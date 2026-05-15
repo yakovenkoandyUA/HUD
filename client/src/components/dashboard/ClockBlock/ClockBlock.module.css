@@ -1,0 +1,32 @@
+.block {
+  text-align: center;
+  padding: 12px 0 4px;
+}
+
+.time {
+  font-family: var(--font-display);
+  font-size: 72px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.colon {
+  animation: blink 1s step-end infinite;
+  display: inline-block;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.15; }
+}
+
+.day {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text3);
+  margin-top: 6px;
+}

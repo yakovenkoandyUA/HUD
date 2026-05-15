@@ -1,0 +1,31 @@
+.countdown {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.seg {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.num {
+  font-family: var(--font-display);
+  font-size: 36px;
+  color: var(--red);
+  letter-spacing: 0.02em;
+}
+
+.unit {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.sep {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--border2);
+  margin: 0 2px;
+}

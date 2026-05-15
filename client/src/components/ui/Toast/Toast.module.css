@@ -1,0 +1,27 @@
+.container {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 200;
+}
+
+.toast {
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  cursor: pointer;
+  animation: slideIn 0.2s ease;
+}
+
+.info    { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+.success { background: var(--green-s); color: var(--green); border: 1px solid var(--green); }
+.error   { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}

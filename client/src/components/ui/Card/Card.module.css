@@ -1,0 +1,21 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.accent {
+  border-left: 3px solid var(--red);
+  background: linear-gradient(135deg, rgba(224, 16, 46, 0.06) 0%, var(--surface) 60%);
+}
+
+.card[role='button'] {
+  cursor: pointer;
+}
+
+.card[role='button']:hover {
+  background: var(--surface2);
+  border-color: var(--border2);
+}

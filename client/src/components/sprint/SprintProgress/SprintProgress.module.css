@@ -1,0 +1,22 @@
+.wrapper { display: flex; flex-direction: column; gap: 8px; }
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--green);
+}
