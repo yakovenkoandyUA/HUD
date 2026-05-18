@@ -31,6 +31,13 @@
   color: var(--text2);
 }
 
+.right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Live clock */
 .clock {
   display: flex;
   flex-direction: column;
@@ -51,4 +58,24 @@
   letter-spacing: 0.08em;
   color: var(--text3);
   text-transform: uppercase;
+}
+
+/* Palette icon button */
+.themeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.themeBtn:hover {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+  background: var(--accent-soft);
 }

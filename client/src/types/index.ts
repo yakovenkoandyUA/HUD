@@ -36,6 +36,13 @@ export interface Lesson {
   date: string
 }
 
+export interface Goal {
+  id: string
+  title: string
+  targetAmount: number
+  savedAmount: number
+}
+
 export type TodoPriority = 'urgent' | 'normal' | 'low'
 
 export interface TodoItem {
@@ -44,4 +51,27 @@ export interface TodoItem {
   priority: TodoPriority
   done: boolean
   dueDate?: string
+}
+
+export interface MealIngredient {
+  name: string
+  measure: string
+}
+
+export interface Meal {
+  id: string
+  name: string
+  category: string
+  area: string
+  instructions: string
+  thumb: string
+  ingredients: MealIngredient[]
+}
+
+export interface Recipe {
+  id: string
+  title: string
+  ingredients: string[]
+  steps: string
+  imageUrl?: string
 }

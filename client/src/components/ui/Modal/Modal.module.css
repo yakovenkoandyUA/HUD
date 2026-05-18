@@ -7,7 +7,7 @@
   justify-content: center;
   z-index: 100;
   padding: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.38s ease;
 }
 
 .overlayVisible { opacity: 1; }
@@ -21,11 +21,20 @@
   max-width: 480px;
   max-height: 90dvh;
   overflow-y: auto;
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+  transition:
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity   0.38s ease;
 }
 
-.modalVisible { transform: translateY(0); }
-.modalHidden  { transform: translateY(100%); }
+.modalVisible {
+  transform: translateY(0);
+  opacity: 1;
+}
+.modalHidden {
+  transform: translateY(48px);
+  opacity: 0;
+}
 
 .header {
   display: flex;

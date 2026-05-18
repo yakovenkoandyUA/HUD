@@ -1,0 +1,79 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 4px 0 8px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 12px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.12s, box-shadow 0.15s;
+}
+.card:active { transform: scale(0.97); }
+
+/* Theme name */
+.name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Color swatch dots */
+.swatches {
+  display: flex;
+  gap: 5px;
+}
+
+.swatch {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Fake UI preview */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.previewBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  border-radius: 5px;
+}
+
+.previewDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.previewLine {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+}
+
+/* Active checkmark */
+.activeTick {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}

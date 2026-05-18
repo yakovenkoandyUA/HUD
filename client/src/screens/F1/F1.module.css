@@ -9,6 +9,38 @@
   gap: 12px;
 }
 
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg3);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+
+.tab {
+  flex: 1;
+  padding: 7px 12px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  border-radius: 7px;
+  transition: color 0.15s, background 0.15s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.tab:hover { color: var(--text2); }
+
+.tabActive {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+}
+
 .calLabel {
   font-family: var(--font-ui);
   font-size: 12px;

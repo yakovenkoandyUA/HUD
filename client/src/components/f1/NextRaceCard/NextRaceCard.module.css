@@ -1,4 +1,5 @@
 .card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 4px solid var(--accent);
@@ -7,6 +8,18 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* overflow: hidden; */
+}
+
+/* Track watermark — top-right, static, ghosted */
+.watermark {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 64px;
+  height: 64px;
+  opacity: 0.15;
+  pointer-events: none;
 }
 
 .meta {

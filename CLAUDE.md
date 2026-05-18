@@ -46,7 +46,8 @@
 - **Zustand** — стейт менеджмент (легкий, без бойлерплейту)
 - **React Router v6** — навігація між екранами
 - **CSS Modules** — стилізація
-- **PWA** — Vite PWA Plugin (`vite-plugin-pwa`)
+- **Recharts** — діаграми витрат у Finance екрані
+- **Three.js** — 3D модель болида на F1 екрані
 - **Service Worker** — офлайн підтримка + підготовка до push-нотифікацій
 
 ### Backend (`/backend`)
@@ -389,6 +390,21 @@ color: 'var(--accent)'
 - Статистика за місяць / тиждень — що купую найчастіше
 - Перегляд патернів витрат
 
+**Діаграма витрат:**
+- Donut/Pie chart розбивка витрат по категоріях за місяць
+- Категорії: 🛒 Їжа / 🚗 Транспорт / 🎮 Розваги / 👕 Одяг / 💊 Здоров'я / 📦 Інше
+- Кожна категорія свого кольору (семантичні змінні)
+- Бібліотека: **Recharts** (легка, React-friendly)
+- При натисканні на сектор → фільтрує список транзакцій по категорії
+
+**Цілі / Savings Goals:**
+- Картки цілей на які збираєш кошти
+- Поля: назва, emoji іконка, цільова сума, поточна сума, дедлайн
+- Прогрес-бар накопичення з відсотком
+- Можливість поповнити ціль вручну
+- Приклади: 🎮 Xbox, ✈️ Відпустка, 🔧 Ремонт
+- Горизонтальний скрол карток як на макеті
+
 **Логіка розрахунку:**
 ```
 dailyBudget = Math.floor(currentBalance / daysLeftInMonth)
@@ -400,10 +416,15 @@ bonus = (dailyBudget * daysElapsed) - totalMonthExpense
 - Hero-картка наступного Гран Прі: прапор, назва, трек, зворотній відлік
 - Повний список 22 Гран Прі сезону 2026
 - Пройдені гонки — затемнені, наступна — виділена червоним
-- **Таб "Чемпіонат":**
-  - Залік команд (Constructor Championship)
-  - Залік пілотів (Driver Championship)
-  - Дані через OpenF1 API
+- **Два таби** — "Календар" і "Чемпіонат" (перемикаються в межах F1 екрану)
+- **Таб "Чемпіонат" → ChampionshipTable:**
+  - Суб-таби: Пілоти / Команди
+  - Пілоти: OpenF1 `championship_drivers` — position, name, team, points + **фото (headshot_url)**
+  - Фото: circular 36px avatar, fallback initials, CORS proxy через `images.weserv.nl`
+  - Команди: Jolpica API `current/constructorstandings`
+  - Top-3: gold/silver/bronze highlight рядків
+  - Skeleton shimmer під час завантаження, error+retry стан
+  - Кеш: sessionStorage з денним ключем `hud-champ-YYYY-MM-DD`
 - (Майбутнє) Push-нотифікація в понеділок перед уїкендом: "it's race weekend 🏎"
 
 ### 4. Sprint (`/sprint`) — Спрінти та Менторство
@@ -414,12 +435,13 @@ bonus = (dailyBudget * daysElapsed) - totalMonthExpense
 - Прогрес-бар тижня
 - Тижнева ретроспектива (в кінці тижня)
 
-**Таб "Список справ"** *(новий)*:
+**Таб "Список покупок"**:
 - Список справ і покупок поза тижневим спрінтом
-- Маркери терміновості:
-  - 🔴 **ТЕРМІНОВО**
-  - 🟡 **ПРОСТО ПРИДБАТИ**
-  - 🟢 **АБИ БУЛО**
+- Режим додавання: **одна річ** або **список** (перемикач у формі)
+- Маркери терміновості через `PriorityBadge` (▲◆▽ замість emoji):
+  - ▲ **ТЕРМІНОВО** — `var(--negative)`
+  - ◆ **ПРОСТО ПРИДБАТИ** — `var(--gold)`
+  - ▽ **АБИ БУЛО** — `var(--positive)`
 - Можливість встановити термін виконання
 
 **Таб "Уроки":**
@@ -474,23 +496,29 @@ components/
 │   ├── Badge/
 │   ├── ProgressBar/
 │   ├── Modal/
-│   └── Toast/
+│   ├── Toast/
+│   └── PriorityBadge/      ← ▲◆▽ маркери терміновості (urgent/normal/low)
 ├── layout/
 │   ├── TopBar/
 │   ├── BottomNav/
-│   └── ThemeSwitcher/
+│   └── ThemePicker/        ← перемикач тем
 ├── finance/
 │   ├── BalanceHero/
 │   ├── TodayCard/
 │   ├── StatsGrid/
 │   ├── TopupForm/
 │   ├── TransactionList/
-│   └── ShoppingTracker/
+│   ├── ShoppingTracker/
+│   ├── GoalsList/          ← savings goals з горизонтальним скролом
+│   ├── ExpenseChart/       ← donut chart витрат по категоріях (Recharts)
+│   ├── SavingsGoals/
+│   └── SavingsGoalCard/
 ├── f1/
 │   ├── NextRaceCard/
-│   ├── RaceCountdown/
 │   ├── RaceCalendarList/
-│   └── ChampionshipTable/
+│   ├── ChampionshipTable/  ← пілоти (фото) + команди, суб-таби
+│   ├── TrackSVG/           ← SVG траси з draw-path анімацією (JS getTotalLength)
+│   └── McLarenViewer/      ← Three.js 3D McLaren на F1 екрані
 ├── sprint/
 │   ├── SprintItem/
 │   ├── SprintProgress/
@@ -501,19 +529,21 @@ components/
 │   ├── LessonItem/
 │   └── LessonForm/
 ├── recipes/
-│   ├── MealOfTheWeek/
-│   ├── RecipeCard/
-│   ├── RecipeForm/
-│   └── RecipeDetail/
+│   ├── MealBanner/         ← hero-банер блюда тижня з TheMealDB
+│   ├── MealDetail/         ← повний рецепт у модалці
+│   ├── RecipeCard/         ← картка особистого рецепту
+│   └── RecipeForm/         ← форма додавання/редагування рецепту
 ├── watchlist/
 │   ├── WatchlistItem/
 │   ├── WatchlistForm/
 │   └── WatchlistCategory/
 └── dashboard/
-    ├── ClockBlock/
+    ├── CarHero/            ← Three.js McLaren MP4/5, 260px, OrbitControls + particles
     ├── BalanceMini/
     ├── NextRaceMini/
     ├── SprintMini/
+    ├── LessonsMini/
+    ├── TodosMini/
     ├── MealMini/
     └── NasaApod/
 ```
@@ -525,9 +555,10 @@ components/
 ```
 store/
 ├── financeStore.ts    — balance, transactions, топапи, shopping tracker
+├── goalsStore.ts      — savings goals (назва, emoji, target/current amount, deadline)
 ├── sprintStore.ts     — завдання тижня, прогрес, todoList зі справами
 ├── lessonStore.ts     — уроки менторської програми
-├── recipesStore.ts    — особисті рецепти
+├── recipesStore.ts    — особисті рецепти + mealOfWeek (TheMealDB, кеш по тижню)
 ├── watchlistStore.ts  — фільми, серіали, аніме, книги
 └── uiStore.ts         — модалки, тости, NASA/meal дані
 ```
@@ -543,7 +574,8 @@ store/
 | **Open-Meteo** | Погода за геолокацією (анімація запуску) | Не потрібен |
 | **TheMealDB** | Блюдо неділі, рецепти | Не потрібен |
 | **NASA APOD** | Astronomy Picture of the Day на дашборді | Безкоштовний на api.nasa.gov |
-| **OpenF1 API** | Таблиця чемпіонату, результати гонок | Не потрібен |
+| **OpenF1 API** | Залік пілотів з headshot_url (`/v1/championship_drivers?year=2026`) | Не потрібен |
+| **Jolpica API** | Залік команд (`/ergast/f1/current/constructorstandings/`) — надійний форк Ergast | Не потрібен |
 
 ---
 
@@ -591,7 +623,119 @@ export const F1_SEASON_2026: F1Race[] = [
 
 ---
 
-## MongoDB — Mongoose схеми
+## SVG Траси F1
+
+Файли зберігати в `/client/public/tracks/`
+
+**Маппінг трас до файлів:**
+```ts
+// Додати поле trackSvg до інтерфейсу F1Race
+export interface F1Race {
+  round: number
+  name: string
+  circuit: string
+  date: string
+  flag: string
+  country: string
+  sprint?: boolean
+  trackSvg: string | null  // шлях до SVG або null якщо немає
+}
+```
+
+```ts
+// Маппінг файлів сезону 2026
+round 1  — Australian         → '/tracks/Australian.svg'
+round 2  — Chinese            → null  // відсутній, показати placeholder
+round 3  — Japanese           → '/tracks/Japanese(suzuka).svg'
+round 4  — Miami              → '/tracks/Miami.svg'
+round 5  — Canadian           → '/tracks/Canadian.svg'
+round 6  — Monaco             → '/tracks/Monaco.svg'
+round 7  — Barcelona-Catalunya → '/tracks/Spanish.svg'
+round 8  — Austrian           → '/tracks/RedBullRing.svg'
+round 9  — British            → '/tracks/British(Silverstone).svg'
+round 10 — Belgian            → '/tracks/Belgian.svg'
+round 11 — Hungarian          → '/tracks/Hungarian.svg'
+round 12 — Dutch              → '/tracks/Dutch.svg'
+round 13 — Italian            → '/tracks/Italia(monza).svg'
+round 14 — Spanish Madrid     → '/tracks/Madrid.svg'
+round 15 — Azerbaijan         → '/tracks/Azerbaijan.svg'
+round 16 — Singapore          → '/tracks/Singapore.svg'
+round 17 — United States      → '/tracks/USA(ostin).svg'
+round 18 — Mexico City        → '/tracks/Mexican.svg'
+round 19 — São Paulo          → '/tracks/Brazilian.svg'
+round 20 — Las Vegas          → '/tracks/LasVegas.svg'
+round 21 — Qatar              → '/tracks/Qatar.svg'
+round 22 — Abu Dhabi          → '/tracks/abuDhabi.svg'
+```
+
+**Файли які є але не в календарі 2026 (не використовувати):**
+- `Bahrain.svg`, `SaudiArabian.svg` — скасовані гонки
+- `EmiliaRomagna.svg` — випала з календаря
+- `French.svg` — не в календарі 2026
+
+**Анімація draw-path (JS-driven, не CSS):**
+```ts
+// Після завантаження SVG — в useEffect([track, animated]):
+const length = path.getTotalLength()
+path.style.strokeDasharray = `${length}`
+path.style.strokeDashoffset = `${length}`
+path.style.transition = 'none'
+void path.getBoundingClientRect()  // force reflow — обов'язково!
+setTimeout(() => {
+  path.style.transition = 'stroke-dashoffset 3.5s cubic-bezier(0.4, 0, 0.2, 1)'
+  path.style.strokeDashoffset = '0'
+}, 500)
+```
+- **Не використовувати фіксований dasharray** — кожна траса має різну довжину
+- Наступна гонка: `stroke: var(--accent)`, яскраво
+- Пройдені гонки: `stroke: var(--text3)`, приглушено
+- Fill: `none` завжди
+- Placeholder для null: пунктирне коло з написом "Track TBA"
+
+**Компонент:** `src/components/f1/TrackSvg/index.tsx`
+
+```tsx
+/**
+ * TrackSvg
+ * --------
+ * SVG схема траси з анімацією промальовування.
+ *
+ * Props:
+ * @prop {string | null} src       — шлях до SVG файлу або null
+ * @prop {boolean}       isNext    — чи це наступна гонка (акцентний колір)
+ * @prop {boolean}       isPast    — чи пройдена гонка (приглушений колір)
+ * @prop {number}        size      — розмір в пікселях (default: 80)
+ * @prop {boolean}       animated  — чи вмикати draw анімацію (default: true)
+ */
+```
+
+---
+
+## 3D модель
+
+**McLaren MP4/5 Formula 1**
+- Файл: `/client/public/models/mclaren_mp45__formula_1.glb`
+- Ліцензія: CC Attribution — обов'язково вказати кредити в UI
+- Кредит: *McLaren MP4/5 by dark_igorek (CC Attribution, Sketchfab)*
+
+**Два компоненти з моделлю:**
+
+`src/components/dashboard/CarHero/` — Hero на Dashboard
+- Canvas height: **260px**, CSS mask-image fade знизу
+- 80 частинок у box 12×8×12 з повільним Y-обертанням
+- OrbitControls: drag зупиняє autoRotate, відновлення через 3с
+- Theme-aware освітлення через MutationObserver на `data-theme`:
+  - japan: AmbientLight 0.3, DirectionalLight 0.6
+  - решта: AmbientLight 0.6, DirectionalLight 1.2
+- Кредит відображається як `<p>` під canvas
+
+`src/components/f1/McLarenViewer/` — viewer на F1 екрані
+- Окремий компонент, менша висота
+
+**Спільні правила Three.js:**
+- `renderer.dispose()` + geometry/material dispose при unmount — обов'язково
+- DRACOLoader decoder: `https://www.gstatic.com/draco/versioned/decoders/1.5.6/`
+- `alpha: true` на WebGLRenderer для прозорого фону
 
 ```ts
 // Transaction
@@ -617,6 +761,10 @@ export const F1_SEASON_2026: F1Race[] = [
 // Watchlist item
 { title: String, category: 'movie'|'series'|'anime'|'book',
   status: String, imageUrl: String, reminderDate: String, userId: String }
+
+// Savings Goal
+{ title: String, emoji: String, targetAmount: Number,
+  currentAmount: Number, deadline: String, userId: String }
 
 // Push subscription
 { endpoint: String, keys: Object, userId: String }
@@ -652,25 +800,35 @@ export const F1_SEASON_2026: F1Race[] = [
 
 ---
 
-## Що робимо в першу чергу
+## Статус реалізації (станом на 2026-05-19)
 
-1. Scaffold проекту: `npm create vite@latest client -- --template react-ts`
-2. Встановити залежності: `zustand`, `react-router-dom`, `vite-plugin-pwa`
-3. Налаштувати дизайн-систему: CSS змінні, 4 теми, шрифти, базові стилі
-4. Створити `ui/` компоненти: Card, Button, Input, Badge, ProgressBar, Modal, Toast, ThemeSwitcher
-5. Layout: TopBar + BottomNav
-6. Екран **Dashboard** — перший, бо він агрегує всі модулі
-7. Далі по порядку: Finance → F1 → Sprint → Recipes → Watchlist
+**Зроблено:**
+- ✅ Scaffold, дизайн-система (4 теми), шрифти, CSS змінні
+- ✅ UI компоненти: Card, Button, Input, Badge, ProgressBar, Modal, Toast, PriorityBadge
+- ✅ Layout: TopBar, BottomNav, ThemePicker
+- ✅ Dashboard: BalanceMini, NextRaceMini, SprintMini, LessonsMini, TodosMini, MealMini, NasaApod, CarHero (3D)
+- ✅ Finance: BalanceHero, TodayCard, StatsGrid, TransactionList, ShoppingTracker, GoalsList
+- ✅ F1: NextRaceCard (з TrackSVG draw-path), RaceCalendarList, RaceDetail, ChampionshipTable (пілоти з фото + команди), McLarenViewer
+- ✅ Sprint: таби Спрінти / Список покупок / Уроки; PriorityBadge маркери; режим одна/список
+- ✅ Recipes: MealBanner (TheMealDB, кеш по тижню), MealDetail, RecipeCard, RecipeForm
+- ✅ Всі store'и з Zustand persist
+- ✅ SVG траси для всіх 22 гонок (крім Chinese — немає файлу)
+
+**Залишилось:**
+- ⬜ Watchlist екран (`/watchlist`)
+- ⬜ PWA іконки (`icon-192.png`, `icon-512.png`)
+- ⬜ NASA APOD виведення на Dashboard
 
 ---
 
 ## Roadmap по етапах
 
-**Етап 1 — Frontend** *(зараз)*
-- React + TypeScript + Vite scaffold
-- Дизайн-система + 4 теми
-- Всі екрани з localStorage
-- PWA конфігурація
+**Етап 1 — Frontend** *(майже завершено)*
+- ✅ React + TypeScript + Vite scaffold
+- ✅ Дизайн-система + 4 теми
+- ✅ Dashboard, Finance, F1, Sprint, Recipes екрани
+- ⬜ Watchlist екран
+- ⬜ PWA іконки + фінальна конфігурація
 
 **Етап 2 — Деплой Frontend**
 - Підключити GitHub репо до Vercel

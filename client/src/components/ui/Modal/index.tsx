@@ -19,7 +19,7 @@ interface ModalProps {
   children: React.ReactNode
 }
 
-const ANIM_MS = 250
+const ANIM_MS = 420
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
   const [mounted, setMounted] = useState(isOpen)

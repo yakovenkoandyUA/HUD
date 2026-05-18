@@ -3,16 +3,29 @@ import TopBar from '../../components/layout/TopBar'
 import BalanceHero from '../../components/finance/BalanceHero'
 import TodayCard from '../../components/finance/TodayCard'
 import StatsGrid from '../../components/finance/StatsGrid'
+import ShoppingTracker from '../../components/finance/ShoppingTracker'
+import GoalsList from '../../components/finance/GoalsList'
 import TopupForm from '../../components/finance/TopupForm'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import TransactionList from '../../components/finance/TransactionList'
 import Modal from '../../components/ui/Modal'
-import Button from '../../components/ui/Button'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget } from '../../utils/finance'
 import type { ExpenseCategory } from '../../types'
 import styles from './Finance.module.css'
+
+const IconExpense: React.FC = () => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+    <path d="M7.5 2v11M3 9.5l4.5 4 4.5-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+const IconTopup: React.FC = () => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+    <path d="M7.5 13V2M3 5.5l4.5-4 4.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
 
 const Finance: React.FC = () => {
   const { balance, transactions, addTopup, addExpense, deleteTransaction } = useFinanceStore()
@@ -58,37 +71,45 @@ const Finance: React.FC = () => {
   }
 
   return (
-    <div className={styles.screen}>
-      <TopBar title="Фінанси" />
-      <div className={styles.content}>
-        <BalanceHero
-          balance={balance}
-          dailyBudget={dailyBudget}
-          monthSpent={totalExpense}
-          daysLeft={daysLeft}
-          progressPct={progressPct}
-        />
-        <TodayCard todaySpent={todaySpent} dailyBudget={dailyBudget} />
-        <StatsGrid totalTopup={totalTopup} totalExpense={totalExpense} daysLeft={daysLeft} bonus={bonus} />
-        <div className={styles.actions}>
-          <Button fullWidth onClick={() => setShowExpense(true)}>Витрата</Button>
-          <Button variant="secondary" fullWidth onClick={() => setShowTopup(true)}>Поповнення</Button>
-        </div>
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Останні транзакції</h3>
-          <TransactionList transactions={transactions} onDelete={handleDelete} />
-        </div>
-      </div>
+		<div className={styles.screen}>
+			<TopBar title="Фінанси" />
+			<div className={styles.content}>
+				<GoalsList />
 
-      <Modal isOpen={showTopup} onClose={() => setShowTopup(false)} title="Поповнення">
-        <TopupForm onTopup={handleTopup} />
-      </Modal>
+				<BalanceHero balance={balance} dailyBudget={dailyBudget} monthSpent={totalExpense} daysLeft={daysLeft} progressPct={progressPct} />
 
-      <Modal isOpen={showExpense} onClose={() => setShowExpense(false)} title="Витрата">
-        <ExpenseForm onExpense={handleExpense} />
-      </Modal>
-    </div>
-  )
+				<TodayCard todaySpent={todaySpent} dailyBudget={dailyBudget} />
+
+				<StatsGrid totalTopup={totalTopup} totalExpense={totalExpense} daysLeft={daysLeft} bonus={bonus} />
+
+				<div className={styles.actions}>
+					<button className={styles.btnExpense} onClick={() => setShowExpense(true)}>
+						<IconExpense />
+						Витрата
+					</button>
+					<button className={styles.btnTopup} onClick={() => setShowTopup(true)}>
+						<IconTopup />
+						Поповнення
+					</button>
+				</div>
+
+				<ShoppingTracker transactions={transactions} />
+
+				<div className={styles.section}>
+					<h3 className={styles.sectionTitle}>Останні транзакції</h3>
+					<TransactionList transactions={transactions} onDelete={handleDelete} />
+				</div>
+			</div>
+
+			<Modal isOpen={showTopup} onClose={() => setShowTopup(false)} title="Поповнення">
+				<TopupForm onTopup={handleTopup} />
+			</Modal>
+
+			<Modal isOpen={showExpense} onClose={() => setShowExpense(false)} title="Витрата">
+				<ExpenseForm onExpense={handleExpense} />
+			</Modal>
+		</div>
+	)
 }
 
 export default Finance

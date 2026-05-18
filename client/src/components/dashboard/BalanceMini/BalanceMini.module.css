@@ -1,4 +1,13 @@
-.card { padding: 16px; }
+.card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  height: 100%;
+  box-sizing: border-box;
+}
 
 .label {
   font-family: var(--font-ui);
@@ -20,7 +29,6 @@
 .daily {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--gold);
+  color: var(--positive);
   margin-top: 5px;
-  opacity: 0.85;
 }

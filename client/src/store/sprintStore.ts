@@ -9,6 +9,7 @@ interface SprintState {
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
   addTodo: (title: string, priority: TodoPriority, dueDate?: string) => void
+  addTodos: (items: { title: string; priority: TodoPriority }[]) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
 }
@@ -48,6 +49,19 @@ export const useSprintStore = create<SprintState>()(
           todos: [
             ...s.todos,
             { id: crypto.randomUUID(), title, priority, done: false, dueDate },
+          ],
+        })),
+
+      addTodos: (items) =>
+        set((s) => ({
+          todos: [
+            ...s.todos,
+            ...items.map((item) => ({
+              id: crypto.randomUUID(),
+              title: item.title,
+              priority: item.priority,
+              done: false,
+            })),
           ],
         })),
 

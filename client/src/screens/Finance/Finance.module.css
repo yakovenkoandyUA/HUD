@@ -14,6 +14,40 @@
   gap: 8px;
 }
 
+.btnExpense,
+.btnTopup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 12px;
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  border: none;
+}
+.btnExpense:active,
+.btnTopup:active { transform: scale(0.97); }
+
+.btnExpense {
+  background: var(--accent);
+  color: #fff;
+}
+.btnExpense:hover { opacity: 0.88; }
+
+.btnTopup {
+  background: var(--positive);
+  color: #fff;
+  border: 1px solid var(--border2);
+}
+.btnTopup:hover { color: var(--text); border-color: var(--border2); background: var(--surface); }
+
 .section { display: flex; flex-direction: column; gap: 8px; }
 
 .sectionTitle {
