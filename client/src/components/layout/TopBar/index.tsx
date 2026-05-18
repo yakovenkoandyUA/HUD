@@ -34,7 +34,7 @@ const PaletteIcon: React.FC = () => (
   </svg>
 )
 
-const TopBar: React.FC<TopBarProps> = ({ title, showClock }) => {
+const TopBar: React.FC<TopBarProps> = ({ title: _title, showClock }) => {
   const [now, setNow] = useState(new Date())
   const [showPicker, setShowPicker] = useState(false)
 

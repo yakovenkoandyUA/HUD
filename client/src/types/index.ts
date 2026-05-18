@@ -1,3 +1,5 @@
+export type Theme = 'retro' | 'warm' | 'dark' | 'japan'
+
 export type ExpenseCategory =
   | 'кава'
   | 'продукти'
