@@ -9,10 +9,12 @@ import styles from './BottomNav.module.css'
  * Не приймає пропсів — використовує NavLink для активного стану.
  */
 const NAV_ITEMS = [
-  { to: '/',        label: 'HUD',     icon: '⊞' },
-  { to: '/finance', label: 'Finance', icon: '₴' },
-  { to: '/f1',      label: 'F1',      icon: '🏎' },
-  { to: '/sprint',  label: 'Sprint',  icon: '◎' },
+  { to: '/',         label: 'HUD',     icon: '⊞' },
+  { to: '/finance',  label: 'Finance', icon: '₴' },
+  { to: '/f1',       label: 'F1',      icon: '◈' },
+  { to: '/sprint',   label: 'Sprint',  icon: '◎' },
+  { to: '/recipes',  label: 'Recipes', icon: '⊕' },
+  { to: '/watchlist',label: 'Watch',   icon: '◉' },
 ]
 
 const BottomNav: React.FC = () => (

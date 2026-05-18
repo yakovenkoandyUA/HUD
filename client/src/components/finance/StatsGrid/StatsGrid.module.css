@@ -11,8 +11,8 @@
   padding: 12px 14px;
 }
 
-.accent { border-left: 2px solid var(--green); }
-.negative { border-left: 2px solid var(--red); }
+.accent { border-left: 2px solid var(--positive); }
+.negative { border-left: 2px solid var(--negative); }
 
 .tileLabel {
   font-family: var(--font-ui);

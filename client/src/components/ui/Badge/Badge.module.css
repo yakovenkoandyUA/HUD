@@ -10,7 +10,7 @@
 }
 
 .default { background: var(--surface2); color: var(--text2); }
-.red     { background: var(--red-soft); color: var(--red); }
+.red     { background: var(--accent-soft); color: var(--accent); }
 .gold    { background: var(--gold-dim); color: var(--gold); }
-.green   { background: var(--green-s); color: var(--green); }
+.green   { background: var(--second-soft); color: var(--second); }
 .orange  { background: var(--orange-s); color: var(--orange); }

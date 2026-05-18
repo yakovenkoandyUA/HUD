@@ -19,8 +19,8 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
-  color: var(--green);
-  background: var(--green-s);
+  color: var(--second);
+  background: var(--second-soft);
   padding: 2px 8px;
   border-radius: 20px;
 }

@@ -23,13 +23,13 @@
   border: 2px solid var(--border2);
   border-radius: 4px;
   font-size: 12px;
-  color: var(--green);
+  color: var(--second);
   transition: border-color 0.15s;
 }
 
 .done .checkBox {
-  border-color: var(--green);
-  background: var(--green-s);
+  border-color: var(--second);
+  background: var(--second-soft);
 }
 
 .content {
@@ -52,4 +52,4 @@
   padding: 4px;
   transition: color 0.15s;
 }
-.del:hover { color: var(--red); }
+.del:hover { color: var(--accent); }

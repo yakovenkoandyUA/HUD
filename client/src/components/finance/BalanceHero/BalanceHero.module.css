@@ -1,7 +1,7 @@
 .hero {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--red);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;

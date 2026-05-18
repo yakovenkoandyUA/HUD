@@ -25,9 +25,9 @@
 }
 
 .active {
-  background: var(--red-soft);
-  color: var(--red);
-  border-color: var(--red-dim);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-dim);
 }
 
 .actions {

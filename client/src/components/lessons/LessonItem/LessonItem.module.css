@@ -51,4 +51,4 @@
   padding: 4px;
   transition: color 0.15s;
 }
-.del:hover { color: var(--red); }
+.del:hover { color: var(--accent); }

@@ -42,7 +42,7 @@
 }
 
 .chipActive {
-  border-color: var(--red);
-  background: var(--red-soft);
+  border-color: var(--accent);
+  background: var(--accent-soft);
   color: var(--text);
 }

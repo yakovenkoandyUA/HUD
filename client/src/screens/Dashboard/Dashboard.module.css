@@ -42,5 +42,5 @@
   outline: none;
   font-family: var(--font-body);
 }
-.taskInput:focus { border-color: var(--red); }
+.taskInput:focus { border-color: var(--accent); }
 .taskInput::placeholder { color: var(--text3); }

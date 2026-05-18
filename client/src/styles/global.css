@@ -7,42 +7,151 @@
   font-display: swap;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&display=swap');
 
+/* ── Layout & typography constants (theme-independent) ─────────────────────── */
 :root {
-  --bg:         #0d0e14;
-  --bg2:        #111318;
-  --bg3:        #181a24;
-  --surface:    #1d1f2c;
-  --surface2:   #232638;
-  --border:     #2c2f42;
-  --border2:    #393d54;
-
-  --red:        #e0102e;
-  --red-dim:    #9a0b20;
-  --red-glow:   rgba(224, 16, 46, 0.28);
-  --red-soft:   rgba(224, 16, 46, 0.10);
-  --gold:       #d9a820;
-  --gold-dim:   rgba(217, 168, 32, 0.16);
-
-  --text:       #f0ece8;
-  --text2:      #8a8fa8;
-  --text3:      #50556e;
-
-  --green:      #2ecc71;
-  --green-s:    rgba(46, 204, 113, 0.12);
-  --orange:     #e67e22;
-  --orange-s:   rgba(230, 126, 34, 0.12);
+  --radius:     10px;
+  --radius-lg:  16px;
 
   --font-display: 'Furore', 'Barlow Condensed', sans-serif;
   --font-ui:      'Barlow Condensed', sans-serif;
   --font-body:    'Barlow', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 
-  --radius:     10px;
-  --radius-lg:  16px;
+  /* Neutral utility colors (used in Badge/Toast, consistent across themes) */
+  --orange:   #e67e22;
+  --orange-s: rgba(230, 126, 34, 0.12);
 }
 
+/* ── RETRO 🎮 (default) ────────────────────────────────────────────────────── */
+:root,
+[data-theme="retro"] {
+  --bg:         #0d0d0d;
+  --bg2:        #141414;
+  --bg3:        #1c1a18;
+  --surface:    #201e1b;
+  --surface2:   #272421;
+  --border:     #2e2b27;
+  --border2:    #3a3630;
+
+  --accent:      #B83A2D;
+  --accent-dim:  #7a2720;
+  --accent-glow: rgba(184, 58, 45, 0.25);
+  --accent-soft: rgba(184, 58, 45, 0.12);
+
+  --second:      #4E6851;
+  --second-soft: rgba(78, 104, 81, 0.15);
+
+  --gold:        #DCC9A9;
+  --gold-dim:    rgba(220, 201, 169, 0.15);
+
+  --text:   #EDE0CC;
+  --text2:  #9a8f82;
+  --text3:  #5c5248;
+
+  --positive:      #4E6851;
+  --positive-soft: rgba(78, 104, 81, 0.15);
+  --negative:      #B83A2D;
+  --negative-soft: rgba(184, 58, 45, 0.12);
+}
+
+/* ── WARM 🌅 ───────────────────────────────────────────────────────────────── */
+[data-theme="warm"] {
+  --bg:         #1a2328;
+  --bg2:        #1f2c33;
+  --bg3:        #24343c;
+  --surface:    #264653;
+  --surface2:   #2d5060;
+  --border:     #2f5a69;
+  --border2:    #386070;
+
+  --accent:      #E76F51;
+  --accent-dim:  #a84e38;
+  --accent-glow: rgba(231, 111, 81, 0.25);
+  --accent-soft: rgba(231, 111, 81, 0.12);
+
+  --second:      #2A9D8F;
+  --second-soft: rgba(42, 157, 143, 0.15);
+
+  --gold:        #E9C46A;
+  --gold-dim:    rgba(233, 196, 106, 0.15);
+
+  --text:   #f0ece8;
+  --text2:  #9ab0b8;
+  --text3:  #5a7a82;
+
+  --positive:      #2A9D8F;
+  --positive-soft: rgba(42, 157, 143, 0.15);
+  --negative:      #E76F51;
+  --negative-soft: rgba(231, 111, 81, 0.12);
+}
+
+/* ── DARK ⬛ ────────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:         #0a0a0a;
+  --bg2:        #111111;
+  --bg3:        #1a1a1a;
+  --surface:    #1e1e1e;
+  --surface2:   #252525;
+  --border:     #2a2a2a;
+  --border2:    #333333;
+
+  --accent:      #c8102e;
+  --accent-dim:  #8b0b1f;
+  --accent-glow: rgba(200, 16, 46, 0.25);
+  --accent-soft: rgba(200, 16, 46, 0.12);
+
+  --second:      #2ecc71;
+  --second-soft: rgba(46, 204, 113, 0.12);
+
+  --gold:        #d4a017;
+  --gold-dim:    rgba(212, 160, 23, 0.15);
+
+  --text:   #f0ece8;
+  --text2:  #9a9490;
+  --text3:  #5a5652;
+
+  --positive:      #2ecc71;
+  --positive-soft: rgba(46, 204, 113, 0.12);
+  --negative:      #c8102e;
+  --negative-soft: rgba(200, 16, 46, 0.12);
+}
+
+/* ── JAPAN 🎌 ──────────────────────────────────────────────────────────────── */
+[data-theme="japan"] {
+  --bg:         #F5F0EB;
+  --bg2:        #EDE8E2;
+  --bg3:        #E5DED6;
+  --surface:    #EDE8E2;
+  --surface2:   #E0D9D0;
+  --border:     #D5CEC5;
+  --border2:    #C8C0B6;
+
+  --accent:      #C8102E;
+  --accent-dim:  #8b0b1f;
+  --accent-glow: rgba(200, 16, 46, 0.20);
+  --accent-soft: rgba(200, 16, 46, 0.08);
+
+  --second:      #1a1a1a;
+  --second-soft: rgba(26, 26, 26, 0.08);
+
+  --gold:        #8B7355;
+  --gold-dim:    rgba(139, 115, 85, 0.15);
+
+  --text:   #1a1a1a;
+  --text2:  #6b6560;
+  --text3:  #a09890;
+
+  --positive:      #2d6a4f;
+  --positive-soft: rgba(45, 106, 79, 0.12);
+  --negative:      #C8102E;
+  --negative-soft: rgba(200, 16, 46, 0.08);
+
+  --font-display: 'Cormorant Garamond', 'Furore', serif;
+}
+
+/* ── Base reset ─────────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;

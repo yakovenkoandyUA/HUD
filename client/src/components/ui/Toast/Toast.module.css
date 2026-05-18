@@ -18,8 +18,8 @@
 }
 
 .info    { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
-.success { background: var(--green-s); color: var(--green); border: 1px solid var(--green); }
-.error   { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); }
+.success { background: var(--positive-soft); color: var(--positive); border: 1px solid var(--positive); }
+.error   { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
 
 @keyframes slideIn {
   from { transform: translateX(100%); opacity: 0; }

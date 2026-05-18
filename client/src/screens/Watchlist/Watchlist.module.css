@@ -1,0 +1,9 @@
+.screen { display: flex; flex-direction: column; flex: 1; }
+.content { flex: 1; padding: 20px 16px; }
+.soon {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text3);
+  text-align: center;
+  padding-top: 48px;
+}

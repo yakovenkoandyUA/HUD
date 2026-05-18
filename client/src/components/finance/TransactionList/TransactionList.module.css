@@ -15,7 +15,7 @@
 .item:last-child { border-bottom: none; }
 
 .itemPending {
-  background: var(--red-soft);
+  background: var(--accent-soft);
   border-radius: 8px;
   padding: 12px 10px;
   margin: 0 -10px;
@@ -42,8 +42,8 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.dotGreen { background: var(--green); }
-.dotRed   { background: var(--red); }
+.dotGreen { background: var(--positive); }
+.dotRed   { background: var(--negative); }
 
 .desc {
   font-family: var(--font-body);
@@ -68,8 +68,8 @@
   font-weight: 600;
 }
 
-.pos { color: var(--green); }
-.neg { color: var(--red); }
+.pos { color: var(--positive); }
+.neg { color: var(--negative); }
 
 .deleteBtn {
   width: 24px;
@@ -88,8 +88,8 @@
   flex-shrink: 0;
 }
 .deleteBtn:hover {
-  color: var(--red);
-  background: var(--red-soft);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* inline confirm state */
@@ -103,7 +103,7 @@
 .confirmText {
   font-family: var(--font-ui);
   font-size: 13px;
-  color: var(--red);
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -118,8 +118,8 @@
   font-weight: 600;
   padding: 4px 14px;
   border-radius: 6px;
-  border: 1px solid var(--red);
-  background: var(--red);
+  border: 1px solid var(--accent);
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
 }

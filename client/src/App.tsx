@@ -7,6 +7,8 @@ import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
 import F1Screen from './screens/F1'
 import Sprint from './screens/Sprint'
+import Recipes from './screens/Recipes'
+import Watchlist from './screens/Watchlist'
 import './App.css'
 
 const AnimatedRoutes: React.FC = () => {
@@ -18,6 +20,8 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/finance" element={<Finance />} />
         <Route path="/f1" element={<F1Screen />} />
         <Route path="/sprint" element={<Sprint />} />
+        <Route path="/recipes" element={<Recipes />} />
+        <Route path="/watchlist" element={<Watchlist />} />
       </Routes>
     </div>
   )

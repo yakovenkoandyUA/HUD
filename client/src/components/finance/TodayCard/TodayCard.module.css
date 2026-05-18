@@ -22,5 +22,5 @@
   margin-top: 4px;
 }
 
-.pos { color: var(--green); }
-.neg { color: var(--red); }
+.pos { color: var(--positive); }
+.neg { color: var(--negative); }

@@ -20,8 +20,8 @@
 }
 
 .active {
-  color: var(--red);
-  border-bottom-color: var(--red);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .content {
@@ -71,7 +71,7 @@
 }
 
 .catActive {
-  background: var(--red-soft);
-  color: var(--red);
-  border-color: var(--red-dim);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-dim);
 }

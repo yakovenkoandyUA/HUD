@@ -1,7 +1,7 @@
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--red);
+  border-left: 4px solid var(--accent);
   border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;
@@ -21,7 +21,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--red);
+  color: var(--accent);
 }
 
 .country {

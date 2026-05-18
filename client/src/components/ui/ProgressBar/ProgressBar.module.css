@@ -18,8 +18,8 @@
   transition: width 0.3s ease;
 }
 
-.red  { background: var(--red); }
-.green{ background: var(--green); }
+.red  { background: var(--accent); }
+.green{ background: var(--positive); }
 .gold { background: var(--gold); }
 
 .label {

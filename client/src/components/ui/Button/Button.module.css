@@ -17,12 +17,12 @@
 }
 
 .primary {
-  background: var(--red);
+  background: var(--accent);
   color: #fff;
   box-shadow: 0 2px 16px rgba(224, 16, 46, 0.3);
 }
 .primary:hover:not(:disabled) {
-  background: var(--red-dim);
+  background: var(--accent-dim);
   box-shadow: 0 2px 24px rgba(224, 16, 46, 0.45);
 }
 
