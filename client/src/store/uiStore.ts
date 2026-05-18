@@ -7,24 +7,16 @@ interface Toast {
   type: 'success' | 'error' | 'info'
 }
 
-export interface WeatherData {
-  temp: number
-  code: number
-  city: string
-}
-
 export type Theme = 'retro' | 'warm' | 'dark' | 'japan'
 
 interface UiState {
   toasts: Toast[]
   activeModal: string | null
-  weather: WeatherData | null
   theme: Theme
   showToast: (message: string, type?: Toast['type']) => void
   dismissToast: (id: string) => void
   openModal: (name: string) => void
   closeModal: () => void
-  setWeather: (data: WeatherData) => void
   setTheme: (theme: Theme) => void
 }
 
@@ -33,7 +25,6 @@ export const useUiStore = create<UiState>()(
     (set) => ({
       toasts: [],
       activeModal: null,
-      weather: null,
       theme: 'retro',
 
       showToast: (message, type = 'info') =>
@@ -48,7 +39,6 @@ export const useUiStore = create<UiState>()(
 
       openModal: (name) => set({ activeModal: name }),
       closeModal: () => set({ activeModal: null }),
-      setWeather: (data) => set({ weather: data }),
 
       setTheme: (theme) => {
         document.documentElement.setAttribute('data-theme', theme)

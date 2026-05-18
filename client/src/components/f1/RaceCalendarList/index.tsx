@@ -1,5 +1,5 @@
 import React from 'react'
-import type { F1Race } from '../../../data/f1Season2025'
+import type { F1Race } from '../../../data/f1Season2026'
 import styles from './RaceCalendarList.module.css'
 
 /**

@@ -11,6 +11,7 @@ import Button from '../../components/ui/Button'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget } from '../../utils/finance'
+import type { ExpenseCategory } from '../../types'
 import styles from './Finance.module.css'
 
 const Finance: React.FC = () => {
@@ -45,8 +46,8 @@ const Finance: React.FC = () => {
     showToast(`+${amount} ₴ додано`, 'success')
   }
 
-  const handleExpense = (amount: number, description: string) => {
-    addExpense(amount, description)
+  const handleExpense = (amount: number, description: string, category?: string) => {
+    addExpense(amount, description, category as ExpenseCategory | undefined)
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')
   }
@@ -70,8 +71,8 @@ const Finance: React.FC = () => {
         <TodayCard todaySpent={todaySpent} dailyBudget={dailyBudget} />
         <StatsGrid totalTopup={totalTopup} totalExpense={totalExpense} daysLeft={daysLeft} bonus={bonus} />
         <div className={styles.actions}>
-          <Button fullWidth onClick={() => setShowExpense(true)}>+ Витрата</Button>
-          <Button variant="secondary" fullWidth onClick={() => setShowTopup(true)}>+ Поповнення</Button>
+          <Button fullWidth onClick={() => setShowExpense(true)}>Витрата</Button>
+          <Button variant="secondary" fullWidth onClick={() => setShowTopup(true)}>Поповнення</Button>
         </div>
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Останні транзакції</h3>

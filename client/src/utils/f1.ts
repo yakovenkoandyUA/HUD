@@ -1,4 +1,4 @@
-import type { F1Race } from '../data/f1Season2025'
+import type { F1Race } from '../data/f1Season2026'
 
 export function getNextRace(races: F1Race[]): F1Race | null {
   const today = new Date().toISOString().slice(0, 10)

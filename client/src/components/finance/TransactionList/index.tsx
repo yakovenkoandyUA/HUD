@@ -3,6 +3,18 @@ import type { Transaction } from '../../../types'
 import { fmt } from '../../../utils/finance'
 import styles from './TransactionList.module.css'
 
+const CATEGORY_COLORS: Record<string, string> = {
+  кава:      '#8B5E3C',
+  продукти:  '#4A8B3C',
+  таксі:     '#E67E22',
+  метро:     '#3498DB',
+  транспорт: '#E67E22',
+  фібі:      '#9B59B6',
+  коська:    '#F39C12',
+  інше:      '#5a5652',
+  'транспорт-інше': '#E67E22',
+}
+
 /**
  * TransactionList
  * ---------------
@@ -72,7 +84,16 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
             ) : (
               <>
                 <div className={styles.left}>
-                  <span className={`${styles.dot} ${t.type === 'topup' ? styles.dotGreen : styles.dotRed}`} />
+                  <span
+                    className={styles.dot}
+                    style={
+                      t.type === 'expense' && t.category
+                        ? { background: CATEGORY_COLORS[t.category] ?? 'var(--negative)' }
+                        : t.type === 'topup'
+                          ? { background: 'var(--positive)' }
+                          : { background: 'var(--negative)' }
+                    }
+                  />
                   <div>
                     <div className={styles.desc}>{t.description}</div>
                     <div className={styles.date}>{formatDate(t.date)}</div>

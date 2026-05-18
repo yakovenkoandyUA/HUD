@@ -9,10 +9,10 @@ import styles from './ExpenseForm.module.css'
  * Форма запису витрат з вибором категорії.
  *
  * Props:
- * @prop {(amount: number, description: string) => void} onExpense — колбек після підтвердження
+ * @prop {(amount: number, description: string, category: string) => void} onExpense — колбек після підтвердження
  */
 interface ExpenseFormProps {
-  onExpense: (amount: number, description: string) => void
+  onExpense: (amount: number, description: string, category: string) => void
 }
 
 interface SubOption {
@@ -69,7 +69,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit) return
-    onExpense(parseFloat(amount), buildDescription())
+    const resolvedCategory = subSelected || selected || 'інше'
+    onExpense(parseFloat(amount), buildDescription(), resolvedCategory)
     setAmount('')
     setSelected(null)
     setSubSelected(null)

@@ -35,3 +35,13 @@ export interface Lesson {
   status: LessonStatus
   date: string
 }
+
+export type TodoPriority = 'urgent' | 'normal' | 'low'
+
+export interface TodoItem {
+  id: string
+  title: string
+  priority: TodoPriority
+  done: boolean
+  dueDate?: string
+}

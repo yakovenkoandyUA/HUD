@@ -1,12 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Transaction } from '../types'
+import type { Transaction, ExpenseCategory } from '../types'
 
 interface FinanceState {
   balance: number
   transactions: Transaction[]
   addTopup: (amount: number, description: string) => void
-  addExpense: (amount: number, description: string) => void
+  addExpense: (amount: number, description: string, category?: ExpenseCategory) => void
   deleteTransaction: (id: string) => void
 }
 
@@ -25,11 +25,11 @@ export const useFinanceStore = create<FinanceState>()(
           ].slice(0, 100),
         })),
 
-      addExpense: (amount, description) =>
+      addExpense: (amount, description, category) =>
         set((s) => ({
           balance: s.balance - amount,
           transactions: [
-            { id: crypto.randomUUID(), type: 'expense' as const, amount, description, date: new Date().toISOString() },
+            { id: crypto.randomUUID(), type: 'expense' as const, amount, description, category, date: new Date().toISOString() },
             ...s.transactions,
           ].slice(0, 100),
         })),
