@@ -40,7 +40,6 @@ const CATEGORIES: CategoryOption[] = [
     ],
   },
   { id: 'фібі', label: 'Фібі (Троглодіт)' },
-  { id: 'коська', label: 'Коська', hasNote: true },
   { id: 'інше', label: 'Інше', hasNote: true },
 ]
 
