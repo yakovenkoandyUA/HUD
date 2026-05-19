@@ -1,28 +1,45 @@
 .screen { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
+/* ── Pill tabs ────────────────────────────────────────────────── */
+
+.tabBar {
+  background: var(--bg2);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
 .tabs {
   display: flex;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg2);
+  background: var(--bg3);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 2px;
 }
 
 .tab {
   flex: 1;
-  padding: 12px;
+  padding: 7px 12px;
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text3);
-  transition: color 0.15s;
-  border-bottom: 2px solid transparent;
+  border-radius: 999px;
+  transition: color 0.18s, background 0.18s;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 
-.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+.tab:hover { color: var(--text2); }
+
+.tabActive {
+  background: var(--accent);
+  color: #fff;
 }
+
+/* ── Content ──────────────────────────────────────────────────── */
 
 .content {
   flex: 1;
@@ -33,7 +50,12 @@
   gap: 12px;
 }
 
-.list { list-style: none; }
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .lessonList {
   list-style: none;
@@ -42,13 +64,54 @@
   gap: 8px;
 }
 
-.empty {
+/* ── Empty states ─────────────────────────────────────────────── */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 0 16px;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  color: var(--text3);
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.emptyIconLg {
+  font-size: 48px;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.emptyTitle {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+}
+
+.emptyHint {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text3);
+  opacity: 0.7;
+}
+
+.emptySimple {
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--text3);
   text-align: center;
   padding: 24px 0;
 }
+
+/* ── Forms ────────────────────────────────────────────────────── */
 
 .taskForm { display: flex; flex-direction: column; gap: 12px; }
 
@@ -67,6 +130,7 @@
   background: var(--surface2);
   color: var(--text2);
   border: 1px solid var(--border2);
+  cursor: pointer;
   transition: background 0.15s;
 }
 

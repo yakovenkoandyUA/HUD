@@ -4,39 +4,6 @@
   gap: 12px;
 }
 
-/* Sub-tabs */
-.subTabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg3);
-  border-radius: var(--radius);
-  padding: 3px;
-}
-
-.subTab {
-  flex: 1;
-  padding: 7px 12px;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text3);
-  border-radius: 7px;
-  transition: color 0.15s, background 0.15s;
-  cursor: pointer;
-  border: none;
-  background: transparent;
-}
-
-.subTab:hover { color: var(--text2); }
-
-.subTabActive {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
-}
-
 /* Table */
 .table {
   display: flex;
@@ -136,21 +103,33 @@
   text-overflow: ellipsis;
 }
 
+.teamRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.teamDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .pts {
   font-family: var(--font-display);
   font-size: 16px;
   color: var(--text);
   flex-shrink: 0;
-  min-width: 40px;
+  min-width: 44px;
   text-align: right;
+  white-space: nowrap;
 }
 
-.ptsLabel {
+.ptsSmall {
   font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--text3);
-  display: block;
-  text-align: right;
+  font-size: 0.6em;
+  opacity: 0.5;
 }
 
 /* Skeleton */
@@ -196,6 +175,16 @@
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text3);
+}
+
+.errorDetail {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--negative);
+  text-align: center;
+  max-width: 280px;
+  word-break: break-all;
+  opacity: 0.8;
 }
 
 .retryBtn {

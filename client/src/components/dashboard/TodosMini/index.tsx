@@ -76,14 +76,7 @@ const TodosMini: React.FC = () => {
       </div>
 
       {pending.length === 0 && !showForm && (
-        <div className={styles.empty}>
-          <svg className={styles.emptyIcon} width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3"/>
-            <path d="M10 16.5l4 4 8-8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className={styles.emptyTitle}>СПИСОК ЧИСТИЙ</span>
-          <span className={styles.emptyHint}>Нічого не потрібно. Поки що.</span>
-        </div>
+        <span className={styles.emptyText}>Запасів немає</span>
       )}
 
       {pending.length > 0 && (

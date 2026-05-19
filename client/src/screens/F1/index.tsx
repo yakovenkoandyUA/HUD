@@ -7,8 +7,16 @@ import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getNextRound } from '../../utils/f1'
 import styles from './F1.module.css'
 
+type F1Tab = 'calendar' | 'drivers' | 'constructors'
+
+const TABS: { id: F1Tab; label: string }[] = [
+  { id: 'calendar',     label: 'Календар' },
+  { id: 'drivers',      label: 'Пілоти'   },
+  { id: 'constructors', label: 'Команди'  },
+]
+
 const F1Screen: React.FC = () => {
-  const [tab, setTab] = useState<'calendar' | 'championship'>('calendar')
+  const [tab, setTab] = useState<F1Tab>('calendar')
   const nextRace = getNextRace(F1_SEASON_2026)
   const nextRound = getNextRound(F1_SEASON_2026)
 
@@ -23,26 +31,23 @@ const F1Screen: React.FC = () => {
         )}
 
         <div className={styles.tabs}>
-          <button
-            className={`${styles.tab} ${tab === 'calendar' ? styles.tabActive : ''}`}
-            onClick={() => setTab('calendar')}
-          >
-            Календар
-          </button>
-          <button
-            className={`${styles.tab} ${tab === 'championship' ? styles.tabActive : ''}`}
-            onClick={() => setTab('championship')}
-          >
-            Чемпіонат
-          </button>
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {tab === 'calendar' && (
           <RaceCalendarList races={F1_SEASON_2026} nextRound={nextRound} />
         )}
 
-        {tab === 'championship' && (
-          <ChampionshipTable />
+        {(tab === 'drivers' || tab === 'constructors') && (
+          <ChampionshipTable tab={tab} />
         )}
       </div>
     </div>

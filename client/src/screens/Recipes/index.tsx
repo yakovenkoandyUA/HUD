@@ -11,12 +11,11 @@ import { useUiStore } from '../../store/uiStore'
 import type { Recipe } from '../../types'
 import styles from './Recipes.module.css'
 
-type Tab = 'meal' | 'my'
+const GHOST_TITLES = ['Паста карбонара', 'Курка теріякі', 'Грецький салат']
 
 const Recipes: React.FC = () => {
   const { mealOfWeek, mealLoading, mealError, recipes, fetchMealOfWeek, addRecipe, updateRecipe, deleteRecipe } = useRecipesStore()
   const { showToast } = useUiStore()
-  const [tab, setTab] = useState<Tab>('meal')
   const [showMealDetail, setShowMealDetail] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
@@ -54,75 +53,85 @@ const Recipes: React.FC = () => {
     <div className={styles.screen}>
       <TopBar title="Рецепти" />
 
-      <div className={styles.tabs}>
-        <button className={`${styles.tab} ${tab === 'meal' ? styles.active : ''}`} onClick={() => setTab('meal')}>
-          Блюдо тижня
-        </button>
-        <button className={`${styles.tab} ${tab === 'my' ? styles.active : ''}`} onClick={() => setTab('my')}>
-          Мої рецепти
-        </button>
-      </div>
-
       <div className={styles.content}>
-        {tab === 'meal' && (
-          <>
-            {mealLoading && (
-              <div className={styles.loadingWrap}>
-                <div className={styles.spinner} />
-                <p className={styles.loadingText}>Завантаження блюда...</p>
-              </div>
-            )}
-            {mealError && !mealLoading && (
-              <div className={styles.errorWrap}>
-                <p className={styles.errorText}>Не вдалось завантажити блюдо</p>
-                <Button onClick={handleRefresh}>Спробувати знову</Button>
-              </div>
-            )}
-            {mealOfWeek && !mealLoading && (
-              <MealBanner
-                meal={mealOfWeek}
-                onView={() => setShowMealDetail(true)}
-                onRefresh={handleRefresh}
-              />
-            )}
-            <div className={styles.weekHint}>
-              <span className={styles.weekLabel}>Оновлюється щотижня</span>
-            </div>
-          </>
+
+        {/* ── Meal of the week ── */}
+        {mealLoading && (
+          <div className={styles.loadingWrap}>
+            <div className={styles.spinner} />
+            <p className={styles.loadingText}>Завантаження блюда...</p>
+          </div>
+        )}
+        {mealError && !mealLoading && (
+          <div className={styles.errorWrap}>
+            <p className={styles.errorText}>Не вдалось завантажити блюдо</p>
+            <Button onClick={handleRefresh}>Спробувати знову</Button>
+          </div>
+        )}
+        {mealOfWeek && !mealLoading && (
+          <MealBanner
+            meal={mealOfWeek}
+            onView={() => setShowMealDetail(true)}
+            onRefresh={handleRefresh}
+          />
         )}
 
-        {tab === 'my' && (
-          <>
-            <Button fullWidth onClick={() => { setEditingRecipe(null); setShowForm(true) }}>
-              Додати рецепт
-            </Button>
-            {recipes.length === 0 ? (
-              <div className={styles.empty}>
-                <p className={styles.emptyTitle}>Рецептів ще немає</p>
-                <p className={styles.emptyHint}>Додай свій перший рецепт</p>
+        {/* ── My recipes section ── */}
+        <div className={styles.sectionHead}>
+          <span className={styles.sectionTitle}>Мої рецепти</span>
+          {recipes.length > 0 && (
+            <span className={styles.sectionCount}>{recipes.length}</span>
+          )}
+        </div>
+
+        {recipes.length === 0 ? (
+          <div className={styles.ghostWrap}>
+            {GHOST_TITLES.map((title) => (
+              <div key={title} className={styles.ghostCard}>
+                <div className={styles.ghostImg} />
+                <div className={styles.ghostBody}>
+                  <div className={styles.ghostTitle}>{title}</div>
+                  <div className={styles.ghostLine} />
+                  <div className={styles.ghostLine} style={{ width: '60%' }} />
+                </div>
               </div>
-            ) : (
-              <div className={styles.recipeList}>
-                {recipes.map((r) => (
-                  <RecipeCard
-                    key={r.id}
-                    recipe={r}
-                    onEdit={() => handleEdit(r)}
-                    onDelete={() => handleDelete(r.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </>
+            ))}
+            <div className={styles.ghostOverlay}>
+              <span className={styles.ghostMsg}>Додай свій перший рецепт</span>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.recipeList}>
+            {recipes.map((r) => (
+              <RecipeCard
+                key={r.id}
+                recipe={r}
+                onEdit={() => handleEdit(r)}
+                onDelete={() => handleDelete(r.id)}
+              />
+            ))}
+          </div>
         )}
       </div>
 
+      {/* ── FAB ── */}
+      <button
+        type="button"
+        className={styles.fab}
+        onClick={() => { setEditingRecipe(null); setShowForm(true) }}
+        aria-label="Додати рецепт"
+      >
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M3 11h16M11 3v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </button>
+
+      {/* ── Modals ── */}
       {mealOfWeek && (
         <Modal isOpen={showMealDetail} onClose={() => setShowMealDetail(false)} title={mealOfWeek.name}>
           <MealDetail meal={mealOfWeek} />
         </Modal>
       )}
-
       <Modal
         isOpen={showForm}
         onClose={() => { setShowForm(false); setEditingRecipe(null) }}

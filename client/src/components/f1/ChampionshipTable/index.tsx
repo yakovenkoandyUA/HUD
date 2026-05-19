@@ -5,12 +5,30 @@ import styles from './ChampionshipTable.module.css'
 /**
  * ChampionshipTable
  * -----------------
- * Таблиця чемпіонату F1: пілоти (з фото) та команди.
- * Дані через OpenF1 (drivers + headshot_url) і Jolpica (constructors).
+ * Таблиця чемпіонату F1: пілоти (з фото) або команди.
+ * Дані через Jolpica (standings) + OpenF1 (headshots).
  * Денне кешування у sessionStorage.
  *
- * Props: none — fetches its own data
+ * Props:
+ * @prop {'drivers' | 'constructors'} tab — яка таблиця відображається (контролюється батьківським екраном)
  */
+
+const TEAM_COLORS: Record<string, string> = {
+  'Mercedes':     '#00D2BE',
+  'Ferrari':      '#E8002D',
+  'McLaren':      '#FF8000',
+  'Red Bull':     '#3671C6',
+  'Alpine':       '#FF87BC',
+  'Aston Martin': '#229971',
+  'Williams':     '#64C4FF',
+  'Haas':         '#B6BABD',
+  'Kick Sauber':  '#52E252',
+  'RB':           '#6692FF',
+}
+
+interface ChampionshipTableProps {
+  tab: 'drivers' | 'constructors'
+}
 
 function rowClass(pos: number): string {
   if (pos === 1) return `${styles.row} ${styles.gold}`
@@ -87,8 +105,7 @@ function Skeleton() {
   )
 }
 
-const ChampionshipTable: React.FC = () => {
-  const [subTab, setSubTab] = useState<'drivers' | 'constructors'>('drivers')
+const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
   const { drivers, constructors, loading, error, refetch } = useChampionshipStandings()
 
   if (loading) return <Skeleton />
@@ -97,6 +114,7 @@ const ChampionshipTable: React.FC = () => {
     return (
       <div className={styles.error}>
         <span className={styles.errorText}>Не вдалося завантажити дані</span>
+        <span className={styles.errorDetail}>{error}</span>
         <button className={styles.retryBtn} onClick={refetch}>Спробувати знову</button>
       </div>
     )
@@ -104,22 +122,7 @@ const ChampionshipTable: React.FC = () => {
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.subTabs}>
-        <button
-          className={`${styles.subTab} ${subTab === 'drivers' ? styles.subTabActive : ''}`}
-          onClick={() => setSubTab('drivers')}
-        >
-          Пілоти
-        </button>
-        <button
-          className={`${styles.subTab} ${subTab === 'constructors' ? styles.subTabActive : ''}`}
-          onClick={() => setSubTab('constructors')}
-        >
-          Команди
-        </button>
-      </div>
-
-      {subTab === 'drivers' && (
+      {tab === 'drivers' && (
         <div className={styles.table}>
           {drivers.length === 0 && (
             <p className={styles.emptyText}>Дані відсутні</p>
@@ -130,18 +133,23 @@ const ChampionshipTable: React.FC = () => {
               <DriverAvatar driver={d} />
               <div className={styles.info}>
                 <span className={styles.name}>{d.full_name}</span>
-                <span className={styles.team}>{d.team_name}</span>
+                <div className={styles.teamRow}>
+                  <span
+                    className={styles.teamDot}
+                    style={{ background: TEAM_COLORS[d.team_name] ?? 'var(--border2)' }}
+                  />
+                  <span className={styles.team}>{d.team_name}</span>
+                </div>
               </div>
               <div className={styles.pts}>
-                {d.points}
-                <span className={styles.ptsLabel}>PTS</span>
+                {d.points} <small className={styles.ptsSmall}>pts</small>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {subTab === 'constructors' && (
+      {tab === 'constructors' && (
         <div className={styles.table}>
           {constructors.length === 0 && (
             <p className={styles.emptyText}>Дані відсутні</p>
@@ -150,11 +158,16 @@ const ChampionshipTable: React.FC = () => {
             <div key={c.team_name} className={rowClass(c.position)}>
               <span className={`${styles.pos} ${posClass(c.position)}`}>{c.position}</span>
               <div className={styles.info}>
-                <span className={styles.name}>{c.team_name}</span>
+                <div className={styles.teamRow}>
+                  <span
+                    className={styles.teamDot}
+                    style={{ background: TEAM_COLORS[c.team_name] ?? 'var(--border2)' }}
+                  />
+                  <span className={styles.name}>{c.team_name}</span>
+                </div>
               </div>
               <div className={styles.pts}>
-                {c.points}
-                <span className={styles.ptsLabel}>PTS</span>
+                {c.points} <small className={styles.ptsSmall}>pts</small>
               </div>
             </div>
           ))}

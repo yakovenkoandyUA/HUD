@@ -1,18 +1,32 @@
 .item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  transition: background 0.15s;
 }
-.item:last-child { border-bottom: none; }
+
+.item:hover { background: rgba(255, 255, 255, 0.07); }
+
+.done {
+  opacity: 0.55;
+}
 
 .done .title {
   text-decoration: line-through;
   color: var(--text3);
 }
 
-.check { padding: 4px; }
+.check {
+  padding: 0;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
 
 .checkBox {
   display: flex;
@@ -21,10 +35,11 @@
   width: 20px;
   height: 20px;
   border: 2px solid var(--border2);
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: 5px;
+  font-size: 11px;
   color: var(--second);
-  transition: border-color 0.15s;
+  background: var(--surface);
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .done .checkBox {
@@ -36,20 +51,31 @@
   flex: 1;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .title {
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .del {
   font-size: 12px;
   color: var(--text3);
   padding: 4px;
+  flex-shrink: 0;
   transition: color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
+
 .del:hover { color: var(--accent); }

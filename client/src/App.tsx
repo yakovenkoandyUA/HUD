@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import BottomNav from './components/layout/BottomNav'
 import ToastContainer from './components/ui/Toast'
-import WeatherSplash from './components/ui/WeatherSplash'
+import CitySplash from './components/ui/CitySplash'
 import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
 import F1Screen from './screens/F1'
@@ -29,7 +29,6 @@ const AnimatedRoutes: React.FC = () => {
   )
 }
 
-// Hide bottom nav on drill-down pages that have their own back button
 const NavGuard: React.FC = () => {
   const { pathname } = useLocation()
   if (/^\/f1\/\d+$/.test(pathname)) return null
@@ -37,14 +36,17 @@ const NavGuard: React.FC = () => {
 }
 
 const App: React.FC = () => {
-  const [splashDone, setSplashDone] = useState(false)
+  // Show splash only once per browser session
+  const [splashDone, setSplashDone] = useState(
+    () => sessionStorage.getItem('hud-city-splash') === '1'
+  )
 
   return (
     <BrowserRouter>
       <AnimatedRoutes />
       <NavGuard />
       <ToastContainer />
-      {!splashDone && <WeatherSplash onDone={() => setSplashDone(true)} />}
+      {!splashDone && <CitySplash onDone={() => setSplashDone(true)} />}
     </BrowserRouter>
   )
 }

@@ -5,7 +5,7 @@
 }
 
 .tile {
-  background: var(--surface);
+  /* background: var(--surface); */
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 14px;

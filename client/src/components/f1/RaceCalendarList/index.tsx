@@ -30,19 +30,21 @@ const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound })
         return (
           <li
             key={race.round}
-            className={`${styles.item} ${isPast ? styles.past : ''} ${isNext ? styles.next : ''}`}
+            className={`${styles.item} ${isNext ? styles.next : ''}`}
             onClick={() => navigate(`/f1/${race.round}`)}
           >
-            <span className={styles.round}>{String(race.round).padStart(2, '0')}</span>
-            <span className={styles.flag}>{race.flag}</span>
+            <span className={`${styles.round} ${isPast ? styles.roundPast : ''}`}>
+              {isPast ? '✓' : String(race.round).padStart(2, '0')}
+            </span>
+            <span className={`${styles.flag} ${isPast ? styles.dimPast : ''}`}>{race.flag}</span>
             <div className={styles.info}>
-              <span className={styles.name}>{race.name}</span>
-              <span className={styles.circuit}>{race.circuit}</span>
+              <span className={`${styles.name} ${isPast ? styles.dimPast : ''}`}>{race.name}</span>
+              <span className={`${styles.circuit} ${isPast ? styles.dimPast : ''}`}>{race.circuit}</span>
             </div>
-            <span className={styles.date}>
+            <span className={`${styles.date} ${isPast ? styles.dimPast : ''}`}>
               {new Date(race.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
             </span>
-            <div className={styles.trackWrap}>
+            <div className={`${styles.trackWrap} ${isPast ? styles.trackPast : ''}`}>
               {race.trackSvg ? (
                 <TrackSVG
                   src={race.trackSvg}

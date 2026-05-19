@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import styles from './Modal.module.css'
 
 /**
  * Modal
  * -----
  * Оверлей-модалка. Закривається по кліку на тло або Escape.
+ * На мобільних: при фокусі на input/textarea — автоскрол щоб не перекривалось клавіатурою.
  *
  * Props:
  * @prop {boolean}         isOpen
@@ -24,6 +25,7 @@ const ANIM_MS = 420
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
   const [mounted, setMounted] = useState(isOpen)
   const [visible, setVisible] = useState(isOpen)
+  const modalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -43,6 +45,21 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
+  // Scroll focused input into view when keyboard opens on mobile
+  useEffect(() => {
+    const el = modalRef.current
+    if (!el) return
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 300)
+    }
+    el.addEventListener('focusin', handleFocusIn)
+    return () => el.removeEventListener('focusin', handleFocusIn)
+  }, [mounted])
+
   if (!mounted) return null
 
   return (
@@ -51,6 +68,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
       onClick={onClose}
     >
       <div
+        ref={modalRef}
         className={`${styles.modal} ${visible ? styles.modalVisible : styles.modalHidden}`}
         onClick={(e) => e.stopPropagation()}
       >

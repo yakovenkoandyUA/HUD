@@ -7,7 +7,6 @@ export type ExpenseCategory =
   | 'метро'
   | 'транспорт'
   | 'фібі'
-  | 'коська'
   | 'інше'
 
 export interface Transaction {

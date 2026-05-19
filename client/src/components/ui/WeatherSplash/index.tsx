@@ -7,7 +7,6 @@ import styles from './WeatherSplash.module.css'
  * Вступна анімація при запуску застосунку.
  * Показує логотип HUD та поточну дату.
  * Анімація: fade-in 0.3s → показ 1.5s → fade-out 0.3s.
- * Місце під SVG анімацію зарезервовано — TODO: додати пізніше.
  *
  * Props:
  * @prop {() => void} onDone — колбек після завершення анімації
@@ -35,14 +34,11 @@ const WeatherSplash: React.FC<WeatherSplashProps> = ({ onDone }) => {
   return (
     <div className={`${styles.overlay} ${styles[phase]}`} aria-hidden="true">
       <div className={styles.logo}>HUD</div>
-
-      {/* TODO: SVG анімація */}
       <div className={styles.body}>
         <div className={styles.loading}>
           <span /><span /><span />
         </div>
       </div>
-
       <div className={styles.date}>{formatDate()}</div>
     </div>
   )

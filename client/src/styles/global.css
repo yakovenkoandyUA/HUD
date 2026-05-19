@@ -156,6 +156,13 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+button, a, [role="button"], input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
 html, body, #root {
@@ -192,7 +199,9 @@ button {
   color: inherit;
 }
 
-input, textarea {
+input, textarea, select {
   font: inherit;
   color: inherit;
+  /* Prevent Safari iOS auto-zoom on focus (triggers when font-size < 16px) */
+  font-size: max(16px, 1em);
 }
