@@ -19,6 +19,7 @@ interface CitySplashProps {
   onDone: () => void
 }
 
+// const MODEL_PATH = '/models/city.glb'
 const MODEL_PATH = '/models/city.glb'
 
 const CitySplash: React.FC<CitySplashProps> = ({ onDone }) => {

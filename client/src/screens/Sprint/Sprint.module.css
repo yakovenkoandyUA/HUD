@@ -32,7 +32,7 @@
   cursor: pointer;
 }
 
-.tab:hover { color: var(--text2); }
+/* .tab:hover { color: var(--text2); } */
 
 .tabActive {
   background: var(--accent);

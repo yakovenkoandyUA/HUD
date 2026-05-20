@@ -9,7 +9,8 @@
   gap: 8px;
   background:
     linear-gradient(to bottom, transparent 20%, rgba(13, 13, 13, 0.92) 100%),
-    url('/f1-bg.jpg') 80px 360px / cover ;
+    url('/f1-bg.jpg') 0 -250px / cover ;
+    background-repeat: no-repeat;
 }
 
 /* Track watermark — top-right, static, ghosted */

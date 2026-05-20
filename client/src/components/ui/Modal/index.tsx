@@ -30,7 +30,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
   useEffect(() => {
     if (isOpen) {
       setMounted(true)
-      requestAnimationFrame(() => setVisible(true))
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
       setVisible(false)
       const t = setTimeout(() => setMounted(false), ANIM_MS)
