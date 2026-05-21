@@ -2,7 +2,9 @@ import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import BottomNav from './components/layout/BottomNav'
 import ToastContainer from './components/ui/Toast'
+import PwaInstallBanner from './components/ui/PwaInstallBanner'
 import CitySplash from './components/ui/CitySplash'
+import { usePwaInstall } from './hooks/usePwaInstall'
 import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
 import F1Screen from './screens/F1'
@@ -36,14 +38,23 @@ const NavGuard: React.FC = () => {
 }
 
 const App: React.FC = () => {
-  // Show splash only once per browser session
   const [splashDone, setSplashDone] = useState(
     () => sessionStorage.getItem('hud-city-splash') === '1'
   )
+  const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
+
+  const showBanner = !isDismissed && (isInstallable || isIOS)
 
   return (
     <BrowserRouter>
       <AnimatedRoutes />
+      {showBanner && (
+        <PwaInstallBanner
+          isIOS={isIOS}
+          onInstall={promptInstall}
+          onDismiss={dismiss}
+        />
+      )}
       <NavGuard />
       <ToastContainer />
       {!splashDone && <CitySplash onDone={() => setSplashDone(true)} />}

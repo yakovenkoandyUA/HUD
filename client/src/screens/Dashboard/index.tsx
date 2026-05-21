@@ -1,12 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import TopBar from '../../components/layout/TopBar'
 import HeroCard from '../../components/dashboard/HeroCard'
 import SprintMini from '../../components/dashboard/SprintMini'
 import TodosMini from '../../components/dashboard/TodosMini'
 import LessonsMini from '../../components/dashboard/LessonsMini'
+import NasaApod from '../../components/dashboard/NasaApod'
 import Modal from '../../components/ui/Modal'
 // import CarHero from '../../components/dashboard/CarHero'
 import ExpenseForm from '../../components/finance/ExpenseForm'
+import { useNasaApod } from '../../hooks/useNasaApod'
 import { useFinanceStore } from '../../store/financeStore'
 import { useSprintStore } from '../../store/sprintStore'
 import { useLessonStore } from '../../store/lessonStore'
@@ -24,6 +26,13 @@ const Dashboard: React.FC = () => {
   const { lessons } = useLessonStore()
   const { showToast, theme } = useUiStore()
   const [showExpense, setShowExpense] = useState(false)
+  const [showApod, setShowApod] = useState(false)
+  const { data: apodData, loading: apodLoading, error: apodError, fetchApod } = useNasaApod()
+
+  const handleLogoLongPress = useCallback(() => {
+    setShowApod(true)
+    fetchApod()
+  }, [fetchApod])
   const isRetro = theme === 'retro'
   const bgRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -58,7 +67,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className={styles.screen}>
       {isRetro && <div ref={bgRef} className={styles.bg} />}
-      <TopBar showClock />
+      <TopBar showClock onLogoLongPress={handleLogoLongPress} />
       <div ref={contentRef} className={styles.content}>
         <HeroCard
           balance={balance}
@@ -88,6 +97,14 @@ const Dashboard: React.FC = () => {
       <Modal isOpen={showExpense} onClose={() => setShowExpense(false)} title="Додати витрату">
         <ExpenseForm onExpense={handleExpense} />
       </Modal>
+
+      <NasaApod
+        isOpen={showApod}
+        onClose={() => setShowApod(false)}
+        data={apodData}
+        loading={apodLoading}
+        error={apodError}
+      />
     </div>
   )
 }
