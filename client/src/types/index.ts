@@ -76,3 +76,27 @@ export interface Recipe {
   steps: string
   imageUrl?: string
 }
+
+export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'
+export type WatchlistStatus = 'want' | 'watching' | 'watched' | 'dropped'
+
+export interface WatchlistItem {
+  id: string
+  tmdbId: number
+  title: string
+  originalTitle: string
+  category: WatchlistCategory
+  status: WatchlistStatus
+  posterPath: string | null
+  backdropPath: string | null
+  overview: string
+  year: string
+  genres: string[]
+  rating: number | null
+  seasonReminder: boolean
+  reminderDate: string | null
+  addedAt: string
+  authors?: string[]
+  pageCount?: number
+  thumbnail?: string
+}

@@ -1,105 +1,117 @@
-.card { padding: 16px; display: flex; flex-direction: column; gap: 12px; background: transparent; border-color: var(--border); }
+.card {
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	background: transparent;
+	background: var(--surface);
+	/* background: linear-gradient(
+180deg, rgba(224, 16, 46, 0.06) 0%, var(--surface) 110%); */
+	border-color: var(--border);
+}
 
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 }
 
 .label {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text3);
+	font-family: var(--font-ui);
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: var(--text3);
 }
 
 .count {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--second);
-  background: var(--second-soft);
-  padding: 2px 8px;
-  border-radius: 20px;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--second);
+	background: var(--second-soft);
+	padding: 2px 8px;
+	border-radius: 20px;
 }
 
 /* ── Progress bar ────────────────────────────────────────────── */
 
 .barTrack {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--surface2);
-  overflow: hidden;
+	height: 6px;
+	border-radius: 999px;
+	background: var(--surface2);
+	overflow: hidden;
 }
 
 .barFill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--accent);
-  transition: width 0.4s ease;
+	height: 100%;
+	border-radius: 999px;
+	background: var(--accent);
+	transition: width 0.4s ease;
 }
 
 /* ── Task list ───────────────────────────────────────────────── */
 
 .list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
 }
 
 .item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
 }
 
 .circle {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--text3);
-  transition: border-color 0.15s, background 0.15s;
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	border: 2px solid var(--text3);
+	transition:
+		border-color 0.15s,
+		background 0.15s;
 }
 
 .circleDone {
-  background: var(--accent);
-  border-color: var(--accent);
+	background: var(--accent);
+	border-color: var(--accent);
 }
 
 .title {
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--text2);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.4;
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--text2);
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height: 1.4;
 }
 
 .tag {
-  flex-shrink: 0;
-  font-family: var(--font-ui);
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  letter-spacing: 0.04em;
+	flex-shrink: 0;
+	font-family: var(--font-ui);
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--accent-soft);
+	color: var(--accent);
+	letter-spacing: 0.04em;
 }
 
 /* ── Empty ───────────────────────────────────────────────────── */
 
 .empty {
-  font-family: var(--font-ui);
-  font-size: 12px;
-  color: var(--text3);
-  text-align: center;
-  padding: 4px 0;
+	font-family: var(--font-ui);
+	font-size: 12px;
+	color: var(--text3);
+	text-align: center;
+	padding: 4px 0;
 }

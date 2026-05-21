@@ -4,6 +4,22 @@
   flex: 1;
   min-height: 0;
   position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.bg {
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: 0;
+  right: 0;
+  background-image: url('/retro.jpg');
+  background-size: cover;
+  background-position: center;
+  will-change: transform;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .content {

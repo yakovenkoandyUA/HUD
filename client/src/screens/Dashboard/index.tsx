@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import TopBar from '../../components/layout/TopBar'
 import HeroCard from '../../components/dashboard/HeroCard'
 import SprintMini from '../../components/dashboard/SprintMini'
 import TodosMini from '../../components/dashboard/TodosMini'
 import LessonsMini from '../../components/dashboard/LessonsMini'
 import Modal from '../../components/ui/Modal'
-import CarHero from '../../components/dashboard/CarHero'
+// import CarHero from '../../components/dashboard/CarHero'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import { useFinanceStore } from '../../store/financeStore'
 import { useSprintStore } from '../../store/sprintStore'
@@ -22,8 +22,22 @@ const Dashboard: React.FC = () => {
   const { balance, transactions, addExpense } = useFinanceStore()
   const { tasks } = useSprintStore()
   const { lessons } = useLessonStore()
-  const { showToast } = useUiStore()
+  const { showToast, theme } = useUiStore()
   const [showExpense, setShowExpense] = useState(false)
+  const isRetro = theme === 'retro'
+  const bgRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const content = contentRef.current
+    const bg = bgRef.current
+    if (!content || !bg) return
+    const onScroll = () => {
+      bg.style.transform = `translateY(${-content.scrollTop * 0.3}px)`
+    }
+    content.addEventListener('scroll', onScroll, { passive: true })
+    return () => content.removeEventListener('scroll', onScroll)
+  }, [isRetro])
 
   const nextRace = getNextRace(F1_SEASON_2026)
   const dailyBudget = calcDailyBudget(balance)
@@ -43,8 +57,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className={styles.screen}>
+      {isRetro && <div ref={bgRef} className={styles.bg} />}
       <TopBar showClock />
-      <div className={styles.content}>
+      <div ref={contentRef} className={styles.content}>
         <HeroCard
           balance={balance}
           dailyBudget={dailyBudget}
@@ -54,9 +69,9 @@ const Dashboard: React.FC = () => {
         <SprintMini tasks={weekTasks} />
         <TodosMini />
         <LessonsMini lessons={lessons} />
-        <div className={styles.heroWrap}>
+        {/* <div className={styles.heroWrap}>
           <CarHero />
-        </div>
+        </div> */}
       </div>
 
       <button

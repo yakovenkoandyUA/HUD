@@ -50,6 +50,8 @@
   --text2:  #9a8f82;
   --text3:  #5c5248;
 
+  --f1-back: #000;
+
   --positive:      #4E6851;
   --positive-soft: rgba(78, 104, 81, 0.15);
   --negative:      #B83A2D;
@@ -80,6 +82,8 @@
   --text:   #f0ece8;
   --text2:  #9ab0b8;
   --text3:  #8ea7ad;
+
+  --f1-back: #000;
 
   --positive:      #2A9D8F;
   --positive-soft: rgba(42, 157, 143, 0.15);
@@ -142,6 +146,8 @@
   --text:   #1a1a1a;
   --text2:  #6b6560;
   --text3:  #a09890;
+
+  --f1-back: #F5F0EB;
 
   --positive:      #2d6a4f;
   --positive-soft: rgba(45, 106, 79, 0.12);

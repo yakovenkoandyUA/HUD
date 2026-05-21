@@ -1,4 +1,30 @@
-.screen { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--f1-back);
+
+}
+
+/* Parallax background layer — 80% taller than container to have room to move */
+.bg {
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: 0;
+  right: 0;
+  background-image: url('/hero1.png');
+  background-size: 120%;
+  background-repeat: no-repeat;
+  background-position: center;
+  will-change: transform;
+  pointer-events: none;
+  z-index: -1;
+}
 
 .content {
   flex: 1;
