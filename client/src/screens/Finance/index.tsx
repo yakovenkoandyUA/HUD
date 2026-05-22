@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import TopBar from '../../components/layout/TopBar'
 import BalanceHero from '../../components/finance/BalanceHero'
 import TodayCard from '../../components/finance/TodayCard'
@@ -12,8 +12,17 @@ import Modal from '../../components/ui/Modal'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget } from '../../utils/finance'
+import { migrateTransactionsToBackend } from '../../utils/migrateToBackend'
+import { getToken } from '../../services/api'
 import type { ExpenseCategory } from '../../types'
 import styles from './Finance.module.css'
+
+const SYNC_COLORS: Record<string, string> = {
+  synced:  'var(--positive)',
+  syncing: 'var(--gold)',
+  error:   'var(--negative)',
+  local:   'var(--text3)',
+}
 
 const IconExpense: React.FC = () => (
   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
@@ -28,10 +37,16 @@ const IconTopup: React.FC = () => (
 )
 
 const Finance: React.FC = () => {
-  const { balance, transactions, addTopup, addExpense, deleteTransaction } = useFinanceStore()
+  const { balance, transactions, addTopup, addExpense, deleteTransaction, fetchTransactions, syncStatus } = useFinanceStore()
   const { showToast } = useUiStore()
   const [showTopup, setShowTopup] = useState(false)
   const [showExpense, setShowExpense] = useState(false)
+
+  useEffect(() => {
+    if (!getToken()) return
+    migrateTransactionsToBackend().then(() => fetchTransactions())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const daysLeft = getDaysLeftInMonth()
   const daysElapsed = getDaysElapsed()
@@ -72,7 +87,12 @@ const Finance: React.FC = () => {
 
   return (
 		<div className={styles.screen}>
-			<TopBar title="Фінанси" />
+			<TopBar title="Фінанси" right={
+        <span
+          title={syncStatus}
+          style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }}
+        />
+      } />
 			<div className={styles.content}>
 				<GoalsList />
 

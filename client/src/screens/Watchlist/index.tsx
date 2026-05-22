@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import TopBar from '../../components/layout/TopBar'
 import WatchlistHero from '../../components/watchlist/WatchlistHero'
 import WatchlistSearch from '../../components/watchlist/WatchlistSearch'
@@ -6,8 +6,14 @@ import WatchlistGrid from '../../components/watchlist/WatchlistGrid'
 import WatchlistDetail from '../../components/watchlist/WatchlistDetail'
 import { useWatchlistStore } from '../../store/watchlistStore'
 import { useUiStore } from '../../store/uiStore'
+import { migrateWatchlistToBackend } from '../../utils/migrateToBackend'
+import { getToken } from '../../services/api'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../types'
 import styles from './Watchlist.module.css'
+
+const SYNC_COLORS: Record<string, string> = {
+  synced: 'var(--positive)', syncing: 'var(--gold)', error: 'var(--negative)', local: 'var(--text3)',
+}
 
 type Tab = WatchlistCategory
 
@@ -19,9 +25,15 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const Watchlist: React.FC = () => {
-  const { items, addItem, setStatus, setRating, toggleReminder, deleteItem } = useWatchlistStore()
+  const { items, addItem, setStatus, setRating, toggleReminder, deleteItem, fetchWatchlist, syncStatus } = useWatchlistStore()
   const { showToast } = useUiStore()
   const [tab, setTab] = useState<Tab>('movie')
+
+  useEffect(() => {
+    if (!getToken()) return
+    migrateWatchlistToBackend().then(() => fetchWatchlist())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [selected, setSelected] = useState<WatchlistItem | null>(null)
 
   const watchingItems = useMemo(
@@ -86,7 +98,9 @@ const Watchlist: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <TopBar title="Незабутько" />
+      <TopBar title="Незабутько" right={
+        <span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />
+      } />
 
       {/* ── "Дивлюсь зараз" hero strip ── */}
       {watchingItems.length > 0 && (

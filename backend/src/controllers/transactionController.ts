@@ -2,8 +2,31 @@ import { Request, Response } from 'express'
 import Transaction from '../models/Transaction'
 
 export async function getAll(req: Request, res: Response): Promise<void> {
-  const items = await Transaction.find({ userId: req.userId }).sort({ date: -1 }).limit(100)
+  const { month } = req.query as { month?: string }
+  const query: Record<string, unknown> = { userId: req.userId }
+  if (month) query.date = { $regex: `^${month}` }
+  const items = await Transaction.find(query).sort({ date: -1 }).limit(1000)
   res.json(items)
+}
+
+export async function getStats(req: Request, res: Response): Promise<void> {
+  const { month } = req.query as { month?: string }
+  const query: Record<string, unknown> = { userId: req.userId }
+  if (month) query.date = { $regex: `^${month}` }
+
+  const items = await Transaction.find(query)
+
+  const totalIncome  = items.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+  const totalExpense = items.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+
+  const catMap = new Map<string, number>()
+  items
+    .filter(t => t.type === 'expense' && t.category)
+    .forEach(t => catMap.set(t.category, (catMap.get(t.category) ?? 0) + t.amount))
+
+  const byCategory = Array.from(catMap.entries()).map(([category, amount]) => ({ category, amount }))
+
+  res.json({ totalIncome, totalExpense, byCategory })
 }
 
 export async function create(req: Request, res: Response): Promise<void> {

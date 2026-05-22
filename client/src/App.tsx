@@ -5,6 +5,8 @@ import ToastContainer from './components/ui/Toast'
 import PwaInstallBanner from './components/ui/PwaInstallBanner'
 import CitySplash from './components/ui/CitySplash'
 import { usePwaInstall } from './hooks/usePwaInstall'
+import { useAuth } from './hooks/useAuth'
+import LoginScreen from './screens/Login'
 import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
 import F1Screen from './screens/F1'
@@ -42,8 +44,13 @@ const App: React.FC = () => {
     () => sessionStorage.getItem('hud-city-splash') === '1'
   )
   const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
+  const { isAuthenticated, login, loading, error } = useAuth()
 
   const showBanner = !isDismissed && (isInstallable || isIOS)
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={login} loading={loading} error={error} />
+  }
 
   return (
     <BrowserRouter>

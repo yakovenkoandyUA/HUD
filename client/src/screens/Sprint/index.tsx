@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import TopBar from '../../components/layout/TopBar'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import SprintProgress from '../../components/sprint/SprintProgress'
@@ -14,16 +14,28 @@ import { useSprintStore } from '../../store/sprintStore'
 import { useLessonStore } from '../../store/lessonStore'
 import { useUiStore } from '../../store/uiStore'
 import { getCurrentWeekStart } from '../../utils/sprint'
+import { migrateSprintToBackend } from '../../utils/migrateToBackend'
+import { getToken } from '../../services/api'
 import type { Lesson, SprintTask, TodoPriority } from '../../types'
 import styles from './Sprint.module.css'
+
+const SYNC_COLORS: Record<string, string> = {
+  synced: 'var(--positive)', syncing: 'var(--gold)', error: 'var(--negative)', local: 'var(--text3)',
+}
 
 type Tab = 'sprint' | 'lessons' | 'todo'
 
 const Sprint: React.FC = () => {
-  const { tasks, addTask, toggleTask, deleteTask, todos, addTodo, addTodos, toggleTodo, deleteTodo } = useSprintStore()
+  const { tasks, addTask, toggleTask, deleteTask, todos, addTodo, addTodos, toggleTodo, deleteTodo, fetchTasks, fetchTodos, syncStatus } = useSprintStore()
   const { lessons, addLesson, updateLesson, deleteLesson } = useLessonStore()
   const { showToast } = useUiStore()
   const [tab, setTab] = useState<Tab>('sprint')
+
+  useEffect(() => {
+    if (!getToken()) return
+    migrateSprintToBackend().then(() => Promise.all([fetchTasks(), fetchTodos()]))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [showAddTask, setShowAddTask] = useState(false)
   const [taskTitle, setTaskTitle] = useState('')
@@ -99,7 +111,9 @@ const Sprint: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <TopBar title="Sprint" />
+      <TopBar title="Sprint" right={
+        <span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />
+      } />
 
       {/* ── Pill tabs ── */}
       <div className={styles.tabBar}>

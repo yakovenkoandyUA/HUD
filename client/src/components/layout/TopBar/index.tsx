@@ -10,15 +10,16 @@ import styles from './TopBar.module.css'
  * Верхня панель: HUD логотип зліва, іконка теми (та опційно годинник) справа.
  *
  * Props:
- * @prop {string}    [title]            — назва поточного екрану
- * @prop {boolean}   [showClock]        — показати живий годинник (Dashboard)
- * @prop {() => void} [onLogoLongPress] — активує Easter egg (NASA APOD)
- *                                        і показує перший-раз підказку
+ * @prop {string}          [title]            — назва поточного екрану
+ * @prop {boolean}         [showClock]        — показати живий годинник (Dashboard)
+ * @prop {() => void}      [onLogoLongPress]  — активує Easter egg (NASA APOD)
+ * @prop {React.ReactNode} [right]            — додатковий вміст зліва від кнопки теми
  */
 interface TopBarProps {
   title?: string
   showClock?: boolean
   onLogoLongPress?: () => void
+  right?: React.ReactNode
 }
 
 function formatTime(d: Date): string {
@@ -41,7 +42,7 @@ const PaletteIcon: React.FC = () => (
 
 const HINT_KEY = 'hud_nasa_hint_shown'
 
-const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress }) => {
+const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) => {
   const [now, setNow] = useState(new Date())
   const [showPicker, setShowPicker] = useState(false)
   // const [hintPhase, setHintPhase] = useState<HintPhase>('hidden')
@@ -103,6 +104,7 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress }) => {
               <span className={styles.clockDay}>{formatDay(now)}</span>
             </div>
           )}
+          {right}
           <button
             type="button"
             className={styles.themeBtn}

@@ -29,6 +29,23 @@ export async function login(req: Request, res: Response): Promise<void> {
   res.json({ token })
 }
 
+export function verify(req: Request, res: Response): void {
+  const header = req.headers.authorization
+  if (!header?.startsWith('Bearer ')) {
+    res.status(401).json({ valid: false })
+    return
+  }
+  try {
+    const payload = jwt.verify(
+      header.slice(7),
+      process.env.JWT_SECRET!
+    ) as { userId: string }
+    res.json({ valid: true, userId: payload.userId })
+  } catch {
+    res.status(401).json({ valid: false })
+  }
+}
+
 export function me(req: Request, res: Response): void {
   res.json({ userId: req.userId })
 }

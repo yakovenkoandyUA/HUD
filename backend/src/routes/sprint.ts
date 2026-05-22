@@ -11,12 +11,12 @@ router.use(requireAuth)
 
 router.get('/tasks', getTasks)
 router.post('/tasks', createTask)
-router.put('/tasks/:id', updateTask)
+router.patch('/tasks/:id', updateTask)
 router.delete('/tasks/:id', removeTask)
 
 router.get('/todos', getTodos)
 router.post('/todos', createTodo)
-router.put('/todos/:id', updateTodo)
+router.patch('/todos/:id', updateTodo)
 router.delete('/todos/:id', removeTodo)
 
 export default router

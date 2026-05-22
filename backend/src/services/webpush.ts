@@ -1,14 +1,48 @@
-import webpush from 'web-push'
+import webpush, { PushSubscription, SendResult } from 'web-push'
 
 export function initWebPush(): void {
-  const pub = process.env.VAPID_PUBLIC_KEY
-  const priv = process.env.VAPID_PRIVATE_KEY
+  const pub   = process.env.VAPID_PUBLIC_KEY
+  const priv  = process.env.VAPID_PRIVATE_KEY
+  const email = process.env.VAPID_EMAIL || 'mailto:admin@hud.app'
   if (!pub || !priv) {
     console.warn('⚠️  VAPID keys not set — push notifications disabled')
     return
   }
-  webpush.setVapidDetails('mailto:admin@hud.app', pub, priv)
+  webpush.setVapidDetails(email, pub, priv)
   console.log('✅ Web Push initialized')
 }
 
-export { webpush }
+export async function sendNotification(
+  subscription: PushSubscription,
+  payload: { title: string; body: string; icon?: string; url?: string }
+): Promise<SendResult | null> {
+  try {
+    return await webpush.sendNotification(subscription, JSON.stringify(payload))
+  } catch (err: unknown) {
+    const status = (err as { statusCode?: number }).statusCode
+    if (status === 410 || status === 404) {
+      // Subscription expired — caller should delete it from DB
+      throw Object.assign(new Error('Subscription gone'), { expired: true })
+    }
+    console.error('Push send error:', err)
+    return null
+  }
+}
+
+export async function sendToAll(
+  subscriptions: Array<{ endpoint: string; keys: { p256dh: string; auth: string }; id: string }>,
+  payload: { title: string; body: string; icon?: string; url?: string },
+  onExpired?: (id: string) => Promise<void>
+): Promise<void> {
+  await Promise.allSettled(
+    subscriptions.map(async (sub) => {
+      try {
+        await sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload)
+      } catch (err: unknown) {
+        if ((err as { expired?: boolean }).expired && onExpired) {
+          await onExpired(sub.id)
+        }
+      }
+    })
+  )
+}

@@ -18,6 +18,7 @@ export interface IWatchlistItem extends Document {
   pageCount: number
   thumbnail: string
   userId: string
+  addedAt: string
 }
 
 const schema = new Schema<IWatchlistItem>({
@@ -37,7 +38,10 @@ const schema = new Schema<IWatchlistItem>({
   authors:       { type: [String], default: [] },
   pageCount:     { type: Number, default: 0 },
   thumbnail:     { type: String, default: '' },
-  userId:        { type: String, required: true, index: true },
+  userId:  { type: String, required: true, index: true },
+  addedAt: { type: String, default: () => new Date().toISOString() },
 }, { timestamps: true })
+
+schema.index({ userId: 1, category: 1 })
 
 export default model<IWatchlistItem>('WatchlistItem', schema)

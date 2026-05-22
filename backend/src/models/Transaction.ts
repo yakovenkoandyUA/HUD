@@ -18,4 +18,6 @@ const schema = new Schema<ITransaction>({
   userId:   { type: String, required: true, index: true },
 }, { timestamps: true })
 
+schema.index({ userId: 1, date: -1 })
+
 export default model<ITransaction>('Transaction', schema)
