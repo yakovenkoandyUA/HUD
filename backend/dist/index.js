@@ -19,7 +19,7 @@ const watchlist_1 = __importDefault(require("./routes/watchlist"));
 const goals_1 = __importDefault(require("./routes/goals"));
 const push_1 = __importDefault(require("./routes/push"));
 const app = (0, express_1.default)();
-const PORT = Number(process.env.PORT) || 4000;
+const PORT = Number(process.env.PORT) || 8080;
 // CORS fix v2
 app.use((0, cors_1.default)());
 // app.options('*', cors())

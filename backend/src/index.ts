@@ -16,7 +16,7 @@ import goalRoutes from './routes/goals'
 import pushRoutes from './routes/push'
 
 const app = express()
-const PORT = Number(process.env.PORT) || 4000
+const PORT = Number(process.env.PORT) || 8080
 
 // CORS fix v2
 app.use(cors())
