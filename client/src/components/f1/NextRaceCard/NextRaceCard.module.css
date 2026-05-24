@@ -9,7 +9,7 @@
   gap: 8px;
   background:
     linear-gradient(to bottom, transparent 20%, rgba(13, 13, 13, 0.92) 100%),
-    url('/f1-bg.jpg') 0 -250px / cover ;
+    url('/f1-bg.jpg') 0 -370px / cover ;
     background-repeat: no-repeat;
 }
 

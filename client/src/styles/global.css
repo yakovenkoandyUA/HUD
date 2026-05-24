@@ -7,7 +7,7 @@
   font-display: swap;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&family=Cinzel:wght@400;600;700;900&family=Press+Start+2P&display=swap');
 
 /* ── Layout & typography constants (theme-independent) ─────────────────────── */
 :root {
@@ -52,6 +52,9 @@
 
   --f1-back: #000;
 
+  --learning:      #5580b8;
+  --learning-soft: rgba(85, 128, 184, 0.13);
+
   --positive:      #4E6851;
   --positive-soft: rgba(78, 104, 81, 0.15);
   --negative:      #B83A2D;
@@ -85,6 +88,9 @@
 
   --f1-back: #000;
 
+  --learning:      #6a9fd4;
+  --learning-soft: rgba(106, 159, 212, 0.13);
+
   --positive:      #2A9D8F;
   --positive-soft: rgba(42, 157, 143, 0.15);
   --negative:      #E76F51;
@@ -115,6 +121,9 @@
   --text:   #f0ece8;
   --text2:  #9a9490;
   --text3:  #5a5652;
+
+  --learning:      #5b8af0;
+  --learning-soft: rgba(91, 138, 240, 0.13);
 
   --positive:      #2ecc71;
   --positive-soft: rgba(46, 204, 113, 0.12);
@@ -149,6 +158,9 @@
 
   --f1-back: #F5F0EB;
 
+  --learning:      #3d6ea8;
+  --learning-soft: rgba(61, 110, 168, 0.10);
+
   --positive:      #2d6a4f;
   --positive-soft: rgba(45, 106, 79, 0.12);
   --negative:      #C8102E;
@@ -156,6 +168,45 @@
 
   --font-display: 'Cormorant Garamond', 'Furore', serif;
 }
+
+/* ── HEROES 🏰 ─────────────────────────────────────────────────────────────── */
+[data-theme="heroes"] {
+  --bg:         #0d0f1a;
+  --bg2:        #121520;
+  --bg3:        #181c28;
+  --surface:    #1e2235;
+  --surface2:   #252a40;
+  --border:     #2e3450;
+  --border2:    #3a4260;
+
+  --accent:      #d4a017;
+  --accent-dim:  #9a7010;
+  --accent-glow: rgba(212, 160, 23, 0.30);
+  --accent-soft: rgba(212, 160, 23, 0.12);
+
+  --second:      #6a4fc8;
+  --second-soft: rgba(106, 79, 200, 0.20);
+
+  --gold:        #d4a017;
+  --gold-dim:    rgba(212, 160, 23, 0.15);
+
+  --text:   #e8d5a0;
+  --text2:  #a89060;
+  --text3:  #6a5830;
+
+  --f1-back: #000;
+
+  --learning:      #9975e0;
+  --learning-soft: rgba(153, 117, 224, 0.15);
+
+  --positive:      #4a9a4a;
+  --positive-soft: rgba(74, 154, 74, 0.15);
+  --negative:      #c83030;
+  --negative-soft: rgba(200, 48, 48, 0.12);
+
+  --font-display: 'Cinzel', 'Furore', serif;
+}
+
 
 /* ── Base reset ─────────────────────────────────────────────────────────────── */
 *, *::before, *::after {

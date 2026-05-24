@@ -786,7 +786,7 @@ setTimeout(() => {
 
 1. **Компонентний підхід** — кожен компонент в окремій папці з `index.tsx` і за потреби `*.module.css`
 2. **JSDoc перед кожним компонентом** — обов'язково, опис пропсів перед `interface`
-3. **Система тем** — 3 теми: RETRO (default), WARM, DARK. Перемикання через `data-theme` на `<html>`. Зберігається в `uiStore`
+3. **Система тем** — 5 тем: RETRO (default), WARM, DARK, JAPAN, HEROES. Перемикання через `data-theme` на `<html>`. Зберігається в `uiStore`
 4. **Семантичні CSS змінні** — завжди `var(--accent)`, `var(--positive)` тощо, ніколи хардкод hex
 5. **Furore** — логотип HUD, великі заголовки, числові hero-значення (баланс, відлік F1)
 6. **Символ ₴** — Barlow Condensed (Furore не підтримує), підібрати розмір щоб органічно виглядав
@@ -800,54 +800,53 @@ setTimeout(() => {
 
 ---
 
-## Статус реалізації (станом на 2026-05-19)
+## Статус реалізації (станом на 2026-05-24)
 
 **Зроблено:**
-- ✅ Scaffold, дизайн-система (4 теми), шрифти, CSS змінні
+- ✅ Scaffold, дизайн-система (5 тем: retro/warm/dark/japan/heroes), шрифти, CSS змінні
 - ✅ UI компоненти: Card, Button, Input, Badge, ProgressBar, Modal, Toast, PriorityBadge
-- ✅ Layout: TopBar, BottomNav, ThemePicker
-- ✅ Dashboard: BalanceMini, NextRaceMini, SprintMini, LessonsMini, TodosMini, MealMini, NasaApod, CarHero (3D)
+- ✅ Layout: TopBar, BottomNav, ThemePicker (2×2 grid + heroes картка)
+- ✅ Dashboard: HeroCard (3D McLaren), SprintMini, LessonsMini, TodosMini, MealMini; NASA APOD через довгий тап на логотип
 - ✅ Finance: BalanceHero, TodayCard, StatsGrid, TransactionList, ShoppingTracker, GoalsList
 - ✅ F1: NextRaceCard (з TrackSVG draw-path), RaceCalendarList, RaceDetail, ChampionshipTable (пілоти з фото + команди), McLarenViewer
 - ✅ Sprint: таби Спрінти / Список покупок / Уроки; PriorityBadge маркери; режим одна/список
 - ✅ Recipes: MealBanner (TheMealDB, кеш по тижню), MealDetail, RecipeCard, RecipeForm
+- ✅ Watchlist: екран `/watchlist` з категоріями movie/series/anime/book, пошук TMDB/Google Books
+- ✅ PWA іконки: `icon-192.png`, `icon-512.png` — існують
 - ✅ Всі store'и з Zustand persist
 - ✅ SVG траси для всіх 22 гонок (крім Chinese — немає файлу)
+- ✅ Backend: Express + Mongoose + JWT + VAPID на Railway; CORS відкритий (`cors()`)
+- ✅ Frontend деплой на Vercel; backend деплой на Railway (hud-production.up.railway.app)
 
 **Залишилось:**
-- ⬜ Watchlist екран (`/watchlist`)
-- ⬜ PWA іконки (`icon-192.png`, `icon-512.png`)
-- ⬜ NASA APOD виведення на Dashboard
+- ⬜ Міграція goals з localStorage → MongoDB (goalsStore вже має backend інтеграцію, але старі дані в localStorage)
 
 ---
 
 ## Roadmap по етапах
 
-**Етап 1 — Frontend** *(майже завершено)*
+**Етап 1 — Frontend** *(завершено)*
 - ✅ React + TypeScript + Vite scaffold
-- ✅ Дизайн-система + 4 теми
-- ✅ Dashboard, Finance, F1, Sprint, Recipes екрани
-- ⬜ Watchlist екран
-- ⬜ PWA іконки + фінальна конфігурація
+- ✅ Дизайн-система + 5 тем
+- ✅ Dashboard, Finance, F1, Sprint, Recipes, Watchlist екрани
+- ✅ PWA іконки + конфігурація
 
-**Етап 2 — Деплой Frontend**
-- Підключити GitHub репо до Vercel
-- Налаштувати `/client` як root
-- Отримати HTTPS посилання на PWA
-- Встановити на Android як PWA
+**Етап 2 — Деплой Frontend** *(завершено)*
+- ✅ GitHub репо → Vercel (автодеплой)
+- ✅ HTTPS PWA посилання
 
-**Етап 3 — Backend**
-- Node.js + Express + Mongoose scaffold
-- MongoDB Atlas кластер
-- REST API для всіх модулів
-- JWT авторизація (один користувач)
-- Web Push VAPID для F1 нотифікацій
+**Етап 3 — Backend** *(завершено)*
+- ✅ Node.js + Express + Mongoose scaffold
+- ✅ MongoDB Atlas кластер
+- ✅ REST API для всіх модулів
+- ✅ JWT авторизація (один користувач)
+- ✅ Web Push VAPID підготовлено
 
-**Етап 4 — Деплой Backend**
-- Railway деплой `/backend`
-- Env змінні: MONGODB_URI, JWT_SECRET, VAPID ключі
-- Підключити frontend до backend через VITE_API_URL
-- Міграція даних з localStorage → MongoDB
+**Етап 4 — Деплой Backend** *(завершено)*
+- ✅ Railway деплой `/backend` (hud-production.up.railway.app)
+- ✅ Env змінні налаштовані
+- ✅ Frontend підключений через VITE_API_URL (Vercel dashboard)
+- ⬜ Міграція даних з localStorage → MongoDB (часткова: goals ще на localStorage)
 
 **Етап 5 — Агенти** *(майбутнє)*
 - Фінансовий аналітик — weekly summary

@@ -1,5 +1,6 @@
 import React from 'react'
 import type { Meal } from '../../../types'
+import { translateArea, translateCategory } from '../../../utils/translations'
 import styles from './MealDetail.module.css'
 
 /**
@@ -25,8 +26,8 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal }) => {
     <div className={styles.wrap}>
       <img src={meal.thumb} alt={meal.name} className={styles.image} loading="lazy" />
       <div className={styles.meta}>
-        {meal.area && <span className={styles.tag}>{meal.area}</span>}
-        {meal.category && <span className={styles.tag}>{meal.category}</span>}
+        {meal.area && <span className={styles.tag}>{translateArea(meal.area)}</span>}
+        {meal.category && <span className={styles.tag}>{translateCategory(meal.category)}</span>}
       </div>
 
       <section className={styles.section}>

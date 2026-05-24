@@ -41,7 +41,51 @@
 .addForm {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  padding: 12px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+}
+
+.formRow {
+  display: flex;
+  gap: 6px;
+}
+
+.emojiInput {
+  width: 48px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 18px;
+  padding: 8px 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  outline: none;
+}
+.emojiInput:focus { border-color: var(--accent); }
+
+.titleInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.deadlineWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deadlineLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  text-transform: uppercase;
+  padding-left: 2px;
 }
 
 .input {
@@ -112,9 +156,9 @@
   min-width: 0;
 }
 
-.goalIcon {
-  display: flex;
-  align-items: center;
+.goalEmoji {
+  font-size: 16px;
+  line-height: 1;
   flex-shrink: 0;
 }
 
@@ -209,6 +253,12 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--text2);
+}
+
+.deadline {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold);
 }
 
 .pct {

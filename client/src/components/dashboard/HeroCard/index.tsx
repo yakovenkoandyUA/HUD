@@ -83,7 +83,7 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
             <span className={styles.currency}>₴</span>
             <span className={styles.balance}>{fmt(balance)}</span>
           </div>
-          <div className={styles.daily}>~{fmt(dailyBudget)} ₴/день</div>
+          <div className={styles.daily}>{fmt(dailyBudget)} ₴/день</div>
 
           <div className={styles.progress}>
             <div className={styles.progressLabel}>

@@ -62,6 +62,17 @@ const PALETTES: ThemePalette[] = [
     gold: '#8B7355',
     text: '#1a1a1a',
   },
+  {
+    id: 'heroes',
+    name: 'HEROES 🏰',
+    bg: '#0d0f1a',
+    surface: '#1e2235',
+    border: '#2e3450',
+    accent: '#d4a017',
+    second: '#6a4fc8',
+    gold: '#d4a017',
+    text: '#e8d5a0',
+  },
 ]
 
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
