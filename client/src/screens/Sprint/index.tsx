@@ -50,7 +50,7 @@ const PRIORITY_CONFIG: Record<TodoPriority, { symbol: string; label: string; act
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const Sprint: React.FC = () => {
-  const { items, addItem, addItems, toggleItem, deleteItem, fetchItems, syncStatus } = useSprintStore()
+  const { items, addItem, toggleItem, deleteItem, fetchItems, syncStatus } = useSprintStore()
   const { lessons, addLesson, updateLesson, deleteLesson } = useLessonStore()
   const { showToast } = useUiStore()
 
