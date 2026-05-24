@@ -18,6 +18,7 @@ import pushRoutes from './routes/push'
 const app = express()
 const PORT = process.env.PORT || 4000
 
+// CORS fix v2
 app.use(cors({
   origin: function(origin, callback) {
     const allowedOrigins = [
