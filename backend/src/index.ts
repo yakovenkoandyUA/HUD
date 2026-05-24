@@ -16,7 +16,7 @@ import goalRoutes from './routes/goals'
 import pushRoutes from './routes/push'
 
 const app = express()
-const PORT = process.env.PORT || 4000
+const PORT = Number(process.env.PORT) || 4000
 
 // CORS fix v2
 app.use(cors())
@@ -41,7 +41,7 @@ async function start() {
   await connectDB()
   initWebPush()
   startF1Scheduler()
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+  app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`))
 }
 
 start()

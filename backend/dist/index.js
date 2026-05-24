@@ -19,7 +19,7 @@ const watchlist_1 = __importDefault(require("./routes/watchlist"));
 const goals_1 = __importDefault(require("./routes/goals"));
 const push_1 = __importDefault(require("./routes/push"));
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
 // CORS fix v2
 app.use((0, cors_1.default)());
 // app.options('*', cors())
@@ -38,6 +38,6 @@ async function start() {
     await (0, db_1.connectDB)();
     (0, webpush_1.initWebPush)();
     (0, f1Scheduler_1.startF1Scheduler)();
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
 }
 start();
