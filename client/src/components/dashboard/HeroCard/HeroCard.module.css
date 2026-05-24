@@ -203,3 +203,11 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+.raceDay {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-align: center;
+}

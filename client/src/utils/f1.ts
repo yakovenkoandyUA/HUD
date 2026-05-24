@@ -6,7 +6,7 @@ export function getNextRace(races: F1Race[]): F1Race | null {
 }
 
 export function getDaysToRace(race: F1Race): number {
-  const diff = new Date(race.date).getTime() - Date.now()
+  const diff = new Date(race.date + 'T14:00:00Z').getTime() - Date.now()
   return Math.max(0, Math.ceil(diff / 86400000))
 }
 

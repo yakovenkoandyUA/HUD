@@ -29,9 +29,10 @@ interface Countdown {
   s: number
 }
 
-function getCountdown(raceDate: string): Countdown {
-  const target = new Date(raceDate + 'T00:00:00').getTime()
-  const diff = Math.max(0, target - Date.now())
+function getCountdown(raceDate: string): Countdown | null {
+  const target = new Date(raceDate + 'T14:00:00Z').getTime()
+  const diff = target - Date.now()
+  if (diff <= 0) return null
   const s = Math.floor(diff / 1000)
   return {
     d: Math.floor(s / 86400),
@@ -46,8 +47,8 @@ function pad(n: number) {
 }
 
 const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, race }) => {
-  const [countdown, setCountdown] = useState<Countdown>(
-    race ? getCountdown(race.date) : { d: 0, h: 0, m: 0, s: 0 }
+  const [countdown, setCountdown] = useState<Countdown | null>(
+    race ? getCountdown(race.date) : null
   )
 
   useEffect(() => {
@@ -111,24 +112,28 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
                 <span className={styles.flag}>{race.flag}</span>
                 <span className={styles.raceName}>{race.name.replace(' GP', '')}</span>
               </div>
-              <div className={styles.countdownGrid}>
-                <div className={styles.countdownUnit}>
-                  <span className={styles.countdownNum}>{countdown.d}</span>
-                  <span className={styles.countdownSub}>д</span>
+              {countdown ? (
+                <div className={styles.countdownGrid}>
+                  <div className={styles.countdownUnit}>
+                    <span className={styles.countdownNum}>{countdown.d}</span>
+                    <span className={styles.countdownSub}>д</span>
+                  </div>
+                  <div className={styles.countdownUnit}>
+                    <span className={styles.countdownNum}>{pad(countdown.h)}</span>
+                    <span className={styles.countdownSub}>г</span>
+                  </div>
+                  <div className={styles.countdownUnit}>
+                    <span className={styles.countdownNum}>{pad(countdown.m)}</span>
+                    <span className={styles.countdownSub}>хв</span>
+                  </div>
+                  <div className={styles.countdownUnit}>
+                    <span className={styles.countdownNum}>{pad(countdown.s)}</span>
+                    <span className={styles.countdownSub}>с</span>
+                  </div>
                 </div>
-                <div className={styles.countdownUnit}>
-                  <span className={styles.countdownNum}>{pad(countdown.h)}</span>
-                  <span className={styles.countdownSub}>г</span>
-                </div>
-                <div className={styles.countdownUnit}>
-                  <span className={styles.countdownNum}>{pad(countdown.m)}</span>
-                  <span className={styles.countdownSub}>хв</span>
-                </div>
-                <div className={styles.countdownUnit}>
-                  <span className={styles.countdownNum}>{pad(countdown.s)}</span>
-                  <span className={styles.countdownSub}>с</span>
-                </div>
-              </div>
+              ) : (
+                <div className={styles.raceDay}>RACE DAY! 🏁</div>
+              )}
             </>
           ) : (
             <span className={styles.done}>Сезон<br />завершено</span>

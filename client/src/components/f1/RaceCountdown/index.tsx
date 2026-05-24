@@ -14,9 +14,9 @@ interface RaceCountdownProps {
 }
 
 function getCountdown(raceDate: string) {
-  const target = new Date(raceDate).getTime()
+  const target = new Date(raceDate + 'T14:00:00Z').getTime()
   const diff = target - Date.now()
-  if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 }
+  if (diff <= 0) return null
   const d = Math.floor(diff / 86400000)
   const h = Math.floor((diff % 86400000) / 3600000)
   const m = Math.floor((diff % 3600000) / 60000)
@@ -25,7 +25,7 @@ function getCountdown(raceDate: string) {
 }
 
 const RaceCountdown: React.FC<RaceCountdownProps> = ({ raceDate }) => {
-  const [tick, setTick] = useState(getCountdown(raceDate))
+  const [tick, setTick] = useState(() => getCountdown(raceDate))
 
   useEffect(() => {
     const id = setInterval(() => setTick(getCountdown(raceDate)), 1000)
@@ -33,6 +33,10 @@ const RaceCountdown: React.FC<RaceCountdownProps> = ({ raceDate }) => {
   }, [raceDate])
 
   const pad = (n: number) => String(n).padStart(2, '0')
+
+  if (!tick) {
+    return <div className={styles.countdown}><span className={styles.raceDay}>RACE DAY! 🏁</span></div>
+  }
 
   return (
     <div className={styles.countdown}>
