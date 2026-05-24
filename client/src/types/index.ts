@@ -1,4 +1,4 @@
-export type Theme = 'retro' | 'warm' | 'dark' | 'japan'
+export type Theme = 'retro' | 'warm' | 'dark' | 'japan' | 'heroes'
 
 export type ExpenseCategory =
   | 'кава'
@@ -40,8 +40,10 @@ export interface Lesson {
 export interface Goal {
   id: string
   title: string
+  emoji?: string
   targetAmount: number
-  savedAmount: number
+  currentAmount: number
+  deadline?: string
 }
 
 export type TodoPriority = 'urgent' | 'normal' | 'low'
@@ -52,6 +54,21 @@ export interface TodoItem {
   priority: TodoPriority
   done: boolean
   dueDate?: string
+}
+
+export type UnifiedTodoType = 'sprint' | 'shopping' | 'todo'
+export type SprintTag = 'mentorship' | 'dev' | 'personal' | 'learning'
+
+export interface UnifiedTodo {
+  id: string
+  title: string
+  done: boolean
+  type: UnifiedTodoType
+  tag?: SprintTag
+  priority?: TodoPriority
+  quantity?: string
+  weekStart?: string
+  createdAt: string
 }
 
 export interface MealIngredient {

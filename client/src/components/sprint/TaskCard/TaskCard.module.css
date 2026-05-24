@@ -1,0 +1,110 @@
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 14px;
+  transition: background 0.15s;
+}
+
+.item:hover { background: rgba(255, 255, 255, 0.07); }
+
+.done { opacity: 0.5; }
+.done .title {
+  text-decoration: line-through;
+  color: var(--text3);
+}
+
+.check {
+  padding: 0;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.checkBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--border2);
+  border-radius: 5px;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--surface);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.done .checkBox {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.checkBoxSprint { color: var(--second); }
+.done .checkBoxSprint {
+  border-color: var(--second);
+  background: var(--second-soft);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tagChip {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.quantity {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.del {
+  font-size: 12px;
+  color: var(--text3);
+  padding: 4px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.del:hover { color: var(--accent); }

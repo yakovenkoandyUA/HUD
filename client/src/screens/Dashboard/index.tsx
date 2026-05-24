@@ -22,7 +22,7 @@ import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
   const { balance, transactions, addExpense } = useFinanceStore()
-  const { tasks } = useSprintStore()
+  const { items: tasks } = useSprintStore()
   const { lessons } = useLessonStore()
   const { showToast, theme } = useUiStore()
   const [showExpense, setShowExpense] = useState(false)
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
   const nextRace = getNextRace(F1_SEASON_2026)
   const dailyBudget = calcDailyBudget(balance)
   const weekStart = getCurrentWeekStart()
-  const weekTasks = tasks.filter((t) => t.weekStart === weekStart)
+  const weekTasks = tasks.filter((t) => t.type === 'sprint' && t.weekStart === weekStart)
 
   const today = new Date().toISOString().split('T')[0]
   const todaySpent = transactions

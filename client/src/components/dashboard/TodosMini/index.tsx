@@ -8,19 +8,15 @@ import styles from './TodosMini.module.css'
 /**
  * TodosMini
  * ---------
- * Інтерактивний міні-список справ для Dashboard.
- * Відображається якщо є хоча б одна незавершена справа або відкрита форма.
- * Дозволяє позначати виконання і додавати нові справи (одну або списком).
+ * Інтерактивний міні-список покупок/todos для Dashboard.
+ * Показує всі type=shopping та type=todo елементи.
  */
 
-const PRIORITY_ORDER: Record<TodoPriority, number> = {
-  urgent: 0, normal: 1, low: 2,
-}
-
+const PRIORITY_ORDER: Record<TodoPriority, number> = { urgent: 0, normal: 1, low: 2 }
 const VISIBLE_LIMIT = 5
 
 const TodosMini: React.FC = () => {
-  const { todos, toggleTodo, addTodo, addTodos } = useSprintStore()
+  const { items, toggleItem, addItem, addItems } = useSprintStore()
   const [showForm, setShowForm] = useState(false)
   const [closing, setClosing] = useState(false)
   const [mode, setMode] = useState<'single' | 'list'>('single')
@@ -28,12 +24,11 @@ const TodosMini: React.FC = () => {
   const [listText, setListText] = useState('')
   const [priority, setPriority] = useState<TodoPriority>('normal')
 
-  const pending = todos
-    .filter((t) => !t.done)
-    .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority])
+  const pending = items
+    .filter((t) => !t.done && t.type !== 'sprint')
+    .sort((a, b) => PRIORITY_ORDER[a.priority ?? 'normal'] - PRIORITY_ORDER[b.priority ?? 'normal'])
 
   const ANIM_MS = 220
-
   const openForm = () => { setClosing(false); setShowForm(true) }
   const closeForm = () => {
     setClosing(true)
@@ -47,12 +42,12 @@ const TodosMini: React.FC = () => {
     e.preventDefault()
     if (mode === 'single') {
       if (!title.trim()) return
-      addTodo(title.trim(), priority)
+      addItem({ type: 'shopping', title: title.trim(), priority })
       setTitle('')
     } else {
       const lines = listText.split('\n').map((l) => l.trim()).filter(Boolean)
       if (!lines.length) return
-      addTodos(lines.map((t) => ({ title: t, priority })))
+      addItems(lines.map((t) => ({ type: 'shopping' as const, title: t, priority })))
       setListText('')
     }
     closeForm()
@@ -86,7 +81,7 @@ const TodosMini: React.FC = () => {
               <button
                 type="button"
                 className={styles.check}
-                onClick={() => toggleTodo(t.id)}
+                onClick={() => toggleItem(t.id)}
                 aria-label="Позначити виконаним"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -94,15 +89,13 @@ const TodosMini: React.FC = () => {
                 </svg>
               </button>
               <span className={styles.title}>{t.title}</span>
-              <PriorityBadge priority={t.priority} compact />
+              {t.priority && <PriorityBadge priority={t.priority} compact />}
             </li>
           ))}
         </ul>
       )}
 
-      {rest > 0 && (
-        <div className={styles.more}>ще {rest} справ</div>
-      )}
+      {rest > 0 && <div className={styles.more}>ще {rest} справ</div>}
 
       {showForm && (
         <form

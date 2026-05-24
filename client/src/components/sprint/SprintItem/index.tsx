@@ -20,9 +20,9 @@ interface SprintItemProps {
 }
 
 const CATEGORY_COLOR: Record<SprintTask['category'], 'red' | 'gold' | 'green' | 'orange'> = {
-  mentorship: 'gold',
+  mentorship: 'green',
   dev:        'red',
-  personal:   'green',
+  personal:   'gold',
   learning:   'orange',
 }
 

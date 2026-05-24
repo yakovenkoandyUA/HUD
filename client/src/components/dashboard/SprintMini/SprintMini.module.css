@@ -3,11 +3,12 @@
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	background: transparent;
 	background: var(--surface);
-	/* background: linear-gradient(
-180deg, rgba(224, 16, 46, 0.06) 0%, var(--surface) 110%); */
 	border-color: var(--border);
+}
+
+:global([data-theme="warm"]) .card {
+	background: transparent;
 }
 
 .header {

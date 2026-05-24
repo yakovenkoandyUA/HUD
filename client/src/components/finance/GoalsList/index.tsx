@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useGoalsStore } from '../../../store/goalsStore'
 import { fmt } from '../../../utils/finance'
 import type { Goal } from '../../../types'
@@ -9,15 +9,8 @@ import styles from './GoalsList.module.css'
  * ---------
  * Список цілей накопичення з прогрес-барами.
  * Дозволяє додавати нові цілі та поповнювати існуючі.
+ * Синхронізується з backend якщо токен присутній.
  */
-
-const GoalIcon: React.FC = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-    <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-    <circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.5"/>
-    <circle cx="7" cy="7" r="1" fill="currentColor"/>
-  </svg>
-)
 
 interface GoalRowProps {
   goal: Goal
@@ -27,7 +20,7 @@ interface GoalRowProps {
 
 const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
   const pct = goal.targetAmount > 0
-    ? Math.min((goal.savedAmount / goal.targetAmount) * 100, 100)
+    ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
     : 0
   const done = pct >= 100
 
@@ -35,9 +28,6 @@ const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
     <div className={`${styles.row} ${done ? styles.rowDone : ''}`}>
       <div className={styles.rowHeader}>
         <div className={styles.rowTitle}>
-          <span className={styles.goalIcon} style={{ color: done ? 'var(--positive)' : 'var(--accent)' }}>
-            <GoalIcon />
-          </span>
           <span className={styles.goalName}>{goal.title}</span>
           {done && <span className={styles.doneBadge}>Досягнуто!</span>}
         </div>
@@ -73,7 +63,7 @@ const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
       </div>
 
       <div className={styles.rowMeta}>
-        <span className={styles.savedAmt}>{fmt(goal.savedAmount)} ₴</span>
+        <span className={styles.savedAmt}>{fmt(goal.currentAmount)} ₴</span>
         <span className={styles.pct}>{Math.round(pct)}%</span>
         <span className={styles.targetAmt}>{fmt(goal.targetAmount)} ₴</span>
       </div>
@@ -82,7 +72,7 @@ const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
 }
 
 const GoalsList: React.FC = () => {
-  const { goals, addGoal, contribute, deleteGoal } = useGoalsStore()
+  const { goals, fetchGoals, addGoal, contribute, deleteGoal } = useGoalsStore()
   const [showAdd, setShowAdd] = useState(false)
   const [showContribute, setShowContribute] = useState(false)
   const [activeGoal, setActiveGoal] = useState<Goal | null>(null)
@@ -90,6 +80,8 @@ const GoalsList: React.FC = () => {
   const [newTitle, setNewTitle] = useState('')
   const [newTarget, setNewTarget] = useState('')
   const [contribAmount, setContribAmount] = useState('')
+
+  useEffect(() => { fetchGoals() }, [fetchGoals])
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault()
@@ -142,7 +134,7 @@ const GoalsList: React.FC = () => {
           <input
             className={styles.input}
             type="number"
-            placeholder="Сума (₴)"
+            placeholder="Ціль (₴)"
             value={newTarget}
             onChange={(e) => setNewTarget(e.target.value)}
             min="1"

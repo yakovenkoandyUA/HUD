@@ -1,6 +1,6 @@
 import React from 'react'
 import Card from '../../ui/Card'
-import type { SprintTask } from '../../../types'
+import type { UnifiedTodo, SprintTag } from '../../../types'
 import styles from './SprintMini.module.css'
 
 /**
@@ -9,13 +9,13 @@ import styles from './SprintMini.module.css'
  * Мінікартка прогресу спринту для Dashboard.
  *
  * Props:
- * @prop {SprintTask[]} tasks — завдання поточного тижня
+ * @prop {UnifiedTodo[]} tasks — завдання спринту поточного тижня (type=sprint)
  */
 interface SprintMiniProps {
-  tasks: SprintTask[]
+  tasks: UnifiedTodo[]
 }
 
-const CATEGORY_LABEL: Record<SprintTask['category'], string> = {
+const TAG_LABEL: Record<SprintTag, string> = {
   mentorship: 'Менторство',
   dev:        'Розробка',
   personal:   'Особисте',
@@ -34,7 +34,6 @@ const SprintMini: React.FC<SprintMiniProps> = ({ tasks }) => {
         <span className={styles.count}>{done}/{tasks.length}</span>
       </div>
 
-      {/* Custom progress bar */}
       <div className={styles.barTrack}>
         <div className={styles.barFill} style={{ width: `${pct}%` }} />
       </div>
@@ -45,7 +44,7 @@ const SprintMini: React.FC<SprintMiniProps> = ({ tasks }) => {
             <li key={t.id} className={styles.item}>
               <span className={`${styles.circle} ${t.done ? styles.circleDone : ''}`} />
               <span className={styles.title}>{t.title}</span>
-              <span className={styles.tag}>{CATEGORY_LABEL[t.category]}</span>
+              {t.tag && <span className={styles.tag}>{TAG_LABEL[t.tag]}</span>}
             </li>
           ))}
         </ul>
