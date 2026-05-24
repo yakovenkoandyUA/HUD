@@ -18,20 +18,27 @@ import pushRoutes from './routes/push'
 const app = express()
 const PORT = process.env.PORT || 4000
 
-const corsOptions: cors.CorsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://hud-murex.vercel.app',
-    process.env.CLIENT_URL || '',
-  ].filter(Boolean) as string[],
+app.use(cors({
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://hud-murex.vercel.app',
+      process.env.CLIENT_URL
+    ].filter(Boolean)
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
 
-app.options('*', cors(corsOptions))
-app.use(cors(corsOptions))
+app.options('*', cors())
 app.use(express.json())
 
 app.use('/api/auth', authRoutes)
