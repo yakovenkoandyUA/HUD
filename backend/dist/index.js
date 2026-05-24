@@ -21,26 +21,8 @@ const push_1 = __importDefault(require("./routes/push"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 4000;
 // CORS fix v2
-app.use((0, cors_1.default)({
-    origin: function (origin, callback) {
-        const allowedOrigins = [
-            'http://localhost:5173',
-            'http://localhost:3000',
-            'https://hud-murex.vercel.app',
-            process.env.CLIENT_URL
-        ].filter(Boolean);
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        }
-        else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.options('*', (0, cors_1.default)());
+app.use((0, cors_1.default)());
+// app.options('*', cors())
 app.use(express_1.default.json());
 app.use('/api/auth', auth_1.default);
 app.use('/api/transactions', transactions_1.default);
