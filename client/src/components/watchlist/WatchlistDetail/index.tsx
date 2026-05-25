@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import StarRating from '../StarRating'
+import EpisodesList from '../EpisodesList'
 import styles from './WatchlistDetail.module.css'
 import type { WatchlistItem, WatchlistStatus } from '../../../types'
 
@@ -170,6 +171,14 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                   </button>
                 )}
               </div>
+            </>
+          )}
+
+          {/* Episodes - series only */}
+          {item.category === 'series' && item.tmdbId > 0 && (
+            <>
+              <p className={styles.sectionLabel}>Епізоди</p>
+              <EpisodesList tmdbId={item.tmdbId} />
             </>
           )}
 

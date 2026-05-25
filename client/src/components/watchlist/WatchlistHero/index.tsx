@@ -52,7 +52,7 @@ const WatchlistHero: React.FC<WatchlistHeroProps> = ({ items, onTap }) => {
               </div>
               <div className={styles.cardInfo}>
                 <p className={styles.cardTitle}>{item.title}</p>
-                {item.year && <span className={styles.cardYear}>{item.year}</span>}
+                {/* {item.year && <span className={styles.cardYear}>{item.year}</span>} */}
               </div>
             </button>
           )

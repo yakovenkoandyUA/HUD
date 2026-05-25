@@ -18,10 +18,10 @@ const SYNC_COLORS: Record<string, string> = {
 type Tab = WatchlistCategory
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'movie',  label: '🎬 Фільми' },
-  { id: 'series', label: '📺 Серіали' },
-  { id: 'anime',  label: '🎌 Аніме' },
-  { id: 'book',   label: '📚 Книги' },
+  { id: 'movie',  label: 'Фільми' },
+  { id: 'series', label: 'Серіали' },
+  { id: 'anime',  label: 'Аніме' },
+  { id: 'book',   label: 'Книги' },
 ]
 
 const Watchlist: React.FC = () => {

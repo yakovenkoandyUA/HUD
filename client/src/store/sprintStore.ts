@@ -1,7 +1,16 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { UnifiedTodo, SprintTag, TodoPriority } from '../types'
+import type { UnifiedTodo, SprintTag, TodoPriority, SprintLabel, ChecklistItem } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
+
+export const LABEL_COLORS = [
+  '#216E4E', '#7F5F01', '#A54800', '#AE2E24', '#352C63',
+  '#206A83', '#164555', '#37471F', '#50253F', '#454F59',
+  '#4BCE97', '#F5CD47', '#FEA362', '#F87168', '#9F8FEF',
+  '#579DFF', '#60C6D2', '#94C748', '#E774BB', '#8590A2',
+  '#1F845A', '#E2B203', '#C25100', '#C9372C', '#6E5DC6',
+  '#0C66E4', '#227D9B', '#5B7F24', '#AE4787', '#626F86',
+]
 
 export type SyncStatus = 'local' | 'syncing' | 'synced' | 'error'
 
@@ -74,6 +83,7 @@ function sortItems(items: UnifiedTodo[]): UnifiedTodo[] {
 interface TodoState {
   items: UnifiedTodo[]
   syncStatus: SyncStatus
+  globalLabels: SprintLabel[]
 
   fetchItems: () => Promise<void>
   addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>) => void
@@ -81,6 +91,17 @@ interface TodoState {
   toggleItem: (id: string) => void
   deleteItem: (id: string) => void
   setSyncStatus: (s: SyncStatus) => void
+
+  // Rich card fields — local-only, not synced to backend
+  updateTask: (id: string, updates: Partial<UnifiedTodo>) => void
+  addChecklistItem: (taskId: string, title: string) => void
+  toggleChecklistItem: (taskId: string, itemId: string) => void
+  removeChecklistItem: (taskId: string, itemId: string) => void
+  addLabel: (taskId: string, label: SprintLabel) => void
+  removeLabel: (taskId: string, labelId: string) => void
+  addGlobalLabel: (label: SprintLabel) => void
+  updateGlobalLabel: (id: string, updates: Partial<SprintLabel>) => void
+  deleteGlobalLabel: (id: string) => void
 }
 
 export const useSprintStore = create<TodoState>()(
@@ -88,8 +109,73 @@ export const useSprintStore = create<TodoState>()(
     (set, get) => ({
       items: [],
       syncStatus: 'local' as SyncStatus,
+      globalLabels: [],
 
       setSyncStatus: (syncStatus) => set({ syncStatus }),
+
+      updateTask: (id, updates) =>
+        set(s => ({ items: s.items.map(i => i.id === id ? { ...i, ...updates } : i) })),
+
+      addChecklistItem: (taskId, title) => {
+        const item: ChecklistItem = { id: crypto.randomUUID(), title, done: false }
+        set(s => ({
+          items: s.items.map(i => i.id === taskId
+            ? { ...i, checklist: [...(i.checklist ?? []), item] }
+            : i
+          ),
+        }))
+      },
+
+      toggleChecklistItem: (taskId, itemId) =>
+        set(s => ({
+          items: s.items.map(i => i.id === taskId
+            ? { ...i, checklist: (i.checklist ?? []).map(c => c.id === itemId ? { ...c, done: !c.done } : c) }
+            : i
+          ),
+        })),
+
+      removeChecklistItem: (taskId, itemId) =>
+        set(s => ({
+          items: s.items.map(i => i.id === taskId
+            ? { ...i, checklist: (i.checklist ?? []).filter(c => c.id !== itemId) }
+            : i
+          ),
+        })),
+
+      addLabel: (taskId, label) =>
+        set(s => ({
+          items: s.items.map(i => i.id === taskId
+            ? { ...i, labels: [...(i.labels ?? []).filter(l => l.id !== label.id), label] }
+            : i
+          ),
+        })),
+
+      removeLabel: (taskId, labelId) =>
+        set(s => ({
+          items: s.items.map(i => i.id === taskId
+            ? { ...i, labels: (i.labels ?? []).filter(l => l.id !== labelId) }
+            : i
+          ),
+        })),
+
+      addGlobalLabel: (label) =>
+        set(s => ({ globalLabels: [...s.globalLabels, label] })),
+
+      updateGlobalLabel: (id, updates) =>
+        set(s => ({
+          globalLabels: s.globalLabels.map(l => l.id === id ? { ...l, ...updates } : l),
+          // also update on all tasks that have this label attached
+          items: s.items.map(i => ({
+            ...i,
+            labels: (i.labels ?? []).map(l => l.id === id ? { ...l, ...updates } : l),
+          })),
+        })),
+
+      deleteGlobalLabel: (id) =>
+        set(s => ({
+          globalLabels: s.globalLabels.filter(l => l.id !== id),
+          items: s.items.map(i => ({ ...i, labels: (i.labels ?? []).filter(l => l.id !== id) })),
+        })),
 
       fetchItems: async () => {
         if (!getToken() || !isBackendConfigured()) return

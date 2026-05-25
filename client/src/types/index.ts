@@ -59,6 +59,28 @@ export interface TodoItem {
 export type UnifiedTodoType = 'sprint' | 'shopping' | 'todo'
 export type SprintTag = 'mentorship' | 'dev' | 'personal' | 'learning'
 
+/**
+ * ChecklistItem
+ * -------------
+ * Підзадача всередині Sprint задачі.
+ */
+export interface ChecklistItem {
+  id: string
+  title: string
+  done: boolean
+}
+
+/**
+ * SprintLabel
+ * -----------
+ * Кольорова мітка задачі.
+ */
+export interface SprintLabel {
+  id: string
+  title: string
+  color: string   // hex color
+}
+
 export interface UnifiedTodo {
   id: string
   title: string
@@ -69,6 +91,11 @@ export interface UnifiedTodo {
   quantity?: string
   weekStart?: string
   createdAt: string
+  // Rich card fields (local-only, not synced to backend)
+  description?: string
+  dueDate?: string
+  labels?: SprintLabel[]
+  checklist?: ChecklistItem[]
 }
 
 export interface MealIngredient {

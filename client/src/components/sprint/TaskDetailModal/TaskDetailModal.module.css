@@ -1,0 +1,609 @@
+/* ── Overlay ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+}
+
+.overlayIn  { animation: fadeIn  0.2s ease forwards; }
+.overlayOut { animation: fadeOut 0.22s ease forwards; }
+
+@keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+@keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
+
+/* ── Sheet ── */
+.sheet {
+  background: var(--bg2);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheetIn  { animation: slideUp   0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.sheetOut { animation: slideDown 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+@keyframes slideUp   { from { transform: translateY(100%) } to { transform: translateY(0) } }
+@keyframes slideDown { from { transform: translateY(0) }    to { transform: translateY(100%) } }
+
+/* ── Handle ── */
+.handle {
+  width: 32px;
+  height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px 10px;
+}
+
+.headerCheck {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  transition: background 0.15s, border-color 0.15s;
+  margin-top: 2px;
+}
+
+.headerCheckDone {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.titleEdit {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--text);
+  resize: none;
+  overflow: hidden;
+  line-height: 1.35;
+  padding: 0;
+  min-height: 22px;
+}
+
+.titleEdit::placeholder { color: var(--text3); }
+
+.titleDone {
+  color: var(--text3);
+  text-decoration: line-through;
+}
+
+.closeBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.15s;
+  margin-top: 1px;
+}
+.closeBtn:hover { color: var(--text); }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.tab {
+  padding: 10px 0;
+  margin-right: 24px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.tab:last-child { margin-right: 0; }
+
+.tabActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Body ── */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 24px;
+}
+
+.tabContent {
+  padding: 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Field label ── */
+.fieldLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  margin-bottom: -4px;
+}
+
+/* ── Label form (create / edit) ── */
+.labelForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.labelFormBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+  align-self: flex-start;
+  margin-bottom: -2px;
+}
+.labelFormBack:hover { color: var(--text); }
+
+.labelPreview {
+  width: 100%;
+  height: 48px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  min-height: 48px;
+}
+
+.labelPreviewText {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.labelFieldLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  margin-bottom: -6px;
+}
+
+.labelInput {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.labelInput:focus { border-color: var(--accent); }
+.labelInput::placeholder { color: var(--text3); }
+
+/* 5-column color grid */
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.colorSwatch {
+  height: 36px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.12s, transform 0.12s;
+  position: relative;
+}
+.colorSwatch:hover { opacity: 0.82; }
+
+.labelFormActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.labelSaveBtn {
+  padding: 9px 18px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--second);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.labelSaveBtn:hover { opacity: 0.85; }
+
+.labelDeleteBtn {
+  padding: 9px 14px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: none;
+  color: var(--negative);
+  border: 1px solid var(--negative);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.labelDeleteBtn:hover { background: var(--accent-soft); }
+
+/* ── Global labels list ── */
+.globalLabelsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.globalLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.globalLabelCheck {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.globalLabelCheckOn {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.globalLabelBlock {
+  flex: 1;
+  height: 36px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  transition: opacity 0.15s;
+}
+.globalLabelBlock:hover { opacity: 0.85; }
+
+.globalLabelName {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.globalLabelEdit {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 6px;
+  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+}
+.globalLabelEdit:hover { color: var(--text); }
+
+.createLabelBtn {
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text2);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.createLabelBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Dates tab ── */
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateInput {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 10px 12px;
+  outline: none;
+  color-scheme: dark;
+}
+.dateInput:focus { border-color: var(--accent); }
+
+.dateClear {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text3);
+  font-size: 16px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.dateClear:hover { color: var(--accent); }
+
+.dateHuman {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: -4px;
+}
+
+/* ── Checklist tab ── */
+.checklistProgress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checklistPct {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  width: 36px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.checklistBar {
+  flex: 1;
+  height: 4px;
+  background: var(--border2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.checklistBarFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.checklistList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+.checklistItem:last-child { border-bottom: none; }
+
+.checklistCheckbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.checklistCheckboxDone {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.checklistTitle {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  transition: color 0.15s;
+}
+
+.checklistTitleDone {
+  color: var(--text3);
+  text-decoration: line-through;
+}
+
+.checklistConfirmText {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.checklistConfirmYes {
+  padding: 4px 10px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--negative);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.checklistConfirmNo {
+  padding: 4px 10px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.checklistAdd {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.checklistInput {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.checklistInput:focus { border-color: var(--accent); }
+.checklistInput::placeholder { color: var(--text3); }
+
+.checklistAddBtn {
+  padding: 9px 14px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.checklistAddBtn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Description ── */
+.descSection {
+  padding: 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.descTextarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  min-height: 60px;
+  line-height: 1.5;
+}
+.descTextarea:focus { border-color: var(--accent); }
+.descTextarea::placeholder { color: var(--text3); }

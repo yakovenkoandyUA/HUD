@@ -3,6 +3,7 @@ import TopBar from '../../components/layout/TopBar'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import SprintProgress from '../../components/sprint/SprintProgress'
 import TaskCard from '../../components/sprint/TaskCard'
+import TaskDetailModal from '../../components/sprint/TaskDetailModal'
 import LessonItem from '../../components/lessons/LessonItem'
 import LessonForm from '../../components/lessons/LessonForm'
 import Button from '../../components/ui/Button'
@@ -63,6 +64,9 @@ const Sprint: React.FC = () => {
   const [newTag, setNewTag] = useState<SprintTag>('dev')
   const [newPriority, setNewPriority] = useState<TodoPriority>('normal')
   const [newQuantity, setNewQuantity] = useState('')
+
+  // ── Task detail modal ────────────────────────────────────────────────────
+  const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
 
   // ── Lesson modal state ───────────────────────────────────────────────────
   const [showAddLesson, setShowAddLesson] = useState(false)
@@ -189,6 +193,7 @@ const Sprint: React.FC = () => {
                   item={t}
                   onToggle={() => toggleItem(t.id)}
                   onDelete={() => deleteItem(t.id)}
+                  onOpenDetail={() => setDetailTaskId(t.id)}
                 />
               ))}
             </ul>
@@ -317,6 +322,12 @@ const Sprint: React.FC = () => {
           onCancel={() => { setShowAddLesson(false); setEditingLesson(null) }}
         />
       </Modal>
+
+      {/* ── Task detail modal ── */}
+      <TaskDetailModal
+        taskId={detailTaskId}
+        onClose={() => setDetailTaskId(null)}
+      />
     </div>
   )
 }

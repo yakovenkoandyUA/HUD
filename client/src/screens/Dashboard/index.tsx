@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import TopBar from '../../components/layout/TopBar'
 import HeroCard from '../../components/dashboard/HeroCard'
-import SprintMini from '../../components/dashboard/SprintMini'
-import TodosMini from '../../components/dashboard/TodosMini'
+import TasksAccordion from '../../components/dashboard/TasksAccordion'
 import LessonsMini from '../../components/dashboard/LessonsMini'
 import NasaApod from '../../components/dashboard/NasaApod'
 import Modal from '../../components/ui/Modal'
@@ -10,19 +9,16 @@ import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import { useNasaApod } from '../../hooks/useNasaApod'
 import { useFinanceStore } from '../../store/financeStore'
-import { useSprintStore } from '../../store/sprintStore'
 import { useLessonStore } from '../../store/lessonStore'
 import { useUiStore } from '../../store/uiStore'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace } from '../../utils/f1'
 import { calcDailyBudget } from './helpers'
-import { getCurrentWeekStart } from '../../utils/sprint'
 import type { ExpenseCategory } from '../../types'
 import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
   const { balance, transactions, addExpense } = useFinanceStore()
-  const { items: tasks } = useSprintStore()
   const { lessons } = useLessonStore()
   const { showToast, theme } = useUiStore()
   const [showExpense, setShowExpense] = useState(false)
@@ -50,9 +46,6 @@ const Dashboard: React.FC = () => {
 
   const nextRace = getNextRace(F1_SEASON_2026)
   const dailyBudget = calcDailyBudget(balance)
-  const weekStart = getCurrentWeekStart()
-  const weekTasks = tasks.filter((t) => t.type === 'sprint' && t.weekStart === weekStart)
-
   const today = new Date().toISOString().split('T')[0]
   const todaySpent = transactions
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))
@@ -75,8 +68,7 @@ const Dashboard: React.FC = () => {
           todaySpent={todaySpent}
           race={nextRace}
         />
-        <SprintMini tasks={weekTasks} />
-        <TodosMini />
+        <TasksAccordion />
         <LessonsMini lessons={lessons} />
         {/* <div className={styles.heroWrap}>
           <CarHero />

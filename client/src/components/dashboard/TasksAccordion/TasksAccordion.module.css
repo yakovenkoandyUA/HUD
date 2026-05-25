@@ -1,0 +1,204 @@
+/* ── Root block ── */
+.root {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ── Section ── */
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+}
+
+.header:active {
+  background: var(--surface2);
+}
+
+.headerLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.arrow {
+  color: var(--text3);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  transform: rotate(-90deg);
+}
+
+.arrowOpen {
+  transform: rotate(0deg);
+}
+
+/* ── Progress bar (sprint section) ── */
+.progressWrap {
+  padding: 0 16px;
+  height: 0;
+  overflow: hidden;
+  transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressVisible {
+  height: 10px;
+}
+
+.progressTrack {
+  height: 2px;
+  border-radius: 999px;
+  background: var(--border2);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+/* ── Accordion content ── */
+.content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.contentOpen {
+  max-height: 400px;
+}
+
+.contentInner {
+  padding: 0 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Task / Shopping list ── */
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+/* ── Checkbox ── */
+.checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  color: #fff;
+  padding: 0;
+}
+
+.checkboxDone {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Item title ── */
+.itemTitle {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: color 0.15s;
+}
+
+.itemDone {
+  color: var(--text3);
+  text-decoration: line-through;
+}
+
+/* ── Empty ── */
+.emptyText {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  padding: 4px 0 2px;
+}
+
+/* ── More button ── */
+.moreBtn {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 8px 0 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Divider between sections ── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
