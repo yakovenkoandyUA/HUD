@@ -5,8 +5,8 @@ import type { WatchlistItem } from '../../../types'
 /**
  * WatchlistHero
  * -------------
- * Compact horizontal card(s) for "Дивлюсь зараз" items.
- * Each card shows a small poster + label/title/year.
+ * Horizontal scroll strip showing "Дивлюсь зараз" items
+ * with wide backdrop images.
  *
  * Props:
  * @prop {WatchlistItem[]} items    — items with status "watching"
@@ -21,44 +21,43 @@ const CATEGORY_ICON: Record<string, string> = {
   movie: '🎬', series: '📺', anime: '🎌', book: '📚',
 }
 
-const TMDB_IMG = 'https://image.tmdb.org/t/p/w92'
-
 const WatchlistHero: React.FC<WatchlistHeroProps> = ({ items, onTap }) => {
   if (!items.length) return null
 
   return (
     <div className={styles.wrap}>
-      {items.map((item) => {
-        const imgSrc = item.category === 'book'
-          ? item.thumbnail ?? null
-          : item.posterPath
-            ? `${TMDB_IMG}${item.posterPath}`
-            : null
+      <p className={styles.label}>Дивлюсь зараз</p>
+      <div className={styles.strip}>
+        {items.map((item) => {
+          const backdropSrc = item.backdropPath
+            ? `https://image.tmdb.org/t/p/w500${item.backdropPath}`
+            : item.thumbnail ?? null
 
-        return (
-          <button
-            key={item.id}
-            type="button"
-            className={styles.card}
-            onClick={() => onTap(item)}
-          >
-            <div className={styles.poster}>
-              {imgSrc ? (
-                <img src={imgSrc} alt={item.title} className={styles.posterImg} loading="lazy" />
-              ) : (
-                <div className={styles.posterFallback}>
-                  <span>{CATEGORY_ICON[item.category]}</span>
-                </div>
-              )}
-            </div>
-            <div className={styles.info}>
-              <span className={styles.label}>Дивлюсь зараз</span>
-              <p className={styles.title}>{item.title}</p>
-              {item.year && <span className={styles.year}>{item.year}</span>}
-            </div>
-          </button>
-        )
-      })}
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={styles.card}
+              onClick={() => onTap(item)}
+            >
+              <div className={styles.imgWrap}>
+                {backdropSrc ? (
+                  <img src={backdropSrc} alt={item.title} className={styles.img} loading="lazy" />
+                ) : (
+                  <div className={styles.noImg}>
+                    <span>{CATEGORY_ICON[item.category]}</span>
+                  </div>
+                )}
+                <div className={styles.overlay} />
+              </div>
+              <div className={styles.cardInfo}>
+                <p className={styles.cardTitle}>{item.title}</p>
+                {item.year && <span className={styles.cardYear}>{item.year}</span>}
+              </div>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }

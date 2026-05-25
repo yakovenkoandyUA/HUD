@@ -205,31 +205,32 @@
   flex-shrink: 0;
 }
 
-/* ── Status chips ── */
+/* ── Status buttons ── */
 .statusRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 .statusBtn {
   flex: 1;
-  padding: 6px 4px;
+  min-width: calc(50% - 3px);
+  padding: 7px 8px;
   font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--text2);
-  background: var(--surface);
+  background: var(--bg3);
   border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
-  white-space: nowrap;
 }
 .statusActive {
-  background: var(--accent-soft);
+  background: var(--accent);
   border-color: var(--accent);
-  color: var(--accent);
+  color: #fff;
 }
 
 /* ── Add button ── */
