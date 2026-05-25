@@ -15,8 +15,8 @@ const TMDB_GENRES: Record<number, string> = {
 }
 
 const STATUS_OPTIONS: { value: WatchlistStatus; label: string }[] = [
-  { value: 'want',     label: 'Хочу подивитись' },
-  { value: 'watching', label: 'Дивлюсь зараз' },
+  { value: 'want',     label: 'Хочу' },
+  { value: 'watching', label: 'Дивлюсь' },
   { value: 'watched',  label: 'Переглянув' },
   { value: 'dropped',  label: 'Кинув' },
 ]

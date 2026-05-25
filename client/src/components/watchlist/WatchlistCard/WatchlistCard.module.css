@@ -17,7 +17,10 @@
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--surface);
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
 }
+.card:active .poster { border-color: var(--accent); }
 
 .img {
   width: 100%;
@@ -56,19 +59,20 @@
   top: 6px;
   right: 6px;
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 2px 6px;
+  padding: 3px 7px;
   border-radius: 4px;
+  background: rgba(0,0,0,0.85);
   backdrop-filter: blur(4px);
 }
 
-.statusWant    { background: rgba(0,0,0,0.5); color: var(--text2); }
-.statusWatching { background: var(--accent); color: #fff; }
-.statusWatched  { background: rgba(78,104,81,0.9); color: #fff; }
-.statusDropped  { background: rgba(0,0,0,0.5); color: var(--text3); }
+.statusWant    { color: var(--text2); }
+.statusWatching { color: var(--accent); }
+.statusWatched  { color: var(--second); }
+.statusDropped  { color: var(--text3); }
 
 /* ── Watching indicator ── */
 .watchingBar {

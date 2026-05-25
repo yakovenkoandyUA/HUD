@@ -18,10 +18,10 @@ const SYNC_COLORS: Record<string, string> = {
 type Tab = WatchlistCategory
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'movie',  label: '🎬 Фільми' },
-  { id: 'series', label: '📺 Серіали' },
-  { id: 'anime',  label: '🎌 Аніме' },
-  { id: 'book',   label: '📚 Книги' },
+  { id: 'movie',  label: 'Фільми' },
+  { id: 'series', label: 'Серіали' },
+  { id: 'anime',  label: 'Аніме' },
+  { id: 'book',   label: 'Книги' },
 ]
 
 const Watchlist: React.FC = () => {
@@ -110,16 +110,19 @@ const Watchlist: React.FC = () => {
       {/* ── Stats row ── */}
       <div className={styles.statsRow}>
         <div className={styles.stat}>
+          <span className={styles.statIcon}>✓</span>
           <span className={styles.statVal}>{stats.watched}</span>
           <span className={styles.statLabel}>Переглянув</span>
         </div>
         <div className={styles.statDivider} />
         <div className={styles.stat}>
+          <span className={styles.statIcon}>▶</span>
           <span className={styles.statVal}>{stats.watching}</span>
           <span className={styles.statLabel}>Дивлюсь</span>
         </div>
         <div className={styles.statDivider} />
         <div className={styles.stat}>
+          <span className={styles.statIcon}>♥</span>
           <span className={styles.statVal}>{stats.want}</span>
           <span className={styles.statLabel}>Хочу</span>
         </div>
@@ -127,7 +130,8 @@ const Watchlist: React.FC = () => {
           <>
             <div className={styles.statDivider} />
             <div className={styles.stat}>
-              <span className={styles.statVal}>{stats.avg}★</span>
+              <span className={styles.statIcon}>★</span>
+              <span className={styles.statVal}>{stats.avg}</span>
               <span className={styles.statLabel}>Рейтинг</span>
             </div>
           </>
