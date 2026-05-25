@@ -20,7 +20,7 @@ const SYNC_COLORS: Record<string, string> = {
   synced: 'var(--positive)', syncing: 'var(--gold)', error: 'var(--negative)', local: 'var(--text3)',
 }
 
-type Filter = 'all' | 'sprint' | 'shopping' | 'todo'
+type Filter = 'all' | 'sprint' | 'shopping' | 'todo' | 'lessons'
 
 // ── Category config ───────────────────────────────────────────────────────────
 
@@ -55,7 +55,6 @@ const Sprint: React.FC = () => {
   const { showToast } = useUiStore()
 
   const [filter, setFilter] = useState<Filter>('all')
-  const [showLessons, setShowLessons] = useState(false)
 
   // ── Add task modal state ─────────────────────────────────────────────────
   const [showAdd, setShowAdd] = useState(false)
@@ -124,6 +123,7 @@ const Sprint: React.FC = () => {
     { key: 'sprint',   label: 'Спринт'  },
     { key: 'shopping', label: 'Покупки' },
     { key: 'todo',     label: 'Todo'    },
+    { key: 'lessons',  label: 'Уроки'   },
   ]
 
   return (
@@ -154,71 +154,67 @@ const Sprint: React.FC = () => {
 
         {/* ── Section header + add ── */}
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionTitle}>Задачі</span>
-          <div className={styles.sectionActions}>
-            <button className={styles.addBtn} onClick={() => setShowAdd(true)} aria-label="Додати задачу">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-            <button
-              className={`${styles.addBtn} ${showLessons ? styles.addBtnActive : ''}`}
-              onClick={() => setShowLessons(v => !v)}
-              title="Уроки"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 3h10M2 7h7M2 11h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-            </button>
-          </div>
+          <span className={styles.sectionTitle}>{filter === 'lessons' ? 'Уроки' : 'Задачі'}</span>
+          <button
+            className={styles.addBtn}
+            onClick={() => {
+              if (filter === 'lessons') {
+                setEditingLesson(null)
+                setShowAddLesson(true)
+              } else {
+                setShowAdd(true)
+              }
+            }}
+            aria-label="Додати"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
 
         {/* ── Task list ── */}
-        {filteredItems.length === 0 ? (
-          <div className={styles.emptyState}>
-            <span className={styles.emptyIcon}>✓</span>
-            <span className={styles.emptyTitle}>Список чистий</span>
-            <span className={styles.emptyHint}>Додай першу задачу</span>
-          </div>
-        ) : (
-          <ul className={styles.list}>
-            {filteredItems.map(t => (
-              <TaskCard
-                key={t.id}
-                item={t}
-                onToggle={() => toggleItem(t.id)}
-                onDelete={() => deleteItem(t.id)}
-              />
-            ))}
-          </ul>
+        {filter !== 'lessons' && (
+          filteredItems.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>✓</span>
+              <span className={styles.emptyTitle}>Список чистий</span>
+              <span className={styles.emptyHint}>Додай першу задачу</span>
+            </div>
+          ) : (
+            <ul className={styles.list}>
+              {filteredItems.map(t => (
+                <TaskCard
+                  key={t.id}
+                  item={t}
+                  onToggle={() => toggleItem(t.id)}
+                  onDelete={() => deleteItem(t.id)}
+                />
+              ))}
+            </ul>
+          )
         )}
 
-        {/* ── Lessons section ── */}
-        {showLessons && (
-          <div className={styles.lessonsSection}>
-            <div className={styles.sectionHeader}>
-              <span className={styles.sectionTitle}>Уроки</span>
-              <button className={styles.addBtn} onClick={() => { setEditingLesson(null); setShowAddLesson(true) }} aria-label="Додати урок">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
+        {/* ── Lessons list ── */}
+        {filter === 'lessons' && (
+          lessons.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>📖</span>
+              <span className={styles.emptyTitle}>Уроків ще немає</span>
+              <span className={styles.emptyHint}>Додай перший урок</span>
             </div>
-            {lessons.length === 0 ? (
-              <p className={styles.emptySimple}>Уроків ще немає</p>
-            ) : (
-              <ul className={styles.lessonList}>
-                {lessons.map(l => (
-                  <LessonItem
-                    key={l.id}
-                    lesson={l}
-                    onEdit={() => { setEditingLesson(l); setShowAddLesson(true) }}
-                    onDelete={() => deleteLesson(l.id)}
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
+          ) : (
+            <ul className={styles.lessonList}>
+              {lessons.map(l => (
+                <LessonItem
+                  key={l.id}
+                  lesson={l}
+                  onEdit={() => { setEditingLesson(l); setShowAddLesson(true) }}
+                  onDelete={() => deleteLesson(l.id)}
+                />
+              ))}
+            </ul>
+          )
         )}
       </div>
 
