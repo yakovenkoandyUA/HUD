@@ -26,6 +26,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? '')
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTitle(initial?.title ?? '')
     setIngredientsText(initial?.ingredients.join('\n') ?? '')
     setSteps(initial?.steps ?? '')

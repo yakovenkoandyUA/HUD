@@ -23,13 +23,17 @@ export async function uploadToCloudinary(
   formData.append('upload_preset', uploadPreset)
   formData.append('folder', folder)
 
+  console.log('[Cloudinary] upload →', { cloudName, uploadPreset, folder })
+
   const response = await fetch(
     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
     { method: 'POST', body: formData }
   )
 
   if (!response.ok) {
-    throw new Error('Cloudinary upload failed')
+    const errBody = await response.json().catch(() => ({}))
+    console.error('[Cloudinary] error body:', errBody)
+    throw new Error(`Cloudinary ${response.status}: ${errBody?.error?.message ?? JSON.stringify(errBody)}`)
   }
 
   const data = await response.json()

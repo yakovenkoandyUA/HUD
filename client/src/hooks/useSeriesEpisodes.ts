@@ -81,6 +81,7 @@ export function useSeriesEpisodes(tmdbId: number | null) {
     if (!tmdbId || !TMDB_KEY || !activeSeason) return
     const cached = readCache(tmdbId, activeSeason)
     if (cached) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEpisodes(cached.episodes)
       return
     }

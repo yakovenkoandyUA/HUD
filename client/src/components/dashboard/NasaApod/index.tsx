@@ -35,6 +35,7 @@ const NasaApod: React.FC<NasaApodProps> = ({ isOpen, onClose, data, loading, err
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {

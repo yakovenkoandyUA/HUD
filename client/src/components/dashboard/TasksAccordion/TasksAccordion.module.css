@@ -131,13 +131,12 @@
   border-bottom: none;
 }
 
-/* ── Checkbox ── */
+/* ── Checkbox — sprint (rounded square, faint undone border) ── */
 .checkbox {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  border: 1.5px solid var(--border2);
   background: none;
   cursor: pointer;
   display: flex;
@@ -146,11 +145,59 @@
   transition: background 0.15s, border-color 0.15s;
   color: #fff;
   padding: 0;
+  border: 1.5px solid var(--border2);
 }
 
+/* undone sprint checkbox — faint white border */
+.checkboxUndone {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+:global([data-theme="japan"]) .checkboxUndone {
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* done sprint checkbox — var(--second) fill */
 .checkboxDone {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--second);
+  border-color: var(--second);
+}
+
+/* ── Checkbox — shopping (square, + icon, var(--second) accent) ── */
+.checkboxShop {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(42, 157, 143, 0.4);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--second);
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.checkboxShop:hover { border-color: var(--second); background: var(--second-soft); }
+
+.checkboxShopDone {
+  background: var(--second);
+  border-color: var(--second);
+  color: #fff;
+}
+
+/* ── Shopping tag icon ── */
+.shopTag {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--second-soft);
+  border: 0.5px solid rgba(42, 157, 143, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--second);
 }
 
 /* ── Item title ── */
@@ -165,11 +212,33 @@
   white-space: nowrap;
   line-height: 1.4;
   transition: color 0.15s;
+  cursor: pointer;
+}
+
+.itemTitle:hover {
+  color: var(--accent);
 }
 
 .itemDone {
   color: var(--text3);
   text-decoration: line-through;
+}
+
+/* ── Label dots ── */
+.labelDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Checklist badge ── */
+.checklistBadge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ── Empty ── */

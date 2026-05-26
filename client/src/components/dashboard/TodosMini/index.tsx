@@ -10,10 +10,39 @@ import styles from './TodosMini.module.css'
  * ---------
  * Інтерактивний міні-список покупок/todos для Dashboard.
  * Показує всі type=shopping та type=todo елементи.
+ * Чекбокс: квадратний (border-radius 6px), + коли невиконано, ✓ коли виконано.
+ * Лічильник: var(--second), приглушений коли список порожній.
  */
 
 const PRIORITY_ORDER: Record<TodoPriority, number> = { urgent: 0, normal: 1, low: 2 }
 const VISIBLE_LIMIT = 5
+
+const PlusIcon: React.FC = () => (
+  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+    <path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+)
+
+const CheckIcon: React.FC = () => (
+  <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+    <path d="M1.5 4.5l2.2 2.2 4-4" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+const ShopTag: React.FC = () => (
+  <span className={styles.tag} aria-hidden="true">
+    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+      <path
+        d="M2 3.5h8l-.8 5.5H2.8L2 3.5z"
+        stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"
+      />
+      <path
+        d="M4 3.5V2.5a2 2 0 0 1 4 0v1"
+        stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"
+      />
+    </svg>
+  </span>
+)
 
 const TodosMini: React.FC = () => {
   const { items, toggleItem, addItem, addItems } = useSprintStore()
@@ -53,12 +82,19 @@ const TodosMini: React.FC = () => {
     closeForm()
   }
 
+  const badgeColor   = pending.length === 0 ? 'var(--text3)' : 'var(--second)'
+  const badgeBg      = pending.length === 0 ? 'transparent' : 'var(--second-soft)'
+
   return (
     <Card className={styles.card}>
       <div className={styles.header}>
         <span className={styles.label}>Запаси</span>
         <div className={styles.headerRight}>
-          {pending.length > 0 && <span className={styles.badge}>{pending.length}</span>}
+          {pending.length > 0 && (
+            <span className={styles.badge} style={{ color: badgeColor, background: badgeBg }}>
+              {pending.length}
+            </span>
+          )}
           <button
             type="button"
             className={`${styles.addBtn} ${showForm ? styles.addBtnActive : ''}`}
@@ -80,16 +116,17 @@ const TodosMini: React.FC = () => {
             <li key={t.id} className={styles.item}>
               <button
                 type="button"
-                className={styles.check}
+                className={`${styles.check} ${t.done ? styles.checkDone : ''}`}
                 onClick={() => toggleItem(t.id)}
-                aria-label="Позначити виконаним"
+                aria-label={t.done ? 'Позначити невиконаним' : 'Позначити виконаним'}
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                </svg>
+                {t.done ? <CheckIcon /> : <PlusIcon />}
               </button>
-              <span className={styles.title}>{t.title}</span>
+              <span className={`${styles.title} ${t.done ? styles.titleDone : ''}`}>
+                {t.title}
+              </span>
               {t.priority && <PriorityBadge priority={t.priority} compact />}
+              <ShopTag />
             </li>
           ))}
         </ul>

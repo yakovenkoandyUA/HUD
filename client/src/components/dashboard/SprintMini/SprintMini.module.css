@@ -30,16 +30,15 @@
 	font-family: var(--font-mono);
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--second);
-	background: var(--second-soft);
 	padding: 2px 8px;
 	border-radius: 20px;
+	transition: color 0.3s, background 0.3s;
 }
 
-/* ── Progress bar ────────────────────────────────────────────── */
+/* ── Progress bar ── */
 
 .barTrack {
-	height: 6px;
+	height: 4px;
 	border-radius: 999px;
 	background: var(--surface2);
 	overflow: hidden;
@@ -48,11 +47,10 @@
 .barFill {
 	height: 100%;
 	border-radius: 999px;
-	background: var(--accent);
-	transition: width 0.4s ease;
+	transition: width 0.4s ease, background 0.4s ease;
 }
 
-/* ── Task list ───────────────────────────────────────────────── */
+/* ── Task list ── */
 
 .list {
 	list-style: none;
@@ -68,20 +66,27 @@
 	min-width: 0;
 }
 
-.circle {
+/* Checkbox — undone: faint transparent border */
+.checkbox {
 	flex-shrink: 0;
 	width: 16px;
 	height: 16px;
-	border-radius: 50%;
-	border: 2px solid var(--text3);
-	transition:
-		border-color 0.15s,
-		background 0.15s;
+	border-radius: 4px;
+	border: 1.5px solid rgba(255, 255, 255, 0.2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.15s, border-color 0.15s;
 }
 
-.circleDone {
-	background: var(--accent);
-	border-color: var(--accent);
+/* Checkbox — done: var(--second) fill */
+.checkboxDone {
+	background: var(--second);
+	border-color: var(--second);
+}
+
+:global([data-theme="japan"]) .checkbox {
+	border-color: rgba(0, 0, 0, 0.15);
 }
 
 .title {
@@ -96,6 +101,11 @@
 	line-height: 1.4;
 }
 
+.titleDone {
+	text-decoration: line-through;
+	color: var(--text3);
+}
+
 .tag {
 	flex-shrink: 0;
 	font-family: var(--font-ui);
@@ -107,7 +117,7 @@
 	letter-spacing: 0.04em;
 }
 
-/* ── Empty ───────────────────────────────────────────────────── */
+/* ── Empty / More ── */
 
 .empty {
 	font-family: var(--font-ui);
@@ -115,4 +125,18 @@
 	color: var(--text3);
 	text-align: center;
 	padding: 4px 0;
+}
+
+.moreBtn {
+	align-self: flex-end;
+	background: none;
+	border: none;
+	font-family: var(--font-ui);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+	cursor: pointer;
+	padding: 0;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
 }

@@ -70,6 +70,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
           `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=10`
         )
         const data = await res.json()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const items: SearchResult[] = (data.items ?? []).map((b: any) => ({
           tmdbId: 0,
           title: b.volumeInfo?.title ?? 'Невідома назва',
@@ -94,12 +95,14 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
 
         if (category === 'anime') {
           list = list.filter(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (r: any) =>
               r.genre_ids?.includes(16) &&
               (r.origin_country?.includes('JP') || r.original_language === 'ja')
           )
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const items: SearchResult[] = list.slice(0, 10).map((r: any) => ({
           tmdbId: r.id,
           title: r.title ?? r.name ?? 'Без назви',
@@ -122,6 +125,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!query.trim()) { setResults([]); setIsOpen(false); return }
     timerRef.current = setTimeout(() => search(query), 500)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
@@ -129,6 +133,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
 
   // close dropdown on category change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuery('')
     setResults([])
     setIsOpen(false)

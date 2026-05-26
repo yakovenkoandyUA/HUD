@@ -60,7 +60,7 @@ function parseDrivers(json: any, headshotMap: Record<string, { url: string; numb
     const headshot = headshotMap[code]
     return {
       position:      Number(s.position),
-      driver_number: headshot?.number ?? Number(drv.permanentNumber) ?? 0,
+      driver_number: headshot?.number ?? (Number(drv.permanentNumber) || 0),
       full_name:     `${drv.givenName} ${drv.familyName}`,
       broadcast_name: code,
       team_name:     s.Constructors?.[0]?.name ?? '',

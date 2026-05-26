@@ -7,7 +7,7 @@ import styles from './TopBar.module.css'
 /**
  * TopBar
  * ------
- * Верхня панель: HUD логотип зліва, іконка теми (та опційно годинник) справа.
+ * Верхня панель: MIMIR логотип зліва, іконка теми (та опційно годинник) справа.
  *
  * Props:
  * @prop {string}          [title]            — назва поточного екрану
@@ -77,7 +77,7 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) =>
         aria-label="Hold for NASA APOD"
         {...longPress}
       >
-        HUD
+        MIMIR
       </button>
       {/* {hintPhase !== 'hidden' && (
         <span
@@ -88,7 +88,7 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) =>
       )} */}
     </div>
   ) : (
-    <h1 className={styles.logo}>HUD</h1>
+    <h1 className={styles.logo}>MIMIR</h1>
   )
 
   return (

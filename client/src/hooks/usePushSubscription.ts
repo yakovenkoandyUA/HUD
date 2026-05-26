@@ -17,6 +17,7 @@ export function usePushSubscription() {
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !VAPID_KEY) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSupported(true)
     navigator.serviceWorker.ready.then((reg) =>
       reg.pushManager.getSubscription().then((sub) => setIsSubscribed(!!sub))

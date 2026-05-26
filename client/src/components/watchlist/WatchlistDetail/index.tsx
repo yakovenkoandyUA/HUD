@@ -61,6 +61,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true)
       setConfirmDelete(false)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))

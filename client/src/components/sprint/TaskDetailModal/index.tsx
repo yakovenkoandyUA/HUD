@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSprintStore, LABEL_COLORS } from '../../../store/sprintStore'
-import { useLongPress } from '../../../hooks/useLongPress'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import type { SprintLabel, UnifiedTodo } from '../../../types'
 import styles from './TaskDetailModal.module.css'
@@ -42,7 +41,7 @@ function formatDueDateHuman(dateStr: string): string {
   return `${DAYS[target.getDay()]} ${target.getDate()} ${MONTHS[target.getMonth()]}`
 }
 
-// ── Checklist row with long-press delete ─────────────────────────────────────
+// ── Checklist row with animated delete ───────────────────────────────────────
 
 interface ChecklistRowProps {
   taskId: string
@@ -53,23 +52,18 @@ interface ChecklistRowProps {
 
 const ChecklistRow: React.FC<ChecklistRowProps> = ({ taskId, itemId, title, done }) => {
   const { toggleChecklistItem, removeChecklistItem } = useSprintStore()
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const longPress = useLongPress(() => setConfirmDelete(true), 600)
+  const [deleting, setDeleting] = useState(false)
 
-  if (confirmDelete) {
-    return (
-      <li className={styles.checklistItem}>
-        <span className={styles.checklistConfirmText}>Видалити підзадачу?</span>
-        <button type="button" className={styles.checklistConfirmYes}
-          onClick={() => removeChecklistItem(taskId, itemId)}>Так</button>
-        <button type="button" className={styles.checklistConfirmNo}
-          onClick={() => setConfirmDelete(false)}>Ні</button>
-      </li>
-    )
+  const handleDelete = () => {
+    setDeleting(true)
+    setTimeout(() => {
+      removeChecklistItem(taskId, itemId)
+      setDeleting(false)
+    }, 280)
   }
 
   return (
-    <li className={styles.checklistItem} {...longPress}>
+    <li className={`${styles.checklistItem} ${deleting ? styles.checklistItemDeleting : ''}`}>
       <button
         type="button"
         className={`${styles.checklistCheckbox} ${done ? styles.checklistCheckboxDone : ''}`}
@@ -85,6 +79,14 @@ const ChecklistRow: React.FC<ChecklistRowProps> = ({ taskId, itemId, title, done
       <span className={`${styles.checklistTitle} ${done ? styles.checklistTitleDone : ''}`}>
         {title}
       </span>
+      <button
+        type="button"
+        className={styles.checklistDeleteBtn}
+        onClick={handleDelete}
+        aria-label="Видалити підзадачу"
+      >
+        ×
+      </button>
     </li>
   )
 }
@@ -292,7 +294,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   // Keep a snapshot so the task content stays visible during the close animation
   const liveTask = items.find(i => i.id === taskId) ?? null
   const lastTaskRef = useRef<UnifiedTodo | null>(null)
+  // eslint-disable-next-line react-hooks/refs
   if (liveTask) lastTaskRef.current = liveTask
+  // eslint-disable-next-line react-hooks/refs
   const task = liveTask ?? lastTaskRef.current
 
   const [mounted, setMounted]                 = useState(false)
@@ -309,6 +313,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
   useEffect(() => {
     if (taskId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true)
       setLabelPickerOpen(false)
       setCheckInput('')
@@ -320,6 +325,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
   useEffect(() => {
     if (task) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitleDraft(task.title)
       setDescDraft(task.description ?? '')
     }
@@ -368,6 +374,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     updateTask(task.id, { dueDate: date || undefined })
   }
 
+  // eslint-disable-next-line react-hooks/refs
   if (!mounted || !task) return null
 
   const checklist    = task.checklist ?? []

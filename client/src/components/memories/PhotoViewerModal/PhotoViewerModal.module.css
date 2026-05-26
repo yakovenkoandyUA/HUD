@@ -1,0 +1,145 @@
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ── UI overlay ── */
+.ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.uiVisible { opacity: 1; pointer-events: auto; }
+.uiHidden  { opacity: 0; pointer-events: none; }
+
+/* ── Top bar ── */
+.topBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 16px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+  background: linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.counter {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.actionBtn {
+  font-size: 18px;
+  color: rgba(255,255,255,0.8);
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.15s, color 0.15s;
+}
+.actionBtn:hover { background: rgba(255,255,255,0.15); }
+
+.deleteBtn:hover { color: var(--negative); }
+
+.closeBtn {
+  font-size: 24px;
+  color: rgba(255,255,255,0.9);
+  padding: 6px 10px;
+  transition: color 0.15s;
+}
+.closeBtn:hover { color: #fff; }
+
+/* ── Prev / Next arrows ── */
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 36px;
+  color: rgba(255,255,255,0.8);
+  padding: 12px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.navBtn:hover { color: #fff; }
+
+.navBtnPrev { left: 8px; }
+.navBtnNext { right: 8px; }
+
+/* ── Bottom caption ── */
+.bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 20px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%);
+}
+
+.caption {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  text-align: center;
+}
+
+.captionEdit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.captionInput {
+  flex: 1;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+}
+.captionInput::placeholder { color: rgba(255,255,255,0.4); }
+
+.captionSave {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  padding: 8px 12px;
+  white-space: nowrap;
+}

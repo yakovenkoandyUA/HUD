@@ -11,6 +11,7 @@ export async function migrateTransactionsToBackend(): Promise<void> {
   if (localStorage.getItem(MIGRATED_KEY)) return
   if (!getToken() || !isBackendConfigured()) return
 
+  // eslint-disable-next-line no-useless-assignment
   let transactions: Transaction[] = []
   try {
     const raw = localStorage.getItem('hud-finance')
@@ -74,7 +75,9 @@ export async function migrateSprintToBackend(): Promise<void> {
   if (localStorage.getItem('hud_migrated_sprint')) return
   if (!getToken() || !isBackendConfigured()) return
 
+  // eslint-disable-next-line no-useless-assignment
   let tasks: SprintTask[] = []
+  // eslint-disable-next-line no-useless-assignment
   let todos: TodoItem[] = []
   try {
     const raw = localStorage.getItem('hud-sprint')
@@ -123,6 +126,7 @@ export async function migrateWatchlistToBackend(): Promise<void> {
   if (localStorage.getItem('hud_migrated_watchlist')) return
   if (!getToken() || !isBackendConfigured()) return
 
+  // eslint-disable-next-line no-useless-assignment
   let items: WatchlistItem[] = []
   try {
     const raw = localStorage.getItem('hud-watchlist')

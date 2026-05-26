@@ -12,10 +12,13 @@ import RaceDetailPage from './screens/RaceDetail'
 import Sprint from './screens/Sprint'
 import Recipes from './screens/Recipes'
 import Watchlist from './screens/Watchlist'
+import MemoriesScreen from './screens/Memories'
+import MemoryDetailScreen from './screens/MemoryDetail'
 import './App.css'
 
 const AnimatedRoutes: React.FC = () => {
   const location = useLocation()
+
   return (
     <div key={location.pathname} className="pageWrapper">
       <Routes location={location}>
@@ -26,6 +29,8 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/sprint" element={<Sprint />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/watchlist" element={<Watchlist />} />
+        <Route path="/memories" element={<MemoriesScreen />} />
+        <Route path="/memories/:id" element={<MemoryDetailScreen />} />
       </Routes>
     </div>
   )
@@ -34,6 +39,7 @@ const AnimatedRoutes: React.FC = () => {
 const NavGuard: React.FC = () => {
   const { pathname } = useLocation()
   if (/^\/f1\/\d+$/.test(pathname)) return null
+  if (/^\/memories\/.+/.test(pathname)) return null
   return <BottomNav />
 }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PriorityBadge from '../../ui/PriorityBadge'
+import TaskDetailModal from '../../sprint/TaskDetailModal'
 import { useSprintStore } from '../../../store/sprintStore'
 import { getCurrentWeekStart } from '../../../utils/sprint'
 import type { TodoPriority } from '../../../types'
@@ -14,25 +15,50 @@ import styles from './TasksAccordion.module.css'
  *
  * Секція 1 — ЗАДАЧІ: задачі поточного тижня (type=sprint),
  *   за замовчуванням відкрита, показує перші 4 задачі з чекбоксами.
+ *   Тап на назву задачі → відкриває TaskDetailModal.
  *
  * Секція 2 — ПОКУПКИ: items типу shopping/todo,
  *   за замовчуванням закрита, показує перші 3 з PriorityBadge.
+ *   Тап на назву → відкриває TaskDetailModal.
  */
 
 const SPRINT_LIMIT = 4
 const SHOPPING_LIMIT = 3
 const PRIORITY_ORDER: Record<TodoPriority, number> = { urgent: 0, normal: 1, low: 2 }
 
+const PlusIcon: React.FC = () => (
+  <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+    <path d="M4.5 1.5v6M1.5 4.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+)
+
+const CheckIcon: React.FC = () => (
+  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+    <path d="M1.5 4l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+const ShopTag: React.FC = () => (
+  <span className={styles.shopTag} aria-hidden="true">
+    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+      <path d="M2 3.5h8l-.8 5.5H2.8L2 3.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+      <path d="M4 3.5V2.5a2 2 0 0 1 4 0v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  </span>
+)
+
 const TasksAccordion: React.FC = () => {
   const navigate = useNavigate()
   const { items, toggleItem } = useSprintStore()
   const [sprintOpen, setSprintOpen] = useState(true)
   const [shoppingOpen, setShoppingOpen] = useState(false)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
   const weekStart = getCurrentWeekStart()
 
   const sprintTasks = items.filter((t) => t.type === 'sprint' && t.weekStart === weekStart)
   const sprintDone = sprintTasks.filter((t) => t.done).length
+  const sprintAllDone = sprintTasks.length > 0 && sprintDone === sprintTasks.length
   const sprintPct = sprintTasks.length > 0 ? Math.round((sprintDone / sprintTasks.length) * 100) : 0
   const sprintVisible = sprintTasks.slice(0, SPRINT_LIMIT)
   const sprintRest = sprintTasks.length - SPRINT_LIMIT
@@ -57,7 +83,10 @@ const TasksAccordion: React.FC = () => {
         >
           <span className={styles.headerLabel}>Задачі</span>
           <div className={styles.headerRight}>
-            <span className={styles.badge}>
+            <span
+              className={styles.badge}
+              style={{ color: sprintAllDone ? 'var(--second)' : 'var(--accent)' }}
+            >
               {sprintDone}/{sprintTasks.length}
             </span>
             <svg
@@ -71,7 +100,13 @@ const TasksAccordion: React.FC = () => {
 
         <div className={`${styles.progressWrap} ${sprintOpen ? styles.progressVisible : ''}`}>
           <div className={styles.progressTrack}>
-            <div className={styles.progressFill} style={{ width: `${sprintPct}%` }} />
+            <div
+              className={styles.progressFill}
+              style={{
+                width:      `${sprintPct}%`,
+                background: sprintAllDone ? 'var(--second)' : 'var(--accent)',
+              }}
+            />
           </div>
         </div>
 
@@ -85,19 +120,26 @@ const TasksAccordion: React.FC = () => {
                   <li key={t.id} className={styles.item}>
                     <button
                       type="button"
-                      className={`${styles.checkbox} ${t.done ? styles.checkboxDone : ''}`}
-                      onClick={() => toggleItem(t.id)}
+                      className={`${styles.checkbox} ${t.done ? styles.checkboxDone : styles.checkboxUndone}`}
+                      onClick={(e) => { e.stopPropagation(); toggleItem(t.id) }}
                       aria-label={t.done ? 'Позначити невиконаним' : 'Позначити виконаним'}
                     >
-                      {t.done && (
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                          <path d="M1.5 4l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
+                      {t.done && <CheckIcon />}
                     </button>
-                    <span className={`${styles.itemTitle} ${t.done ? styles.itemDone : ''}`}>
+                    <span
+                      className={`${styles.itemTitle} ${t.done ? styles.itemDone : ''}`}
+                      onClick={() => setSelectedTaskId(t.id)}
+                    >
                       {t.title}
                     </span>
+                    {t.labels && t.labels.length > 0 && t.labels.slice(0, 2).map(label => (
+                      <span key={label.id} className={styles.labelDot} style={{ background: label.color }} />
+                    ))}
+                    {t.checklist && t.checklist.length > 0 && (
+                      <span className={styles.checklistBadge}>
+                        {t.checklist.filter(i => i.done).length}/{t.checklist.length}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -119,6 +161,12 @@ const TasksAccordion: React.FC = () => {
       {/* ── Роздільник ── */}
       <div className={styles.divider} />
 
+      {/* ── TaskDetailModal ── */}
+      <TaskDetailModal
+        taskId={selectedTaskId}
+        onClose={() => setSelectedTaskId(null)}
+      />
+
       {/* ── Секція 2: ПОКУПКИ ── */}
       <div className={styles.section}>
         <button
@@ -130,7 +178,9 @@ const TasksAccordion: React.FC = () => {
           <span className={styles.headerLabel}>Покупки</span>
           <div className={styles.headerRight}>
             {shoppingTotal > 0 && (
-              <span className={styles.badge}>{shoppingTotal}</span>
+              <span className={styles.badge} style={{ color: 'var(--second)' }}>
+                {shoppingTotal}
+              </span>
             )}
             <svg
               className={`${styles.arrow} ${shoppingOpen ? styles.arrowOpen : ''}`}
@@ -151,20 +201,25 @@ const TasksAccordion: React.FC = () => {
                   <li key={t.id} className={styles.item}>
                     <button
                       type="button"
-                      className={`${styles.checkbox} ${t.done ? styles.checkboxDone : ''}`}
-                      onClick={() => toggleItem(t.id)}
+                      className={`${styles.checkboxShop} ${t.done ? styles.checkboxShopDone : ''}`}
+                      onClick={(e) => { e.stopPropagation(); toggleItem(t.id) }}
                       aria-label={t.done ? 'Позначити невиконаним' : 'Позначити виконаним'}
                     >
-                      {t.done && (
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                          <path d="M1.5 4l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
+                      {t.done ? <CheckIcon /> : <PlusIcon />}
                     </button>
-                    <span className={`${styles.itemTitle} ${t.done ? styles.itemDone : ''}`}>
+                    <span
+                      className={`${styles.itemTitle} ${t.done ? styles.itemDone : ''}`}
+                      onClick={() => setSelectedTaskId(t.id)}
+                    >
                       {t.title}
                     </span>
                     {t.priority && <PriorityBadge priority={t.priority} compact />}
+                    {t.checklist && t.checklist.length > 0 && (
+                      <span className={styles.checklistBadge}>
+                        ☑ {t.checklist.filter(i => i.done).length}/{t.checklist.length}
+                      </span>
+                    )}
+                    <ShopTag />
                   </li>
                 ))}
               </ul>

@@ -7,6 +7,7 @@ import F1Icon from '../../../../public/icons/nav/F1.svg?react'
 import SprintIcon from '../../../../public/icons/nav/sprint.svg?react'
 import RecipeIcon from '../../../../public/icons/nav/recipe.svg?react'
 import WatchIcon from '../../../../public/icons/nav/watch.svg?react'
+import MemoriesIcon from '../../../../public/icons/nav/memories.svg?react'
 
 /**
  * BottomNav
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { to: '/sprint',    Icon: SprintIcon    },
   { to: '/recipes',   Icon: RecipeIcon    },
   { to: '/watchlist', Icon: WatchIcon     },
+  { to: '/memories',  Icon: MemoriesIcon  },
 ]
 
 const BottomNav: React.FC = () => (

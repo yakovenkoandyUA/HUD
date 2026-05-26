@@ -24,7 +24,7 @@
 .item:nth-child(4)  svg {
   width: 20px;
 }
-.item:last-child.active  svg path{
+.item:nth-child(6).active svg path {
   fill: var(--accent);
 }
 
