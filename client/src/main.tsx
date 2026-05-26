@@ -2,6 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/global.css'
 import App from './App.tsx'
+import { runCacheMigration } from './utils/appCache'
+
+runCacheMigration()
 
 // Apply stored theme before React mounts to prevent flash
 try {

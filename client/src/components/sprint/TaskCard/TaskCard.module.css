@@ -1,15 +1,22 @@
 .item {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 11px 14px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  /* border-radius: 12px; */
   transition: background 0.15s;
 }
 
 .item:hover { background: rgba(255, 255, 255, 0.07); }
+
+.inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 14px;
+}
 
 .done { opacity: 0.5; }
 .done .title {
@@ -128,16 +135,24 @@
   flex-shrink: 0;
 }
 
-.checklistBadge {
-  display: flex;
-  align-items: center;
-  gap: 3px;
+.checklistCounter {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text2);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
-.checklistIcon { flex-shrink: 0; }
+.progressTrack {
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.progressFill {
+  height: 100%;
+  transition: width 0.3s ease, background 0.3s ease;
+}
 
 .dueDateBadge {
   display: flex;

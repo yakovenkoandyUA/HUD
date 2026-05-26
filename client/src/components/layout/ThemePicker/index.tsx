@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useUiStore } from '../../../store/uiStore'
 import type { Theme } from '../../../store/uiStore'
+import { clearApiCaches } from '../../../utils/appCache'
 import styles from './ThemePicker.module.css'
 
 /**
@@ -64,7 +65,7 @@ const PALETTES: ThemePalette[] = [
   },
   {
     id: 'heroes',
-    name: 'HEROES 🏰',
+    name: 'HEROES',
     bg: '#0d0f1a',
     surface: '#1e2235',
     border: '#2e3450',
@@ -76,14 +77,23 @@ const PALETTES: ThemePalette[] = [
 ]
 
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
-  const { theme, setTheme } = useUiStore()
+  const { theme, setTheme, showToast } = useUiStore()
+  const [cleared, setCleared] = useState(false)
 
   const handlePick = (id: Theme) => {
     setTheme(id)
     onClose()
   }
 
+  const handleClearCache = () => {
+    clearApiCaches()
+    setCleared(true)
+    showToast('Кеш очищено', 'success')
+    setTimeout(() => setCleared(false), 2000)
+  }
+
   return (
+    <>
     <div className={styles.grid}>
       {PALETTES.map((p) => {
         const isActive = theme === p.id
@@ -138,6 +148,15 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
         )
       })}
     </div>
+
+    <button
+      type="button"
+      className={`${styles.clearBtn} ${cleared ? styles.clearBtnDone : ''}`}
+      onClick={handleClearCache}
+    >
+      {cleared ? '✓ Кеш очищено' : 'Очистити кеш'}
+    </button>
+    </>
   )
 }
 

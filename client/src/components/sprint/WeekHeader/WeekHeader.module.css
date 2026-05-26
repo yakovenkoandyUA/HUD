@@ -23,43 +23,80 @@
   color: var(--text3);
 }
 
-/* ── Day dots ────────────────────────────────────────────────── */
+/* ── Week grid ─────────────────────────────────────────────────── */
 
-.dots {
-  display: flex;
-  gap: 0;
-  justify-content: space-between;
+.weekRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+  padding: 8px 0;
 }
 
-.dotCol {
+.dayCell {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  flex: 1;
+  padding: 6px 4px;
+  border-radius: 8px;
 }
+
+.dayCellToday {
+  background: var(--accent-soft);
+}
+
+/* ── Day name ──────────────────────────────────────────────────── */
+
+.dayName {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text3);
+}
+
+.dayNameToday {
+  color: var(--accent);
+}
+
+/* ── Day number ────────────────────────────────────────────────── */
+
+.dayNumber {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1;
+}
+
+.dayNumberToday {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.dayNumberDim {
+  color: var(--text3);
+  opacity: 0.5;
+}
+
+/* ── Dot ───────────────────────────────────────────────────────── */
 
 .dot {
   display: block;
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--border2);
-  transition: background 0.2s;
+  flex-shrink: 0;
 }
 
 .dotToday {
   background: var(--accent);
-  box-shadow: 0 0 6px var(--accent-glow);
+  box-shadow: 0 0 5px var(--accent-glow);
 }
 
-.dotLabel {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--text3);
-  letter-spacing: 0.04em;
-}
-
-.dotLabelToday {
-  color: var(--accent);
+.dotDim {
+  background: var(--text3);
+  opacity: 0.4;
 }

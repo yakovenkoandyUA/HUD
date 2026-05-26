@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import StarRating from '../StarRating'
 import EpisodesList from '../EpisodesList'
+import CustomDatePicker from '../../ui/CustomDatePicker'
+import ImageUploadButton from '../../ui/ImageUploadButton'
+import { formatDateUA } from '../../../utils/formatDate'
 import styles from './WatchlistDetail.module.css'
 import type { WatchlistItem, WatchlistStatus } from '../../../types'
 
@@ -8,7 +11,7 @@ import type { WatchlistItem, WatchlistStatus } from '../../../types'
  * WatchlistDetail
  * ---------------
  * Bottom-sheet modal with full item details, status change,
- * personal rating, season reminder toggle and delete.
+ * personal rating, season reminder toggle, custom photo upload and delete.
  *
  * Props:
  * @prop {WatchlistItem}                       item
@@ -17,6 +20,7 @@ import type { WatchlistItem, WatchlistStatus } from '../../../types'
  * @prop {(status: WatchlistStatus) => void}   onStatusChange
  * @prop {(rating: number | null) => void}     onRatingChange
  * @prop {(date?: string) => void}             onToggleReminder
+ * @prop {(url: string) => void}               [onImageChange]  — upload custom poster/backdrop
  * @prop {() => void}                          onDelete
  */
 interface WatchlistDetailProps {
@@ -26,6 +30,7 @@ interface WatchlistDetailProps {
   onStatusChange: (status: WatchlistStatus) => void
   onRatingChange: (rating: number | null) => void
   onToggleReminder: (date?: string) => void
+  onImageChange?: (url: string) => void
   onDelete: () => void
 }
 
@@ -45,12 +50,14 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   onStatusChange,
   onRatingChange,
   onToggleReminder,
+  onImageChange,
   onDelete,
 }) => {
-  const [mounted, setMounted] = useState(isOpen)
-  const [visible, setVisible] = useState(isOpen)
+  const [mounted, setMounted]             = useState(isOpen)
+  const [visible, setVisible]             = useState(isOpen)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [reminderDate, setReminderDate] = useState(item.reminderDate ?? '')
+  const [reminderDate, setReminderDate]   = useState(item.reminderDate ?? '')
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -90,6 +97,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   }
 
   return (
+    <>
     <div
       className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`}
       onClick={onClose}
@@ -134,6 +142,20 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
               <span className={styles.metaChip}>{item.authors[0]}</span>
             )}
           </div>
+
+          {/* Custom poster — show when no TMDB backdrop */}
+          {!item.backdropPath && onImageChange && (
+            <>
+              <p className={styles.sectionLabel}>Постер</p>
+              <ImageUploadButton
+                currentUrl={item.thumbnail}
+                folder="mimir/watchlist"
+                onUpload={onImageChange}
+                variant="square"
+                placeholder="Додати постер"
+              />
+            </>
+          )}
 
           {/* Overview */}
           {item.overview && (
@@ -195,17 +217,18 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                   <span className={styles.toggleKnob} />
                 </button>
                 {item.seasonReminder && (
-                  <input
-                    type="date"
-                    className={styles.dateInput}
-                    value={reminderDate}
-                    onChange={(e) => setReminderDate(e.target.value)}
-                  />
+                  <button
+                    type="button"
+                    className={styles.reminderDateTrigger}
+                    onClick={() => setShowDatePicker(true)}
+                  >
+                    {reminderDate ? formatDateUA(reminderDate) : 'Вибрати дату'}
+                  </button>
                 )}
               </div>
               {item.seasonReminder && item.reminderDate && (
                 <p className={styles.reminderNote}>
-                  Нагадування заплановано на {item.reminderDate}
+                  Нагадування заплановано на {formatDateUA(item.reminderDate)}
                 </p>
               )}
             </>
@@ -240,6 +263,15 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
         </div>
       </div>
     </div>
+
+    {showDatePicker && (
+      <CustomDatePicker
+        value={reminderDate || undefined}
+        onChange={(val) => { setReminderDate(val); setShowDatePicker(false) }}
+        onClose={() => setShowDatePicker(false)}
+      />
+    )}
+    </>
   )
 }
 

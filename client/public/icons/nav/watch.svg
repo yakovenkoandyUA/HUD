@@ -1,13 +1,4 @@
-<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M43.5,20.7991,38.6216,10.734a3.9415,3.9415,0,0,1-5.2592-1.8317L6.3407,21.96A3.9322,3.9322,0,0,1,4.5,27.21L9.3784,37.2751a3.934,3.934,0,0,1,5.2592,1.8226L41.6593,26.04A3.9322,3.9322,0,0,1,43.5,20.79L38.6216,10.7249"/>
-<line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" x1="13.573" y1="25.4039" x2="16.5653" y2="31.3885"/>
-<line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" x1="23.9433" y1="27.8068" x2="27.0263" y2="26.356"/>
-<line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" x1="21.0416" y1="21.8222" x2="24.034" y2="20.3713"/>
-<line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" x1="22.4925" y1="24.8145" x2="24.4873" y2="23.9077"/>
-<line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" x1="21.0416" y1="21.8222" x2="23.9433" y2="27.8068"/>
-<polyline fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" points="28.401 25.576 25.485 19.533 31.422 24.118 31.527 16.617 34.444 22.66"/>
-<polyline fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" points="18.145 30.727 15.229 24.685 22.677 28.54 19.761 22.497"/>
-<polyline fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" points="39.916 20.06 35.036 14.966 35.913 21.992"/>
-<line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" x1="35.6111" y1="19.5296" x2="38.2348" y2="18.3053"/>
-<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M14.1208,30.0481a2.261,2.261,0,1,1-4.0714,1.9677l-.9884-2.04a2.2506,2.2506,0,0,1,1.0519-3.02,2.1843,2.1843,0,0,1,2.947,1.0881"/>
+<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg width="800px" height="800px" viewBox="-0.08 0 50.633 50.633" xmlns="http://www.w3.org/2000/svg">
+  <path id="cinema" d="M235.795,668.725A10.977,10.977,0,1,0,224.821,679.7,10.975,10.975,0,0,0,235.795,668.725Zm-19.411,0a8.434,8.434,0,1,1,8.437,8.434A8.448,8.448,0,0,1,216.384,668.725Zm31.634,10.98a8.277,8.277,0,1,0-8.279-8.278A8.277,8.277,0,0,0,248.018,679.705Zm0-14.013a5.733,5.733,0,1,1-5.731,5.735A5.743,5.743,0,0,1,248.018,665.692Zm15.96,17.666a1.663,1.663,0,0,0-1.378-.747,2.071,2.071,0,0,0-1.36.56l-9.691,8.42V685.74a4.206,4.206,0,0,0-4.2-4.2H222.928a4.2,4.2,0,0,0-4.2,4.2v18.437a4.209,4.209,0,0,0,4.2,4.2h24.417a4.215,4.215,0,0,0,4.2-4.2v-6.671l9.691,8.5a2.085,2.085,0,0,0,1.362.562.458.458,0,0,0,.052,0,1.658,1.658,0,0,0,1.328-.752,2.163,2.163,0,0,0,.325-1.2V684.569A2.164,2.164,0,0,0,263.978,683.358Zm-14.972,20.819a1.677,1.677,0,0,1-1.661,1.656H222.928a1.677,1.677,0,0,1-1.659-1.656V685.74a1.678,1.678,0,0,1,1.659-1.658h24.417a1.679,1.679,0,0,1,1.661,1.658Zm12.762-1.1-9.739-8.536,9.739-8.455Z" transform="translate(-213.841 -657.745)" fill="#8ea7ad"/>
 </svg>

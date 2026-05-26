@@ -15,7 +15,7 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  /* gap: 8px; */
 }
 
 .lessonList {
@@ -25,11 +25,25 @@
   gap: 8px;
 }
 
+/* ── Tab transition ───────────────────────────────────────────────────────── */
+
+@keyframes tabEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: tabEnter 0.17s ease both;
+}
+
 /* ── Filter chips ─────────────────────────────────────────────────────────── */
 
 .filterRow {
   display: flex;
-  gap: 6px;
+  /* gap: 6px; */
   flex-wrap: wrap;
 }
 
@@ -40,7 +54,7 @@
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  border-radius: 999px;
+  /* border-radius: 999px; */
   border: 1px solid var(--border2);
   background: var(--surface);
   color: var(--text2);

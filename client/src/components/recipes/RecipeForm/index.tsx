@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import type { Recipe } from '../../../types'
+import ImageUploadButton from '../../ui/ImageUploadButton'
 import styles from './RecipeForm.module.css'
 
 /**
@@ -74,13 +75,13 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>Посилання на фото <span className={styles.hint}>(необов'язково)</span></label>
-        <input
-          className={styles.input}
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="https://..."
-          type="url"
+        <label className={styles.label}>Фото <span className={styles.hint}>(необов'язково)</span></label>
+        <ImageUploadButton
+          currentUrl={imageUrl || undefined}
+          folder="mimir/recipes"
+          onUpload={setImageUrl}
+          variant="wide"
+          placeholder="Додати фото рецепту"
         />
       </div>
 

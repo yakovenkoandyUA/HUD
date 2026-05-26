@@ -800,26 +800,50 @@ setTimeout(() => {
 
 ---
 
-## Статус реалізації (станом на 2026-05-24)
+## Статус реалізації (станом на 2026-05-26)
 
 **Зроблено:**
 - ✅ Scaffold, дизайн-система (5 тем: retro/warm/dark/japan/heroes), шрифти, CSS змінні
-- ✅ UI компоненти: Card, Button, Input, Badge, ProgressBar, Modal, Toast, PriorityBadge
-- ✅ Layout: TopBar, BottomNav, ThemePicker (2×2 grid + heroes картка)
+- ✅ UI компоненти: Card, Button, Input, Badge, ProgressBar, Modal, Toast, PriorityBadge, CustomDatePicker, ImageUploadButton
+- ✅ Layout: TopBar, BottomNav, ThemePicker (2×2 grid + heroes картка) + кнопка "Очистити кеш"
 - ✅ Dashboard: HeroCard (3D McLaren), SprintMini, LessonsMini, TodosMini, MealMini; NASA APOD через довгий тап на логотип
 - ✅ Finance: BalanceHero, TodayCard, StatsGrid, TransactionList, ShoppingTracker, GoalsList
 - ✅ F1: NextRaceCard (з TrackSVG draw-path), RaceCalendarList, RaceDetail, ChampionshipTable (пілоти з фото + команди), McLarenViewer
-- ✅ Sprint: таби Спрінти / Список покупок / Уроки; PriorityBadge маркери; режим одна/список
-- ✅ Recipes: MealBanner (TheMealDB, кеш по тижню), MealDetail, RecipeCard, RecipeForm
-- ✅ Watchlist: екран `/watchlist` з категоріями movie/series/anime/book, пошук TMDB/Google Books
+- ✅ Sprint: таби Спрінти / Список покупок / Уроки; PriorityBadge маркери; анімація переходу між табами
+- ✅ Sprint TaskDetailModal: єдиний скролл, секції МІТКИ/ДЕДЛАЙН/ЧЕК-ЛІСТ/ОПИС, LabelPicker overlay, анімація відкриття/закриття
+- ✅ Sprint TaskCard: прогрес-бар чек-листа (2px знизу), лічильник `☑ X/Y` з кольоровими станами
+- ✅ Sprint WeekHeader: числа дат під назвами днів, підсвітка сьогодні (accent-soft bg), приглушення минулих/overflow днів
+- ✅ Sprint store: дефолтні globalLabels (8 шт), mergeLocal при fetchItems (checklist/labels/dueDate/description не перезаписуються)
+- ✅ Recipes: MealBanner (TheMealDB, кеш по тижню), MealDetail, RecipeCard, RecipeForm (з ImageUploadButton)
+- ✅ Watchlist: екран `/watchlist` з категоріями movie/series/anime/book, пошук TMDB/Google Books, кастомний постер через ImageUploadButton
+- ✅ CustomDatePicker: нативний UI замість `input[type=date]` — в TaskDetailModal, LessonForm, WatchlistDetail
+- ✅ Cloudinary: `uploadToCloudinary.ts` + `useImageUpload` хук + `ImageUploadButton` компонент (unsigned upload, folder param)
+- ✅ Cache migration: `appCache.ts` — versioned migration, `clearApiCaches()`, `clearAllStorage()`, `getStorageReport()`
+- ✅ `formatDate.ts` утиліта: `formatDateUA`, `isOverdue`, `isTodayOrTomorrow`
 - ✅ PWA іконки: `icon-192.png`, `icon-512.png` — існують
 - ✅ Всі store'и з Zustand persist
 - ✅ SVG траси для всіх 22 гонок (крім Chinese — немає файлу)
 - ✅ Backend: Express + Mongoose + JWT + VAPID на Railway; CORS відкритий (`cors()`)
 - ✅ Frontend деплой на Vercel; backend деплой на Railway (hud-production.up.railway.app)
+- ✅ Goals: goalsStore повністю на backend (fetchGoals / addGoal / contribute / deleteGoal)
 
 **Залишилось:**
-- ⬜ Міграція goals з localStorage → MongoDB (goalsStore вже має backend інтеграцію, але старі дані в localStorage)
+- ⬜ Міграція goals з localStorage → MongoDB для старих юзерів (goalsStore має backend інтеграцію, але існуючі локальні дані не мігрують автоматично)
+
+---
+
+## Cloudinary
+
+Env змінні в `/client/.env`:
+```
+VITE_CLOUDINARY_CLOUD_NAME=cold-house
+VITE_CLOUDINARY_UPLOAD_PRESET=mimir_uploads
+```
+
+Використання: `uploadToCloudinary(file, folder)` — unsigned upload через FormData.
+Папки: `mimir/recipes`, `mimir/watchlist`, `mimir` (default).
+Хук `useImageUpload(folder, onSuccess)` повертає `{ trigger, uploading, error, inputElement }`.
+Компонент `ImageUploadButton` — варіанти `square` (1:1) і `wide` (16:9).
 
 ---
 

@@ -24,6 +24,9 @@
 .item:nth-child(4)  svg {
   width: 20px;
 }
+.item:last-child.active  svg path{
+  fill: var(--accent);
+}
 
 .item:hover { color: var(--text2); }
 

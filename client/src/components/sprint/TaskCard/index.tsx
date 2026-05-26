@@ -63,80 +63,89 @@ function formatDueDate(dateStr: string): string {
   return `${DAYS[target.getDay()]} ${target.getDate()} ${MONTHS[target.getMonth()]}`
 }
 
+function getChecklistColors(pct: number): { bar: string; counter: string } {
+  if (pct === 100) return { bar: 'var(--positive)', counter: 'var(--positive)' }
+  if (pct >= 50)   return { bar: 'var(--gold)',     counter: 'var(--gold)' }
+  return               { bar: 'var(--negative)',  counter: 'var(--text3)' }
+}
+
 const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDetail }) => {
-  const checkDone = (item.checklist ?? []).filter(c => c.done).length
+  const checkDone  = (item.checklist ?? []).filter(c => c.done).length
   const checkTotal = (item.checklist ?? []).length
-  const hasLabels = (item.labels ?? []).length > 0
+  const checkPct   = checkTotal > 0 ? Math.round((checkDone / checkTotal) * 100) : 0
+
+  const hasLabels    = (item.labels ?? []).length > 0
   const hasChecklist = checkTotal > 0
-  const hasDueDate = !!item.dueDate
-  const hasExtras = hasLabels || hasChecklist || hasDueDate
+  const hasDueDate   = !!item.dueDate
+  const hasExtras    = hasLabels || hasChecklist || hasDueDate
+  const showBar      = hasChecklist && checkPct > 0
+
+  const { bar: barColor, counter: counterColor } = getChecklistColors(checkPct)
 
   return (
-    <li className={`${styles.item} ${item.done ? styles.done : ''}`}>
-      <button type="button" className={styles.check} onClick={onToggle} aria-label="Toggle">
-        <span className={`${styles.checkBox} ${item.type === 'sprint' ? styles.checkBoxSprint : ''}`}>
-          {item.done ? '✓' : ''}
-        </span>
-      </button>
+		<li className={`${styles.item} ${item.done ? styles.done : ''}`}>
+			<div className={styles.inner}>
+				<button type="button" className={styles.check} onClick={onToggle} aria-label="Toggle">
+					<span className={`${styles.checkBox} ${item.type === 'sprint' ? styles.checkBoxSprint : ''}`}>{item.done ? '✓' : ''}</span>
+				</button>
 
-      {/* Clickable body → open detail */}
-      <div className={styles.body} onClick={onOpenDetail} role="button" tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && onOpenDetail()}
-      >
-        <div className={styles.topRow}>
-          <span className={styles.title}>{item.title}</span>
-          <div className={styles.meta}>
-            {item.type === 'sprint' && item.tag && (
-              <span
-                className={styles.tagChip}
-                style={{ color: TAG_COLOR[item.tag], background: TAG_BG[item.tag] }}
-              >
-                {TAG_LABEL[item.tag]}
-              </span>
-            )}
-            {(item.type === 'shopping' || item.type === 'todo') && item.priority && (
-              <PriorityBadge priority={item.priority} />
-            )}
-            {item.type === 'shopping' && item.quantity && (
-              <span className={styles.quantity}>{item.quantity}</span>
-            )}
-          </div>
-        </div>
+				{/* Clickable body → open detail */}
+				<div className={styles.body} onClick={onOpenDetail} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && onOpenDetail()}>
+					<div className={styles.topRow}>
+						<span className={styles.title}>{item.title}</span>
+						<div className={styles.meta}>
+							{item.type === 'sprint' && item.tag && (
+								<span className={styles.tagChip} style={{ color: TAG_COLOR[item.tag], background: TAG_BG[item.tag] }}>
+									{TAG_LABEL[item.tag]}
+								</span>
+							)}
+							{(item.type === 'shopping' || item.type === 'todo') && item.priority && <PriorityBadge priority={item.priority} />}
+							{item.type === 'shopping' && item.quantity && <span className={styles.quantity}>{item.quantity}</span>}
+						</div>
+					</div>
 
-        {/* Extra row: labels + checklist count + dueDate */}
-        {hasExtras && (
-          <div className={styles.extrasRow}>
-            {hasLabels && (
-              <div className={styles.labelPills}>
-                {(item.labels ?? []).map(l => (
-                  <span key={l.id} className={styles.labelPill} style={{ background: l.color }} />
-                ))}
-              </div>
-            )}
-            {hasChecklist && (
-              <span className={styles.checklistBadge}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={styles.checklistIcon}>
-                  <path d="M2 5.5l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                {checkDone}/{checkTotal}
-              </span>
-            )}
-            {hasDueDate && (
-              <span className={styles.dueDateBadge} style={{ color: getDueDateColor(item.dueDate!) }}>
-                <svg width="9" height="9" viewBox="0 0 10 10" fill="none" className={styles.dueDateIcon}>
-                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
-                  <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                </svg>
-                {formatDueDate(item.dueDate!)}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+					{/* Extra row: labels + checklist counter + dueDate */}
+					{hasExtras && (
+						<div className={styles.extrasRow}>
+							{hasLabels && (
+								<div className={styles.labelPills}>
+									{(item.labels ?? []).map(l => (
+										<span key={l.id} className={styles.labelPill} style={{ background: l.color }} />
+									))}
+								</div>
+							)}
+							{hasChecklist && (
+								<span className={styles.checklistCounter} style={{ color: counterColor }}>
+									{checkDone} / {checkTotal}
+								</span>
+							)}
 
-      <button type="button" className={styles.del} onClick={onDelete} aria-label="Delete">✕</button>
-    </li>
-  )
+							{hasDueDate && (
+								<span className={styles.dueDateBadge} style={{ color: getDueDateColor(item.dueDate!) }}>
+									<svg width="9" height="9" viewBox="0 0 10 10" fill="none" className={styles.dueDateIcon}>
+										<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
+										<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+									</svg>
+									{formatDueDate(item.dueDate!)}
+								</span>
+							)}
+						</div>
+					)}
+				</div>
+
+				<button type="button" className={styles.del} onClick={onDelete} aria-label="Delete">
+					✕
+				</button>
+			</div>
+
+			{/* Full-width progress bar pinned to card bottom */}
+			{showBar && (
+				<div className={styles.progressTrack}>
+					<div className={styles.progressFill} style={{ width: `${checkPct}%`, background: barColor }} />
+				</div>
+			)}
+		</li>
+	)
 }
 
 export default TaskCard

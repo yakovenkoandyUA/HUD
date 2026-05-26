@@ -25,7 +25,7 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const Watchlist: React.FC = () => {
-  const { items, addItem, setStatus, setRating, toggleReminder, deleteItem, fetchWatchlist, syncStatus } = useWatchlistStore()
+  const { items, addItem, setStatus, setRating, toggleReminder, updateItem, deleteItem, fetchWatchlist, syncStatus } = useWatchlistStore()
   const { showToast } = useUiStore()
   const [tab, setTab] = useState<Tab>('movie')
 
@@ -87,6 +87,12 @@ const Watchlist: React.FC = () => {
     setSelected((prev) =>
       prev ? { ...prev, seasonReminder: !prev.seasonReminder, reminderDate: date ?? prev.reminderDate } : null
     )
+  }
+
+  const handleImageChange = (url: string) => {
+    if (!selected) return
+    updateItem(selected.id, { thumbnail: url || undefined })
+    setSelected((prev) => prev ? { ...prev, thumbnail: url || undefined } : null)
   }
 
   const handleDelete = () => {
@@ -167,6 +173,7 @@ const Watchlist: React.FC = () => {
           onStatusChange={handleStatusChange}
           onRatingChange={handleRatingChange}
           onToggleReminder={handleToggleReminder}
+          onImageChange={handleImageChange}
           onDelete={handleDelete}
         />
       )}

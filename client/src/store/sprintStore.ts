@@ -3,6 +3,17 @@ import { persist } from 'zustand/middleware'
 import type { UnifiedTodo, SprintTag, TodoPriority, SprintLabel, ChecklistItem } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
 
+const DEFAULT_LABELS: SprintLabel[] = [
+  { id: 'default-1', title: '',        color: '#216E4E' },
+  { id: 'default-2', title: '',        color: '#7F5F01' },
+  { id: 'default-3', title: '',        color: '#A54800' },
+  { id: 'default-4', title: '',        color: '#AE2E24' },
+  { id: 'default-5', title: 'it-tv',   color: '#AE2E24' },
+  { id: 'default-6', title: '',        color: '#9F8FEF' },
+  { id: 'default-7', title: 'desktop', color: '#0C66E4' },
+  { id: 'default-8', title: 'fly',     color: '#0C66E4' },
+]
+
 export const LABEL_COLORS = [
   '#216E4E', '#7F5F01', '#A54800', '#AE2E24', '#352C63',
   '#206A83', '#164555', '#37471F', '#50253F', '#454F59',
@@ -109,7 +120,7 @@ export const useSprintStore = create<TodoState>()(
     (set, get) => ({
       items: [],
       syncStatus: 'local' as SyncStatus,
-      globalLabels: [],
+      globalLabels: DEFAULT_LABELS,
 
       setSyncStatus: (syncStatus) => set({ syncStatus }),
 
@@ -208,11 +219,24 @@ export const useSprintStore = create<TodoState>()(
             createdAt: now,
           }))
 
+          // Merge API items with existing local-only fields (checklist, labels, dueDate, description)
+          // so navigating between screens doesn't wipe rich card data
+          const mergeLocal = (apiItem: UnifiedTodo, existing: UnifiedTodo | undefined): UnifiedTodo => {
+            if (!existing) return apiItem
+            return {
+              ...apiItem,
+              ...(existing.checklist   !== undefined && { checklist:   existing.checklist }),
+              ...(existing.labels      !== undefined && { labels:      existing.labels }),
+              ...(existing.dueDate     !== undefined && { dueDate:     existing.dueDate }),
+              ...(existing.description !== undefined && { description: existing.description }),
+            }
+          }
+
           set(s => ({
             items: sortItems([
               ...s.items.filter(i => i.type === 'sprint' && i.weekStart !== ws),
-              ...sprintItems,
-              ...otherItems,
+              ...sprintItems.map(item => mergeLocal(item, s.items.find(i => i.id === item.id))),
+              ...otherItems.map(item  => mergeLocal(item, s.items.find(i => i.id === item.id))),
             ]),
             syncStatus: 'synced',
           }))
@@ -322,7 +346,14 @@ export const useSprintStore = create<TodoState>()(
           .catch(() => set({ syncStatus: 'error' }))
       },
     }),
-    { name: 'hud-sprint-v2' }
+    {
+      name: 'hud-sprint-v2',
+      onRehydrateStorage: () => (state) => {
+        if (state && state.globalLabels.length === 0) {
+          state.globalLabels = DEFAULT_LABELS
+        }
+      },
+    }
   )
 )
 

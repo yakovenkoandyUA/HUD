@@ -156,71 +156,73 @@ const Sprint: React.FC = () => {
           ))}
         </div>
 
-        {/* ── Section header + add ── */}
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionTitle}>{filter === 'lessons' ? 'Уроки' : 'Задачі'}</span>
-          <button
-            className={styles.addBtn}
-            onClick={() => {
-              if (filter === 'lessons') {
-                setEditingLesson(null)
-                setShowAddLesson(true)
-              } else {
-                setShowAdd(true)
-              }
-            }}
-            aria-label="Додати"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
+        {/* ── Section header + list (keyed for tab transition animation) ── */}
+        <div key={filter} className={styles.tabContent}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>{filter === 'lessons' ? 'Уроки' : 'Задачі'}</span>
+            <button
+              className={styles.addBtn}
+              onClick={() => {
+                if (filter === 'lessons') {
+                  setEditingLesson(null)
+                  setShowAddLesson(true)
+                } else {
+                  setShowAdd(true)
+                }
+              }}
+              aria-label="Додати"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* ── Task list ── */}
+          {filter !== 'lessons' && (
+            filteredItems.length === 0 ? (
+              <div className={styles.emptyState}>
+                <span className={styles.emptyIcon}>✓</span>
+                <span className={styles.emptyTitle}>Список чистий</span>
+                <span className={styles.emptyHint}>Додай першу задачу</span>
+              </div>
+            ) : (
+              <ul className={styles.list}>
+                {filteredItems.map(t => (
+                  <TaskCard
+                    key={t.id}
+                    item={t}
+                    onToggle={() => toggleItem(t.id)}
+                    onDelete={() => deleteItem(t.id)}
+                    onOpenDetail={() => setDetailTaskId(t.id)}
+                  />
+                ))}
+              </ul>
+            )
+          )}
+
+          {/* ── Lessons list ── */}
+          {filter === 'lessons' && (
+            lessons.length === 0 ? (
+              <div className={styles.emptyState}>
+                <span className={styles.emptyIcon}>📖</span>
+                <span className={styles.emptyTitle}>Уроків ще немає</span>
+                <span className={styles.emptyHint}>Додай перший урок</span>
+              </div>
+            ) : (
+              <ul className={styles.lessonList}>
+                {lessons.map(l => (
+                  <LessonItem
+                    key={l.id}
+                    lesson={l}
+                    onEdit={() => { setEditingLesson(l); setShowAddLesson(true) }}
+                    onDelete={() => deleteLesson(l.id)}
+                  />
+                ))}
+              </ul>
+            )
+          )}
         </div>
-
-        {/* ── Task list ── */}
-        {filter !== 'lessons' && (
-          filteredItems.length === 0 ? (
-            <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>✓</span>
-              <span className={styles.emptyTitle}>Список чистий</span>
-              <span className={styles.emptyHint}>Додай першу задачу</span>
-            </div>
-          ) : (
-            <ul className={styles.list}>
-              {filteredItems.map(t => (
-                <TaskCard
-                  key={t.id}
-                  item={t}
-                  onToggle={() => toggleItem(t.id)}
-                  onDelete={() => deleteItem(t.id)}
-                  onOpenDetail={() => setDetailTaskId(t.id)}
-                />
-              ))}
-            </ul>
-          )
-        )}
-
-        {/* ── Lessons list ── */}
-        {filter === 'lessons' && (
-          lessons.length === 0 ? (
-            <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>📖</span>
-              <span className={styles.emptyTitle}>Уроків ще немає</span>
-              <span className={styles.emptyHint}>Додай перший урок</span>
-            </div>
-          ) : (
-            <ul className={styles.lessonList}>
-              {lessons.map(l => (
-                <LessonItem
-                  key={l.id}
-                  lesson={l}
-                  onEdit={() => { setEditingLesson(l); setShowAddLesson(true) }}
-                  onDelete={() => deleteLesson(l.id)}
-                />
-              ))}
-            </ul>
-          )
-        )}
       </div>
 
       {/* ── Add task modal ── */}
