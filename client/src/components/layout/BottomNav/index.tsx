@@ -2,43 +2,57 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import styles from './BottomNav.module.css'
 import DashboardIcon from '../../../../public/icons/nav/dashboard.svg?react'
-import WalletIcon from '../../../../public/icons/nav/wallet.svg?react'
-import F1Icon from '../../../../public/icons/nav/F1.svg?react'
-import SprintIcon from '../../../../public/icons/nav/sprint.svg?react'
-import RecipeIcon from '../../../../public/icons/nav/recipe.svg?react'
-import WatchIcon from '../../../../public/icons/nav/watch.svg?react'
-import MemoriesIcon from '../../../../public/icons/nav/memories.svg?react'
+import WalletIcon    from '../../../../public/icons/nav/wallet.svg?react'
+import F1Icon        from '../../../../public/icons/nav/F1.svg?react'
+import SprintIcon    from '../../../../public/icons/nav/sprint.svg?react'
+import RecipeIcon    from '../../../../public/icons/nav/recipe.svg?react'
+import WatchIcon     from '../../../../public/icons/nav/watch.svg?react'
+import MemoriesIcon  from '../../../../public/icons/nav/memories.svg?react'
+import { useProfileStore } from '../../../store/profileStore'
 
 /**
  * BottomNav
  * ---------
  * Нижня навігація між основними екранами.
- * Не приймає пропсів — використовує NavLink для активного стану.
- * Іконки — SVG компоненти через vite-plugin-svgr.
+ * F1 іконка відображається тільки для role='admin'.
  */
-const NAV_ITEMS = [
-  { to: '/',          Icon: DashboardIcon },
-  { to: '/finance',   Icon: WalletIcon    },
-  { to: '/f1',        Icon: F1Icon        },
-  { to: '/sprint',    Icon: SprintIcon    },
-  { to: '/recipes',   Icon: RecipeIcon    },
-  { to: '/watchlist', Icon: WatchIcon     },
-  { to: '/memories',  Icon: MemoriesIcon  },
-]
+const BottomNav: React.FC = () => {
+  const { activeProfile } = useProfileStore()
+  const isAdmin = activeProfile?.role === 'admin'
 
-const BottomNav: React.FC = () => (
-  <nav className={styles.nav}>
-    {NAV_ITEMS.map(({ to, Icon }) => (
-      <NavLink
-        key={to}
-        to={to}
-        end={to === '/'}
-        className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
-      >
-        <Icon className={styles.icon} />
+  return (
+    <nav className={styles.nav}>
+      <NavLink to="/" end className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+        <DashboardIcon className={styles.icon} />
       </NavLink>
-    ))}
-  </nav>
-)
+
+      <NavLink to="/finance" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+        <WalletIcon className={styles.icon} />
+      </NavLink>
+
+      {isAdmin && (
+        <NavLink to="/f1" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+          <F1Icon className={styles.icon} />
+        </NavLink>
+      )}
+
+      <NavLink to="/sprint" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+        <SprintIcon className={styles.icon} />
+      </NavLink>
+
+      <NavLink to="/recipes" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+        <RecipeIcon className={styles.icon} />
+      </NavLink>
+
+      <NavLink to="/watchlist" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+        <WatchIcon className={styles.icon} />
+      </NavLink>
+
+      <NavLink to="/memories" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+        <MemoriesIcon className={styles.icon} />
+      </NavLink>
+    </nav>
+  )
+}
 
 export default BottomNav

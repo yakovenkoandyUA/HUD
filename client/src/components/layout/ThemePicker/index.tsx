@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useUiStore } from '../../../store/uiStore'
+import { useProfileStore } from '../../../store/profileStore'
 import type { Theme } from '../../../store/uiStore'
 import { clearApiCaches } from '../../../utils/appCache'
 import styles from './ThemePicker.module.css'
@@ -7,8 +9,8 @@ import styles from './ThemePicker.module.css'
 /**
  * ThemePicker
  * -----------
- * Вибір теми у вигляді 2×2 сітки карток.
- * Кожна картка — превью кольорів теми.
+ * Вибір теми (2×2 сітка) + секція ПРОФІЛЬ.
+ * Профіль: аватар з можливістю змінити, ім'я, кнопка "Змінити профіль".
  *
  * Props:
  * @prop {() => void} onClose — закрити після вибору
@@ -77,8 +79,12 @@ const PALETTES: ThemePalette[] = [
 ]
 
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
+  const navigate = useNavigate()
   const { theme, setTheme, showToast } = useUiStore()
+  const { activeProfile, logout, uploadAvatar } = useProfileStore()
   const [cleared, setCleared] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const handlePick = (id: Theme) => {
     setTheme(id)
@@ -92,70 +98,136 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
     setTimeout(() => setCleared(false), 2000)
   }
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      await uploadAvatar(file)
+      showToast('Аватар оновлено', 'success')
+    } catch {
+      showToast('Помилка завантаження', 'error')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  const handleSwitchProfile = () => {
+    logout()
+    onClose()
+    navigate('/profile-select')
+  }
+
   return (
     <>
-    <div className={styles.grid}>
-      {PALETTES.map((p) => {
-        const isActive = theme === p.id
-        return (
-          <button
-            key={p.id}
-            type="button"
-            className={styles.card}
-            style={{
-              background: p.bg,
-              border: isActive
-                ? `2px solid ${p.accent}`
-                : `1.5px solid ${p.border}`,
-              boxShadow: isActive ? `0 0 16px ${p.accent}44` : 'none',
-            }}
-            onClick={() => handlePick(p.id)}
-          >
-            {/* Theme name */}
-            <span
-              className={styles.name}
-              style={{ color: p.accent, fontFamily: 'var(--font-display)' }}
+      {/* ── Теми ── */}
+      <div className={styles.grid}>
+        {PALETTES.map((p) => {
+          const isActive = theme === p.id
+          return (
+            <button
+              key={p.id}
+              type="button"
+              className={styles.card}
+              style={{
+                background: p.bg,
+                border: isActive
+                  ? `2px solid ${p.accent}`
+                  : `1.5px solid ${p.border}`,
+                boxShadow: isActive ? `0 0 16px ${p.accent}44` : 'none',
+              }}
+              onClick={() => handlePick(p.id)}
             >
-              {p.name}
-            </span>
+              <span
+                className={styles.name}
+                style={{ color: p.accent, fontFamily: 'var(--font-display)' }}
+              >
+                {p.name}
+              </span>
 
-            {/* Color swatches row */}
-            <div className={styles.swatches}>
-              <span className={styles.swatch} style={{ background: p.accent }} title="accent" />
-              <span className={styles.swatch} style={{ background: p.second }} title="second" />
-              <span className={styles.swatch} style={{ background: p.gold }}   title="gold"   />
-              <span className={styles.swatch} style={{ background: p.text, opacity: 0.7 }}   title="text" />
-            </div>
-
-            {/* Mini preview strips */}
-            <div className={styles.preview}>
-              <div className={styles.previewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                <div className={styles.previewDot} style={{ background: p.accent }} />
-                <div className={styles.previewLine} style={{ background: p.text, opacity: 0.6 }} />
-                <div className={styles.previewLine} style={{ background: p.text, opacity: 0.3, width: '40%' }} />
+              <div className={styles.swatches}>
+                <span className={styles.swatch} style={{ background: p.accent }} />
+                <span className={styles.swatch} style={{ background: p.second }} />
+                <span className={styles.swatch} style={{ background: p.gold }}   />
+                <span className={styles.swatch} style={{ background: p.text, opacity: 0.7 }} />
               </div>
-              <div className={styles.previewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                <div className={styles.previewDot} style={{ background: p.second }} />
-                <div className={styles.previewLine} style={{ background: p.text, opacity: 0.6 }} />
-                <div className={styles.previewLine} style={{ background: p.text, opacity: 0.3, width: '55%' }} />
+
+              <div className={styles.preview}>
+                <div className={styles.previewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                  <div className={styles.previewDot}  style={{ background: p.accent }} />
+                  <div className={styles.previewLine} style={{ background: p.text, opacity: 0.6 }} />
+                  <div className={styles.previewLine} style={{ background: p.text, opacity: 0.3, width: '40%' }} />
+                </div>
+                <div className={styles.previewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                  <div className={styles.previewDot}  style={{ background: p.second }} />
+                  <div className={styles.previewLine} style={{ background: p.text, opacity: 0.6 }} />
+                  <div className={styles.previewLine} style={{ background: p.text, opacity: 0.3, width: '55%' }} />
+                </div>
               </div>
+
+              {isActive && (
+                <span className={styles.activeTick} style={{ color: p.accent }}>✓</span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* ── Профіль ── */}
+      {activeProfile && (
+        <div className={styles.profileSection}>
+          <p className={styles.sectionLabel}>ПРОФІЛЬ</p>
+
+          <div className={styles.profileRow}>
+            {/* Avatar + upload */}
+            <button
+              type="button"
+              className={styles.avatarBtn}
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              title="Змінити аватар"
+            >
+              {activeProfile.avatarUrl ? (
+                <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
+              ) : (
+                <span className={styles.avatarInitial}>
+                  {activeProfile.name[0].toUpperCase()}
+                </span>
+              )}
+              <span className={styles.avatarOverlay}>{uploading ? '...' : '✎'}</span>
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleAvatarChange}
+            />
+
+            {/* Name + switch button */}
+            <div className={styles.profileInfo}>
+              <span className={styles.profileName}>{activeProfile.name}</span>
+              <button
+                type="button"
+                className={styles.switchBtn}
+                onClick={handleSwitchProfile}
+              >
+                Змінити профіль
+              </button>
             </div>
+          </div>
+        </div>
+      )}
 
-            {isActive && (
-              <span className={styles.activeTick} style={{ color: p.accent }}>✓</span>
-            )}
-          </button>
-        )
-      })}
-    </div>
-
-    <button
-      type="button"
-      className={`${styles.clearBtn} ${cleared ? styles.clearBtnDone : ''}`}
-      onClick={handleClearCache}
-    >
-      {cleared ? '✓ Кеш очищено' : 'Очистити кеш'}
-    </button>
+      {/* ── Кеш ── */}
+      <button
+        type="button"
+        className={`${styles.clearBtn} ${cleared ? styles.clearBtnDone : ''}`}
+        onClick={handleClearCache}
+      >
+        {cleared ? '✓ Кеш очищено' : 'Очистити кеш'}
+      </button>
     </>
   )
 }

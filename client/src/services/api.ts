@@ -1,12 +1,19 @@
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
-const TOKEN_KEY = 'hud_token'
 
 /** True only when VITE_API_URL is set — use this before any API call */
 export const isBackendConfigured = (): boolean => BASE_URL.length > 0
 
-export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY)
-export const setToken = (token: string): void => localStorage.setItem(TOKEN_KEY, token)
-export const removeToken = (): void => localStorage.removeItem(TOKEN_KEY)
+/** Read token from profileStore persist (no circular import) */
+export const getToken = (): string | null => {
+  try {
+    const stored = localStorage.getItem('profile-storage')
+    if (stored) {
+      const parsed = JSON.parse(stored) as { state?: { token?: string } }
+      return parsed?.state?.token ?? null
+    }
+  } catch { /* noop */ }
+  return null
+}
 
 export function isTokenValid(token: string): boolean {
   try {

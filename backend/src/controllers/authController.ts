@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { User } from '../models/User'
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { password } = req.body as { password?: string }
@@ -22,7 +23,7 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 
   const token = jwt.sign(
-    { userId: 'admin' },
+    { userId: 'admin', role: 'admin' },
     process.env.JWT_SECRET!,
     { expiresIn: '365d' }
   )
@@ -47,5 +48,73 @@ export function verify(req: Request, res: Response): void {
 }
 
 export function me(req: Request, res: Response): void {
-  res.json({ userId: req.userId })
+  res.json({ userId: req.userId, role: req.userRole })
+}
+
+/** GET /auth/profiles — public list of all profiles */
+export async function getProfiles(req: Request, res: Response): Promise<void> {
+  try {
+    const users = await User.find({}, { name: 1, username: 1, avatarUrl: 1, role: 1 }).sort({ name: 1 })
+    res.json(users.map(u => ({
+      id: (u._id as { toString(): string }).toString(),
+      name: u.name,
+      username: u.username,
+      avatarUrl: u.avatarUrl,
+      role: u.role,
+    })))
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch profiles' })
+  }
+}
+
+/** POST /auth/select — pick a profile, receive JWT (no password) */
+export async function selectProfile(req: Request, res: Response): Promise<void> {
+  const { username } = req.body as { username?: string }
+  if (!username) {
+    res.status(400).json({ error: 'username required' })
+    return
+  }
+
+  try {
+    const user = await User.findOne({ username })
+    if (!user) {
+      res.status(404).json({ error: 'Profile not found' })
+      return
+    }
+
+    const token = jwt.sign(
+      { userId: (user._id as { toString(): string }).toString(), role: user.role },
+      process.env.JWT_SECRET!,
+      { expiresIn: '30d' }
+    )
+
+    res.json({
+      token,
+      user: {
+        id: (user._id as { toString(): string }).toString(),
+        name: user.name,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        role: user.role,
+      },
+    })
+  } catch {
+    res.status(500).json({ error: 'Failed to select profile' })
+  }
+}
+
+/** PATCH /auth/me — update avatar for active user */
+export async function updateMe(req: Request, res: Response): Promise<void> {
+  const { avatarUrl } = req.body as { avatarUrl?: string }
+  if (!avatarUrl) {
+    res.status(400).json({ error: 'avatarUrl required' })
+    return
+  }
+
+  try {
+    await User.findByIdAndUpdate(req.userId, { avatarUrl })
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Failed to update avatar' })
+  }
 }
