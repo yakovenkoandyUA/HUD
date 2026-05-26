@@ -8,11 +8,10 @@ import LessonItem from '../../components/lessons/LessonItem'
 import LessonForm from '../../components/lessons/LessonForm'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
-import { useSprintStore, migrateLegacySprint } from '../../store/sprintStore'
+import { useSprintStore } from '../../store/sprintStore'
 import { useLessonStore } from '../../store/lessonStore'
 import { useUiStore } from '../../store/uiStore'
 import { getCurrentWeekStart } from '../../utils/sprint'
-import { migrateSprintToBackend } from '../../utils/migrateToBackend'
 import { getToken } from '../../services/api'
 import type { Lesson, UnifiedTodo, SprintTag, TodoPriority } from '../../types'
 import styles from './Sprint.module.css'
@@ -73,9 +72,8 @@ const Sprint: React.FC = () => {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null)
 
   useEffect(() => {
-    migrateLegacySprint()
     if (!getToken()) return
-    migrateSprintToBackend().then(() => fetchItems())
+    fetchItems()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

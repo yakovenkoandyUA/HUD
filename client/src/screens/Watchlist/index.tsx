@@ -6,7 +6,6 @@ import WatchlistGrid from '../../components/watchlist/WatchlistGrid'
 import WatchlistDetail from '../../components/watchlist/WatchlistDetail'
 import { useWatchlistStore } from '../../store/watchlistStore'
 import { useUiStore } from '../../store/uiStore'
-import { migrateWatchlistToBackend } from '../../utils/migrateToBackend'
 import { getToken } from '../../services/api'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../types'
 import styles from './Watchlist.module.css'
@@ -31,7 +30,7 @@ const Watchlist: React.FC = () => {
 
   useEffect(() => {
     if (!getToken()) return
-    migrateWatchlistToBackend().then(() => fetchWatchlist())
+    fetchWatchlist()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [selected, setSelected] = useState<WatchlistItem | null>(null)

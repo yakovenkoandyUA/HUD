@@ -12,7 +12,6 @@ import Modal from '../../components/ui/Modal'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget } from '../../utils/finance'
-import { migrateTransactionsToBackend } from '../../utils/migrateToBackend'
 import { getToken } from '../../services/api'
 import type { ExpenseCategory } from '../../types'
 import styles from './Finance.module.css'
@@ -44,7 +43,7 @@ const Finance: React.FC = () => {
 
   useEffect(() => {
     if (!getToken()) return
-    migrateTransactionsToBackend().then(() => fetchTransactions())
+    fetchTransactions()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

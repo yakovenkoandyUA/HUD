@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { Goal } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
 
@@ -31,63 +30,55 @@ interface GoalsState {
   deleteGoal: (id: string) => void
 }
 
-export const useGoalsStore = create<GoalsState>()(
-  persist(
-    (set, get) => ({
-      goals: [],
+export const useGoalsStore = create<GoalsState>()((set, get) => ({
+  goals: [],
 
-      fetchGoals: async () => {
-        if (!getToken() || !isBackendConfigured()) return
-        try {
-          const res = await authFetch('/api/goals')
-          if (!res.ok) throw new Error()
-          const data: ApiGoal[] = await res.json()
-          set({ goals: data.map(fromApi) })
-        } catch {
-          // keep local data on error
-        }
-      },
+  fetchGoals: async () => {
+    if (!getToken() || !isBackendConfigured()) return
+    try {
+      const res = await authFetch('/api/goals')
+      if (!res.ok) throw new Error()
+      const data: ApiGoal[] = await res.json()
+      set({ goals: data.map(fromApi) })
+    } catch {
+      // keep in-memory data on error
+    }
+  },
 
-      addGoal: (title, targetAmount, emoji = '🎯', deadline = '') => {
-        const goal: Goal = {
-          id: crypto.randomUUID(),
-          title,
-          emoji,
-          targetAmount,
-          currentAmount: 0,
-          deadline,
-        }
-        set(s => ({ goals: [...s.goals, goal] }))
-        if (!getToken() || !isBackendConfigured()) return
-        authFetch('/api/goals', {
-          method: 'POST',
-          body: JSON.stringify({ title, emoji, targetAmount, currentAmount: 0, deadline }),
-        })
-          .then(r => { if (!r.ok) throw new Error(); return r.json() })
-          .then((created: ApiGoal) => {
-            set(s => ({ goals: s.goals.map(g => g.id === goal.id ? fromApi(created) : g) }))
-          })
-          .catch(() => {})
-      },
+  addGoal: (title, targetAmount, emoji = '🎯', deadline = '') => {
+    const goal: Goal = {
+      id: crypto.randomUUID(),
+      title,
+      emoji,
+      targetAmount,
+      currentAmount: 0,
+      deadline,
+    }
+    set(s => ({ goals: [...s.goals, goal] }))
+    authFetch('/api/goals', {
+      method: 'POST',
+      body: JSON.stringify({ title, emoji, targetAmount, currentAmount: 0, deadline }),
+    })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then((created: ApiGoal) => {
+        set(s => ({ goals: s.goals.map(g => g.id === goal.id ? fromApi(created) : g) }))
+      })
+      .catch(() => {})
+  },
 
-      contribute: (id, amount) => {
-        const goal = get().goals.find(g => g.id === id)
-        if (!goal) return
-        const newAmount = Math.min(goal.currentAmount + amount, goal.targetAmount)
-        set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, currentAmount: newAmount } : g) }))
-        if (!getToken() || !isBackendConfigured()) return
-        authFetch(`/api/goals/${id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ currentAmount: newAmount }),
-        }).catch(() => {})
-      },
+  contribute: (id, amount) => {
+    const goal = get().goals.find(g => g.id === id)
+    if (!goal) return
+    const newAmount = Math.min(goal.currentAmount + amount, goal.targetAmount)
+    set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, currentAmount: newAmount } : g) }))
+    authFetch(`/api/goals/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ currentAmount: newAmount }),
+    }).catch(() => {})
+  },
 
-      deleteGoal: (id) => {
-        set(s => ({ goals: s.goals.filter(g => g.id !== id) }))
-        if (!getToken() || !isBackendConfigured()) return
-        authFetch(`/api/goals/${id}`, { method: 'DELETE' }).catch(() => {})
-      },
-    }),
-    { name: 'hud-goals' }
-  )
-)
+  deleteGoal: (id) => {
+    set(s => ({ goals: s.goals.filter(g => g.id !== id) }))
+    authFetch(`/api/goals/${id}`, { method: 'DELETE' }).catch(() => {})
+  },
+}))

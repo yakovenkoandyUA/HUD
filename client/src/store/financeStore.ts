@@ -1,11 +1,9 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { Transaction, ExpenseCategory } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
 
 export type SyncStatus = 'local' | 'syncing' | 'synced' | 'error'
 
-// Shape returned by the backend
 interface ApiTransaction {
   _id: string
   type: 'income' | 'expense'
@@ -52,97 +50,89 @@ interface FinanceState {
   setSyncStatus: (s: SyncStatus) => void
 }
 
-export const useFinanceStore = create<FinanceState>()(
-  persist(
-    (set, get) => ({
-      balance: 0,
-      transactions: [],
-      syncStatus: 'local' as SyncStatus,
+export const useFinanceStore = create<FinanceState>()((set, get) => ({
+  balance: 0,
+  transactions: [],
+  syncStatus: 'local' as SyncStatus,
 
-      setSyncStatus: (syncStatus) => set({ syncStatus }),
+  setSyncStatus: (syncStatus) => set({ syncStatus }),
 
-      fetchTransactions: async (month) => {
-        if (!getToken() || !isBackendConfigured()) return
-        set({ syncStatus: 'syncing' })
-        try {
-          const url = month ? `/api/transactions?month=${month}` : '/api/transactions'
-          const res = await authFetch(url)
-          if (!res.ok) throw new Error()
-          const data: ApiTransaction[] = await res.json()
-          const transactions = data.map(fromApi)
-          set({ transactions, balance: calcBalance(transactions), syncStatus: 'synced' })
-        } catch {
-          set({ syncStatus: 'error' })
-        }
-      },
+  fetchTransactions: async (month) => {
+    if (!getToken() || !isBackendConfigured()) return
+    set({ syncStatus: 'syncing' })
+    try {
+      const url = month ? `/api/transactions?month=${month}` : '/api/transactions'
+      const res = await authFetch(url)
+      if (!res.ok) throw new Error()
+      const data: ApiTransaction[] = await res.json()
+      const transactions = data.map(fromApi)
+      set({ transactions, balance: calcBalance(transactions), syncStatus: 'synced' })
+    } catch {
+      set({ syncStatus: 'error' })
+    }
+  },
 
-      addTopup: (amount, description) => {
-        const tx: Transaction = {
-          id: crypto.randomUUID(),
-          type: 'topup',
-          amount,
-          description,
-          date: new Date().toISOString(),
-        }
+  addTopup: (amount, description) => {
+    const tx: Transaction = {
+      id: crypto.randomUUID(),
+      type: 'topup',
+      amount,
+      description,
+      date: new Date().toISOString(),
+    }
+    set(s => ({
+      balance: s.balance + amount,
+      transactions: [tx, ...s.transactions].slice(0, 200),
+      syncStatus: 'syncing',
+    }))
+    authFetch('/api/transactions', { method: 'POST', body: JSON.stringify(toApiBody(tx)) })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then((created: ApiTransaction) => {
         set(s => ({
-          balance: s.balance + amount,
-          transactions: [tx, ...s.transactions].slice(0, 200),
-          syncStatus: getToken() && isBackendConfigured() ? 'syncing' : 'local',
+          syncStatus: 'synced',
+          transactions: s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t),
         }))
-        if (!getToken() || !isBackendConfigured()) return
-        authFetch('/api/transactions', { method: 'POST', body: JSON.stringify(toApiBody(tx)) })
-          .then(r => { if (!r.ok) throw new Error(); return r.json() })
-          .then((created: ApiTransaction) => {
-            set(s => ({
-              syncStatus: 'synced',
-              transactions: s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t),
-            }))
-          })
-          .catch(() => set({ syncStatus: 'error' }))
-      },
+      })
+      .catch(() => set({ syncStatus: 'error' }))
+  },
 
-      addExpense: (amount, description, category) => {
-        const tx: Transaction = {
-          id: crypto.randomUUID(),
-          type: 'expense',
-          amount,
-          description,
-          category,
-          date: new Date().toISOString(),
-        }
+  addExpense: (amount, description, category) => {
+    const tx: Transaction = {
+      id: crypto.randomUUID(),
+      type: 'expense',
+      amount,
+      description,
+      category,
+      date: new Date().toISOString(),
+    }
+    set(s => ({
+      balance: s.balance - amount,
+      transactions: [tx, ...s.transactions].slice(0, 200),
+      syncStatus: 'syncing',
+    }))
+    authFetch('/api/transactions', { method: 'POST', body: JSON.stringify(toApiBody(tx)) })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then((created: ApiTransaction) => {
         set(s => ({
-          balance: s.balance - amount,
-          transactions: [tx, ...s.transactions].slice(0, 200),
-          syncStatus: getToken() && isBackendConfigured() ? 'syncing' : 'local',
+          syncStatus: 'synced',
+          transactions: s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t),
         }))
-        if (!getToken() || !isBackendConfigured()) return
-        authFetch('/api/transactions', { method: 'POST', body: JSON.stringify(toApiBody(tx)) })
-          .then(r => { if (!r.ok) throw new Error(); return r.json() })
-          .then((created: ApiTransaction) => {
-            set(s => ({
-              syncStatus: 'synced',
-              transactions: s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t),
-            }))
-          })
-          .catch(() => set({ syncStatus: 'error' }))
-      },
+      })
+      .catch(() => set({ syncStatus: 'error' }))
+  },
 
-      deleteTransaction: (id) => {
-        const s = get()
-        const tx = s.transactions.find(t => t.id === id)
-        if (!tx) return
-        const delta = tx.type === 'topup' ? -tx.amount : tx.amount
-        set({
-          balance: s.balance + delta,
-          transactions: s.transactions.filter(t => t.id !== id),
-          syncStatus: getToken() && isBackendConfigured() ? 'syncing' : 'local',
-        })
-        if (!getToken() || !isBackendConfigured()) return
-        authFetch(`/api/transactions/${id}`, { method: 'DELETE' })
-          .then(() => set({ syncStatus: 'synced' }))
-          .catch(() => set({ syncStatus: 'error' }))
-      },
-    }),
-    { name: 'hud-finance' }
-  )
-)
+  deleteTransaction: (id) => {
+    const s = get()
+    const tx = s.transactions.find(t => t.id === id)
+    if (!tx) return
+    const delta = tx.type === 'topup' ? -tx.amount : tx.amount
+    set({
+      balance: s.balance + delta,
+      transactions: s.transactions.filter(t => t.id !== id),
+      syncStatus: 'syncing',
+    })
+    authFetch(`/api/transactions/${id}`, { method: 'DELETE' })
+      .then(() => set({ syncStatus: 'synced' }))
+      .catch(() => set({ syncStatus: 'error' }))
+  },
+}))

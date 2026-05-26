@@ -348,6 +348,7 @@ export const useSprintStore = create<TodoState>()(
     }),
     {
       name: 'hud-sprint-v2',
+      partialize: (s) => ({ globalLabels: s.globalLabels, items: s.items }),
       onRehydrateStorage: () => (state) => {
         if (state && state.globalLabels.length === 0) {
           state.globalLabels = DEFAULT_LABELS
@@ -356,53 +357,3 @@ export const useSprintStore = create<TodoState>()(
     }
   )
 )
-
-// ── localStorage migration v1 → v2 ────────────────────────────────────────────
-
-interface LegacySprintState {
-  state?: {
-    tasks?: { id: string; title: string; category: string; done: boolean; weekStart: string }[]
-    todos?: { id: string; title: string; priority: string; done: boolean; dueDate?: string }[]
-  }
-}
-
-export function migrateLegacySprint(): void {
-  const FLAG = 'hud-sprint-v2-migrated'
-  if (localStorage.getItem(FLAG)) return
-  const raw = localStorage.getItem('hud-sprint')
-  if (!raw) { localStorage.setItem(FLAG, '1'); return }
-
-  try {
-    const parsed = JSON.parse(raw) as LegacySprintState
-    const oldTasks = parsed?.state?.tasks ?? []
-    const oldTodos = parsed?.state?.todos ?? []
-    const now = new Date().toISOString()
-
-    const newItems: UnifiedTodo[] = [
-      ...oldTasks.map(t => ({
-        id: t.id, title: t.title, done: t.done,
-        type: 'sprint' as const,
-        tag: t.category as SprintTag,
-        weekStart: t.weekStart,
-        createdAt: now,
-      })),
-      ...oldTodos.map(t => ({
-        id: t.id, title: t.title, done: t.done,
-        type: 'shopping' as const,
-        priority: t.priority as TodoPriority,
-        createdAt: now,
-      })),
-    ]
-
-    if (newItems.length > 0) {
-      const existing = useSprintStore.getState().items
-      const existingIds = new Set(existing.map(i => i.id))
-      const toAdd = newItems.filter(i => !existingIds.has(i.id))
-      if (toAdd.length > 0) {
-        useSprintStore.setState(s => ({ items: [...s.items, ...toAdd] }))
-      }
-    }
-  } catch { /* silent */ }
-
-  localStorage.setItem(FLAG, '1')
-}
