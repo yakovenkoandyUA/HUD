@@ -13,31 +13,29 @@ import { useLessonStore } from '../../store/lessonStore'
 import { useUiStore } from '../../store/uiStore'
 import { getCurrentWeekStart } from '../../utils/sprint'
 import { getToken } from '../../services/api'
-import type { Lesson, UnifiedTodo, SprintTag, TodoPriority } from '../../types'
+import type { Lesson, UnifiedTodo, TodoPriority } from '../../types'
 import styles from './Sprint.module.css'
 
 const SYNC_COLORS: Record<string, string> = {
   synced: 'var(--positive)', syncing: 'var(--gold)', error: 'var(--negative)', local: 'var(--text3)',
 }
 
-type Filter = 'all' | 'sprint' | 'shopping' | 'todo' | 'lessons'
+type FilterType = 'all' | 'sprint' | 'shopping' | 'todo' | 'lessons'
+type SprintStatus = 'all' | 'active' | 'done'
 
-// ── Category config ───────────────────────────────────────────────────────────
+const FILTER_OPTIONS: { key: FilterType; label: string }[] = [
+  { key: 'all',      label: 'Всі'     },
+  { key: 'sprint',   label: 'Спринт'  },
+  { key: 'shopping', label: 'Покупки' },
+  { key: 'todo',     label: 'Todo'    },
+  { key: 'lessons',  label: 'Уроки'   },
+]
 
-const SPRINT_TAGS: SprintTag[] = ['mentorship', 'dev', 'personal', 'learning']
-
-const TAG_LABEL: Record<SprintTag, string> = {
-  mentorship: 'Менторство', dev: 'Розробка', personal: 'Особисте', learning: 'Навчання',
-}
-
-const TAG_ACTIVE_CLASS: Record<SprintTag, string> = {
-  dev: styles.catActiveDev,
-  mentorship: styles.catActiveMentorship,
-  personal: styles.catActivePersonal,
-  learning: styles.catActiveLearning,
-}
-
-// ── Priority config ───────────────────────────────────────────────────────────
+const SPRINT_STATUS_OPTIONS: { key: SprintStatus; label: string }[] = [
+  { key: 'all',    label: 'Всі'        },
+  { key: 'active', label: 'Активні'    },
+  { key: 'done',   label: 'Завершені'  },
+]
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'normal', 'low']
 
@@ -47,27 +45,32 @@ const PRIORITY_CONFIG: Record<TodoPriority, { symbol: string; label: string; act
   low:    { symbol: '▽', label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow    },
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+const IconFilter: React.FC = () => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+    <path d="M2 4h11M4 7.5h7M6 11h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+)
 
 const Sprint: React.FC = () => {
   const { items, addItem, toggleItem, deleteItem, fetchItems, syncStatus } = useSprintStore()
   const { lessons, addLesson, updateLesson, deleteLesson } = useLessonStore()
   const { showToast } = useUiStore()
 
-  const [filter, setFilter] = useState<Filter>('all')
+  const [filter, setFilter] = useState<FilterType>('all')
+  const [sprintStatus, setSprintStatus] = useState<SprintStatus>('all')
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
 
-  // ── Add task modal state ─────────────────────────────────────────────────
+  // ── Add task modal ───────────────────────────────────────────────────────
   const [showAdd, setShowAdd] = useState(false)
   const [newType, setNewType] = useState<UnifiedTodo['type']>('sprint')
   const [newTitle, setNewTitle] = useState('')
-  const [newTag, setNewTag] = useState<SprintTag>('dev')
   const [newPriority, setNewPriority] = useState<TodoPriority>('normal')
   const [newQuantity, setNewQuantity] = useState('')
 
   // ── Task detail modal ────────────────────────────────────────────────────
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
 
-  // ── Lesson modal state ───────────────────────────────────────────────────
+  // ── Lesson modal ─────────────────────────────────────────────────────────
   const [showAddLesson, setShowAddLesson] = useState(false)
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null)
 
@@ -82,13 +85,19 @@ const Sprint: React.FC = () => {
   const done = weekSprintItems.filter((t) => t.done).length
 
   const filteredItems = items.filter((t) => {
+    if (filter === 'lessons') return false
     if (filter === 'all') return true
+    if (filter === 'sprint') {
+      if (t.type !== 'sprint') return false
+      if (sprintStatus === 'active') return !t.done
+      if (sprintStatus === 'done') return t.done
+      return true
+    }
     return t.type === filter
   })
 
   const resetForm = () => {
     setNewTitle('')
-    setNewTag('dev')
     setNewPriority('normal')
     setNewQuantity('')
   }
@@ -99,7 +108,7 @@ const Sprint: React.FC = () => {
     addItem({
       type: newType,
       title: newTitle.trim(),
-      ...(newType === 'sprint' ? { tag: newTag, weekStart } : {}),
+      ...(newType === 'sprint' ? { tag: 'dev', weekStart } : {}),
       ...(newType !== 'sprint' ? { priority: newPriority } : {}),
       ...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
     })
@@ -120,13 +129,13 @@ const Sprint: React.FC = () => {
     setEditingLesson(null)
   }
 
-  const FILTERS: { key: Filter; label: string }[] = [
-    { key: 'all',      label: 'Всі'     },
-    { key: 'sprint',   label: 'Спринт'  },
-    { key: 'shopping', label: 'Покупки' },
-    { key: 'todo',     label: 'Todo'    },
-    { key: 'lessons',  label: 'Уроки'   },
-  ]
+  const handleFilterSelect = (key: FilterType) => {
+    setFilter(key)
+    if (key !== 'sprint') setSprintStatus('all')
+    setShowFilterPanel(false)
+  }
+
+  const isFiltered = filter !== 'all' || sprintStatus !== 'all'
 
   return (
     <div className={styles.screen}>
@@ -141,40 +150,62 @@ const Sprint: React.FC = () => {
         <WeekHeader weekStart={weekStart} />
         <SprintProgress done={done} total={weekSprintItems.length} />
 
-        {/* ── Filter chips ── */}
-        <div className={styles.filterRow}>
-          {FILTERS.map(f => (
-            <button
-              key={f.key}
-              className={`${styles.filterChip} ${filter === f.key ? styles.filterChipActive : ''}`}
-              onClick={() => setFilter(f.key)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Section header + list (keyed for tab transition animation) ── */}
-        <div key={filter} className={styles.tabContent}>
+        {/* ── Section header ── */}
+        <div key={filter + sprintStatus} className={styles.tabContent}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTitle}>{filter === 'lessons' ? 'Уроки' : 'Задачі'}</span>
-            <button
-              className={styles.addBtn}
-              onClick={() => {
-                if (filter === 'lessons') {
-                  setEditingLesson(null)
-                  setShowAddLesson(true)
-                } else {
-                  setShowAdd(true)
-                }
-              }}
-              aria-label="Додати"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
+            <div className={styles.sectionActions}>
+              <button
+                className={`${styles.filterBtn} ${showFilterPanel ? styles.filterBtnOpen : ''} ${isFiltered && !showFilterPanel ? styles.filterBtnActive : ''}`}
+                onClick={() => setShowFilterPanel(v => !v)}
+                aria-label="Фільтр"
+              >
+                <IconFilter />
+              </button>
+              <button
+                className={styles.addBtn}
+                onClick={() => {
+                  if (filter === 'lessons') { setEditingLesson(null); setShowAddLesson(true) }
+                  else { setShowAdd(true) }
+                }}
+                aria-label="Додати"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
+
+          {/* ── Filter panel ── */}
+          {showFilterPanel && (
+            <div className={styles.filterPanel}>
+              <div className={styles.filterPanelRow}>
+                {FILTER_OPTIONS.map(f => (
+                  <button
+                    key={f.key}
+                    className={`${styles.filterChip} ${filter === f.key ? styles.filterChipActive : ''}`}
+                    onClick={() => handleFilterSelect(f.key)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              {filter === 'sprint' && (
+                <div className={styles.filterPanelRow}>
+                  {SPRINT_STATUS_OPTIONS.map(s => (
+                    <button
+                      key={s.key}
+                      className={`${styles.filterChip} ${sprintStatus === s.key ? styles.filterChipStatus : ''}`}
+                      onClick={() => { setSprintStatus(s.key); setShowFilterPanel(false) }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── Task list ── */}
           {filter !== 'lessons' && (
@@ -259,22 +290,6 @@ const Sprint: React.FC = () => {
             placeholder="Назва задачі..."
             autoFocus
           />
-
-          {/* Sprint: tag chips */}
-          {newType === 'sprint' && (
-            <div className={styles.catRow}>
-              {SPRINT_TAGS.map(t => (
-                <button
-                  key={t}
-                  type="button"
-                  className={`${styles.catBtn} ${newTag === t ? TAG_ACTIVE_CLASS[t] : ''}`}
-                  onClick={() => setNewTag(t)}
-                >
-                  {TAG_LABEL[t]}
-                </button>
-              ))}
-            </div>
-          )}
 
           {/* Shopping/Todo: priority chips */}
           {(newType === 'shopping' || newType === 'todo') && (

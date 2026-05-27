@@ -15,7 +15,6 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  /* gap: 8px; */
 }
 
 .lessonList {
@@ -35,42 +34,8 @@
 .tabContent {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   animation: tabEnter 0.17s ease both;
-}
-
-/* ── Filter chips ─────────────────────────────────────────────────────────── */
-
-.filterRow {
-  display: flex;
-  /* gap: 6px; */
-  flex-wrap: wrap;
-}
-
-.filterChip {
-  padding: 5px 13px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  /* border-radius: 999px; */
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text2);
-  cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-}
-
-.filterChip:hover:not(.filterChipActive) {
-  color: var(--text);
-  border-color: var(--text3);
-}
-
-.filterChipActive {
-  background: var(--accent);
-  color: var(--bg);
-  border-color: var(--accent);
 }
 
 /* ── Section header ───────────────────────────────────────────────────────── */
@@ -109,27 +74,95 @@
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-
 .addBtn:hover {
   color: var(--accent);
   border-color: var(--accent-dim);
   background: var(--accent-soft);
 }
 
-.addBtnActive {
+/* ── Filter button ────────────────────────────────────────────────────────── */
+
+.filterBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.filterBtn:hover { color: var(--text); border-color: var(--text3); }
+
+.filterBtnOpen {
   color: var(--accent);
   border-color: var(--accent-dim);
   background: var(--accent-soft);
 }
 
-/* ── Lessons section ──────────────────────────────────────────────────────── */
+/* dot indicator when filter is active but panel is closed */
+.filterBtnActive {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+  background: var(--accent-soft);
+}
 
-.lessonsSection {
+/* ── Filter panel ─────────────────────────────────────────────────────────── */
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.filterPanel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  border-top: 1px solid var(--border);
-  padding-top: 12px;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  animation: panelIn 0.15s ease both;
+}
+
+.filterPanelRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filterChip {
+  padding: 5px 12px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.filterChip:hover:not(.filterChipActive):not(.filterChipStatus) {
+  color: var(--text);
+  border-color: var(--text3);
+}
+
+.filterChipActive {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.filterChipStatus {
+  background: var(--second-soft);
+  color: var(--second);
+  border-color: var(--second);
 }
 
 /* ── Empty states ─────────────────────────────────────────────────────────── */
@@ -165,19 +198,9 @@
   opacity: 0.7;
 }
 
-.emptySimple {
-  font-family: var(--font-body);
-  font-size: 14px;
-  color: var(--text3);
-  text-align: center;
-  padding: 12px 0;
-}
-
 /* ── Add task form ────────────────────────────────────────────────────────── */
 
 .taskForm { display: flex; flex-direction: column; gap: 12px; }
-
-/* Type chips (⚡ Спринт / 🛒 Покупка / ✓ Todo) */
 
 .typeRow {
   display: flex;
@@ -200,49 +223,9 @@
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 
-.typeChipSprint.typeChipActive {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent-dim);
-}
-
-.typeChipShopping.typeChipActive {
-  background: var(--second-soft);
-  color: var(--second);
-  border-color: var(--second);
-}
-
-.typeChipTodo.typeChipActive {
-  background: var(--gold-dim);
-  color: var(--gold);
-  border-color: var(--gold);
-}
-
-/* Sprint tag chips */
-
-.catRow { display: flex; gap: 6px; flex-wrap: wrap; }
-
-.catBtn {
-  flex: 1;
-  min-width: 80px;
-  padding: 7px 8px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-radius: var(--radius);
-  background: var(--surface2);
-  color: var(--text2);
-  border: 1px solid var(--border2);
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.catActiveDev        { background: var(--accent-soft);  color: var(--accent);  border-color: var(--accent-dim); }
-.catActiveMentorship { background: var(--second-soft);  color: var(--second);  border-color: var(--second);     }
-.catActivePersonal   { background: var(--gold-dim);     color: var(--gold);    border-color: var(--gold);       }
-.catActiveLearning   { background: var(--orange-s);     color: var(--orange);  border-color: var(--orange);     }
+.typeChipSprint.typeChipActive  { background: var(--accent-soft);  color: var(--accent);  border-color: var(--accent-dim); }
+.typeChipShopping.typeChipActive{ background: var(--second-soft);  color: var(--second);  border-color: var(--second);     }
+.typeChipTodo.typeChipActive    { background: var(--gold-dim);     color: var(--gold);    border-color: var(--gold);       }
 
 /* Priority chips */
 
