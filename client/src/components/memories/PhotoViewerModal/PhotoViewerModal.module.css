@@ -1,3 +1,14 @@
+/* ── Viewer open / close ── */
+
+@keyframes viewerIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes viewerOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.96); }
+}
+
 .fullscreen {
   position: fixed;
   inset: 0;
@@ -8,6 +19,9 @@
   justify-content: center;
 }
 
+.viewerIn  { animation: viewerIn  0.24s cubic-bezier(0.2, 0, 0, 1) both; }
+.viewerOut { animation: viewerOut 0.22s cubic-bezier(0.4, 0, 1, 1) both; }
+
 .imageWrap {
   position: absolute;
   inset: 0;
@@ -15,6 +29,25 @@
   align-items: center;
   justify-content: center;
 }
+
+/* ── Photo slide animations ── */
+
+@keyframes slideFromRight {
+  from { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateX(-48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes imgFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.slideFromRight { animation: slideFromRight 0.26s cubic-bezier(0.2, 0, 0, 1) both; }
+.slideFromLeft  { animation: slideFromLeft  0.26s cubic-bezier(0.2, 0, 0, 1) both; }
+.fadeIn         { animation: imgFadeIn      0.22s ease both; }
 
 .image {
   max-width: 100%;

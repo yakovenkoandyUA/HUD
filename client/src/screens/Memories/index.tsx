@@ -54,7 +54,6 @@ const MemoriesScreen: React.FC = () => {
         }
       />
 
-      <h1 className={styles.pageTitle}>СПОГАДИ</h1>
 
       {memories.length === 0 ? (
         <div className={styles.empty}>

@@ -6,6 +6,7 @@ import styles from './PhotoViewerModal.module.css'
  * PhotoViewerModal
  * ----------------
  * Fullscreen перегляд фотографій з свайпом між ними.
+ * Анімація відкриття/закриття (scale+fade) та слайд між фото (left/right).
  *
  * Props:
  * @prop {MemoryPhoto[]}             photos          — список фотографій
@@ -22,6 +23,10 @@ interface PhotoViewerModalProps {
   onCaption: (id: string, caption: string) => void
 }
 
+type SlideDir = 'next' | 'prev' | null
+
+const CLOSE_MS = 240
+
 const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   photos,
   initialIndex,
@@ -33,14 +38,38 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   const [showUI, setShowUI]       = useState(true)
   const [editingCaption, setEditingCaption] = useState(false)
   const [captionInput, setCaptionInput]     = useState('')
+  const [slideDir, setSlideDir]   = useState<SlideDir>(null)
+  const [closing, setClosing]     = useState(false)
 
   const touchStartX = useRef(0)
 
   const photo = photos[index]
 
+  // ── Navigation ──────────────────────────────────────────────────────────────
+
+  const goNext = () => {
+    if (index >= photos.length - 1) return
+    setSlideDir('next')
+    setIndex(i => i + 1)
+  }
+
+  const goPrev = () => {
+    if (index <= 0) return
+    setSlideDir('prev')
+    setIndex(i => i - 1)
+  }
+
+  const handleClose = () => {
+    setClosing(true)
+    setTimeout(onClose, CLOSE_MS)
+  }
+
+  // ── Sync with parent ─────────────────────────────────────────────────────────
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIndex(initialIndex)
+    setSlideDir(null)
   }, [initialIndex])
 
   useEffect(() => {
@@ -50,15 +79,20 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
     setEditingCaption(false)
   }, [photo?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Keyboard ─────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft'  && index > 0)              setIndex(i => i - 1)
-      if (e.key === 'ArrowRight' && index < photos.length - 1) setIndex(i => i + 1)
+      if (e.key === 'Escape')      handleClose()
+      if (e.key === 'ArrowLeft')   goPrev()
+      if (e.key === 'ArrowRight')  goNext()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [index, photos.length, onClose])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, photos.length])
+
+  // ── Touch swipe ───────────────────────────────────────────────────────────────
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
@@ -66,14 +100,16 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     const delta = e.changedTouches[0].clientX - touchStartX.current
-    if (delta > 50 && index > 0)              setIndex(i => i - 1)
-    if (delta < -50 && index < photos.length - 1) setIndex(i => i + 1)
+    if (delta > 50)  goPrev()
+    if (delta < -50) goNext()
   }
+
+  // ── Delete ────────────────────────────────────────────────────────────────────
 
   const handleDelete = () => {
     onDelete(photo.id)
     if (photos.length === 1) {
-      onClose()
+      handleClose()
     } else {
       setIndex(i => Math.min(i, photos.length - 2))
     }
@@ -86,8 +122,13 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
 
   if (!photo) return null
 
+  const slideClass =
+    slideDir === 'next' ? styles.slideFromRight :
+    slideDir === 'prev' ? styles.slideFromLeft  :
+    styles.fadeIn
+
   return (
-    <div className={styles.fullscreen}>
+    <div className={`${styles.fullscreen} ${closing ? styles.viewerOut : styles.viewerIn}`}>
       {/* Photo */}
       <div
         className={styles.imageWrap}
@@ -95,7 +136,12 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
         onTouchEnd={handleTouchEnd}
         onClick={() => setShowUI(v => !v)}
       >
-        <img src={photo.url} alt={photo.caption ?? ''} className={styles.image} />
+        <img
+          key={index}
+          src={photo.url}
+          alt={photo.caption ?? ''}
+          className={`${styles.image} ${slideClass}`}
+        />
       </div>
 
       {/* UI overlay */}
@@ -123,7 +169,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
             <button
               type="button"
               className={styles.closeBtn}
-              onClick={e => { e.stopPropagation(); onClose() }}
+              onClick={e => { e.stopPropagation(); handleClose() }}
               title="Закрити"
             >
               ×
@@ -136,7 +182,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
           <button
             type="button"
             className={`${styles.navBtn} ${styles.navBtnPrev}`}
-            onClick={e => { e.stopPropagation(); setIndex(i => i - 1) }}
+            onClick={e => { e.stopPropagation(); goPrev() }}
             aria-label="Попереднє фото"
           >
             ‹
@@ -146,7 +192,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
           <button
             type="button"
             className={`${styles.navBtn} ${styles.navBtnNext}`}
-            onClick={e => { e.stopPropagation(); setIndex(i => i + 1) }}
+            onClick={e => { e.stopPropagation(); goNext() }}
             aria-label="Наступне фото"
           >
             ›
