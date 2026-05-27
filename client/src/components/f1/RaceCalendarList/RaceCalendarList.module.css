@@ -1,7 +1,15 @@
 .list {
 	list-style: none;
-	background-color: rgba(0, 0, 0, 0.7);
+	background-color: rgba(0, 0, 0, 0.86);
+	/* backdrop-filter: blur(14px); */
+	/* -webkit-backdrop-filter: blur(14px); */
+	border-radius: 10px;
 	margin-top: -13px;
+	padding: 0 8px;
+}
+
+:global([data-theme="japan"]) .list {
+	background-color: var(--surface);
 }
 
 .item {
@@ -26,17 +34,17 @@
 	font-size: 13px;
 }
 .dimPast {
-	opacity: 0.4;
+	opacity: 0.55;
 }
 .trackPast {
-	opacity: 0.18;
+	opacity: 0.32;
 }
 
 .next {
 	background: var(--accent-soft);
 	border-radius: var(--radius);
-	padding: 10px 10px;
-	margin: 0 -10px;
+	padding: 10px 8px;
+	margin: 0 -8px;
 }
 
 .round {

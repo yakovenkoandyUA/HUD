@@ -3,7 +3,7 @@ import WatchlistItem from '../models/WatchlistItem'
 
 export async function getAll(req: Request, res: Response): Promise<void> {
   const { category, status } = req.query as { category?: string; status?: string }
-  const query: Record<string, unknown> = { userId: req.userId }
+  const query: Record<string, unknown> = {}
   if (category) query.category = category
   if (status)   query.status   = status
   const items = await WatchlistItem.find(query).sort({ addedAt: -1 })
@@ -13,9 +13,9 @@ export async function getAll(req: Request, res: Response): Promise<void> {
 export async function create(req: Request, res: Response): Promise<void> {
   const { tmdbId, category } = req.body as { tmdbId?: number; category?: string }
 
-  // Duplicate check for items that have a real TMDB/external id
+  // Duplicate check across all users
   if (tmdbId && tmdbId !== 0) {
-    const existing = await WatchlistItem.findOne({ tmdbId, category, userId: req.userId })
+    const existing = await WatchlistItem.findOne({ tmdbId, category })
     if (existing) {
       res.status(409).json({ error: 'Already in watchlist', id: existing._id })
       return
@@ -28,7 +28,7 @@ export async function create(req: Request, res: Response): Promise<void> {
 
 export async function update(req: Request, res: Response): Promise<void> {
   const item = await WatchlistItem.findOneAndUpdate(
-    { _id: req.params.id, userId: req.userId },
+    { _id: req.params.id },
     req.body,
     { new: true }
   )
@@ -37,6 +37,6 @@ export async function update(req: Request, res: Response): Promise<void> {
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
-  await WatchlistItem.findOneAndDelete({ _id: req.params.id, userId: req.userId })
+  await WatchlistItem.findOneAndDelete({ _id: req.params.id })
   res.status(204).end()
 }
