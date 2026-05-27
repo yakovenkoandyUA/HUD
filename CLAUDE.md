@@ -26,8 +26,8 @@
 │       └── styles/
 └── backend/         # Backend — Node.js + Express + MongoDB
     ├── src/
-    │   ├── routes/      # auth, transactions, sprint, goals, lessons, recipes, watchlist, push
-    │   ├── models/      # User, Transaction, SprintTask, TodoItem, SavingsGoal, Lesson, Recipe, WatchlistItem, PushSubscription
+    │   ├── routes/      # auth, transactions, sprint, goals, lessons, recipes, watchlist, memories, push
+    │   ├── models/      # User, Transaction, SprintTask, TodoItem, SavingsGoal, Lesson, Recipe, WatchlistItem, Memory, PushSubscription
     │   ├── controllers/ # Логіка обробки запитів
     │   ├── middleware/  # requireAuth, requireAdmin, error handling
     │   ├── scripts/     # seedUsers.ts, migrateToKotka.ts
@@ -383,17 +383,23 @@ store/
 ├── financeStore.ts   — balance, transactions; БЕЗ persist (backend-only)
 ├── goalsStore.ts     — savings goals; БЕЗ persist (backend-only)
 ├── sprintStore.ts    — items, globalLabels; persist тільки items+globalLabels (ключ: hud-sprint-v2)
-├── lessonStore.ts    — уроки; persist localStorage (ключ: hud-lessons)
-├── recipesStore.ts   — рецепти + mealOfWeek; persist localStorage (ключ: hud-recipes)
+├── lessonStore.ts    — уроки; БЕЗ persist (backend-only, /api/lessons)
+├── recipesStore.ts   — рецепти (backend-only) + mealOfWeek (persist ключ: hud-recipes, тільки TheMealDB кеш)
 ├── watchlistStore.ts — watchlist items; БЕЗ persist (backend-only)
-├── memoriesStore.ts  — спогади + фото; persist localStorage (ключ: memories-storage)
+├── memoriesStore.ts  — спогади + фото; БЕЗ persist (backend-only, /api/memories)
 └── uiStore.ts        — theme, toasts; persist тільки theme (ключ: hud-ui)
 ```
 
 **Правило persist:**
-- `financeStore`, `watchlistStore`, `goalsStore` — **без** persist, дані завжди з backend
-- `sprintStore` — часткова persist: `items` (для rich local fields: checklist/labels/dueDate/description) + `globalLabels`; решта з backend при `fetchItems`
-- `lessonStore`, `recipesStore`, `memoriesStore` — повна persist, backend не підключено
+- `financeStore`, `watchlistStore`, `goalsStore`, `lessonStore`, `memoriesStore` — **без** persist, дані завжди з backend
+- `sprintStore` — часткова persist: `items` (rich local fields: checklist/labels/dueDate/description) + `globalLabels`; решта з backend при `fetchItems`
+- `recipesStore` — persist тільки `mealOfWeek` + `mealWeekKey` (TheMealDB кеш на тиждень); рецепти — backend
+
+**Маппінг полів Lesson** (frontend ↔ backend):
+- `description` ↔ `desc`
+- `notes` ↔ `sessionNotes`
+
+**Memory** — embedded photos subdocument `{ url, caption, createdAt }`. Фото-операції: `POST/PATCH/DELETE /api/memories/:id/photos/:photoId`.
 
 ---
 
@@ -414,6 +420,14 @@ store/
 | `/api/goals/:id` | PATCH/DELETE | Оновити/видалити goal |
 | `/api/watchlist` | GET/POST | Watchlist items |
 | `/api/watchlist/:id` | PATCH/DELETE | Оновити/видалити item |
+| `/api/lessons` | GET/POST | Уроки |
+| `/api/lessons/:id` | PUT/DELETE | Оновити/видалити урок |
+| `/api/recipes` | GET/POST | Особисті рецепти |
+| `/api/recipes/:id` | PUT/DELETE | Оновити/видалити рецепт |
+| `/api/memories` | GET/POST | Спогади |
+| `/api/memories/:id` | PATCH/DELETE | Оновити/видалити спогад |
+| `/api/memories/:id/photos` | POST | Додати фото до спогаду |
+| `/api/memories/:id/photos/:photoId` | PATCH/DELETE | Оновити/видалити фото |
 
 **Middleware:**
 - `requireAuth` — перевіряє JWT, додає `req.userId`, `req.userRole`
@@ -523,9 +537,9 @@ VITE_CLOUDINARY_UPLOAD_PRESET=mimir_uploads
 - ✅ Backend інтеграція: transactions, sprint tasks/todos, goals, watchlist (без persist в store)
 - ✅ `sprintStore` persist тільки rich local fields (checklist, labels, dueDate, description, globalLabels)
 - ✅ Видалено `migrateToBackend.ts` — всі міграції завершено
+- ✅ Backend інтеграція: lessons, recipes, memories (model + controller + routes + store rewrite)
+- ✅ Жодного юзерського контенту в localStorage — тільки auth token, тема UI, та API-кеш (TheMealDB, NASA, TMDB episodes)
 
 **Залишилось / наступне:**
-- ✅ Сід-скрипти на Railway (`seedUsers.ts`, `migrateToKotka.ts`) — виконано
-- ⬜ Backend для lessons, recipes, memories — поки localStorage
 - ⬜ Push-нотифікації — VAPID підключено, логіка відправки не реалізована
 - ⬜ Фінансовий аналітик / менторський помічник (агенти) — майбутнє
