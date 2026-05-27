@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TopBar from '../../components/layout/TopBar'
 import MemoryCard from '../../components/memories/MemoryCard'
@@ -22,11 +22,13 @@ const PlusIcon: React.FC = () => (
  */
 const MemoriesScreen: React.FC = () => {
   const navigate    = useNavigate()
-  const { memories, addMemory } = useMemoriesStore()
+  const { memories, fetchMemories, addMemory } = useMemoriesStore()
   const [showAdd, setShowAdd]   = useState(false)
 
-  const handleCreate = (data: AddMemoryData) => {
-    const id = addMemory({
+  useEffect(() => { fetchMemories() }, [fetchMemories])
+
+  const handleCreate = async (data: AddMemoryData) => {
+    const id = await addMemory({
       title:    data.title,
       location: data.location,
       date:     data.date,

@@ -1,91 +1,142 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { authFetch, getToken } from '../services/api'
 import type { Memory, MemoryPhoto } from '../types/memory'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toPhoto(p: Record<string, any>): MemoryPhoto {
+  return {
+    id:        p._id,
+    url:       p.url,
+    caption:   p.caption ?? undefined,
+    createdAt: typeof p.createdAt === 'string' ? p.createdAt : new Date(p.createdAt).toISOString(),
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toMemory(d: Record<string, any>): Memory {
+  return {
+    id:        d._id,
+    title:     d.title,
+    location:  d.location || undefined,
+    date:      d.date,
+    coverUrl:  d.coverUrl ?? '',
+    photos:    (d.photos ?? []).map(toPhoto),
+    createdAt: typeof d.createdAt === 'string' ? d.createdAt : new Date(d.createdAt).toISOString(),
+  }
+}
 
 /**
  * memoriesStore
  * -------------
- * Zustand store для сторінки Спогади.
- * Зберігається в localStorage через persist.
+ * Zustand store для сторінки Спогади — backend-backed через /api/memories.
  */
 interface MemoriesState {
   memories: Memory[]
-  addMemory: (memory: Omit<Memory, 'id' | 'createdAt'>) => string
-  updateMemory: (id: string, updates: Partial<Omit<Memory, 'id' | 'createdAt'>>) => void
-  deleteMemory: (id: string) => void
-  addPhoto: (memoryId: string, photo: Omit<MemoryPhoto, 'id' | 'createdAt'>) => void
-  deletePhoto: (memoryId: string, photoId: string) => void
-  setCover: (memoryId: string, photoUrl: string) => void
-  updatePhoto: (memoryId: string, photoId: string, updates: Partial<MemoryPhoto>) => void
+  fetchMemories: () => Promise<void>
+  addMemory: (memory: Omit<Memory, 'id' | 'createdAt'>) => Promise<string>
+  updateMemory: (id: string, updates: Partial<Omit<Memory, 'id' | 'createdAt'>>) => Promise<void>
+  deleteMemory: (id: string) => Promise<void>
+  addPhoto: (memoryId: string, photo: Omit<MemoryPhoto, 'id' | 'createdAt'>) => Promise<void>
+  deletePhoto: (memoryId: string, photoId: string) => Promise<void>
+  setCover: (memoryId: string, photoUrl: string) => Promise<void>
+  updatePhoto: (memoryId: string, photoId: string, updates: Partial<MemoryPhoto>) => Promise<void>
 }
 
-export const useMemoriesStore = create<MemoriesState>()(
-  persist(
-    (set) => ({
-      memories: [],
+export const useMemoriesStore = create<MemoriesState>()((set) => ({
+  memories: [],
 
-      addMemory: (memory) => {
-        const id = crypto.randomUUID()
-        set(s => ({
-          memories: [
-            { ...memory, id, createdAt: new Date().toISOString() },
-            ...s.memories,
-          ],
-        }))
-        return id
-      },
+  fetchMemories: async () => {
+    if (!getToken()) return
+    const res = await authFetch('/api/memories')
+    if (!res.ok) return
+    const data = await res.json()
+    set({ memories: data.map(toMemory) })
+  },
 
-      updateMemory: (id, updates) => {
-        set(s => ({
-          memories: s.memories.map(m => m.id === id ? { ...m, ...updates } : m),
-        }))
-      },
+  addMemory: async (memory) => {
+    const res = await authFetch('/api/memories', {
+      method: 'POST',
+      body: JSON.stringify(memory),
+    })
+    if (!res.ok) throw new Error('Failed to create memory')
+    const item = await res.json()
+    const m = toMemory(item)
+    set(s => ({ memories: [m, ...s.memories] }))
+    return m.id
+  },
 
-      deleteMemory: (id) => {
-        set(s => ({ memories: s.memories.filter(m => m.id !== id) }))
-      },
+  updateMemory: async (id, updates) => {
+    set(s => ({
+      memories: s.memories.map(m => m.id === id ? { ...m, ...updates } : m),
+    }))
+    await authFetch(`/api/memories/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    })
+  },
 
-      addPhoto: (memoryId, photo) => {
-        const newPhoto: MemoryPhoto = {
-          ...photo,
-          id: crypto.randomUUID(),
-          createdAt: new Date().toISOString(),
-        }
-        set(s => ({
-          memories: s.memories.map(m =>
-            m.id === memoryId ? { ...m, photos: [...m.photos, newPhoto] } : m
-          ),
-        }))
-      },
+  deleteMemory: async (id) => {
+    set(s => ({ memories: s.memories.filter(m => m.id !== id) }))
+    await authFetch(`/api/memories/${id}`, { method: 'DELETE' })
+  },
 
-      deletePhoto: (memoryId, photoId) => {
-        set(s => ({
-          memories: s.memories.map(m =>
-            m.id === memoryId
-              ? { ...m, photos: m.photos.filter(p => p.id !== photoId) }
-              : m
-          ),
-        }))
-      },
+  addPhoto: async (memoryId, photo) => {
+    const tempPhoto: MemoryPhoto = {
+      ...photo,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }
+    set(s => ({
+      memories: s.memories.map(m =>
+        m.id === memoryId ? { ...m, photos: [...m.photos, tempPhoto] } : m
+      ),
+    }))
+    const res = await authFetch(`/api/memories/${memoryId}/photos`, {
+      method: 'POST',
+      body: JSON.stringify(photo),
+    })
+    if (res.ok) {
+      const updated = await res.json()
+      set(s => ({
+        memories: s.memories.map(m => m.id === memoryId ? toMemory(updated) : m),
+      }))
+    }
+  },
 
-      setCover: (memoryId, photoUrl) => {
-        set(s => ({
-          memories: s.memories.map(m =>
-            m.id === memoryId ? { ...m, coverUrl: photoUrl } : m
-          ),
-        }))
-      },
+  deletePhoto: async (memoryId, photoId) => {
+    set(s => ({
+      memories: s.memories.map(m =>
+        m.id === memoryId
+          ? { ...m, photos: m.photos.filter(p => p.id !== photoId) }
+          : m
+      ),
+    }))
+    await authFetch(`/api/memories/${memoryId}/photos/${photoId}`, { method: 'DELETE' })
+  },
 
-      updatePhoto: (memoryId, photoId, updates) => {
-        set(s => ({
-          memories: s.memories.map(m =>
-            m.id === memoryId
-              ? { ...m, photos: m.photos.map(p => p.id === photoId ? { ...p, ...updates } : p) }
-              : m
-          ),
-        }))
-      },
-    }),
-    { name: 'memories-storage' }
-  )
-)
+  setCover: async (memoryId, photoUrl) => {
+    set(s => ({
+      memories: s.memories.map(m =>
+        m.id === memoryId ? { ...m, coverUrl: photoUrl } : m
+      ),
+    }))
+    await authFetch(`/api/memories/${memoryId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ coverUrl: photoUrl }),
+    })
+  },
+
+  updatePhoto: async (memoryId, photoId, updates) => {
+    set(s => ({
+      memories: s.memories.map(m =>
+        m.id === memoryId
+          ? { ...m, photos: m.photos.map(p => p.id === photoId ? { ...p, ...updates } : p) }
+          : m
+      ),
+    }))
+    await authFetch(`/api/memories/${memoryId}/photos/${photoId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    })
+  },
+}))

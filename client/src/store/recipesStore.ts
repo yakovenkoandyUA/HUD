@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { authFetch, getToken } from '../services/api'
 import type { Recipe, Meal, MealIngredient } from '../types'
 
 function getWeekKey(): string {
@@ -30,15 +31,27 @@ function parseMeal(raw: Record<string, string>): Meal {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toRecipe(d: Record<string, any>): Recipe {
+  return {
+    id:          d._id,
+    title:       d.title,
+    ingredients: d.ingredients ?? [],
+    steps:       d.steps ?? '',
+    imageUrl:    d.imageUrl ?? undefined,
+  }
+}
+
 interface RecipesState {
   recipes: Recipe[]
   mealOfWeek: Meal | null
   mealWeekKey: string
   mealLoading: boolean
   mealError: boolean
-  addRecipe: (data: Omit<Recipe, 'id'>) => void
-  updateRecipe: (id: string, data: Partial<Omit<Recipe, 'id'>>) => void
-  deleteRecipe: (id: string) => void
+  fetchRecipes: () => Promise<void>
+  addRecipe: (data: Omit<Recipe, 'id'>) => Promise<void>
+  updateRecipe: (id: string, data: Partial<Omit<Recipe, 'id'>>) => Promise<void>
+  deleteRecipe: (id: string) => Promise<void>
   fetchMealOfWeek: () => Promise<void>
 }
 
@@ -51,18 +64,45 @@ export const useRecipesStore = create<RecipesState>()(
       mealLoading: false,
       mealError: false,
 
-      addRecipe: (data) =>
-        set((s) => ({
-          recipes: [{ id: crypto.randomUUID(), ...data }, ...s.recipes],
-        })),
+      fetchRecipes: async () => {
+        if (!getToken()) return
+        const res = await authFetch('/api/recipes')
+        if (!res.ok) return
+        const data = await res.json()
+        set({ recipes: data.map(toRecipe) })
+      },
 
-      updateRecipe: (id, data) =>
-        set((s) => ({
-          recipes: s.recipes.map((r) => (r.id === id ? { ...r, ...data } : r)),
-        })),
+      addRecipe: async (data) => {
+        const tempId = crypto.randomUUID()
+        set(s => ({ recipes: [{ id: tempId, ...data }, ...s.recipes] }))
+        const res = await authFetch('/api/recipes', {
+          method: 'POST',
+          body: JSON.stringify({ ...data, isPersonal: true }),
+        })
+        if (!res.ok) {
+          set(s => ({ recipes: s.recipes.filter(r => r.id !== tempId) }))
+          return
+        }
+        const item = await res.json()
+        set(s => ({ recipes: s.recipes.map(r => r.id === tempId ? toRecipe(item) : r) }))
+      },
 
-      deleteRecipe: (id) =>
-        set((s) => ({ recipes: s.recipes.filter((r) => r.id !== id) })),
+      updateRecipe: async (id, data) => {
+        set(s => ({ recipes: s.recipes.map(r => r.id === id ? { ...r, ...data } : r) }))
+        const res = await authFetch(`/api/recipes/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        })
+        if (res.ok) {
+          const item = await res.json()
+          set(s => ({ recipes: s.recipes.map(r => r.id === id ? toRecipe(item) : r) }))
+        }
+      },
+
+      deleteRecipe: async (id) => {
+        set(s => ({ recipes: s.recipes.filter(r => r.id !== id) }))
+        await authFetch(`/api/recipes/${id}`, { method: 'DELETE' })
+      },
 
       fetchMealOfWeek: async () => {
         const weekKey = getWeekKey()
@@ -81,8 +121,7 @@ export const useRecipesStore = create<RecipesState>()(
     {
       name: 'hud-recipes',
       partialize: (s) => ({
-        recipes: s.recipes,
-        mealOfWeek: s.mealOfWeek,
+        mealOfWeek:  s.mealOfWeek,
         mealWeekKey: s.mealWeekKey,
       }),
     }

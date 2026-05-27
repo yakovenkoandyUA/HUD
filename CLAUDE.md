@@ -525,7 +525,7 @@ VITE_CLOUDINARY_UPLOAD_PRESET=mimir_uploads
 - ✅ Видалено `migrateToBackend.ts` — всі міграції завершено
 
 **Залишилось / наступне:**
-- ⬜ Сід-скрипти на Railway (`seedUsers.ts`, `migrateToKotka.ts`) — потрібно запустити 1 раз
+- ✅ Сід-скрипти на Railway (`seedUsers.ts`, `migrateToKotka.ts`) — виконано
 - ⬜ Backend для lessons, recipes, memories — поки localStorage
 - ⬜ Push-нотифікації — VAPID підключено, логіка відправки не реалізована
 - ⬜ Фінансовий аналітик / менторський помічник (агенти) — майбутнє

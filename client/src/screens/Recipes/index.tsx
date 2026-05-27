@@ -14,13 +14,13 @@ import styles from './Recipes.module.css'
 const GHOST_TITLES = ['Паста карбонара', 'Курка теріякі', 'Грецький салат']
 
 const Recipes: React.FC = () => {
-  const { mealOfWeek, mealLoading, mealError, recipes, fetchMealOfWeek, addRecipe, updateRecipe, deleteRecipe } = useRecipesStore()
+  const { mealOfWeek, mealLoading, mealError, recipes, fetchMealOfWeek, fetchRecipes, addRecipe, updateRecipe, deleteRecipe } = useRecipesStore()
   const { showToast } = useUiStore()
   const [showMealDetail, setShowMealDetail] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
 
-  useEffect(() => { fetchMealOfWeek() }, [fetchMealOfWeek])
+  useEffect(() => { fetchMealOfWeek(); fetchRecipes() }, [fetchMealOfWeek, fetchRecipes])
 
   const handleSave = (data: Omit<Recipe, 'id'>) => {
     if (editingRecipe) {

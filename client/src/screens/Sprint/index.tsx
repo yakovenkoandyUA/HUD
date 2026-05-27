@@ -103,7 +103,7 @@ const IconFilter: React.FC<{ active?: boolean }> = ({ active }) => (
 
 const Sprint: React.FC = () => {
   const { items, addItem, toggleItem, deleteItem, fetchItems, syncStatus } = useSprintStore()
-  const { lessons, addLesson, updateLesson, deleteLesson } = useLessonStore()
+  const { lessons, addLesson, updateLesson, deleteLesson, fetchLessons } = useLessonStore()
   const { showToast } = useUiStore()
 
   const [filter, setFilter]             = useState<FilterType>('all')
@@ -124,6 +124,7 @@ const Sprint: React.FC = () => {
   useEffect(() => {
     if (!getToken()) return
     fetchItems()
+    fetchLessons()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
