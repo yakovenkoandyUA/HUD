@@ -81,124 +81,84 @@
 
 /* ── Filter panel ─────────────────────────────────────────────────────────── */
 
-@keyframes panelIn {
-  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
-}
-
 .filterPanel {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px 12px 10px;
+  gap: 0;
+  padding: 4px 12px 10px;
   background: var(--bg2);
   border: 1px solid var(--border2);
   border-radius: 14px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.28);
-  animation: panelIn 0.16s cubic-bezier(0.2, 0, 0, 1) both;
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0, 0, 1),
+    opacity   0.18s ease;
+  will-change: transform, opacity;
 }
 
-/* ── Select row ───────────────────────────────────────────────────────────── */
+.filterPanelVisible {
+  transform: translateY(0);
+  opacity: 1;
+}
 
-.selectRow {
+.filterPanelHidden {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+/* ── Chip group (filter panel) ────────────────────────────────────────────── */
+
+.chipGroup {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px 0;
 }
-.selectRow:last-of-type { border-bottom: none; }
+.chipGroup:last-of-type { border-bottom: none; padding-bottom: 2px; }
 
-.selectLabel {
+.chipGroupLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+}
+
+.chipRow {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  background: var(--bg2);
+  scrollbar-width: none;
+}
+.chipRow::-webkit-scrollbar { display: none; }
+
+.chip {
+  flex: 1;
+  flex-shrink: 0;
+  padding: 8px 10px;
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text3);
-  flex-shrink: 0;
-}
-
-.selectWrap { position: relative; min-width: 130px; }
-
-.selectTrigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  padding: 7px 10px;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  text-align: left;
-}
-.selectTrigger:hover       { border-color: var(--accent-dim); }
-.selectTriggerOpen         { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-
-.chevron {
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
-  color: var(--text3);
-}
-.chevronUp { transform: rotate(180deg); }
-.selectTriggerOpen .chevron { color: var(--accent); }
-
-/* ── Dropdown list ────────────────────────────────────────────────────────── */
-
-@keyframes dropIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  left: 0;
-  z-index: 20;
-  list-style: none;
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  overflow: hidden;
-  animation: dropIn 0.13s ease both;
-}
-
-.dropdownItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 12px;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text2);
-  background: none;
+  text-align: center;
   border: none;
+  border-right: 1px solid var(--border);
+  background: none;
+  color: var(--text3);
   cursor: pointer;
-  text-align: left;
-  transition: background 0.1s, color 0.1s;
+  transition: color 0.12s, background 0.12s;
+  white-space: nowrap;
 }
-.dropdownItem:hover { background: var(--surface); color: var(--text); }
-.dropdownItem + .dropdownItem { border-top: 1px solid var(--border); }
-
-.dropdownItemActive { color: var(--accent) !important; background: var(--accent-soft) !important; }
-
-.checkmark {
-  font-size: 10px;
+.chip:last-child { border-right: none; }
+.chip:hover { color: var(--text2); }
+.chipActive {
+  background: var(--accent-soft);
   color: var(--accent);
-  width: 12px;
-  flex-shrink: 0;
 }
 
 /* ── Filter footer ────────────────────────────────────────────────────────── */
@@ -212,9 +172,9 @@
 }
 
 .resetBtn {
-  padding: 7px 14px;
+  padding: 6px 12px;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -228,9 +188,9 @@
 .resetBtn:hover { color: var(--negative); border-color: var(--negative); }
 
 .doneBtn {
-  padding: 7px 18px;
+  padding: 6px 16px;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -242,6 +202,39 @@
   transition: opacity 0.15s;
 }
 .doneBtn:hover { opacity: 0.85; }
+
+/* ── Active filter pills (above list) ────────────────────────────────────── */
+
+@keyframes pillIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.activePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  animation: pillIn 0.15s ease both;
+}
+
+.activePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 11px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  cursor: pointer;
+  transition: opacity 0.12s, background 0.12s;
+}
+.activePill:hover { opacity: 0.75; }
 
 /* ── Empty states ─────────────────────────────────────────────────────────── */
 

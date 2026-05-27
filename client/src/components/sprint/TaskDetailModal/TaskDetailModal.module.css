@@ -599,6 +599,24 @@
 }
 .pickerCreateBtn:hover { border-color: var(--accent); color: var(--accent); }
 
+.pickerDoneBtn {
+  flex-shrink: 0;
+  margin: 0 16px 16px;
+  padding: 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 10px;
+  background: var(--accent);
+  border: none;
+  color: var(--bg);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.pickerDoneBtn:hover { opacity: 0.85; }
+
 /* ── Label form (inside picker) ── */
 .labelForm {
   display: flex;

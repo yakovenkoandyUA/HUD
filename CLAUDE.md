@@ -79,8 +79,8 @@ VAPID_PRIVATE_KEY=...
 
 # /client .env
 VITE_API_URL=https://hud-production.up.railway.app
-VITE_CLOUDINARY_CLOUD_NAME=cold-house
-VITE_CLOUDINARY_UPLOAD_PRESET=mimir_uploads
+VITE_CLOUDINARY_CLOUD_NAME=mimir-hud
+VITE_CLOUDINARY_UPLOAD_PRESET=mimirorg
 ```
 
 ---
@@ -477,8 +477,8 @@ store/
 ## Cloudinary
 
 ```
-VITE_CLOUDINARY_CLOUD_NAME=cold-house
-VITE_CLOUDINARY_UPLOAD_PRESET=mimir_uploads
+VITE_CLOUDINARY_CLOUD_NAME=mimir-hud
+VITE_CLOUDINARY_UPLOAD_PRESET=mimirorg
 ```
 
 `uploadToCloudinary(file, folder)` — unsigned upload через FormData.

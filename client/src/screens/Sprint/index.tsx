@@ -20,6 +20,8 @@ const SYNC_COLORS: Record<string, string> = {
   synced: 'var(--positive)', syncing: 'var(--gold)', error: 'var(--negative)', local: 'var(--text3)',
 }
 
+const PANEL_ANIM_MS = 220
+
 type FilterType   = 'all' | 'sprint' | 'shopping' | 'todo' | 'lessons'
 type StatusFilter = 'active' | 'done' | 'all'
 
@@ -45,49 +47,30 @@ const PRIORITY_CONFIG: Record<TodoPriority, { symbol: string; label: string; act
   low:    { symbol: '▽', label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow    },
 }
 
-// ── Inline dropdown ───────────────────────────────────────────────────────────
+// ── Chip group ────────────────────────────────────────────────────────────────
 
-interface SelectRowProps<T extends string> {
+interface ChipGroupProps<T extends string> {
   label: string
   options: { key: T; label: string }[]
   value: T
   onChange: (v: T) => void
 }
 
-function SelectRow<T extends string>({ label, options, value, onChange }: SelectRowProps<T>) {
-  const [open, setOpen] = useState(false)
-  const selected = options.find(o => o.key === value)
-
+function ChipGroup<T extends string>({ label, options, value, onChange }: ChipGroupProps<T>) {
   return (
-    <div className={styles.selectRow}>
-      <span className={styles.selectLabel}>{label}</span>
-      <div className={styles.selectWrap}>
-        <button
-          type="button"
-          className={`${styles.selectTrigger} ${open ? styles.selectTriggerOpen : ''}`}
-          onClick={() => setOpen(v => !v)}
-        >
-          <span>{selected?.label}</span>
-          <svg className={`${styles.chevron} ${open ? styles.chevronUp : ''}`} width="10" height="6" viewBox="0 0 10 6" fill="none">
-            <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-        {open && (
-          <ul className={styles.dropdown}>
-            {options.map(opt => (
-              <li key={opt.key}>
-                <button
-                  type="button"
-                  className={`${styles.dropdownItem} ${value === opt.key ? styles.dropdownItemActive : ''}`}
-                  onClick={() => { onChange(opt.key); setOpen(false) }}
-                >
-                  {value === opt.key && <span className={styles.checkmark}>✓</span>}
-                  {opt.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+    <div className={styles.chipGroup}>
+      <span className={styles.chipGroupLabel}>{label}</span>
+      <div className={styles.chipRow}>
+        {options.map(opt => (
+          <button
+            key={opt.key}
+            type="button"
+            className={`${styles.chip} ${value === opt.key ? styles.chipActive : ''}`}
+            onClick={() => onChange(opt.key)}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -108,8 +91,11 @@ const Sprint: React.FC = () => {
 
   const [filter, setFilter]             = useState<FilterType>('all')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
-  const [showFilterPanel, setShowFilterPanel] = useState(false)
-  const filterPanelRef = useRef<HTMLDivElement>(null)
+  const [showFilterPanel, setShowFilterPanel]       = useState(false)
+  const [filterPanelMounted, setFilterPanelMounted] = useState(false)
+  const [filterPanelVisible, setFilterPanelVisible] = useState(false)
+  const filterPanelRef  = useRef<HTMLDivElement>(null)
+  const filterTimerRef  = useRef<ReturnType<typeof setTimeout>>()
 
   const [showAdd, setShowAdd]         = useState(false)
   const [newType, setNewType]         = useState<UnifiedTodo['type']>('sprint')
@@ -120,6 +106,23 @@ const Sprint: React.FC = () => {
   const [detailTaskId, setDetailTaskId]   = useState<string | null>(null)
   const [showAddLesson, setShowAddLesson] = useState(false)
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null)
+
+  const openPanel = () => {
+    clearTimeout(filterTimerRef.current)
+    setShowFilterPanel(true)
+    setFilterPanelMounted(true)
+    requestAnimationFrame(() => requestAnimationFrame(() => setFilterPanelVisible(true)))
+  }
+
+  const closePanel = () => {
+    setShowFilterPanel(false)
+    setFilterPanelVisible(false)
+    filterTimerRef.current = setTimeout(() => setFilterPanelMounted(false), PANEL_ANIM_MS)
+  }
+
+  const togglePanel = () => showFilterPanel ? closePanel() : openPanel()
+
+  useEffect(() => () => clearTimeout(filterTimerRef.current), [])
 
   useEffect(() => {
     if (!getToken()) return
@@ -187,7 +190,7 @@ const Sprint: React.FC = () => {
           <div className={styles.sectionActions}>
             <button
               className={`${styles.filterBtn} ${showFilterPanel ? styles.filterBtnOpen : ''} ${isFiltered && !showFilterPanel ? styles.filterBtnActive : ''}`}
-              onClick={() => setShowFilterPanel(v => !v)}
+              onClick={togglePanel}
               aria-label="Фільтр"
             >
               <IconFilter active={isFiltered} />
@@ -209,16 +212,19 @@ const Sprint: React.FC = () => {
         </div>
 
         {/* ── Filter panel ── */}
-        {showFilterPanel && (
-          <div className={styles.filterPanel} ref={filterPanelRef}>
-            <SelectRow
+        {filterPanelMounted && (
+          <div
+            className={`${styles.filterPanel} ${filterPanelVisible ? styles.filterPanelVisible : styles.filterPanelHidden}`}
+            ref={filterPanelRef}
+          >
+            <ChipGroup
               label="Тип"
               options={TYPE_OPTIONS}
               value={filter}
               onChange={setFilter}
             />
             {filter !== 'lessons' && (
-              <SelectRow
+              <ChipGroup
                 label="Статус"
                 options={STATUS_OPTIONS}
                 value={statusFilter}
@@ -228,13 +234,35 @@ const Sprint: React.FC = () => {
             <div className={styles.filterFooter}>
               {isFiltered && (
                 <button className={styles.resetBtn} onClick={() => { setFilter('all'); setStatusFilter('active') }}>
-                  Скинути
+                  Скинути все
                 </button>
               )}
-              <button className={styles.doneBtn} onClick={() => setShowFilterPanel(false)}>
+              <button className={styles.doneBtn} onClick={closePanel}>
                 Готово
               </button>
             </div>
+          </div>
+        )}
+
+        {/* ── Active filter pills ── */}
+        {!showFilterPanel && isFiltered && (
+          <div className={styles.activePills}>
+            {filter !== 'all' && (
+              <button className={styles.activePill} onClick={() => setFilter('all')} aria-label="Прибрати фільтр типу">
+                {TYPE_OPTIONS.find(o => o.key === filter)?.label}
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+                  <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
+            {statusFilter !== 'active' && filter !== 'lessons' && (
+              <button className={styles.activePill} onClick={() => setStatusFilter('active')} aria-label="Прибрати фільтр статусу">
+                {STATUS_OPTIONS.find(o => o.key === statusFilter)?.label}
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+                  <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
           </div>
         )}
 

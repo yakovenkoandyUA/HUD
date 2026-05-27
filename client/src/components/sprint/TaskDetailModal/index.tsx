@@ -228,6 +228,10 @@ const LabelPicker: React.FC<LabelPickerProps> = ({ taskId, onClose }) => {
             <button type="button" className={styles.pickerCreateBtn} onClick={handleCreateStart}>
               + Створити нову мітку
             </button>
+
+            <button type="button" className={styles.pickerDoneBtn} onClick={onClose}>
+              Готово
+            </button>
           </>
         ) : (
           /* Create / Edit form */
