@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUiStore } from '../../../store/uiStore'
 import { useProfileStore } from '../../../store/profileStore'
+import { usePwaInstall } from '../../../hooks/usePwaInstall'
 import type { Theme } from '../../../store/uiStore'
 import { clearApiCaches } from '../../../utils/appCache'
 import styles from './ThemePicker.module.css'
@@ -82,6 +83,9 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
   const navigate = useNavigate()
   const { theme, setTheme, showToast } = useUiStore()
   const { activeProfile, logout, uploadAvatar } = useProfileStore()
+  const { isInstallable, isIOS, promptInstall } = usePwaInstall()
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  const showInstall = !isStandalone && (isInstallable || isIOS)
   const [cleared, setCleared] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -217,6 +221,27 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Встановити ── */}
+      {showInstall && (
+        <div className={styles.installSection}>
+          <p className={styles.sectionLabel}>ДОДАТОК</p>
+          {isIOS ? (
+            <p className={styles.installHint}>
+              Натисніть <strong>⎙ Share</strong> → <strong>«Додати на початковий екран»</strong> щоб встановити HUD як додаток.
+            </p>
+          ) : (
+            <button
+              type="button"
+              className={styles.installBtn}
+              onClick={() => { promptInstall(); onClose() }}
+            >
+              <span className={styles.installIcon}>⬇</span>
+              Встановити додаток
+            </button>
+          )}
         </div>
       )}
 
