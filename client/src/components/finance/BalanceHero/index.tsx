@@ -10,9 +10,9 @@ import styles from './BalanceHero.module.css'
  *
  * Props:
  * @prop {number}  balance        — поточний баланс на картці (грн)
- * @prop {number}  dailyBudget    — розрахований денний бюджет до кінця місяця
- * @prop {number}  monthSpent     — витрачено за поточний місяць
- * @prop {number}  daysLeft       — кількість днів до кінця місяця
+ * @prop {number}  dailyBudget    — розрахований денний бюджет до 10-го наступного місяця
+ * @prop {number}  monthSpent     — витрачено за поточний бюджетний період
+ * @prop {number}  daysLeft       — кількість днів до наступного поповнення (10-е)
  * @prop {number}  progressPct    — відсоток витрат від поповнень (0–100)
  */
 interface BalanceHeroProps {
