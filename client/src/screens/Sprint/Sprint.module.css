@@ -1,7 +1,5 @@
 .screen { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
-/* ── Content ──────────────────────────────────────────────────────────────── */
-
 .content {
   flex: 1;
   overflow-y: auto;
@@ -11,22 +9,14 @@
   gap: 12px;
 }
 
-.list        { list-style: none; display: flex; flex-direction: column; }
-.lessonList  { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-
-/* ── Animation ────────────────────────────────────────────────────────────── */
+.list       { list-style: none; display: flex; flex-direction: column; }
+.lessonList { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-.tabContent {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  animation: fadeUp 0.17s ease both;
-}
+.tabContent { display: flex; flex-direction: column; gap: 12px; animation: fadeUp 0.17s ease both; }
 
 /* ── Section header ───────────────────────────────────────────────────────── */
 
@@ -48,8 +38,6 @@
 
 .sectionActions { display: flex; gap: 6px; align-items: center; }
 
-/* ── Filter button ────────────────────────────────────────────────────────── */
-
 .filterBtn {
   position: relative;
   display: flex;
@@ -64,26 +52,14 @@
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.filterBtn:hover { color: var(--text); border-color: var(--border2); }
-
-.filterBtnOpen {
-  color: var(--accent);
-  border-color: var(--accent-dim);
-  background: var(--accent-soft);
-}
-
-.filterBtnActive {
-  color: var(--accent);
-  border-color: var(--accent-dim);
-  background: var(--accent-soft);
-}
+.filterBtn:hover     { color: var(--text); }
+.filterBtnOpen       { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-soft); }
+.filterBtnActive     { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-soft); }
 
 .filterDot {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 5px;
-  height: 5px;
+  top: 5px; right: 5px;
+  width: 5px; height: 5px;
   border-radius: 50%;
   background: var(--accent);
 }
@@ -113,8 +89,8 @@
 .filterPanel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 14px 16px 12px;
+  gap: 4px;
+  padding: 8px 12px 10px;
   background: var(--bg2);
   border: 1px solid var(--border2);
   border-radius: 14px;
@@ -122,98 +98,150 @@
   animation: panelIn 0.16s cubic-bezier(0.2, 0, 0, 1) both;
 }
 
-.filterSection {
+/* ── Select row ───────────────────────────────────────────────────────────── */
+
+.selectRow {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.selectRow:last-of-type { border-bottom: none; }
+
+.selectLabel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.selectWrap { position: relative; min-width: 130px; }
+
+.selectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-}
-
-.filterLabel {
+  width: 100%;
+  padding: 7px 10px;
   font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text3);
-}
-
-.filterChips {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-/* Type chips */
-
-.typeChip {
-  padding: 6px 14px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text2);
-  cursor: pointer;
-  transition: color 0.13s, background 0.13s, border-color 0.13s, transform 0.1s;
-}
-.typeChip:hover:not(.typeChipActive) { color: var(--text); border-color: var(--border2); }
-.typeChip:active { transform: scale(0.96); }
-
-.typeChipActive { border-color: transparent; }
-
-.typeChip_neutral  { background: var(--surface2);    color: var(--text);    border-color: var(--text3); }
-.typeChip_accent   { background: var(--accent);      color: var(--bg);      }
-.typeChip_second   { background: var(--second);      color: var(--bg);      }
-.typeChip_gold     { background: var(--gold);        color: var(--bg);      }
-.typeChip_lessons  { background: var(--text3);       color: var(--bg2);     }
-
-/* Status chips */
-
-.statusChip {
-  padding: 6px 14px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text2);
-  cursor: pointer;
-  transition: color 0.13s, background 0.13s, border-color 0.13s, transform 0.1s;
-}
-.statusChip:hover:not([class*='statusChip_']) { color: var(--text); }
-.statusChip:active { transform: scale(0.96); }
-
-.statusChip_active   { background: var(--second-soft); color: var(--second); border-color: var(--second); }
-.statusChip_done     { background: var(--gold-dim);    color: var(--text3);  border-color: var(--text3);  }
-.statusChip_all      { background: var(--surface2);    color: var(--text);   border-color: var(--text3);  }
-
-/* Reset button */
-
-.resetBtn {
-  align-self: center;
-  padding: 4px 0;
-  font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+}
+.selectTrigger:hover       { border-color: var(--accent-dim); }
+.selectTriggerOpen         { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+.chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
   color: var(--text3);
+}
+.chevronUp { transform: rotate(180deg); }
+.selectTriggerOpen .chevron { color: var(--accent); }
+
+/* ── Dropdown list ────────────────────────────────────────────────────────── */
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  list-style: none;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  overflow: hidden;
+  animation: dropIn 0.13s ease both;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.15s;
-  border-top: 1px solid var(--border);
-  width: 100%;
-  text-align: center;
-  padding-top: 10px;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
 }
-.resetBtn:hover { color: var(--negative); }
+.dropdownItem:hover { background: var(--surface); color: var(--text); }
+.dropdownItem + .dropdownItem { border-top: 1px solid var(--border); }
+
+.dropdownItemActive { color: var(--accent) !important; background: var(--accent-soft) !important; }
+
+.checkmark {
+  font-size: 10px;
+  color: var(--accent);
+  width: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Filter footer ────────────────────────────────────────────────────────── */
+
+.filterFooter {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.resetBtn {
+  padding: 7px 14px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.resetBtn:hover { color: var(--negative); border-color: var(--negative); }
+
+.doneBtn {
+  padding: 7px 18px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.doneBtn:hover { opacity: 0.85; }
 
 /* ── Empty states ─────────────────────────────────────────────────────────── */
 
@@ -224,7 +252,6 @@
   gap: 8px;
   padding: 32px 0 16px;
 }
-
 .emptyIcon  { font-size: 40px; color: var(--text3); line-height: 1; opacity: 0.4; }
 .emptyTitle { font-family: var(--font-ui); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); }
 .emptyHint  { font-family: var(--font-body); font-size: 12px; color: var(--text3); opacity: 0.7; }
@@ -250,12 +277,9 @@
   cursor: pointer;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
-
 .formTypeChipSprint.formTypeChipActive   { background: var(--accent-soft);  color: var(--accent);  border-color: var(--accent-dim); }
 .formTypeChipShopping.formTypeChipActive { background: var(--second-soft);  color: var(--second);  border-color: var(--second);     }
 .formTypeChipTodo.formTypeChipActive     { background: var(--gold-dim);     color: var(--gold);    border-color: var(--gold);       }
-
-/* Priority chips */
 
 .priorityRow { display: flex; gap: 6px; }
 
@@ -277,7 +301,6 @@
   cursor: pointer;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
-
 .priSymbol { font-size: 8px; line-height: 1; }
 .priLabel  { font-size: 9px; }
 
