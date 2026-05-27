@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import TopBar from '../../components/layout/TopBar'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import SprintProgress from '../../components/sprint/SprintProgress'
@@ -20,21 +20,21 @@ const SYNC_COLORS: Record<string, string> = {
   synced: 'var(--positive)', syncing: 'var(--gold)', error: 'var(--negative)', local: 'var(--text3)',
 }
 
-type FilterType = 'all' | 'sprint' | 'shopping' | 'todo' | 'lessons'
-type SprintStatus = 'all' | 'active' | 'done'
+type FilterType   = 'all' | 'sprint' | 'shopping' | 'todo' | 'lessons'
+type StatusFilter = 'active' | 'done' | 'all'
 
-const FILTER_OPTIONS: { key: FilterType; label: string }[] = [
-  { key: 'all',      label: 'Всі'     },
-  { key: 'sprint',   label: 'Спринт'  },
-  { key: 'shopping', label: 'Покупки' },
-  { key: 'todo',     label: 'Todo'    },
-  { key: 'lessons',  label: 'Уроки'   },
+const TYPE_OPTIONS: { key: FilterType; label: string; color: string }[] = [
+  { key: 'all',      label: 'Всі',     color: '' },
+  { key: 'sprint',   label: 'Спринт',  color: 'accent' },
+  { key: 'shopping', label: 'Покупки', color: 'second' },
+  { key: 'todo',     label: 'Todo',    color: 'gold' },
+  { key: 'lessons',  label: 'Уроки',   color: 'lessons' },
 ]
 
-const SPRINT_STATUS_OPTIONS: { key: SprintStatus; label: string }[] = [
-  { key: 'all',    label: 'Всі'        },
-  { key: 'active', label: 'Активні'    },
-  { key: 'done',   label: 'Завершені'  },
+const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
+  { key: 'active', label: 'Активні'   },
+  { key: 'done',   label: 'Завершені' },
+  { key: 'all',    label: 'Всі'       },
 ]
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'normal', 'low']
@@ -45,9 +45,9 @@ const PRIORITY_CONFIG: Record<TodoPriority, { symbol: string; label: string; act
   low:    { symbol: '▽', label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow    },
 }
 
-const IconFilter: React.FC = () => (
-  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-    <path d="M2 4h11M4 7.5h7M6 11h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+const IconFilter: React.FC<{ active?: boolean }> = ({ active }) => (
+  <svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">
+    <path d="M1 1.5h13M3.5 6.5h8M6 11.5h3" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round"/>
   </svg>
 )
 
@@ -56,21 +56,20 @@ const Sprint: React.FC = () => {
   const { lessons, addLesson, updateLesson, deleteLesson } = useLessonStore()
   const { showToast } = useUiStore()
 
-  const [filter, setFilter] = useState<FilterType>('all')
-  const [sprintStatus, setSprintStatus] = useState<SprintStatus>('all')
+  const [filter, setFilter]             = useState<FilterType>('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
   const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const filterPanelRef = useRef<HTMLDivElement>(null)
 
   // ── Add task modal ───────────────────────────────────────────────────────
-  const [showAdd, setShowAdd] = useState(false)
-  const [newType, setNewType] = useState<UnifiedTodo['type']>('sprint')
-  const [newTitle, setNewTitle] = useState('')
+  const [showAdd, setShowAdd]         = useState(false)
+  const [newType, setNewType]         = useState<UnifiedTodo['type']>('sprint')
+  const [newTitle, setNewTitle]       = useState('')
   const [newPriority, setNewPriority] = useState<TodoPriority>('normal')
   const [newQuantity, setNewQuantity] = useState('')
 
-  // ── Task detail modal ────────────────────────────────────────────────────
-  const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
-
-  // ── Lesson modal ─────────────────────────────────────────────────────────
+  // ── Task detail / lesson modals ──────────────────────────────────────────
+  const [detailTaskId, setDetailTaskId]   = useState<string | null>(null)
   const [showAddLesson, setShowAddLesson] = useState(false)
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null)
 
@@ -80,27 +79,33 @@ const Sprint: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const weekStart = getCurrentWeekStart()
-  const weekSprintItems = items.filter((t) => t.type === 'sprint' && t.weekStart === weekStart)
-  const done = weekSprintItems.filter((t) => t.done).length
-
-  const filteredItems = items.filter((t) => {
-    if (filter === 'lessons') return false
-    if (filter === 'all') return true
-    if (filter === 'sprint') {
-      if (t.type !== 'sprint') return false
-      if (sprintStatus === 'active') return !t.done
-      if (sprintStatus === 'done') return t.done
-      return true
+  // close panel on outside click
+  useEffect(() => {
+    if (!showFilterPanel) return
+    const handler = (e: MouseEvent) => {
+      if (filterPanelRef.current && !filterPanelRef.current.contains(e.target as Node)) {
+        setShowFilterPanel(false)
+      }
     }
-    return t.type === filter
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showFilterPanel])
+
+  const weekStart = getCurrentWeekStart()
+  const weekSprintItems = items.filter(t => t.type === 'sprint' && t.weekStart === weekStart)
+  const done = weekSprintItems.filter(t => t.done).length
+
+  const filteredItems = items.filter(t => {
+    if (filter === 'lessons') return false
+    if (filter !== 'all' && t.type !== filter) return false
+    if (statusFilter === 'active') return !t.done
+    if (statusFilter === 'done')   return t.done
+    return true
   })
 
-  const resetForm = () => {
-    setNewTitle('')
-    setNewPriority('normal')
-    setNewQuantity('')
-  }
+  const isFiltered = filter !== 'all' || statusFilter !== 'active'
+
+  const resetForm = () => { setNewTitle(''); setNewPriority('normal'); setNewQuantity('') }
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault()
@@ -129,13 +134,7 @@ const Sprint: React.FC = () => {
     setEditingLesson(null)
   }
 
-  const handleFilterSelect = (key: FilterType) => {
-    setFilter(key)
-    if (key !== 'sprint') setSprintStatus('all')
-    setShowFilterPanel(false)
-  }
-
-  const isFiltered = filter !== 'all' || sprintStatus !== 'all'
+  const handleReset = () => { setFilter('all'); setStatusFilter('active') }
 
   return (
     <div className={styles.screen}>
@@ -151,69 +150,87 @@ const Sprint: React.FC = () => {
         <SprintProgress done={done} total={weekSprintItems.length} />
 
         {/* ── Section header ── */}
-        <div key={filter + sprintStatus} className={styles.tabContent}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>{filter === 'lessons' ? 'Уроки' : 'Задачі'}</span>
-            <div className={styles.sectionActions}>
-              <button
-                className={`${styles.filterBtn} ${showFilterPanel ? styles.filterBtnOpen : ''} ${isFiltered && !showFilterPanel ? styles.filterBtnActive : ''}`}
-                onClick={() => setShowFilterPanel(v => !v)}
-                aria-label="Фільтр"
-              >
-                <IconFilter />
-              </button>
-              <button
-                className={styles.addBtn}
-                onClick={() => {
-                  if (filter === 'lessons') { setEditingLesson(null); setShowAddLesson(true) }
-                  else { setShowAdd(true) }
-                }}
-                aria-label="Додати"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>{filter === 'lessons' ? 'Уроки' : 'Задачі'}</span>
+          <div className={styles.sectionActions}>
+            <button
+              className={`${styles.filterBtn} ${showFilterPanel ? styles.filterBtnOpen : ''} ${isFiltered && !showFilterPanel ? styles.filterBtnActive : ''}`}
+              onClick={() => setShowFilterPanel(v => !v)}
+              aria-label="Фільтр"
+            >
+              <IconFilter active={isFiltered} />
+              {isFiltered && !showFilterPanel && <span className={styles.filterDot} />}
+            </button>
+            <button
+              className={styles.addBtn}
+              onClick={() => {
+                if (filter === 'lessons') { setEditingLesson(null); setShowAddLesson(true) }
+                else setShowAdd(true)
+              }}
+              aria-label="Додати"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
           </div>
+        </div>
 
-          {/* ── Filter panel ── */}
-          {showFilterPanel && (
-            <div className={styles.filterPanel}>
-              <div className={styles.filterPanelRow}>
-                {FILTER_OPTIONS.map(f => (
+        {/* ── Filter panel ── */}
+        {showFilterPanel && (
+          <div className={styles.filterPanel} ref={filterPanelRef}>
+            <div className={styles.filterSection}>
+              <span className={styles.filterLabel}>Тип</span>
+              <div className={styles.filterChips}>
+                {TYPE_OPTIONS.map(opt => (
                   <button
-                    key={f.key}
-                    className={`${styles.filterChip} ${filter === f.key ? styles.filterChipActive : ''}`}
-                    onClick={() => handleFilterSelect(f.key)}
+                    key={opt.key}
+                    className={`${styles.typeChip} ${filter === opt.key ? `${styles.typeChipActive} ${styles[`typeChip_${opt.color || 'neutral'}`]}` : ''}`}
+                    onClick={() => setFilter(opt.key)}
                   >
-                    {f.label}
+                    {opt.label}
                   </button>
                 ))}
               </div>
-              {filter === 'sprint' && (
-                <div className={styles.filterPanelRow}>
-                  {SPRINT_STATUS_OPTIONS.map(s => (
+            </div>
+
+            {filter !== 'lessons' && (
+              <div className={styles.filterSection}>
+                <span className={styles.filterLabel}>Статус</span>
+                <div className={styles.filterChips}>
+                  {STATUS_OPTIONS.map(opt => (
                     <button
-                      key={s.key}
-                      className={`${styles.filterChip} ${sprintStatus === s.key ? styles.filterChipStatus : ''}`}
-                      onClick={() => { setSprintStatus(s.key); setShowFilterPanel(false) }}
+                      key={opt.key}
+                      className={`${styles.statusChip} ${statusFilter === opt.key ? styles[`statusChip_${opt.key}`] : ''}`}
+                      onClick={() => setStatusFilter(opt.key)}
                     >
-                      {s.label}
+                      {opt.label}
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* ── Task list ── */}
+            {isFiltered && (
+              <button className={styles.resetBtn} onClick={handleReset}>
+                Скинути фільтри
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── List area ── */}
+        <div key={`${filter}-${statusFilter}`} className={styles.tabContent}>
           {filter !== 'lessons' && (
             filteredItems.length === 0 ? (
               <div className={styles.emptyState}>
                 <span className={styles.emptyIcon}>✓</span>
-                <span className={styles.emptyTitle}>Список чистий</span>
-                <span className={styles.emptyHint}>Додай першу задачу</span>
+                <span className={styles.emptyTitle}>
+                  {statusFilter === 'active' ? 'Активних задач немає' : 'Список чистий'}
+                </span>
+                <span className={styles.emptyHint}>
+                  {statusFilter === 'active' ? 'Всі виконано 🎉' : 'Додай першу задачу'}
+                </span>
               </div>
             ) : (
               <ul className={styles.list}>
@@ -230,7 +247,6 @@ const Sprint: React.FC = () => {
             )
           )}
 
-          {/* ── Lessons list ── */}
           {filter === 'lessons' && (
             lessons.length === 0 ? (
               <div className={styles.emptyState}>
@@ -257,32 +273,12 @@ const Sprint: React.FC = () => {
       {/* ── Add task modal ── */}
       <Modal isOpen={showAdd} onClose={() => { setShowAdd(false); resetForm() }} title="Нова задача">
         <form onSubmit={handleAdd} className={styles.taskForm}>
-          {/* Type selector */}
           <div className={styles.typeRow}>
-            <button
-              type="button"
-              className={`${styles.typeChip} ${styles.typeChipSprint} ${newType === 'sprint' ? styles.typeChipActive : ''}`}
-              onClick={() => setNewType('sprint')}
-            >
-              ⚡ Спринт
-            </button>
-            <button
-              type="button"
-              className={`${styles.typeChip} ${styles.typeChipShopping} ${newType === 'shopping' ? styles.typeChipActive : ''}`}
-              onClick={() => setNewType('shopping')}
-            >
-              🛒 Покупка
-            </button>
-            <button
-              type="button"
-              className={`${styles.typeChip} ${styles.typeChipTodo} ${newType === 'todo' ? styles.typeChipActive : ''}`}
-              onClick={() => setNewType('todo')}
-            >
-              ✓ Todo
-            </button>
+            <button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipSprint}  ${newType === 'sprint'   ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('sprint')}>⚡ Спринт</button>
+            <button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipShopping}${newType === 'shopping' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('shopping')}>🛒 Покупка</button>
+            <button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipTodo}    ${newType === 'todo'     ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('todo')}>✓ Todo</button>
           </div>
 
-          {/* Title */}
           <input
             className={styles.todoInput}
             value={newTitle}
@@ -291,18 +287,12 @@ const Sprint: React.FC = () => {
             autoFocus
           />
 
-          {/* Shopping/Todo: priority chips */}
           {(newType === 'shopping' || newType === 'todo') && (
             <div className={styles.priorityRow}>
               {PRIORITIES.map(p => {
                 const { symbol, label, activeClass } = PRIORITY_CONFIG[p]
                 return (
-                  <button
-                    key={p}
-                    type="button"
-                    className={`${styles.priBtn} ${newPriority === p ? activeClass : ''}`}
-                    onClick={() => setNewPriority(p)}
-                  >
+                  <button key={p} type="button" className={`${styles.priBtn} ${newPriority === p ? activeClass : ''}`} onClick={() => setNewPriority(p)}>
                     <span className={styles.priSymbol}>{symbol}</span>
                     <span className={styles.priLabel}>{label}</span>
                   </button>
@@ -311,14 +301,8 @@ const Sprint: React.FC = () => {
             </div>
           )}
 
-          {/* Shopping: optional quantity */}
           {newType === 'shopping' && (
-            <input
-              className={styles.todoInput}
-              value={newQuantity}
-              onChange={e => setNewQuantity(e.target.value)}
-              placeholder="Кількість (необов'язково)"
-            />
+            <input className={styles.todoInput} value={newQuantity} onChange={e => setNewQuantity(e.target.value)} placeholder="Кількість (необов'язково)" />
           )}
 
           <Button type="submit" fullWidth>Додати</Button>
@@ -326,23 +310,11 @@ const Sprint: React.FC = () => {
       </Modal>
 
       {/* ── Lesson modal ── */}
-      <Modal
-        isOpen={showAddLesson}
-        onClose={() => { setShowAddLesson(false); setEditingLesson(null) }}
-        title={editingLesson ? 'Редагувати урок' : 'Новий урок'}
-      >
-        <LessonForm
-          initial={editingLesson ?? undefined}
-          onSave={handleSaveLesson}
-          onCancel={() => { setShowAddLesson(false); setEditingLesson(null) }}
-        />
+      <Modal isOpen={showAddLesson} onClose={() => { setShowAddLesson(false); setEditingLesson(null) }} title={editingLesson ? 'Редагувати урок' : 'Новий урок'}>
+        <LessonForm initial={editingLesson ?? undefined} onSave={handleSaveLesson} onCancel={() => { setShowAddLesson(false); setEditingLesson(null) }} />
       </Modal>
 
-      {/* ── Task detail modal ── */}
-      <TaskDetailModal
-        taskId={detailTaskId}
-        onClose={() => setDetailTaskId(null)}
-      />
+      <TaskDetailModal taskId={detailTaskId} onClose={() => setDetailTaskId(null)} />
     </div>
   )
 }

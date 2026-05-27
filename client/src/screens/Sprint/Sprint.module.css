@@ -11,31 +11,21 @@
   gap: 12px;
 }
 
-.list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-}
+.list        { list-style: none; display: flex; flex-direction: column; }
+.lessonList  { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 
-.lessonList {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+/* ── Animation ────────────────────────────────────────────────────────────── */
 
-/* ── Tab transition ───────────────────────────────────────────────────────── */
-
-@keyframes tabEnter {
+@keyframes fadeUp {
   from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .tabContent {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  animation: tabEnter 0.17s ease both;
+  gap: 12px;
+  animation: fadeUp 0.17s ease both;
 }
 
 /* ── Section header ───────────────────────────────────────────────────────── */
@@ -56,46 +46,25 @@
   color: var(--text3);
 }
 
-.sectionActions {
-  display: flex;
-  gap: 6px;
-}
-
-.addBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  color: var(--text2);
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-}
-.addBtn:hover {
-  color: var(--accent);
-  border-color: var(--accent-dim);
-  background: var(--accent-soft);
-}
+.sectionActions { display: flex; gap: 6px; align-items: center; }
 
 /* ── Filter button ────────────────────────────────────────────────────────── */
 
 .filterBtn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: var(--surface2);
   border: 1px solid var(--border2);
-  border-radius: 8px;
+  border-radius: 9px;
   color: var(--text2);
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.filterBtn:hover { color: var(--text); border-color: var(--text3); }
+.filterBtn:hover { color: var(--text); border-color: var(--border2); }
 
 .filterBtnOpen {
   color: var(--accent);
@@ -103,67 +72,148 @@
   background: var(--accent-soft);
 }
 
-/* dot indicator when filter is active but panel is closed */
 .filterBtnActive {
   color: var(--accent);
   border-color: var(--accent-dim);
   background: var(--accent-soft);
 }
 
+.filterDot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.addBtn:hover { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-soft); }
+
 /* ── Filter panel ─────────────────────────────────────────────────────────── */
 
 @keyframes panelIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
 .filterPanel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--surface);
+  gap: 16px;
+  padding: 14px 16px 12px;
+  background: var(--bg2);
   border: 1px solid var(--border2);
-  border-radius: 10px;
-  animation: panelIn 0.15s ease both;
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  animation: panelIn 0.16s cubic-bezier(0.2, 0, 0, 1) both;
 }
 
-.filterPanelRow {
+.filterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+}
+
+.filterChips {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.filterChip {
-  padding: 5px 12px;
+/* Type chips */
+
+.typeChip {
+  padding: 6px 14px;
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  border-radius: 6px;
+  border-radius: 999px;
   border: 1px solid var(--border2);
-  background: var(--surface2);
+  background: var(--surface);
   color: var(--text2);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: color 0.13s, background 0.13s, border-color 0.13s, transform 0.1s;
 }
-.filterChip:hover:not(.filterChipActive):not(.filterChipStatus) {
-  color: var(--text);
-  border-color: var(--text3);
-}
+.typeChip:hover:not(.typeChipActive) { color: var(--text); border-color: var(--border2); }
+.typeChip:active { transform: scale(0.96); }
 
-.filterChipActive {
-  background: var(--accent);
-  color: var(--bg);
-  border-color: var(--accent);
-}
+.typeChipActive { border-color: transparent; }
 
-.filterChipStatus {
-  background: var(--second-soft);
-  color: var(--second);
-  border-color: var(--second);
+.typeChip_neutral  { background: var(--surface2);    color: var(--text);    border-color: var(--text3); }
+.typeChip_accent   { background: var(--accent);      color: var(--bg);      }
+.typeChip_second   { background: var(--second);      color: var(--bg);      }
+.typeChip_gold     { background: var(--gold);        color: var(--bg);      }
+.typeChip_lessons  { background: var(--text3);       color: var(--bg2);     }
+
+/* Status chips */
+
+.statusChip {
+  padding: 6px 14px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.13s, background 0.13s, border-color 0.13s, transform 0.1s;
 }
+.statusChip:hover:not([class*='statusChip_']) { color: var(--text); }
+.statusChip:active { transform: scale(0.96); }
+
+.statusChip_active   { background: var(--second-soft); color: var(--second); border-color: var(--second); }
+.statusChip_done     { background: var(--gold-dim);    color: var(--text3);  border-color: var(--text3);  }
+.statusChip_all      { background: var(--surface2);    color: var(--text);   border-color: var(--text3);  }
+
+/* Reset button */
+
+.resetBtn {
+  align-self: center;
+  padding: 4px 0;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  border-top: 1px solid var(--border);
+  width: 100%;
+  text-align: center;
+  padding-top: 10px;
+}
+.resetBtn:hover { color: var(--negative); }
 
 /* ── Empty states ─────────────────────────────────────────────────────────── */
 
@@ -175,39 +225,17 @@
   padding: 32px 0 16px;
 }
 
-.emptyIcon {
-  font-size: 48px;
-  color: var(--text3);
-  line-height: 1;
-  opacity: 0.5;
-}
-
-.emptyTitle {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text3);
-}
-
-.emptyHint {
-  font-family: var(--font-body);
-  font-size: 12px;
-  color: var(--text3);
-  opacity: 0.7;
-}
+.emptyIcon  { font-size: 40px; color: var(--text3); line-height: 1; opacity: 0.4; }
+.emptyTitle { font-family: var(--font-ui); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); }
+.emptyHint  { font-family: var(--font-body); font-size: 12px; color: var(--text3); opacity: 0.7; }
 
 /* ── Add task form ────────────────────────────────────────────────────────── */
 
 .taskForm { display: flex; flex-direction: column; gap: 12px; }
 
-.typeRow {
-  display: flex;
-  gap: 6px;
-}
+.typeRow { display: flex; gap: 6px; }
 
-.typeChip {
+.formTypeChip {
   flex: 1;
   padding: 7px 4px;
   font-family: var(--font-ui);
@@ -223,9 +251,9 @@
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 
-.typeChipSprint.typeChipActive  { background: var(--accent-soft);  color: var(--accent);  border-color: var(--accent-dim); }
-.typeChipShopping.typeChipActive{ background: var(--second-soft);  color: var(--second);  border-color: var(--second);     }
-.typeChipTodo.typeChipActive    { background: var(--gold-dim);     color: var(--gold);    border-color: var(--gold);       }
+.formTypeChipSprint.formTypeChipActive   { background: var(--accent-soft);  color: var(--accent);  border-color: var(--accent-dim); }
+.formTypeChipShopping.formTypeChipActive { background: var(--second-soft);  color: var(--second);  border-color: var(--second);     }
+.formTypeChipTodo.formTypeChipActive     { background: var(--gold-dim);     color: var(--gold);    border-color: var(--gold);       }
 
 /* Priority chips */
 
@@ -256,8 +284,6 @@
 .priBtnActiveUrgent { color: var(--negative); background: var(--accent-soft); border-color: var(--negative); }
 .priBtnActiveNormal { color: var(--second);   background: var(--second-soft); border-color: var(--second);   }
 .priBtnActiveLow    { color: var(--text3);    background: var(--gold-dim);    border-color: var(--text3);    }
-
-/* Text inputs */
 
 .todoInput {
   background: var(--bg3);
