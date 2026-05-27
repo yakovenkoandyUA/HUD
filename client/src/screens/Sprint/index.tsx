@@ -106,7 +106,10 @@ const Sprint: React.FC = () => {
 	const [editingLesson, setEditingLesson] = useState<Lesson | null>(null)
 
 	const openPanel = () => {
-		clearTimeout(filterTimerRef.current)
+		if (filterTimerRef.current !== null) {
+			clearTimeout(filterTimerRef.current)
+			filterTimerRef.current = null
+		}
 		setShowFilterPanel(true)
 		setFilterPanelMounted(true)
 		requestAnimationFrame(() => requestAnimationFrame(() => setFilterPanelVisible(true)))
@@ -120,7 +123,14 @@ const Sprint: React.FC = () => {
 
 	const togglePanel = () => (showFilterPanel ? closePanel() : openPanel())
 
-	useEffect(() => () => clearTimeout(filterTimerRef.current), [])
+	useEffect(
+		() => () => {
+			if (filterTimerRef.current !== null) {
+				clearTimeout(filterTimerRef.current)
+			}
+		},
+		[],
+	)
 
 	useEffect(() => {
 		if (!getToken()) return
