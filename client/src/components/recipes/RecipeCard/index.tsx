@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { Recipe } from '../../../types'
 import { useRecipesStore } from '../../../store/recipesStore'
 import styles from './RecipeCard.module.css'
@@ -40,6 +40,7 @@ const ChefHatIcon: React.FC = () => (
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
   const { wishlistIds, toggleWishlist } = useRecipesStore()
   const isWishlisted = wishlistIds.includes(recipe.id)
+  const [loaded, setLoaded] = useState(false)
 
   return (
     <div
@@ -51,7 +52,18 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
     >
       <div className={styles.photoWrap}>
         {recipe.imageUrl
-          ? <img src={recipe.imageUrl} alt={recipe.title} className={styles.photo} loading="lazy" />
+          ? (
+            <>
+              {!loaded && <div className={styles.shimmer} />}
+              <img
+                src={recipe.imageUrl}
+                alt={recipe.title}
+                className={`${styles.photo} ${loaded ? styles.photoLoaded : ''}`}
+                loading="lazy"
+                onLoad={() => setLoaded(true)}
+              />
+            </>
+          )
           : (
             <div className={styles.photoPlaceholder}>
               <span className={styles.photoInitial}>{recipe.title[0]?.toUpperCase()}</span>

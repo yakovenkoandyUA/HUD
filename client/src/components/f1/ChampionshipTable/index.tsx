@@ -1,5 +1,8 @@
 import React, { useState } from 'react'
 import { useChampionshipStandings, type DriverStanding } from '../../../hooks/useChampionshipStandings'
+import PixelCar from '../../PixelCar'
+import DriverStatsCard, { type DriverStats } from '../DriverStatsCard'
+import ConstructorStatsCard, { type ConstructorStats } from '../ConstructorStatsCard'
 import styles from './ChampionshipTable.module.css'
 
 /**
@@ -107,6 +110,18 @@ function Skeleton() {
 
 const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
   const { drivers, constructors, loading, error, refetch } = useChampionshipStandings()
+  const [expandedDriver, setExpandedDriver]           = useState<string | null>(null)
+  const [statsCache, setStatsCache]                   = useState<Map<string, DriverStats>>(new Map())
+  const [expandedConstructor, setExpandedConstructor] = useState<string | null>(null)
+  const [constrCache, setConstrCache]                 = useState<Map<string, ConstructorStats>>(new Map())
+
+  const handleStats = (id: string, stats: DriverStats) => {
+    setStatsCache(prev => new Map(prev).set(id, stats))
+  }
+
+  const handleConstrStats = (id: string, stats: ConstructorStats) => {
+    setConstrCache(prev => new Map(prev).set(id, stats))
+  }
 
   if (loading) return <Skeleton />
 
@@ -127,25 +142,49 @@ const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
           {drivers.length === 0 && (
             <p className={styles.emptyText}>Дані відсутні</p>
           )}
-          {drivers.map((d) => (
-            <div key={d.driver_number} className={rowClass(d.position)}>
-              <span className={`${styles.pos} ${posClass(d.position)}`}>{d.position}</span>
-              <DriverAvatar driver={d} />
-              <div className={styles.info}>
-                <span className={styles.name}>{d.full_name}</span>
-                <div className={styles.teamRow}>
-                  <span
-                    className={styles.teamDot}
-                    style={{ background: TEAM_COLORS[d.team_name] ?? 'var(--border2)' }}
-                  />
-                  <span className={styles.team}>{d.team_name}</span>
+          {drivers.map((d) => {
+            const driverId = d.driverId ?? ''
+            const isOpen   = expandedDriver === driverId
+            const maxPts   = drivers[0]?.points ?? 1
+            return (
+              <div key={d.driver_number} className={styles.driverGroup}>
+                <div
+                  className={`${rowClass(d.position)} ${styles.rowClickable}`}
+                  onClick={() => driverId && setExpandedDriver(isOpen ? null : driverId)}
+                >
+                  <span className={`${styles.pos} ${posClass(d.position)}`}>{d.position}</span>
+                  <DriverAvatar driver={d} />
+                  <div className={styles.info}>
+                    <span className={styles.name}>{d.full_name}</span>
+                    <div className={styles.teamRow}>
+                      <span
+                        className={styles.teamDot}
+                        style={{ background: TEAM_COLORS[d.team_name] ?? 'var(--border2)' }}
+                      />
+                      <span className={styles.team}>{d.team_name}</span>
+                    </div>
+                  </div>
+                  <div className={styles.pts}>
+                    {d.points} <small className={styles.ptsSmall}>pts</small>
+                  </div>
+                  {driverId && (
+                    <span className={`${styles.arrow} ${isOpen ? styles.arrowUp : ''}`}>▼</span>
+                  )}
+                </div>
+                <div className={`${styles.expandable} ${isOpen ? styles.expandableOpen : ''}`}>
+                  {isOpen && driverId && (
+                    <DriverStatsCard
+                      driverId={driverId}
+                      points={d.points}
+                      maxPoints={maxPts}
+                      cachedStats={statsCache.get(driverId)}
+                      onStats={handleStats}
+                    />
+                  )}
                 </div>
               </div>
-              <div className={styles.pts}>
-                {d.points} <small className={styles.ptsSmall}>pts</small>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -154,23 +193,60 @@ const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
           {constructors.length === 0 && (
             <p className={styles.emptyText}>Дані відсутні</p>
           )}
-          {constructors.map((c) => (
-            <div key={c.team_name} className={rowClass(c.position)}>
-              <span className={`${styles.pos} ${posClass(c.position)}`}>{c.position}</span>
-              <div className={styles.info}>
-                <div className={styles.teamRow}>
-                  <span
-                    className={styles.teamDot}
-                    style={{ background: TEAM_COLORS[c.team_name] ?? 'var(--border2)' }}
-                  />
-                  <span className={styles.name}>{c.team_name}</span>
+          {constructors.map((c) => {
+            const cid    = c.constructorId ?? ''
+            const isOpen = expandedConstructor === cid
+            const maxPts = constructors[0]?.points ?? 1
+            const teamDrivers = drivers
+              .filter(d => d.team_name === c.team_name)
+              .map(d => ({ name: d.full_name, points: d.points }))
+            return (
+              <div key={c.team_name} className={styles.driverGroup}>
+                <div
+                  className={`${rowClass(c.position)} ${c.position <= 3 ? styles.rowCar : ''} ${styles.rowClickable}`}
+                  onClick={() => cid && setExpandedConstructor(isOpen ? null : cid)}
+                > 
+               
+                  <span className={`${styles.pos} ${posClass(c.position)}`}>{c.position}</span>
+                  <div className={styles.info}>
+                    {c.position <= 3 ? (
+                      <div className={styles.carRow}>
+                        <PixelCar team={c.team_name} size={28} />
+                        <span className={styles.name}>{c.team_name}</span>
+                      </div>
+                    ) : (
+                      <div className={styles.teamRow}>
+                        <span
+                          className={styles.teamDot}
+                          style={{ background: TEAM_COLORS[c.team_name] ?? 'var(--border2)' }}
+                        />
+                        <span className={styles.name}>{c.team_name}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.pts}>
+                    {c.points} <small className={styles.ptsSmall}>pts</small>
+                  </div>
+                  {cid && (
+                    <span className={`${styles.arrow} ${isOpen ? styles.arrowUp : ''}`}>▼</span>
+                  )}
+                </div>
+                <div className={`${styles.expandable} ${isOpen ? styles.expandableOpen : ''}`}>
+                  {isOpen && cid && (
+                    <ConstructorStatsCard
+                      constructorId={cid}
+                      teamName={c.team_name}
+                      points={c.points}
+                      maxPoints={maxPts}
+                      teamDrivers={teamDrivers}
+                      cachedStats={constrCache.get(cid)}
+                      onStats={handleConstrStats}
+                    />
+                  )}
                 </div>
               </div>
-              <div className={styles.pts}>
-                {c.points} <small className={styles.ptsSmall}>pts</small>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

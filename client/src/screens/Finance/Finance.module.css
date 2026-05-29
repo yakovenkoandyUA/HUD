@@ -53,6 +53,10 @@
 	opacity: 0.88;
 }
 
+:global([data-theme="heroes"]) .btnExpense {
+	background: #d4174b;
+}
+
 .btnTopup {
 	background: var(--positive);
 	color: #fff;

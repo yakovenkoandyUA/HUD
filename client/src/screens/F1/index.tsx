@@ -3,17 +3,21 @@ import TopBar from '../../components/layout/TopBar'
 import NextRaceCard from '../../components/f1/NextRaceCard'
 import RaceCalendarList from '../../components/f1/RaceCalendarList'
 import ChampionshipTable from '../../components/f1/ChampionshipTable'
+import LastRaceCard from '../../components/f1/LastRaceCard'
+import RacePredictionCard from '../../components/f1/RacePredictionCard'
+import MySeasonStats from '../../components/f1/MySeasonStats'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getNextRound } from '../../utils/f1'
 import { useUiStore } from '../../store/uiStore'
 import styles from './F1.module.css'
 
-type F1Tab = 'calendar' | 'drivers' | 'constructors'
+type F1Tab = 'calendar' | 'drivers' | 'constructors' | 'myseason'
 
 const TABS: { id: F1Tab; label: string }[] = [
-  { id: 'calendar',     label: 'Календар' },
-  { id: 'drivers',      label: 'Пілоти'   },
-  { id: 'constructors', label: 'Команди'  },
+  { id: 'calendar',     label: 'Календар'  },
+  { id: 'drivers',      label: 'Пілоти'    },
+  { id: 'constructors', label: 'Команди'   },
+  { id: 'myseason',     label: 'МІЙ СЕЗОН' },
 ]
 
 const F1Screen: React.FC = () => {
@@ -47,6 +51,10 @@ const F1Screen: React.FC = () => {
           <p className={styles.done}>Сезон 2026 завершено</p>
         )}
 
+        <LastRaceCard />
+
+        {nextRace && <RacePredictionCard race={nextRace} />}
+
         <div className={styles.tabs}>
           {TABS.map((t) => (
             <button
@@ -65,6 +73,10 @@ const F1Screen: React.FC = () => {
 
         {(tab === 'drivers' || tab === 'constructors') && (
           <ChampionshipTable tab={tab} />
+        )}
+
+        {tab === 'myseason' && (
+          <MySeasonStats />
         )}
       </div>
     </div>

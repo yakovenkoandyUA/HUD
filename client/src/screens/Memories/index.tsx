@@ -7,12 +7,6 @@ import type { AddMemoryData } from '../../components/memories/AddMemoryModal'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import styles from './Memories.module.css'
 
-const PlusIcon: React.FC = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-    <line x1="10" y1="3" x2="10" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
-)
 
 /**
  * MemoriesScreen
@@ -41,18 +35,7 @@ const MemoriesScreen: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <TopBar
-        right={
-          <button
-            type="button"
-            className={styles.addBtn}
-            onClick={() => setShowAdd(true)}
-            aria-label="Додати спогад"
-          >
-            <PlusIcon />
-          </button>
-        }
-      />
+      <TopBar />
 
 
       {memories.length === 0 ? (
@@ -79,6 +62,17 @@ const MemoriesScreen: React.FC = () => {
           ))}
         </div>
       )}
+
+      <button
+        type="button"
+        className={styles.fab}
+        onClick={() => setShowAdd(true)}
+        aria-label="Додати спогад"
+      >
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M3 11h16M11 3v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </button>
 
       <AddMemoryModal
         isOpen={showAdd}

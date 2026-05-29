@@ -8,12 +8,14 @@ export interface DriverStanding {
   team_name: string
   points: number
   headshot_url?: string
+  driverId?: string
 }
 
 export interface ConstructorStanding {
-  position: number
-  team_name: string
-  points: number
+  position:      number
+  team_name:     string
+  points:        number
+  constructorId?: string
 }
 
 interface StandingsState {
@@ -25,12 +27,13 @@ interface StandingsState {
 
 const IS_PROD = import.meta.env.PROD
 const PROXY_URL = '/api/f1standings'
+// v6: added constructorId field
 const JOLPICA_DRIVERS_URL = 'https://api.jolpi.ca/ergast/f1/2026/driverstandings/'
 const JOLPICA_CONSTRUCTORS_URL = 'https://api.jolpi.ca/ergast/f1/current/constructorstandings/'
 const OPENF1_HEADSHOTS_URL = 'https://api.openf1.org/v1/drivers?session_key=latest'
 
 function getCacheKey(): string {
-  return `hud-champ-v4-${new Date().toISOString().split('T')[0]}`
+  return `hud-champ-v6-${new Date().toISOString().split('T')[0]}`
 }
 
 function readCache(): { drivers: DriverStanding[]; constructors: ConstructorStanding[] } | null {
@@ -66,6 +69,7 @@ function parseDrivers(json: any, headshotMap: Record<string, { url: string; numb
       team_name:     s.Constructors?.[0]?.name ?? '',
       points:        Number(s.points),
       headshot_url:  headshot?.url,
+      driverId:      drv.driverId as string | undefined,
     } satisfies DriverStanding
   })
 }
@@ -75,9 +79,10 @@ function parseConstructors(json: any): ConstructorStanding[] {
   const list = json?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings ?? []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return list.map((c: any) => ({
-    position:  Number(c.position),
-    team_name: c.Constructor?.name ?? '',
-    points:    Number(c.points),
+    position:      Number(c.position),
+    team_name:     c.Constructor?.name ?? '',
+    points:        Number(c.points),
+    constructorId: c.Constructor?.constructorId as string | undefined,
   }))
 }
 

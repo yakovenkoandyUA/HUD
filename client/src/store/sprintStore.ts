@@ -234,11 +234,24 @@ export const useSprintStore = create<TodoState>()(
             }
           }
 
+          // IDs confirmed by backend — used to identify unconfirmed (tempId) local items
+          const backendIds = new Set<string>([
+            ...sprintItems.map(i => i.id),
+            ...otherItems.map(i => i.id),
+          ])
+
           set(s => ({
             items: sortItems([
               ...s.items.filter(i => i.type === 'sprint' && i.weekStart !== ws),
-              ...sprintItems.map(item => mergeLocal(item, s.items.find(i => i.id === item.id))),
-              ...otherItems.map(item  => mergeLocal(item, s.items.find(i => i.id === item.id))),
+              ...sprintItems.map(item => mergeLocal(item,
+                s.items.find(i => i.id === item.id) ??
+                // tempId race: POST response not yet back, match by title+type to preserve checklist
+                s.items.find(i => !backendIds.has(i.id) && i.title === item.title && i.type === item.type)
+              )),
+              ...otherItems.map(item => mergeLocal(item,
+                s.items.find(i => i.id === item.id) ??
+                s.items.find(i => !backendIds.has(i.id) && i.title === item.title && i.type === item.type)
+              )),
             ]),
             syncStatus: 'synced',
           }))

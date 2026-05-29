@@ -39,15 +39,19 @@ interface PhotoItemProps {
 
 const PhotoItem: React.FC<PhotoItemProps> = ({ photo, onTap, onSetCover, onDelete }) => {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [loaded, setLoaded]     = useState(false)
 
   const longPress = useLongPress(() => setMenuOpen(true))
 
   return (
     <div className={styles.photoItem} {...longPress}>
+      {!loaded && <div className={styles.photoSkeleton} style={{ height: 120 }} />}
       <img
         src={photo.url}
         alt={photo.caption ?? ''}
-        className={styles.photoImg}
+        className={`${styles.photoImg} ${loaded ? styles.photoImgLoaded : ''}`}
+        onLoad={() => setLoaded(true)}
+        loading="lazy"
         onClick={() => { if (!menuOpen) onTap() }}
       />
 

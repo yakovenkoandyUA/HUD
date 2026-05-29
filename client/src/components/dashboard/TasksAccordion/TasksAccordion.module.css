@@ -1,7 +1,7 @@
 /* ── Root block ── */
 .root {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  /* background: var(--surface);
+  border: 1px solid var(--border); */
   border-radius: 12px;
   overflow: hidden;
 }
@@ -78,9 +78,9 @@
 }
 
 .progressTrack {
-  height: 2px;
+  height: 4px;
   border-radius: 999px;
-  background: var(--border2);
+  /* background: var(--border2); */
   overflow: hidden;
   margin-bottom: 8px;
 }

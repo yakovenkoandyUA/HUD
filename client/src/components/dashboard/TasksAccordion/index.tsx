@@ -50,18 +50,20 @@ const ShopTag: React.FC = () => (
 const TasksAccordion: React.FC = () => {
   const navigate = useNavigate()
   const { items, toggleItem } = useSprintStore()
-  const [sprintOpen, setSprintOpen] = useState(true)
+
+  const weekStart = getCurrentWeekStart()
+  const sprintTasks = items.filter((t) => t.type === 'sprint' && t.weekStart === weekStart)
+  const sprintActive = sprintTasks.filter((t) => !t.done)
+
+  const [sprintOpen, setSprintOpen] = useState(() => sprintActive.length > 0)
   const [shoppingOpen, setShoppingOpen] = useState(false)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
-  const weekStart = getCurrentWeekStart()
-
-  const sprintTasks = items.filter((t) => t.type === 'sprint' && t.weekStart === weekStart)
   const sprintDone = sprintTasks.filter((t) => t.done).length
   const sprintAllDone = sprintTasks.length > 0 && sprintDone === sprintTasks.length
   const sprintPct = sprintTasks.length > 0 ? Math.round((sprintDone / sprintTasks.length) * 100) : 0
-  const sprintVisible = sprintTasks.slice(0, SPRINT_LIMIT)
-  const sprintRest = sprintTasks.length - SPRINT_LIMIT
+  const sprintVisible = sprintActive.slice(0, SPRINT_LIMIT)
+  const sprintRest = sprintActive.length - SPRINT_LIMIT
 
   const shoppingItems = items
     .filter((t) => t.type !== 'sprint' && !t.done)
@@ -114,6 +116,8 @@ const TasksAccordion: React.FC = () => {
           <div className={styles.contentInner}>
             {sprintTasks.length === 0 ? (
               <p className={styles.emptyText}>Завдань немає</p>
+            ) : sprintActive.length === 0 ? (
+              <p className={styles.emptyText}>Всі задачі виконано ✓</p>
             ) : (
               <ul className={styles.list}>
                 {sprintVisible.map((t) => (
@@ -216,7 +220,7 @@ const TasksAccordion: React.FC = () => {
                     {t.priority && <PriorityBadge priority={t.priority} compact />}
                     {t.checklist && t.checklist.length > 0 && (
                       <span className={styles.checklistBadge}>
-                        ☑ {t.checklist.filter(i => i.done).length}/{t.checklist.length}
+                        {t.checklist.filter(i => i.done).length}/{t.checklist.length}
                       </span>
                     )}
                     <ShopTag />

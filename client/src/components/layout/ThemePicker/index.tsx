@@ -77,6 +77,17 @@ const PALETTES: ThemePalette[] = [
     gold: '#d4a017',
     text: '#e8d5a0',
   },
+  {
+    id: 'berry',
+    name: 'BERRY',
+    bg: '#0f1a24',
+    surface: '#1E3442',
+    border: '#2a4d5e',
+    accent: '#FF5C8D',
+    second: '#732553',
+    gold: '#85A3B2',
+    text: '#E9D8C8',
+  },
 ]
 
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {

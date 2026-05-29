@@ -86,7 +86,7 @@ const Sprint: React.FC = () => {
 	const { items, addItem, toggleItem, deleteItem, fetchItems, syncStatus } = useSprintStore()
 	const { lessons, addLesson, updateLesson, deleteLesson, fetchLessons } = useLessonStore()
 	const { showToast } = useUiStore()
-
+	console.log(items);
 	const [filter, setFilter] = useState<FilterType>('all')
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
 	const [showFilterPanel, setShowFilterPanel] = useState(false)

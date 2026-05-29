@@ -1,0 +1,96 @@
+/* ── Container ── */
+.inner {
+  background: var(--surface-2, var(--surface));
+  border-radius: 0 0 12px 12px;
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Stats grid ── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.statLabel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.statVal {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  text-align: right;
+}
+
+/* ── Progress bar ── */
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.track {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border2);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.progressLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-align: right;
+}
+
+/* ── Meta ── */
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+/* ── Skeleton ── */
+@keyframes skPulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.7; }
+}
+
+.skBar {
+  height: 10px;
+  border-radius: 4px;
+  background: var(--border2);
+  animation: skPulse 1.4s ease-in-out infinite;
+  margin-bottom: 6px;
+}

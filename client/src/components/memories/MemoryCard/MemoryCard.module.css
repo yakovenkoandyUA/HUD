@@ -1,10 +1,15 @@
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
 .card {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   background: var(--surface);
-  aspect-ratio: 3/4;
+  /* aspect-ratio: 3/4; */
   user-select: none;
 }
 
@@ -13,6 +18,26 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.coverLoaded {
+  opacity: 1;
+}
+
+.shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    var(--surface2) 0%,
+    var(--bg3) 50%,
+    var(--surface2) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
 }
 
 .coverPlaceholder {
