@@ -225,10 +225,12 @@ export const useSprintStore = create<TodoState>()(
             if (!existing) return apiItem
             return {
               ...apiItem,
-              ...(existing.checklist   !== undefined && { checklist:   existing.checklist }),
-              ...(existing.labels      !== undefined && { labels:      existing.labels }),
-              ...(existing.dueDate     !== undefined && { dueDate:     existing.dueDate }),
-              ...(existing.description !== undefined && { description: existing.description }),
+              ...(existing.checklist      !== undefined && { checklist:      existing.checklist }),
+              ...(existing.labels         !== undefined && { labels:         existing.labels }),
+              ...(existing.dueDate        !== undefined && { dueDate:        existing.dueDate }),
+              ...(existing.description    !== undefined && { description:    existing.description }),
+              ...(existing.recipeImageUrl !== undefined && { recipeImageUrl: existing.recipeImageUrl }),
+              ...(existing.recipeId       !== undefined && { recipeId:       existing.recipeId }),
             }
           }
 

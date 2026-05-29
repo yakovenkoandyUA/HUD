@@ -89,6 +89,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
 					<span className={`${styles.checkBox} ${item.type === 'sprint' ? styles.checkBoxSprint : ''}`}>{item.done ? '✓' : ''}</span>
 				</button>
 
+				{/* Recipe thumbnail for shopping tasks from recipes */}
+				{/* {item.type === 'shopping' && item.recipeImageUrl && (
+					<img src={item.recipeImageUrl} alt={item.title} className={styles.recipeThumb} onClick={onOpenDetail} />
+				)} */}
+
 				{/* Clickable body → open detail */}
 				<div className={styles.body} onClick={onOpenDetail} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && onOpenDetail()}>
 					<div className={styles.topRow}>

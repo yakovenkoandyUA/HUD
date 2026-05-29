@@ -96,22 +96,11 @@ export interface UnifiedTodo {
   dueDate?: string
   labels?: SprintLabel[]
   checklist?: ChecklistItem[]
+  recipeImageUrl?: string
+  recipeId?: string
 }
 
-export interface MealIngredient {
-  name: string
-  measure: string
-}
-
-export interface Meal {
-  id: string
-  name: string
-  category: string
-  area: string
-  instructions: string
-  thumb: string
-  ingredients: MealIngredient[]
-}
+export type RecipeDifficulty = 'easy' | 'medium' | 'hard'
 
 export interface Recipe {
   id: string
@@ -119,6 +108,12 @@ export interface Recipe {
   ingredients: string[]
   steps: string
   imageUrl?: string
+  category?: string
+  calories?: number
+  difficulty?: RecipeDifficulty
+  cookTime?: number
+  servings?: number
+  equipment?: string[]
 }
 
 export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'

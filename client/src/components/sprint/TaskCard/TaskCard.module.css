@@ -164,6 +164,17 @@
 
 .dueDateIcon { flex-shrink: 0; }
 
+/* ── Recipe thumbnail ── */
+.recipeThumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
 /* ── Delete ── */
 .del {
   font-size: 12px;

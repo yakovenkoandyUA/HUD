@@ -1,35 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authFetch, getToken } from '../services/api'
-import type { Recipe, Meal, MealIngredient } from '../types'
-
-function getWeekKey(): string {
-  const d = new Date()
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  const monday = new Date(d.getFullYear(), d.getMonth(), diff)
-  return monday.toISOString().split('T')[0]
-}
-
-function parseMeal(raw: Record<string, string>): Meal {
-  const ingredients: MealIngredient[] = []
-  for (let i = 1; i <= 20; i++) {
-    const name = raw[`strIngredient${i}`]
-    const measure = raw[`strMeasure${i}`]
-    if (name && name.trim()) {
-      ingredients.push({ name: name.trim(), measure: (measure || '').trim() })
-    }
-  }
-  return {
-    id: raw.idMeal,
-    name: raw.strMeal,
-    category: raw.strCategory || '',
-    area: raw.strArea || '',
-    instructions: raw.strInstructions || '',
-    thumb: raw.strMealThumb || '',
-    ingredients,
-  }
-}
+import type { Recipe } from '../types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRecipe(d: Record<string, any>): Recipe {
@@ -39,30 +11,30 @@ function toRecipe(d: Record<string, any>): Recipe {
     ingredients: d.ingredients ?? [],
     steps:       d.steps ?? '',
     imageUrl:    d.imageUrl ?? undefined,
+    category:    d.category ?? undefined,
+    calories:    d.calories ?? undefined,
+    difficulty:  d.difficulty ?? undefined,
+    cookTime:    d.cookTime ?? undefined,
+    servings:    d.servings ?? undefined,
+    equipment:   d.equipment?.length ? d.equipment : undefined,
   }
 }
 
 interface RecipesState {
   recipes: Recipe[]
-  mealOfWeek: Meal | null
-  mealWeekKey: string
-  mealLoading: boolean
-  mealError: boolean
+  wishlistIds: string[]
   fetchRecipes: () => Promise<void>
   addRecipe: (data: Omit<Recipe, 'id'>) => Promise<void>
   updateRecipe: (id: string, data: Partial<Omit<Recipe, 'id'>>) => Promise<void>
   deleteRecipe: (id: string) => Promise<void>
-  fetchMealOfWeek: () => Promise<void>
+  toggleWishlist: (id: string) => void
 }
 
 export const useRecipesStore = create<RecipesState>()(
   persist(
     (set, get) => ({
       recipes: [],
-      mealOfWeek: null,
-      mealWeekKey: '',
-      mealLoading: false,
-      mealError: false,
+      wishlistIds: [],
 
       fetchRecipes: async () => {
         if (!getToken()) return
@@ -84,46 +56,38 @@ export const useRecipesStore = create<RecipesState>()(
           return
         }
         const item = await res.json()
-        set(s => ({ recipes: s.recipes.map(r => r.id === tempId ? toRecipe(item) : r) }))
+        // Keep the data we sent (includes category etc.) — just swap tempId for real _id
+        const realId = (item._id ?? item.id) as string
+        set(s => ({ recipes: s.recipes.map(r => r.id === tempId ? { ...data, id: realId } : r) }))
       },
 
       updateRecipe: async (id, data) => {
         set(s => ({ recipes: s.recipes.map(r => r.id === id ? { ...r, ...data } : r) }))
-        const res = await authFetch(`/api/recipes/${id}`, {
+        await authFetch(`/api/recipes/${id}`, {
           method: 'PUT',
           body: JSON.stringify(data),
         })
-        if (res.ok) {
-          const item = await res.json()
-          set(s => ({ recipes: s.recipes.map(r => r.id === id ? toRecipe(item) : r) }))
-        }
       },
 
       deleteRecipe: async (id) => {
-        set(s => ({ recipes: s.recipes.filter(r => r.id !== id) }))
+        set(s => ({
+          recipes: s.recipes.filter(r => r.id !== id),
+          wishlistIds: s.wishlistIds.filter(wid => wid !== id),
+        }))
         await authFetch(`/api/recipes/${id}`, { method: 'DELETE' })
       },
 
-      fetchMealOfWeek: async () => {
-        const weekKey = getWeekKey()
-        if (get().mealWeekKey === weekKey && get().mealOfWeek) return
-        set({ mealLoading: true, mealError: false })
-        try {
-          const res = await fetch('https://www.themealdb.com/api/json/v1/1/random.php')
-          const json = await res.json()
-          const meal = parseMeal(json.meals[0])
-          set({ mealOfWeek: meal, mealWeekKey: weekKey, mealLoading: false })
-        } catch {
-          set({ mealLoading: false, mealError: true })
-        }
+      toggleWishlist: (id) => {
+        set(s => ({
+          wishlistIds: s.wishlistIds.includes(id)
+            ? s.wishlistIds.filter(wid => wid !== id)
+            : [...s.wishlistIds, id],
+        }))
       },
     }),
     {
       name: 'hud-recipes',
-      partialize: (s) => ({
-        mealOfWeek:  s.mealOfWeek,
-        mealWeekKey: s.mealWeekKey,
-      }),
+      partialize: (s) => ({ wishlistIds: s.wishlistIds }),
     }
   )
 )

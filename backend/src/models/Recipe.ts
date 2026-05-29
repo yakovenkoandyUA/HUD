@@ -7,6 +7,12 @@ export interface IRecipe extends Document {
   imageUrl: string
   isPersonal: boolean
   userId: string
+  category?: string
+  calories?: number
+  difficulty?: string
+  cookTime?: number
+  servings?: number
+  equipment?: string[]
 }
 
 const schema = new Schema<IRecipe>({
@@ -16,6 +22,12 @@ const schema = new Schema<IRecipe>({
   imageUrl:    { type: String, default: '' },
   isPersonal:  { type: Boolean, default: true },
   userId:      { type: String, required: true, index: true },
+  category:    { type: String, default: 'Інше' },
+  calories:    { type: Number },
+  difficulty:  { type: String },
+  cookTime:    { type: Number },
+  servings:    { type: Number },
+  equipment:   { type: [String], default: [] },
 }, { timestamps: true })
 
 export default model<IRecipe>('Recipe', schema)
