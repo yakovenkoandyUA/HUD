@@ -65,7 +65,7 @@ const COUNTRY_FLAG: Record<string, string> = {
   'Mexico': '🇲🇽', 'Brazil': '🇧🇷', 'UAE': '🇦🇪',
   'Abu Dhabi': '🇦🇪', 'Bahrain': '🇧🇭', 'Saudi Arabia': '🇸🇦',
   'Qatar': '🇶🇦', 'Germany': '🇩🇪', 'France': '🇫🇷',
-  'Portugal': '🇵🇹', 'Netherlands': '🇳🇱',
+  'Portugal': '🇵🇹',
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

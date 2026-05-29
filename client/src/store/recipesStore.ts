@@ -32,7 +32,7 @@ interface RecipesState {
 
 export const useRecipesStore = create<RecipesState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       recipes: [],
       wishlistIds: [],
 

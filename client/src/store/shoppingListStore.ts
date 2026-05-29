@@ -48,7 +48,7 @@ function parseIngredient(
 
 export const useShoppingListStore = create<ShoppingListState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       items: [],
 
       addFromRecipe: (recipe, servings) => {
