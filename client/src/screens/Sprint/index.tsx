@@ -240,6 +240,43 @@ const Sprint: React.FC = () => {
 				<WeekHeader weekStart={weekStart} onExpand={() => setWeekExpanded(true)} />
 				<SprintProgress done={done} total={weekSprintItems.length} />
 
+				{/* ── Рутини accordion ── */}
+				{routineItems.length > 0 && (
+					<div className={styles.routinesSection}>
+						<button type="button" className={styles.routineHeader} onClick={() => setRoutinesOpen(v => !v)} aria-expanded={routinesOpen}>
+							<span className={styles.sectionTitle}>Рутини</span>
+							<div className={styles.sectionActions}>
+								<span className={styles.routineCount}>{routineItems.length}</span>
+								<svg className={`${styles.routineArrow} ${routinesOpen ? styles.routineArrowOpen : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
+									<path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+							</div>
+						</button>
+
+						{routinesOpen && (
+							<ul className={styles.routineList}>
+								{routineItems.map(t => (
+									<li key={t.id} className={`${styles.routineItem} ${completingRoutines.has(t.id) ? styles.routineItemCompleting : ''}`}>
+										<button type="button" className={styles.routineCheck} onClick={() => handleRoutineToggle(t.id)} aria-label="Виконати">
+											<span className={styles.routineCheckBox}>{completingRoutines.has(t.id) ? '✓' : ''}</span>
+										</button>
+										<div className={styles.routineBody}>
+											<span className={styles.routineTitle}>{t.title}</span>
+											<div className={styles.routineMeta}>
+												<span className={styles.repeatBadge}>{REPEAT_BADGE[t.repeat!]}</span>
+												{t.nextDue && <span className={styles.routineDue}>{formatRoutineDue(t.nextDue)}</span>}
+											</div>
+										</div>
+										<button type="button" className={styles.del} onClick={() => deleteItem(t.id)} aria-label="Видалити">
+											✕
+										</button>
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
+				)}
+
 				{/* ── Section header ── */}
 				<div className={styles.sectionHeader}>
 					<span className={styles.sectionTitle}>Квести</span>
@@ -267,11 +304,19 @@ const Sprint: React.FC = () => {
 						<ChipGroup label="Статус" options={STATUS_OPTIONS} value={statusFilter} onChange={setStatusFilter} />
 						<div className={styles.filterFooter}>
 							{isFiltered && (
-								<button className={styles.resetBtn} onClick={() => { setFilter('all'); setStatusFilter('active') }}>
+								<button
+									className={styles.resetBtn}
+									onClick={() => {
+										setFilter('all')
+										setStatusFilter('active')
+									}}
+								>
 									Скинути все
 								</button>
 							)}
-							<button className={styles.doneBtn} onClick={closePanel}>Готово</button>
+							<button className={styles.doneBtn} onClick={closePanel}>
+								Готово
+							</button>
 						</div>
 					</div>
 				)}
@@ -279,11 +324,7 @@ const Sprint: React.FC = () => {
 				{/* ── Active filter pills — always visible ── */}
 				{!showFilterPanel && (
 					<div className={styles.activePills}>
-						<button
-							className={`${styles.activePill} ${filter === 'all' ? styles.activePillDefault : ''}`}
-							onClick={() => filter !== 'all' ? setFilter('all') : undefined}
-							aria-label="Фільтр типу"
-						>
+						<button className={`${styles.activePill} ${filter === 'all' ? styles.activePillDefault : ''}`} onClick={() => (filter !== 'all' ? setFilter('all') : undefined)} aria-label="Фільтр типу">
 							{TYPE_OPTIONS.find(o => o.key === filter)?.label ?? 'Всі'}
 							{filter !== 'all' && (
 								<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
@@ -293,7 +334,7 @@ const Sprint: React.FC = () => {
 						</button>
 						<button
 							className={`${styles.activePill} ${statusFilter === 'active' ? styles.activePillDefault : ''}`}
-							onClick={() => statusFilter !== 'active' ? setStatusFilter('active') : undefined}
+							onClick={() => (statusFilter !== 'active' ? setStatusFilter('active') : undefined)}
 							aria-label="Фільтр статусу"
 						>
 							{STATUS_OPTIONS.find(o => o.key === statusFilter)?.label ?? 'Активні'}
@@ -322,72 +363,20 @@ const Sprint: React.FC = () => {
 						</ul>
 					)}
 				</div>
-
-				{/* ── Рутини accordion ── */}
-				{routineItems.length > 0 && (
-					<div className={styles.routinesSection}>
-						<button
-							type="button"
-							className={styles.routineHeader}
-							onClick={() => setRoutinesOpen(v => !v)}
-							aria-expanded={routinesOpen}
-						>
-							<span className={styles.sectionTitle}>Рутини</span>
-							<div className={styles.sectionActions}>
-								<span className={styles.routineCount}>{routineItems.length}</span>
-								<svg
-									className={`${styles.routineArrow} ${routinesOpen ? styles.routineArrowOpen : ''}`}
-									width="12" height="12" viewBox="0 0 12 12" fill="none"
-								>
-									<path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-								</svg>
-							</div>
-						</button>
-
-						{routinesOpen && (
-							<ul className={styles.routineList}>
-								{routineItems.map(t => (
-									<li key={t.id} className={`${styles.routineItem} ${completingRoutines.has(t.id) ? styles.routineItemCompleting : ''}`}>
-										<button
-											type="button"
-											className={styles.routineCheck}
-											onClick={() => handleRoutineToggle(t.id)}
-											aria-label="Виконати"
-										>
-											<span className={styles.routineCheckBox}>
-												{completingRoutines.has(t.id) ? '✓' : ''}
-											</span>
-										</button>
-										<div className={styles.routineBody}>
-											<span className={styles.routineTitle}>{t.title}</span>
-											<div className={styles.routineMeta}>
-												<span className={styles.repeatBadge}>{REPEAT_BADGE[t.repeat!]}</span>
-												{t.nextDue && (
-													<span className={styles.routineDue}>{formatRoutineDue(t.nextDue)}</span>
-												)}
-											</div>
-										</div>
-										<button
-											type="button"
-											className={styles.del}
-											onClick={() => deleteItem(t.id)}
-											aria-label="Видалити"
-										>
-											✕
-										</button>
-									</li>
-								))}
-							</ul>
-						)}
-					</div>
-				)}
 			</div>
 
 			{/* ── Add modal ── */}
-			<Modal isOpen={showAdd} onClose={() => { setShowAdd(false); resetForm() }} title="Нова справа">
+			<Modal
+				isOpen={showAdd}
+				onClose={() => {
+					setShowAdd(false)
+					resetForm()
+				}}
+				title="Нова справа"
+			>
 				<form onSubmit={handleAdd} className={styles.taskForm}>
 					<div className={styles.typeRow}>
-						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipTodo}     ${newType === 'todo'     ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('todo')}>
+						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipTodo}     ${newType === 'todo' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('todo')}>
 							✓ Справа
 						</button>
 						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipShopping} ${newType === 'shopping' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('shopping')}>
@@ -420,18 +409,17 @@ const Sprint: React.FC = () => {
 							<div className={styles.extrasInlineRow}>
 								<div className={styles.extrasLabels}>
 									{newLabels.map(l => (
-										<button
-											key={l.id} type="button"
-											className={styles.selectedLabel}
-											style={{ background: l.color }}
-											onClick={() => setNewLabels(prev => prev.filter(x => x.id !== l.id))}
-										>
+										<button key={l.id} type="button" className={styles.selectedLabel} style={{ background: l.color }} onClick={() => setNewLabels(prev => prev.filter(x => x.id !== l.id))}>
 											{l.title}
-											<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 1l5 5M6 1L1 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+											<svg width="7" height="7" viewBox="0 0 7 7" fill="none">
+												<path d="M1 1l5 5M6 1L1 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+											</svg>
 										</button>
 									))}
 									<button type="button" className={styles.addExtrasBtn} onClick={() => setShowLabelPicker(true)}>
-										<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+										<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+											<path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+										</svg>
 										Мітка
 									</button>
 								</div>
@@ -439,22 +427,27 @@ const Sprint: React.FC = () => {
 								{!showRepeatPicker ? (
 									<button type="button" className={styles.repeatToggleBtn} onClick={() => setShowRepeatPicker(true)}>
 										<svg width="11" height="11" viewBox="0 0 10 10" fill="none">
-											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
-											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
+											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
 										</svg>
 										Повторити
 									</button>
 								) : (
 									<span className={styles.repeatActiveLabel}>
 										<svg width="11" height="11" viewBox="0 0 10 10" fill="none">
-											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
-											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
+											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
 										</svg>
 										Повторювана
 										<button
 											type="button"
 											className={styles.repeatActiveClose}
-											onClick={() => { setShowRepeatPicker(false); setNewRepeat('none'); setNewRepeatDate(''); setShowRepeatDatePicker(false) }}
+											onClick={() => {
+												setShowRepeatPicker(false)
+												setNewRepeat('none')
+												setNewRepeatDate('')
+												setShowRepeatDatePicker(false)
+											}}
 										>
 											✕
 										</button>
@@ -470,7 +463,10 @@ const Sprint: React.FC = () => {
 											key={r.key}
 											type="button"
 											className={`${styles.repeatBtn} ${newRepeat === r.key ? styles.repeatBtnActive : ''}`}
-											onClick={() => { setNewRepeat(prev => prev === r.key ? 'none' : r.key); setNewRepeatDate('') }}
+											onClick={() => {
+												setNewRepeat(prev => (prev === r.key ? 'none' : r.key))
+												setNewRepeatDate('')
+											}}
 										>
 											{r.label}
 										</button>
@@ -483,17 +479,16 @@ const Sprint: React.FC = () => {
 								<div className={styles.repeatDateRow}>
 									{newRepeatDate ? (
 										<div className={styles.deadlineInline}>
-											<button
-												type="button"
-												className={styles.dateDisplayBtn}
-												onClick={() => setShowRepeatDatePicker(true)}
-											>
+											<button type="button" className={styles.dateDisplayBtn} onClick={() => setShowRepeatDatePicker(true)}>
 												{formatRepeatDateLabel(newRepeat, newRepeatDate)}
 											</button>
 											<button
 												type="button"
 												className={styles.deadlineRemoveBtn}
-												onClick={() => { setNewRepeatDate(''); setShowRepeatDatePicker(false) }}
+												onClick={() => {
+													setNewRepeatDate('')
+													setShowRepeatDatePicker(false)
+												}}
 											>
 												✕
 											</button>
@@ -510,35 +505,29 @@ const Sprint: React.FC = () => {
 						</div>
 					)}
 
-					<Button type="submit" fullWidth>Додати</Button>
+					<Button type="submit" fullWidth>
+						Додати
+					</Button>
 				</form>
 			</Modal>
 
 			{showRepeatDatePicker && (
 				<CustomDatePicker
 					value={newRepeatDate || undefined}
-					onChange={date => { setNewRepeatDate(date); setShowRepeatDatePicker(false) }}
+					onChange={date => {
+						setNewRepeatDate(date)
+						setShowRepeatDatePicker(false)
+					}}
 					onClose={() => setShowRepeatDatePicker(false)}
 				/>
 			)}
 
-			{weekExpanded && (
-				<WeekExpandedView
-					weekStart={weekStart}
-					routineItems={routineItems}
-					onToggle={toggleItem}
-					onClose={() => setWeekExpanded(false)}
-				/>
-			)}
+			{weekExpanded && <WeekExpandedView weekStart={weekStart} routineItems={routineItems} onToggle={toggleItem} onClose={() => setWeekExpanded(false)} />}
 
 			{showLabelPicker && (
 				<LabelPicker
 					selectedLabels={newLabels}
-					onToggle={label => setNewLabels(prev =>
-						prev.some(l => l.id === label.id)
-							? prev.filter(l => l.id !== label.id)
-							: [...prev, label]
-					)}
+					onToggle={label => setNewLabels(prev => (prev.some(l => l.id === label.id) ? prev.filter(l => l.id !== label.id) : [...prev, label]))}
 					onClose={() => setShowLabelPicker(false)}
 				/>
 			)}
