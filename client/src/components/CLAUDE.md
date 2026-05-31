@@ -48,10 +48,24 @@ components/
 │   ├── ShoppingTracker, GoalsList, SavingsGoalCard
 │   └── ExpenseChart        ← Recharts donut
 ├── f1/
-│   ├── NextRaceCard, RaceCalendarList
+│   ├── NextRaceCard        ← наступна гонка з TrackSVG і RaceCountdown
+│   ├── RaceCalendarList    ← 22 гонки 2026, пройдені затемнені, тап → /f1/:round
+│   ├── LastRaceCard        ← останній результат (Jolpica), podium + fastest lap
+│   │                          експортує useLastRace hook та типи LastRaceData/PodiumEntry
 │   ├── ChampionshipTable   ← пілоти (фото через images.weserv.nl) + команди
+│   │                          expand/collapse рядок → DriverStatsCard / ConstructorStatsCard
+│   ├── DriverStatsCard     ← деталі пілота: wins/poles/podiums/FL, прогрес-бар очок
+│   │                          Jolpica: results + qualifying, sessionStorage кеш
+│   ├── ConstructorStatsCard← деталі команди: PixelCar анімація, пілоти, stats grid
+│   │                          паралельний fetch results + qualifying
+│   ├── RacePredictionCard  ← прогноз топ-3 перед гонкою, auto-check після результату
+│   │                          локаут за 2г до старту, scoring: exact=10/partial=5/miss=0
+│   ├── MySeasonStats       ← таб "МІЙ СЕЗОН": streak, accuracy, race-by-race список
 │   ├── TrackSVG            ← draw-path анімація (JS via getTotalLength())
+│   ├── RaceCountdown       ← live countdown до наступної гонки
 │   └── McLarenViewer       ← Three.js
+├── PixelCar/               ← SVG pixel-art болид (viewBox 0 0 48 16), team-colored fill
+│                              Props: team (string), size (number)
 ├── sprint/
 │   ├── TaskCard            ← прогрес-бар чек-листа, лічильник ☑ X/Y
 │   ├── TaskDetailModal     ← МІТКИ/ДЕДЛАЙН/ЧЕК-ЛІСТ/ОПИС + LabelPicker
@@ -59,15 +73,23 @@ components/
 ├── lessons/
 │   └── LessonItem, LessonForm
 ├── recipes/
-│   └── MealBanner, MealDetail, RecipeCard, RecipeForm
+│   ├── RecipeCard          ← картка рецепту в Instagram-grid, wishlist heart
+│   ├── RecipeForm          ← форма з кастомними chip-пікерами категорії та складності
+│   │                          Категорія: pill-chips з emoji, Складність: 3 кнопки (зелений/золотий/червоний)
+│   ├── CategoriesSlider    ← горизонтальний slider фільтра категорій
+│   └── CategoryCard        ← картка категорії з grid 1–4 фото рецептів
 ├── watchlist/
 │   └── WatchlistHero, WatchlistGrid, WatchlistSearch, WatchlistDetail
 ├── memories/
 │   └── MemoryCard, MemoryForm, PhotoGrid
 └── dashboard/
     ├── CarHero             ← Three.js McLaren, 260px canvas, 80 частинок, OrbitControls
-    ├── BalanceMini, NextRaceMini, SprintMini
-    └── LessonsMini, TodosMini, MealMini, NasaApod
+    ├── HeroCard            ← hero-блок: баланс + nextRace + спринт-прогрес
+    ├── ClockBlock          ← годинник Furore + дата
+    ├── TasksAccordion      ← акордеон Задачі / Покупки (expand/collapse секції)
+    │                          анімація strike+fadeout при відмітці покупки
+    ├── SprintMini, LessonsMini, TodosMini
+    └── NasaApod            ← NASA APOD через довгий тап на логотип
 ```
 
 ---
@@ -104,3 +126,13 @@ VITE_CLOUDINARY_UPLOAD_PRESET=mimirorg
 
 **CarHero** (Dashboard): 260px canvas, 80 частинок, OrbitControls, theme-aware освітлення
 **McLarenViewer** (F1): менша висота, окремий компонент
+
+---
+
+## F1 зовнішні API та кешування
+
+- **Jolpica (Ergast)**: `https://api.jolpi.ca/ergast/f1/` — standings, results, qualifying, schedule
+- **OpenF1**: headshots пілотів
+- **images.weserv.nl**: proxy для headshot зображень (fallback → initials)
+- Кешування: sessionStorage, ключ формат `hud-{name}-v{N}-{YYYY-MM-DD}` (денне)
+- DriverStatsCard / ConstructorStatsCard: кеш у Map через props `cachedStats / onStats`

@@ -64,9 +64,21 @@ Service Worker підключений до Web Push (VAPID).
 
 ---
 
-## Статус (2026-05-27)
+## Статус (2026-05-31)
 
-**Зроблено:** повний scaffold, дизайн-система (5 тем), всі екрани, backend інтеграція (transactions/sprint/goals/watchlist/lessons/recipes/memories), auth мультипрофіль, PWA, Cloudinary, Three.js.
+**Зроблено:**
+- Повний scaffold, дизайн-система (6 тем), всі екрани
+- Backend інтеграція: transactions / sprint / goals / watchlist / lessons / recipes / memories
+- Auth мультипрофіль (Котька admin / Коська user), PWA, Cloudinary, Three.js
+- F1 розширення: DriverStatsCard, ConstructorStatsCard, LastRaceCard, PixelCar
+- F1 прогнози: RacePredictionCard + f1PredictionsStore (local persist, scoring, lockout)
+- MySeasonStats: streak, accuracy, race-by-race за сезон
+- RaceDetail: circuit data, session schedule (Jolpica), weather (wttr.in), podium results
+- circuitData.ts: 22 траси 2026 з характеристиками та рекордами
+- RecipeDetail screen з stepper порцій + wishlist
+- ShoppingList screen + shoppingListStore (local persist, addFromRecipe з ingredient parsing)
+- RecipeForm: кастомні chip-picker категорій (emoji) та 3-кнопковий picker складності
+- Dashboard: TasksAccordion (Задачі + Покупки), анімація при відмітці покупки
 
 **Наступне:**
 - ⬜ Push-нотифікації (VAPID підключено, логіка відправки не реалізована)

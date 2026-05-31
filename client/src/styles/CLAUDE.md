@@ -2,13 +2,13 @@
 
 ## Теми
 
-7 тем: **RETRO** (default) / **WARM** / **DARK** / **JAPAN** / **HEROES** / **FLAME** / **BERRY**
+6 тем: **RETRO** (default) / **WARM** / **DARK** / **JAPAN** / **HEROES** / **BERRY**
 Перемикання через `data-theme` атрибут на `<html>`.
 Зберігається в `uiStore` → `localStorage` (ключ `hud-ui`).
 
 ```tsx
 // uiStore.ts
-theme: 'retro' | 'warm' | 'dark' | 'japan' | 'heroes' | 'flame' | 'berry'
+theme: 'retro' | 'warm' | 'dark' | 'japan' | 'heroes' | 'berry'
 setTheme: (theme) => void
 ```
 

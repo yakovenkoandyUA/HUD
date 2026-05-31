@@ -4,24 +4,28 @@
 
 ```
 store/
-├── profileStore.ts   — token, activeProfile, profiles
-│                       persist: token+profile (ключ: profile-storage)
-├── financeStore.ts   — balance, transactions
-│                       БЕЗ persist (backend-only)
-├── goalsStore.ts     — savings goals
-│                       БЕЗ persist (backend-only)
-├── sprintStore.ts    — items, globalLabels
-│                       persist тільки items+globalLabels (ключ: hud-sprint-v2)
-├── lessonStore.ts    — уроки
-│                       БЕЗ persist (backend-only, /api/lessons)
-├── recipesStore.ts   — рецепти (backend-only) + mealOfWeek
-│                       persist тільки mealOfWeek+mealWeekKey (ключ: hud-recipes)
-├── watchlistStore.ts — watchlist items
-│                       БЕЗ persist (backend-only)
-├── memoriesStore.ts  — спогади + фото
-│                       БЕЗ persist (backend-only, /api/memories)
-└── uiStore.ts        — theme, toasts
-                        persist тільки theme (ключ: hud-ui)
+├── profileStore.ts        — token, activeProfile, profiles
+│                            persist: token+profile (ключ: profile-storage)
+├── financeStore.ts        — balance, transactions
+│                            БЕЗ persist (backend-only)
+├── goalsStore.ts          — savings goals
+│                            БЕЗ persist (backend-only)
+├── sprintStore.ts         — items, globalLabels
+│                            persist тільки items+globalLabels (ключ: hud-sprint-v2)
+├── lessonStore.ts         — уроки
+│                            БЕЗ persist (backend-only, /api/lessons)
+├── recipesStore.ts        — рецепти (backend-only) + mealOfWeek
+│                            persist тільки mealOfWeek+mealWeekKey (ключ: hud-recipes)
+├── shoppingListStore.ts   — список покупок
+│                            persist (ключ: hud-shopping-v1), повністю local
+├── watchlistStore.ts      — watchlist items
+│                            БЕЗ persist (backend-only)
+├── memoriesStore.ts       — спогади + фото
+│                            БЕЗ persist (backend-only, /api/memories)
+├── f1PredictionsStore.ts  — прогнози гонок F1 + підрахунок очок
+│                            persist (ключ: f1-predictions-storage), повністю local
+└── uiStore.ts             — theme, toasts
+                             persist тільки theme (ключ: hud-ui)
 ```
 
 ## Правила persist
@@ -29,7 +33,68 @@ store/
 - `financeStore`, `watchlistStore`, `goalsStore`, `lessonStore`, `memoriesStore` — **без** persist, дані завжди з backend
 - `sprintStore` — часткова persist: `items` (rich local fields: checklist/labels/dueDate/description) + `globalLabels`; решта з backend при `fetchItems`
 - `recipesStore` — persist тільки `mealOfWeek` + `mealWeekKey` (TheMealDB кеш на тиждень); рецепти — backend
-- Жодного юзерського контенту в localStorage — тільки auth token, тема UI, та API-кеш
+- `shoppingListStore` — повний persist (local-only store)
+- `f1PredictionsStore` — повний persist (local-only store)
+- Жодного юзерського контенту в localStorage — тільки auth token, тема UI, API-кеш та локальні прогнози/список
+
+## shoppingListStore — структура
+
+```ts
+interface ShoppingItem {
+  id: string
+  name: string
+  amount: number
+  unit: string          // г | кг | мл | л | шт | ч.л. | ст.л.
+  recipeId?: string
+  recipeName?: string
+  checked: boolean
+}
+
+// Actions
+addFromRecipe(recipe, servings)  // парсить ingredients, масштабує під servings
+addManual(name, amount, unit)
+toggleItem(id)
+removeItem(id)
+clearChecked()
+clearAll()
+```
+
+`addFromRecipe` — regex парсинг: `(\d+(?:[.,]\d+)?)\s*(кг|г|л|мл|шт|ч\.л\.|ст\.л\.)?` для кожного рядка ingredients.
+
+## f1PredictionsStore — структура
+
+```ts
+interface RacePrediction {
+  raceId: string           // формат: "2026-r{round}"
+  raceName: string
+  raceRound: number
+  p1: string               // driverId
+  p2: string
+  p3: string
+  savedAt: string          // ISO
+  result?: {
+    p1Match: 'exact' | 'partial' | 'miss'
+    p2Match: 'exact' | 'partial' | 'miss'
+    p3Match: 'exact' | 'partial' | 'miss'
+    actualP1: string; actualP2: string; actualP3: string
+    points: number         // 0–30
+  }
+}
+
+// State
+predictions: RacePrediction[]
+totalPoints: number
+
+// Actions
+savePrediction(race, p1, p2, p3)   // замінює існуючий для того ж raceId
+checkResult(raceId, p1, p2, p3)    // guard проти double-check, додає points
+```
+
+**Скоринг:** exact (той самий пілот + позиція) = 10 pts; partial (правильний пілот, інша позиція) = 5 pts; miss = 0 pts. Максимум 30 pts за гонку.
+
+**Локаут:** `isRaceLocked(race)` — `race.date + 'T13:00:00Z'` мінус 2 години.
+
+**Auto-check:** `RacePredictionCard` слухає `useLastRace()`, при появі нового результату викликає `checkResult` з `podium[0..2].driverId`.
 
 ## Маппінг полів Lesson (frontend ↔ backend)
 
