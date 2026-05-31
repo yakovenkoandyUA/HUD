@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useRecipesStore } from '../../store/recipesStore'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
-import { useSprintStore } from '../../store/sprintStore'
+import { useShoppingListStore } from '../../store/shoppingListStore'
 import RecipeForm from '../../components/recipes/RecipeForm'
 import Modal from '../../components/ui/Modal'
 import type { Recipe } from '../../types'
@@ -94,7 +94,7 @@ const RecipeDetailScreen: React.FC = () => {
   const { recipes, wishlistIds, toggleWishlist, updateRecipe, deleteRecipe } = useRecipesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
-  const { addItem, items: sprintItems } = useSprintStore()
+  const { addFromRecipe, items: shoppingItems } = useShoppingListStore()
 
   const recipe = recipes.find(r => r.id === id)
   const defaultServings = recipe?.servings ?? 2
@@ -119,25 +119,15 @@ const RecipeDetailScreen: React.FC = () => {
   const factor = servings / defaultServings
 
   const alreadyInList = recipe
-    ? sprintItems.some(it => it.recipeId === recipe.id && it.type === 'shopping' && !it.done)
+    ? shoppingItems.some(it => it.recipeId === recipe.id && !it.checked)
     : false
 
   const handleAddToShopping = () => {
     if (!recipe) return
-    if (alreadyInList) { navigate('/sprint'); return }
-    addItem({
-      type: 'shopping',
-      title: recipe.title,
-      recipeId: recipe.id,
-      recipeImageUrl: recipe.imageUrl,
-      checklist: recipe.ingredients.map(ing => ({
-        id: crypto.randomUUID(),
-        title: ing,
-        done: false,
-      })),
-    })
-    showToast(`Покупки для «${recipe.title}» додано в Спринт`, 'success')
-    navigate('/sprint')
+    if (alreadyInList) { navigate('/shopping'); return }
+    addFromRecipe(recipe, servings)
+    showToast(`Інгредієнти «${recipe.title}» додано до списку покупок`, 'success')
+    navigate('/shopping')
   }
 
   if (!recipe) {
@@ -255,7 +245,7 @@ const RecipeDetailScreen: React.FC = () => {
             onClick={handleAddToShopping}
           >
             <ShoppingIcon />
-            {alreadyInList ? 'У спринті' : 'Покупки'}
+            {alreadyInList ? 'У списку' : 'Покупки'}
           </button>
           {/* <button
             type="button"

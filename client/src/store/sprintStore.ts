@@ -235,18 +235,22 @@ export const useSprintStore = create<TodoState>()(
             createdAt: now,
           }))
 
-          // Merge API items with existing local-only fields (checklist, labels, dueDate, description)
-          // so navigating between screens doesn't wipe rich card data
+          // Merge API items with existing local-only fields.
+          // Backend doesn't store: type distinction (todo vs shopping), repeat, labels, checklist, etc.
           const mergeLocal = (apiItem: UnifiedTodo, existing: UnifiedTodo | undefined): UnifiedTodo => {
             if (!existing) return apiItem
             return {
               ...apiItem,
+              type:       existing.type,
               ...(existing.checklist      !== undefined && { checklist:      existing.checklist }),
               ...(existing.labels         !== undefined && { labels:         existing.labels }),
               ...(existing.dueDate        !== undefined && { dueDate:        existing.dueDate }),
               ...(existing.description    !== undefined && { description:    existing.description }),
               ...(existing.recipeImageUrl !== undefined && { recipeImageUrl: existing.recipeImageUrl }),
               ...(existing.recipeId       !== undefined && { recipeId:       existing.recipeId }),
+              ...(existing.repeat         !== undefined && { repeat:         existing.repeat }),
+              ...(existing.nextDue        !== undefined && { nextDue:        existing.nextDue }),
+              ...(existing.repeatDay      !== undefined && { repeatDay:      existing.repeatDay }),
             }
           }
 

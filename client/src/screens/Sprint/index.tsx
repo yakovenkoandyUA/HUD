@@ -192,6 +192,7 @@ const Sprint: React.FC = () => {
 
 	const resetForm = () => {
 		setNewTitle('')
+		setNewType('todo')
 		setNewPriority('normal')
 		setNewQuantity('')
 		setNewLabels([])
@@ -208,7 +209,7 @@ const Sprint: React.FC = () => {
 		addItem({
 			type:     newType,
 			title:    newTitle.trim(),
-			priority: newPriority,
+			priority: newType === 'shopping' ? newPriority : undefined,
 			...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
 			...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
 			...(newType === 'todo' && newRepeat !== 'none' ? {

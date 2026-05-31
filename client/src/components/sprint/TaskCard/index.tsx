@@ -104,7 +104,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
 									{TAG_LABEL[item.tag]}
 								</span>
 							)}
-							{(item.type === 'shopping' || item.type === 'todo') && item.priority && <PriorityBadge priority={item.priority} />}
+							{item.type === 'shopping' && item.priority && <PriorityBadge priority={item.priority} />}
 							{item.type === 'shopping' && item.quantity && <span className={styles.quantity}>{item.quantity}</span>}
 						</div>
 					</div>

@@ -50,7 +50,7 @@ const TasksAccordion: React.FC = () => {
   const navigate = useNavigate()
   const { items, toggleItem } = useSprintStore()
 
-  const todoItems  = items.filter((t) => t.type === 'todo')
+  const todoItems  = items.filter((t) => t.type === 'todo' && (!t.repeat || t.repeat === 'none'))
   const todoActive = todoItems.filter((t) => !t.done)
 
   const [questsOpen, setQuestsOpen]   = useState(() => items.filter(t => t.type === 'todo' && !t.done).length > 0)

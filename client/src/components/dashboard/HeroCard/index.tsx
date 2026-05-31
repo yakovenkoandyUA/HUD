@@ -63,18 +63,18 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
     : 0
   const overBudget = todaySpent > dailyBudget
 
-  const trackSvg = race?.trackSvg ?? null
+  // const trackSvg = race?.trackSvg ?? null
 
   return (
     <Card variant="accent" className={styles.card}>
-      {trackSvg && (
+      {/* {trackSvg && (
         <img
           src={trackSvg}
           className={styles.watermark}
           aria-hidden="true"
           alt=""
         />
-      )}
+      )} */}
 
       <div className={styles.inner}>
         {/* Left — balance */}
@@ -84,7 +84,7 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
             <span className={styles.currency}>₴</span>
             <span className={styles.balance}>{fmt(balance)}</span>
           </div>
-          <div className={styles.daily}>{fmt(dailyBudget)} ₴/день</div>
+          {/* <div className={styles.daily}>{fmt(dailyBudget)} ₴/день</div> */}
 
           <div className={styles.progress}>
             <div className={styles.progressLabel}>

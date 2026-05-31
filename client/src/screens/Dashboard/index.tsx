@@ -75,6 +75,7 @@ const Dashboard: React.FC = () => {
         ) : (
           <WeekHeader weekStart={weekStart} hideTitle />
         )}
+        <TasksAccordion />
         <HeroCard
           balance={balance}
           dailyBudget={dailyBudget}
@@ -82,7 +83,6 @@ const Dashboard: React.FC = () => {
           race={nextRace}
           compact={!!raceThisWeek}
         />
-        <TasksAccordion />
       </div>
 
       <button
