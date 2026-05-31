@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSprintStore } from '../../../store/sprintStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LabelPicker from '../LabelPicker'
-import type { SprintLabel, UnifiedTodo } from '../../../types'
+import type {  UnifiedTodo } from '../../../types'
 import styles from './TaskDetailModal.module.css'
 
 /**
