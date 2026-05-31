@@ -250,6 +250,23 @@
   padding: 4px 0 2px;
 }
 
+/* ── Shopping item completing animation ── */
+@keyframes shopComplete {
+  0%   { opacity: 1; transform: translateX(0); }
+  25%  { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(12px); }
+}
+
+.itemCompleting {
+  animation: shopComplete 0.38s ease forwards;
+  pointer-events: none;
+}
+
+.itemCompleting .itemTitle {
+  text-decoration: line-through;
+  color: var(--text3);
+}
+
 /* ── More button ── */
 .moreBtn {
   align-self: flex-end;

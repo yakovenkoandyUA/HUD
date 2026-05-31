@@ -64,8 +64,8 @@ export async function sendRaceWeekendAlert(): Promise<void> {
       keys: s.keys,
     })),
     {
-      title: `Race weekend! ${race.flag}`,
-      body: `${race.name} is this weekend. Lights out! 🏎`,
+      title: 'MIMIR',
+      body: `RAAAACCEEEEE WEEEEEEEK 🏎️`,
       icon: '/icons/icon-192.png',
       url: '/f1',
     },
@@ -82,8 +82,8 @@ export function startF1Scheduler(): void {
     console.warn('⚠️  VAPID not configured — F1 scheduler disabled')
     return
   }
-  cron.schedule('0 9 * * 1', () => {
+  cron.schedule('0 8 * * 0', () => {
     sendRaceWeekendAlert().catch(console.error)
   }, { timezone: 'Europe/Kyiv' })
-  console.log('🏎 F1 race weekend scheduler started (Mon 09:00 Kyiv time)')
+  console.log('🏎 F1 race weekend scheduler started (Sun 08:00 Kyiv time)')
 }

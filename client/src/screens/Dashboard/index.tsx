@@ -1,21 +1,25 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import TopBar from '../../components/layout/TopBar'
 import HeroCard from '../../components/dashboard/HeroCard'
+import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
 import TasksAccordion from '../../components/dashboard/TasksAccordion'
 import NasaApod from '../../components/dashboard/NasaApod'
+import WeekHeader from '../../components/sprint/WeekHeader'
 import Modal from '../../components/ui/Modal'
-// import CarHero from '../../components/dashboard/CarHero'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import { useNasaApod } from '../../hooks/useNasaApod'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
-import { getNextRace } from '../../utils/f1'
+import { getNextRace, getRaceThisWeek } from '../../utils/f1'
+import { getCurrentWeekStart } from '../../utils/sprint'
 import { calcDailyBudget } from './helpers'
 import type { ExpenseCategory } from '../../types'
 import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const { showToast, theme } = useUiStore()
   const [showExpense, setShowExpense] = useState(false)
@@ -46,8 +50,10 @@ const Dashboard: React.FC = () => {
     return () => content.removeEventListener('scroll', onScroll)
   }, [isRetro])
 
-  const nextRace = getNextRace(F1_SEASON_2026)
-  const dailyBudget = calcDailyBudget(balance)
+  const nextRace      = getNextRace(F1_SEASON_2026)
+  const raceThisWeek  = getRaceThisWeek(F1_SEASON_2026)
+  const weekStart     = getCurrentWeekStart()
+  const dailyBudget   = calcDailyBudget(balance)
   const today = new Date().toISOString().split('T')[0]
   const todaySpent = transactions
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))
@@ -64,11 +70,17 @@ const Dashboard: React.FC = () => {
       {isRetro && <div ref={bgRef} className={styles.bg} />}
       <TopBar showClock onLogoLongPress={handleLogoLongPress} />
       <div ref={contentRef} className={styles.content}>
+        {raceThisWeek ? (
+          <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
+        ) : (
+          <WeekHeader weekStart={weekStart} hideTitle />
+        )}
         <HeroCard
           balance={balance}
           dailyBudget={dailyBudget}
           todaySpent={todaySpent}
           race={nextRace}
+          compact={!!raceThisWeek}
         />
         <TasksAccordion />
       </div>

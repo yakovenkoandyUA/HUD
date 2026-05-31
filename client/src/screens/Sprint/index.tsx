@@ -4,16 +4,16 @@ import WeekHeader from '../../components/sprint/WeekHeader'
 import SprintProgress from '../../components/sprint/SprintProgress'
 import TaskCard from '../../components/sprint/TaskCard'
 import TaskDetailModal from '../../components/sprint/TaskDetailModal'
-import LessonItem from '../../components/lessons/LessonItem'
-import LessonForm from '../../components/lessons/LessonForm'
+import WeekExpandedView from '../../components/sprint/WeekExpandedView'
+import LabelPicker from '../../components/sprint/LabelPicker'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
+import CustomDatePicker from '../../components/ui/CustomDatePicker'
 import { useSprintStore } from '../../store/sprintStore'
-import { useLessonStore } from '../../store/lessonStore'
 import { useUiStore } from '../../store/uiStore'
 import { getCurrentWeekStart } from '../../utils/sprint'
 import { getToken } from '../../services/api'
-import type { Lesson, UnifiedTodo, TodoPriority } from '../../types'
+import type { UnifiedTodo, TodoPriority, SprintLabel } from '../../types'
 import styles from './Sprint.module.css'
 
 const SYNC_COLORS: Record<string, string> = {
@@ -25,29 +25,63 @@ const SYNC_COLORS: Record<string, string> = {
 
 const PANEL_ANIM_MS = 220
 
-type FilterType = 'all' | 'sprint' | 'shopping' | 'todo' | 'lessons'
+type FilterType = 'all' | 'sprint' | 'shopping' | 'todo'
 type StatusFilter = 'active' | 'done' | 'all'
 
 const TYPE_OPTIONS: { key: FilterType; label: string }[] = [
-	{ key: 'all', label: 'Всі' },
-	{ key: 'sprint', label: 'Спринт' },
+	{ key: 'all',      label: 'Всі' },
 	{ key: 'shopping', label: 'Покупки' },
-	{ key: 'todo', label: 'Todo' },
-	{ key: 'lessons', label: 'Уроки' },
+	{ key: 'todo',     label: 'Справи' },
 ]
 
 const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
+	{ key: 'all',    label: 'Всі' },
 	{ key: 'active', label: 'Активні' },
-	{ key: 'done', label: 'Завершені' },
-	{ key: 'all', label: 'Всі' },
+	{ key: 'done',   label: 'Завершені' },
 ]
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'normal', 'low']
 
 const PRIORITY_CONFIG: Record<TodoPriority, { symbol: string; label: string; activeClass: string }> = {
 	urgent: { symbol: '▲', label: 'ТЕРМІНОВО', activeClass: styles.priBtnActiveUrgent },
-	normal: { symbol: '◆', label: 'НОРМ', activeClass: styles.priBtnActiveNormal },
-	low: { symbol: '▽', label: 'АБИ БУЛО', activeClass: styles.priBtnActiveLow },
+	normal: { symbol: '◆', label: 'НОРМ',      activeClass: styles.priBtnActiveNormal },
+	low:    { symbol: '▽', label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow },
+}
+
+type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly'
+
+const REPEAT_OPTIONS: { key: Exclude<RepeatType, 'none'>; label: string }[] = [
+	{ key: 'daily',   label: 'ЩОДНЯ' },
+	{ key: 'weekly',  label: 'ЩОТИЖНЯ' },
+	{ key: 'monthly', label: 'ЩОМІСЯЦЯ' },
+]
+
+const REPEAT_BADGE: Record<string, string> = {
+	daily:   'ЩОДНЯ',
+	weekly:  'ЩОТИЖНЯ',
+	monthly: 'ЩОМІСЯЦЯ',
+}
+
+function formatRepeatDateLabel(repeat: Exclude<RepeatType, 'none' | 'daily'>, dateStr: string): string {
+	const [y, m, d] = dateStr.split('-').map(Number)
+	const date = new Date(y, m - 1, d)
+	if (repeat === 'weekly') {
+		const DAYS = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+		return `Кожен ${DAYS[date.getDay()]}`
+	}
+	return `${d}-го числа`
+}
+
+function formatRoutineDue(dateStr: string): string {
+	const today  = new Date(); today.setHours(0, 0, 0, 0)
+	const target = new Date(dateStr); target.setHours(0, 0, 0, 0)
+	const diff   = Math.round((target.getTime() - today.getTime()) / 86400000)
+	if (diff < 0)  return 'Прострочено'
+	if (diff === 0) return 'Сьогодні'
+	if (diff === 1) return 'Завтра'
+	const DAYS   = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+	const MONTHS = ['січ.', 'лют.', 'бер.', 'квіт.', 'трав.', 'черв.', 'лип.', 'серп.', 'вер.', 'жовт.', 'лист.', 'груд.']
+	return `${DAYS[target.getDay()]} ${target.getDate()} ${MONTHS[target.getMonth()]}`
 }
 
 // ── Chip group ────────────────────────────────────────────────────────────────
@@ -84,26 +118,30 @@ const IconFilter: React.FC<{ active?: boolean }> = ({ active }) => (
 
 const Sprint: React.FC = () => {
 	const { items, addItem, toggleItem, deleteItem, fetchItems, syncStatus } = useSprintStore()
-	const { lessons, addLesson, updateLesson, deleteLesson, fetchLessons } = useLessonStore()
 	const { showToast } = useUiStore()
-	console.log(items);
-	const [filter, setFilter] = useState<FilterType>('all')
+	const [filter, setFilter]             = useState<FilterType>('all')
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
-	const [showFilterPanel, setShowFilterPanel] = useState(false)
+	const [showFilterPanel, setShowFilterPanel]       = useState(false)
 	const [filterPanelMounted, setFilterPanelMounted] = useState(false)
 	const [filterPanelVisible, setFilterPanelVisible] = useState(false)
-	const filterPanelRef = useRef<HTMLDivElement>(null)
-	const filterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const filterPanelRef  = useRef<HTMLDivElement>(null)
+	const filterTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-	const [showAdd, setShowAdd] = useState(false)
-	const [newType, setNewType] = useState<UnifiedTodo['type']>('sprint')
-	const [newTitle, setNewTitle] = useState('')
+	const [showAdd, setShowAdd]       = useState(false)
+	const [newType, setNewType]       = useState<UnifiedTodo['type']>('todo')
+	const [newTitle, setNewTitle]     = useState('')
 	const [newPriority, setNewPriority] = useState<TodoPriority>('normal')
-	const [newQuantity, setNewQuantity] = useState('')
-
-	const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
-	const [showAddLesson, setShowAddLesson] = useState(false)
-	const [editingLesson, setEditingLesson] = useState<Lesson | null>(null)
+	const [newQuantity, setNewQuantity]       = useState('')
+	const [newLabels, setNewLabels]           = useState<SprintLabel[]>([])
+	const [showLabelPicker, setShowLabelPicker] = useState(false)
+	const [newRepeat, setNewRepeat]           = useState<RepeatType>('none')
+	const [newRepeatDate, setNewRepeatDate]   = useState('')
+	const [showRepeatPicker, setShowRepeatPicker]     = useState(false)
+	const [showRepeatDatePicker, setShowRepeatDatePicker] = useState(false)
+	const [routinesOpen, setRoutinesOpen]     = useState(false)
+	const [completingRoutines, setCompletingRoutines] = useState<Set<string>>(new Set())
+	const [detailTaskId, setDetailTaskId]     = useState<string | null>(null)
+	const [weekExpanded, setWeekExpanded]     = useState(false)
 
 	const openPanel = () => {
 		if (filterTimerRef.current !== null) {
@@ -125,9 +163,7 @@ const Sprint: React.FC = () => {
 
 	useEffect(
 		() => () => {
-			if (filterTimerRef.current !== null) {
-				clearTimeout(filterTimerRef.current)
-			}
+			if (filterTimerRef.current !== null) clearTimeout(filterTimerRef.current)
 		},
 		[],
 	)
@@ -135,19 +171,20 @@ const Sprint: React.FC = () => {
 	useEffect(() => {
 		if (!getToken()) return
 		fetchItems()
-		fetchLessons()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	const weekStart = getCurrentWeekStart()
+	const weekStart      = getCurrentWeekStart()
 	const weekSprintItems = items.filter(t => t.type === 'sprint' && t.weekStart === weekStart)
-	const done = weekSprintItems.filter(t => t.done).length
+	const done            = weekSprintItems.filter(t => t.done).length
+
+	const routineItems = items.filter(t => t.repeat && t.repeat !== 'none')
 
 	const filteredItems = items.filter(t => {
-		if (filter === 'lessons') return false
+		if (t.repeat && t.repeat !== 'none') return false
 		if (filter !== 'all' && t.type !== filter) return false
 		if (statusFilter === 'active') return !t.done
-		if (statusFilter === 'done') return t.done
+		if (statusFilter === 'done')   return t.done
 		return true
 	})
 
@@ -157,46 +194,55 @@ const Sprint: React.FC = () => {
 		setNewTitle('')
 		setNewPriority('normal')
 		setNewQuantity('')
+		setNewLabels([])
+		setShowLabelPicker(false)
+		setNewRepeat('none')
+		setNewRepeatDate('')
+		setShowRepeatPicker(false)
+		setShowRepeatDatePicker(false)
 	}
 
 	const handleAdd = (e: React.FormEvent) => {
 		e.preventDefault()
 		if (!newTitle.trim()) return
 		addItem({
-			type: newType,
-			title: newTitle.trim(),
-			...(newType === 'sprint' ? { tag: 'dev', weekStart } : {}),
-			...(newType !== 'sprint' ? { priority: newPriority } : {}),
+			type:     newType,
+			title:    newTitle.trim(),
+			priority: newPriority,
 			...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
+			...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
+			...(newType === 'todo' && newRepeat !== 'none' ? {
+				repeat:  newRepeat,
+				nextDue: newRepeatDate || new Date().toISOString().split('T')[0],
+				...(newRepeat === 'monthly' && newRepeatDate
+					? { repeatDay: parseInt(newRepeatDate.split('-')[2], 10) }
+					: {}),
+			} : {}),
 		})
 		resetForm()
 		setShowAdd(false)
-		showToast('Задачу додано', 'success')
+		showToast('Справу додано', 'success')
 	}
 
-	const handleSaveLesson = (data: Omit<Lesson, 'id'>) => {
-		if (editingLesson) {
-			updateLesson(editingLesson.id, data)
-			showToast('Урок оновлено', 'success')
-		} else {
-			addLesson(data.title, data.description, data.date)
-			showToast('Урок додано', 'success')
-		}
-		setShowAddLesson(false)
-		setEditingLesson(null)
+	const handleRoutineToggle = (id: string) => {
+		setCompletingRoutines(prev => new Set(prev).add(id))
+		setTimeout(() => {
+			toggleItem(id)
+			setCompletingRoutines(prev => { const s = new Set(prev); s.delete(id); return s })
+		}, 380)
 	}
 
 	return (
 		<div className={styles.screen}>
-			<TopBar title="Todo" right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
+			<TopBar title="Квести" right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
 
 			<div className={styles.content}>
-				<WeekHeader weekStart={weekStart} />
+				<WeekHeader weekStart={weekStart} onExpand={() => setWeekExpanded(true)} />
 				<SprintProgress done={done} total={weekSprintItems.length} />
 
 				{/* ── Section header ── */}
 				<div className={styles.sectionHeader}>
-					<span className={styles.sectionTitle}>{filter === 'lessons' ? 'Уроки' : 'Задачі'}</span>
+					<span className={styles.sectionTitle}>Квести</span>
 					<div className={styles.sectionActions}>
 						<button
 							className={`${styles.filterBtn} ${showFilterPanel ? styles.filterBtnOpen : ''} ${isFiltered && !showFilterPanel ? styles.filterBtnActive : ''}`}
@@ -206,16 +252,7 @@ const Sprint: React.FC = () => {
 							<IconFilter active={isFiltered} />
 							{isFiltered && !showFilterPanel && <span className={styles.filterDot} />}
 						</button>
-						<button
-							className={styles.addBtn}
-							onClick={() => {
-								if (filter === 'lessons') {
-									setEditingLesson(null)
-									setShowAddLesson(true)
-								} else setShowAdd(true)
-							}}
-							aria-label="Додати"
-						>
+						<button className={styles.addBtn} onClick={() => setShowAdd(true)} aria-label="Додати">
 							<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
 								<path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
 							</svg>
@@ -227,154 +264,284 @@ const Sprint: React.FC = () => {
 				{filterPanelMounted && (
 					<div className={`${styles.filterPanel} ${filterPanelVisible ? styles.filterPanelVisible : styles.filterPanelHidden}`} ref={filterPanelRef}>
 						<ChipGroup label="Тип" options={TYPE_OPTIONS} value={filter} onChange={setFilter} />
-						{filter !== 'lessons' && <ChipGroup label="Статус" options={STATUS_OPTIONS} value={statusFilter} onChange={setStatusFilter} />}
+						<ChipGroup label="Статус" options={STATUS_OPTIONS} value={statusFilter} onChange={setStatusFilter} />
 						<div className={styles.filterFooter}>
 							{isFiltered && (
-								<button
-									className={styles.resetBtn}
-									onClick={() => {
-										setFilter('all')
-										setStatusFilter('active')
-									}}
-								>
+								<button className={styles.resetBtn} onClick={() => { setFilter('all'); setStatusFilter('active') }}>
 									Скинути все
 								</button>
 							)}
-							<button className={styles.doneBtn} onClick={closePanel}>
-								Готово
-							</button>
+							<button className={styles.doneBtn} onClick={closePanel}>Готово</button>
 						</div>
 					</div>
 				)}
 
-				{/* ── Active filter pills ── */}
-				{!showFilterPanel && isFiltered && (
+				{/* ── Active filter pills — always visible ── */}
+				{!showFilterPanel && (
 					<div className={styles.activePills}>
-						{filter !== 'all' && (
-							<button className={styles.activePill} onClick={() => setFilter('all')} aria-label="Прибрати фільтр типу">
-								{TYPE_OPTIONS.find(o => o.key === filter)?.label}
+						<button
+							className={`${styles.activePill} ${filter === 'all' ? styles.activePillDefault : ''}`}
+							onClick={() => filter !== 'all' ? setFilter('all') : undefined}
+							aria-label="Фільтр типу"
+						>
+							{TYPE_OPTIONS.find(o => o.key === filter)?.label ?? 'Всі'}
+							{filter !== 'all' && (
 								<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
 									<path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
 								</svg>
-							</button>
-						)}
-						{statusFilter !== 'active' && filter !== 'lessons' && (
-							<button className={styles.activePill} onClick={() => setStatusFilter('active')} aria-label="Прибрати фільтр статусу">
-								{STATUS_OPTIONS.find(o => o.key === statusFilter)?.label}
+							)}
+						</button>
+						<button
+							className={`${styles.activePill} ${statusFilter === 'active' ? styles.activePillDefault : ''}`}
+							onClick={() => statusFilter !== 'active' ? setStatusFilter('active') : undefined}
+							aria-label="Фільтр статусу"
+						>
+							{STATUS_OPTIONS.find(o => o.key === statusFilter)?.label ?? 'Активні'}
+							{statusFilter !== 'active' && (
 								<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
 									<path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
 								</svg>
-							</button>
-						)}
+							)}
+						</button>
 					</div>
 				)}
 
 				{/* ── List ── */}
 				<div key={`${filter}-${statusFilter}`} className={styles.tabContent}>
-					{filter !== 'lessons' &&
-						(filteredItems.length === 0 ? (
-							<div className={styles.emptyState}>
-								<span className={styles.emptyIcon}>✓</span>
-								<span className={styles.emptyTitle}>{statusFilter === 'active' ? 'Активних задач немає' : 'Список чистий'}</span>
-								<span className={styles.emptyHint}>{statusFilter === 'active' ? 'Всі виконано 🎉' : 'Додай першу задачу'}</span>
-							</div>
-						) : (
-							<ul className={styles.list}>
-								{filteredItems.map(t => (
-									<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
-								))}
-							</ul>
-						))}
-
-					{filter === 'lessons' &&
-						(lessons.length === 0 ? (
-							<div className={styles.emptyState}>
-								<span className={styles.emptyIcon}>📖</span>
-								<span className={styles.emptyTitle}>Уроків ще немає</span>
-								<span className={styles.emptyHint}>Додай перший урок</span>
-							</div>
-						) : (
-							<ul className={styles.lessonList}>
-								{lessons.map(l => (
-									<LessonItem
-										key={l.id}
-										lesson={l}
-										onEdit={() => {
-											setEditingLesson(l)
-											setShowAddLesson(true)
-										}}
-										onDelete={() => deleteLesson(l.id)}
-									/>
-								))}
-							</ul>
-						))}
+					{filteredItems.length === 0 ? (
+						<div className={styles.emptyState}>
+							<span className={styles.emptyIcon}>✓</span>
+							<span className={styles.emptyTitle}>{statusFilter === 'active' ? 'Активних квестів немає' : 'Список чистий'}</span>
+							<span className={styles.emptyHint}>{statusFilter === 'active' ? 'Всі виконано 🎉' : 'Додай першу справу'}</span>
+						</div>
+					) : (
+						<ul className={styles.list}>
+							{filteredItems.map(t => (
+								<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
+							))}
+						</ul>
+					)}
 				</div>
+
+				{/* ── Рутини accordion ── */}
+				{routineItems.length > 0 && (
+					<div className={styles.routinesSection}>
+						<button
+							type="button"
+							className={styles.routineHeader}
+							onClick={() => setRoutinesOpen(v => !v)}
+							aria-expanded={routinesOpen}
+						>
+							<span className={styles.sectionTitle}>Рутини</span>
+							<div className={styles.sectionActions}>
+								<span className={styles.routineCount}>{routineItems.length}</span>
+								<svg
+									className={`${styles.routineArrow} ${routinesOpen ? styles.routineArrowOpen : ''}`}
+									width="12" height="12" viewBox="0 0 12 12" fill="none"
+								>
+									<path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+								</svg>
+							</div>
+						</button>
+
+						{routinesOpen && (
+							<ul className={styles.routineList}>
+								{routineItems.map(t => (
+									<li key={t.id} className={`${styles.routineItem} ${completingRoutines.has(t.id) ? styles.routineItemCompleting : ''}`}>
+										<button
+											type="button"
+											className={styles.routineCheck}
+											onClick={() => handleRoutineToggle(t.id)}
+											aria-label="Виконати"
+										>
+											<span className={styles.routineCheckBox}>
+												{completingRoutines.has(t.id) ? '✓' : ''}
+											</span>
+										</button>
+										<div className={styles.routineBody}>
+											<span className={styles.routineTitle}>{t.title}</span>
+											<div className={styles.routineMeta}>
+												<span className={styles.repeatBadge}>{REPEAT_BADGE[t.repeat!]}</span>
+												{t.nextDue && (
+													<span className={styles.routineDue}>{formatRoutineDue(t.nextDue)}</span>
+												)}
+											</div>
+										</div>
+										<button
+											type="button"
+											className={styles.del}
+											onClick={() => deleteItem(t.id)}
+											aria-label="Видалити"
+										>
+											✕
+										</button>
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
+				)}
 			</div>
 
-			{/* ── Add task modal ── */}
-			<Modal
-				isOpen={showAdd}
-				onClose={() => {
-					setShowAdd(false)
-					resetForm()
-				}}
-				title="Нова задача"
-			>
+			{/* ── Add modal ── */}
+			<Modal isOpen={showAdd} onClose={() => { setShowAdd(false); resetForm() }} title="Нова справа">
 				<form onSubmit={handleAdd} className={styles.taskForm}>
 					<div className={styles.typeRow}>
-						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipSprint}   ${newType === 'sprint' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('sprint')}>
-							⚡ Спринт
+						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipTodo}     ${newType === 'todo'     ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('todo')}>
+							✓ Справа
 						</button>
 						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipShopping} ${newType === 'shopping' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('shopping')}>
 							🛒 Покупка
 						</button>
-						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipTodo}     ${newType === 'todo' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('todo')}>
-							✓ Todo
-						</button>
 					</div>
 
-					<input className={styles.todoInput} value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Назва задачі..." autoFocus />
+					<input className={styles.todoInput} value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Назва..." autoFocus />
 
-					{(newType === 'shopping' || newType === 'todo') && (
-						<div className={styles.priorityRow}>
-							{PRIORITIES.map(p => {
-								const { symbol, label, activeClass } = PRIORITY_CONFIG[p]
-								return (
-									<button key={p} type="button" className={`${styles.priBtn} ${newPriority === p ? activeClass : ''}`} onClick={() => setNewPriority(p)}>
-										<span className={styles.priSymbol}>{symbol}</span>
-										<span className={styles.priLabel}>{label}</span>
+					{newType === 'shopping' && (
+						<>
+							<div className={styles.priorityRow}>
+								{PRIORITIES.map(p => {
+									const { symbol, label, activeClass } = PRIORITY_CONFIG[p]
+									return (
+										<button key={p} type="button" className={`${styles.priBtn} ${newPriority === p ? activeClass : ''}`} onClick={() => setNewPriority(p)}>
+											<span className={styles.priSymbol}>{symbol}</span>
+											<span className={styles.priLabel}>{label}</span>
+										</button>
+									)
+								})}
+							</div>
+							<input className={styles.todoInput} value={newQuantity} onChange={e => setNewQuantity(e.target.value)} placeholder="Кількість (необов'язково)" />
+						</>
+					)}
+
+					{newType === 'todo' && (
+						<div className={styles.todoExtras}>
+							{/* Row 1: labels + repeat toggle inline */}
+							<div className={styles.extrasInlineRow}>
+								<div className={styles.extrasLabels}>
+									{newLabels.map(l => (
+										<button
+											key={l.id} type="button"
+											className={styles.selectedLabel}
+											style={{ background: l.color }}
+											onClick={() => setNewLabels(prev => prev.filter(x => x.id !== l.id))}
+										>
+											{l.title}
+											<svg width="7" height="7" viewBox="0 0 7 7" fill="none"><path d="M1 1l5 5M6 1L1 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+										</button>
+									))}
+									<button type="button" className={styles.addExtrasBtn} onClick={() => setShowLabelPicker(true)}>
+										<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+										Мітка
 									</button>
-								)
-							})}
+								</div>
+
+								{!showRepeatPicker ? (
+									<button type="button" className={styles.repeatToggleBtn} onClick={() => setShowRepeatPicker(true)}>
+										<svg width="11" height="11" viewBox="0 0 10 10" fill="none">
+											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
+											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+										</svg>
+										Повторити
+									</button>
+								) : (
+									<span className={styles.repeatActiveLabel}>
+										<svg width="11" height="11" viewBox="0 0 10 10" fill="none">
+											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
+											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+										</svg>
+										Повторювана
+										<button
+											type="button"
+											className={styles.repeatActiveClose}
+											onClick={() => { setShowRepeatPicker(false); setNewRepeat('none'); setNewRepeatDate(''); setShowRepeatDatePicker(false) }}
+										>
+											✕
+										</button>
+									</span>
+								)}
+							</div>
+
+							{/* Row 2: repeat options — full width, shown when active */}
+							{showRepeatPicker && (
+								<div className={styles.repeatRow}>
+									{REPEAT_OPTIONS.map(r => (
+										<button
+											key={r.key}
+											type="button"
+											className={`${styles.repeatBtn} ${newRepeat === r.key ? styles.repeatBtnActive : ''}`}
+											onClick={() => { setNewRepeat(prev => prev === r.key ? 'none' : r.key); setNewRepeatDate('') }}
+										>
+											{r.label}
+										</button>
+									))}
+								</div>
+							)}
+
+							{/* Row 3: day picker for weekly/monthly */}
+							{showRepeatPicker && (newRepeat === 'weekly' || newRepeat === 'monthly') && (
+								<div className={styles.repeatDateRow}>
+									{newRepeatDate ? (
+										<div className={styles.deadlineInline}>
+											<button
+												type="button"
+												className={styles.dateDisplayBtn}
+												onClick={() => setShowRepeatDatePicker(true)}
+											>
+												{formatRepeatDateLabel(newRepeat, newRepeatDate)}
+											</button>
+											<button
+												type="button"
+												className={styles.deadlineRemoveBtn}
+												onClick={() => { setNewRepeatDate(''); setShowRepeatDatePicker(false) }}
+											>
+												✕
+											</button>
+										</div>
+									) : (
+										<div className={styles.deadlineTrigger}>
+											<button type="button" className={styles.addExtrasBtn} onClick={() => setShowRepeatDatePicker(true)}>
+												{newRepeat === 'weekly' ? 'Обрати день тижня' : 'Обрати день місяця'}
+											</button>
+										</div>
+									)}
+								</div>
+							)}
 						</div>
 					)}
 
-					{newType === 'shopping' && <input className={styles.todoInput} value={newQuantity} onChange={e => setNewQuantity(e.target.value)} placeholder="Кількість (необов'язково)" />}
-
-					<Button type="submit" fullWidth>
-						Додати
-					</Button>
+					<Button type="submit" fullWidth>Додати</Button>
 				</form>
 			</Modal>
 
-			{/* ── Lesson modal ── */}
-			<Modal
-				isOpen={showAddLesson}
-				onClose={() => {
-					setShowAddLesson(false)
-					setEditingLesson(null)
-				}}
-				title={editingLesson ? 'Редагувати урок' : 'Новий урок'}
-			>
-				<LessonForm
-					initial={editingLesson ?? undefined}
-					onSave={handleSaveLesson}
-					onCancel={() => {
-						setShowAddLesson(false)
-						setEditingLesson(null)
-					}}
+			{showRepeatDatePicker && (
+				<CustomDatePicker
+					value={newRepeatDate || undefined}
+					onChange={date => { setNewRepeatDate(date); setShowRepeatDatePicker(false) }}
+					onClose={() => setShowRepeatDatePicker(false)}
 				/>
-			</Modal>
+			)}
+
+			{weekExpanded && (
+				<WeekExpandedView
+					weekStart={weekStart}
+					routineItems={routineItems}
+					onToggle={toggleItem}
+					onClose={() => setWeekExpanded(false)}
+				/>
+			)}
+
+			{showLabelPicker && (
+				<LabelPicker
+					selectedLabels={newLabels}
+					onToggle={label => setNewLabels(prev =>
+						prev.some(l => l.id === label.id)
+							? prev.filter(l => l.id !== label.id)
+							: [...prev, label]
+					)}
+					onClose={() => setShowLabelPicker(false)}
+				/>
+			)}
 
 			<TaskDetailModal taskId={detailTaskId} onClose={() => setDetailTaskId(null)} />
 		</div>

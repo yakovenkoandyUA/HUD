@@ -9,8 +9,7 @@
   gap: 12px;
 }
 
-.list       { list-style: none; display: flex; flex-direction: column; }
-.lessonList { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.list { list-style: none; display: flex; flex-direction: column; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(6px); }
@@ -236,6 +235,14 @@
 }
 .activePill:hover { opacity: 0.75; }
 
+.activePillDefault {
+  background: transparent;
+  border-color: var(--border2);
+  color: var(--text3);
+  cursor: default;
+}
+.activePillDefault:hover { opacity: 1; }
+
 /* ── Empty states ─────────────────────────────────────────────────────────── */
 
 .emptyState {
@@ -315,3 +322,364 @@
 }
 .todoInput:focus { border-color: var(--accent); }
 .todoInput::placeholder { color: var(--text3); }
+
+/* ── Todo extras (labels + deadline) ────────────────────────────────────── */
+
+.todoExtras {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.labelRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.selectedLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 10px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 20px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: opacity 0.12s;
+}
+.selectedLabel:hover { opacity: 0.65; }
+
+.addExtrasBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 12px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border2);
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+
+.addExtrasBtn:hover { color: var(--text2); border-color: var(--text3); }
+
+
+.deadlineRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateInput {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  box-sizing: border-box;
+  color-scheme: dark;
+}
+.dateInput:focus { border-color: var(--accent); }
+
+.deadlineRemoveBtn {
+  font-size: 12px;
+  color: var(--text3);
+  padding: 7px 10px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.deadlineRemoveBtn:hover { color: var(--negative); border-color: var(--negative); }
+
+/* ── Extras inline row (label + deadline) ───────────────────────────────── */
+
+.extrasInlineRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.extrasLabels {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.extrasDeadline { flex-shrink: 0; }
+
+@keyframes deadlinePop {
+  from { opacity: 0; transform: scale(0.82) translateX(4px); }
+  to   { opacity: 1; transform: scale(1)    translateX(0); }
+}
+
+.deadlineInline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  animation: deadlinePop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.deadlineTrigger {
+  animation: deadlinePop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.dateDisplayBtn {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-dim);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.dateDisplayBtn:hover { opacity: 0.75; }
+
+/* ── Repeat toggle ───────────────────────────────────────────────────────── */
+
+.repeatToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: 1px dashed var(--border2);
+  border-radius: 20px;
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+.repeatToggleBtn:hover { color: var(--text2); border-color: var(--text3); }
+
+.repeatActiveLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px 4px 9px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--accent-dim);
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  flex-shrink: 0;
+  animation: deadlinePop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.repeatActiveClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 1px 3px;
+  border-radius: 4px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.repeatActiveClose:hover { opacity: 1; }
+
+@keyframes repeatJiggle {
+  0%   { transform: translateY(-8px) scale(0.96); opacity: 0; }
+  40%  { transform: translateY(3px)  scale(1.02); opacity: 1; }
+  65%  { transform: translateY(-2px) scale(0.99); }
+  82%  { transform: translateY(1px)  scale(1.004); }
+  100% { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+/* ── Repeat picker ───────────────────────────────────────────────────────── */
+
+.repeatRow {
+  display: flex;
+  gap: 6px;
+  animation: repeatJiggle 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.repeatBtn {
+  flex: 1;
+  padding: 7px 4px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.repeatBtn:hover { color: var(--text2); }
+.repeatBtnActive { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-dim); }
+
+/* ── Рутини accordion ────────────────────────────────────────────────────── */
+
+.routinesSection {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.routineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.routineCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  padding: 1px 6px;
+  background: var(--surface2);
+  border-radius: 10px;
+}
+
+.routineArrow {
+  color: var(--text3);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.routineArrowOpen { transform: rotate(180deg); }
+
+.routineList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.routineItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.routineItem:first-child { border-top: none; }
+.routineItem:hover { background: rgba(255, 255, 255, 0.04); }
+
+@keyframes routineComplete {
+  0%   { opacity: 1; }
+  40%  { opacity: 1; }
+  100% { opacity: 0.3; transform: scale(0.97); }
+}
+.routineItemCompleting {
+  animation: routineComplete 0.38s ease forwards;
+  pointer-events: none;
+}
+.routineItemCompleting .routineTitle { text-decoration: line-through; color: var(--text3); }
+
+.routineCheck {
+  padding: 0;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.routineCheckBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--accent-dim);
+  border-radius: 50%;
+  font-size: 10px;
+  color: var(--accent);
+  background: var(--surface);
+  transition: border-color 0.15s, background 0.15s;
+}
+.routineCheckBox:hover { border-color: var(--accent); }
+
+.routineBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.routineTitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.routineMeta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.repeatBadge {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.routineDue {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}

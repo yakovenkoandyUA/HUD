@@ -59,6 +59,83 @@
 .textarea:focus { border-color: var(--accent); }
 .textarea::placeholder { color: var(--text3); }
 
+/* ── Category chip grid ── */
+.catGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.catBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.catBtn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.catBtnActive {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.catIcon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── Difficulty picker ── */
+.diffPicker {
+  display: flex;
+  gap: 6px;
+}
+
+.diffBtn {
+  flex: 1;
+  padding: 9px 4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.diffBtn:hover { border-color: var(--border); color: var(--text2); }
+
+.diffBtn[data-active][data-diff="easy"] {
+  border-color: var(--second);
+  background: var(--second-soft);
+  color: var(--second);
+}
+.diffBtn[data-active][data-diff="medium"] {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+.diffBtn[data-active][data-diff="hard"] {
+  border-color: var(--negative);
+  background: var(--negative-soft);
+  color: var(--negative);
+}
+
 .actions {
   display: flex;
   gap: 8px;

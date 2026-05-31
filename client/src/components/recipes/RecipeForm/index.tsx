@@ -8,6 +8,25 @@ const DEFAULT_CATEGORIES = [
   'Десерти', 'Випічка', 'Напої', 'Закуски', 'Інше',
 ]
 
+const CATEGORY_ICONS: Record<string, string> = {
+  'Сніданки':       '🌅',
+  'Супи':           '🍲',
+  'Салати':         '🥗',
+  'Основні страви': '🍽',
+  'Гарніри':        '🥦',
+  'Десерти':        '🍰',
+  'Випічка':        '🥐',
+  'Напої':          '🥤',
+  'Закуски':        '🫙',
+  'Інше':           '📦',
+}
+
+const DIFFICULTY_OPTIONS = [
+  { value: 'easy'   as RecipeDifficulty, label: 'Легкий',   diff: 'easy'   },
+  { value: 'medium' as RecipeDifficulty, label: 'Середній', diff: 'medium' },
+  { value: 'hard'   as RecipeDifficulty, label: 'Важкий',   diff: 'hard'   },
+]
+
 /**
  * RecipeForm
  * ----------
@@ -94,14 +113,19 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
       <div className={styles.field}>
         <label className={styles.label}>Категорія</label>
-        <select
-          className={styles.input}
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-        >
-          <option value="">— оберіть категорію —</option>
-          {DEFAULT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <div className={styles.catGrid}>
+          {DEFAULT_CATEGORIES.map(c => (
+            <button
+              key={c}
+              type="button"
+              className={`${styles.catBtn} ${category === c ? styles.catBtnActive : ''}`}
+              onClick={() => setCategory(category === c ? '' : c)}
+            >
+              <span className={styles.catIcon}>{CATEGORY_ICONS[c]}</span>
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={styles.row}>
@@ -142,16 +166,20 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
       <div className={styles.field}>
         <label className={styles.label}>Складність</label>
-        <select
-          className={styles.input}
-          value={difficulty}
-          onChange={e => setDifficulty(e.target.value as RecipeDifficulty | '')}
-        >
-          <option value="">— не вказано —</option>
-          <option value="easy">Легкий</option>
-          <option value="medium">Середній</option>
-          <option value="hard">Важкий</option>
-        </select>
+        <div className={styles.diffPicker}>
+          {DIFFICULTY_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              data-active={difficulty === opt.value ? 'true' : undefined}
+              data-diff={opt.diff}
+              className={styles.diffBtn}
+              onClick={() => setDifficulty(difficulty === opt.value ? '' : opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={styles.field}>

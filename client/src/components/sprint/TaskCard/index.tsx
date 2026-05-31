@@ -86,7 +86,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
 		<li className={`${styles.item} ${item.done ? styles.done : ''}`}>
 			<div className={styles.inner}>
 				<button type="button" className={styles.check} onClick={onToggle} aria-label="Toggle">
-					<span className={`${styles.checkBox} ${item.type === 'sprint' ? styles.checkBoxSprint : ''}`}>{item.done ? '✓' : ''}</span>
+					<span className={`${styles.checkBox} ${item.type === 'sprint' ? styles.checkBoxSprint : item.type === 'shopping' ? styles.checkBoxShopping : item.type === 'todo' ? styles.checkBoxTodo : ''}`}>{item.done ? '✓' : ''}</span>
 				</button>
 
 				{/* Recipe thumbnail for shopping tasks from recipes */}

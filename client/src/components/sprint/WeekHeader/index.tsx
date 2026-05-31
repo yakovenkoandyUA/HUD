@@ -8,10 +8,14 @@ import styles from './WeekHeader.module.css'
  * з назвою дня, числом і крапкою.
  *
  * Props:
- * @prop {string} weekStart — ISO дата понеділка ('YYYY-MM-DD')
+ * @prop {string}       weekStart  — ISO дата понеділка ('YYYY-MM-DD')
+ * @prop {() => void}   onExpand   — відкрити розгорнутий вигляд тижня
+ * @prop {boolean}      hideTitle  — приховати рядок "Тиждень / діапазон дат"
  */
 interface WeekHeaderProps {
   weekStart: string
+  onExpand?: () => void
+  hideTitle?: boolean
 }
 
 const DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
@@ -30,7 +34,7 @@ function getWeekDays(weekStart: string): Date[] {
   })
 }
 
-const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart }) => {
+const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, onExpand, hideTitle }) => {
   const days = getWeekDays(weekStart)
   const mon  = days[0]
   const sun  = days[6]
@@ -43,10 +47,26 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart }) => {
 
   return (
     <div className={styles.header}>
-      <div className={styles.top}>
-        <span className={styles.label}>Тиждень</span>
-        <span className={styles.range}>{fmt(mon)} — {fmt(sun)}</span>
-      </div>
+      {!hideTitle && (
+        <div className={styles.top}>
+          <span className={styles.label}>Тиждень</span>
+          <div className={styles.topRight}>
+            <span className={styles.range}>{fmt(mon)} — {fmt(sun)}</span>
+            {onExpand && (
+              <button
+                type="button"
+                className={styles.expandBtn}
+                onClick={onExpand}
+                aria-label="Розгорнути тиждень"
+              >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M8 1h4v4M5 12H1V8M1.5 1.5l4 4M11.5 11.5l-4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className={styles.weekRow}>
         {days.map((day, i) => {

@@ -98,6 +98,9 @@ export interface UnifiedTodo {
   checklist?: ChecklistItem[]
   recipeImageUrl?: string
   recipeId?: string
+  repeat?: 'none' | 'daily' | 'weekly' | 'monthly'
+  repeatDay?: number
+  nextDue?: string
 }
 
 export type RecipeDifficulty = 'easy' | 'medium' | 'hard'

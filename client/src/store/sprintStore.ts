@@ -76,6 +76,22 @@ interface ApiTodo {
   dueDate: string
 }
 
+// ── Repeat helpers ────────────────────────────────────────────────────────────
+
+function calcNextDue(item: UnifiedTodo): string {
+  const base = new Date(); base.setHours(0, 0, 0, 0)
+  if (item.repeat === 'daily') {
+    base.setDate(base.getDate() + 1)
+  } else if (item.repeat === 'weekly') {
+    base.setDate(base.getDate() + 7)
+  } else if (item.repeat === 'monthly') {
+    const day = item.repeatDay ?? base.getDate()
+    base.setMonth(base.getMonth() + 1)
+    base.setDate(day)
+  }
+  return localDateStr(base)
+}
+
 // ── Sort helpers ──────────────────────────────────────────────────────────────
 
 const PRIORITY_ORDER: Record<TodoPriority, number> = { urgent: 0, normal: 1, low: 2 }
@@ -335,6 +351,14 @@ export const useSprintStore = create<TodoState>()(
       toggleItem: (id) => {
         const item = get().items.find(i => i.id === id)
         if (!item) return
+
+        // Recurring task: reset with new nextDue instead of marking done
+        if (item.repeat && item.repeat !== 'none' && !item.done) {
+          const nextDue = calcNextDue(item)
+          set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: false, nextDue } : i) }))
+          return
+        }
+
         const done = !item.done
         set(s => ({
           items: s.items.map(i => i.id === id ? { ...i, done } : i),

@@ -25,9 +25,9 @@ interface TopBarProps {
 function formatTime(d: Date): string {
   return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
 }
-function formatDay(d: Date): string {
-  return d.toLocaleDateString('uk-UA', { weekday: 'short' }).toUpperCase()
-}
+// function formatDay(d: Date): string {
+//   return d.toLocaleDateString('uk-UA', { weekday: 'short' }).toUpperCase()
+// }
 
 const PaletteIcon: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -101,7 +101,7 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) =>
           {showClock && (
             <div className={styles.clock}>
               <span className={styles.clockTime}>{formatTime(now)}</span>
-              <span className={styles.clockDay}>{formatDay(now)}</span>
+              {/* <span className={styles.clockDay}>{formatDay(now)}</span> */}
             </div>
           )}
           {right}

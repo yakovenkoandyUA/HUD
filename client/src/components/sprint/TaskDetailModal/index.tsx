@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { useSprintStore, LABEL_COLORS } from '../../../store/sprintStore'
+import { useSprintStore } from '../../../store/sprintStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
+import LabelPicker from '../LabelPicker'
 import type { SprintLabel, UnifiedTodo } from '../../../types'
 import styles from './TaskDetailModal.module.css'
 
@@ -91,209 +92,10 @@ const ChecklistRow: React.FC<ChecklistRowProps> = ({ taskId, itemId, title, done
   )
 }
 
-// ── Label Picker Overlay ─────────────────────────────────────────────────────
-
-interface LabelPickerProps {
-  taskId: string
-  onClose: () => void
-}
-
-type PickerView = 'list' | 'create' | 'edit'
-
-const LabelPicker: React.FC<LabelPickerProps> = ({ taskId, onClose }) => {
-  const {
-    items, globalLabels,
-    addLabel, removeLabel,
-    addGlobalLabel, updateGlobalLabel, deleteGlobalLabel,
-  } = useSprintStore()
-
-  const task = items.find(i => i.id === taskId)
-  const taskLabels = task?.labels ?? []
-
-  const [pickerView, setPickerView] = useState<PickerView>('list')
-  const [search, setSearch]         = useState('')
-  const [editingId, setEditingId]   = useState<string | null>(null)
-  const [formTitle, setFormTitle]   = useState('')
-  const [formColor, setFormColor]   = useState(LABEL_COLORS[0])
-
-  const filteredLabels = globalLabels.filter(l =>
-    !search || l.title.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const handleToggle = (label: SprintLabel) => {
-    const isOn = taskLabels.some(l => l.id === label.id)
-    if (isOn) removeLabel(taskId, label.id)
-    else      addLabel(taskId, label)
-  }
-
-  const handleEditStart = (label: SprintLabel) => {
-    setEditingId(label.id)
-    setFormTitle(label.title)
-    setFormColor(label.color)
-    setPickerView('edit')
-  }
-
-  const handleCreateStart = () => {
-    setEditingId(null)
-    setFormTitle('')
-    setFormColor(LABEL_COLORS[0])
-    setPickerView('create')
-  }
-
-  const handleSave = () => {
-    if (pickerView === 'create') {
-      const label: SprintLabel = { id: crypto.randomUUID(), title: formTitle.trim(), color: formColor }
-      addGlobalLabel(label)
-      addLabel(taskId, label)
-    } else if (pickerView === 'edit' && editingId) {
-      updateGlobalLabel(editingId, { title: formTitle, color: formColor })
-    }
-    setPickerView('list')
-  }
-
-  const handleDelete = () => {
-    if (editingId) deleteGlobalLabel(editingId)
-    setPickerView('list')
-  }
-
-  return (
-    <div className={styles.pickerOverlay} onClick={onClose}>
-      <div className={styles.pickerSheet} onClick={e => e.stopPropagation()}>
-
-        {/* Header */}
-        <div className={styles.pickerHeader}>
-          <span className={styles.pickerTitle}>Мітки</span>
-          <button type="button" className={styles.pickerClose} onClick={onClose} aria-label="Закрити">✕</button>
-        </div>
-
-        {pickerView === 'list' ? (
-          <>
-            {/* Search */}
-            <div className={styles.pickerSearchWrap}>
-              <input
-                className={styles.pickerSearch}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Пошук..."
-                autoFocus
-              />
-            </div>
-
-            {/* Label list */}
-            <div className={styles.pickerList}>
-              {filteredLabels.map(label => {
-                const isOn = taskLabels.some(l => l.id === label.id)
-                return (
-                  <div key={label.id} className={styles.pickerRow}>
-                    <button
-                      type="button"
-                      className={`${styles.pickerCheck} ${isOn ? styles.pickerCheckOn : ''}`}
-                      onClick={() => handleToggle(label)}
-                      aria-label={isOn ? 'Прибрати' : 'Прикріпити'}
-                    >
-                      {isOn && (
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                          <path d="M1.5 4l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.pickerLabelBlock}
-                      style={{ background: label.color }}
-                      onClick={() => handleToggle(label)}
-                    >
-                      {label.title && <span className={styles.pickerLabelName}>{label.title}</span>}
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.pickerEditBtn}
-                      onClick={() => handleEditStart(label)}
-                      aria-label="Редагувати"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M8.5 1.5l2 2L3.5 10.5H1.5v-2L8.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                  </div>
-                )
-              })}
-              {filteredLabels.length === 0 && (
-                <p className={styles.pickerEmpty}>
-                  {search ? 'Нічого не знайдено' : 'Мітки відсутні'}
-                </p>
-              )}
-            </div>
-
-            <button type="button" className={styles.pickerCreateBtn} onClick={handleCreateStart}>
-              + Створити нову мітку
-            </button>
-
-            <button type="button" className={styles.pickerDoneBtn} onClick={onClose}>
-              Готово
-            </button>
-          </>
-        ) : (
-          /* Create / Edit form */
-          <div className={styles.labelForm}>
-            <button type="button" className={styles.labelFormBack} onClick={() => setPickerView('list')}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Мітки
-            </button>
-
-            <div className={styles.labelPreview} style={{ background: formColor }}>
-              {formTitle && <span className={styles.labelPreviewText}>{formTitle}</span>}
-            </div>
-
-            <p className={styles.labelFieldLabel}>Назва</p>
-            <input
-              className={styles.labelInput}
-              value={formTitle}
-              onChange={e => setFormTitle(e.target.value)}
-              placeholder="Назва мітки..."
-              autoFocus
-            />
-
-            <p className={styles.labelFieldLabel}>Колір</p>
-            <div className={styles.colorGrid}>
-              {LABEL_COLORS.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  className={styles.colorSwatch}
-                  style={{ background: c }}
-                  onClick={() => setFormColor(c)}
-                  aria-label={c}
-                  aria-pressed={formColor === c}
-                >
-                  {formColor === c && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6.5l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <div className={styles.labelFormActions}>
-              <button type="button" className={styles.labelSaveBtn} onClick={handleSave}>Зберегти</button>
-              {pickerView === 'edit' && (
-                <button type="button" className={styles.labelDeleteBtn} onClick={handleDelete}>Видалити</button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // ── Main component ───────────────────────────────────────────────────────────
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
-  const { items, updateTask, toggleItem, addChecklistItem } = useSprintStore()
+  const { items, updateTask, toggleItem, addChecklistItem, addLabel, removeLabel } = useSprintStore()
 
   // Keep a snapshot so the task content stays visible during the close animation
   const liveTask = items.find(i => i.id === taskId) ?? null
@@ -555,7 +357,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
       {/* ── Label Picker (separate fixed overlay, z-index 300) ── */}
       {labelPickerOpen && (
-        <LabelPicker taskId={task.id} onClose={() => setLabelPickerOpen(false)} />
+        <LabelPicker
+          selectedLabels={taskLabels}
+          onToggle={label => {
+            const isOn = taskLabels.some(l => l.id === label.id)
+            if (isOn) removeLabel(task.id, label.id)
+            else      addLabel(task.id, label)
+          }}
+          onClose={() => setLabelPickerOpen(false)}
+        />
       )}
 
       {/* ── Date Picker (separate fixed overlay, z-index 400) ── */}

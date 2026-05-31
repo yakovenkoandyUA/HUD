@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import PriorityBadge from '../../ui/PriorityBadge'
 import TaskDetailModal from '../../sprint/TaskDetailModal'
 import { useSprintStore } from '../../../store/sprintStore'
-import { getCurrentWeekStart } from '../../../utils/sprint'
 import type { TodoPriority } from '../../../types'
 import styles from './TasksAccordion.module.css'
 
@@ -51,48 +50,62 @@ const TasksAccordion: React.FC = () => {
   const navigate = useNavigate()
   const { items, toggleItem } = useSprintStore()
 
-  const weekStart = getCurrentWeekStart()
-  const sprintTasks = items.filter((t) => t.type === 'sprint' && t.weekStart === weekStart)
-  const sprintActive = sprintTasks.filter((t) => !t.done)
+  const todoItems  = items.filter((t) => t.type === 'todo')
+  const todoActive = todoItems.filter((t) => !t.done)
 
-  const [sprintOpen, setSprintOpen] = useState(() => sprintActive.length > 0)
+  const [questsOpen, setQuestsOpen]   = useState(() => items.filter(t => t.type === 'todo' && !t.done).length > 0)
   const [shoppingOpen, setShoppingOpen] = useState(false)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [completingShop, setCompletingShop] = useState<Set<string>>(new Set())
 
-  const sprintDone = sprintTasks.filter((t) => t.done).length
-  const sprintAllDone = sprintTasks.length > 0 && sprintDone === sprintTasks.length
-  const sprintPct = sprintTasks.length > 0 ? Math.round((sprintDone / sprintTasks.length) * 100) : 0
-  const sprintVisible = sprintActive.slice(0, SPRINT_LIMIT)
-  const sprintRest = sprintActive.length - SPRINT_LIMIT
+  const handleShopToggle = (id: string, isDone: boolean) => {
+    if (!isDone) {
+      setCompletingShop(prev => new Set(prev).add(id))
+      toggleItem(id)
+      setTimeout(() => {
+        setCompletingShop(prev => { const s = new Set(prev); s.delete(id); return s })
+      }, 380)
+    } else {
+      toggleItem(id)
+    }
+  }
+
+  const todoDone    = todoItems.filter((t) => t.done).length
+  const todoAllDone = todoItems.length > 0 && todoDone === todoItems.length
+  const todoPct     = todoItems.length > 0 ? Math.round((todoDone / todoItems.length) * 100) : 0
+  const todoVisible = todoActive.slice(0, SPRINT_LIMIT)
+  const todoRest    = todoActive.length - SPRINT_LIMIT
 
   const shoppingItems = items
-    .filter((t) => t.type !== 'sprint' && !t.done)
+    .filter((t) => t.type === 'shopping' && (!t.done || completingShop.has(t.id)))
     .sort((a, b) => PRIORITY_ORDER[a.priority ?? 'normal'] - PRIORITY_ORDER[b.priority ?? 'normal'])
   const shoppingVisible = shoppingItems.slice(0, SHOPPING_LIMIT)
-  const shoppingRest = shoppingItems.length - SHOPPING_LIMIT
-  const shoppingTotal = items.filter((t) => t.type !== 'sprint' && !t.done).length
+  const shoppingRest    = shoppingItems.length - SHOPPING_LIMIT
+  const shoppingTotal   = items.filter((t) => t.type === 'shopping' && !t.done).length
 
   return (
     <div className={styles.root}>
 
-      {/* ── Секція 1: ЗАДАЧІ ── */}
+      {/* ── Секція 1: КВЕСТИ ── */}
       <div className={styles.section}>
         <button
           type="button"
           className={styles.header}
-          onClick={() => setSprintOpen((v) => !v)}
-          aria-expanded={sprintOpen}
+          onClick={() => setQuestsOpen((v) => !v)}
+          aria-expanded={questsOpen}
         >
-          <span className={styles.headerLabel}>Задачі</span>
+          <span className={styles.headerLabel}>Квести</span>
           <div className={styles.headerRight}>
-            <span
-              className={styles.badge}
-              style={{ color: sprintAllDone ? 'var(--second)' : 'var(--accent)' }}
-            >
-              {sprintDone}/{sprintTasks.length}
-            </span>
+            {todoItems.length > 0 && (
+              <span
+                className={styles.badge}
+                style={{ color: todoAllDone ? 'var(--second)' : 'var(--accent)' }}
+              >
+                {todoDone}/{todoItems.length}
+              </span>
+            )}
             <svg
-              className={`${styles.arrow} ${sprintOpen ? styles.arrowOpen : ''}`}
+              className={`${styles.arrow} ${questsOpen ? styles.arrowOpen : ''}`}
               width="12" height="12" viewBox="0 0 12 12" fill="none"
             >
               <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -100,27 +113,27 @@ const TasksAccordion: React.FC = () => {
           </div>
         </button>
 
-        <div className={`${styles.progressWrap} ${sprintOpen ? styles.progressVisible : ''}`}>
+        <div className={`${styles.progressWrap} ${questsOpen ? styles.progressVisible : ''}`}>
           <div className={styles.progressTrack}>
             <div
               className={styles.progressFill}
               style={{
-                width:      `${sprintPct}%`,
-                background: sprintAllDone ? 'var(--second)' : 'var(--accent)',
+                width:      `${todoPct}%`,
+                background: todoAllDone ? 'var(--second)' : 'var(--accent)',
               }}
             />
           </div>
         </div>
 
-        <div className={`${styles.content} ${sprintOpen ? styles.contentOpen : ''}`}>
+        <div className={`${styles.content} ${questsOpen ? styles.contentOpen : ''}`}>
           <div className={styles.contentInner}>
-            {sprintTasks.length === 0 ? (
-              <p className={styles.emptyText}>Завдань немає</p>
-            ) : sprintActive.length === 0 ? (
-              <p className={styles.emptyText}>Всі задачі виконано ✓</p>
+            {todoItems.length === 0 ? (
+              <p className={styles.emptyText}>Квестів немає</p>
+            ) : todoActive.length === 0 ? (
+              <p className={styles.emptyText}>Всі квести виконано ✓</p>
             ) : (
               <ul className={styles.list}>
-                {sprintVisible.map((t) => (
+                {todoVisible.map((t) => (
                   <li key={t.id} className={styles.item}>
                     <button
                       type="button"
@@ -149,13 +162,13 @@ const TasksAccordion: React.FC = () => {
               </ul>
             )}
 
-            {sprintRest > 0 && (
+            {todoRest > 0 && (
               <button
                 type="button"
                 className={styles.moreBtn}
                 onClick={() => navigate('/sprint')}
               >
-                ще {sprintRest} →
+                ще {todoRest} →
               </button>
             )}
           </div>
@@ -202,17 +215,17 @@ const TasksAccordion: React.FC = () => {
             ) : (
               <ul className={styles.list}>
                 {shoppingVisible.map((t) => (
-                  <li key={t.id} className={styles.item}>
+                  <li key={t.id} className={`${styles.item} ${completingShop.has(t.id) ? styles.itemCompleting : ''}`}>
                     <button
                       type="button"
-                      className={`${styles.checkboxShop} ${t.done ? styles.checkboxShopDone : ''}`}
-                      onClick={(e) => { e.stopPropagation(); toggleItem(t.id) }}
+                      className={`${styles.checkboxShop} ${(t.done || completingShop.has(t.id)) ? styles.checkboxShopDone : ''}`}
+                      onClick={(e) => { e.stopPropagation(); handleShopToggle(t.id, t.done) }}
                       aria-label={t.done ? 'Позначити невиконаним' : 'Позначити виконаним'}
                     >
-                      {t.done ? <CheckIcon /> : <PlusIcon />}
+                      {(t.done || completingShop.has(t.id)) ? <CheckIcon /> : <PlusIcon />}
                     </button>
                     <span
-                      className={`${styles.itemTitle} ${t.done ? styles.itemDone : ''}`}
+                      className={`${styles.itemTitle} ${(t.done || completingShop.has(t.id)) ? styles.itemDone : ''}`}
                       onClick={() => setSelectedTaskId(t.id)}
                     >
                       {t.title}

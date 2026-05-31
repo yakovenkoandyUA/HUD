@@ -20,6 +20,7 @@ interface HeroCardProps {
   dailyBudget: number
   todaySpent: number
   race: F1Race | null
+  compact?: boolean
 }
 
 interface Countdown {
@@ -46,7 +47,7 @@ function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
-const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, race }) => {
+const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, race, compact }) => {
   const [countdown, setCountdown] = useState<Countdown | null>(
     race ? getCountdown(race.date) : null
   )
@@ -101,11 +102,10 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
           </div>
         </div>
 
-        {/* Divider */}
-        <div className={styles.divider} />
+        {/* Divider + right — hidden in compact mode */}
+        {!compact && <div className={styles.divider} />}
 
-        {/* Right — race countdown */}
-        <div className={styles.right}>
+        {!compact && <div className={styles.right}>
           {race ? (
             <>
               <div className={styles.raceLabel}>
@@ -138,7 +138,7 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
           ) : (
             <span className={styles.done}>Сезон<br />завершено</span>
           )}
-        </div>
+        </div>}
       </div>
     </Card>
   )

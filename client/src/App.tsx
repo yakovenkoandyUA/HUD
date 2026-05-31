@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import BottomNav from './components/layout/BottomNav'
 import ToastContainer from './components/ui/Toast'
@@ -6,6 +6,7 @@ import PwaInstallBanner from './components/ui/PwaInstallBanner'
 import CitySplash from './components/ui/CitySplash'
 import { usePwaInstall } from './hooks/usePwaInstall'
 import { useProfileStore } from './store/profileStore'
+import { usePushSubscription } from './hooks/usePushSubscription'
 import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
 import F1Screen from './screens/F1'
@@ -84,6 +85,22 @@ const App: React.FC = () => {
     () => sessionStorage.getItem('hud-city-splash') === '1'
   )
   const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
+  const { token } = useProfileStore()
+  const { isSupported, isSubscribed, subscribe } = usePushSubscription()
+
+  useEffect(() => {
+    if (!token || !isSupported || isSubscribed) return
+    async function trySubscribe() {
+      const perm = Notification.permission
+      if (perm === 'denied') return
+      const granted = perm === 'granted'
+        ? true
+        : await Notification.requestPermission().then(p => p === 'granted')
+      if (granted) subscribe()
+    }
+    trySubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, isSupported, isSubscribed])
 
   const showBanner = !isDismissed && (isInstallable || isIOS)
 

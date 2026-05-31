@@ -58,6 +58,18 @@
   background: var(--second-soft);
 }
 
+.checkBoxShopping { border-color: #7F77DD; color: #7F77DD; }
+.done .checkBoxShopping {
+  border-color: #7F77DD;
+  background: rgba(127, 119, 221, 0.12);
+}
+
+.checkBoxTodo { border-color: #EF9F27; color: #EF9F27; }
+.done .checkBoxTodo {
+  border-color: #EF9F27;
+  background: rgba(239, 159, 39, 0.12);
+}
+
 /* ── Body (clickable) ── */
 .body {
   flex: 1;
