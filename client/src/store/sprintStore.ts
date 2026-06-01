@@ -277,7 +277,7 @@ export const useSprintStore = create<TodoState>()(
             createdAt: now,
             ...(t.repeat && t.repeat !== 'none' && { repeat: t.repeat as UnifiedTodo['repeat'] }),
             ...(t.nextDue && { nextDue: t.nextDue }),
-            ...(t.repeatConfig && { repeatConfig: t.repeatConfig as RepeatConfig }),
+            ...(t.repeatConfig && { repeatConfig: t.repeatConfig as unknown as RepeatConfig }),
             ...(t.repeatDay !== undefined && { repeatDay: t.repeatDay }),
             ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
           }))
@@ -289,7 +289,7 @@ export const useSprintStore = create<TodoState>()(
             createdAt: now,
             ...(t.repeat && t.repeat !== 'none' && { repeat: t.repeat as UnifiedTodo['repeat'] }),
             ...(t.nextDue && { nextDue: t.nextDue }),
-            ...(t.repeatConfig && { repeatConfig: t.repeatConfig as RepeatConfig }),
+            ...(t.repeatConfig && { repeatConfig: t.repeatConfig as unknown as RepeatConfig }),
             ...(t.repeatDay !== undefined && { repeatDay: t.repeatDay }),
             ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
           }))
