@@ -116,7 +116,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
                   dayRoutines.map(t => {
                     const isDone      = completing.has(t.id)
                     const repeatLabel = getRepeatLabel(t)
-                    const circleClass = t.type === 'shopping' ? styles.circleGold : styles.circlePurple
+                    const circleClass = styles.circleGold
 
                     return (
                       <div key={t.id} className={`${styles.taskRow} ${isDone ? styles.taskRowDone : ''}`}>
