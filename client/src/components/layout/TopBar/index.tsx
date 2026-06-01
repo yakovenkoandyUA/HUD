@@ -62,10 +62,10 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) =>
 
   const logoEl = onLogoLongPress ? (
     <button type="button" className={styles.logoBtn} aria-label="Hold for NASA APOD" {...longPress}>
-      <MimirLogo />
+      <MimirLogo className={styles.logoSvg} />
     </button>
   ) : (
-    <MimirLogo />
+    <MimirLogo className={styles.logoSvg} />
   )
 
   return (
