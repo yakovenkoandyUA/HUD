@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import TopBar from '../../components/layout/TopBar'
+import AppHeader from '../../components/AppHeader'
 import WatchlistHero from '../../components/watchlist/WatchlistHero'
 import WatchlistSearch from '../../components/watchlist/WatchlistSearch'
 import WatchlistGrid from '../../components/watchlist/WatchlistGrid'
@@ -103,9 +103,7 @@ const Watchlist: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <TopBar title="Незабутько" right={
-        <span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />
-      } />
+      <AppHeader right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
 
       {/* ── "Дивлюсь зараз" hero strip ── */}
       {watchingItems.length > 0 && (

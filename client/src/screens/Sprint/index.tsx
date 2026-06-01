@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import TopBar from '../../components/layout/TopBar'
+import AppHeader from '../../components/AppHeader'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import SprintProgress from '../../components/sprint/SprintProgress'
 import TaskCard from '../../components/sprint/TaskCard'
@@ -304,7 +304,7 @@ const Sprint: React.FC = () => {
 
 	return (
 		<div className={styles.screen}>
-			<TopBar title="Квести" right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
+			<AppHeader right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
 
 			<div className={styles.content}>
 				<WeekHeader weekStart={weekStart} onExpand={() => setWeekExpanded(true)} routineItems={routineItems} />

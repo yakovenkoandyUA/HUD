@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import TopBar from '../../components/layout/TopBar'
+import AppHeader from '../../components/AppHeader'
 import BalanceHero from '../../components/finance/BalanceHero'
 import TodayCard from '../../components/finance/TodayCard'
 import StatsGrid from '../../components/finance/StatsGrid'
@@ -86,12 +86,7 @@ const Finance: React.FC = () => {
 
   return (
 		<div className={styles.screen}>
-			<TopBar title="Фінанси" right={
-        <span
-          title={syncStatus}
-          style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }}
-        />
-      } />
+			<AppHeader right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
 			<div className={styles.content}>
 				<GoalsList />
 

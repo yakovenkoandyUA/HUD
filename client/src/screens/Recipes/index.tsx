@@ -4,7 +4,7 @@ import RecipeCard from '../../components/recipes/RecipeCard'
 import RecipeForm from '../../components/recipes/RecipeForm'
 import CategoriesSlider from '../../components/recipes/CategoriesSlider'
 import Modal from '../../components/ui/Modal'
-import ThemePicker from '../../components/layout/ThemePicker'
+import AppHeader from '../../components/AppHeader'
 import { useRecipesStore } from '../../store/recipesStore'
 import { useUiStore } from '../../store/uiStore'
 // import { useSprintStore } from '../../store/sprintStore'
@@ -12,15 +12,6 @@ import type { Recipe } from '../../types'
 import styles from './Recipes.module.css'
 
 const GHOST_COUNT = 6
-
-const PaletteIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <rect x="1"  y="1"  width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="9"  y="1"  width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="1"  y="9"  width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="9"  y="9"  width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-  </svg>
-)
 
 // const BackIcon: React.FC = () => (
 //   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -43,7 +34,6 @@ const Recipes: React.FC = () => {
   // const { items: sprintItems } = useSprintStore()
   // const cartCount = sprintItems.filter(it => it.type === 'shopping' && !it.done && it.recipeId).length
   const [showForm, setShowForm] = useState(false)
-  const [showPicker, setShowPicker] = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
   const [tab, setTab] = useState<'all' | 'saved'>('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -79,19 +69,7 @@ const Recipes: React.FC = () => {
 
   return (
 		<div className={styles.screen}>
-			{/* ── Header ── */}
-			<header className={styles.header}>
-				<h1 className={styles.logo}>MIMIR</h1>
-				<div className={styles.headerRight}>
-					{/* <button type="button" className={styles.headerBtn} onClick={() => navigate('/sprint')} aria-label="Список покупок">
-						<CartIcon />
-						{cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
-					</button> */}
-					<button type="button" className={styles.headerBtn} onClick={() => setShowPicker(true)} aria-label="Тема">
-						<PaletteIcon />
-					</button>
-				</div>
-			</header>
+			<AppHeader />
 
 			<div className={styles.content}>
 				{/* ── Tabs ── */}
@@ -153,9 +131,6 @@ const Recipes: React.FC = () => {
 			</button>
 
 			{/* ── Modals ── */}
-			<Modal isOpen={showPicker} onClose={() => setShowPicker(false)} title="Тема">
-				<ThemePicker onClose={() => setShowPicker(false)} />
-			</Modal>
 			<Modal
 				isOpen={showForm}
 				onClose={() => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import TopBar from '../../components/layout/TopBar'
+import AppHeader from '../../components/AppHeader'
 import MemoryCard from '../../components/memories/MemoryCard'
 import AddMemoryModal from '../../components/memories/AddMemoryModal'
 import type { AddMemoryData } from '../../components/memories/AddMemoryModal'
@@ -35,7 +35,7 @@ const MemoriesScreen: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <TopBar />
+      <AppHeader />
 
 
       {memories.length === 0 ? (

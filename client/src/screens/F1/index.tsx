@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import TopBar from '../../components/layout/TopBar'
+import AppHeader from '../../components/AppHeader'
 import NextRaceCard from '../../components/f1/NextRaceCard'
 import RaceCalendarList from '../../components/f1/RaceCalendarList'
 import ChampionshipTable from '../../components/f1/ChampionshipTable'
@@ -43,7 +43,7 @@ const F1Screen: React.FC = () => {
   return (
     <div className={styles.screen}>
       {showBg && <div ref={bgRef} className={styles.bg} />}
-      <TopBar title="F1 2026" />
+      <AppHeader />
       <div ref={contentRef} className={styles.content}>
         {nextRace ? (
           <NextRaceCard race={nextRace} />

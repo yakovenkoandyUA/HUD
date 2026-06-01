@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import TopBar from '../../components/layout/TopBar'
+import AppHeader from '../../components/AppHeader'
 import HeroCard from '../../components/dashboard/HeroCard'
 import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
 import TasksAccordion from '../../components/dashboard/TasksAccordion'
@@ -71,7 +71,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className={styles.screen}>
       {isRetro && <div ref={bgRef} className={styles.bg} />}
-      <TopBar showClock onLogoLongPress={handleLogoLongPress} />
+      <AppHeader onLogoLongPress={handleLogoLongPress} />
       <div ref={contentRef} className={styles.content}>
         {raceThisWeek ? (
           <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
