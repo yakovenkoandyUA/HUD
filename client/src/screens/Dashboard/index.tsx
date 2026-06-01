@@ -14,7 +14,7 @@ import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getRaceThisWeek } from '../../utils/f1'
-import { getCurrentWeekStart } from '../../utils/sprint'
+import { getCurrentWeekStart, isRecurring } from '../../utils/sprint'
 import { calcDailyBudget } from './helpers'
 import type { ExpenseCategory } from '../../types'
 import styles from './Dashboard.module.css'
@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const sprintItems  = useSprintStore(s => s.items)
-  const routineItems = sprintItems.filter(t => t.repeat && t.repeat !== 'none')
+  const routineItems = sprintItems.filter(t => isRecurring(t))
   const { showToast, theme } = useUiStore()
   const [showExpense, setShowExpense] = useState(false)
   const [showApod, setShowApod] = useState(false)

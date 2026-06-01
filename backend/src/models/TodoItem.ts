@@ -5,6 +5,12 @@ export interface ITodoItem extends Document {
   priority: 'urgent' | 'normal' | 'low'
   done: boolean
   dueDate: string
+  type: string
+  repeat: string
+  nextDue?: string
+  repeatDay?: number
+  repeatConfig?: Record<string, unknown>
+  repeatStartDate?: string
   userId: string
 }
 
@@ -13,6 +19,12 @@ const schema = new Schema<ITodoItem>({
   priority: { type: String, enum: ['urgent', 'normal', 'low'], default: 'normal' },
   done:     { type: Boolean, default: false },
   dueDate:  { type: String, default: '' },
+  type:     { type: String, default: 'todo' },
+  repeat:   { type: String, default: 'none' },
+  nextDue:  { type: String },
+  repeatDay: { type: Number },
+  repeatConfig: { type: Schema.Types.Mixed },
+  repeatStartDate: { type: String },
   userId:   { type: String, required: true, index: true },
 }, { timestamps: true })
 

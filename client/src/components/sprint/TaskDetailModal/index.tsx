@@ -3,6 +3,7 @@ import { useSprintStore } from '../../../store/sprintStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
+import { isRecurring } from '../../../utils/sprint'
 import type { RepeatConfig, UnifiedTodo } from '../../../types'
 import styles from './TaskDetailModal.module.css'
 
@@ -239,8 +240,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   // eslint-disable-next-line react-hooks/refs
   if (!mounted || !task) return null
 
-  // eslint-disable-next-line react-hooks/refs
-  const isRecurring  = !!(task.repeat && task.repeat !== 'none')
+  const recurring  = isRecurring(task)
   const checklist    = task.checklist ?? []
   const checkDone    = checklist.filter(c => c.done).length
   const checkPct     = checklist.length > 0 ? Math.round((checkDone / checklist.length) * 100) : 0
@@ -313,7 +313,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               </div>
             </div>
 
-            {isRecurring ? (
+            {recurring ? (
               <>
                 {/* ── ПОВТОРЮВАНІСТЬ ── */}
                 <div className={styles.section}>

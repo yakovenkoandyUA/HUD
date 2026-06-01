@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { UnifiedTodo, SprintTag, TodoPriority, SprintLabel, ChecklistItem } from '../types'
+import type { UnifiedTodo, SprintTag, TodoPriority, SprintLabel, ChecklistItem, RepeatConfig } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
+import { isRecurring } from '../utils/sprint'
 
 const DEFAULT_LABELS: SprintLabel[] = [
   { id: 'default-1', title: '',        color: '#216E4E' },
@@ -66,6 +67,13 @@ interface ApiTask {
   done: boolean
   weekNumber: number
   year: number
+  weekStart?: string
+  type?: string
+  repeat?: string
+  nextDue?: string
+  repeatDay?: number
+  repeatConfig?: Record<string, unknown>
+  repeatStartDate?: string
 }
 
 interface ApiTodo {
@@ -74,6 +82,12 @@ interface ApiTodo {
   priority: TodoPriority
   done: boolean
   dueDate: string
+  type?: string
+  repeat?: string
+  nextDue?: string
+  repeatDay?: number
+  repeatConfig?: Record<string, unknown>
+  repeatStartDate?: string
 }
 
 // ── Repeat helpers ────────────────────────────────────────────────────────────
@@ -257,17 +271,27 @@ export const useSprintStore = create<TodoState>()(
 
           const sprintItems: UnifiedTodo[] = apiTasks.map(t => ({
             id: t._id, title: t.title, done: t.done,
-            type: 'sprint' as const,
+            type: (t.type as UnifiedTodo['type']) || 'sprint',
             tag: (t.tag as SprintTag) || 'dev',
-            weekStart: isoWeekToMonday(t.year, t.weekNumber),
+            weekStart: t.weekStart ?? isoWeekToMonday(t.year, t.weekNumber),
             createdAt: now,
+            ...(t.repeat && t.repeat !== 'none' && { repeat: t.repeat as UnifiedTodo['repeat'] }),
+            ...(t.nextDue && { nextDue: t.nextDue }),
+            ...(t.repeatConfig && { repeatConfig: t.repeatConfig as RepeatConfig }),
+            ...(t.repeatDay !== undefined && { repeatDay: t.repeatDay }),
+            ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
           }))
 
           const otherItems: UnifiedTodo[] = apiTodos.map(t => ({
             id: t._id, title: t.title, done: t.done,
-            type: 'shopping' as const,
+            type: (t.type as UnifiedTodo['type']) ?? 'shopping',
             priority: t.priority,
             createdAt: now,
+            ...(t.repeat && t.repeat !== 'none' && { repeat: t.repeat as UnifiedTodo['repeat'] }),
+            ...(t.nextDue && { nextDue: t.nextDue }),
+            ...(t.repeatConfig && { repeatConfig: t.repeatConfig as RepeatConfig }),
+            ...(t.repeatDay !== undefined && { repeatDay: t.repeatDay }),
+            ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
           }))
 
           // Merge API items with existing local-only fields.
@@ -346,7 +370,18 @@ export const useSprintStore = create<TodoState>()(
         } else {
           authFetch('/api/sprint/todos', {
             method: 'POST',
-            body: JSON.stringify({ title: item.title, priority: item.priority ?? 'normal', dueDate: '', done: false }),
+            body: JSON.stringify({
+              title: item.title,
+              type: item.type,
+              priority: item.priority ?? 'normal',
+              dueDate: '',
+              done: false,
+              repeat: item.repeat ?? 'none',
+              ...(item.nextDue && { nextDue: item.nextDue }),
+              ...(item.repeatConfig && { repeatConfig: item.repeatConfig }),
+              ...(item.repeatDay !== undefined && { repeatDay: item.repeatDay }),
+              ...(item.repeatStartDate && { repeatStartDate: item.repeatStartDate }),
+            }),
           })
             .then(r => { if (!r.ok) throw new Error(); return r.json() })
             .then((created: ApiTodo) => set(s => ({
@@ -377,7 +412,18 @@ export const useSprintStore = create<TodoState>()(
                 const { week, year } = getISOWeekYear(ws)
                 return JSON.stringify({ title: item.title, tag: item.tag ?? 'dev', weekNumber: week, year, done: false })
               })()
-            : JSON.stringify({ title: item.title, priority: item.priority ?? 'normal', dueDate: '', done: false })
+            : JSON.stringify({
+                title: item.title,
+                type: item.type,
+                priority: item.priority ?? 'normal',
+                dueDate: '',
+                done: false,
+                repeat: item.repeat ?? 'none',
+                ...(item.nextDue && { nextDue: item.nextDue }),
+                ...(item.repeatConfig && { repeatConfig: item.repeatConfig }),
+                ...(item.repeatDay !== undefined && { repeatDay: item.repeatDay }),
+                ...(item.repeatStartDate && { repeatStartDate: item.repeatStartDate }),
+              })
           const endpoint = item.type === 'sprint' ? '/api/sprint/tasks' : '/api/sprint/todos'
           return authFetch(endpoint, { method: 'POST', body })
             .then(r => r.ok ? r.json() : Promise.reject())
@@ -394,7 +440,7 @@ export const useSprintStore = create<TodoState>()(
         if (!item) return
 
         // Recurring task: reset with new nextDue instead of marking done
-        if (item.repeat && item.repeat !== 'none' && !item.done) {
+        if (isRecurring(item) && !item.done) {
           const nextDue = calcNextDue(item)
           set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: false, nextDue } : i) }))
           return

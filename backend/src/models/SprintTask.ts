@@ -6,6 +6,14 @@ export interface ISprintTask extends Document {
   done: boolean
   weekNumber: number
   year: number
+  weekStart?: string
+  type: string
+  repeat: string
+  nextDue?: string
+  repeatDay?: number
+  repeatConfig?: Record<string, unknown>
+  repeatStartDate?: string
+  priority?: string
   userId: string
 }
 
@@ -15,6 +23,14 @@ const schema = new Schema<ISprintTask>({
   done:       { type: Boolean, default: false },
   weekNumber: { type: Number, required: true },
   year:       { type: Number, required: true },
+  weekStart:  { type: String },
+  type:       { type: String, default: 'sprint' },
+  repeat:     { type: String, default: 'none' },
+  nextDue:    { type: String },
+  repeatDay:  { type: Number },
+  repeatConfig: { type: Schema.Types.Mixed },
+  repeatStartDate: { type: String },
+  priority:   { type: String, default: 'normal' },
   userId:     { type: String, required: true, index: true },
 }, { timestamps: true })
 

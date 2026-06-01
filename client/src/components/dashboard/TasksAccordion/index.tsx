@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import PriorityBadge from '../../ui/PriorityBadge'
 import TaskDetailModal from '../../sprint/TaskDetailModal'
 import { useSprintStore } from '../../../store/sprintStore'
+import { isRegular } from '../../../utils/sprint'
 import type { TodoPriority } from '../../../types'
 import styles from './TasksAccordion.module.css'
 
@@ -50,7 +51,7 @@ const TasksAccordion: React.FC = () => {
   const navigate = useNavigate()
   const { items, toggleItem } = useSprintStore()
 
-  const todoItems  = items.filter((t) => t.type === 'todo' && (!t.repeat || t.repeat === 'none'))
+  const todoItems  = items.filter((t) => t.type === 'todo' && isRegular(t))
   const todoActive = todoItems.filter((t) => !t.done)
 
   const [questsOpen, setQuestsOpen]   = useState(false)

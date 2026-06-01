@@ -1,5 +1,13 @@
 import type { UnifiedTodo } from '../types'
 
+export function isRecurring(task: UnifiedTodo): boolean {
+  return !!(task.repeat && task.repeat !== 'none')
+}
+
+export function isRegular(task: UnifiedTodo): boolean {
+  return !task.repeat || task.repeat === 'none'
+}
+
 export function getCurrentWeekStart(): string {
   const d = new Date()
   const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - (d.getDay() + 6) % 7)
@@ -12,7 +20,7 @@ function parseIso(iso: string): Date {
 }
 
 export function isRoutineDueOnDay(task: UnifiedTodo, day: Date): boolean {
-  if (!task.repeat || task.repeat === 'none') return false
+  if (isRegular(task)) return false
   if (task.repeat === 'daily') return true
   if (task.repeat === 'weekly') {
     if (!task.nextDue) return false
