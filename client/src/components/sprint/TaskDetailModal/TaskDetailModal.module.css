@@ -406,6 +406,47 @@
 }
 .checklistAddBtn:disabled { opacity: 0.4; cursor: default; }
 
+/* ── Info row (repeat / next due) ── */
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.infoRow:hover { border-color: var(--border2); }
+
+.infoRowIcon {
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.infoRowText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editIcon {
+  color: var(--text3);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.infoRow:hover .editIcon { color: var(--accent); }
+
 /* ── Description ── */
 .descTextarea {
   width: 100%;

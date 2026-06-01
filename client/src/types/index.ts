@@ -102,6 +102,7 @@ export interface UnifiedTodo {
   repeatDay?: number
   nextDue?: string
   repeatConfig?: RepeatConfig
+  repeatStartDate?: string
 }
 
 export interface RepeatConfig {

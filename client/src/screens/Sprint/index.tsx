@@ -7,6 +7,7 @@ import TaskDetailModal from '../../components/sprint/TaskDetailModal'
 import WeekExpandedView from '../../components/sprint/WeekExpandedView'
 import LabelPicker from '../../components/sprint/LabelPicker'
 import RepeatConfigScreen from '../../components/sprint/RepeatConfigScreen'
+import CustomDatePicker from '../../components/ui/CustomDatePicker'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import { useSprintStore } from '../../store/sprintStore'
@@ -91,6 +92,25 @@ function formatRepeatActiveLabel(repeat: RepeatType, config: RepeatConfig | null
 	return 'Повтор'
 }
 
+const START_DATE_MONTHS = ['січ.','лют.','бер.','квіт.','трав.','черв.','лип.','серп.','вер.','жовт.','лист.','груд.']
+
+function formatStartDate(iso: string): string {
+	const [y, m, d] = iso.split('-').map(Number)
+	return `${String(d).padStart(2, '0')} ${START_DATE_MONTHS[m - 1]} ${y}`
+}
+
+function nextWeekDayFrom(from: Date, weekDays: number[]): string {
+	const sorted = [...weekDays].sort((a, b) => a - b)
+	for (let i = 0; i < 7; i++) {
+		const d = new Date(from)
+		d.setDate(from.getDate() + i)
+		if (sorted.includes((d.getDay() + 6) % 7)) {
+			return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+		}
+	}
+	return `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`
+}
+
 function formatRoutineDue(dateStr: string): string {
 	const today  = new Date(); today.setHours(0, 0, 0, 0)
 	const target = new Date(dateStr); target.setHours(0, 0, 0, 0)
@@ -157,6 +177,8 @@ const Sprint: React.FC = () => {
 	const [showRepeatList, setShowRepeatList] = useState(false)
 	const [showRepeatConfigScreen, setShowRepeatConfigScreen] = useState(false)
 	const [newRepeatConfig, setNewRepeatConfig] = useState<RepeatConfig | null>(null)
+	const [repeatStartDate, setRepeatStartDate] = useState(() => new Date().toISOString().split('T')[0])
+	const [showStartDatePicker, setShowStartDatePicker] = useState(false)
 	const [routinesOpen, setRoutinesOpen]     = useState(false)
 	const [completingRoutines, setCompletingRoutines] = useState<Set<string>>(new Set())
 	const [detailTaskId, setDetailTaskId]     = useState<string | null>(null)
@@ -220,11 +242,20 @@ const Sprint: React.FC = () => {
 		setNewRepeatConfig(null)
 		setShowRepeatList(false)
 		setShowRepeatConfigScreen(false)
+		setRepeatStartDate(new Date().toISOString().split('T')[0])
+		setShowStartDatePicker(false)
 	}
 
 	const handleAdd = (e: React.FormEvent) => {
 		e.preventDefault()
 		if (!newTitle.trim()) return
+		const hasStartDate = newRepeat !== 'none' && newRepeat !== 'daily' && newRepeat !== 'custom'
+		const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0, 0, 0, 0)
+		const initialNextDue = newRepeat === 'daily'
+			? `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+			: newRepeat === 'custom' && newRepeatConfig?.weekDays?.length
+				? nextWeekDayFrom(tomorrow, newRepeatConfig.weekDays)
+				: hasStartDate ? repeatStartDate : new Date().toISOString().split('T')[0]
 		addItem({
 			type:     newType,
 			title:    newTitle.trim(),
@@ -234,7 +265,8 @@ const Sprint: React.FC = () => {
 			...(newType === 'todo' && newRepeat !== 'none' ? {
 				repeat:       newRepeat,
 				repeatConfig: newRepeatConfig ?? { interval: 1, unit: repeatToUnit(newRepeat as Exclude<RepeatType, 'none' | 'custom'>), endsType: 'never' as const },
-				nextDue:      new Date().toISOString().split('T')[0],
+				nextDue:      initialNextDue,
+				...(hasStartDate ? { repeatStartDate } : {}),
 			} : {}),
 		})
 		resetForm()
@@ -255,7 +287,7 @@ const Sprint: React.FC = () => {
 			<TopBar title="Квести" right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
 
 			<div className={styles.content}>
-				<WeekHeader weekStart={weekStart} onExpand={() => setWeekExpanded(true)} />
+				<WeekHeader weekStart={weekStart} onExpand={() => setWeekExpanded(true)} routineItems={routineItems} />
 				<SprintProgress done={done} total={weekSprintItems.length} />
 
 				{/* ── Рутини accordion ── */}
@@ -278,13 +310,13 @@ const Sprint: React.FC = () => {
 										<button type="button" className={styles.routineCheck} onClick={() => handleRoutineToggle(t.id)} aria-label="Виконати">
 											<span className={styles.routineCheckBox}>{completingRoutines.has(t.id) ? '✓' : ''}</span>
 										</button>
-										<div className={styles.routineBody}>
+										<button type="button" className={styles.routineBody} onClick={() => setDetailTaskId(t.id)}>
 											<span className={styles.routineTitle}>{t.title}</span>
 											<div className={styles.routineMeta}>
 												<span className={styles.repeatBadge}>{REPEAT_BADGE[t.repeat!] ?? t.repeat}</span>
 												{t.nextDue && <span className={styles.routineDue}>{formatRoutineDue(t.nextDue)}</span>}
 											</div>
-										</div>
+										</button>
 										<button type="button" className={styles.del} onClick={() => deleteItem(t.id)} aria-label="Видалити">
 											✕
 										</button>
@@ -462,6 +494,20 @@ const Sprint: React.FC = () => {
 								)}
 							</div>
 
+							{/* Start date: shown for weekly / monthly / yearly */}
+							{(newRepeat === 'weekly' || newRepeat === 'monthly' || newRepeat === 'yearly') && !showRepeatList && (
+								<div className={styles.startDateRow}>
+									<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+										<rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+										<path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+									</svg>
+									<span className={styles.startDateLabel}>Починаючи з:</span>
+									<button type="button" className={styles.dateDisplayBtn} onClick={() => setShowStartDatePicker(true)}>
+										{formatStartDate(repeatStartDate)}
+									</button>
+								</div>
+							)}
+
 							{/* Repeat option list */}
 							{showRepeatList && (
 								<div className={styles.repeatList}>
@@ -503,7 +549,15 @@ const Sprint: React.FC = () => {
 				/>
 			)}
 
-			{weekExpanded && <WeekExpandedView weekStart={weekStart} routineItems={routineItems} onToggle={toggleItem} onClose={() => setWeekExpanded(false)} />}
+			{showStartDatePicker && (
+				<CustomDatePicker
+					value={repeatStartDate}
+					onChange={date => { setRepeatStartDate(date); setShowStartDatePicker(false) }}
+					onClose={() => setShowStartDatePicker(false)}
+				/>
+			)}
+
+			{weekExpanded && <WeekExpandedView weekStart={weekStart} routineItems={routineItems} onToggle={toggleItem} onOpenDetail={setDetailTaskId} onClose={() => setWeekExpanded(false)} />}
 
 			{showLabelPicker && (
 				<LabelPicker

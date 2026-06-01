@@ -118,6 +118,10 @@
   box-shadow: 0 0 5px var(--accent-glow);
 }
 
+.dotRoutine {
+  background: #7F77DD;
+}
+
 .dotDim {
   background: var(--text3);
   opacity: 0.4;

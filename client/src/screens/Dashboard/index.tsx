@@ -10,6 +10,7 @@ import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import { useNasaApod } from '../../hooks/useNasaApod'
 import { useFinanceStore } from '../../store/financeStore'
+import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getRaceThisWeek } from '../../utils/f1'
@@ -21,6 +22,7 @@ import styles from './Dashboard.module.css'
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
+  const routineItems = useSprintStore(s => s.items.filter(t => t.repeat && t.repeat !== 'none'))
   const { showToast, theme } = useUiStore()
   const [showExpense, setShowExpense] = useState(false)
   const [showApod, setShowApod] = useState(false)
@@ -73,7 +75,7 @@ const Dashboard: React.FC = () => {
         {raceThisWeek ? (
           <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
         ) : (
-          <WeekHeader weekStart={weekStart} hideTitle />
+          <WeekHeader weekStart={weekStart} hideTitle routineItems={routineItems} />
         )}
         <TasksAccordion />
         <HeroCard

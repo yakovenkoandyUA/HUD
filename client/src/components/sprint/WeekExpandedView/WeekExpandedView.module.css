@@ -61,180 +61,136 @@
 }
 .closeBtn:hover { color: var(--text); background: var(--surface2); }
 
-/* ── Scrollable list ── */
+/* ── Timeline ── */
 
-.list {
+.timeline {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 0 40px;
+  padding: 8px 0 40px;
 }
 
-/* ── Empty state ── */
-
-.empty {
+.timelineRow {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-}
-
-.emptyText {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text3);
-  opacity: 0.5;
-}
-
-/* ── Day section ── */
-
-.daySection {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
 }
-.daySection:last-child { border-bottom: none; }
+.timelineRow:last-child { border-bottom: none; }
 
-/* ── Day header ── */
+.timelineRowEmpty { opacity: 0.35; }
 
-.dayHeader {
+/* ── Day column ── */
+
+.dayCol {
+  width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.dayAbbr {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+.dayNum {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text2);
+  line-height: 1.1;
+}
+
+.dayColToday .dayAbbr { color: var(--accent); }
+.dayColToday .dayNum  { color: var(--accent); }
+
+/* ── Task column ── */
+
+.taskCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 3px;
+}
+
+.emptyDash {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text3);
+}
+
+/* ── Task row ── */
+
+.taskRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px 10px;
-  background: var(--bg2);
-  position: sticky;
-  top: 0;
-  z-index: 1;
 }
 
-.dayHeaderToday {
-  background: var(--accent-soft);
-}
-
-.dayLabel {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text3);
-  min-width: 24px;
-}
-
-.dayLabelToday { color: var(--accent); }
-
-.dayDate {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text2);
-}
-
-.dayDateToday { color: var(--accent); }
-
-.todayDot {
-  display: block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent-glow);
-  flex-shrink: 0;
-}
-
-/* ── Routine list ── */
-
-.routineList {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Routine row ── */
-
-@keyframes routineDone {
+@keyframes taskDone {
   0%   { opacity: 1; }
-  40%  { background: var(--positive); opacity: 1; }
+  40%  { opacity: 1; }
   100% { opacity: 0.28; }
 }
 
-.routineRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 16px;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  border-top: 1px solid var(--border);
-  transition: background 0.12s;
-}
-.routineRow:hover { background: rgba(255, 255, 255, 0.03); }
-
-.routineRowDone {
-  animation: routineDone 0.38s ease forwards;
+.taskRowDone {
+  animation: taskDone 0.38s ease forwards;
   pointer-events: none;
 }
 
-/* ── Check circle ── */
+/* ── Circle toggle ── */
 
-.routineCheck {
+.circle {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 1.5px solid var(--accent-dim);
-  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  background: none;
+  padding: 0;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
-  transition: border-color 0.15s, background 0.15s;
+  transition: opacity 0.15s;
 }
-.routineRow:hover .routineCheck { border-color: var(--accent); }
 
-/* ── Title ── */
+.circlePurple { border-color: #7F77DD; color: #7F77DD; }
+.circleGold   { border-color: var(--accent); color: var(--accent); }
 
-.routineTitle {
+/* ── Task name ── */
+
+.taskName {
   flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
 }
 
-/* ── Meta badges ── */
+/* ── Repeat label ── */
 
-.routineMeta {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.repeatLabel {
   flex-shrink: 0;
-}
-
-.repeatBadge {
   font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: var(--accent-soft);
-  border-radius: 4px;
-  padding: 2px 5px;
-}
-
-.dueBadge {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text3);
-  white-space: nowrap;
+  font-weight: 600;
 }
-
-.dueBadgeOverdue { color: var(--negative); }
-.dueBadgeToday   { color: var(--positive); font-weight: 600; }

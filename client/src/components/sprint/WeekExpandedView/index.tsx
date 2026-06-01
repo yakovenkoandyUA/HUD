@@ -1,33 +1,31 @@
 import React, { useState } from 'react'
 import type { UnifiedTodo } from '../../../types'
+import { isRoutineDueOnDay } from '../../../utils/sprint'
 import styles from './WeekExpandedView.module.css'
 
 /**
  * WeekExpandedView
  * ----------------
- * Повноекранний overlay тижневих рутин у вигляді вертикального списку.
- * Показує лише дні, що мають хоча б одну рутину. Тап → відмітити виконаною.
+ * Повноекранний overlay тижневих рутин у вигляді timeline.
+ * Зліва — день (аббревіатура + число), справа — задачі.
+ * Сьогодні виділено золотим; дні без задач — 35% opacity.
  *
  * Props:
- * @prop {string}               weekStart    — ISO дата понеділка ('YYYY-MM-DD')
- * @prop {UnifiedTodo[]}        routineItems — задачі з repeat !== 'none'
- * @prop {(id: string) => void} onToggle     — перемикання рутини
- * @prop {() => void}           onClose      — закрити overlay
+ * @prop {string}               weekStart      — ISO дата понеділка ('YYYY-MM-DD')
+ * @prop {UnifiedTodo[]}        routineItems   — задачі з repeat !== 'none'
+ * @prop {(id: string) => void} onToggle       — відмітити як виконану
+ * @prop {(id: string) => void} onOpenDetail   — відкрити модальне редагування
+ * @prop {() => void}           onClose        — закрити overlay
  */
 interface WeekExpandedViewProps {
   weekStart: string
   routineItems: UnifiedTodo[]
   onToggle: (id: string) => void
+  onOpenDetail?: (id: string) => void
   onClose: () => void
 }
 
 const DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
-
-const REPEAT_BADGE: Record<string, string> = {
-  daily:   'ЩОДНЯ',
-  weekly:  'ЩОТИЖНЯ',
-  monthly: 'ЩОМІСЯЦЯ',
-}
 
 function parseLocalDate(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number)
@@ -41,35 +39,23 @@ function getWeekDays(weekStart: string): Date[] {
   })
 }
 
-function isRoutineDueOnDay(task: UnifiedTodo, day: Date): boolean {
-  if (!task.repeat || task.repeat === 'none') return false
-  if (task.repeat === 'daily') return true
-  if (task.repeat === 'weekly') {
-    if (!task.nextDue) return false
-    return day.getDay() === parseLocalDate(task.nextDue).getDay()
+function getRepeatLabel(task: UnifiedTodo): string {
+  if (task.repeat === 'daily')   return 'щодня'
+  if (task.repeat === 'weekly')  return 'щотижня'
+  if (task.repeat === 'monthly') return 'щомісяця'
+  if (task.repeat === 'yearly')  return 'щороку'
+  if (task.repeat === 'custom' && task.repeatConfig) {
+    const { interval, unit } = task.repeatConfig
+    if (unit === 'day')   return interval === 1 ? 'щодня'     : `кожні ${interval} дн.`
+    if (unit === 'week')  return interval === 1 ? 'щотижня'   : `кожні ${interval} тиж.`
+    if (unit === 'month') return interval === 1 ? 'щомісяця'  : `кожні ${interval} міс.`
+    if (unit === 'year')  return interval === 1 ? 'щороку'    : `кожні ${interval} р.`
   }
-  if (task.repeat === 'monthly') {
-    const dom = task.repeatDay ?? (task.nextDue ? parseInt(task.nextDue.split('-')[2], 10) : null)
-    return dom !== null && day.getDate() === dom
-  }
-  return false
-}
-
-function formatDueLabel(task: UnifiedTodo, today: Date): string {
-  if (task.repeat === 'daily') return 'Щодня'
-  if (!task.nextDue) return ''
-  const target = parseLocalDate(task.nextDue); target.setHours(0, 0, 0, 0)
-  const diff = Math.round((target.getTime() - today.getTime()) / 86400000)
-  if (diff < 0)  return 'Прострочено'
-  if (diff === 0) return 'Сьогодні'
-  if (diff === 1) return 'Завтра'
-  const DAYS   = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-  const MONTHS = ['січ.', 'лют.', 'бер.', 'квіт.', 'трав.', 'черв.', 'лип.', 'серп.', 'вер.', 'жовт.', 'лист.', 'груд.']
-  return `${DAYS[target.getDay()]} ${target.getDate()} ${MONTHS[target.getMonth()]}`
+  return ''
 }
 
 const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
-  weekStart, routineItems, onToggle, onClose,
+  weekStart, routineItems, onToggle, onOpenDetail, onClose,
 }) => {
   const days  = getWeekDays(weekStart)
   const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -87,10 +73,6 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
 
   const fmt = (d: Date) => d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
 
-  const daysWithRoutines = days
-    .map((day, i) => ({ day, i, routines: routineItems.filter(t => isRoutineDueOnDay(t, day)) }))
-    .filter(({ routines }) => routines.length > 0)
-
   return (
     <div className={styles.overlay}>
 
@@ -107,69 +89,65 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
         </button>
       </div>
 
-      {/* ── Vertical day list ── */}
-      <div className={styles.list}>
-        {daysWithRoutines.length === 0 && (
-          <div className={styles.empty}>
-            <span className={styles.emptyText}>Рутин на цьому тижні немає</span>
-          </div>
-        )}
-
-        {daysWithRoutines.map(({ day, i, routines }) => {
-          const dt      = new Date(day); dt.setHours(0, 0, 0, 0)
-          const isToday = dt.getTime() === today.getTime()
+      {/* ── Timeline ── */}
+      <div className={styles.timeline}>
+        {days.map((day, i) => {
+          const dt          = new Date(day); dt.setHours(0, 0, 0, 0)
+          const isToday     = dt.getTime() === today.getTime()
+          const dayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, dt))
+          const hasRoutines = dayRoutines.length > 0
 
           return (
-            <div key={i} className={styles.daySection}>
-
-              {/* Day header */}
-              <div className={`${styles.dayHeader} ${isToday ? styles.dayHeaderToday : ''}`}>
-                <span className={`${styles.dayLabel} ${isToday ? styles.dayLabelToday : ''}`}>
-                  {DAY_LABELS[i]}
-                </span>
-                <span className={`${styles.dayDate} ${isToday ? styles.dayDateToday : ''}`}>
-                  {day.getDate()} {day.toLocaleDateString('uk-UA', { month: 'short' })}
-                </span>
-                {isToday && <span className={styles.todayDot} />}
+            <div
+              key={i}
+              className={`${styles.timelineRow} ${!hasRoutines ? styles.timelineRowEmpty : ''}`}
+            >
+              {/* Left: day label + date number */}
+              <div className={`${styles.dayCol} ${isToday ? styles.dayColToday : ''}`}>
+                <span className={styles.dayAbbr}>{DAY_LABELS[i]}</span>
+                <span className={styles.dayNum}>{day.getDate()}</span>
               </div>
 
-              {/* Routines for this day */}
-              <div className={styles.routineList}>
-                {routines.map(t => {
-                  const dueLabel  = formatDueLabel(t, today)
-                  const badgeText = t.repeat ? REPEAT_BADGE[t.repeat] : ''
-                  const isDone    = completing.has(t.id)
+              {/* Right: tasks or dash */}
+              <div className={styles.taskCol}>
+                {!hasRoutines ? (
+                  <span className={styles.emptyDash}>—</span>
+                ) : (
+                  dayRoutines.map(t => {
+                    const isDone      = completing.has(t.id)
+                    const repeatLabel = getRepeatLabel(t)
+                    const circleClass = t.type === 'shopping' ? styles.circleGold : styles.circlePurple
 
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={`${styles.routineRow} ${isDone ? styles.routineRowDone : ''}`}
-                      onClick={() => handleTap(t.id)}
-                    >
-                      <div className={styles.routineCheck}>
-                        {isDone && (
-                          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                            <path d="M1.5 4.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
+                    return (
+                      <div key={t.id} className={`${styles.taskRow} ${isDone ? styles.taskRowDone : ''}`}>
+                        <button
+                          type="button"
+                          className={`${styles.circle} ${circleClass}`}
+                          onClick={() => handleTap(t.id)}
+                          aria-label="Виконати"
+                        >
+                          {isDone && (
+                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                              <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          className={styles.taskName}
+                          onClick={() => onOpenDetail?.(t.id)}
+                        >
+                          {t.title}
+                        </button>
+
+                        {repeatLabel && (
+                          <span className={styles.repeatLabel}>{repeatLabel}</span>
                         )}
                       </div>
-
-                      <span className={styles.routineTitle}>{t.title}</span>
-
-                      <div className={styles.routineMeta}>
-                        {badgeText && (
-                          <span className={styles.repeatBadge}>{badgeText}</span>
-                        )}
-                        {dueLabel && dueLabel !== 'Щодня' && (
-                          <span className={`${styles.dueBadge} ${dueLabel === 'Прострочено' ? styles.dueBadgeOverdue : ''} ${dueLabel === 'Сьогодні' ? styles.dueBadgeToday : ''}`}>
-                            {dueLabel}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
+                    )
+                  })
+                )}
               </div>
             </div>
           )

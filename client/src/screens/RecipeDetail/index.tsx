@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useRecipesStore } from '../../store/recipesStore'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
-import { useShoppingListStore } from '../../store/shoppingListStore'
+import { useSprintStore } from '../../store/sprintStore'
 import RecipeForm from '../../components/recipes/RecipeForm'
 import Modal from '../../components/ui/Modal'
 import type { Recipe } from '../../types'
@@ -94,13 +94,14 @@ const RecipeDetailScreen: React.FC = () => {
   const { recipes, wishlistIds, toggleWishlist, updateRecipe, deleteRecipe } = useRecipesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
-  const { addFromRecipe, items: shoppingItems } = useShoppingListStore()
+  const { addItem: addSprintItem, items: sprintItems } = useSprintStore()
 
   const recipe = recipes.find(r => r.id === id)
   const defaultServings = recipe?.servings ?? 2
   const [servings, setServings] = useState(defaultServings)
   const [showEdit, setShowEdit] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showAddConfirm, setShowAddConfirm] = useState(false)
 
   const handleEdit = (data: Omit<Recipe, 'id'>) => {
     if (!id) return
@@ -119,15 +120,30 @@ const RecipeDetailScreen: React.FC = () => {
   const factor = servings / defaultServings
 
   const alreadyInList = recipe
-    ? shoppingItems.some(it => it.recipeId === recipe.id && !it.checked)
+    ? sprintItems.some(it => it.type === 'shopping' && it.recipeId === recipe.id && !it.done)
     : false
+
+  const doAddToShopping = () => {
+    if (!recipe) return
+    addSprintItem({
+      type:          'shopping',
+      title:         recipe.title,
+      recipeId:      recipe.id,
+      recipeImageUrl: recipe.imageUrl,
+      checklist:     recipe.ingredients.map(ing => ({
+        id:    crypto.randomUUID(),
+        title: ing,
+        done:  false,
+      })),
+    })
+    showToast(`«${recipe.title}» додано до квестів`, 'success')
+    navigate('/sprint')
+  }
 
   const handleAddToShopping = () => {
     if (!recipe) return
-    if (alreadyInList) { navigate('/shopping'); return }
-    addFromRecipe(recipe, servings)
-    showToast(`Інгредієнти «${recipe.title}» додано до списку покупок`, 'success')
-    navigate('/shopping')
+    if (alreadyInList) { setShowAddConfirm(true); return }
+    doAddToShopping()
   }
 
   if (!recipe) {
@@ -198,6 +214,15 @@ const RecipeDetailScreen: React.FC = () => {
             <span className={styles.deleteBarMsg}>Видалити рецепт?</span>
             <button type="button" className={styles.deleteBarYes} onClick={handleDelete}>Так</button>
             <button type="button" className={styles.deleteBarNo} onClick={() => setConfirmDelete(false)}>Ні</button>
+          </div>
+        )}
+
+        {/* ── Add-again confirm bar ── */}
+        {showAddConfirm && (
+          <div className={styles.deleteBar}>
+            <span className={styles.deleteBarMsg}>Вже у квестах. Додати ще раз?</span>
+            <button type="button" className={styles.deleteBarYes} onClick={() => { setShowAddConfirm(false); doAddToShopping() }}>Так</button>
+            <button type="button" className={styles.deleteBarNo} onClick={() => setShowAddConfirm(false)}>Ні</button>
           </div>
         )}
 

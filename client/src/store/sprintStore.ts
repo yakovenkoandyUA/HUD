@@ -80,6 +80,41 @@ interface ApiTodo {
 
 function calcNextDue(item: UnifiedTodo): string {
   const base = new Date(); base.setHours(0, 0, 0, 0)
+
+  if (item.repeatConfig) {
+    const { unit, interval, weekDays } = item.repeatConfig
+
+    if (unit === 'week' && weekDays && weekDays.length > 0) {
+      const sorted = [...weekDays].sort((a, b) => a - b) // 0=Mon..6=Sun
+      // JS getDay(): 0=Sun,1=Mon..6=Sat → convert to 0=Mon..6=Sun
+      const todayWd = (base.getDay() + 6) % 7
+      // Next selected weekday still remaining this week
+      const nextInWeek = sorted.find(d => d > todayWd)
+      if (nextInWeek !== undefined) {
+        base.setDate(base.getDate() + (nextInWeek - todayWd))
+      } else {
+        // Last selected day of this active week was just completed;
+        // jump to first selected weekday, interval weeks from this week's Monday.
+        const thisMonday = new Date(base)
+        thisMonday.setDate(base.getDate() - todayWd)
+        base.setTime(thisMonday.getTime())
+        base.setDate(thisMonday.getDate() + interval * 7 + sorted[0])
+      }
+      return localDateStr(base)
+    }
+
+    if (unit === 'month') {
+      base.setMonth(base.getMonth() + interval)
+    } else if (unit === 'year') {
+      base.setFullYear(base.getFullYear() + interval)
+    } else {
+      // day or week without weekDays
+      base.setDate(base.getDate() + interval * (unit === 'week' ? 7 : 1))
+    }
+    return localDateStr(base)
+  }
+
+  // Legacy simple repeat
   if (item.repeat === 'daily') {
     base.setDate(base.getDate() + 1)
   } else if (item.repeat === 'weekly') {

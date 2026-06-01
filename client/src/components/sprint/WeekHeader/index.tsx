@@ -1,4 +1,6 @@
 import React from 'react'
+import type { UnifiedTodo } from '../../../types'
+import { isRoutineDueOnDay } from '../../../utils/sprint'
 import styles from './WeekHeader.module.css'
 
 /**
@@ -16,6 +18,7 @@ interface WeekHeaderProps {
   weekStart: string
   onExpand?: () => void
   hideTitle?: boolean
+  routineItems?: UnifiedTodo[]
 }
 
 const DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
@@ -34,7 +37,7 @@ function getWeekDays(weekStart: string): Date[] {
   })
 }
 
-const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, onExpand, hideTitle }) => {
+const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, onExpand, hideTitle, routineItems = [] }) => {
   const days = getWeekDays(weekStart)
   const mon  = days[0]
   const sun  = days[6]
@@ -77,6 +80,7 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, onExpand, hideTitle 
           const isPast     = dayTime.getTime() < today.getTime()
           const isOverflow = day.getMonth() !== weekMonth
           const isDim      = (isPast || isOverflow) && !isToday
+          const hasRoutines = routineItems.some(t => isRoutineDueOnDay(t, dayTime))
 
           return (
             <div
@@ -89,7 +93,7 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, onExpand, hideTitle 
               <span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : ''} ${isDim ? styles.dayNumberDim : ''}`}>
                 {day.getDate()}
               </span>
-              <span className={`${styles.dot} ${isToday ? styles.dotToday : ''} ${isDim ? styles.dotDim : ''}`} />
+              <span className={`${styles.dot} ${isToday ? styles.dotToday : ''} ${!isToday && hasRoutines ? styles.dotRoutine : ''} ${isDim && !hasRoutines ? styles.dotDim : ''}`} />
             </div>
           )
         })}
