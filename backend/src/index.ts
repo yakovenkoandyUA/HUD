@@ -15,6 +15,7 @@ import watchlistRoutes from './routes/watchlist'
 import goalRoutes from './routes/goals'
 import pushRoutes from './routes/push'
 import memoryRoutes from './routes/memories'
+import f1Routes from './routes/f1'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -34,6 +35,7 @@ app.use('/api/watchlist', watchlistRoutes)
 app.use('/api/goals', goalRoutes)
 app.use('/api/push', pushRoutes)
 app.use('/api/memories', memoryRoutes)
+app.use('/api/f1', f1Routes)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
