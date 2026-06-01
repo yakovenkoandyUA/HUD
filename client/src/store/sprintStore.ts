@@ -439,10 +439,21 @@ export const useSprintStore = create<TodoState>()(
         const item = get().items.find(i => i.id === id)
         if (!item) return
 
-        // Recurring task: reset with new nextDue instead of marking done
+        // Recurring task: briefly mark done, then recalculate nextDue after animation
         if (isRecurring(item) && !item.done) {
-          const nextDue = calcNextDue(item)
-          set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: false, nextDue } : i) }))
+          set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: true } : i) }))
+          setTimeout(() => {
+            const current = get().items.find(i => i.id === id)
+            if (!current) return
+            const nextDue = calcNextDue(current)
+            set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: false, nextDue } : i) }))
+            if (!getToken() || !isBackendConfigured()) return
+            const endpoint = current.type === 'sprint' ? `/api/sprint/tasks/${id}` : `/api/sprint/todos/${id}`
+            authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ nextDue, done: false }) })
+              .then(r => { if (!r.ok) throw new Error() })
+              .then(() => set({ syncStatus: 'synced' }))
+              .catch(() => set({ syncStatus: 'error' }))
+          }, 600)
           return
         }
 

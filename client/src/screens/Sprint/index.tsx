@@ -296,10 +296,10 @@ const Sprint: React.FC = () => {
 
 	const handleRoutineToggle = (id: string) => {
 		setCompletingRoutines(prev => new Set(prev).add(id))
+		toggleItem(id)
 		setTimeout(() => {
-			toggleItem(id)
 			setCompletingRoutines(prev => { const s = new Set(prev); s.delete(id); return s })
-		}, 380)
+		}, 600)
 	}
 
 	return (
