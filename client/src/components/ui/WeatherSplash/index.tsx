@@ -33,7 +33,7 @@ const WeatherSplash: React.FC<WeatherSplashProps> = ({ onDone }) => {
 
   return (
     <div className={`${styles.overlay} ${styles[phase]}`} aria-hidden="true">
-      <div className={styles.logo}>HUD</div>
+      <div className={styles.logo}>MIMIR</div>
       <div className={styles.body}>
         <div className={styles.loading}>
           <span /><span /><span />

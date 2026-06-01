@@ -34,7 +34,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, loading = false, err
         <span className={`${styles.corner} ${styles.br}`} />
 
         <div className={styles.header}>
-          <h1 className={styles.title}>HUD</h1>
+          <h1 className={styles.title}>MIMIR</h1>
           <p className={styles.subtitle}>HEADS UP DISPLAY</p>
         </div>
 

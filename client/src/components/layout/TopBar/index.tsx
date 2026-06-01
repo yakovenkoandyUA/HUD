@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import MimirLogo from '../../../assets/mimir-logo.svg?react'
 import Modal from '../../ui/Modal'
 import ThemePicker from '../ThemePicker'
 import { useLongPress } from '../../../hooks/useLongPress'
@@ -25,16 +26,6 @@ interface TopBarProps {
 function formatTime(d: Date): string {
   return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
 }
-
-const MimirLogo: React.FC = () => (
-  <svg viewBox="0 0 1024 916" className={styles.logoSvg} aria-label="MIMIR" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g stroke="currentColor" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M122 783 V108 L464 401 L807 108"/>
-      <path d="M192 303 L464 535 L807 242 V781 H463"/>
-      <circle cx="390" cy="778" r="36"/>
-    </g>
-  </svg>
-)
 
 const PaletteIcon: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">

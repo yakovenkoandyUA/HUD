@@ -241,7 +241,7 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
           <p className={styles.sectionLabel}>ДОДАТОК</p>
           {isIOS ? (
             <p className={styles.installHint}>
-              Натисніть <strong>⎙ Share</strong> → <strong>«Додати на початковий екран»</strong> щоб встановити HUD як додаток.
+              Натисніть <strong>⎙ Share</strong> → <strong>«Додати на початковий екран»</strong> щоб встановити MIMIR як додаток.
             </p>
           ) : (
             <button

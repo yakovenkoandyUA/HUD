@@ -1,9 +1,13 @@
-/* ── Root wrap ──────────────────────────────────────────────────────────────── */
+/* ── Root wrap ── */
 
 .wrap {
   position: fixed;
   inset: 0;
   z-index: 9999;
+  background: #0f1117;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: opacity 0.8s ease;
 }
 
@@ -12,120 +16,81 @@
   pointer-events: none;
 }
 
-/* ── Three.js canvas ────────────────────────────────────────────────────────── */
+/* ── Center content ── */
 
-.canvas {
-  position: absolute;
-  inset: 0;
-}
-
-.canvas canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* ── HUD overlay (sits above canvas) ────────────────────────────────────────── */
-
-.overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-/* ── Corner brackets ────────────────────────────────────────────────────────── */
-
-.corner {
-  position: absolute;
-  width: 32px;
-  height: 32px;
-  border-color: var(--accent);
-  border-style: solid;
-  border-width: 0;
-  opacity: 0.9;
-}
-
-.tl { top: 24px;    left: 24px;   border-top-width: 2px;    border-left-width: 2px;  }
-.tr { top: 24px;    right: 24px;  border-top-width: 2px;    border-right-width: 2px; }
-.bl { bottom: 24px; left: 24px;   border-bottom-width: 2px; border-left-width: 2px;  }
-.br { bottom: 24px; right: 24px;  border-bottom-width: 2px; border-right-width: 2px; }
-
-/* ── Scanlines ──────────────────────────────────────────────────────────────── */
-
-.scanlines {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    rgba(0, 0, 0, 0.07) 3px,
-    rgba(0, 0, 0, 0.07) 4px
-  );
-  pointer-events: none;
-}
-
-/* ── Center: logo + subtitle ────────────────────────────────────────────────── */
-
-.center {
-  position: absolute;
-  inset: 0;
+.content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.9s ease, transform 0.9s ease;
+  gap: 20px;
 }
 
-.centerVisible {
+/* ── Mimir face SVG ── */
+
+.mimirFace {
+  width: 210px;
+  height: auto;
+  display: block;
+  animation:
+    mimirAppear 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    glowPulse   2.5s ease-in-out 1.2s infinite;
+}
+
+@keyframes mimirAppear {
+  0%   { opacity: 0; transform: scale(0.9); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(239, 159, 39, 0.3)); }
+  50%      { filter: drop-shadow(0 0 28px rgba(239, 159, 39, 0.7)); }
+}
+
+/* ── MIMIR label ── */
+
+.label {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.45em;
+  color: #EF9F27;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.labelVisible {
   opacity: 1;
   transform: translateY(0);
 }
 
-.logo {
-  font-family: var(--font-display);
-  font-size: clamp(44px, 12vw, 72px);
-  letter-spacing: 0.3em;
-  color: var(--accent);
-  text-shadow:
-    0 0 48px var(--accent-glow),
-    0 0 16px var(--accent-glow);
+/* ── Three dots ── */
+
+.dots {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.5s ease 0.2s;
 }
 
-.subtitle {
-  font-family: var(--font-ui);
-  font-size: clamp(9px, 2.5vw, 12px);
-  letter-spacing: 0.45em;
-  color: rgba(255, 255, 255, 0.35);
-  text-transform: uppercase;
+.dotsVisible {
+  opacity: 1;
 }
 
-/* ── Loading bar ────────────────────────────────────────────────────────────── */
-
-.barWrap {
-  position: absolute;
-  bottom: 52px;
-  left: 52px;
-  right: 52px;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 1px;
-  overflow: hidden;
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #EF9F27;
+  opacity: 0.4;
 }
 
-.bar {
-  height: 100%;
-  width: 0%;
-  background: var(--accent);
-  border-radius: 1px;
-  box-shadow: 0 0 8px var(--accent-glow);
-  animation: fillBar 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50%      { opacity: 1;   transform: scale(1); }
 }
 
-@keyframes fillBar {
-  from { width: 0%; }
-  to   { width: 100%; }
-}
+.dot1 { animation: dotPulse 1.2s ease-in-out 0s   infinite; }
+.dot2 { animation: dotPulse 1.2s ease-in-out 0.2s infinite; }
+.dot3 { animation: dotPulse 1.2s ease-in-out 0.4s infinite; }

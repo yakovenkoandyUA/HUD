@@ -236,7 +236,7 @@ const Sprint: React.FC = () => {
 	}, [])
 
 	const weekStart      = getCurrentWeekStart()
-	const weekSprintItems = items.filter(t => !isRecurring(t) && t.type !== 'shopping')
+	const weekSprintItems = items.filter(t => t.type === 'todo' || isRecurring(t))
 	const done            = weekSprintItems.filter(t => t.done).length
 
 	const routineItems = items.filter(t => isRecurring(t))

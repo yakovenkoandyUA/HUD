@@ -32,7 +32,7 @@ const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ isIOS, onInstall, o
     <div className={`${styles.banner} ${visible ? styles.bannerIn : ''}`}>
       <div className={styles.icon}>◈</div>
       <div className={styles.body}>
-        <p className={styles.title}>HUD — встановити як додаток</p>
+        <p className={styles.title}>MIMIR — встановити як додаток</p>
         {isIOS ? (
           <p className={styles.sub}>
             Натисніть <span className={styles.share}>⎙ Share</span> → «Додати на початковий екран»

@@ -22,9 +22,9 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
-        name: 'HUD — Personal Organizer',
-        short_name: 'HUD',
-        description: 'Heads Up Display — особистий органайзер',
+        name: 'MIMIR',
+        short_name: 'MIMIR',
+        description: 'MIMIR — особистий органайзер',
         start_url: '/',
         scope: '/',
         theme_color: '#0d0d0d',
