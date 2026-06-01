@@ -441,7 +441,11 @@ export const useSprintStore = create<TodoState>()(
 
         // Recurring task: briefly mark done, then recalculate nextDue after animation
         if (isRecurring(item) && !item.done) {
-          set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: true } : i) }))
+          const todayStr = localDateStr(new Date())
+          set(s => ({ items: s.items.map(i => i.id === id ? {
+            ...i, done: true,
+            completionLog: [...(i.completionLog ?? []), todayStr],
+          } : i) }))
           setTimeout(() => {
             const current = get().items.find(i => i.id === id)
             if (!current) return

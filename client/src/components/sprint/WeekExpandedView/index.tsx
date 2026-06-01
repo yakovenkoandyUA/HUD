@@ -9,6 +9,7 @@ import styles from './WeekExpandedView.module.css'
  * Повноекранний overlay тижневих рутин у вигляді timeline.
  * Зліва — день (аббревіатура + число), справа — задачі.
  * Сьогодні виділено золотим; дні без задач — 35% opacity.
+ * Внизу — статистика виконання рутин за 4 тижні.
  *
  * Props:
  * @prop {string}               weekStart      — ISO дата понеділка ('YYYY-MM-DD')
@@ -39,6 +40,10 @@ function getWeekDays(weekStart: string): Date[] {
   })
 }
 
+function toIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function getRepeatLabel(task: UnifiedTodo): string {
   if (task.repeat === 'daily')   return 'щодня'
   if (task.repeat === 'weekly')  return 'щотижня'
@@ -52,6 +57,38 @@ function getRepeatLabel(task: UnifiedTodo): string {
     if (unit === 'year')  return interval === 1 ? 'щороку'    : `кожні ${interval} р.`
   }
   return ''
+}
+
+interface WeekStat { done: number; total: number }
+
+function calcWeekStats(weekStart: string, routineItems: UnifiedTodo[]): WeekStat[] {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const anchorMon = parseLocalDate(weekStart)
+
+  return Array.from({ length: 4 }, (_, wi) => {
+    // wi=0 → 3 weeks ago, wi=3 → current week
+    const mon = new Date(anchorMon)
+    mon.setDate(anchorMon.getDate() - (3 - wi) * 7)
+
+    let total = 0
+    let done  = 0
+
+    for (let di = 0; di < 7; di++) {
+      const day = new Date(mon); day.setDate(mon.getDate() + di)
+      day.setHours(0, 0, 0, 0)
+      if (day > today) break  // don't count future days
+
+      const dayIso = toIso(day)
+
+      routineItems.forEach(t => {
+        if (!isRoutineDueOnDay(t, day)) return
+        total++
+        if (t.completionLog?.includes(dayIso)) done++
+      })
+    }
+
+    return { done, total }
+  })
 }
 
 const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
@@ -72,6 +109,10 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
   }
 
   const fmt = (d: Date) => d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
+
+  const weekStats   = calcWeekStats(weekStart, routineItems)
+  const totalDone   = weekStats.reduce((s, w) => s + w.done, 0)
+  const showStats   = totalDone > 0
 
   return (
     <div className={styles.overlay}>
@@ -152,6 +193,27 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
             </div>
           )
         })}
+
+        {/* ── Stats block ── */}
+        {showStats && (
+          <div className={styles.stats}>
+            <span className={styles.statsTitle}>Статистика рутин</span>
+            <div className={styles.statsRows}>
+              {weekStats.map((w, i) => {
+                const pct = w.total > 0 ? w.done / w.total : 0
+                return (
+                  <div key={i} className={styles.statsRow}>
+                    <span className={styles.statsWeekLabel}>тиж {i + 1}</span>
+                    <div className={styles.statsBar}>
+                      <div className={styles.statsBarFill} style={{ width: `${pct * 100}%` }} />
+                    </div>
+                    <span className={styles.statsCount}>{w.done} / {w.total}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
     </div>

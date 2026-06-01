@@ -25,8 +25,6 @@ interface StandingsState {
   error: string | null
 }
 
-const IS_PROD = import.meta.env.PROD
-const PROXY_URL = '/api/f1standings'
 // v6: added constructorId field
 const JOLPICA_DRIVERS_URL = 'https://api.jolpi.ca/ergast/f1/2026/driverstandings/'
 const JOLPICA_CONSTRUCTORS_URL = 'https://api.jolpi.ca/ergast/f1/current/constructorstandings/'
@@ -86,15 +84,6 @@ function parseConstructors(json: any): ConstructorStanding[] {
   }))
 }
 
-async function fetchViaProxy(): Promise<{ drivers: DriverStanding[]; constructors: ConstructorStanding[] }> {
-  const res = await fetch(PROXY_URL, { headers: { Accept: 'application/json' } })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(`proxy ${res.status}: ${body.detail ?? body.error ?? res.statusText}`)
-  }
-  return res.json()
-}
-
 async function fetchDirect(): Promise<{ drivers: DriverStanding[]; constructors: ConstructorStanding[] }> {
   const [drRes, coRes, f1Res] = await Promise.all([
     fetch(JOLPICA_DRIVERS_URL,      { headers: { Accept: 'application/json' } }),
@@ -141,7 +130,7 @@ export function useChampionshipStandings() {
     if (!force && readCache()) return
     setState((s) => ({ ...s, loading: true, error: null }))
     try {
-      const data = IS_PROD ? await fetchViaProxy() : await fetchDirect()
+      const data = await fetchDirect()
       writeCache(data)
       setState({ ...data, loading: false, error: null })
     } catch (err) {

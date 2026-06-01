@@ -103,6 +103,7 @@ export interface UnifiedTodo {
   nextDue?: string
   repeatConfig?: RepeatConfig
   repeatStartDate?: string
+  completionLog?: string[]  // 'YYYY-MM-DD' entries, local-only
 }
 
 export interface RepeatConfig {
