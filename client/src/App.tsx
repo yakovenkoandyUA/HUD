@@ -6,6 +6,7 @@ import PwaInstallBanner from './components/ui/PwaInstallBanner'
 import CitySplash from './components/ui/CitySplash'
 import { usePwaInstall } from './hooks/usePwaInstall'
 import { useProfileStore } from './store/profileStore'
+import { useUiStore } from './store/uiStore'
 import { usePushSubscription } from './hooks/usePushSubscription'
 import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
@@ -86,7 +87,25 @@ const App: React.FC = () => {
   )
   const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
   const { token } = useProfileStore()
+  const { setUpdateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe } = usePushSubscription()
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const watchForUpdate = () => {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        setUpdateAvailable(true)
+      })
+    }
+    // If SW already controls the page, the next controllerchange is an update.
+    // Otherwise wait for the initial take-control, then watch for updates.
+    if (navigator.serviceWorker.controller) {
+      watchForUpdate()
+    } else {
+      navigator.serviceWorker.addEventListener('controllerchange', watchForUpdate, { once: true })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!token || !isSupported || isSubscribed) return

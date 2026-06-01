@@ -13,11 +13,13 @@ interface UiState {
   toasts: Toast[]
   activeModal: string | null
   theme: Theme
+  updateAvailable: boolean
   showToast: (message: string, type?: Toast['type']) => void
   dismissToast: (id: string) => void
   openModal: (name: string) => void
   closeModal: () => void
   setTheme: (theme: Theme) => void
+  setUpdateAvailable: (v: boolean) => void
 }
 
 export const useUiStore = create<UiState>()(
@@ -26,6 +28,7 @@ export const useUiStore = create<UiState>()(
       toasts: [],
       activeModal: null,
       theme: 'warm',
+      updateAvailable: false,
 
       showToast: (message, type = 'info') =>
         set((s) => {
@@ -44,6 +47,8 @@ export const useUiStore = create<UiState>()(
         document.documentElement.setAttribute('data-theme', theme)
         set({ theme })
       },
+
+      setUpdateAvailable: (v) => set({ updateAvailable: v }),
     }),
     {
       name: 'hud-ui',

@@ -67,9 +67,9 @@ function parseConstructors(json: any): ConstructorStanding[] {
 
 async function fetchStandings(): Promise<{ drivers: DriverStanding[]; constructors: ConstructorStanding[] }> {
   const [drRes, coRes, f1Res] = await Promise.all([
-    fetch(JOLPICA_DRIVERS,      { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) }),
-    fetch(JOLPICA_CONSTRUCTORS, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) }),
-    fetch(OPENF1_HEADSHOTS,     { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) }).catch(() => null),
+    fetch(JOLPICA_DRIVERS,      { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(15000) }),
+    fetch(JOLPICA_CONSTRUCTORS, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(15000) }),
+    fetch(OPENF1_HEADSHOTS,     { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) }).catch(() => null),
   ])
 
   if (!drRes.ok) throw new Error(`Jolpica driver standings: ${drRes.status}`)
@@ -107,20 +107,26 @@ export async function getF1Standings(req: Request, res: Response): Promise<void>
     return
   }
 
-  try {
-    const data = await fetchStandings()
-    cache = { ...data, fetchedAt: now }
-    res.json({ ...data, cached: false })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error('[f1/standings]', message)
-
-    // Return stale cache rather than an error if available
-    if (cache) {
-      res.json({ drivers: cache.drivers, constructors: cache.constructors, cached: true, stale: true })
+  let lastErr: unknown
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 1000))
+      const data = await fetchStandings()
+      cache = { ...data, fetchedAt: now }
+      res.json({ ...data, cached: false })
       return
+    } catch (err) {
+      lastErr = err
+      console.error(`[f1/standings] attempt ${attempt + 1} failed:`, err instanceof Error ? err.message : err)
     }
-
-    res.status(502).json({ error: `F1 standings unavailable: ${message}` })
   }
+
+  // Return stale cache rather than an error if available
+  if (cache) {
+    res.json({ drivers: cache.drivers, constructors: cache.constructors, cached: true, stale: true })
+    return
+  }
+
+  const message = lastErr instanceof Error ? lastErr.message : String(lastErr)
+  res.status(502).json({ error: `F1 standings unavailable: ${message}` })
 }

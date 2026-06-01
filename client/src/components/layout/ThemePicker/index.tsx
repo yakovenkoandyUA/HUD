@@ -93,7 +93,7 @@ const PALETTES: ThemePalette[] = [
 
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
   const navigate = useNavigate()
-  const { theme, setTheme, showToast } = useUiStore()
+  const { theme, setTheme, showToast, updateAvailable } = useUiStore()
   const { activeProfile, logout } = useProfileStore()
   const { isInstallable, isIOS, promptInstall } = usePwaInstall()
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
@@ -241,6 +241,20 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
               Встановити додаток
             </button>
           )}
+        </div>
+      )}
+
+      {/* ── Оновлення ── */}
+      {updateAvailable && (
+        <div className={styles.updateRow}>
+          <span className={styles.updateLabel}>🔄 Доступне оновлення</span>
+          <button
+            type="button"
+            className={styles.updateBtn}
+            onClick={() => window.location.reload()}
+          >
+            ОНОВИТИ
+          </button>
         </div>
       )}
 
