@@ -239,6 +239,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   // eslint-disable-next-line react-hooks/refs
   if (!mounted || !task) return null
 
+  // eslint-disable-next-line react-hooks/refs
   const isRecurring  = !!(task.repeat && task.repeat !== 'none')
   const checklist    = task.checklist ?? []
   const checkDone    = checklist.filter(c => c.done).length

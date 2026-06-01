@@ -167,52 +167,104 @@
 
 /* ── Ends section ─────────────────────────────────────────────────────────── */
 
-.endsOptions {
+.endsRows {
   display: flex;
   flex-direction: column;
 }
 
-.endsOption {
+.endsRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 14px 0;
+  cursor: pointer;
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.12s;
 }
-.endsOption:last-child,
-.endsOptionLast {
-  border-bottom: none;
-}
+.endsRow:active { opacity: 0.7; }
 
-.radio {
-  accent-color: var(--accent);
-  width: 16px;
-  height: 16px;
+.endsRowLast { border-bottom: none; }
+
+/* Wrapper for "Дата" row + its expandable content */
+.endsRowGroup {
+  border-bottom: 1px solid var(--border);
+}
+.endsRowGroup .endsRow { border-bottom: none; }
+
+/* Custom radio circle */
+.endsRadio {
   flex-shrink: 0;
-  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
 }
 
-.endsOptionText {
+.endsRadioActive { border-color: var(--accent); }
+
+.endsRadioActive::after {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.endsRowLabel {
+  flex: 1;
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--text);
-  flex: 1;
+  transition: color 0.15s;
 }
 
-.endsDateInput {
-  padding: 6px 10px;
-  font-family: var(--font-mono);
+.endsRowActive .endsRowLabel { color: var(--accent); }
+
+/* Expand/collapse area under "Дата" */
+.endsDateExpand {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.22s ease, opacity 0.18s ease;
+}
+
+.endsDateExpandOpen {
+  max-height: 60px;
+  opacity: 1;
+}
+
+/* Date display button */
+.endsDateBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+  font-family: var(--font-body);
   font-size: 13px;
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
   color: var(--text);
-  outline: none;
-  color-scheme: dark;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
 }
-.endsDateInput:focus { border-color: var(--accent); }
+.endsDateBtn:hover { border-color: var(--border2); }
 
+.endsDateIcon { color: var(--text3); flex-shrink: 0; }
+
+.endsDatePlaceholder { color: var(--text3); }
+
+/* "Після" number input */
 .endsAfterInput {
   width: 52px;
   padding: 6px 8px;

@@ -22,7 +22,8 @@ import styles from './Dashboard.module.css'
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
-  const routineItems = useSprintStore(s => s.items.filter(t => t.repeat && t.repeat !== 'none'))
+  const sprintItems  = useSprintStore(s => s.items)
+  const routineItems = sprintItems.filter(t => t.repeat && t.repeat !== 'none')
   const { showToast, theme } = useUiStore()
   const [showExpense, setShowExpense] = useState(false)
   const [showApod, setShowApod] = useState(false)

@@ -283,10 +283,11 @@ export const useSprintStore = create<TodoState>()(
               ...(existing.description    !== undefined && { description:    existing.description }),
               ...(existing.recipeImageUrl !== undefined && { recipeImageUrl: existing.recipeImageUrl }),
               ...(existing.recipeId       !== undefined && { recipeId:       existing.recipeId }),
-              ...(existing.repeat         !== undefined && { repeat:         existing.repeat }),
-              ...(existing.nextDue        !== undefined && { nextDue:        existing.nextDue }),
-              ...(existing.repeatDay      !== undefined && { repeatDay:      existing.repeatDay }),
-              ...(existing.repeatConfig   !== undefined && { repeatConfig:   existing.repeatConfig }),
+              ...(existing.repeat           !== undefined && { repeat:           existing.repeat }),
+              ...(existing.nextDue          !== undefined && { nextDue:          existing.nextDue }),
+              ...(existing.repeatDay        !== undefined && { repeatDay:        existing.repeatDay }),
+              ...(existing.repeatConfig     !== undefined && { repeatConfig:     existing.repeatConfig }),
+              ...(existing.repeatStartDate  !== undefined && { repeatStartDate:  existing.repeatStartDate }),
             }
           }
 

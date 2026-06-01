@@ -63,7 +63,26 @@ const REPEAT_BADGE: Record<string, string> = {
 	weekly:  'ЩОТИЖНЯ',
 	monthly: 'ЩОМІСЯЦЯ',
 	yearly:  'ЩОРОКУ',
-	custom:  'CUSTOM',
+}
+
+const WEEK_DAY_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+
+function getRoutineBadge(t: UnifiedTodo): string {
+	if (t.repeat !== 'custom') return REPEAT_BADGE[t.repeat ?? ''] ?? ''
+	if (!t.repeatConfig) return 'CUSTOM'
+	const { interval, unit, weekDays } = t.repeatConfig
+	const UNITS: Record<RepeatConfig['unit'], [string, string]> = {
+		day:   ['ДЕНЬ', 'ДНІ'],
+		week:  ['ТИЖ', 'ТИЖ'],
+		month: ['МІС', 'МІС'],
+		year:  ['РІК', 'Р'],
+	}
+	const [sing, plur] = UNITS[unit]
+	let label = interval === 1 ? `КОЖ. ${sing}` : `КОЖ. ${interval} ${plur}`
+	if (unit === 'week' && weekDays && weekDays.length > 0) {
+		label = [...weekDays].sort((a, b) => a - b).map(d => WEEK_DAY_SHORT[d]).join(', ')
+	}
+	return label
 }
 
 function repeatToUnit(r: Exclude<RepeatType, 'none' | 'custom'>): RepeatConfig['unit'] {
@@ -113,7 +132,8 @@ function nextWeekDayFrom(from: Date, weekDays: number[]): string {
 
 function formatRoutineDue(dateStr: string): string {
 	const today  = new Date(); today.setHours(0, 0, 0, 0)
-	const target = new Date(dateStr); target.setHours(0, 0, 0, 0)
+	const [ry, rm, rd] = dateStr.split('-').map(Number)
+	const target = new Date(ry, rm - 1, rd)
 	const diff   = Math.round((target.getTime() - today.getTime()) / 86400000)
 	if (diff < 0)  return 'Прострочено'
 	if (diff === 0) return 'Сьогодні'
@@ -303,9 +323,8 @@ const Sprint: React.FC = () => {
 							</div>
 						</button>
 
-						{routinesOpen && (
-							<ul className={styles.routineList}>
-								{routineItems.map(t => (
+						<ul className={`${styles.routineList} ${routinesOpen ? styles.routineListOpen : ''}`}>
+							{routineItems.map(t => (
 									<li key={t.id} className={`${styles.routineItem} ${completingRoutines.has(t.id) ? styles.routineItemCompleting : ''}`}>
 										<button type="button" className={styles.routineCheck} onClick={() => handleRoutineToggle(t.id)} aria-label="Виконати">
 											<span className={styles.routineCheckBox}>{completingRoutines.has(t.id) ? '✓' : ''}</span>
@@ -313,7 +332,7 @@ const Sprint: React.FC = () => {
 										<button type="button" className={styles.routineBody} onClick={() => setDetailTaskId(t.id)}>
 											<span className={styles.routineTitle}>{t.title}</span>
 											<div className={styles.routineMeta}>
-												<span className={styles.repeatBadge}>{REPEAT_BADGE[t.repeat!] ?? t.repeat}</span>
+												<span className={styles.repeatBadge}>{getRoutineBadge(t)}</span>
 												{t.nextDue && <span className={styles.routineDue}>{formatRoutineDue(t.nextDue)}</span>}
 											</div>
 										</button>
@@ -322,8 +341,7 @@ const Sprint: React.FC = () => {
 										</button>
 									</li>
 								))}
-							</ul>
-						)}
+						</ul>
 					</div>
 				)}
 

@@ -655,6 +655,15 @@
   display: flex;
   flex-direction: column;
   border-top: 1px solid var(--border);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 250ms ease-in-out, opacity 200ms ease-in-out;
+}
+
+.routineListOpen {
+  max-height: 600px;
+  opacity: 1;
 }
 
 .routineItem {
