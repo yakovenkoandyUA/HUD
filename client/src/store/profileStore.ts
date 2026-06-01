@@ -30,6 +30,7 @@ interface ProfileState {
   selectProfile: (username: string) => Promise<void>
   logout: () => void
   uploadAvatar: (file: File) => Promise<void>
+  updateProfile: (patch: { name?: string; avatarUrl?: string }) => Promise<void>
 }
 
 export const useProfileStore = create<ProfileState>()(
@@ -67,26 +68,30 @@ export const useProfileStore = create<ProfileState>()(
 
       uploadAvatar: async (file: File) => {
         const url = await uploadToCloudinary(file, 'mimir/avatars')
+        await get().updateProfile({ avatarUrl: url })
+      },
+
+      updateProfile: async (patch: { name?: string; avatarUrl?: string }) => {
         const { token, activeProfile } = get()
         if (!activeProfile) return
 
-        // Update backend
         if (BASE_URL && token) {
-          await fetch(`${BASE_URL}/api/auth/me`, {
+          const res = await fetch(`${BASE_URL}/api/auth/me`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ avatarUrl: url }),
-          }).catch(() => { /* non-critical */ })
+            body: JSON.stringify(patch),
+          })
+          if (!res.ok) throw new Error('Failed to update profile')
         }
 
-        // Update local state
+        const updated = { ...activeProfile, ...patch }
         set({
-          activeProfile: { ...activeProfile, avatarUrl: url },
+          activeProfile: updated,
           profiles: get().profiles.map(p =>
-            p.username === activeProfile.username ? { ...p, avatarUrl: url } : p
+            p.username === activeProfile.username ? { ...p, ...patch } : p
           ),
         })
       },

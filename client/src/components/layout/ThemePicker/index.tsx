@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUiStore } from '../../../store/uiStore'
 import { useProfileStore } from '../../../store/profileStore'
 import { usePwaInstall } from '../../../hooks/usePwaInstall'
 import type { Theme } from '../../../store/uiStore'
 import { clearApiCaches } from '../../../utils/appCache'
+import ProfileEditModal from '../../ui/ProfileEditModal'
 import styles from './ThemePicker.module.css'
 
 /**
@@ -93,13 +94,12 @@ const PALETTES: ThemePalette[] = [
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
   const navigate = useNavigate()
   const { theme, setTheme, showToast } = useUiStore()
-  const { activeProfile, logout, uploadAvatar } = useProfileStore()
+  const { activeProfile, logout } = useProfileStore()
   const { isInstallable, isIOS, promptInstall } = usePwaInstall()
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
   const showInstall = !isStandalone && (isInstallable || isIOS)
   const [cleared, setCleared] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [editOpen, setEditOpen] = useState(false)
 
   const handlePick = (id: Theme) => {
     setTheme(id)
@@ -111,21 +111,6 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
     setCleared(true)
     showToast('Кеш очищено', 'success')
     setTimeout(() => setCleared(false), 2000)
-  }
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      await uploadAvatar(file)
-      showToast('Аватар оновлено', 'success')
-    } catch {
-      showToast('Помилка завантаження', 'error')
-    } finally {
-      setUploading(false)
-      if (fileRef.current) fileRef.current.value = ''
-    }
   }
 
   const handleSwitchProfile = () => {
@@ -195,13 +180,12 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
           <p className={styles.sectionLabel}>ПРОФІЛЬ</p>
 
           <div className={styles.profileRow}>
-            {/* Avatar + upload */}
+            {/* Avatar */}
             <button
               type="button"
               className={styles.avatarBtn}
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              title="Змінити аватар"
+              onClick={() => setEditOpen(true)}
+              title="Редагувати профіль"
             >
               {activeProfile.avatarUrl ? (
                 <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
@@ -210,30 +194,34 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
                   {activeProfile.name[0].toUpperCase()}
                 </span>
               )}
-              <span className={styles.avatarOverlay}>{uploading ? '...' : '✎'}</span>
+              <span className={styles.avatarOverlay}>✎</span>
             </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleAvatarChange}
-            />
 
-            {/* Name + switch button */}
+            {/* Name + buttons */}
             <div className={styles.profileInfo}>
               <span className={styles.profileName}>{activeProfile.name}</span>
-              <button
-                type="button"
-                className={styles.switchBtn}
-                onClick={handleSwitchProfile}
-              >
-                Змінити профіль
-              </button>
+              <div className={styles.profileActions}>
+                <button
+                  type="button"
+                  className={styles.editBtn}
+                  onClick={() => setEditOpen(true)}
+                >
+                  ✎ Редагувати
+                </button>
+                <button
+                  type="button"
+                  className={styles.switchBtn}
+                  onClick={handleSwitchProfile}
+                >
+                  Змінити профіль
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      <ProfileEditModal isOpen={editOpen} onClose={() => setEditOpen(false)} />
 
       {/* ── Встановити ── */}
       {showInstall && (

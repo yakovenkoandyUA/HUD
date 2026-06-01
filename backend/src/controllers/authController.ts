@@ -103,18 +103,21 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
   }
 }
 
-/** PATCH /auth/me — update avatar for active user */
+/** PATCH /auth/me — update name and/or avatar for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl } = req.body as { avatarUrl?: string }
-  if (!avatarUrl) {
-    res.status(400).json({ error: 'avatarUrl required' })
+  const { avatarUrl, name } = req.body as { avatarUrl?: string; name?: string }
+  if (!avatarUrl && !name) {
+    res.status(400).json({ error: 'avatarUrl or name required' })
     return
   }
 
   try {
-    await User.findByIdAndUpdate(req.userId, { avatarUrl })
+    const update: Record<string, string> = {}
+    if (avatarUrl) update.avatarUrl = avatarUrl
+    if (name?.trim()) update.name = name.trim()
+    await User.findByIdAndUpdate(req.userId, update)
     res.json({ ok: true })
   } catch {
-    res.status(500).json({ error: 'Failed to update avatar' })
+    res.status(500).json({ error: 'Failed to update profile' })
   }
 }

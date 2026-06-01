@@ -168,6 +168,27 @@
   min-width: 0;
 }
 
+.profileActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.editBtn {
+  background: none;
+  border: 1px solid var(--accent-dim);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  align-self: flex-start;
+}
+.editBtn:hover { background: var(--accent-soft); }
+
 .profileName {
   font-family: var(--font-ui);
   font-size: 14px;
