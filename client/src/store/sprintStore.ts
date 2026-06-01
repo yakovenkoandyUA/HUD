@@ -251,6 +251,7 @@ export const useSprintStore = create<TodoState>()(
               ...(existing.repeat         !== undefined && { repeat:         existing.repeat }),
               ...(existing.nextDue        !== undefined && { nextDue:        existing.nextDue }),
               ...(existing.repeatDay      !== undefined && { repeatDay:      existing.repeatDay }),
+              ...(existing.repeatConfig   !== undefined && { repeatConfig:   existing.repeatConfig }),
             }
           }
 

@@ -98,9 +98,19 @@ export interface UnifiedTodo {
   checklist?: ChecklistItem[]
   recipeImageUrl?: string
   recipeId?: string
-  repeat?: 'none' | 'daily' | 'weekly' | 'monthly'
+  repeat?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
   repeatDay?: number
   nextDue?: string
+  repeatConfig?: RepeatConfig
+}
+
+export interface RepeatConfig {
+  interval: number
+  unit: 'day' | 'week' | 'month' | 'year'
+  weekDays?: number[]        // 0=Mon..6=Sun, only for unit=week
+  endsType: 'never' | 'date' | 'after'
+  endsDate?: string
+  endsAfter?: number
 }
 
 export type RecipeDifficulty = 'easy' | 'medium' | 'hard'

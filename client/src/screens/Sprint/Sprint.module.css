@@ -551,6 +551,44 @@
 .repeatBtn:hover { color: var(--text2); }
 .repeatBtnActive { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-dim); }
 
+/* ── Repeat option list ──────────────────────────────────────────────────── */
+
+.repeatList {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+  animation: repeatJiggle 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.repeatListItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+.repeatListItem:first-child { border-top: none; }
+.repeatListItem:hover { background: rgba(255,255,255,0.03); }
+
+.repeatListItemActive {
+  color: var(--accent);
+}
+
+.repeatListCustom {
+  color: var(--text3);
+}
+
 /* ── Рутини accordion ────────────────────────────────────────────────────── */
 
 .routinesSection {

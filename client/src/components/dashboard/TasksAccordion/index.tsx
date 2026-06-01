@@ -53,7 +53,7 @@ const TasksAccordion: React.FC = () => {
   const todoItems  = items.filter((t) => t.type === 'todo' && (!t.repeat || t.repeat === 'none'))
   const todoActive = todoItems.filter((t) => !t.done)
 
-  const [questsOpen, setQuestsOpen]   = useState(() => items.filter(t => t.type === 'todo' && !t.done).length > 0)
+  const [questsOpen, setQuestsOpen]   = useState(false)
   const [shoppingOpen, setShoppingOpen] = useState(false)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [completingShop, setCompletingShop] = useState<Set<string>>(new Set())

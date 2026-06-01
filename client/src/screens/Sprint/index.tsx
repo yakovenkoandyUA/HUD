@@ -6,14 +6,14 @@ import TaskCard from '../../components/sprint/TaskCard'
 import TaskDetailModal from '../../components/sprint/TaskDetailModal'
 import WeekExpandedView from '../../components/sprint/WeekExpandedView'
 import LabelPicker from '../../components/sprint/LabelPicker'
+import RepeatConfigScreen from '../../components/sprint/RepeatConfigScreen'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
-import CustomDatePicker from '../../components/ui/CustomDatePicker'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
 import { getCurrentWeekStart } from '../../utils/sprint'
 import { getToken } from '../../services/api'
-import type { UnifiedTodo, TodoPriority, SprintLabel } from '../../types'
+import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
 
 const SYNC_COLORS: Record<string, string> = {
@@ -48,28 +48,47 @@ const PRIORITY_CONFIG: Record<TodoPriority, { symbol: string; label: string; act
 	low:    { symbol: '▽', label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow },
 }
 
-type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly'
+type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
 
-const REPEAT_OPTIONS: { key: Exclude<RepeatType, 'none'>; label: string }[] = [
-	{ key: 'daily',   label: 'ЩОДНЯ' },
-	{ key: 'weekly',  label: 'ЩОТИЖНЯ' },
-	{ key: 'monthly', label: 'ЩОМІСЯЦЯ' },
+const QUICK_REPEAT_OPTIONS: { key: Exclude<RepeatType, 'none' | 'custom'>; label: string }[] = [
+	{ key: 'daily',   label: 'Щодня' },
+	{ key: 'weekly',  label: 'Щотижня' },
+	{ key: 'monthly', label: 'Щомісяця' },
+	{ key: 'yearly',  label: 'Щороку' },
 ]
 
 const REPEAT_BADGE: Record<string, string> = {
 	daily:   'ЩОДНЯ',
 	weekly:  'ЩОТИЖНЯ',
 	monthly: 'ЩОМІСЯЦЯ',
+	yearly:  'ЩОРОКУ',
+	custom:  'CUSTOM',
 }
 
-function formatRepeatDateLabel(repeat: Exclude<RepeatType, 'none' | 'daily'>, dateStr: string): string {
-	const [y, m, d] = dateStr.split('-').map(Number)
-	const date = new Date(y, m - 1, d)
-	if (repeat === 'weekly') {
-		const DAYS = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-		return `Кожен ${DAYS[date.getDay()]}`
+function repeatToUnit(r: Exclude<RepeatType, 'none' | 'custom'>): RepeatConfig['unit'] {
+	if (r === 'daily')   return 'day'
+	if (r === 'weekly')  return 'week'
+	if (r === 'monthly') return 'month'
+	return 'year'
+}
+
+function formatRepeatActiveLabel(repeat: RepeatType, config: RepeatConfig | null): string {
+	if (repeat === 'daily')   return 'Щодня'
+	if (repeat === 'weekly')  return 'Щотижня'
+	if (repeat === 'monthly') return 'Щомісяця'
+	if (repeat === 'yearly')  return 'Щороку'
+	if (repeat === 'custom' && config) {
+		const n = config.interval
+		const UNITS: Record<RepeatConfig['unit'], [string, string]> = {
+			day:   ['день', 'дні'],
+			week:  ['тиждень', 'тижні'],
+			month: ['місяць', 'місяці'],
+			year:  ['рік', 'роки'],
+		}
+		const [sing, plur] = UNITS[config.unit]
+		return n === 1 ? `Кожен ${sing}` : `Кожні ${n} ${plur}`
 	}
-	return `${d}-го числа`
+	return 'Повтор'
 }
 
 function formatRoutineDue(dateStr: string): string {
@@ -135,9 +154,9 @@ const Sprint: React.FC = () => {
 	const [newLabels, setNewLabels]           = useState<SprintLabel[]>([])
 	const [showLabelPicker, setShowLabelPicker] = useState(false)
 	const [newRepeat, setNewRepeat]           = useState<RepeatType>('none')
-	const [newRepeatDate, setNewRepeatDate]   = useState('')
-	const [showRepeatPicker, setShowRepeatPicker]     = useState(false)
-	const [showRepeatDatePicker, setShowRepeatDatePicker] = useState(false)
+	const [showRepeatList, setShowRepeatList] = useState(false)
+	const [showRepeatConfigScreen, setShowRepeatConfigScreen] = useState(false)
+	const [newRepeatConfig, setNewRepeatConfig] = useState<RepeatConfig | null>(null)
 	const [routinesOpen, setRoutinesOpen]     = useState(false)
 	const [completingRoutines, setCompletingRoutines] = useState<Set<string>>(new Set())
 	const [detailTaskId, setDetailTaskId]     = useState<string | null>(null)
@@ -198,9 +217,9 @@ const Sprint: React.FC = () => {
 		setNewLabels([])
 		setShowLabelPicker(false)
 		setNewRepeat('none')
-		setNewRepeatDate('')
-		setShowRepeatPicker(false)
-		setShowRepeatDatePicker(false)
+		setNewRepeatConfig(null)
+		setShowRepeatList(false)
+		setShowRepeatConfigScreen(false)
 	}
 
 	const handleAdd = (e: React.FormEvent) => {
@@ -213,11 +232,9 @@ const Sprint: React.FC = () => {
 			...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
 			...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
 			...(newType === 'todo' && newRepeat !== 'none' ? {
-				repeat:  newRepeat,
-				nextDue: newRepeatDate || new Date().toISOString().split('T')[0],
-				...(newRepeat === 'monthly' && newRepeatDate
-					? { repeatDay: parseInt(newRepeatDate.split('-')[2], 10) }
-					: {}),
+				repeat:       newRepeat,
+				repeatConfig: newRepeatConfig ?? { interval: 1, unit: repeatToUnit(newRepeat as Exclude<RepeatType, 'none' | 'custom'>), endsType: 'never' as const },
+				nextDue:      new Date().toISOString().split('T')[0],
 			} : {}),
 		})
 		resetForm()
@@ -264,7 +281,7 @@ const Sprint: React.FC = () => {
 										<div className={styles.routineBody}>
 											<span className={styles.routineTitle}>{t.title}</span>
 											<div className={styles.routineMeta}>
-												<span className={styles.repeatBadge}>{REPEAT_BADGE[t.repeat!]}</span>
+												<span className={styles.repeatBadge}>{REPEAT_BADGE[t.repeat!] ?? t.repeat}</span>
 												{t.nextDue && <span className={styles.routineDue}>{formatRoutineDue(t.nextDue)}</span>}
 											</div>
 										</div>
@@ -425,8 +442,8 @@ const Sprint: React.FC = () => {
 									</button>
 								</div>
 
-								{!showRepeatPicker ? (
-									<button type="button" className={styles.repeatToggleBtn} onClick={() => setShowRepeatPicker(true)}>
+								{newRepeat === 'none' ? (
+									<button type="button" className={styles.repeatToggleBtn} onClick={() => setShowRepeatList(v => !v)}>
 										<svg width="11" height="11" viewBox="0 0 10 10" fill="none">
 											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
 											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -434,73 +451,39 @@ const Sprint: React.FC = () => {
 										Повторити
 									</button>
 								) : (
-									<span className={styles.repeatActiveLabel}>
+									<span className={styles.repeatActiveLabel} style={{ cursor: 'pointer' }} onClick={() => setShowRepeatList(v => !v)}>
 										<svg width="11" height="11" viewBox="0 0 10 10" fill="none">
 											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
 											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
 										</svg>
-										Повторювана
-										<button
-											type="button"
-											className={styles.repeatActiveClose}
-											onClick={() => {
-												setShowRepeatPicker(false)
-												setNewRepeat('none')
-												setNewRepeatDate('')
-												setShowRepeatDatePicker(false)
-											}}
-										>
-											✕
-										</button>
+										{formatRepeatActiveLabel(newRepeat, newRepeatConfig)}
+										<button type="button" className={styles.repeatActiveClose} onClick={e => { e.stopPropagation(); setNewRepeat('none'); setNewRepeatConfig(null); setShowRepeatList(false); setShowRepeatConfigScreen(false) }}>✕</button>
 									</span>
 								)}
 							</div>
 
-							{/* Row 2: repeat options — full width, shown when active */}
-							{showRepeatPicker && (
-								<div className={styles.repeatRow}>
-									{REPEAT_OPTIONS.map(r => (
-										<button
-											key={r.key}
-											type="button"
-											className={`${styles.repeatBtn} ${newRepeat === r.key ? styles.repeatBtnActive : ''}`}
-											onClick={() => {
-												setNewRepeat(prev => (prev === r.key ? 'none' : r.key))
-												setNewRepeatDate('')
-											}}
-										>
-											{r.label}
+							{/* Repeat option list */}
+							{showRepeatList && (
+								<div className={styles.repeatList}>
+									<button type="button" className={`${styles.repeatListItem} ${newRepeat === 'none' ? styles.repeatListItemActive : ''}`}
+										onClick={() => { setNewRepeat('none'); setNewRepeatConfig(null); setShowRepeatList(false) }}>
+										<span>Не повторюється</span>
+										{newRepeat === 'none' && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+									</button>
+									{QUICK_REPEAT_OPTIONS.map(opt => (
+										<button type="button" key={opt.key}
+											className={`${styles.repeatListItem} ${newRepeat === opt.key ? styles.repeatListItemActive : ''}`}
+											onClick={() => { setNewRepeat(opt.key); setNewRepeatConfig(null); setShowRepeatList(false) }}>
+											<span>{opt.label}</span>
+											{newRepeat === opt.key && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
 										</button>
 									))}
-								</div>
-							)}
-
-							{/* Row 3: day picker for weekly/monthly */}
-							{showRepeatPicker && (newRepeat === 'weekly' || newRepeat === 'monthly') && (
-								<div className={styles.repeatDateRow}>
-									{newRepeatDate ? (
-										<div className={styles.deadlineInline}>
-											<button type="button" className={styles.dateDisplayBtn} onClick={() => setShowRepeatDatePicker(true)}>
-												{formatRepeatDateLabel(newRepeat, newRepeatDate)}
-											</button>
-											<button
-												type="button"
-												className={styles.deadlineRemoveBtn}
-												onClick={() => {
-													setNewRepeatDate('')
-													setShowRepeatDatePicker(false)
-												}}
-											>
-												✕
-											</button>
-										</div>
-									) : (
-										<div className={styles.deadlineTrigger}>
-											<button type="button" className={styles.addExtrasBtn} onClick={() => setShowRepeatDatePicker(true)}>
-												{newRepeat === 'weekly' ? 'Обрати день тижня' : 'Обрати день місяця'}
-											</button>
-										</div>
-									)}
+									<button type="button"
+										className={`${styles.repeatListItem} ${styles.repeatListCustom} ${newRepeat === 'custom' ? styles.repeatListItemActive : ''}`}
+										onClick={() => { setShowRepeatList(false); setShowRepeatConfigScreen(true) }}>
+										<span>Налаштувати...</span>
+										{newRepeat === 'custom' && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+									</button>
 								</div>
 							)}
 						</div>
@@ -512,14 +495,11 @@ const Sprint: React.FC = () => {
 				</form>
 			</Modal>
 
-			{showRepeatDatePicker && (
-				<CustomDatePicker
-					value={newRepeatDate || undefined}
-					onChange={date => {
-						setNewRepeatDate(date)
-						setShowRepeatDatePicker(false)
-					}}
-					onClose={() => setShowRepeatDatePicker(false)}
+			{showRepeatConfigScreen && (
+				<RepeatConfigScreen
+					initial={newRepeatConfig ?? undefined}
+					onSave={config => { setNewRepeat('custom'); setNewRepeatConfig(config); setShowRepeatConfigScreen(false) }}
+					onClose={() => setShowRepeatConfigScreen(false)}
 				/>
 			)}
 

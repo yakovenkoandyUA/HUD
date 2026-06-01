@@ -26,14 +26,9 @@ const LabelPicker: React.FC<LabelPickerProps> = ({ selectedLabels, onToggle, onC
   const { globalLabels, addGlobalLabel, updateGlobalLabel, deleteGlobalLabel } = useSprintStore()
 
   const [pickerView, setPickerView] = useState<PickerView>('list')
-  const [search, setSearch]         = useState('')
   const [editingId, setEditingId]   = useState<string | null>(null)
   const [formTitle, setFormTitle]   = useState('')
   const [formColor, setFormColor]   = useState(LABEL_COLORS[0])
-
-  const filteredLabels = globalLabels.filter(l =>
-    !search || l.title.toLowerCase().includes(search.toLowerCase())
-  )
 
   const handleEditStart = (label: SprintLabel) => {
     setEditingId(label.id)
@@ -76,18 +71,8 @@ const LabelPicker: React.FC<LabelPickerProps> = ({ selectedLabels, onToggle, onC
 
         {pickerView === 'list' ? (
           <>
-            <div className={styles.pickerSearchWrap}>
-              <input
-                className={styles.pickerSearch}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Пошук..."
-                autoFocus
-              />
-            </div>
-
             <div className={styles.pickerList}>
-              {filteredLabels.map(label => {
+              {globalLabels.map(label => {
                 const isOn = selectedLabels.some(l => l.id === label.id)
                 return (
                   <div key={label.id} className={styles.pickerRow}>
@@ -124,10 +109,8 @@ const LabelPicker: React.FC<LabelPickerProps> = ({ selectedLabels, onToggle, onC
                   </div>
                 )
               })}
-              {filteredLabels.length === 0 && (
-                <p className={styles.pickerEmpty}>
-                  {search ? 'Нічого не знайдено' : 'Мітки відсутні'}
-                </p>
+              {globalLabels.length === 0 && (
+                <p className={styles.pickerEmpty}>Мітки відсутні</p>
               )}
             </div>
 
