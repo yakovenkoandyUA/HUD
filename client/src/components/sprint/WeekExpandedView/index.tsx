@@ -10,6 +10,7 @@ import styles from './WeekExpandedView.module.css'
  * Зліва — день (аббревіатура + число), справа — задачі.
  * Сьогодні виділено золотим; дні без задач — 35% opacity.
  * Внизу — статистика виконання рутин за 4 тижні.
+ * Тап на майбутню задачу → підтвердження дострокового виконання.
  *
  * Props:
  * @prop {string}               weekStart      — ISO дата понеділка ('YYYY-MM-DD')
@@ -26,7 +27,15 @@ interface WeekExpandedViewProps {
   onClose: () => void
 }
 
+interface ConfirmItem {
+  id: string
+  title: string
+  scheduledDate: string
+}
+
 const DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+const DAY_SHORT  = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+const MONTHS_SHORT = ['січ.', 'лют.', 'бер.', 'квіт.', 'трав.', 'черв.', 'лип.', 'серп.', 'вер.', 'жовт.', 'лист.', 'груд.']
 
 function parseLocalDate(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number)
@@ -42,6 +51,12 @@ function getWeekDays(weekStart: string): Date[] {
 
 function toIso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function formatScheduledDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return `${DAY_SHORT[date.getDay()]} ${d} ${MONTHS_SHORT[m - 1]}`
 }
 
 function getRepeatLabel(task: UnifiedTodo): string {
@@ -61,14 +76,18 @@ function getRepeatLabel(task: UnifiedTodo): string {
 
 interface WeekStat { done: number; total: number }
 
-function calcWeekStats(weekStart: string, routineItems: UnifiedTodo[]): WeekStat[] {
+function calcWeekStats(routineItems: UnifiedTodo[]): WeekStat[] {
   const today = new Date(); today.setHours(0, 0, 0, 0)
-  const anchorMon = parseLocalDate(weekStart)
+  const currentMonday = new Date(today)
+  currentMonday.setDate(today.getDate() - (today.getDay() + 6) % 7)
+  currentMonday.setHours(0, 0, 0, 0)
+  const lastMonday = new Date(currentMonday)
+  lastMonday.setDate(currentMonday.getDate() - 7)
 
   return Array.from({ length: 4 }, (_, wi) => {
-    // wi=0 → 3 weeks ago, wi=3 → current week
-    const mon = new Date(anchorMon)
-    mon.setDate(anchorMon.getDate() - (3 - wi) * 7)
+    const mon = new Date(lastMonday)
+    mon.setDate(lastMonday.getDate() - (3 - wi) * 7)
+    mon.setHours(0, 0, 0, 0)
 
     let total = 0
     let done  = 0
@@ -76,10 +95,9 @@ function calcWeekStats(weekStart: string, routineItems: UnifiedTodo[]): WeekStat
     for (let di = 0; di < 7; di++) {
       const day = new Date(mon); day.setDate(mon.getDate() + di)
       day.setHours(0, 0, 0, 0)
-      if (day > today) break  // don't count future days
+      if (day > today) break
 
       const dayIso = toIso(day)
-
       routineItems.forEach(t => {
         if (!isRoutineDueOnDay(t, day)) return
         total++
@@ -94,10 +112,18 @@ function calcWeekStats(weekStart: string, routineItems: UnifiedTodo[]): WeekStat
 const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
   weekStart, routineItems, onToggle, onOpenDetail, onClose,
 }) => {
-  const days  = getWeekDays(weekStart)
-  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const days    = getWeekDays(weekStart)
+  const today   = new Date(); today.setHours(0, 0, 0, 0)
+  const todayStr = toIso(today)
 
   const [completing, setCompleting] = useState<Set<string>>(new Set())
+  const [closing, setClosing]       = useState(false)
+  const [confirmItem, setConfirmItem] = useState<ConfirmItem | null>(null)
+
+  const handleClose = () => {
+    setClosing(true)
+    setTimeout(onClose, 210)
+  }
 
   const handleTap = (id: string) => {
     if (completing.has(id)) return
@@ -108,14 +134,36 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
     }, 360)
   }
 
+  // Decide whether to complete immediately or ask for confirmation
+  const handleCheckboxTap = (task: UnifiedTodo, isDoneForDay: boolean) => {
+    if (isDoneForDay) {
+      // Undo — always immediate
+      onToggle(task.id)
+      return
+    }
+    // Future task: nextDue is strictly after today → ask confirmation
+    if (task.nextDue && task.nextDue > todayStr) {
+      setConfirmItem({ id: task.id, title: task.title, scheduledDate: task.nextDue })
+      return
+    }
+    // Today or overdue → mark immediately
+    handleTap(task.id)
+  }
+
+  const handleConfirm = () => {
+    if (!confirmItem) return
+    handleTap(confirmItem.id)
+    setConfirmItem(null)
+  }
+
   const fmt = (d: Date) => d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
 
-  const weekStats   = calcWeekStats(weekStart, routineItems)
-  const totalDone   = weekStats.reduce((s, w) => s + w.done, 0)
-  const showStats   = totalDone > 0
+  const weekStats = calcWeekStats(routineItems)
+  const totalDone = weekStats.reduce((s, w) => s + w.done, 0)
+  const showStats = totalDone > 0
 
   return (
-    <div className={styles.overlay}>
+    <div className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
 
       {/* ── Top bar ── */}
       <div className={styles.topBar}>
@@ -123,7 +171,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
           <span className={styles.topBarTitle}>Тиждень</span>
           <span className={styles.topBarRange}>{fmt(days[0])} — {fmt(days[6])}</span>
         </div>
-        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
+        <button type="button" className={styles.closeBtn} onClick={handleClose} aria-label="Закрити">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
@@ -155,23 +203,26 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
                   <span className={styles.emptyDash}>—</span>
                 ) : (
                   dayRoutines.map(t => {
-                    const isDone      = completing.has(t.id)
-                    const repeatLabel = getRepeatLabel(t)
-                    const circleClass = styles.circleGold
+                    const isDoneForDay = t.completionLog?.includes(toIso(dt)) ?? false
+                    const isAnimating  = completing.has(t.id)
+                    const isDone       = isAnimating || isDoneForDay
+                    const repeatLabel  = getRepeatLabel(t)
 
                     return (
-                      <div key={t.id} className={`${styles.taskRow} ${isDone ? styles.taskRowDone : ''}`}>
+                      <div key={t.id} className={`${styles.taskRow} ${isAnimating ? styles.taskRowDone : ''} ${isDoneForDay && !isAnimating ? styles.taskRowCompleted : ''}`}>
                         <button
                           type="button"
-                          className={`${styles.circle} ${circleClass}`}
-                          onClick={() => handleTap(t.id)}
+                          className={styles.checkboxWrapper}
+                          onClick={() => handleCheckboxTap(t, isDoneForDay)}
                           aria-label="Виконати"
                         >
-                          {isDone && (
-                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                              <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
+                          <span className={`${styles.circle} ${isDone ? styles.circleChecked : styles.circleGold}`}>
+                            {isDone && (
+                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                                <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </span>
                         </button>
 
                         <button
@@ -215,6 +266,35 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* ── Early-completion confirmation dialog ── */}
+      {confirmItem && (
+        <div className={styles.confirmBackdrop} onClick={() => setConfirmItem(null)}>
+          <div className={styles.confirmCard} onClick={e => e.stopPropagation()}>
+            <p className={styles.confirmTitle}>Виконати достроково?</p>
+            <p className={styles.confirmBody}>
+              <span className={styles.confirmTaskName}>&ldquo;{confirmItem.title}&rdquo;</span>{' '}
+              заплановано на {formatScheduledDate(confirmItem.scheduledDate)}
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.confirmCancel}
+                onClick={() => setConfirmItem(null)}
+              >
+                Скасувати
+              </button>
+              <button
+                type="button"
+                className={styles.confirmDo}
+                onClick={handleConfirm}
+              >
+                Виконати
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

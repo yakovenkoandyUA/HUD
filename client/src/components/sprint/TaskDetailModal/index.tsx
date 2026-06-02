@@ -135,8 +135,34 @@ const ChecklistRow: React.FC<ChecklistRowProps> = ({ taskId, itemId, title, done
 
 // ── Main component ───────────────────────────────────────────────────────────
 
+type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks'
+
+const REMINDER_UNITS: { key: ReminderUnit; label: string }[] = [
+  { key: 'minutes', label: 'Хв. до' },
+  { key: 'hours',   label: 'Годин'  },
+  { key: 'days',    label: 'Днів'   },
+  { key: 'weeks',   label: 'Тижнів' },
+]
+
+function formatReminderLabel(reminder: { amount: number; unit: string }): string {
+  const { amount, unit } = reminder
+  if (unit === 'minutes') return `${amount} хв.`
+  if (unit === 'hours')   return `${amount} год.`
+  if (unit === 'days') {
+    if (amount === 1) return '1 день'
+    if (amount < 5)  return `${amount} дні`
+    return `${amount} днів`
+  }
+  if (unit === 'weeks') {
+    if (amount === 1) return '1 тиждень'
+    if (amount < 5)  return `${amount} тижні`
+    return `${amount} тижнів`
+  }
+  return String(amount)
+}
+
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
-  const { items, updateTask, toggleItem, addChecklistItem, addLabel, removeLabel } = useSprintStore()
+  const { items, updateTask, toggleItem, addChecklistItem, addLabel, removeLabel, setReminder } = useSprintStore()
 
   // Keep a snapshot so the task content stays visible during the close animation
   const liveTask = items.find(i => i.id === taskId) ?? null
@@ -151,6 +177,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [showDatePicker, setShowDatePicker]   = useState(false)
   const [showRepeatConfig, setShowRepeatConfig] = useState(false)
   const [showNextDuePicker, setShowNextDuePicker] = useState(false)
+  const [showReminderPicker, setShowReminderPicker] = useState(false)
+  const [reminderAmount, setReminderAmount] = useState(1)
+  const [reminderUnit, setReminderUnit] = useState<ReminderUnit>('days')
 
   const titleRef      = useRef<HTMLTextAreaElement>(null)
   const descRef       = useRef<HTMLTextAreaElement>(null)
@@ -168,6 +197,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
       setCheckInput('')
       setShowRepeatConfig(false)
       setShowNextDuePicker(false)
+      setShowReminderPicker(false)
     } else {
       const t = setTimeout(() => setMounted(false), 280)
       return () => clearTimeout(t)
@@ -282,6 +312,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               onBlur={handleTitleBlur}
               rows={1}
             />
+            {task.recipeImageUrl && (
+              <img src={task.recipeImageUrl} className={styles.headerRecipeImg} alt="" />
+            )}
             <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">✕</button>
           </div>
 
@@ -342,6 +375,46 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                       <path d="M9.5 1.5l2 2L4 11H2v-2L9.5 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </button>
+                </div>
+
+                {/* ── СПОВІЩЕННЯ ── */}
+                <div className={styles.section}>
+                  <p className={styles.sectionLabel}>Сповіщення</p>
+                  {task.reminder ? (
+                    <div className={styles.reminderActive}>
+                      <svg width="14" height="14" viewBox="0 0 16 18" fill="none" className={styles.reminderIcon}>
+                        <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                      </svg>
+                      <span className={styles.reminderActiveText}>
+                        За {formatReminderLabel(task.reminder)}
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.reminderClear}
+                        onClick={() => setReminder(task.id, undefined)}
+                        aria-label="Видалити сповіщення"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.addReminderBtn}
+                      onClick={() => {
+                        setReminderAmount(1)
+                        setReminderUnit('days')
+                        setShowReminderPicker(true)
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 18" fill="none" className={styles.addReminderIcon}>
+                        <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                      </svg>
+                      Додати сповіщення
+                    </button>
+                  )}
                 </div>
               </>
             ) : (
@@ -486,6 +559,59 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
           onChange={handleNextDueSave}
           onClose={() => setShowNextDuePicker(false)}
         />
+      )}
+
+      {/* ── Reminder Picker (z-index 400) ── */}
+      {showReminderPicker && (
+        <div className={styles.reminderOverlay} onClick={() => setShowReminderPicker(false)}>
+          <div className={styles.reminderSheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.handle} />
+            <div className={styles.reminderSheetHeader}>
+              <span className={styles.reminderSheetTitle}>Сповіщення</span>
+              <button type="button" className={styles.closeBtn} onClick={() => setShowReminderPicker(false)} aria-label="Закрити">✕</button>
+            </div>
+            <div className={styles.reminderSheetBody}>
+              <div className={styles.reminderAmountRow}>
+                <input
+                  type="number"
+                  className={styles.reminderAmountInput}
+                  value={reminderAmount}
+                  min={1}
+                  max={999}
+                  onChange={e => setReminderAmount(Math.max(1, Math.min(999, Number(e.target.value) || 1)))}
+                />
+                <span className={styles.reminderAmountLabel}>
+                  {reminderUnit === 'minutes' ? 'хвилин' : reminderUnit === 'hours' ? 'годин' : reminderUnit === 'days' ? 'днів' : 'тижнів'} до
+                </span>
+              </div>
+              <div className={styles.reminderUnitList}>
+                {REMINDER_UNITS.map(u => (
+                  <button
+                    key={u.key}
+                    type="button"
+                    className={styles.reminderUnitRow}
+                    onClick={() => setReminderUnit(u.key)}
+                  >
+                    <span className={`${styles.reminderRadio} ${reminderUnit === u.key ? styles.reminderRadioActive : ''}`} />
+                    <span className={`${styles.reminderUnitLabel} ${reminderUnit === u.key ? styles.reminderUnitLabelActive : ''}`}>
+                      {u.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              type="button"
+              className={styles.reminderDoneBtn}
+              onClick={() => {
+                setReminder(task.id, { amount: reminderAmount, unit: reminderUnit })
+                setShowReminderPicker(false)
+              }}
+            >
+              Готово
+            </button>
+          </div>
+        </div>
       )}
     </>
   )

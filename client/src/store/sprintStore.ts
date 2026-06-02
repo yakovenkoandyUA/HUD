@@ -74,6 +74,8 @@ interface ApiTask {
   repeatDay?: number
   repeatConfig?: Record<string, unknown>
   repeatStartDate?: string
+  completionHistory?: string[]
+  reminder?: { amount: number; unit: string } | null
 }
 
 interface ApiTodo {
@@ -88,6 +90,8 @@ interface ApiTodo {
   repeatDay?: number
   repeatConfig?: Record<string, unknown>
   repeatStartDate?: string
+  completionHistory?: string[]
+  reminder?: { amount: number; unit: string } | null
 }
 
 // ── Repeat helpers ────────────────────────────────────────────────────────────
@@ -168,6 +172,8 @@ interface TodoState {
   deleteItem: (id: string) => void
   setSyncStatus: (s: SyncStatus) => void
 
+  setReminder: (id: string, reminder: UnifiedTodo['reminder']) => void
+
   // Rich card fields — local-only, not synced to backend
   updateTask: (id: string, updates: Partial<UnifiedTodo>) => void
   addChecklistItem: (taskId: string, title: string) => void
@@ -188,6 +194,17 @@ export const useSprintStore = create<TodoState>()(
       globalLabels: DEFAULT_LABELS,
 
       setSyncStatus: (syncStatus) => set({ syncStatus }),
+
+      setReminder: (id, reminder) => {
+        const item = get().items.find(i => i.id === id)
+        set(s => ({ items: s.items.map(i => i.id === id ? { ...i, reminder } : i) }))
+        if (!item || !getToken() || !isBackendConfigured()) return
+        const endpoint = item.type === 'sprint' ? `/api/sprint/tasks/${id}` : `/api/sprint/todos/${id}`
+        authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ reminder: reminder ?? null }) })
+          .then(r => { if (!r.ok) throw new Error() })
+          .then(() => set({ syncStatus: 'synced' }))
+          .catch(() => set({ syncStatus: 'error' }))
+      },
 
       updateTask: (id, updates) =>
         set(s => ({ items: s.items.map(i => i.id === id ? { ...i, ...updates } : i) })),
@@ -280,6 +297,8 @@ export const useSprintStore = create<TodoState>()(
             ...(t.repeatConfig && { repeatConfig: t.repeatConfig as unknown as RepeatConfig }),
             ...(t.repeatDay !== undefined && { repeatDay: t.repeatDay }),
             ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
+            ...(t.completionHistory?.length && { completionLog: t.completionHistory }),
+            ...(t.reminder && { reminder: t.reminder as UnifiedTodo['reminder'] }),
           }))
 
           const otherItems: UnifiedTodo[] = apiTodos.map(t => ({
@@ -292,12 +311,19 @@ export const useSprintStore = create<TodoState>()(
             ...(t.repeatConfig && { repeatConfig: t.repeatConfig as unknown as RepeatConfig }),
             ...(t.repeatDay !== undefined && { repeatDay: t.repeatDay }),
             ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
+            ...(t.completionHistory?.length && { completionLog: t.completionHistory }),
+            ...(t.reminder && { reminder: t.reminder as UnifiedTodo['reminder'] }),
           }))
 
           // Merge API items with existing local-only fields.
           // Backend doesn't store: type distinction (todo vs shopping), repeat, labels, checklist, etc.
           const mergeLocal = (apiItem: UnifiedTodo, existing: UnifiedTodo | undefined): UnifiedTodo => {
             if (!existing) return apiItem
+            // Union of backend-synced and any locally-pending completionLog entries
+            const mergedLog = Array.from(new Set([
+              ...(existing.completionLog ?? []),
+              ...(apiItem.completionLog ?? []),
+            ]))
             return {
               ...apiItem,
               type:       existing.type,
@@ -312,6 +338,7 @@ export const useSprintStore = create<TodoState>()(
               ...(existing.repeatDay        !== undefined && { repeatDay:        existing.repeatDay }),
               ...(existing.repeatConfig     !== undefined && { repeatConfig:     existing.repeatConfig }),
               ...(existing.repeatStartDate  !== undefined && { repeatStartDate:  existing.repeatStartDate }),
+              ...(mergedLog.length && { completionLog: mergedLog }),
             }
           }
 
@@ -439,13 +466,26 @@ export const useSprintStore = create<TodoState>()(
         const item = get().items.find(i => i.id === id)
         if (!item) return
 
-        // Recurring task: briefly mark done, then recalculate nextDue after animation
+        // Recurring task
         if (isRecurring(item) && !item.done) {
           const todayStr = localDateStr(new Date())
-          set(s => ({ items: s.items.map(i => i.id === id ? {
-            ...i, done: true,
-            completionLog: [...(i.completionLog ?? []), todayStr],
-          } : i) }))
+
+          if (item.completionLog?.includes(todayStr)) {
+            // UNDO: remove today's entry, restore nextDue to today
+            const newLog = (item.completionLog ?? []).filter(d => d !== todayStr)
+            set(s => ({ items: s.items.map(i => i.id === id ? { ...i, completionLog: newLog, nextDue: todayStr } : i) }))
+            if (!getToken() || !isBackendConfigured()) return
+            const endpoint = item.type === 'sprint' ? `/api/sprint/tasks/${id}` : `/api/sprint/todos/${id}`
+            authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ nextDue: todayStr, done: false, completionHistory: newLog }) })
+              .then(r => { if (!r.ok) throw new Error() })
+              .then(() => set({ syncStatus: 'synced' }))
+              .catch(() => set({ syncStatus: 'error' }))
+            return
+          }
+
+          // COMPLETE: briefly mark done, then recalculate nextDue after animation
+          const newLog = [...(item.completionLog ?? []), todayStr]
+          set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: true, completionLog: newLog } : i) }))
           setTimeout(() => {
             const current = get().items.find(i => i.id === id)
             if (!current) return
@@ -453,7 +493,11 @@ export const useSprintStore = create<TodoState>()(
             set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: false, nextDue } : i) }))
             if (!getToken() || !isBackendConfigured()) return
             const endpoint = current.type === 'sprint' ? `/api/sprint/tasks/${id}` : `/api/sprint/todos/${id}`
-            authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ nextDue, done: false }) })
+            authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({
+              nextDue,
+              done: false,
+              completionHistory: current.completionLog ?? [],
+            }) })
               .then(r => { if (!r.ok) throw new Error() })
               .then(() => set({ syncStatus: 'synced' }))
               .catch(() => set({ syncStatus: 'error' }))

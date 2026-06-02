@@ -104,6 +104,10 @@ export interface UnifiedTodo {
   repeatConfig?: RepeatConfig
   repeatStartDate?: string
   completionLog?: string[]  // 'YYYY-MM-DD' entries, local-only
+  reminder?: {
+    amount: number
+    unit: 'minutes' | 'hours' | 'days' | 'weeks'
+  }
 }
 
 export interface RepeatConfig {

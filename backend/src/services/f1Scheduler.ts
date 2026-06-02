@@ -1,6 +1,8 @@
 import cron from 'node-cron'
 import PushSubscription from '../models/PushSubscription'
-import { sendToAll } from './webpush'
+import SprintTask from '../models/SprintTask'
+import TodoItem from '../models/TodoItem'
+import { sendNotification, sendToAll } from './webpush'
 
 // 2026 F1 race dates (race Sunday, ISO format)
 const F1_2026_RACES: Array<{ name: string; date: string; flag: string }> = [
@@ -76,14 +78,76 @@ export async function sendRaceWeekendAlert(): Promise<void> {
   )
 }
 
-// Runs every Monday at 09:00
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+async function sendReminderNotifications(): Promise<void> {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStr = toDateStr(today)
+
+  const [tasks, todos] = await Promise.all([
+    SprintTask.find({ repeat: { $ne: 'none' }, reminder: { $ne: null }, nextDue: { $exists: true } }).lean(),
+    TodoItem.find({ repeat: { $ne: 'none' }, reminder: { $ne: null }, nextDue: { $exists: true } }).lean(),
+  ])
+
+  const allItems = [...tasks, ...todos] as Array<{
+    _id: unknown; title: string; userId: string; nextDue?: string
+    reminder?: { amount: number; unit: string } | null
+  }>
+
+  for (const item of allItems) {
+    if (!item.reminder || !item.nextDue) continue
+
+    const [ny, nm, nd] = item.nextDue.split('-').map(Number)
+    const nextDueDate = new Date(ny, nm - 1, nd)
+    nextDueDate.setHours(0, 0, 0, 0)
+
+    const reminderDate = new Date(nextDueDate)
+    const { amount, unit } = item.reminder
+    if (unit === 'minutes') reminderDate.setMinutes(reminderDate.getMinutes() - amount)
+    else if (unit === 'hours') reminderDate.setHours(reminderDate.getHours() - amount)
+    else if (unit === 'days') reminderDate.setDate(reminderDate.getDate() - amount)
+    else if (unit === 'weeks') reminderDate.setDate(reminderDate.getDate() - amount * 7)
+    reminderDate.setHours(0, 0, 0, 0)
+
+    if (toDateStr(reminderDate) !== todayStr) continue
+
+    const subs = await PushSubscription.find({ userId: item.userId }).lean()
+    for (const sub of subs) {
+      try {
+        await sendNotification(
+          { endpoint: sub.endpoint, keys: sub.keys },
+          { title: 'MIMIR', body: `Нагадування: ${item.title}`, icon: '/icons/icon-192.png' }
+        )
+      } catch (err: unknown) {
+        if ((err as { expired?: boolean }).expired) {
+          await PushSubscription.findByIdAndDelete(sub._id)
+          console.log(`🗑 Removed expired subscription: ${String(sub._id)}`)
+        }
+      }
+    }
+  }
+
+  console.log(`🔔 Reminder notifications processed (${allItems.length} recurring tasks checked)`)
+}
+
 export function startF1Scheduler(): void {
   if (!process.env.VAPID_PUBLIC_KEY) {
     console.warn('⚠️  VAPID not configured — F1 scheduler disabled')
     return
   }
+
+  // F1 race weekend alert — every Sunday at 08:00 Kyiv
   cron.schedule('0 8 * * 0', () => {
     sendRaceWeekendAlert().catch(console.error)
   }, { timezone: 'Europe/Kyiv' })
   console.log('🏎 F1 race weekend scheduler started (Sun 08:00 Kyiv time)')
+
+  // Recurring task reminders — every day at 08:00 Kyiv (05:00 UTC)
+  cron.schedule('0 5 * * *', () => {
+    sendReminderNotifications().catch(console.error)
+  })
+  console.log('🔔 Reminder scheduler started (daily 05:00 UTC / 08:00 Kyiv)')
 }

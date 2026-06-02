@@ -11,6 +11,8 @@ export interface ITodoItem extends Document {
   repeatDay?: number
   repeatConfig?: Record<string, unknown>
   repeatStartDate?: string
+  completionHistory?: string[]
+  reminder?: { amount: number; unit: string }
   userId: string
 }
 
@@ -25,7 +27,9 @@ const schema = new Schema<ITodoItem>({
   repeatDay: { type: Number },
   repeatConfig: { type: Schema.Types.Mixed },
   repeatStartDate: { type: String },
-  userId:   { type: String, required: true, index: true },
+  completionHistory: { type: [String], default: [] },
+  reminder:  { type: Schema.Types.Mixed, default: null },
+  userId:    { type: String, required: true, index: true },
 }, { timestamps: true })
 
 export default model<ITodoItem>('TodoItem', schema)

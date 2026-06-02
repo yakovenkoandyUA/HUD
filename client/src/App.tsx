@@ -111,11 +111,15 @@ const App: React.FC = () => {
     if (!token || !isSupported || isSubscribed) return
     async function trySubscribe() {
       const perm = Notification.permission
+      console.log('[push] trySubscribe — permission:', perm)
       if (perm === 'denied') return
       const granted = perm === 'granted'
         ? true
         : await Notification.requestPermission().then(p => p === 'granted')
-      if (granted) subscribe()
+      if (!granted) { console.log('[push] permission not granted'); return }
+      console.log('[push] calling subscribe…')
+      const ok = await subscribe()
+      console.log('[push] subscribe result:', ok)
     }
     trySubscribe()
     // eslint-disable-next-line react-hooks/exhaustive-deps

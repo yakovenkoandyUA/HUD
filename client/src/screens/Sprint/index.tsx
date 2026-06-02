@@ -199,10 +199,13 @@ const Sprint: React.FC = () => {
 	const [newRepeatConfig, setNewRepeatConfig] = useState<RepeatConfig | null>(null)
 	const [repeatStartDate, setRepeatStartDate] = useState(() => new Date().toISOString().split('T')[0])
 	const [showStartDatePicker, setShowStartDatePicker] = useState(false)
+	const todayStr = new Date().toISOString().split('T')[0]
 	const [routinesOpen, setRoutinesOpen]     = useState(false)
 	const [completingRoutines, setCompletingRoutines] = useState<Set<string>>(new Set())
 	const [detailTaskId, setDetailTaskId]     = useState<string | null>(null)
 	const [weekExpanded, setWeekExpanded]     = useState(false)
+	const [binHidden, setBinHidden]           = useState(true)
+	const binTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	const openPanel = () => {
 		if (filterTimerRef.current !== null) {
@@ -229,6 +232,13 @@ const Sprint: React.FC = () => {
 		[],
 	)
 
+	useEffect(
+		() => () => {
+			if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
+		},
+		[],
+	)
+
 	useEffect(() => {
 		if (!getToken()) return
 		fetchItems()
@@ -250,6 +260,16 @@ const Sprint: React.FC = () => {
 	})
 
 	const isFiltered = filter !== 'all' || statusFilter !== 'active'
+
+	useEffect(() => {
+		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
+		if (filteredItems.length === 0) {
+			binTimerRef.current = setTimeout(() => setBinHidden(true), 300)
+		} else {
+			setBinHidden(false)
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [filteredItems.length])
 
 	const resetForm = () => {
 		setNewTitle('')
@@ -295,11 +315,14 @@ const Sprint: React.FC = () => {
 	}
 
 	const handleRoutineToggle = (id: string) => {
-		setCompletingRoutines(prev => new Set(prev).add(id))
+		const isUndo = items.find(i => i.id === id)?.completionLog?.includes(todayStr) ?? false
+		if (!isUndo) {
+			setCompletingRoutines(prev => new Set(prev).add(id))
+			setTimeout(() => {
+				setCompletingRoutines(prev => { const s = new Set(prev); s.delete(id); return s })
+			}, 600)
+		}
 		toggleItem(id)
-		setTimeout(() => {
-			setCompletingRoutines(prev => { const s = new Set(prev); s.delete(id); return s })
-		}, 600)
 	}
 
 	return (
@@ -324,10 +347,13 @@ const Sprint: React.FC = () => {
 						</button>
 
 						<ul className={`${styles.routineList} ${routinesOpen ? styles.routineListOpen : ''}`}>
-							{routineItems.map(t => (
-									<li key={t.id} className={`${styles.routineItem} ${completingRoutines.has(t.id) ? styles.routineItemCompleting : ''}`}>
+							{routineItems.map(t => {
+								const doneToday = t.completionLog?.includes(todayStr) ?? false
+								const isCompleting = completingRoutines.has(t.id)
+								return (
+									<li key={t.id} className={`${styles.routineItem} ${isCompleting ? styles.routineItemCompleting : ''} ${doneToday && !isCompleting ? styles.routineItemDone : ''}`}>
 										<button type="button" className={styles.routineCheck} onClick={() => handleRoutineToggle(t.id)} aria-label="Виконати">
-											<span className={styles.routineCheckBox}>{completingRoutines.has(t.id) ? '✓' : ''}</span>
+											<span className={`${styles.routineCheckBox} ${isCompleting || doneToday ? styles.routineCheckBoxDone : ''}`}>{isCompleting || doneToday ? '✓' : ''}</span>
 										</button>
 										<button type="button" className={styles.routineBody} onClick={() => setDetailTaskId(t.id)}>
 											<span className={styles.routineTitle}>{t.title}</span>
@@ -340,7 +366,8 @@ const Sprint: React.FC = () => {
 											✕
 										</button>
 									</li>
-								))}
+								)
+							})}
 						</ul>
 					</div>
 				)}
@@ -574,6 +601,19 @@ const Sprint: React.FC = () => {
 					onClose={() => setShowStartDatePicker(false)}
 				/>
 			)}
+
+			{/* Trash bin — fixed, fly-to-bin target for TaskCard swipe-delete */}
+			<div
+				className={`${styles.trashBin} ${filteredItems.length === 0 ? styles.trashBinEmpty : ''}`}
+				id="sprint-trash-bin"
+				aria-hidden="true"
+				style={binHidden ? { display: 'none' } : undefined}
+			>
+				<svg width="20" height="22" viewBox="0 0 18 20" fill="none">
+					<path d="M1 4h16M6 4V2h6v2M3 4l1 14a1 1 0 001 1h8a1 1 0 001-1L15 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+					<path d="M7 8v6M11 8v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+				</svg>
+			</div>
 
 			{weekExpanded && <WeekExpandedView weekStart={weekStart} routineItems={routineItems} onToggle={toggleItem} onOpenDetail={setDetailTaskId} onClose={() => setWeekExpanded(false)} />}
 
