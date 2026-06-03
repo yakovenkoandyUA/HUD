@@ -30,6 +30,8 @@ router.post('/scan', requireAuth, async (req: Request, res: Response): Promise<v
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
+  console.log('ANTHROPIC_API_KEY exists:', !!apiKey)
+  console.log('ANTHROPIC_API_KEY prefix:', apiKey?.substring(0, 10))
   if (!apiKey) {
     console.error('ANTHROPIC_API_KEY is not set')
     res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' })
@@ -58,7 +60,7 @@ router.post('/scan', requireAuth, async (req: Request, res: Response): Promise<v
       }),
     })
 
-    console.log('Anthropic response status:', response.status)
+    console.log('Anthropic status:', response.status)
 
     if (!response.ok) {
       const errText = await response.text()
@@ -68,7 +70,7 @@ router.post('/scan', requireAuth, async (req: Request, res: Response): Promise<v
     }
 
     const data = await response.json() as AnthropicResponse
-    console.log('Anthropic response body:', JSON.stringify(data))
+    console.log('Anthropic response:', JSON.stringify(data))
 
     const text = data.content?.[0]?.text ?? ''
     console.log('Raw text from Claude:', text)
