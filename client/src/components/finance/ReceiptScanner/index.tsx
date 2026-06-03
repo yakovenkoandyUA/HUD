@@ -50,11 +50,16 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
 
     const run = async () => {
       try {
+        console.log('File selected:', file?.name, file?.size, file?.type)
         const base64 = await fileToBase64(file)
+        console.log('Base64 ready, length:', base64?.length)
+        console.log('Sending to backend:', `${import.meta.env.VITE_API_URL}/api/receipt/scan`)
         const response = await authFetch('/api/receipt/scan', {
           method: 'POST',
           body: JSON.stringify({ imageBase64: base64, mimeType: file.type }),
         })
+        console.log('Response status:', response.status)
+        console.log('Response body:', await response.clone().text())
 
         if (!response.ok) throw new Error('API error')
         const data: ReceiptResult = await response.json()
