@@ -19,10 +19,7 @@ interface AnthropicResponse {
 }
 
 router.post('/scan', requireAuth, async (req: Request, res: Response): Promise<void> => {
-  console.log('Receipt scan request received')
   const { imageBase64, mimeType } = req.body as { imageBase64?: string; mimeType?: string }
-  console.log('Image size (base64 length):', imageBase64?.length)
-  console.log('Mime type:', mimeType)
 
   if (!imageBase64 || !mimeType) {
     res.status(400).json({ error: 'imageBase64 and mimeType required' })
@@ -30,16 +27,12 @@ router.post('/scan', requireAuth, async (req: Request, res: Response): Promise<v
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
-  console.log('ANTHROPIC_API_KEY exists:', !!apiKey)
-  console.log('ANTHROPIC_API_KEY prefix:', apiKey?.substring(0, 10))
   if (!apiKey) {
-    console.error('ANTHROPIC_API_KEY is not set')
     res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' })
     return
   }
 
   try {
-    console.log('Sending to Anthropic...')
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -60,20 +53,15 @@ router.post('/scan', requireAuth, async (req: Request, res: Response): Promise<v
       }),
     })
 
-    console.log('Anthropic status:', response.status)
-
     if (!response.ok) {
       const errText = await response.text()
-      console.error('Anthropic API error:', errText)
+      console.error('Anthropic API error:', response.status, errText)
       res.status(502).json({ error: 'Anthropic API error' })
       return
     }
 
     const data = await response.json() as AnthropicResponse
-    console.log('Anthropic response:', JSON.stringify(data))
-
     const text = data.content?.[0]?.text ?? ''
-    console.log('Raw text from Claude:', text)
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
