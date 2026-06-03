@@ -10,10 +10,6 @@ import { getToken } from '../../services/api'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../types'
 import styles from './Watchlist.module.css'
 
-const SYNC_COLORS: Record<string, string> = {
-  synced: 'var(--positive)', syncing: 'var(--gold)', error: 'var(--negative)', local: 'var(--text3)',
-}
-
 type Tab = WatchlistCategory
 
 const TABS: { id: Tab; label: string }[] = [
@@ -24,7 +20,7 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const Watchlist: React.FC = () => {
-  const { items, addItem, setStatus, setRating, toggleReminder, updateItem, deleteItem, fetchWatchlist, syncStatus } = useWatchlistStore()
+  const { items, addItem, setStatus, setRating, toggleReminder, updateItem, deleteItem, fetchWatchlist } = useWatchlistStore()
   const { showToast } = useUiStore()
   const [tab, setTab] = useState<Tab>('movie')
 
@@ -103,7 +99,7 @@ const Watchlist: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <AppHeader right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
+      <AppHeader />
 
       {/* ── "Дивлюсь зараз" hero strip ── */}
       {watchingItems.length > 0 && (

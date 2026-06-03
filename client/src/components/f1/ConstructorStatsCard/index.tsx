@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import PixelCar from '../../PixelCar'
+// import PixelCar from '../../PixelCar'
 import styles from './ConstructorStatsCard.module.css'
 
 /**
@@ -52,7 +52,7 @@ function SkeletonRows() {
 }
 
 const ConstructorStatsCard: React.FC<Props> = ({
-  constructorId, teamName, points, maxPoints, teamDrivers, cachedStats, onStats,
+  constructorId,  points, maxPoints, teamDrivers, cachedStats, onStats,
 }) => {
   const [stats, setStats]     = useState<ConstructorStats | null>(cachedStats ?? null)
   const [loading, setLoading] = useState<boolean>(!cachedStats)
@@ -101,9 +101,9 @@ const ConstructorStatsCard: React.FC<Props> = ({
     <div className={styles.inner}>
 
       {/* Animated PixelCar */}
-      <div className={styles.carWrap}>
+      {/* <div className={styles.carWrap}>
         <PixelCar team={teamName} size={48} />
-      </div>
+      </div> */}
 
       {/* Drivers */}
       {teamDrivers.length > 0 && (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useChampionshipStandings, type DriverStanding } from '../../../hooks/useChampionshipStandings'
-import PixelCar from '../../PixelCar'
+// import PixelCar from '../../PixelCar'
 import DriverStatsCard, { type DriverStats } from '../DriverStatsCard'
 import ConstructorStatsCard, { type ConstructorStats } from '../ConstructorStatsCard'
 import styles from './ChampionshipTable.module.css'
@@ -211,8 +211,9 @@ const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
                   <div className={styles.info}>
                     {c.position <= 3 ? (
                       <div className={styles.carRow}>
-                        <PixelCar team={c.team_name} size={28} />
+                        {/* <PixelCar team={c.team_name} size={28} /> */}
                         <span className={styles.name}>{c.team_name}</span>
+                        {/* <img src="/car.jpg" alt=""  style={{width: "100px"}}/> */}
                       </div>
                     ) : (
                       <div className={styles.teamRow}>

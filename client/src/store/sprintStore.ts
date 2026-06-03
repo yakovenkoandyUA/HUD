@@ -96,8 +96,8 @@ interface ApiTodo {
 
 // ── Repeat helpers ────────────────────────────────────────────────────────────
 
-function calcNextDue(item: UnifiedTodo): string {
-  const base = new Date(); base.setHours(0, 0, 0, 0)
+function calcNextDue(item: UnifiedTodo, baseDate?: Date): string {
+  const base = baseDate ? new Date(baseDate) : new Date(); base.setHours(0, 0, 0, 0)
 
   if (item.repeatConfig) {
     const { unit, interval, weekDays } = item.repeatConfig
@@ -168,7 +168,7 @@ interface TodoState {
   fetchItems: () => Promise<void>
   addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>) => void
   addItems: (dataList: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>[]) => void
-  toggleItem: (id: string) => void
+  toggleItem: (id: string, date?: string) => void
   deleteItem: (id: string) => void
   setSyncStatus: (s: SyncStatus) => void
 
@@ -462,21 +462,21 @@ export const useSprintStore = create<TodoState>()(
           .catch(() => set({ syncStatus: 'error' }))
       },
 
-      toggleItem: (id) => {
+      toggleItem: (id, date) => {
         const item = get().items.find(i => i.id === id)
         if (!item) return
 
         // Recurring task
         if (isRecurring(item) && !item.done) {
-          const todayStr = localDateStr(new Date())
+          const completionDateStr = date ?? localDateStr(new Date())
 
-          if (item.completionLog?.includes(todayStr)) {
-            // UNDO: remove today's entry, restore nextDue to today
-            const newLog = (item.completionLog ?? []).filter(d => d !== todayStr)
-            set(s => ({ items: s.items.map(i => i.id === id ? { ...i, completionLog: newLog, nextDue: todayStr } : i) }))
+          if (item.completionLog?.includes(completionDateStr)) {
+            // UNDO: remove that date's entry, restore nextDue to that date
+            const newLog = (item.completionLog ?? []).filter(d => d !== completionDateStr)
+            set(s => ({ items: s.items.map(i => i.id === id ? { ...i, completionLog: newLog, nextDue: completionDateStr } : i) }))
             if (!getToken() || !isBackendConfigured()) return
             const endpoint = item.type === 'sprint' ? `/api/sprint/tasks/${id}` : `/api/sprint/todos/${id}`
-            authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ nextDue: todayStr, done: false, completionHistory: newLog }) })
+            authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ nextDue: completionDateStr, done: false, completionHistory: newLog }) })
               .then(r => { if (!r.ok) throw new Error() })
               .then(() => set({ syncStatus: 'synced' }))
               .catch(() => set({ syncStatus: 'error' }))
@@ -484,19 +484,20 @@ export const useSprintStore = create<TodoState>()(
           }
 
           // COMPLETE: briefly mark done, then recalculate nextDue after animation
-          const newLog = [...(item.completionLog ?? []), todayStr]
+          const newLog = [...(item.completionLog ?? []), completionDateStr]
           set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: true, completionLog: newLog } : i) }))
+          // Capture values now — fetchItems() could overwrite store before 600ms elapses
+          const parts = completionDateStr.split('-').map(Number)
+          const completionBase = new Date(parts[0], parts[1] - 1, parts[2])
+          const nextDue = calcNextDue(item, completionBase)
+          const endpoint = item.type === 'sprint' ? `/api/sprint/tasks/${id}` : `/api/sprint/todos/${id}`
           setTimeout(() => {
-            const current = get().items.find(i => i.id === id)
-            if (!current) return
-            const nextDue = calcNextDue(current)
-            set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: false, nextDue } : i) }))
+            set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: false, nextDue, completionLog: newLog } : i) }))
             if (!getToken() || !isBackendConfigured()) return
-            const endpoint = current.type === 'sprint' ? `/api/sprint/tasks/${id}` : `/api/sprint/todos/${id}`
             authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({
               nextDue,
               done: false,
-              completionHistory: current.completionLog ?? [],
+              completionHistory: newLog,
             }) })
               .then(r => { if (!r.ok) throw new Error() })
               .then(() => set({ syncStatus: 'synced' }))

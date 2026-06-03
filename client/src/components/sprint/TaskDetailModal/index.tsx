@@ -185,6 +185,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const descRef       = useRef<HTMLTextAreaElement>(null)
   const checkInputRef = useRef<HTMLInputElement>(null)
 
+  const sheetRef   = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const drag        = useRef({ startY: 0, startTime: 0, active: false })
+  const dragClosing = useRef(false)
+
   const [titleDraft, setTitleDraft] = useState('')
   const [descDraft, setDescDraft]   = useState('')
   const [checkInput, setCheckInput] = useState('')
@@ -199,6 +204,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
       setShowNextDuePicker(false)
       setShowReminderPicker(false)
     } else {
+      if (!dragClosing.current) {
+        // Normal close — clear inline drag styles so CSS exit animation works
+        if (sheetRef.current)   { sheetRef.current.style.transform = '';   sheetRef.current.style.transition = '' }
+        if (overlayRef.current) { overlayRef.current.style.opacity = '';   overlayRef.current.style.transition = '' }
+      }
+      dragClosing.current = false
       const t = setTimeout(() => setMounted(false), 280)
       return () => clearTimeout(t)
     }
@@ -232,6 +243,35 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [taskId, onClose])
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (sheetRef.current && sheetRef.current.scrollTop > 0) return
+    drag.current = { startY: e.touches[0].clientY, startTime: Date.now(), active: true }
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!drag.current.active) return
+    const deltaY = e.touches[0].clientY - drag.current.startY
+    if (deltaY <= 0) return
+    if (sheetRef.current)   { sheetRef.current.style.transform = `translateY(${deltaY}px)`;   sheetRef.current.style.transition = 'none' }
+    if (overlayRef.current) { overlayRef.current.style.opacity = String(Math.max(0, 1 - deltaY / 400)); overlayRef.current.style.transition = 'none' }
+  }
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!drag.current.active) return
+    drag.current.active = false
+    const deltaY   = e.changedTouches[0].clientY - drag.current.startY
+    const velocity = deltaY / Math.max(1, Date.now() - drag.current.startTime)
+    if (deltaY >= 120 || (deltaY > 60 && velocity > 0.5)) {
+      dragClosing.current = true
+      if (sheetRef.current)   { sheetRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'; sheetRef.current.style.transform = 'translateY(100%)' }
+      if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '0' }
+      setTimeout(() => onClose(), 300)
+    } else {
+      if (sheetRef.current)   { sheetRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'; sheetRef.current.style.transform = 'translateY(0)' }
+      if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '' }
+    }
+  }
 
   const handleTitleBlur = useCallback(() => {
     if (!task || !titleDraft.trim()) return
@@ -281,12 +321,17 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   return (
     <>
       <div
+        ref={overlayRef}
         className={`${styles.overlay} ${isOpen ? styles.overlayIn : styles.overlayOut}`}
         onClick={onClose}
       >
         <div
+          ref={sheetRef}
           className={`${styles.sheet} ${isOpen ? styles.sheetIn : styles.sheetOut}`}
           onClick={e => e.stopPropagation()}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
           <div className={styles.handle} />
 

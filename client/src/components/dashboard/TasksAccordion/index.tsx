@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import PriorityBadge from '../../ui/PriorityBadge'
 import TaskDetailModal from '../../sprint/TaskDetailModal'
 import { useSprintStore } from '../../../store/sprintStore'
-import { isRegular } from '../../../utils/sprint'
+import { isRecurring } from '../../../utils/sprint'
 import type { TodoPriority } from '../../../types'
 import styles from './TasksAccordion.module.css'
 
@@ -47,12 +47,18 @@ const ShopTag: React.FC = () => (
   </span>
 )
 
+const d = new Date()
+const todayIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
 const TasksAccordion: React.FC = () => {
   const navigate = useNavigate()
   const { items, toggleItem } = useSprintStore()
 
-  const todoItems  = items.filter((t) => t.type === 'todo' && isRegular(t))
-  const todoActive = todoItems.filter((t) => !t.done)
+  const isDoneToday = (t: Parameters<typeof isRecurring>[0]) =>
+    isRecurring(t) ? !!(t.completionLog?.some(d => d >= todayIso)) : t.done
+
+  const todoItems  = items.filter((t) => t.type === 'todo')
+  const todoActive = todoItems.filter((t) => !isDoneToday(t))
 
   const [questsOpen, setQuestsOpen]   = useState(false)
   const [shoppingOpen, setShoppingOpen] = useState(false)
@@ -71,7 +77,7 @@ const TasksAccordion: React.FC = () => {
     }
   }
 
-  const todoDone    = todoItems.filter((t) => t.done).length
+  const todoDone    = todoItems.filter((t) => isDoneToday(t)).length
   const todoAllDone = todoItems.length > 0 && todoDone === todoItems.length
   const todoPct     = todoItems.length > 0 ? Math.round((todoDone / todoItems.length) * 100) : 0
   const todoVisible = todoActive.slice(0, SPRINT_LIMIT)
@@ -138,14 +144,14 @@ const TasksAccordion: React.FC = () => {
                   <li key={t.id} className={styles.item}>
                     <button
                       type="button"
-                      className={`${styles.checkbox} ${t.done ? styles.checkboxDone : styles.checkboxUndone}`}
+                      className={`${styles.checkbox} ${isDoneToday(t) ? styles.checkboxDone : styles.checkboxUndone}`}
                       onClick={(e) => { e.stopPropagation(); toggleItem(t.id) }}
-                      aria-label={t.done ? 'Позначити невиконаним' : 'Позначити виконаним'}
+                      aria-label={isDoneToday(t) ? 'Позначити невиконаним' : 'Позначити виконаним'}
                     >
-                      {t.done && <CheckIcon />}
+                      {isDoneToday(t) && <CheckIcon />}
                     </button>
                     <span
-                      className={`${styles.itemTitle} ${t.done ? styles.itemDone : ''}`}
+                      className={`${styles.itemTitle} ${isDoneToday(t) ? styles.itemDone : ''}`}
                       onClick={() => setSelectedTaskId(t.id)}
                     >
                       {t.title}

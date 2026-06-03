@@ -10,6 +10,9 @@ import styles from './GoalsList.module.css'
  * Список цілей накопичення з прогрес-барами.
  * Дозволяє додавати нові цілі та поповнювати існуючі.
  * Синхронізується з backend якщо токен присутній.
+ *
+ * Props:
+ * @prop {boolean} [openAdd] — якщо true, відразу відкриває форму додавання
  */
 
 interface GoalRowProps {
@@ -71,9 +74,17 @@ const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
   )
 }
 
-const GoalsList: React.FC = () => {
+interface GoalsListProps {
+  addTrigger?: number
+}
+
+const GoalsList: React.FC<GoalsListProps> = ({ addTrigger }) => {
   const { goals, fetchGoals, addGoal, contribute, deleteGoal } = useGoalsStore()
   const [showAdd, setShowAdd] = useState(false)
+
+  useEffect(() => {
+    if (addTrigger && addTrigger > 0) setShowAdd(true)
+  }, [addTrigger])
   const [showContribute, setShowContribute] = useState(false)
   const [activeGoal, setActiveGoal] = useState<Goal | null>(null)
 

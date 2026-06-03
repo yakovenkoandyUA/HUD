@@ -59,29 +59,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 6px 4px;
+  gap: 3px;
+  padding: 4px 2px;
   border-radius: 8px;
 }
 
-.dayCellToday {
-  background: var(--accent-soft);
-}
+.dayCellSelected  { background: var(--gold-dim); }
+.dayCellClickable { cursor: pointer; }
 
 /* ── Day name ──────────────────────────────────────────────────── */
 
 .dayName {
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text3);
 }
 
-.dayNameToday {
-  color: var(--accent);
-}
+.dayNameToday    { color: var(--gold); }
+.dayNameSelected { color: var(--text); }
+.dayNameDim      { opacity: 0.45; }
 
 /* ── Day number ────────────────────────────────────────────────── */
 
@@ -93,36 +92,37 @@
 }
 
 .dayNumberToday {
-  color: var(--accent);
+  color: var(--gold);
+  font-size: 1.2em;
   font-weight: 600;
 }
 
+.dayNumberSelected { color: var(--text); }
+
 .dayNumberDim {
   color: var(--text3);
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
-/* ── Dot ───────────────────────────────────────────────────────── */
+/* ── Dots row ──────────────────────────────────────────────────── */
+
+.dotsRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 4px;
+}
 
 .dot {
   display: block;
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: var(--border2);
   flex-shrink: 0;
 }
 
-.dotToday {
-  background: var(--accent);
-  box-shadow: 0 0 5px var(--accent-glow);
-}
-
-.dotRoutine {
-  background: #7F77DD;
-}
-
-.dotDim {
-  background: var(--text3);
-  opacity: 0.4;
-}
+.dotToday   { background: var(--gold); }
+.dotDone    { background: var(--second); }
+.dotPending { background: var(--gold); opacity: 0.45; }

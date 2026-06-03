@@ -138,6 +138,7 @@ const Recipes: React.FC = () => {
 					setEditingRecipe(null)
 				}}
 				title={editingRecipe ? 'Редагувати рецепт' : 'Новий рецепт'}
+				draggable
 			>
 				<RecipeForm
 					initial={editingRecipe}

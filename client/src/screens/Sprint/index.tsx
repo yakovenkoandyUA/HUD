@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import AppHeader from '../../components/AppHeader'
 import WeekHeader from '../../components/sprint/WeekHeader'
-import SprintProgress from '../../components/sprint/SprintProgress'
 import TaskCard from '../../components/sprint/TaskCard'
 import TaskDetailModal from '../../components/sprint/TaskDetailModal'
 import WeekExpandedView from '../../components/sprint/WeekExpandedView'
@@ -12,17 +11,10 @@ import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
-import { getCurrentWeekStart, isRecurring } from '../../utils/sprint'
+import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
 import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
-
-const SYNC_COLORS: Record<string, string> = {
-	synced: 'var(--positive)',
-	syncing: 'var(--gold)',
-	error: 'var(--negative)',
-	local: 'var(--text3)',
-}
 
 const PANEL_ANIM_MS = 220
 
@@ -49,7 +41,23 @@ const PRIORITY_CONFIG: Record<TodoPriority, { symbol: string; label: string; act
 	low:    { symbol: '▽', label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow },
 }
 
-type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
+type RepeatType    = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
+type ReminderUnit  = 'minutes' | 'hours' | 'days' | 'weeks'
+
+const FORM_REMINDER_UNITS: { key: ReminderUnit; label: string }[] = [
+  { key: 'minutes', label: 'Хв. до' },
+  { key: 'hours',   label: 'Годин'  },
+  { key: 'days',    label: 'Днів'   },
+  { key: 'weeks',   label: 'Тижнів' },
+]
+
+function formatReminderShort(amount: number, unit: ReminderUnit): string {
+  if (unit === 'minutes') return `${amount} хв.`
+  if (unit === 'hours')   return `${amount} год.`
+  if (unit === 'days')    return amount === 1 ? '1 день' : amount < 5 ? `${amount} дні` : `${amount} днів`
+  if (unit === 'weeks')   return amount === 1 ? '1 тиждень' : amount < 5 ? `${amount} тижні` : `${amount} тижнів`
+  return String(amount)
+}
 
 const QUICK_REPEAT_OPTIONS: { key: Exclude<RepeatType, 'none' | 'custom'>; label: string }[] = [
 	{ key: 'daily',   label: 'Щодня' },
@@ -176,7 +184,7 @@ const IconFilter: React.FC<{ active?: boolean }> = ({ active }) => (
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const Sprint: React.FC = () => {
-	const { items, addItem, toggleItem, deleteItem, fetchItems, syncStatus } = useSprintStore()
+	const { items, addItem, toggleItem, deleteItem, fetchItems } = useSprintStore()
 	const { showToast } = useUiStore()
 	const [filter, setFilter]             = useState<FilterType>('all')
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
@@ -199,7 +207,13 @@ const Sprint: React.FC = () => {
 	const [newRepeatConfig, setNewRepeatConfig] = useState<RepeatConfig | null>(null)
 	const [repeatStartDate, setRepeatStartDate] = useState(() => new Date().toISOString().split('T')[0])
 	const [showStartDatePicker, setShowStartDatePicker] = useState(false)
-	const todayStr = new Date().toISOString().split('T')[0]
+	const [newReminderAmount, setNewReminderAmount] = useState(1)
+	const [newReminderUnit, setNewReminderUnit]     = useState<ReminderUnit>('days')
+	const [newReminder, setNewReminder]             = useState<{ amount: number; unit: ReminderUnit } | null>(null)
+	const [showFormReminderPicker, setShowFormReminderPicker] = useState(false)
+	const _td = new Date()
+	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
+	const [selectedDay, setSelectedDay] = useState(todayStr)
 	const [routinesOpen, setRoutinesOpen]     = useState(false)
 	const [completingRoutines, setCompletingRoutines] = useState<Set<string>>(new Set())
 	const [detailTaskId, setDetailTaskId]     = useState<string | null>(null)
@@ -245,11 +259,13 @@ const Sprint: React.FC = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	const weekStart      = getCurrentWeekStart()
-	const weekSprintItems = items.filter(t => t.type === 'todo' || isRecurring(t))
-	const done            = weekSprintItems.filter(t => t.done).length
-
+	const weekStart    = getCurrentWeekStart()
 	const routineItems = items.filter(t => isRecurring(t))
+
+	const [selY, selM, selD] = selectedDay.split('-').map(Number)
+	const selectedDate = new Date(selY, selM - 1, selD)
+
+	const dayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, selectedDate))
 
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
@@ -259,17 +275,22 @@ const Sprint: React.FC = () => {
 		return true
 	})
 
+	const isDayToday = selectedDay === todayStr
+	const dayQuests  = isDayToday
+		? filteredItems
+		: filteredItems.filter(t => t.type !== 'shopping' && t.dueDate === selectedDay)
+
 	const isFiltered = filter !== 'all' || statusFilter !== 'active'
 
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
-		if (filteredItems.length === 0) {
+		if (dayQuests.length === 0) {
 			binTimerRef.current = setTimeout(() => setBinHidden(true), 300)
 		} else {
 			setBinHidden(false)
 		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [filteredItems.length])
+	}, [dayQuests.length])
 
 	const resetForm = () => {
 		setNewTitle('')
@@ -284,6 +305,10 @@ const Sprint: React.FC = () => {
 		setShowRepeatConfigScreen(false)
 		setRepeatStartDate(new Date().toISOString().split('T')[0])
 		setShowStartDatePicker(false)
+		setNewReminderAmount(1)
+		setNewReminderUnit('days')
+		setNewReminder(null)
+		setShowFormReminderPicker(false)
 	}
 
 	const handleAdd = (e: React.FormEvent) => {
@@ -307,6 +332,7 @@ const Sprint: React.FC = () => {
 				repeatConfig: newRepeatConfig ?? { interval: 1, unit: repeatToUnit(newRepeat as Exclude<RepeatType, 'none' | 'custom'>), endsType: 'never' as const },
 				nextDue:      initialNextDue,
 				...(hasStartDate ? { repeatStartDate } : {}),
+				...(newReminder ? { reminder: newReminder } : {}),
 			} : {}),
 		})
 		resetForm()
@@ -327,19 +353,24 @@ const Sprint: React.FC = () => {
 
 	return (
 		<div className={styles.screen}>
-			<AppHeader right={<span title={syncStatus} style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: SYNC_COLORS[syncStatus] }} />} />
+			<AppHeader />
 
 			<div className={styles.content}>
-				<WeekHeader weekStart={weekStart} onExpand={() => setWeekExpanded(true)} routineItems={routineItems} />
-				<SprintProgress done={done} total={weekSprintItems.length} />
+				<WeekHeader
+					weekStart={weekStart}
+					onExpand={() => setWeekExpanded(true)}
+					routineItems={routineItems}
+					selectedDay={selectedDay}
+					onDaySelect={(iso) => { if (iso !== selectedDay) setSelectedDay(iso) }}
+				/>
 
 				{/* ── Рутини accordion ── */}
-				{routineItems.length > 0 && (
+				{dayRoutines.length > 0 && (
 					<div className={styles.routinesSection}>
 						<button type="button" className={styles.routineHeader} onClick={() => setRoutinesOpen(v => !v)} aria-expanded={routinesOpen}>
 							<span className={styles.sectionTitle}>Рутини</span>
 							<div className={styles.sectionActions}>
-								<span className={styles.routineCount}>{routineItems.length}</span>
+								<span className={styles.routineCount}>{dayRoutines.filter(t => !t.completionLog?.includes(selectedDay)).length}</span>
 								<svg className={`${styles.routineArrow} ${routinesOpen ? styles.routineArrowOpen : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
 									<path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 								</svg>
@@ -347,19 +378,25 @@ const Sprint: React.FC = () => {
 						</button>
 
 						<ul className={`${styles.routineList} ${routinesOpen ? styles.routineListOpen : ''}`}>
-							{routineItems.map(t => {
-								const doneToday = t.completionLog?.includes(todayStr) ?? false
+							{dayRoutines.map(t => {
+								const doneOnDay    = !!(t.completionLog?.includes(selectedDay))
 								const isCompleting = completingRoutines.has(t.id)
 								return (
-									<li key={t.id} className={`${styles.routineItem} ${isCompleting ? styles.routineItemCompleting : ''} ${doneToday && !isCompleting ? styles.routineItemDone : ''}`}>
+									<li key={t.id} className={`${styles.routineItem} ${isCompleting ? styles.routineItemCompleting : ''} ${doneOnDay && !isCompleting ? styles.routineItemDone : ''}`}>
 										<button type="button" className={styles.routineCheck} onClick={() => handleRoutineToggle(t.id)} aria-label="Виконати">
-											<span className={`${styles.routineCheckBox} ${isCompleting || doneToday ? styles.routineCheckBoxDone : ''}`}>{isCompleting || doneToday ? '✓' : ''}</span>
+											<span className={`${styles.routineCheckBox} ${isCompleting || doneOnDay ? styles.routineCheckBoxDone : ''}`}>{isCompleting || doneOnDay ? '✓' : ''}</span>
 										</button>
 										<button type="button" className={styles.routineBody} onClick={() => setDetailTaskId(t.id)}>
 											<span className={styles.routineTitle}>{t.title}</span>
 											<div className={styles.routineMeta}>
 												<span className={styles.repeatBadge}>{getRoutineBadge(t)}</span>
 												{t.nextDue && <span className={styles.routineDue}>{formatRoutineDue(t.nextDue)}</span>}
+												{t.reminder && (
+													<svg className={styles.bellIcon} width="12" height="12" viewBox="0 0 16 18" fill="none">
+														<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+														<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+													</svg>
+												)}
 											</div>
 										</button>
 										<button type="button" className={styles.del} onClick={() => deleteItem(t.id)} aria-label="Видалити">
@@ -443,16 +480,12 @@ const Sprint: React.FC = () => {
 				)}
 
 				{/* ── List ── */}
-				<div key={`${filter}-${statusFilter}`} className={styles.tabContent}>
-					{filteredItems.length === 0 ? (
-						<div className={styles.emptyState}>
-							<span className={styles.emptyIcon}>✓</span>
-							<span className={styles.emptyTitle}>{statusFilter === 'active' ? 'Активних квестів немає' : 'Список чистий'}</span>
-							<span className={styles.emptyHint}>{statusFilter === 'active' ? 'Всі виконано 🎉' : 'Додай першу справу'}</span>
-						</div>
+				<div key={`${filter}-${statusFilter}-${selectedDay}`} className={styles.tabContent}>
+					{dayQuests.length === 0 ? (
+						<p className={styles.dayEmptyText}>Немає задач на цей день</p>
 					) : (
 						<ul className={styles.list}>
-							{filteredItems.map(t => (
+							{dayQuests.map(t => (
 								<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
 							))}
 						</ul>
@@ -553,6 +586,30 @@ const Sprint: React.FC = () => {
 								</div>
 							)}
 
+							{/* Reminder: shown when repeat is set */}
+							{newRepeat !== 'none' && !showRepeatList && (
+								<div className={styles.formReminderRow}>
+									{newReminder ? (
+										<div className={styles.formReminderActive}>
+											<svg width="11" height="11" viewBox="0 0 16 18" fill="none">
+												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+											</svg>
+											<span>За {formatReminderShort(newReminder.amount, newReminder.unit)}</span>
+											<button type="button" className={styles.formReminderClear} onClick={() => setNewReminder(null)} aria-label="Видалити">×</button>
+										</div>
+									) : (
+										<button type="button" className={styles.formReminderBtn} onClick={() => { setNewReminderAmount(1); setNewReminderUnit('days'); setShowFormReminderPicker(true) }}>
+											<svg width="11" height="11" viewBox="0 0 16 18" fill="none">
+												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+											</svg>
+											Сповіщення
+										</button>
+									)}
+								</div>
+							)}
+
 							{/* Repeat option list */}
 							{showRepeatList && (
 								<div className={styles.repeatList}>
@@ -585,6 +642,51 @@ const Sprint: React.FC = () => {
 					</Button>
 				</form>
 			</Modal>
+
+			{showFormReminderPicker && (
+				<div className={styles.formReminderOverlay} onClick={() => setShowFormReminderPicker(false)}>
+					<div className={styles.formReminderSheet} onClick={e => e.stopPropagation()}>
+						<div className={styles.formReminderHandle} />
+						<div className={styles.formReminderSheetHeader}>
+							<span className={styles.formReminderSheetTitle}>Сповіщення</span>
+							<button type="button" className={styles.formReminderSheetClose} onClick={() => setShowFormReminderPicker(false)} aria-label="Закрити">✕</button>
+						</div>
+						<div className={styles.formReminderSheetBody}>
+							<div className={styles.formReminderAmountRow}>
+								<input
+									type="number"
+									className={styles.formReminderAmountInput}
+									value={newReminderAmount}
+									min={1}
+									max={999}
+									onChange={e => setNewReminderAmount(Math.max(1, Math.min(999, Number(e.target.value) || 1)))}
+								/>
+								<span className={styles.formReminderAmountLabel}>
+									{newReminderUnit === 'minutes' ? 'хвилин' : newReminderUnit === 'hours' ? 'годин' : newReminderUnit === 'days' ? 'днів' : 'тижнів'} до
+								</span>
+							</div>
+							<div className={styles.formReminderUnitList}>
+								{FORM_REMINDER_UNITS.map(u => (
+									<button key={u.key} type="button" className={styles.formReminderUnitRow} onClick={() => setNewReminderUnit(u.key)}>
+										<span className={`${styles.formReminderRadio} ${newReminderUnit === u.key ? styles.formReminderRadioActive : ''}`} />
+										<span className={`${styles.formReminderUnitLabel} ${newReminderUnit === u.key ? styles.formReminderUnitLabelActive : ''}`}>{u.label}</span>
+									</button>
+								))}
+							</div>
+						</div>
+						<button
+							type="button"
+							className={styles.formReminderDoneBtn}
+							onClick={() => {
+								setNewReminder({ amount: newReminderAmount, unit: newReminderUnit })
+								setShowFormReminderPicker(false)
+							}}
+						>
+							Готово
+						</button>
+					</div>
+				</div>
+			)}
 
 			{showRepeatConfigScreen && (
 				<RepeatConfigScreen

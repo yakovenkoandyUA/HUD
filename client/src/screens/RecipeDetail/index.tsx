@@ -361,7 +361,7 @@ const RecipeDetailScreen: React.FC = () => {
         <div className={styles.bottomPad} />
       </div>
 
-      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title="Редагувати рецепт">
+      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title="Редагувати рецепт" draggable>
         <RecipeForm
           initial={recipe}
           onSave={handleEdit}

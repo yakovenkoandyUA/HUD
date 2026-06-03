@@ -99,7 +99,7 @@ const Dashboard: React.FC = () => {
         </svg>
       </button>
 
-      <Modal isOpen={showExpense} onClose={() => setShowExpense(false)} title="Додати витрату">
+      <Modal isOpen={showExpense} onClose={() => setShowExpense(false)} title="Додати витрату" draggable>
         <ExpenseForm onExpense={handleExpense} />
       </Modal>
 

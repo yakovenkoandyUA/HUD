@@ -22,7 +22,7 @@ import styles from './WeekExpandedView.module.css'
 interface WeekExpandedViewProps {
   weekStart: string
   routineItems: UnifiedTodo[]
-  onToggle: (id: string) => void
+  onToggle: (id: string, date?: string) => void
   onOpenDetail?: (id: string) => void
   onClose: () => void
 }
@@ -30,7 +30,7 @@ interface WeekExpandedViewProps {
 interface ConfirmItem {
   id: string
   title: string
-  scheduledDate: string
+  calendarDate: string
 }
 
 const DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
@@ -116,7 +116,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
   const today   = new Date(); today.setHours(0, 0, 0, 0)
   const todayStr = toIso(today)
 
-  const [completing, setCompleting] = useState<Set<string>>(new Set())
+  const [completing, setCompleting] = useState<Map<string, string>>(new Map())
   const [closing, setClosing]       = useState(false)
   const [confirmItem, setConfirmItem] = useState<ConfirmItem | null>(null)
 
@@ -125,34 +125,34 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
     setTimeout(onClose, 210)
   }
 
-  const handleTap = (id: string) => {
+  const handleTap = (id: string, calendarDate: string) => {
     if (completing.has(id)) return
-    setCompleting(prev => new Set(prev).add(id))
+    setCompleting(prev => new Map(prev).set(id, calendarDate))
     setTimeout(() => {
-      onToggle(id)
-      setCompleting(prev => { const s = new Set(prev); s.delete(id); return s })
+      onToggle(id, calendarDate)
+      setCompleting(prev => { const m = new Map(prev); m.delete(id); return m })
     }, 360)
   }
 
   // Decide whether to complete immediately or ask for confirmation
-  const handleCheckboxTap = (task: UnifiedTodo, isDoneForDay: boolean) => {
+  const handleCheckboxTap = (task: UnifiedTodo, isDoneForDay: boolean, calendarDate: string) => {
     if (isDoneForDay) {
-      // Undo — always immediate
-      onToggle(task.id)
+      // Undo — immediate, keyed to the specific calendar date
+      onToggle(task.id, calendarDate)
       return
     }
-    // Future task: nextDue is strictly after today → ask confirmation
-    if (task.nextDue && task.nextDue > todayStr) {
-      setConfirmItem({ id: task.id, title: task.title, scheduledDate: task.nextDue })
+    // Future calendar date → ask for early-completion confirmation
+    if (calendarDate > todayStr) {
+      setConfirmItem({ id: task.id, title: task.title, calendarDate })
       return
     }
     // Today or overdue → mark immediately
-    handleTap(task.id)
+    handleTap(task.id, calendarDate)
   }
 
   const handleConfirm = () => {
     if (!confirmItem) return
-    handleTap(confirmItem.id)
+    handleTap(confirmItem.id, confirmItem.calendarDate)
     setConfirmItem(null)
   }
 
@@ -204,7 +204,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
                 ) : (
                   dayRoutines.map(t => {
                     const isDoneForDay = t.completionLog?.includes(toIso(dt)) ?? false
-                    const isAnimating  = completing.has(t.id)
+                    const isAnimating  = completing.get(t.id) === toIso(dt)
                     const isDone       = isAnimating || isDoneForDay
                     const repeatLabel  = getRepeatLabel(t)
 
@@ -213,7 +213,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
                         <button
                           type="button"
                           className={styles.checkboxWrapper}
-                          onClick={() => handleCheckboxTap(t, isDoneForDay)}
+                          onClick={() => handleCheckboxTap(t, isDoneForDay, toIso(dt))}
                           aria-label="Виконати"
                         >
                           <span className={`${styles.circle} ${isDone ? styles.circleChecked : styles.circleGold}`}>
@@ -274,7 +274,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
             <p className={styles.confirmTitle}>Виконати достроково?</p>
             <p className={styles.confirmBody}>
               <span className={styles.confirmTaskName}>&ldquo;{confirmItem.title}&rdquo;</span>{' '}
-              заплановано на {formatScheduledDate(confirmItem.scheduledDate)}
+              заплановано на {formatScheduledDate(confirmItem.calendarDate)}
             </p>
             <div className={styles.confirmActions}>
               <button
