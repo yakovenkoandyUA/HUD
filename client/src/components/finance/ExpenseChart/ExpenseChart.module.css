@@ -1,7 +1,13 @@
-.wrap {
+/* ── Card wrapper ── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 /* ── Header row ── */
@@ -14,7 +20,7 @@
 
 .title {
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -27,38 +33,35 @@
 .switcher {
   display: flex;
   align-items: center;
-  background: var(--surface2);
-  border-radius: 7px;
-  padding: 2px;
-  gap: 1px;
+  gap: 2px;
 }
 
 .switchBtn {
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text3);
   background: transparent;
   border: none;
-  border-radius: 5px;
-  padding: 3px 8px;
+  border-radius: 6px;
+  padding: 4px 10px;
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
 
 .switchActive {
   color: var(--gold);
-  background: var(--surface);
+  background: var(--gold-dim);
 }
 
-/* ── Chart + legend ── */
+/* ── Chart body ── */
 
 .body {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 20px;
 }
 
 /* ── Donut ── */
@@ -66,8 +69,8 @@
 .donut {
   position: relative;
   flex-shrink: 0;
-  width: 132px;
-  height: 132px;
+  width: 176px;
+  height: 176px;
 }
 
 .center {
@@ -82,7 +85,7 @@
 
 .centerValue {
   font-family: var(--font-mono);
-  font-size: 17px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
@@ -90,11 +93,11 @@
 
 .centerUnit {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text2);
-  margin-top: 3px;
+  margin-top: 4px;
   text-transform: uppercase;
 }
 
@@ -104,31 +107,38 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
   min-width: 0;
 }
 
 .row {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 
 .dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.cat {
-  font-family: var(--font-ui);
-  font-size: 12px;
-  color: var(--text2);
+/* name + count grouped together */
+.catCount {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.cat {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  text-transform: capitalize;
   white-space: nowrap;
 }
 
@@ -141,7 +151,24 @@
 
 .amt {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--text);
   flex-shrink: 0;
+}
+
+/* ── Insight ── */
+
+.insight {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  margin: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.insightCat {
+  color: var(--gold);
+  text-transform: capitalize;
 }

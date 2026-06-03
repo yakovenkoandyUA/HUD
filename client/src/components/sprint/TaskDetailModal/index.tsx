@@ -178,7 +178,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [showRepeatConfig, setShowRepeatConfig] = useState(false)
   const [showNextDuePicker, setShowNextDuePicker] = useState(false)
   const [showReminderPicker, setShowReminderPicker] = useState(false)
-  const [reminderAmount, setReminderAmount] = useState(1)
+  const [reminderAmount, setReminderAmount] = useState<number | ''>(1)
   const [reminderUnit, setReminderUnit] = useState<ReminderUnit>('days')
 
   const titleRef      = useRef<HTMLTextAreaElement>(null)
@@ -623,7 +623,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   value={reminderAmount}
                   min={1}
                   max={999}
-                  onChange={e => setReminderAmount(Math.max(1, Math.min(999, Number(e.target.value) || 1)))}
+                  onFocus={e => e.target.select()}
+                  onChange={e => setReminderAmount(e.target.value === '' ? '' : Math.min(999, Number(e.target.value)))}
                 />
                 <span className={styles.reminderAmountLabel}>
                   {reminderUnit === 'minutes' ? 'хвилин' : reminderUnit === 'hours' ? 'годин' : reminderUnit === 'days' ? 'днів' : 'тижнів'} до
@@ -649,7 +650,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               type="button"
               className={styles.reminderDoneBtn}
               onClick={() => {
-                setReminder(task.id, { amount: reminderAmount, unit: reminderUnit })
+                setReminder(task.id, { amount: Math.max(1, Math.min(999, Number(reminderAmount) || 1)), unit: reminderUnit })
                 setShowReminderPicker(false)
               }}
             >

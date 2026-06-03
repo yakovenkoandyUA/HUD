@@ -107,7 +107,7 @@
 /* ── Merged stats card ── */
 
 .statsCard {
-  background: var(--surface);
+  /* background: var(--surface); */
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }

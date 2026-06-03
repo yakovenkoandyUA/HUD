@@ -165,6 +165,7 @@ interface TodoState {
   syncStatus: SyncStatus
   globalLabels: SprintLabel[]
 
+  clearItems: () => void
   fetchItems: () => Promise<void>
   addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>) => void
   addItems: (dataList: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>[]) => void
@@ -192,6 +193,8 @@ export const useSprintStore = create<TodoState>()(
       items: [],
       syncStatus: 'local' as SyncStatus,
       globalLabels: DEFAULT_LABELS,
+
+      clearItems: () => set({ items: [] }),
 
       setSyncStatus: (syncStatus) => set({ syncStatus }),
 
@@ -350,7 +353,9 @@ export const useSprintStore = create<TodoState>()(
 
           set(s => ({
             items: sortItems([
-              ...s.items.filter(i => i.type === 'sprint' && i.weekStart !== ws),
+              // Preserve unsynced local items (temp UUIDs not yet confirmed by backend, any type).
+              // Backend-confirmed items are fully replaced by fresh API data below.
+              ...s.items.filter(i => !backendIds.has(i.id)),
               ...sprintItems.map(item => mergeLocal(item,
                 s.items.find(i => i.id === item.id) ??
                 // tempId race: POST response not yet back, match by title+type to preserve checklist

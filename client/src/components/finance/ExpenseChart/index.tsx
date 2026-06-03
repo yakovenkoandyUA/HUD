@@ -17,21 +17,22 @@ interface ExpenseChartProps {
 }
 
 const COLORS: Record<string, string> = {
-  'кава':       '#e8944a',
+  'таксі':      '#e8944a',
   'продукти':   '#5aad7c',
-  'таксі':      '#5b8fd9',
-  'метро':      '#8a9ab8',
+  'кава':       '#a07848',
+  'метро':      '#6a8fb8',
   'транспорт':  '#9b72c8',
-  'фібі':       '#d47aa8',
-  'інше':       '#8a8a9a',
+  'фібі':       '#c87a9a',
+  'інше':       '#7a7a8c',
 }
-const FALLBACK = '#8a8a9a'
+const FALLBACK = '#7a7a8c'
 
-const R    = 50
-const CX   = 66
-const CY   = 66
-const SW   = 15
+const R    = 66
+const CX   = 88
+const CY   = 88
+const SW   = 22
 const CIRC = 2 * Math.PI * R
+const GAP_DEG = 2.5
 
 type Period = 'month' | 'week'
 
@@ -78,16 +79,20 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
 
   if (total === 0) return null
 
+  const gapFrac = GAP_DEG / 360
+  const totalGap = entries.length * gapFrac
   let angle = 0
+
   const segments = entries.map(({ cat, amount }) => {
-    const sweep = (amount / total) * 360
+    const rawFrac = amount / total
+    const drawFrac = Math.max(0, rawFrac - gapFrac)
     const start = angle
-    angle += sweep
-    return { cat, amount, start, sweep }
+    angle += rawFrac * 360
+    return { cat, amount, start, dashLen: drawFrac * CIRC }
   })
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.card}>
       <div className={styles.header}>
         <p className={styles.title}>Витрати по категоріях</p>
         <div className={styles.switcher}>
@@ -110,22 +115,23 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
 
       <div className={styles.body}>
         <div className={styles.donut}>
-          <svg width={132} height={132} viewBox="0 0 132 132">
+          <svg width={176} height={176} viewBox="0 0 176 176">
             <circle
               cx={CX} cy={CY} r={R}
               fill="none"
               stroke="var(--surface2)"
               strokeWidth={SW}
             />
-            {segments.map(({ cat, start, sweep }) => (
+            {segments.map(({ cat, dashLen, start }) => (
               <circle
                 key={cat}
                 cx={CX} cy={CY} r={R}
                 fill="none"
                 stroke={COLORS[cat] ?? FALLBACK}
                 strokeWidth={SW}
-                strokeDasharray={`${(sweep / 360) * CIRC} ${CIRC}`}
+                strokeDasharray={`${dashLen} ${CIRC}`}
                 transform={`rotate(${start - 90} ${CX} ${CY})`}
+                strokeLinecap="butt"
               />
             ))}
           </svg>
@@ -139,13 +145,22 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
           {entries.map(({ cat, amount, count }) => (
             <div key={cat} className={styles.row}>
               <span className={styles.dot} style={{ background: COLORS[cat] ?? FALLBACK }} />
-              <span className={styles.cat}>{cat}</span>
-              <span className={styles.count}>{count}x</span>
+              <span className={styles.catCount}>
+                <span className={styles.cat}>{cat}</span>
+                <span className={styles.count}>{count}×</span>
+              </span>
               <span className={styles.amt}>{fmt(amount)} ₴</span>
             </div>
           ))}
         </div>
       </div>
+
+      {entries.length > 0 && (
+        <p className={styles.insight}>
+          Найбільше цього {period === 'month' ? 'місяця' : 'тижня'}:{' '}
+          <span className={styles.insightCat}>{entries[0].cat}</span>
+        </p>
+      )}
     </div>
   )
 }

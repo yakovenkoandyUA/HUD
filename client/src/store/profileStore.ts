@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { uploadToCloudinary } from '../utils/uploadToCloudinary'
+import { useSprintStore } from './sprintStore'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
 
@@ -59,6 +60,7 @@ export const useProfileStore = create<ProfileState>()(
         })
         if (!res.ok) throw new Error('Failed to select profile')
         const { token, user } = await res.json() as { token: string; user: Profile }
+        useSprintStore.getState().clearItems()
         set({ token, activeProfile: user })
       },
 

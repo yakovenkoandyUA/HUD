@@ -111,6 +111,8 @@ const Finance: React.FC = () => {
           monthSpent={totalExpense}
           daysLeft={daysLeft}
           progressPct={progressPct}
+          todaySpent={todaySpent}
+          daysElapsed={daysElapsed}
         />
 
         {(goals.length > 0 || goalAddTrigger > 0) && (

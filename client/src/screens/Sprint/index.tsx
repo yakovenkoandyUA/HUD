@@ -207,7 +207,7 @@ const Sprint: React.FC = () => {
 	const [newRepeatConfig, setNewRepeatConfig] = useState<RepeatConfig | null>(null)
 	const [repeatStartDate, setRepeatStartDate] = useState(() => new Date().toISOString().split('T')[0])
 	const [showStartDatePicker, setShowStartDatePicker] = useState(false)
-	const [newReminderAmount, setNewReminderAmount] = useState(1)
+	const [newReminderAmount, setNewReminderAmount] = useState<number | ''>(1)
 	const [newReminderUnit, setNewReminderUnit]     = useState<ReminderUnit>('days')
 	const [newReminder, setNewReminder]             = useState<{ amount: number; unit: ReminderUnit } | null>(null)
 	const [showFormReminderPicker, setShowFormReminderPicker] = useState(false)
@@ -287,9 +287,8 @@ const Sprint: React.FC = () => {
 		if (dayQuests.length === 0) {
 			binTimerRef.current = setTimeout(() => setBinHidden(true), 300)
 		} else {
-			setBinHidden(false)
+			binTimerRef.current = setTimeout(() => setBinHidden(false), 0)
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [dayQuests.length])
 
 	const resetForm = () => {
@@ -311,7 +310,7 @@ const Sprint: React.FC = () => {
 		setShowFormReminderPicker(false)
 	}
 
-	const handleAdd = (e: React.FormEvent) => {
+	const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		if (!newTitle.trim()) return
 		const hasStartDate = newRepeat !== 'none' && newRepeat !== 'daily' && newRepeat !== 'custom'
@@ -350,7 +349,7 @@ const Sprint: React.FC = () => {
 		}
 		toggleItem(id)
 	}
-
+	
 	return (
 		<div className={styles.screen}>
 			<AppHeader />
@@ -659,7 +658,8 @@ const Sprint: React.FC = () => {
 									value={newReminderAmount}
 									min={1}
 									max={999}
-									onChange={e => setNewReminderAmount(Math.max(1, Math.min(999, Number(e.target.value) || 1)))}
+									onFocus={e => e.target.select()}
+									onChange={e => setNewReminderAmount(e.target.value === '' ? '' : Math.min(999, Number(e.target.value)))}
 								/>
 								<span className={styles.formReminderAmountLabel}>
 									{newReminderUnit === 'minutes' ? 'хвилин' : newReminderUnit === 'hours' ? 'годин' : newReminderUnit === 'days' ? 'днів' : 'тижнів'} до
@@ -678,7 +678,7 @@ const Sprint: React.FC = () => {
 							type="button"
 							className={styles.formReminderDoneBtn}
 							onClick={() => {
-								setNewReminder({ amount: newReminderAmount, unit: newReminderUnit })
+								setNewReminder({ amount: Math.max(1, Math.min(999, Number(newReminderAmount) || 1)), unit: newReminderUnit })
 								setShowFormReminderPicker(false)
 							}}
 						>

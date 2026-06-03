@@ -26,25 +26,10 @@ const SPRINT_LIMIT = 4
 const SHOPPING_LIMIT = 3
 const PRIORITY_ORDER: Record<TodoPriority, number> = { urgent: 0, normal: 1, low: 2 }
 
-const PlusIcon: React.FC = () => (
-  <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-    <path d="M4.5 1.5v6M1.5 4.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-  </svg>
-)
-
 const CheckIcon: React.FC = () => (
   <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
     <path d="M1.5 4l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
-)
-
-const ShopTag: React.FC = () => (
-  <span className={styles.shopTag} aria-hidden="true">
-    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-      <path d="M2 3.5h8l-.8 5.5H2.8L2 3.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-      <path d="M4 3.5V2.5a2 2 0 0 1 4 0v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-    </svg>
-  </span>
 )
 
 const d = new Date()
@@ -79,7 +64,6 @@ const TasksAccordion: React.FC = () => {
 
   const todoDone    = todoItems.filter((t) => isDoneToday(t)).length
   const todoAllDone = todoItems.length > 0 && todoDone === todoItems.length
-  const todoPct     = todoItems.length > 0 ? Math.round((todoDone / todoItems.length) * 100) : 0
   const todoVisible = todoActive.slice(0, SPRINT_LIMIT)
   const todoRest    = todoActive.length - SPRINT_LIMIT
 
@@ -119,18 +103,6 @@ const TasksAccordion: React.FC = () => {
             </svg>
           </div>
         </button>
-
-        <div className={`${styles.progressWrap} ${questsOpen ? styles.progressVisible : ''}`}>
-          <div className={styles.progressTrack}>
-            <div
-              className={styles.progressFill}
-              style={{
-                width:      `${todoPct}%`,
-                background: todoAllDone ? 'var(--second)' : 'var(--accent)',
-              }}
-            />
-          </div>
-        </div>
 
         <div className={`${styles.content} ${questsOpen ? styles.contentOpen : ''}`}>
           <div className={styles.contentInner}>
@@ -229,7 +201,7 @@ const TasksAccordion: React.FC = () => {
                       onClick={(e) => { e.stopPropagation(); handleShopToggle(t.id, t.done) }}
                       aria-label={t.done ? 'Позначити невиконаним' : 'Позначити виконаним'}
                     >
-                      {(t.done || completingShop.has(t.id)) ? <CheckIcon /> : <PlusIcon />}
+                      {(t.done || completingShop.has(t.id)) && <CheckIcon />}
                     </button>
                     <span
                       className={`${styles.itemTitle} ${(t.done || completingShop.has(t.id)) ? styles.itemDone : ''}`}
@@ -243,7 +215,6 @@ const TasksAccordion: React.FC = () => {
                         {t.checklist.filter(i => i.done).length}/{t.checklist.length}
                       </span>
                     )}
-                    <ShopTag />
                   </li>
                 ))}
               </ul>

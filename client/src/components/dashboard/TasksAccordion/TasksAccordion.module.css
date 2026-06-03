@@ -131,7 +131,7 @@
   border-bottom: none;
 }
 
-/* ── Checkbox — sprint (rounded square, faint undone border) ── */
+/* ── Checkbox — quest/todo (rounded square, var(--second) border) ── */
 .checkbox {
   flex-shrink: 0;
   width: 18px;
@@ -145,59 +145,41 @@
   transition: background 0.15s, border-color 0.15s;
   color: #fff;
   padding: 0;
-  border: 1.5px solid var(--border2);
+  border: 1.5px solid var(--second);
 }
 
-/* undone sprint checkbox — faint white border */
+/* undone quest checkbox — var(--second) border, transparent bg */
 .checkboxUndone {
-  border-color: rgba(255, 255, 255, 0.2);
-}
-:global([data-theme="japan"]) .checkboxUndone {
-  border-color: rgba(0, 0, 0, 0.15);
+  border-color: var(--second);
 }
 
-/* done sprint checkbox — var(--second) fill */
+/* done quest checkbox — var(--second) fill */
 .checkboxDone {
   background: var(--second);
   border-color: var(--second);
 }
 
-/* ── Checkbox — shopping (square, + icon, var(--second) accent) ── */
+/* ── Checkbox — shopping (square, var(--gold) border) ── */
 .checkboxShop {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  border: 1.5px solid rgba(42, 157, 143, 0.4);
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid var(--gold);
   background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--second);
+  color: #fff;
   padding: 0;
   transition: background 0.15s, border-color 0.15s;
 }
-.checkboxShop:hover { border-color: var(--second); background: var(--second-soft); }
+.checkboxShop:hover { background: var(--gold-dim); }
 
 .checkboxShopDone {
-  background: var(--second);
-  border-color: var(--second);
-  color: #fff;
-}
-
-/* ── Shopping tag icon ── */
-.shopTag {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  background: var(--second-soft);
-  border: 0.5px solid rgba(42, 157, 143, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--second);
+  background: var(--gold);
+  border-color: var(--gold);
 }
 
 /* ── Item title ── */
