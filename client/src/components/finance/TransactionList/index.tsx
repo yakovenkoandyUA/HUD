@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import type { Transaction } from '../../../types'
 import { fmt } from '../../../utils/finance'
+import Modal from '../../ui/Modal'
 import styles from './TransactionList.module.css'
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -18,7 +19,8 @@ const CATEGORY_COLORS: Record<string, string> = {
  * TransactionList
  * ---------------
  * Список транзакцій з кастомними dropdown-фільтрами по типу та категорії.
- * За замовчуванням — останні 20. При активному фільтрі — поточний місяць.
+ * Транзакції з чеком (description = JSON з полем store) показуються з іконкою
+ * і відкривають модалку деталей по тапу.
  *
  * Props:
  * @prop {Transaction[]}          transactions — масив транзакцій
@@ -27,6 +29,18 @@ const CATEGORY_COLORS: Record<string, string> = {
 interface TransactionListProps {
   transactions: Transaction[]
   onDelete?: (id: string) => void
+}
+
+interface ReceiptData {
+  store: string
+  items: { name: string; price: number; category: string }[]
+}
+
+function parseReceipt(description: string): ReceiptData | null {
+  try {
+    const parsed = JSON.parse(description)
+    return parsed.store ? (parsed as ReceiptData) : null
+  } catch { return null }
 }
 
 type TypeFilter = 'all' | 'income' | 'expense'
@@ -51,6 +65,13 @@ const ChevronDown: React.FC = () => (
 const CheckMark: React.FC = () => (
   <svg width="11" height="9" viewBox="0 0 11 9" fill="none" aria-hidden="true">
     <path d="M1 4l3 3.5 6-6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+const ReceiptIcon: React.FC = () => (
+  <svg width="11" height="13" viewBox="0 0 11 13" fill="none" aria-hidden="true">
+    <path d="M1 1.5h9V12l-1.5-1-2 1.5-2-1.5L3 12.5 1.5 12 1 12V1.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+    <path d="M3 5h5M3 7.5h5M3 10h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
   </svg>
 )
 
@@ -110,7 +131,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({ value, options, onChang
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 const TYPE_OPTIONS: DropOption[] = [
@@ -120,9 +141,10 @@ const TYPE_OPTIONS: DropOption[] = [
 ]
 
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete }) => {
-  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
-  const [typeFilter, setTypeFilter]       = useState<TypeFilter>('all')
-  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [pendingDelete, setPendingDelete]         = useState<string | null>(null)
+  const [typeFilter, setTypeFilter]               = useState<TypeFilter>('all')
+  const [categoryFilter, setCategoryFilter]       = useState('all')
+  const [selectedReceiptTx, setSelectedReceiptTx] = useState<Transaction | null>(null)
 
   const currentMonth = new Date().toISOString().slice(0, 7)
 
@@ -147,6 +169,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const handleDeleteClick   = (id: string) => setPendingDelete(id)
   const handleConfirmDelete = (id: string) => { onDelete?.(id); setPendingDelete(null) }
   const handleCancelDelete  = () => setPendingDelete(null)
+
+  const receiptModalData = selectedReceiptTx ? parseReceipt(selectedReceiptTx.description) : null
 
   return (
     <div>
@@ -176,6 +200,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
         <ul className={styles.list}>
           {list.map((t) => {
             const isPending = pendingDelete === t.id
+            const receipt   = parseReceipt(t.description)
             return (
               <li key={t.id} className={`${styles.item} ${isPending ? styles.itemPending : ''}`}>
                 {isPending ? (
@@ -192,7 +217,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                   </div>
                 ) : (
                   <>
-                    <div className={styles.left}>
+                    <div
+                      className={`${styles.left} ${receipt ? styles.leftClickable : ''}`}
+                      onClick={receipt ? () => setSelectedReceiptTx(t) : undefined}
+                    >
                       <span
                         className={styles.dot}
                         style={
@@ -203,8 +231,15 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                               : { background: 'var(--negative)' }
                         }
                       />
+                      {receipt && (
+                        <span className={styles.receiptIconWrap}>
+                          <ReceiptIcon />
+                        </span>
+                      )}
                       <div>
-                        <div className={styles.desc}>{t.description}</div>
+                        <div className={styles.desc}>
+                          {receipt ? receipt.store : t.description}
+                        </div>
                         <div className={styles.date}>{formatDate(t.date)}</div>
                       </div>
                     </div>
@@ -230,6 +265,36 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
           })}
         </ul>
       )}
+
+      {/* ── Receipt detail modal ── */}
+      <Modal
+        isOpen={!!selectedReceiptTx}
+        onClose={() => setSelectedReceiptTx(null)}
+        title={`🧾 ${receiptModalData?.store ?? 'Чек'}`}
+        draggable
+      >
+        {selectedReceiptTx && receiptModalData && (
+          <div className={styles.receiptModal}>
+            <div className={styles.receiptModalDate}>
+              {formatDate(selectedReceiptTx.date)}
+            </div>
+
+            <div className={styles.receiptModalItems}>
+              {receiptModalData.items.map((item, i) => (
+                <div key={i} className={styles.receiptModalItem}>
+                  <span className={styles.receiptModalItemName}>{item.name}</span>
+                  <span className={styles.receiptModalItemPrice}>{fmt(item.price)} ₴</span>
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.receiptModalTotal}>
+              <span>Разом</span>
+              <span>{fmt(selectedReceiptTx.amount)} ₴</span>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
