@@ -80,16 +80,21 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
   if (total === 0) return null
 
   const gapFrac = GAP_DEG / 360
-  const totalGap = entries.length * gapFrac
-  let angle = 0
 
-  const segments = entries.map(({ cat, amount }) => {
-    const rawFrac = amount / total
-    const drawFrac = Math.max(0, rawFrac - gapFrac)
-    const start = angle
-    angle += rawFrac * 360
-    return { cat, amount, start, dashLen: drawFrac * CIRC }
-  })
+  const segments = entries.reduce(
+    (acc, { cat, amount }) => {
+      const rawFrac = amount / total
+      const drawFrac = Math.max(0, rawFrac - gapFrac)
+      const start = acc.angle
+      acc.segments.push({ cat, amount, start, dashLen: drawFrac * CIRC })
+      acc.angle += rawFrac * 360
+      return acc
+    },
+    {
+      angle: 0,
+      segments: [] as { cat: string; amount: number; start: number; dashLen: number }[],
+    }
+  ).segments
 
   return (
     <div className={styles.card}>
