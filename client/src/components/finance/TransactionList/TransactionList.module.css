@@ -1,3 +1,124 @@
+/* ── Filter row ── */
+.filterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.filterTitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.selects {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Custom dropdown ── */
+.dropWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.dropTrigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+  letter-spacing: 0.02em;
+}
+.dropTrigger:hover { border-color: var(--accent); color: var(--text); }
+
+.dropTriggerActive {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dropChevron {
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  transition: transform 0.18s;
+}
+.dropChevronOpen { transform: rotate(180deg); }
+
+.dropList {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
+  min-width: 140px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+  animation: dropIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: scale(0.94) translateY(-4px); transform-origin: top right; }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    transform-origin: top right; }
+}
+
+.dropItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  text-align: left;
+  gap: 8px;
+  transition: background 0.1s;
+  text-transform: capitalize;
+}
+.dropItem:first-child { border-top: none; }
+.dropItem:hover { background: rgba(255,255,255,0.04); }
+
+.dropItemActive {
+  background: var(--accent);
+  color: #fff;
+  border-top-color: transparent;
+}
+.dropItemActive:hover { background: var(--accent); }
+.dropItemActive + .dropItem { border-top-color: transparent; }
+
+.dropItemCheck {
+  width: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+/* ── Transaction list ── */
 .list {
   list-style: none;
   display: flex;

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Goal } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
+import { useFinanceStore } from './financeStore'
 
 interface ApiGoal {
   _id: string
@@ -74,7 +75,12 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
     authFetch(`/api/goals/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ currentAmount: newAmount }),
-    }).catch(() => {})
+    })
+      .then(r => {
+        if (!r.ok) throw new Error()
+        useFinanceStore.getState().addExpense(amount, `Ціль: ${goal.title}`, 'накопичення')
+      })
+      .catch(() => {})
   },
 
   deleteGoal: (id) => {

@@ -7,13 +7,18 @@ import styles from './GoalsList.module.css'
 /**
  * GoalsList
  * ---------
- * Список цілей накопичення з прогрес-барами.
- * Дозволяє додавати нові цілі та поповнювати існуючі.
- * Синхронізується з backend якщо токен присутній.
+ * Список цілей накопичення. Кожна ціль — компактний горизонтальний рядок
+ * з SVG кільцем 48px і тонким прогрес-баром.
  *
  * Props:
- * @prop {boolean} [openAdd] — якщо true, відразу відкриває форму додавання
+ * @prop {number} [addTrigger] — збільшення відкриває форму додавання
  */
+
+const R    = 20
+const SW   = 4
+const CX   = 24
+const CY   = 24
+const CIRC = 2 * Math.PI * R
 
 interface GoalRowProps {
   goal: Goal
@@ -22,53 +27,78 @@ interface GoalRowProps {
 }
 
 const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
-  const pct = goal.targetAmount > 0
-    ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+  const pct       = goal.targetAmount > 0
+    ? Math.min(Math.round((goal.currentAmount / goal.targetAmount) * 100), 100)
     : 0
-  const done = pct >= 100
+  const done      = pct >= 100
+  const offset    = CIRC - (pct / 100) * CIRC
+  const ringColor = done ? 'var(--second)' : 'var(--gold)'
+  const barColor  = done ? 'var(--second)' : 'var(--gold)'
 
   return (
-    <div className={`${styles.row} ${done ? styles.rowDone : ''}`}>
-      <div className={styles.rowHeader}>
-        <div className={styles.rowTitle}>
+    <div className={styles.goalCard}>
+      {/* ── SVG ring 48px ── */}
+      <svg width="48" height="48" viewBox="0 0 48 48" className={styles.ring}>
+        <circle
+          cx={CX} cy={CY} r={R}
+          fill="none" stroke="var(--border2)" strokeWidth={SW}
+        />
+        <circle
+          cx={CX} cy={CY} r={R}
+          fill="none" stroke={ringColor} strokeWidth={SW}
+          strokeDasharray={CIRC}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${CX} ${CY})`}
+        />
+        <text
+          x={CX} y={CY + 4}
+          textAnchor="middle"
+          fill={ringColor}
+          fontSize="10"
+          fontFamily="var(--font-mono)"
+          fontWeight="700"
+        >
+          {pct}%
+        </text>
+      </svg>
+
+      {/* ── Centre: name + amount + thin progress bar ── */}
+      <div className={styles.goalInfo}>
+        <div className={styles.goalHeader}>
           <span className={styles.goalName}>{goal.title}</span>
-          {done && <span className={styles.doneBadge}>Досягнуто!</span>}
+          <span className={styles.goalAmount}>
+            {fmt(goal.currentAmount)} / {fmt(goal.targetAmount)} ₴
+          </span>
         </div>
-        <div className={styles.rowActions}>
-          {!done && (
-            <button
-              type="button"
-              className={styles.contributeBtn}
-              onClick={() => onContribute(goal)}
-            >
-              +
-            </button>
-          )}
+        <div className={styles.progressBar}>
+          <div
+            className={styles.progressFill}
+            style={{ width: `${pct}%`, background: barColor }}
+          />
+        </div>
+      </div>
+
+      {/* ── Action buttons ── */}
+      <div className={styles.goalActions}>
+        {!done && (
           <button
             type="button"
-            className={styles.deleteBtn}
-            onClick={() => onDelete(goal.id)}
-            aria-label="Видалити"
+            className={styles.contributeBtn}
+            onClick={() => onContribute(goal)}
+            aria-label="Поповнити"
           >
-            ×
+            +
           </button>
-        </div>
-      </div>
-
-      <div className={styles.barTrack}>
-        <div
-          className={styles.barFill}
-          style={{
-            width: `${pct}%`,
-            background: done ? 'var(--positive)' : 'var(--accent)',
-          }}
-        />
-      </div>
-
-      <div className={styles.rowMeta}>
-        <span className={styles.savedAmt}>{fmt(goal.currentAmount)} ₴</span>
-        <span className={styles.pct}>{Math.round(pct)}%</span>
-        <span className={styles.targetAmt}>{fmt(goal.targetAmount)} ₴</span>
+        )}
+        <button
+          type="button"
+          className={styles.deleteBtn}
+          onClick={() => onDelete(goal.id)}
+          aria-label="Видалити"
+        >
+          ×
+        </button>
       </div>
     </div>
   )
@@ -80,17 +110,16 @@ interface GoalsListProps {
 
 const GoalsList: React.FC<GoalsListProps> = ({ addTrigger }) => {
   const { goals, fetchGoals, addGoal, contribute, deleteGoal } = useGoalsStore()
-  const [showAdd, setShowAdd] = useState(false)
+  const [showAdd, setShowAdd]               = useState(false)
+  const [showContribute, setShowContribute] = useState(false)
+  const [activeGoal, setActiveGoal]         = useState<Goal | null>(null)
+  const [newTitle, setNewTitle]             = useState('')
+  const [newTarget, setNewTarget]           = useState('')
+  const [contribAmount, setContribAmount]   = useState('')
 
   useEffect(() => {
     if (addTrigger && addTrigger > 0) setShowAdd(true)
   }, [addTrigger])
-  const [showContribute, setShowContribute] = useState(false)
-  const [activeGoal, setActiveGoal] = useState<Goal | null>(null)
-
-  const [newTitle, setNewTitle] = useState('')
-  const [newTarget, setNewTarget] = useState('')
-  const [contribAmount, setContribAmount] = useState('')
 
   useEffect(() => { fetchGoals() }, [fetchGoals])
 

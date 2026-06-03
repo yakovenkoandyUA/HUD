@@ -8,6 +8,7 @@ export type ExpenseCategory =
   | 'транспорт'
   | 'фібі'
   | 'інше'
+  | 'накопичення'
 
 export interface Transaction {
   id: string

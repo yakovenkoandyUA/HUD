@@ -10,6 +10,12 @@
   gap: 8px;
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .sectionLabel {
   font-family: var(--font-ui);
   font-size: 12px;
@@ -17,6 +23,24 @@
   letter-spacing: 0.08em;
   color: var(--text3);
 }
+
+.scanBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.scanBtn:hover { border-color: var(--accent); color: var(--accent); }
 
 .chips {
   display: flex;
@@ -45,4 +69,86 @@
   border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--text);
+}
+
+/* ── Custom category chip ── */
+.chipCustom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chipDelete {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text3);
+  transition: color 0.12s;
+  flex-shrink: 0;
+}
+.chipDelete:hover {
+  color: var(--accent);
+}
+
+/* ── "+ Нова..." chip ── */
+.chipNew {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px dashed var(--border2);
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.chipNew:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── New category inline input ── */
+.newCatRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.newCatInput {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 7px 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+}
+.newCatInput:focus { border-color: var(--accent); }
+.newCatInput::placeholder { color: var(--text3); }
+
+.newCatSaveBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 7px 14px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.newCatSaveBtn:disabled { opacity: 0.5; cursor: default; }
+
+.newCatCancelBtn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  font-size: 14px;
+  color: var(--text3);
+  cursor: pointer;
 }

@@ -167,7 +167,6 @@ const Finance: React.FC = () => {
         <ExpenseChart transactions={transactions} />
 
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Останні транзакції</h3>
           <TransactionList transactions={transactions} onDelete={handleDelete} />
         </div>
       </div>
