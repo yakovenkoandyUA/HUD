@@ -29,10 +29,10 @@ const ProtectedRoute: React.FC = () => {
   return <Outlet />
 }
 
-/** Redirects non-admin users to / */
-const AdminRoute: React.FC = () => {
+/** Redirects users without f1Enabled to / */
+const F1Route: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  if (activeProfile?.role !== 'admin') return <Navigate to="/" replace />
+  if (!activeProfile?.f1Enabled) return <Navigate to="/" replace />
   return <Outlet />
 }
 
@@ -57,8 +57,8 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/memories" element={<MemoriesScreen />} />
           <Route path="/memories/:id" element={<MemoryDetailScreen />} />
 
-          {/* Admin only */}
-          <Route element={<AdminRoute />}>
+          {/* F1 module — f1Enabled only */}
+          <Route element={<F1Route />}>
             <Route path="/f1" element={<F1Screen />} />
             <Route path="/f1/:round" element={<RaceDetailPage />} />
           </Route>

@@ -94,7 +94,7 @@ const PALETTES: ThemePalette[] = [
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
   const navigate = useNavigate()
   const { theme, setTheme, showToast, updateAvailable } = useUiStore()
-  const { activeProfile, logout } = useProfileStore()
+  const { activeProfile, logout, updateProfile } = useProfileStore()
   const { isInstallable, isIOS, promptInstall } = usePwaInstall()
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
   const showInstall = !isStandalone && (isInstallable || isIOS)
@@ -162,6 +162,16 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
                 </button>
               </div>
             </div>
+          </div>
+
+          <div className={styles.settingRow}>
+            <span className={styles.settingLabel}>F1 модуль</span>
+            <button
+              type="button"
+              className={`${styles.toggle} ${activeProfile.f1Enabled ? styles.toggleOn : ''}`}
+              onClick={() => updateProfile({ f1Enabled: !(activeProfile.f1Enabled ?? false) })}
+              aria-label="Увімкнути F1 модуль"
+            />
           </div>
         </div>
       )}

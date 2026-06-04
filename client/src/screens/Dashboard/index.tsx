@@ -12,6 +12,7 @@ import { useNasaApod } from '../../hooks/useNasaApod'
 import { useFinanceStore } from '../../store/financeStore'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
+import { useProfileStore } from '../../store/profileStore'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getRaceThisWeek } from '../../utils/f1'
 import { getCurrentWeekStart, isRecurring } from '../../utils/sprint'
@@ -25,6 +26,7 @@ const Dashboard: React.FC = () => {
   const sprintItems  = useSprintStore(s => s.items)
   const routineItems = sprintItems.filter(t => isRecurring(t))
   const { showToast, theme } = useUiStore()
+  const f1Enabled = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const [showExpense, setShowExpense] = useState(false)
   const [showApod, setShowApod] = useState(false)
   const { data: apodData, loading: apodLoading, error: apodError, fetchApod } = useNasaApod()
@@ -53,8 +55,8 @@ const Dashboard: React.FC = () => {
     return () => content.removeEventListener('scroll', onScroll)
   }, [isRetro])
 
-  const nextRace      = getNextRace(F1_SEASON_2026)
-  const raceThisWeek  = getRaceThisWeek(F1_SEASON_2026)
+  const nextRace      = f1Enabled ? getNextRace(F1_SEASON_2026) : null
+  const raceThisWeek  = f1Enabled ? getRaceThisWeek(F1_SEASON_2026) : null
   const weekStart     = getCurrentWeekStart()
   const dailyBudget   = calcDailyBudget(balance)
   const today = new Date().toISOString().split('T')[0]

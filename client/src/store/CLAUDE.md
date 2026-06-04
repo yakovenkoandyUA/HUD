@@ -31,11 +31,11 @@ store/
 ## Правила persist
 
 - `financeStore`, `watchlistStore`, `goalsStore`, `lessonStore`, `memoriesStore` — **без** persist, дані завжди з backend
-- `sprintStore` — часткова persist: `items` (rich local fields: checklist/labels/dueDate/description) + `globalLabels`; решта з backend при `fetchItems`
+- `sprintStore` — часткова persist: тільки `items` (rich local fields: checklist/labels/dueDate/description); `globalLabels` — backend `/api/labels`
 - `recipesStore` — persist тільки `mealOfWeek` + `mealWeekKey` (TheMealDB кеш на тиждень); рецепти — backend
-- `shoppingListStore` — повний persist (local-only store)
-- `f1PredictionsStore` — повний persist (local-only store)
-- Жодного юзерського контенту в localStorage — тільки auth token, тема UI, API-кеш та локальні прогнози/список
+- `shoppingListStore` — **без** persist, backend `/api/shopping`; `fetchItems()` при mount
+- `f1PredictionsStore` — **без** persist, backend `/api/f1/predictions`; `fetchPredictions()` при mount F1Screen
+- Жодного юзерського контенту в localStorage — тільки auth token, тема UI, sprint items (rich local cache)
 
 ## shoppingListStore — структура
 

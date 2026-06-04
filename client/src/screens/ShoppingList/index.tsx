@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useShoppingListStore, type ShoppingItem } from '../../store/shoppingListStore'
 import { useRecipesStore } from '../../store/recipesStore'
@@ -162,7 +162,8 @@ const RecipeGroupHeader: React.FC<RecipeGroupHeaderProps> = ({
  */
 const ShoppingListScreen: React.FC = () => {
   const navigate = useNavigate()
-  const { items, addManual, clearAll, clearChecked } = useShoppingListStore()
+  const { items, addManual, clearAll, clearChecked, fetchItems } = useShoppingListStore()
+  useEffect(() => { fetchItems() }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const { recipes } = useRecipesStore()
   const [confirmClear, setConfirmClear] = useState(false)
   const [showAdd, setShowAdd] = useState(false)

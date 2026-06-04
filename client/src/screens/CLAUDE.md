@@ -36,7 +36,7 @@ bonus = (dailyBudget * daysElapsed) - totalMonthExpense
   - **Конструктори** — expand → ConstructorStatsCard з PixelCar анімацією
   - **МІЙ СЕЗОН** — MySeasonStats (streak, accuracy, race-by-race)
 - McLarenViewer — Three.js
-- Маршрути захищені `AdminRoute`
+- Маршрути захищені `F1Route` (перевіряє `f1Enabled`)
 
 **F1 Календар:** `/client/src/data/f1Season2026.ts` — 22 гонки.
 `trackSvg: string | null` — шлях до SVG або `null`.

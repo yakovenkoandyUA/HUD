@@ -13,6 +13,7 @@ export interface ITodoItem extends Document {
   repeatStartDate?: string
   completionHistory?: string[]
   reminder?: { amount: number; unit: string }
+  checklist?: Array<{ id: string; title: string; done: boolean }>
   userId: string
 }
 
@@ -29,6 +30,7 @@ const schema = new Schema<ITodoItem>({
   repeatStartDate: { type: String },
   completionHistory: { type: [String], default: [] },
   reminder:  { type: Schema.Types.Mixed, default: null },
+  checklist: { type: Schema.Types.Mixed, default: [] },
   userId:    { type: String, required: true, index: true },
 }, { timestamps: true })
 

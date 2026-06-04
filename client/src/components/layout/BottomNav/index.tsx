@@ -14,11 +14,11 @@ import { useProfileStore } from '../../../store/profileStore'
  * BottomNav
  * ---------
  * Нижня навігація між основними екранами.
- * F1 іконка відображається тільки для role='admin'.
+ * F1 іконка відображається тільки якщо f1Enabled у профілі.
  */
 const BottomNav: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  const isAdmin = activeProfile?.role === 'admin'
+  const f1Enabled = activeProfile?.f1Enabled ?? false
 
   return (
     <nav className={styles.nav}>
@@ -30,7 +30,7 @@ const BottomNav: React.FC = () => {
         <WalletIcon className={styles.icon} />
       </NavLink>
 
-      {isAdmin && (
+      {f1Enabled && (
         <NavLink to="/f1" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
           <F1Icon className={styles.icon} />
         </NavLink>

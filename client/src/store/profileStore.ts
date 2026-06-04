@@ -20,6 +20,7 @@ export interface Profile {
   username: string
   avatarUrl: string | null
   role: 'admin' | 'user'
+  f1Enabled: boolean
 }
 
 interface ProfileState {
@@ -31,7 +32,7 @@ interface ProfileState {
   selectProfile: (username: string) => Promise<void>
   logout: () => void
   uploadAvatar: (file: File) => Promise<void>
-  updateProfile: (patch: { name?: string; avatarUrl?: string }) => Promise<void>
+  updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean }) => Promise<void>
 }
 
 export const useProfileStore = create<ProfileState>()(
@@ -47,7 +48,12 @@ export const useProfileStore = create<ProfileState>()(
           const res = await fetch(`${BASE_URL}/api/auth/profiles`)
           if (!res.ok) return
           const profiles = await res.json() as Profile[]
-          set({ profiles })
+          // Also refresh activeProfile so f1Enabled (and other new fields) are always in sync
+          const { activeProfile } = get()
+          const freshActive = activeProfile
+            ? (profiles.find(p => p.id === activeProfile.id) ?? activeProfile)
+            : null
+          set({ profiles, activeProfile: freshActive })
         } catch { /* offline — use cached */ }
       },
 
@@ -73,7 +79,7 @@ export const useProfileStore = create<ProfileState>()(
         await get().updateProfile({ avatarUrl: url })
       },
 
-      updateProfile: async (patch: { name?: string; avatarUrl?: string }) => {
+      updateProfile: async (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean }) => {
         const { token, activeProfile } = get()
         if (!activeProfile) return
 

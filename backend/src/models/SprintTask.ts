@@ -16,6 +16,7 @@ export interface ISprintTask extends Document {
   completionHistory?: string[]
   priority?: string
   reminder?: { amount: number; unit: string }
+  checklist?: Array<{ id: string; title: string; done: boolean }>
   userId: string
 }
 
@@ -35,6 +36,7 @@ const schema = new Schema<ISprintTask>({
   completionHistory: { type: [String], default: [] },
   priority:   { type: String, default: 'normal' },
   reminder:   { type: Schema.Types.Mixed, default: null },
+  checklist:  { type: Schema.Types.Mixed, default: [] },
   userId:     { type: String, required: true, index: true },
 }, { timestamps: true })
 

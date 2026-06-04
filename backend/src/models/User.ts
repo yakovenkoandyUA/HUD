@@ -5,6 +5,7 @@ export interface IUser extends Document {
   username: string
   avatarUrl: string | null
   role: 'admin' | 'user'
+  f1Enabled: boolean
   createdAt: Date
 }
 
@@ -13,6 +14,7 @@ const schema = new Schema<IUser>({
   username:  { type: String, required: true, unique: true },
   avatarUrl: { type: String, default: null },
   role:      { type: String, enum: ['admin', 'user'], default: 'user' },
+  f1Enabled: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 })
 

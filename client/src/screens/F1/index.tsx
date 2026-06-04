@@ -9,6 +9,7 @@ import MySeasonStats from '../../components/f1/MySeasonStats'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getNextRound } from '../../utils/f1'
 import { useUiStore } from '../../store/uiStore'
+import { useF1PredictionsStore } from '../../store/f1PredictionsStore'
 import styles from './F1.module.css'
 
 type F1Tab = 'calendar' | 'drivers' | 'constructors' | 'myseason'
@@ -23,11 +24,16 @@ const TABS: { id: F1Tab; label: string }[] = [
 const F1Screen: React.FC = () => {
   const [tab, setTab] = useState<F1Tab>('calendar')
   const { theme } = useUiStore()
+  const { fetchPredictions } = useF1PredictionsStore()
   const nextRace = getNextRace(F1_SEASON_2026)
   const nextRound = getNextRound(F1_SEASON_2026)
   const bgRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const showBg = theme !== 'japan'
+
+  useEffect(() => {
+    fetchPredictions()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const content = contentRef.current

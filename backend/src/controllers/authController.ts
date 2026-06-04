@@ -54,13 +54,14 @@ export function me(req: Request, res: Response): void {
 /** GET /auth/profiles — public list of all profiles */
 export async function getProfiles(req: Request, res: Response): Promise<void> {
   try {
-    const users = await User.find({}, { name: 1, username: 1, avatarUrl: 1, role: 1 }).sort({ name: 1 })
+    const users = await User.find({}, { name: 1, username: 1, avatarUrl: 1, role: 1, f1Enabled: 1 }).sort({ name: 1 })
     res.json(users.map(u => ({
       id: (u._id as { toString(): string }).toString(),
       name: u.name,
       username: u.username,
       avatarUrl: u.avatarUrl,
       role: u.role,
+      f1Enabled: u.f1Enabled ?? false,
     })))
   } catch {
     res.status(500).json({ error: 'Failed to fetch profiles' })
@@ -96,6 +97,7 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
         username: user.username,
         avatarUrl: user.avatarUrl,
         role: user.role,
+        f1Enabled: user.f1Enabled ?? false,
       },
     })
   } catch {
@@ -103,18 +105,19 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
   }
 }
 
-/** PATCH /auth/me — update name and/or avatar for active user */
+/** PATCH /auth/me — update name, avatar, and/or f1Enabled for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl, name } = req.body as { avatarUrl?: string; name?: string }
-  if (!avatarUrl && !name) {
-    res.status(400).json({ error: 'avatarUrl or name required' })
+  const { avatarUrl, name, f1Enabled } = req.body as { avatarUrl?: string; name?: string; f1Enabled?: boolean }
+  if (!avatarUrl && !name && f1Enabled === undefined) {
+    res.status(400).json({ error: 'avatarUrl, name, or f1Enabled required' })
     return
   }
 
   try {
-    const update: Record<string, string> = {}
+    const update: Record<string, unknown> = {}
     if (avatarUrl) update.avatarUrl = avatarUrl
     if (name?.trim()) update.name = name.trim()
+    if (f1Enabled !== undefined) update.f1Enabled = f1Enabled
     await User.findByIdAndUpdate(req.userId, update)
     res.json({ ok: true })
   } catch {

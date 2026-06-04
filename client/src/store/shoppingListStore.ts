@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { Recipe } from '../types'
+import { authFetch, isBackendConfigured, getToken } from '../services/api'
 
 export interface ShoppingItem {
   id: string
@@ -14,6 +14,7 @@ export interface ShoppingItem {
 
 interface ShoppingListState {
   items: ShoppingItem[]
+  fetchItems: () => Promise<void>
   addFromRecipe: (recipe: Recipe, servings: number) => void
   addManual: (name: string, amount: number, unit: string) => void
   toggleItem: (id: string) => void
@@ -46,73 +47,143 @@ function parseIngredient(
   return { amount: 1, unit: 'шт', name: str.trim() }
 }
 
-export const useShoppingListStore = create<ShoppingListState>()(
-  persist(
-    (set) => ({
-      items: [],
+interface ApiItem {
+  _id: string
+  name: string
+  amount: number
+  unit: string
+  recipeId: string
+  recipeName: string
+  checked: boolean
+}
 
-      addFromRecipe: (recipe, servings) => {
-        const factor = recipe.servings ? servings / recipe.servings : 1
-        const parsed = recipe.ingredients.map(s => parseIngredient(s, factor))
+function fromApi(item: ApiItem): ShoppingItem {
+  return {
+    id: item._id,
+    name: item.name,
+    amount: item.amount,
+    unit: item.unit,
+    recipeId: item.recipeId,
+    recipeName: item.recipeName,
+    checked: item.checked,
+  }
+}
 
-        set(s => {
-          const next = [...s.items]
-          for (const p of parsed) {
-            const key = p.name.toLowerCase().trim()
-            const idx = next.findIndex(
-              it => it.name.toLowerCase().trim() === key && it.recipeId === recipe.id,
-            )
-            if (idx >= 0) {
-              next[idx] = { ...next[idx], amount: p.amount, checked: false }
-            } else {
-              next.push({
-                id:          crypto.randomUUID(),
-                name:        p.name,
-                amount:      p.amount,
-                unit:        p.unit,
-                recipeId:    recipe.id,
-                recipeName:  recipe.title,
-                checked:     false,
-              })
-            }
+export const useShoppingListStore = create<ShoppingListState>()((set, get) => ({
+  items: [],
+
+  fetchItems: async () => {
+    if (!getToken() || !isBackendConfigured()) return
+    try {
+      const res = await authFetch('/api/shopping')
+      if (!res.ok) return
+      const data: ApiItem[] = await res.json()
+      set({ items: data.map(fromApi) })
+    } catch { /* offline */ }
+  },
+
+  addFromRecipe: (recipe, servings) => {
+    const factor = recipe.servings ? servings / recipe.servings : 1
+    const parsed = recipe.ingredients.map(s => parseIngredient(s, factor))
+
+    const toCreate: ShoppingItem[] = []
+    const toUpdate: ShoppingItem[] = []
+
+    set(s => {
+      const next = [...s.items]
+      for (const p of parsed) {
+        const key = p.name.toLowerCase().trim()
+        const idx = next.findIndex(
+          it => it.name.toLowerCase().trim() === key && it.recipeId === recipe.id,
+        )
+        if (idx >= 0) {
+          next[idx] = { ...next[idx], amount: p.amount, checked: false }
+          toUpdate.push(next[idx])
+        } else {
+          const newItem: ShoppingItem = {
+            id: crypto.randomUUID(),
+            name: p.name, amount: p.amount, unit: p.unit,
+            recipeId: recipe.id!, recipeName: recipe.title,
+            checked: false,
           }
-          return { items: next }
+          next.push(newItem)
+          toCreate.push(newItem)
+        }
+      }
+      return { items: next }
+    })
+
+    if (!getToken() || !isBackendConfigured()) return
+
+    Promise.all([
+      ...toCreate.map(item =>
+        authFetch('/api/shopping', {
+          method: 'POST',
+          body: JSON.stringify({ name: item.name, amount: item.amount, unit: item.unit, recipeId: item.recipeId, recipeName: item.recipeName }),
         })
-      },
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then((created: ApiItem) => set(s => ({
+            items: s.items.map(i => i.id === item.id ? { ...i, id: created._id } : i),
+          })))
+          .catch(() => {})
+      ),
+      ...toUpdate.map(item =>
+        authFetch(`/api/shopping/${item.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ amount: item.amount, checked: false }),
+        }).catch(() => {})
+      ),
+    ])
+  },
 
-      addManual: (name, amount, unit) => {
-        set(s => ({
-          items: [
-            ...s.items,
-            {
-              id:         crypto.randomUUID(),
-              name:       name.trim(),
-              amount,
-              unit,
-              recipeId:   'manual',
-              recipeName: 'Вручну',
-              checked:    false,
-            },
-          ],
-        }))
-      },
+  addManual: (name, amount, unit) => {
+    const item: ShoppingItem = {
+      id: crypto.randomUUID(),
+      name: name.trim(), amount, unit,
+      recipeId: 'manual', recipeName: 'Вручну',
+      checked: false,
+    }
+    set(s => ({ items: [...s.items, item] }))
 
-      toggleItem: (id) => {
-        set(s => ({
-          items: s.items.map(it => it.id === id ? { ...it, checked: !it.checked } : it),
-        }))
-      },
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch('/api/shopping', {
+      method: 'POST',
+      body: JSON.stringify({ name: item.name, amount, unit }),
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((created: ApiItem) => set(s => ({
+        items: s.items.map(i => i.id === item.id ? { ...i, id: created._id } : i),
+      })))
+      .catch(() => {})
+  },
 
-      removeItem: (id) => {
-        set(s => ({ items: s.items.filter(it => it.id !== id) }))
-      },
+  toggleItem: (id) => {
+    const item = get().items.find(i => i.id === id)
+    if (!item) return
+    const checked = !item.checked
+    set(s => ({ items: s.items.map(it => it.id === id ? { ...it, checked } : it) }))
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch(`/api/shopping/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ checked }),
+    }).catch(() => {})
+  },
 
-      clearAll: () => set({ items: [] }),
+  removeItem: (id) => {
+    set(s => ({ items: s.items.filter(it => it.id !== id) }))
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch(`/api/shopping/${id}`, { method: 'DELETE' }).catch(() => {})
+  },
 
-      clearChecked: () => {
-        set(s => ({ items: s.items.filter(it => !it.checked) }))
-      },
-    }),
-    { name: 'shopping-list-storage' },
-  ),
-)
+  clearAll: () => {
+    set({ items: [] })
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch('/api/shopping', { method: 'DELETE' }).catch(() => {})
+  },
+
+  clearChecked: () => {
+    set(s => ({ items: s.items.filter(it => !it.checked) }))
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch('/api/shopping?checked=1', { method: 'DELETE' }).catch(() => {})
+  },
+}))

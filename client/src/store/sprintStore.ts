@@ -60,6 +60,8 @@ export function currentWeekStart(): string {
 
 // ── API shapes ────────────────────────────────────────────────────────────────
 
+interface ApiChecklist { id: string; title: string; done: boolean }
+
 interface ApiTask {
   _id: string
   title: string
@@ -76,6 +78,7 @@ interface ApiTask {
   repeatStartDate?: string
   completionHistory?: string[]
   reminder?: { amount: number; unit: string } | null
+  checklist?: ApiChecklist[]
 }
 
 interface ApiTodo {
@@ -92,6 +95,7 @@ interface ApiTodo {
   repeatStartDate?: string
   completionHistory?: string[]
   reminder?: { amount: number; unit: string } | null
+  checklist?: ApiChecklist[]
 }
 
 // ── Repeat helpers ────────────────────────────────────────────────────────────
@@ -160,6 +164,8 @@ function sortItems(items: UnifiedTodo[]): UnifiedTodo[] {
 
 // ── Store interface ───────────────────────────────────────────────────────────
 
+interface ApiLabel { _id: string; title: string; color: string }
+
 interface TodoState {
   items: UnifiedTodo[]
   syncStatus: SyncStatus
@@ -167,6 +173,7 @@ interface TodoState {
 
   clearItems: () => void
   fetchItems: () => Promise<void>
+  fetchLabels: () => Promise<void>
   addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>) => void
   addItems: (dataList: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>[]) => void
   toggleItem: (id: string, date?: string) => void
@@ -198,6 +205,32 @@ export const useSprintStore = create<TodoState>()(
 
       setSyncStatus: (syncStatus) => set({ syncStatus }),
 
+      fetchLabels: async () => {
+        if (!getToken() || !isBackendConfigured()) return
+        try {
+          const res = await authFetch('/api/labels')
+          if (!res.ok) return
+          const data: ApiLabel[] = await res.json()
+          if (data.length > 0) {
+            set({ globalLabels: data.map(l => ({ id: l._id, title: l.title, color: l.color })) })
+          } else {
+            // First time: seed default labels to backend
+            const seeded = await Promise.all(
+              DEFAULT_LABELS.map(l =>
+                authFetch('/api/labels', {
+                  method: 'POST',
+                  body: JSON.stringify({ title: l.title, color: l.color }),
+                })
+                  .then(r => r.ok ? r.json() : Promise.reject())
+                  .then((created: ApiLabel) => ({ id: created._id, title: l.title, color: l.color }))
+                  .catch(() => l)
+              )
+            )
+            set({ globalLabels: seeded })
+          }
+        } catch { /* offline — keep current labels */ }
+      },
+
       setReminder: (id, reminder) => {
         const item = get().items.find(i => i.id === id)
         set(s => ({ items: s.items.map(i => i.id === id ? { ...i, reminder } : i) }))
@@ -213,30 +246,56 @@ export const useSprintStore = create<TodoState>()(
         set(s => ({ items: s.items.map(i => i.id === id ? { ...i, ...updates } : i) })),
 
       addChecklistItem: (taskId, title) => {
-        const item: ChecklistItem = { id: crypto.randomUUID(), title, done: false }
-        set(s => ({
-          items: s.items.map(i => i.id === taskId
-            ? { ...i, checklist: [...(i.checklist ?? []), item] }
-            : i
-          ),
-        }))
+        const newItem: ChecklistItem = { id: crypto.randomUUID(), title, done: false }
+        let newChecklist: ChecklistItem[] = []
+        set(s => {
+          const updated = s.items.map(i => {
+            if (i.id !== taskId) return i
+            newChecklist = [...(i.checklist ?? []), newItem]
+            return { ...i, checklist: newChecklist }
+          })
+          return { items: updated }
+        })
+        if (!getToken() || !isBackendConfigured()) return
+        const item = get().items.find(i => i.id === taskId)
+        if (!item) return
+        const endpoint = item.type === 'sprint' ? `/api/sprint/tasks/${taskId}` : `/api/sprint/todos/${taskId}`
+        authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ checklist: newChecklist }) }).catch(() => {})
       },
 
-      toggleChecklistItem: (taskId, itemId) =>
-        set(s => ({
-          items: s.items.map(i => i.id === taskId
-            ? { ...i, checklist: (i.checklist ?? []).map(c => c.id === itemId ? { ...c, done: !c.done } : c) }
-            : i
-          ),
-        })),
+      toggleChecklistItem: (taskId, itemId) => {
+        let newChecklist: ChecklistItem[] = []
+        set(s => {
+          const updated = s.items.map(i => {
+            if (i.id !== taskId) return i
+            newChecklist = (i.checklist ?? []).map(c => c.id === itemId ? { ...c, done: !c.done } : c)
+            return { ...i, checklist: newChecklist }
+          })
+          return { items: updated }
+        })
+        if (!getToken() || !isBackendConfigured()) return
+        const item = get().items.find(i => i.id === taskId)
+        if (!item) return
+        const endpoint = item.type === 'sprint' ? `/api/sprint/tasks/${taskId}` : `/api/sprint/todos/${taskId}`
+        authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ checklist: newChecklist }) }).catch(() => {})
+      },
 
-      removeChecklistItem: (taskId, itemId) =>
-        set(s => ({
-          items: s.items.map(i => i.id === taskId
-            ? { ...i, checklist: (i.checklist ?? []).filter(c => c.id !== itemId) }
-            : i
-          ),
-        })),
+      removeChecklistItem: (taskId, itemId) => {
+        let newChecklist: ChecklistItem[] = []
+        set(s => {
+          const updated = s.items.map(i => {
+            if (i.id !== taskId) return i
+            newChecklist = (i.checklist ?? []).filter(c => c.id !== itemId)
+            return { ...i, checklist: newChecklist }
+          })
+          return { items: updated }
+        })
+        if (!getToken() || !isBackendConfigured()) return
+        const item = get().items.find(i => i.id === taskId)
+        if (!item) return
+        const endpoint = item.type === 'sprint' ? `/api/sprint/tasks/${taskId}` : `/api/sprint/todos/${taskId}`
+        authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ checklist: newChecklist }) }).catch(() => {})
+      },
 
       addLabel: (taskId, label) =>
         set(s => ({
@@ -254,28 +313,51 @@ export const useSprintStore = create<TodoState>()(
           ),
         })),
 
-      addGlobalLabel: (label) =>
-        set(s => ({ globalLabels: [...s.globalLabels, label] })),
+      addGlobalLabel: (label) => {
+        const tempId = label.id || crypto.randomUUID()
+        const withId = { ...label, id: tempId }
+        set(s => ({ globalLabels: [...s.globalLabels, withId] }))
+        if (!getToken() || !isBackendConfigured()) return
+        authFetch('/api/labels', {
+          method: 'POST',
+          body: JSON.stringify({ title: label.title, color: label.color }),
+        })
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then((created: ApiLabel) => set(s => ({
+            globalLabels: s.globalLabels.map(l => l.id === tempId ? { ...l, id: created._id } : l),
+          })))
+          .catch(() => {})
+      },
 
-      updateGlobalLabel: (id, updates) =>
+      updateGlobalLabel: (id, updates) => {
         set(s => ({
           globalLabels: s.globalLabels.map(l => l.id === id ? { ...l, ...updates } : l),
-          // also update on all tasks that have this label attached
           items: s.items.map(i => ({
             ...i,
             labels: (i.labels ?? []).map(l => l.id === id ? { ...l, ...updates } : l),
           })),
-        })),
+        }))
+        if (!getToken() || !isBackendConfigured()) return
+        authFetch(`/api/labels/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(updates),
+        }).catch(() => {})
+      },
 
-      deleteGlobalLabel: (id) =>
+      deleteGlobalLabel: (id) => {
         set(s => ({
           globalLabels: s.globalLabels.filter(l => l.id !== id),
           items: s.items.map(i => ({ ...i, labels: (i.labels ?? []).filter(l => l.id !== id) })),
-        })),
+        }))
+        if (!getToken() || !isBackendConfigured()) return
+        authFetch(`/api/labels/${id}`, { method: 'DELETE' }).catch(() => {})
+      },
 
       fetchItems: async () => {
         if (!getToken() || !isBackendConfigured()) return
         set({ syncStatus: 'syncing' })
+        // Fetch labels in background alongside tasks
+        get().fetchLabels()
         try {
           const ws = currentWeekStart()
           const { week, year } = getISOWeekYear(ws)
@@ -302,6 +384,7 @@ export const useSprintStore = create<TodoState>()(
             ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
             ...(t.completionHistory?.length && { completionLog: t.completionHistory }),
             ...(t.reminder && { reminder: t.reminder as UnifiedTodo['reminder'] }),
+            ...(t.checklist?.length && { checklist: t.checklist as ChecklistItem[] }),
           }))
 
           const otherItems: UnifiedTodo[] = apiTodos.map(t => ({
@@ -316,6 +399,7 @@ export const useSprintStore = create<TodoState>()(
             ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
             ...(t.completionHistory?.length && { completionLog: t.completionHistory }),
             ...(t.reminder && { reminder: t.reminder as UnifiedTodo['reminder'] }),
+            ...(t.checklist?.length && { checklist: t.checklist as ChecklistItem[] }),
           }))
 
           // Merge API items with existing local-only fields.
@@ -391,7 +475,10 @@ export const useSprintStore = create<TodoState>()(
           const { week, year } = getISOWeekYear(ws)
           authFetch('/api/sprint/tasks', {
             method: 'POST',
-            body: JSON.stringify({ title: item.title, tag: item.tag ?? 'dev', weekNumber: week, year, done: false }),
+            body: JSON.stringify({
+              title: item.title, tag: item.tag ?? 'dev', weekNumber: week, year, done: false,
+              ...(item.checklist?.length && { checklist: item.checklist }),
+            }),
           })
             .then(r => { if (!r.ok) throw new Error(); return r.json() })
             .then((created: ApiTask) => set(s => ({
@@ -409,6 +496,7 @@ export const useSprintStore = create<TodoState>()(
               dueDate: '',
               done: false,
               repeat: item.repeat ?? 'none',
+              ...(item.checklist?.length && { checklist: item.checklist }),
               ...(item.nextDue && { nextDue: item.nextDue }),
               ...(item.repeatConfig && { repeatConfig: item.repeatConfig }),
               ...(item.repeatDay !== undefined && { repeatDay: item.repeatDay }),
@@ -442,7 +530,10 @@ export const useSprintStore = create<TodoState>()(
             ? (() => {
                 const ws = item.weekStart ?? currentWeekStart()
                 const { week, year } = getISOWeekYear(ws)
-                return JSON.stringify({ title: item.title, tag: item.tag ?? 'dev', weekNumber: week, year, done: false })
+                return JSON.stringify({
+                  title: item.title, tag: item.tag ?? 'dev', weekNumber: week, year, done: false,
+                  ...(item.checklist?.length && { checklist: item.checklist }),
+                })
               })()
             : JSON.stringify({
                 title: item.title,
@@ -451,6 +542,7 @@ export const useSprintStore = create<TodoState>()(
                 dueDate: '',
                 done: false,
                 repeat: item.repeat ?? 'none',
+                ...(item.checklist?.length && { checklist: item.checklist }),
                 ...(item.nextDue && { nextDue: item.nextDue }),
                 ...(item.repeatConfig && { repeatConfig: item.repeatConfig }),
                 ...(item.repeatDay !== undefined && { repeatDay: item.repeatDay }),
@@ -539,12 +631,7 @@ export const useSprintStore = create<TodoState>()(
     }),
     {
       name: 'hud-sprint-v2',
-      partialize: (s) => ({ globalLabels: s.globalLabels, items: s.items }),
-      onRehydrateStorage: () => (state) => {
-        if (state && state.globalLabels.length === 0) {
-          state.globalLabels = DEFAULT_LABELS
-        }
-      },
+      partialize: (s) => ({ items: s.items }),
     }
   )
 )
