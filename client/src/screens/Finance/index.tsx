@@ -6,6 +6,7 @@ import TopupForm from '../../components/finance/TopupForm'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import TransactionList from '../../components/finance/TransactionList'
 import ExpenseChart from '../../components/finance/ExpenseChart'
+import RecurringPayments from '../../components/finance/RecurringPayments'
 import Modal from '../../components/ui/Modal'
 import { useFinanceStore } from '../../store/financeStore'
 import { useGoalsStore } from '../../store/goalsStore'
@@ -118,6 +119,8 @@ const Finance: React.FC = () => {
         {(goals.length > 0 || goalAddTrigger > 0) && (
           <GoalsList addTrigger={goalAddTrigger} />
         )}
+
+        <RecurringPayments />
 
         {/* ── Merged TodayCard + StatsGrid ── */}
         <div className={styles.statsCard}>

@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import PushSubscription from '../models/PushSubscription'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
+import RecurringPayment from '../models/RecurringPayment'
 import { sendNotification, sendToAll } from './webpush'
 
 // 2026 F1 race dates (race Sunday, ISO format)
@@ -131,6 +132,26 @@ async function sendReminderNotifications(): Promise<void> {
   }
 
   console.log(`🔔 Reminder notifications processed (${allItems.length} recurring tasks checked)`)
+
+  // Recurring payments — notify on the payment day
+  const todayDay = new Date().getDate()
+  const payments = await RecurringPayment.find({ dayOfMonth: todayDay, isActive: true }).lean()
+  for (const payment of payments) {
+    const subs = await PushSubscription.find({ userId: String(payment.userId) }).lean()
+    for (const sub of subs) {
+      try {
+        await sendNotification(
+          { endpoint: sub.endpoint, keys: sub.keys },
+          { title: '💳 Регулярний платіж', body: `${payment.name} — ${payment.amount} ₴`, icon: '/icons/icon-192.png' }
+        )
+      } catch (err: unknown) {
+        if ((err as { expired?: boolean }).expired) {
+          await PushSubscription.findByIdAndDelete(sub._id)
+        }
+      }
+    }
+  }
+  if (payments.length > 0) console.log(`💳 Recurring payment notifications sent (${payments.length})`)
 }
 
 export function startF1Scheduler(): void {
