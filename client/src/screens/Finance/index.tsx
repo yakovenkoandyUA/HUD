@@ -9,7 +9,6 @@ import ExpenseChart from '../../components/finance/ExpenseChart'
 import RecurringPayments from '../../components/finance/RecurringPayments'
 import Modal from '../../components/ui/Modal'
 import { useFinanceStore } from '../../store/financeStore'
-import { useGoalsStore } from '../../store/goalsStore'
 import { useUiStore } from '../../store/uiStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, fmt } from '../../utils/finance'
 import { getToken } from '../../services/api'
@@ -28,26 +27,15 @@ const IconTopup: React.FC = () => (
   </svg>
 )
 
-const IconGoal: React.FC = () => (
-  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-    <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.4"/>
-    <circle cx="6.5" cy="6.5" r="2.5" stroke="currentColor" strokeWidth="1.4"/>
-    <path d="M6.5 1V2M6.5 11v1M1 6.5H2M11 6.5h1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-  </svg>
-)
-
 const Finance: React.FC = () => {
   const { balance, transactions, addTopup, addExpense, deleteTransaction, fetchTransactions } = useFinanceStore()
-  const { goals, fetchGoals } = useGoalsStore()
   const { showToast } = useUiStore()
   const [showTopup, setShowTopup] = useState(false)
   const [showExpense, setShowExpense] = useState(false)
-  const [goalAddTrigger, setGoalAddTrigger] = useState(0)
 
   useEffect(() => {
     if (!getToken()) return
     fetchTransactions()
-    fetchGoals()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -89,21 +77,9 @@ const Finance: React.FC = () => {
     showToast('Транзакцію видалено', 'info')
   }
 
-  const headerRight = (
-    <button
-      type="button"
-      className={styles.newGoalBtn}
-      onClick={() => setGoalAddTrigger(c => c + 1)}
-      aria-label="Нова ціль"
-    >
-      <IconGoal />
-      Ціль
-    </button>
-  )
-
   return (
     <div className={styles.screen}>
-      <AppHeader right={headerRight} />
+      <AppHeader />
       <div className={styles.content}>
 
         <BalanceHero
@@ -116,9 +92,7 @@ const Finance: React.FC = () => {
           daysElapsed={daysElapsed}
         />
 
-        {(goals.length > 0 || goalAddTrigger > 0) && (
-          <GoalsList addTrigger={goalAddTrigger} />
-        )}
+        <GoalsList />
 
         <RecurringPayments />
 
