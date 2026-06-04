@@ -1,124 +1,64 @@
-.card {
-  position: relative;
-  padding: 22px 20px 20px;
+/* ── Balance card ───────────────────────────────────────────── */
+
+.balanceCard {
+  background: linear-gradient(135deg, rgb(224 16 46 / 0%) 0%, var(--surface) 80%);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  padding: 12px 14px;
 }
 
-/* SVG track watermark */
-.watermark {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 130px;
-  opacity: 0.09;
-  pointer-events: none;
-  object-fit: contain;
-}
-
-/* Japan theme has light bg — invert the white SVG stroke to dark */
-:global([data-theme="japan"]) .watermark {
-  filter: invert(1);
-  opacity: 0.05;
-}
-
-.inner {
-  position: relative;
+.topRow {
   display: flex;
-  align-items: stretch;
-  gap: 0;
+  align-items: center;
 }
 
-/* ── Left — balance ─────────────────────────────────────────── */
-
-.left {
+.balanceLeft {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 
-.label {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text3);
-}
-
-.balanceRow {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  margin-top: 4px;
-}
-
-.currency {
-  font-family: var(--font-ui);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1;
-}
-
-.balance {
+.balanceAmount {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 28px;
   line-height: 1;
   color: var(--text);
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
 }
 
-.daily {
+.balanceCurrency {
+  font-size: 20px;
+  color: var(--gold);
+  font-family: var(--font-ui);
+}
+
+.balanceToday {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text3);
-  margin-top: 2px;
-  margin-bottom: 6px;
+  letter-spacing: 0.02em;
 }
 
-/* ── Day progress ───────────────────────────────────────────── */
-
-.progress {
-  margin-top: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.progressLabel {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text3);
-  letter-spacing: 0.04em;
-}
-
-.slash {
-  opacity: 0.4;
-}
-
-.over {
-  color: var(--negative);
-}
-
-.progressBar {
-  height: 2px;
+.balanceBar {
+  height: 3px;
   background: var(--border);
-  border-radius: 1px;
+  margin-top: 8px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
-.progressFill {
+.balanceBarFill {
   height: 100%;
   background: var(--accent);
-  border-radius: 1px;
+  border-radius: 2px;
   transition: width 0.4s ease;
 }
 
-.progressOver {
+.barOver {
   background: var(--negative);
 }
 
@@ -127,7 +67,7 @@
 .divider {
   width: 1px;
   background: var(--border);
-  margin: 0 16px;
+  margin: 0 14px;
   align-self: stretch;
   opacity: 0.6;
 }
@@ -194,15 +134,6 @@
   font-size: 9px;
   color: var(--text3);
   letter-spacing: 0.06em;
-}
-
-.done {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  color: var(--text3);
-  text-align: center;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .raceDay {

@@ -113,7 +113,7 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--text3);
-  background: var(--surface);
+  /* background: var(--surface); */
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 2px 8px;
@@ -142,30 +142,28 @@
   margin-bottom: -8px;
 }
 
-/* ── Status ── */
-.statusRow {
+/* ── Status chips ── */
+.statusChips {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
 }
-.statusBtn {
-  flex: 1;
-  padding: 8px 4px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text2);
+
+.statusChip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s;
 }
-.statusActive {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+
+.statusChipActive {
+  background: var(--surface2);
 }
 
 /* ── Rating ── */

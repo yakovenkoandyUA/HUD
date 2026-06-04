@@ -36,11 +36,18 @@ interface WatchlistDetailProps {
 
 const ANIM_MS = 420
 
-const STATUS_OPTIONS: { value: WatchlistStatus; label: string }[] = [
-  { value: 'want',     label: 'Хочу' },
-  { value: 'watching', label: 'Дивлюсь' },
-  { value: 'watched',  label: 'Переглянув' },
-  { value: 'dropped',  label: 'Кинув' },
+const STATUS_OPTIONS_DEFAULT: { value: WatchlistStatus; label: string; color: string }[] = [
+  { value: 'want',     label: 'Хочу',       color: 'var(--text2)'    },
+  { value: 'watching', label: 'Дивлюсь',    color: 'var(--second)'   },
+  { value: 'watched',  label: 'Переглянув', color: 'var(--gold)'     },
+  { value: 'dropped',  label: 'Кинув',      color: 'var(--negative)' },
+]
+
+const STATUS_OPTIONS_BOOK: { value: WatchlistStatus; label: string; color: string }[] = [
+  { value: 'want',     label: 'Хочу прочитати', color: 'var(--text2)'    },
+  { value: 'watching', label: 'Читаю',           color: 'var(--second)'   },
+  { value: 'watched',  label: 'Прочитав',        color: 'var(--gold)'     },
+  { value: 'dropped',  label: 'Кинув',           color: 'var(--negative)' },
 ]
 
 const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
@@ -136,10 +143,10 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             {item.genres.slice(0, 3).map((g) => (
               <span key={g} className={styles.metaChip}>{g}</span>
             ))}
-            {item.pageCount && (
+            {item.pageCount != null && item.pageCount > 0 && (
               <span className={styles.metaChip}>{item.pageCount} стор.</span>
             )}
-            {item.authors?.length && (
+            {item.authors && item.authors.length > 0 && (
               <span className={styles.metaChip}>{item.authors[0]}</span>
             )}
           </div>
@@ -165,15 +172,16 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
           {/* Status selector */}
           <p className={styles.sectionLabel}>Статус</p>
-          <div className={styles.statusRow}>
-            {STATUS_OPTIONS.map((opt) => (
+          <div className={styles.statusChips}>
+            {(item.category === 'book' ? STATUS_OPTIONS_BOOK : STATUS_OPTIONS_DEFAULT).map((s) => (
               <button
-                key={opt.value}
+                key={s.value}
                 type="button"
-                className={`${styles.statusBtn} ${item.status === opt.value ? styles.statusActive : ''}`}
-                onClick={() => onStatusChange(opt.value)}
+                className={`${styles.statusChip} ${item.status === s.value ? styles.statusChipActive : ''}`}
+                style={item.status === s.value ? { borderColor: s.color, color: s.color } : {}}
+                onClick={() => onStatusChange(s.value)}
               >
-                {opt.label}
+                {s.label}
               </button>
             ))}
           </div>
@@ -184,7 +192,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
               <p className={styles.sectionLabel}>Моя оцінка</p>
               <div className={styles.ratingRow}>
                 <StarRating value={item.rating} onChange={onRatingChange} size="md" />
-                {item.rating && (
+                {item.rating != null && item.rating > 0 && (
                   <button
                     type="button"
                     className={styles.clearRating}

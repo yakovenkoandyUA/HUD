@@ -3,6 +3,77 @@
   position: relative;
 }
 
+/* ── Search overlay ─────────────────────────────────────────── */
+
+.searchOverlay {
+  position: fixed;
+  top: var(--header-height, 56px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.searchBar {
+  position: relative;
+  z-index: 101;
+  transition: all 0.25s ease;
+}
+
+.searchBarActive {
+  position: fixed;
+  top: var(--header-height, 56px);
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--bg2, var(--surface));
+  border-bottom: 1px solid var(--border);
+  z-index: 101;
+}
+
+.searchBarActive .inputRow {
+  flex: 1;
+}
+
+.cancelBtn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+
+.searchResults {
+  position: fixed;
+  top: calc(var(--header-height, 56px) + 60px); /* header + searchBarActive height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 101;
+  background: var(--bg);
+  padding: 8px 16px 80px;
+}
+
+.searchResults .addPanel {
+  margin-top: 0;
+}
+
 /* ── Input ── */
 .inputRow {
   display: flex;
@@ -62,20 +133,7 @@
 .apiWarning { color: var(--gold); }
 .err { color: var(--negative); }
 
-/* ── Dropdown ── */
-.dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 16px;
-  right: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  z-index: 50;
-  max-height: 320px;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
+/* ── Results list ── */
 
 .result {
   display: flex;
@@ -131,6 +189,15 @@
   font-family: var(--font-body);
   font-size: 11px;
   color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resultAuthor {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -205,32 +272,28 @@
   flex-shrink: 0;
 }
 
-/* ── Status buttons ── */
-.statusRow {
+/* ── Status chips ── */
+.statusChips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
-.statusBtn {
-  flex: 1;
-  min-width: calc(50% - 3px);
-  padding: 7px 8px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+
+.statusChip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
   color: var(--text2);
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s;
 }
-.statusActive {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+
+.active {
+  background: var(--surface2, var(--border));
 }
 
 /* ── Add button ── */

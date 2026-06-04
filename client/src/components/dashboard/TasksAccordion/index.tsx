@@ -13,11 +13,11 @@ import styles from './TasksAccordion.module.css'
  * Єдиний акордеон-блок на Dashboard що об'єднує спрінт-задачі та покупки.
  * Замінює окремі SprintMini і TodosMini.
  *
- * Секція 1 — ЗАДАЧІ: задачі поточного тижня (type=sprint),
+ * Секція 1 — КВЕСТИ: type=sprint|todo та !isRecurring (рутини виключені),
  *   за замовчуванням відкрита, показує перші 4 задачі з чекбоксами.
  *   Тап на назву задачі → відкриває TaskDetailModal.
  *
- * Секція 2 — ПОКУПКИ: items типу shopping/todo,
+ * Секція 2 — ПОКУПКИ: тільки type=shopping,
  *   за замовчуванням закрита, показує перші 3 з PriorityBadge.
  *   Тап на назву → відкриває TaskDetailModal.
  */
@@ -42,7 +42,7 @@ const TasksAccordion: React.FC = () => {
   const isDoneToday = (t: Parameters<typeof isRecurring>[0]) =>
     isRecurring(t) ? !!(t.completionLog?.some(d => d >= todayIso)) : t.done
 
-  const todoItems  = items.filter((t) => t.type === 'todo')
+  const todoItems  = items.filter((t) => (t.type === 'sprint' || t.type === 'todo') && !isRecurring(t))
   const todoActive = todoItems.filter((t) => !isDoneToday(t))
 
   const [questsOpen, setQuestsOpen]   = useState(false)

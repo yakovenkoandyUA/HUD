@@ -24,18 +24,18 @@ const CATEGORY_ICON: Record<string, string> = {
   book: '📚',
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  want: 'Хочу',
-  watching: 'Дивлюсь',
-  watched: 'Переглянув',
-  dropped: 'Кинув',
+const STATUS_BADGE: Record<string, { label: string; bg: string; color: string }> = {
+  want:     { label: 'ХОЧУ',    bg: 'var(--surface2)',    color: 'var(--text3)'    },
+  watching: { label: 'ДИВЛЮСЬ', bg: 'var(--second-soft)', color: 'var(--second)'   },
+  watched:  { label: 'ГЛЯНУВ',  bg: 'var(--gold-dim)',    color: 'var(--gold)'     },
+  dropped:  { label: 'КИНУВ',   bg: 'var(--accent-soft)', color: 'var(--negative)' },
 }
 
-const STATUS_CLASS: Record<string, string> = {
-  want: 'statusWant',
-  watching: 'statusWatching',
-  watched: 'statusWatched',
-  dropped: 'statusDropped',
+const STATUS_BADGE_BOOK: Record<string, { label: string; bg: string; color: string }> = {
+  want:     { label: 'ХОЧУ',     bg: 'var(--surface2)',    color: 'var(--text3)'    },
+  watching: { label: 'ЧИТАЮ',    bg: 'var(--second-soft)', color: 'var(--second)'   },
+  watched:  { label: 'ПРОЧИТАВ', bg: 'var(--gold-dim)',    color: 'var(--gold)'     },
+  dropped:  { label: 'КИНУВ',    bg: 'var(--accent-soft)', color: 'var(--negative)' },
 }
 
 const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
@@ -56,10 +56,17 @@ const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
           </div>
         )}
 
-        <span className={styles.catBadge}>{CATEGORY_ICON[item.category]}</span>
-        <span className={`${styles.statusBadge} ${styles[STATUS_CLASS[item.status]]}`}>
-          {STATUS_LABEL[item.status]}
-        </span>
+        {(item.category === 'book' ? STATUS_BADGE_BOOK : STATUS_BADGE)[item.status] && (
+          <span
+            className={styles.statusBadge}
+            style={{
+              background: (item.category === 'book' ? STATUS_BADGE_BOOK : STATUS_BADGE)[item.status].bg,
+              color:      (item.category === 'book' ? STATUS_BADGE_BOOK : STATUS_BADGE)[item.status].color,
+            }}
+          >
+            {(item.category === 'book' ? STATUS_BADGE_BOOK : STATUS_BADGE)[item.status].label}
+          </span>
+        )}
 
         {item.status === 'watching' && <div className={styles.watchingBar} />}
       </div>
@@ -67,7 +74,7 @@ const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
       <div className={styles.info}>
         <p className={styles.title}>{item.title}</p>
         {item.year && <span className={styles.year}>{item.year}</span>}
-        {item.status === 'watched' && item.rating && (
+        {item.status === 'watched' && item.rating != null && item.rating > 0 && (
           <StarRating value={item.rating} readOnly size="sm" />
         )}
       </div>

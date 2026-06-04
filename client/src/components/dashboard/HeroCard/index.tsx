@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import Card from '../../ui/Card'
 import { fmt } from '../../../utils/finance'
 import type { F1Race } from '../../../data/f1Season2026'
 import styles from './HeroCard.module.css'
@@ -7,13 +6,15 @@ import styles from './HeroCard.module.css'
 /**
  * HeroCard
  * --------
- * Hero-картка Dashboard: поєднує баланс і відлік до наступної гонки.
+ * Компактна баланс-картка Dashboard з опціональним F1-таймером праворуч.
+ * "Сезон завершено" не відображається — правий панель прихований коли race = null.
  *
  * Props:
  * @prop {number}       balance      — поточний баланс (грн)
  * @prop {number}       dailyBudget  — денний бюджет (грн)
  * @prop {number}       todaySpent   — витрачено сьогодні (грн)
  * @prop {F1Race|null}  race         — наступна гонка або null
+ * @prop {boolean}      compact      — true коли RaceHeroCard вже показано зверху
  */
 interface HeroCardProps {
   balance: number
@@ -62,55 +63,27 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
     ? Math.min(100, Math.round((todaySpent / dailyBudget) * 100))
     : 0
   const overBudget = todaySpent > dailyBudget
-
-  // const trackSvg = race?.trackSvg ?? null
+  const showRace = !compact && !!race
 
   return (
-    <Card variant="accent" className={styles.card}>
-      {/* {trackSvg && (
-        <img
-          src={trackSvg}
-          className={styles.watermark}
-          aria-hidden="true"
-          alt=""
-        />
-      )} */}
-
-      <div className={styles.inner}>
-        {/* Left — balance */}
-        <div className={styles.left}>
-          <span className={styles.label}>Баланс</span>
-          <div className={styles.balanceRow}>
-            <span className={styles.currency}>₴</span>
-            <span className={styles.balance}>{fmt(balance)}</span>
-          </div>
-          {/* <div className={styles.daily}>{fmt(dailyBudget)} ₴/день</div> */}
-
-          <div className={styles.progress}>
-            <div className={styles.progressLabel}>
-              <span>Сьогодні</span>
-              <span className={overBudget ? styles.over : ''}>
-                {fmt(todaySpent)} <span className={styles.slash}>/</span> {fmt(dailyBudget)} ₴
-              </span>
-            </div>
-            <div className={styles.progressBar}>
-              <div
-                className={`${styles.progressFill} ${overBudget ? styles.progressOver : ''}`}
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-          </div>
+    <div className={styles.balanceCard}>
+      <div className={styles.topRow}>
+        <div className={styles.balanceLeft}>
+          <span className={styles.balanceAmount}>
+            {fmt(balance)}<span className={styles.balanceCurrency}> ₴</span>
+          </span>
+          <span className={styles.balanceToday}>
+            Сьогодні: {fmt(todaySpent)} / {fmt(dailyBudget)} ₴
+          </span>
         </div>
 
-        {/* Divider + right — hidden in compact mode */}
-        {!compact && <div className={styles.divider} />}
-
-        {!compact && <div className={styles.right}>
-          {race ? (
-            <>
+        {showRace && (
+          <>
+            <div className={styles.divider} />
+            <div className={styles.right}>
               <div className={styles.raceLabel}>
-                <span className={styles.flag}>{race.flag}</span>
-                <span className={styles.raceName}>{race.name.replace(' GP', '')}</span>
+                <span className={styles.flag}>{race!.flag}</span>
+                <span className={styles.raceName}>{race!.name.replace(' GP', '')}</span>
               </div>
               {countdown ? (
                 <div className={styles.countdownGrid}>
@@ -134,13 +107,18 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
               ) : (
                 <div className={styles.raceDay}>RACE DAY! 🏁</div>
               )}
-            </>
-          ) : (
-            <span className={styles.done}>Сезон<br />завершено</span>
-          )}
-        </div>}
+            </div>
+          </>
+        )}
       </div>
-    </Card>
+
+      <div className={styles.balanceBar}>
+        <div
+          className={`${styles.balanceBarFill} ${overBudget ? styles.barOver : ''}`}
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+    </div>
   )
 }
 

@@ -186,9 +186,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const checkInputRef = useRef<HTMLInputElement>(null)
 
   const sheetRef   = useRef<HTMLDivElement>(null)
+  const bodyRef    = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const drag        = useRef({ startY: 0, startTime: 0, active: false })
   const dragClosing = useRef(false)
+  const onCloseRef  = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
   const [titleDraft, setTitleDraft] = useState('')
   const [descDraft, setDescDraft]   = useState('')
@@ -244,34 +247,55 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     return () => window.removeEventListener('keydown', handler)
   }, [taskId, onClose])
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    if (sheetRef.current && sheetRef.current.scrollTop > 0) return
-    drag.current = { startY: e.touches[0].clientY, startTime: Date.now(), active: true }
-  }
+  // Imperative drag-to-dismiss — passive:false so preventDefault() actually works.
+  // scrollTop check on bodyRef (the real scrollable child), not sheetRef.
+  useEffect(() => {
+    if (!mounted || !taskId) return
+    const sheet = sheetRef.current
+    if (!sheet) return
 
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (!drag.current.active) return
-    const deltaY = e.touches[0].clientY - drag.current.startY
-    if (deltaY <= 0) return
-    if (sheetRef.current)   { sheetRef.current.style.transform = `translateY(${deltaY}px)`;   sheetRef.current.style.transition = 'none' }
-    if (overlayRef.current) { overlayRef.current.style.opacity = String(Math.max(0, 1 - deltaY / 400)); overlayRef.current.style.transition = 'none' }
-  }
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (!drag.current.active) return
-    drag.current.active = false
-    const deltaY   = e.changedTouches[0].clientY - drag.current.startY
-    const velocity = deltaY / Math.max(1, Date.now() - drag.current.startTime)
-    if (deltaY >= 120 || (deltaY > 60 && velocity > 0.5)) {
-      dragClosing.current = true
-      if (sheetRef.current)   { sheetRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'; sheetRef.current.style.transform = 'translateY(100%)' }
-      if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '0' }
-      setTimeout(() => onClose(), 300)
-    } else {
-      if (sheetRef.current)   { sheetRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'; sheetRef.current.style.transform = 'translateY(0)' }
-      if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '' }
+    const onStart = (e: TouchEvent) => {
+      if (bodyRef.current && bodyRef.current.scrollTop > 0) {
+        drag.current.active = false
+        return
+      }
+      drag.current = { startY: e.touches[0].clientY, startTime: Date.now(), active: true }
     }
-  }
+
+    const onMove = (e: TouchEvent) => {
+      if (!drag.current.active) return
+      const deltaY = e.touches[0].clientY - drag.current.startY
+      if (deltaY <= 0) { drag.current.active = false; return }
+      e.preventDefault()
+      if (sheetRef.current)   { sheetRef.current.style.transform = `translateY(${deltaY}px)`;   sheetRef.current.style.transition = 'none' }
+      if (overlayRef.current) { overlayRef.current.style.opacity = String(Math.max(0, 1 - deltaY / 400)); overlayRef.current.style.transition = 'none' }
+    }
+
+    const onEnd = (e: TouchEvent) => {
+      if (!drag.current.active) return
+      drag.current.active = false
+      const deltaY   = e.changedTouches[0].clientY - drag.current.startY
+      const velocity = deltaY / Math.max(1, Date.now() - drag.current.startTime)
+      if (deltaY >= 120 || (deltaY > 60 && velocity > 0.5)) {
+        dragClosing.current = true
+        if (sheetRef.current)   { sheetRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'; sheetRef.current.style.transform = 'translateY(100%)' }
+        if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '0' }
+        setTimeout(() => onCloseRef.current(), 300)
+      } else {
+        if (sheetRef.current)   { sheetRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'; sheetRef.current.style.transform = 'translateY(0)' }
+        if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '' }
+      }
+    }
+
+    sheet.addEventListener('touchstart', onStart, { passive: true  })
+    sheet.addEventListener('touchmove',  onMove,  { passive: false })
+    sheet.addEventListener('touchend',   onEnd,   { passive: true  })
+    return () => {
+      sheet.removeEventListener('touchstart', onStart)
+      sheet.removeEventListener('touchmove',  onMove)
+      sheet.removeEventListener('touchend',   onEnd)
+    }
+  }, [mounted, taskId])
 
   const handleTitleBlur = useCallback(() => {
     if (!task || !titleDraft.trim()) return
@@ -329,9 +353,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
           ref={sheetRef}
           className={`${styles.sheet} ${isOpen ? styles.sheetIn : styles.sheetOut}`}
           onClick={e => e.stopPropagation()}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
         >
           <div className={styles.handle} />
 
@@ -364,7 +385,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
           </div>
 
           {/* ── Scrollable body ── */}
-          <div className={styles.body}>
+          <div ref={bodyRef} className={styles.body}>
 
             {/* ── МІТКИ ── */}
             <div className={styles.section}>

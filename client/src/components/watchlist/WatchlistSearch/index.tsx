@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { authFetch } from '../../../services/api'
 import styles from './WatchlistSearch.module.css'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../../types'
 
@@ -14,11 +15,18 @@ const TMDB_GENRES: Record<number, string> = {
   10765: 'Sci-Fi & Fantasy', 10762: 'Дитячий', 10766: 'Мило', 10767: 'Ток-шоу',
 }
 
-const STATUS_OPTIONS: { value: WatchlistStatus; label: string }[] = [
-  { value: 'want',     label: 'Хочу подивитись' },
-  { value: 'watching', label: 'Дивлюсь зараз' },
-  { value: 'watched',  label: 'Переглянув' },
-  { value: 'dropped',  label: 'Кинув' },
+const STATUS_OPTIONS_DEFAULT: { value: WatchlistStatus; label: string; color: string }[] = [
+  { value: 'want',     label: 'Хочу',       color: 'var(--text2)'    },
+  { value: 'watching', label: 'Дивлюсь',    color: 'var(--second)'   },
+  { value: 'watched',  label: 'Переглянув', color: 'var(--gold)'     },
+  { value: 'dropped',  label: 'Кинув',      color: 'var(--negative)' },
+]
+
+const STATUS_OPTIONS_BOOK: { value: WatchlistStatus; label: string; color: string }[] = [
+  { value: 'want',     label: 'Хочу прочитати', color: 'var(--text2)'    },
+  { value: 'watching', label: 'Читаю',           color: 'var(--second)'   },
+  { value: 'watched',  label: 'Прочитав',        color: 'var(--gold)'     },
+  { value: 'dropped',  label: 'Кинув',           color: 'var(--negative)' },
 ]
 
 interface SearchResult {
@@ -39,6 +47,8 @@ interface SearchResult {
  * WatchlistSearch
  * ---------------
  * Search bar with TMDB / Google Books results and inline add flow.
+ * Activating the input shows a fullscreen overlay with fixed search bar and
+ * scrollable results panel; tap outside or "Скасувати" deactivates.
  *
  * Props:
  * @prop {WatchlistCategory}                         category — current active tab
@@ -57,8 +67,23 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
   const [isOpen, setIsOpen] = useState(false)
   const [selected, setSelected] = useState<SearchResult | null>(null)
   const [status, setStatus] = useState<WatchlistStatus>('want')
+  const [searchActive, setSearchActive] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const activateSearch = () => {
+    setSearchActive(true)
+    setTimeout(() => inputRef.current?.focus(), 100)
+  }
+
+  const deactivateSearch = () => {
+    setSearchActive(false)
+    setQuery('')
+    setResults([])
+    setIsOpen(false)
+    setSelected(null)
+    inputRef.current?.blur()
+  }
 
   const search = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); setIsOpen(false); return }
@@ -66,24 +91,9 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     setError('')
     try {
       if (category === 'book') {
-        const res = await fetch(
-          `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=10`
-        )
-        const data = await res.json()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const items: SearchResult[] = (data.items ?? []).map((b: any) => ({
-          tmdbId: 0,
-          title: b.volumeInfo?.title ?? 'Невідома назва',
-          originalTitle: b.volumeInfo?.title ?? '',
-          posterPath: null,
-          backdropPath: null,
-          overview: b.volumeInfo?.description ?? '',
-          year: b.volumeInfo?.publishedDate?.slice(0, 4) ?? '',
-          genres: b.volumeInfo?.categories ?? [],
-          authors: b.volumeInfo?.authors ?? [],
-          pageCount: b.volumeInfo?.pageCount,
-          thumbnail: b.volumeInfo?.imageLinks?.thumbnail?.replace('http://', 'https://'),
-        }))
+        const res = await authFetch(`/api/books/search?q=${encodeURIComponent(q)}`)
+        if (!res.ok) { setError('Помилка пошуку книг'); return }
+        const items: SearchResult[] = await res.json()
         setResults(items)
       } else {
         const endpoint = category === 'movie' ? 'search/movie' : 'search/tv'
@@ -125,19 +135,21 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!query.trim()) { setResults([]); setIsOpen(false); return }
-    timerRef.current = setTimeout(() => search(query), 500)
+    // Books API rate-limits aggressively — require 3+ chars and longer debounce
+    const minLen = category === 'book' ? 3 : 2
+    const delay  = category === 'book' ? 900 : 500
+    if (query.trim().length < minLen) return
+    timerRef.current = setTimeout(() => search(query), delay)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [query, search])
+  }, [query, search, category])
 
-  // close dropdown on category change
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuery('')
     setResults([])
     setIsOpen(false)
     setSelected(null)
+    setSearchActive(false)
   }, [category])
 
   const handleSelect = (r: SearchResult) => {
@@ -169,132 +181,153 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     })
     setSelected(null)
     setStatus('want')
+    deactivateSearch()
   }
 
   const hasKey = !!TMDB_KEY && TMDB_KEY !== 'your_tmdb_api_key_here'
+  const showResults = searchActive && (isOpen || !!selected || !!error || (!hasKey && category !== 'book'))
+  const statusOptions = category === 'book' ? STATUS_OPTIONS_BOOK : STATUS_OPTIONS_DEFAULT
+
+  const placeholder =
+    category === 'book'   ? 'Пошук книги...'   :
+    category === 'anime'  ? 'Пошук аніме...'   :
+    category === 'series' ? 'Пошук серіалу...' :
+                            'Пошук фільму...'
 
   return (
     <div className={styles.wrap}>
-      {/* Search input */}
-      <div className={styles.inputRow}>
-        <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
-          <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-        <input
-          ref={inputRef}
-          className={styles.input}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={
-            category === 'book'
-              ? 'Пошук книги...'
-              : category === 'anime'
-              ? 'Пошук аніме...'
-              : category === 'series'
-              ? 'Пошук серіалу...'
-              : 'Пошук фільму...'
-          }
-        />
-        {query && (
-          <button
-            type="button"
-            className={styles.clearBtn}
-            onClick={() => { setQuery(''); setResults([]); setIsOpen(false) }}
-            aria-label="Очистити"
-          >
-            ✕
-          </button>
-        )}
-        {loading && <div className={styles.spinner} />}
-      </div>
-
-      {!hasKey && category !== 'book' && (
-        <p className={styles.apiWarning}>
-          Додай VITE_TMDB_API_KEY у .env для пошуку
-        </p>
+      {/* Overlay — closes search on tap outside */}
+      {searchActive && (
+        <div className={styles.searchOverlay} onClick={deactivateSearch} />
       )}
 
-      {error && <p className={styles.err}>{error}</p>}
-
-      {/* Search results dropdown */}
-      {isOpen && results.length > 0 && (
-        <div className={styles.dropdown}>
-          {results.map((r, i) => {
-            const thumb = r.thumbnail
-              ?? (r.posterPath ? `${TMDB_IMG}${r.posterPath}` : null)
-            return (
-              <button
-                key={`${r.tmdbId}-${i}`}
-                type="button"
-                className={styles.result}
-                onClick={() => handleSelect(r)}
-              >
-                <div className={styles.resultImg}>
-                  {thumb
-                    ? <img src={thumb} alt={r.title} className={styles.resultPoster} />
-                    : <span className={styles.resultImgFallback}>?</span>
-                  }
-                </div>
-                <div className={styles.resultInfo}>
-                  <span className={styles.resultTitle}>{r.title}</span>
-                  {r.year && <span className={styles.resultYear}>{r.year}</span>}
-                  {r.originalTitle && r.originalTitle !== r.title && (
-                    <span className={styles.resultOriginal}>{r.originalTitle}</span>
-                  )}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {isOpen && results.length === 0 && !loading && query && (
-        <div className={styles.noResults}>Нічого не знайдено</div>
-      )}
-
-      {/* Add panel - shown after selecting a result */}
-      {selected && (
-        <div className={styles.addPanel}>
-          <div className={styles.addPreview}>
-            {(selected.thumbnail ?? (selected.posterPath ? `${TMDB_IMG}${selected.posterPath}` : null)) ? (
-              <img
-                src={selected.thumbnail ?? `${TMDB_IMG}${selected.posterPath}`}
-                alt={selected.title}
-                className={styles.addPoster}
-              />
-            ) : (
-              <div className={styles.addPosterFallback}>?</div>
-            )}
-            <div className={styles.addMeta}>
-              <p className={styles.addTitle}>{selected.title}</p>
-              {selected.year && <span className={styles.addYear}>{selected.year}</span>}
-            </div>
+      {/* Search bar — moves to top when active */}
+      <div className={`${styles.searchBar} ${searchActive ? styles.searchBarActive : ''}`}>
+        <div className={styles.inputRow}>
+          <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <input
+            ref={inputRef}
+            className={styles.input}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={activateSearch}
+            placeholder={placeholder}
+          />
+          {query && (
             <button
               type="button"
-              className={styles.addCancel}
-              onClick={() => setSelected(null)}
+              className={styles.clearBtn}
+              onClick={() => { setQuery(''); setResults([]); setIsOpen(false) }}
+              aria-label="Очистити"
             >
               ✕
             </button>
-          </div>
+          )}
+          {loading && <div className={styles.spinner} />}
+        </div>
 
-          <div className={styles.statusRow}>
-            {STATUS_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className={`${styles.statusBtn} ${status === opt.value ? styles.statusActive : ''}`}
-                onClick={() => setStatus(opt.value)}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          <button type="button" className={styles.addBtn} onClick={handleAdd}>
-            Додати до списку
+        {searchActive && (
+          <button type="button" className={styles.cancelBtn} onClick={deactivateSearch}>
+            Скасувати
           </button>
+        )}
+      </div>
+
+      {/* Results panel — fixed below search bar when active */}
+      {showResults && (
+        <div className={styles.searchResults}>
+          {!hasKey && category !== 'book' && (
+            <p className={styles.apiWarning}>
+              Додай VITE_TMDB_API_KEY у .env для пошуку
+            </p>
+          )}
+
+          {error && <p className={styles.err}>{error}</p>}
+
+          {isOpen && results.length > 0 && (
+            <>
+              {results.map((r, i) => {
+                const thumb = r.thumbnail ?? (r.posterPath ? `${TMDB_IMG}${r.posterPath}` : null)
+                return (
+                  <button
+                    key={`${r.tmdbId}-${i}`}
+                    type="button"
+                    className={styles.result}
+                    onClick={() => handleSelect(r)}
+                  >
+                    <div className={styles.resultImg}>
+                      {thumb
+                        ? <img src={thumb} alt={r.title} className={styles.resultPoster} />
+                        : <span className={styles.resultImgFallback}>?</span>
+                      }
+                    </div>
+                    <div className={styles.resultInfo}>
+                      <span className={styles.resultTitle}>{r.title}</span>
+                      {category === 'book' && r.authors && r.authors.length > 0 && (
+                        <span className={styles.resultAuthor}>{r.authors.join(', ')}</span>
+                      )}
+                      {category !== 'book' && r.originalTitle && r.originalTitle !== r.title && (
+                        <span className={styles.resultOriginal}>{r.originalTitle}</span>
+                      )}
+                      {r.year && <span className={styles.resultYear}>{r.year}</span>}
+                    </div>
+                  </button>
+                )
+              })}
+            </>
+          )}
+
+          {isOpen && results.length === 0 && !loading && query && (
+            <div className={styles.noResults}>Нічого не знайдено</div>
+          )}
+
+          {selected && (
+            <div className={styles.addPanel}>
+              <div className={styles.addPreview}>
+                {(selected.thumbnail ?? (selected.posterPath ? `${TMDB_IMG}${selected.posterPath}` : null)) ? (
+                  <img
+                    src={selected.thumbnail ?? `${TMDB_IMG}${selected.posterPath}`}
+                    alt={selected.title}
+                    className={styles.addPoster}
+                  />
+                ) : (
+                  <div className={styles.addPosterFallback}>?</div>
+                )}
+                <div className={styles.addMeta}>
+                  <p className={styles.addTitle}>{selected.title}</p>
+                  {selected.year && <span className={styles.addYear}>{selected.year}</span>}
+                </div>
+                <button
+                  type="button"
+                  className={styles.addCancel}
+                  onClick={() => setSelected(null)}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className={styles.statusChips}>
+                {statusOptions.map((s) => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    className={`${styles.statusChip} ${status === s.value ? styles.active : ''}`}
+                    style={status === s.value ? { borderColor: s.color, color: s.color } : {}}
+                    onClick={() => setStatus(s.value)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
+              <button type="button" className={styles.addBtn} onClick={handleAdd}>
+                Додати до списку
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
