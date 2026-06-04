@@ -56,23 +56,7 @@ const ShoppingIcon: React.FC = () => (
 //   </svg>
 // )
 
-const TimerIcon: React.FC = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-    <circle cx="7" cy="8" r="5" stroke="currentColor" strokeWidth="1.3"/>
-    <path d="M7 5.5V8l1.5 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-    <path d="M5.5 1.5h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-  </svg>
-)
 
-function parseEquipment(str: string): { emoji: string; name: string; count: number | null } {
-  const countMatch = str.match(/^(\d+)[x×]\s*/)
-  const count = countMatch ? parseInt(countMatch[1]) : null
-  const rest = countMatch ? str.slice(countMatch[0].length).trim() : str.trim()
-  const parts = rest.split(/\s+/)
-  const emoji = parts[0] ?? '🍴'
-  const name = parts.slice(1).join(' ') || emoji
-  return { emoji, name, count }
-}
 
 function parseIngredientStr(str: string): { amount: string; name: string } {
   const m = str.match(/^(\d+(?:[.,]\d+)?\s*(?:[а-яА-Яa-zA-Z]+\.?)?\s*)(.+)$/)
@@ -241,7 +225,13 @@ const RecipeDetailScreen: React.FC = () => {
               <span className={styles.authorNameDark}>{activeProfile.name}</span>
             </div>
           )}
-          <div className={styles.meta}>
+          <div className={styles.metaRow}>
+            {recipe.cookTime && (
+              <>
+                <span className={styles.metaItem}>{recipe.cookTime} хв</span>
+                {(recipe.calories || recipe.difficulty) && <span className={styles.metaDot} />}
+              </>
+            )}
             {recipe.calories && (
               <span className={styles.metaItem}>{recipe.calories} ккал/100г</span>
             )}
@@ -282,33 +272,14 @@ const RecipeDetailScreen: React.FC = () => {
           </button> */}
         </div>
 
-        {/* Cook time */}
-        {recipe.cookTime && (
-          <div className={styles.cookTimePill}>
-            <TimerIcon />
-            <span className={styles.cookTimeValue}>{recipe.cookTime} хв</span>
-            <span className={styles.cookTimeSep}>·</span>
-            <span className={styles.cookTimeLabel}>Готування</span>
-          </div>
-        )}
-
         {/* Equipment */}
         {recipe.equipment && recipe.equipment.length > 0 && (
-          <div className={styles.section}>
+          <div className={styles.toolsSection}>
             <p className={styles.sectionTitle}>Техніка та інструменти</p>
-            <div className={styles.equipmentScroll}>
-              {recipe.equipment.map((eq, i) => {
-                const { emoji, name, count } = parseEquipment(eq)
-                return (
-                  <div key={i} className={styles.equipmentCard}>
-                    {count !== null && count > 1 && (
-                      <span className={styles.equipmentBadge}>{count} шт</span>
-                    )}
-                    <span className={styles.equipmentEmoji}>{emoji}</span>
-                    <span className={styles.equipmentName}>{name}</span>
-                  </div>
-                )
-              })}
+            <div className={styles.toolsList}>
+              {recipe.equipment.map((eq, i) => (
+                <span key={i} className={styles.toolChip}>{eq}</span>
+              ))}
             </div>
           </div>
         )}

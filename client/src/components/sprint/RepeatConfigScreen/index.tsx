@@ -93,7 +93,6 @@ const RepeatConfigScreen: React.FC<RepeatConfigScreenProps> = ({ initial, onSave
 								type="number"
 								className={styles.intervalInput}
 								value={interval}
-								min={1}
 								onChange={e => setInterval(Math.max(1, parseInt(e.target.value, 10) || 1))}
 							/>
 							<select
@@ -183,7 +182,6 @@ const RepeatConfigScreen: React.FC<RepeatConfigScreenProps> = ({ initial, onSave
 											type="number"
 											className={styles.endsAfterInput}
 											value={endsAfter}
-											min={1}
 											onClick={e => e.stopPropagation()}
 											onChange={e => setEndsAfter(Math.max(1, parseInt(e.target.value, 10) || 1))}
 										/>

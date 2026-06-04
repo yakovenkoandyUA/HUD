@@ -1,15 +1,12 @@
 .overlay {
   position: fixed;
   inset: 0;
-  height: 100%;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   z-index: 200;
-  padding: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   transition: opacity 0.38s ease;
 }
 
@@ -24,6 +21,7 @@
   max-width: 480px;
   max-height: 90dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   will-change: transform, opacity;
   transition:
     transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
@@ -39,6 +37,25 @@
   opacity: 0;
 }
 
+/* ── Drag handle bar ── */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0 4px;
+  touch-action: none;
+  cursor: grab;
+}
+.dragHandle:active { cursor: grabbing; }
+
+.dragBar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border2);
+}
+
+/* ── Header ── */
 .header {
   display: flex;
   align-items: center;

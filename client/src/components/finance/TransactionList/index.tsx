@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import type { Transaction } from '../../../types'
 import { fmt } from '../../../utils/finance'
 import Modal from '../../ui/Modal'
@@ -145,6 +145,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const [typeFilter, setTypeFilter]               = useState<TypeFilter>('all')
   const [categoryFilter, setCategoryFilter]       = useState('all')
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<Transaction | null>(null)
+  const [isAnimating, setIsAnimating]             = useState(false)
+  const [displayedList, setDisplayedList]         = useState<Transaction[]>([])
 
   const currentMonth = new Date().toISOString().slice(0, 7)
 
@@ -159,12 +161,31 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
 
   const isDefault = typeFilter === 'all' && categoryFilter === 'all'
 
-  const list = isDefault
+  const list = useMemo(() => isDefault
     ? transactions.slice(0, 20)
     : transactions
         .filter(t => t.date.startsWith(currentMonth))
         .filter(t => typeFilter === 'all' || (typeFilter === 'income' ? t.type === 'topup' : t.type === 'expense'))
-        .filter(t => categoryFilter === 'all' || t.category === categoryFilter)
+        .filter(t => categoryFilter === 'all' || t.category === categoryFilter),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [transactions, typeFilter, categoryFilter])
+
+  // Animate on filter change
+  useEffect(() => {
+    setIsAnimating(true)
+    const timer = setTimeout(() => {
+      setDisplayedList(list)
+      setIsAnimating(false)
+    }, 150)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeFilter, categoryFilter])
+
+  // Sync without animation when transactions data changes (initial load, add, delete)
+  useEffect(() => {
+    setDisplayedList(list)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions])
 
   const handleDeleteClick   = (id: string) => setPendingDelete(id)
   const handleConfirmDelete = (id: string) => { onDelete?.(id); setPendingDelete(null) }
@@ -194,11 +215,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
       </div>
 
       {/* ── List ── */}
-      {list.length === 0 ? (
+      <div className={`${styles.transactionList} ${isAnimating ? styles.fadeOut : styles.fadeIn}`}>
+      {displayedList.length === 0 ? (
         <p className={styles.empty}>Транзакцій немає</p>
       ) : (
         <ul className={styles.list}>
-          {list.map((t) => {
+          {displayedList.map((t) => {
             const isPending = pendingDelete === t.id
             const receipt   = parseReceipt(t.description)
             return (
@@ -238,7 +260,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                       )}
                       <div>
                         <div className={styles.desc}>
-                          {receipt ? receipt.store : t.description}
+                          {receipt ? (
+                            <>
+                              {receipt.store}
+                              {t.category && (
+                                <span className={styles.txCategory}> · {t.category}</span>
+                              )}
+                            </>
+                          ) : t.description}
                         </div>
                         <div className={styles.date}>{formatDate(t.date)}</div>
                       </div>
@@ -265,6 +294,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
           })}
         </ul>
       )}
+      </div>
 
       {/* ── Receipt detail modal ── */}
       <Modal

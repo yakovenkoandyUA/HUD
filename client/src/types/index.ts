@@ -136,6 +136,7 @@ export interface Recipe {
   cookTime?: number
   servings?: number
   equipment?: string[]
+  tags?: string[]
 }
 
 export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'

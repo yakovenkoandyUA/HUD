@@ -46,6 +46,7 @@ function calcForecast(goal: Goal): string {
 const GoalDetail: React.FC<GoalDetailProps> = ({ goal, onClose }) => {
   const { contribute, updateImage, deleteGoal } = useGoalsStore()
   const [contribAmount, setContribAmount] = useState('')
+  const [contribError, setContribError]   = useState<string | undefined>()
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const pct    = goal.targetAmount > 0
@@ -60,7 +61,8 @@ const GoalDetail: React.FC<GoalDetailProps> = ({ goal, onClose }) => {
   const handleContribute = (e: React.FormEvent) => {
     e.preventDefault()
     const amt = parseFloat(contribAmount)
-    if (!amt || amt <= 0) return
+    if (!amt || amt <= 0) { setContribError('Введіть суму'); return }
+    setContribError(undefined)
     contribute(goal.id, amt)
     setContribAmount('')
   }
@@ -133,14 +135,19 @@ const GoalDetail: React.FC<GoalDetailProps> = ({ goal, onClose }) => {
 
         {!done && (
           <form className={styles.contribForm} onSubmit={handleContribute}>
-            <input
-              className={styles.input}
-              type="number"
-              placeholder="Сума поповнення (₴)"
-              value={contribAmount}
-              onChange={e => setContribAmount(e.target.value)}
-              min="1"
-            />
+            <div>
+              <input
+                className={`${styles.input} ${contribError ? 'inputError' : ''}`}
+                type="number"
+                placeholder="Сума поповнення (₴)"
+                value={contribAmount}
+                onChange={e => {
+                  setContribAmount(e.target.value)
+                  if (contribError && parseFloat(e.target.value) > 0) setContribError(undefined)
+                }}
+              />
+              {contribError && <span className="errorMsg">{contribError}</span>}
+            </div>
             <button type="submit" className={styles.contribBtn}>Поповнити</button>
           </form>
         )}

@@ -30,12 +30,12 @@ const HeartIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   </svg>
 )
 
-const ChefHatIcon: React.FC = () => (
-  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-    <path d="M4.5 10.5h5M5 10.5V12h4v-1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M3 7a2 2 0 1 1 1.4-3.4A2.5 2.5 0 0 1 7 2.5a2.5 2.5 0 0 1 2.6 1.1A2 2 0 1 1 11 7H3z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
+const DIFFICULTY_COLOR: Record<string, string> = {
+  easy:   'var(--positive)',
+  medium: 'var(--gold)',
+  hard:   'var(--negative)',
+}
+
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
   const { wishlistIds, toggleWishlist } = useRecipesStore()
@@ -73,6 +73,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
 
         <div className={styles.gradient} />
 
+        <div
+          className={styles.difficultyLine}
+          style={{ background: recipe.difficulty ? (DIFFICULTY_COLOR[recipe.difficulty] ?? 'transparent') : 'transparent' }}
+        />
+
         <button
           type="button"
           className={`${styles.heartBtn} ${isWishlisted ? styles.heartActive : ''}`}
@@ -82,14 +87,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
           <HeartIcon filled={isWishlisted} />
         </button>
 
-        {(recipe.cookTime || recipe.difficulty) && (
+        {recipe.cookTime && (
           <div className={styles.metaOverlay}>
-            {recipe.cookTime && (
-              <span className={styles.metaTime}>⏱ {formatCookTime(recipe.cookTime)}</span>
-            )}
-            {recipe.difficulty && (
-              <span className={styles.metaDiff}><ChefHatIcon /></span>
-            )}
+            <span className={styles.metaTime}>⏱ {formatCookTime(recipe.cookTime)}</span>
           </div>
         )}
       </div>

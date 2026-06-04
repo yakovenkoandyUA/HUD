@@ -13,6 +13,7 @@ export interface IRecipe extends Document {
   cookTime?: number
   servings?: number
   equipment?: string[]
+  tags?: string[]
 }
 
 const schema = new Schema<IRecipe>({
@@ -28,6 +29,7 @@ const schema = new Schema<IRecipe>({
   cookTime:    { type: Number },
   servings:    { type: Number },
   equipment:   { type: [String], default: [] },
+  tags:        { type: [String], default: [] },
 }, { timestamps: true })
 
 export default model<IRecipe>('Recipe', schema)

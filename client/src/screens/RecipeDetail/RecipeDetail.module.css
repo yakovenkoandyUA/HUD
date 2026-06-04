@@ -276,7 +276,7 @@
   color: var(--text3);
 }
 
-.meta {
+.metaRow {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -309,12 +309,12 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 10px 6px;
-  border-radius: 10px;
+  padding: 8px 16px;
+  border-radius: 8px;
   background: var(--surface);
   border: 1px solid var(--border);
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -338,40 +338,6 @@
   transform: scale(1.25);
 }
 
-/* ── Cook time pill ── */
-.cookTimePill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 8px 14px;
-  align-self: flex-start;
-  color: var(--text3);
-}
-
-.cookTimeValue {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.cookTimeSep {
-  color: var(--border2);
-  font-size: 12px;
-}
-
-.cookTimeLabel {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text3);
-}
-
 /* ── Sections ── */
 .section {
   display: flex;
@@ -388,57 +354,30 @@
   color: var(--text3);
 }
 
-/* ── Equipment ── */
-.equipmentScroll {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-.equipmentScroll::-webkit-scrollbar { display: none; }
-
-.equipmentCard {
-  flex-shrink: 0;
+/* ── Tools (chips) ── */
+.toolsSection {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.toolsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.toolChip {
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  padding: 5px 10px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 10px 8px;
-  position: relative;
-  min-width: 62px;
-}
-
-.equipmentEmoji {
-  font-size: 24px;
-  line-height: 1;
-}
-
-.equipmentName {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  color: var(--text3);
-  text-align: center;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.equipmentBadge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: var(--accent);
-  color: #fff;
   border-radius: 999px;
-  padding: 2px 5px;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
 }
 
 /* ── Description ── */

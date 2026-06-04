@@ -95,7 +95,18 @@
   background: rgba(0,0,0,0.55);
 }
 
-/* ── Meta overlay (cookTime + difficulty) ── */
+/* ── Difficulty line ── */
+.difficultyLine {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 0 0 12px 12px;
+  pointer-events: none;
+}
+
+/* ── Meta overlay (cookTime) ── */
 .metaOverlay {
   position: absolute;
   bottom: 8px;

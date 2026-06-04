@@ -119,6 +119,20 @@
 }
 
 /* ── Transaction list ── */
+.transactionList {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.fadeOut {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.fadeIn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .list {
   list-style: none;
   display: flex;
@@ -193,6 +207,12 @@
   font-size: 11px;
   color: var(--text3);
   margin-top: 2px;
+}
+
+.txCategory {
+  color: var(--text3);
+  font-size: 12px;
+  font-family: var(--font-ui);
 }
 
 .amount {

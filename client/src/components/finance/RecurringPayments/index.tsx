@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { authFetch } from '../../../services/api'
 import { fmt } from '../../../utils/finance'
 import Modal from '../../ui/Modal'
@@ -25,94 +25,55 @@ interface FormState {
   name: string
   amount: string
   dayOfMonth: string
-  category: string
 }
 
-const EMPTY_FORM: FormState = { name: '', amount: '', dayOfMonth: '', category: 'Підписки' }
-
-const CATEGORIES = ['Підписки', 'Музика', 'Відео', 'Ігри', 'Хмара', 'Комунальні', 'Інше']
-
-interface CategorySelectProps {
-  value: string
-  onChange: (v: string) => void
+interface FormErrors {
+  name?: string
+  amount?: string
+  dayOfMonth?: string
 }
 
-const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange }) => {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+const EMPTY_FORM: FormState = { name: '', amount: '', dayOfMonth: '' }
 
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
-
-  return (
-    <div className={styles.catSelect} ref={ref}>
-      <button
-        type="button"
-        className={styles.catSelectBtn}
-        onClick={() => setOpen(v => !v)}
-      >
-        <span>{value}</span>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={`${styles.catChevron} ${open ? styles.catChevronOpen : ''}`}>
-          <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-      {open && (
-        <div className={styles.catDropdown}>
-          {CATEGORIES.map(c => (
-            <button
-              key={c}
-              type="button"
-              className={`${styles.catOption} ${c === value ? styles.catOptionActive : ''}`}
-              onClick={() => { onChange(c); setOpen(false) }}
-            >
-              {c === value && (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-              {c}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+function validatePaymentForm(form: FormState): FormErrors {
+  const errs: FormErrors = {}
+  if (!form.name.trim()) errs.name = 'Введіть назву'
+  const amt = parseFloat(form.amount)
+  if (!amt || amt <= 0) errs.amount = 'Введіть суму'
+  const day = parseInt(form.dayOfMonth, 10)
+  if (!day || day < 1 || day > 31) errs.dayOfMonth = 'День від 1 до 31'
+  return errs
 }
 
 const KNOWN_SERVICES: Record<string, string> = {
-  'netflix':          'netflix.com',
-  'spotify':          'spotify.com',
-  'youtube':          'youtube.com',
-  'youtube premium':  'youtube.com',
-  'apple music':      'music.apple.com',
-  'apple tv':         'tv.apple.com',
-  'icloud':           'icloud.com',
-  'google one':       'one.google.com',
-  'amazon':           'amazon.com',
-  'amazon prime':     'amazon.com',
-  'disney':           'disneyplus.com',
-  'disney+':          'disneyplus.com',
-  'hbo':              'hbomax.com',
-  'twitch':           'twitch.tv',
-  'discord':          'discord.com',
-  'notion':           'notion.so',
-  'figma':            'figma.com',
-  'github':           'github.com',
-  'chatgpt':          'openai.com',
-  'claude':           'anthropic.com',
-  'midjourney':       'midjourney.com',
-  'playstation':      'playstation.com',
-  'xbox':             'xbox.com',
-  'nintendo':         'nintendo.com',
-  'київстар':         'kyivstar.ua',
-  'vodafone':         'vodafone.ua',
-  'lifecell':         'lifecell.ua',
+	netflix: 'netflix.com',
+	spotify: 'spotify.com',
+	youtube: 'youtube.com',
+	'youtube premium': 'youtube.com',
+	'apple music': 'music.apple.com',
+	'apple tv': 'tv.apple.com',
+	icloud: 'icloud.com',
+	'google one': 'one.google.com',
+	amazon: 'amazon.com',
+	'amazon prime': 'amazon.com',
+	disney: 'disneyplus.com',
+	'disney+': 'disneyplus.com',
+	hbo: 'hbomax.com',
+	twitch: 'twitch.tv',
+	discord: 'discord.com',
+	notion: 'notion.so',
+	figma: 'figma.com',
+	github: 'github.com',
+	chatgpt: 'openai.com',
+	claude: 'anthropic.com',
+	midjourney: 'midjourney.com',
+	playstation: 'playstation.com',
+	xbox: 'xbox.com',
+	nintendo: 'nintendo.com',
+	київстар: 'kyivstar.ua',
+	vodafone: 'vodafone.ua',
+	lifecell: 'lifecell.ua',
+	patreon: 'patreon.com',
 }
 
 function getCategoryEmoji(name: string): string {
@@ -128,7 +89,7 @@ function getCategoryEmoji(name: string): string {
 const ServiceLogo: React.FC<{ name: string }> = ({ name }) => {
   const [imgError, setImgError] = useState(false)
   const domain = KNOWN_SERVICES[name.toLowerCase().trim()]
-  const logoUrl = domain ? `https://logo.clearbit.com/${domain}` : null
+  const logoUrl = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : null
 
   if (logoUrl && !imgError) {
     return (
@@ -152,6 +113,7 @@ const RecurringPayments: React.FC = () => {
   const [showAdd, setShowAdd]         = useState(false)
   const [editPayment, setEditPayment] = useState<RecurringPayment | null>(null)
   const [form, setForm]               = useState<FormState>(EMPTY_FORM)
+  const [errors, setErrors]           = useState<FormErrors>({})
   const [saving, setSaving]           = useState(false)
 
   const today = new Date().getDate()
@@ -167,14 +129,16 @@ const RecurringPayments: React.FC = () => {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
+    const errs = validatePaymentForm(form)
+    if (Object.keys(errs).length > 0) { setErrors(errs); return }
+    setErrors({})
     const amount = parseFloat(form.amount)
     const day = parseInt(form.dayOfMonth, 10)
-    if (!form.name.trim() || !amount || !day || day < 1 || day > 31) return
     setSaving(true)
     try {
       const r = await authFetch('/api/recurring', {
         method: 'POST',
-        body: JSON.stringify({ name: form.name.trim(), amount, dayOfMonth: day, category: form.category }),
+        body: JSON.stringify({ name: form.name.trim(), amount, dayOfMonth: day }),
       })
       if (r.ok) {
         await fetchPayments()
@@ -187,14 +151,16 @@ const RecurringPayments: React.FC = () => {
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editPayment) return
+    const errs = validatePaymentForm(form)
+    if (Object.keys(errs).length > 0) { setErrors(errs); return }
+    setErrors({})
     const amount = parseFloat(form.amount)
     const day = parseInt(form.dayOfMonth, 10)
-    if (!form.name.trim() || !amount || !day || day < 1 || day > 31) return
     setSaving(true)
     try {
       const r = await authFetch(`/api/recurring/${editPayment._id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ name: form.name.trim(), amount, dayOfMonth: day, category: form.category }),
+        body: JSON.stringify({ name: form.name.trim(), amount, dayOfMonth: day }),
       })
       if (r.ok) {
         await fetchPayments()
@@ -211,13 +177,27 @@ const RecurringPayments: React.FC = () => {
   }
 
   const openEdit = (p: RecurringPayment) => {
-    setForm({ name: p.name, amount: String(p.amount), dayOfMonth: String(p.dayOfMonth), category: p.category })
+    setForm({ name: p.name, amount: String(p.amount), dayOfMonth: String(p.dayOfMonth) })
+    setErrors({})
     setEditPayment(p)
   }
 
   const openAdd = () => {
     setForm(EMPTY_FORM)
+    setErrors({})
     setShowAdd(true)
+  }
+
+  const setField = (field: keyof FormState, value: string) => {
+    setForm(f => ({ ...f, [field]: value }))
+    if (errors[field]) {
+      const valid =
+        field === 'name'       ? value.trim() !== '' :
+        field === 'amount'     ? (parseFloat(value) > 0) :
+        field === 'dayOfMonth' ? (() => { const d = parseInt(value, 10); return d >= 1 && d <= 31 })() :
+        true
+      if (valid) setErrors(prev => ({ ...prev, [field]: undefined }))
+    }
   }
 
   const totalMonthly = payments.filter(p => p.isActive).reduce((s, p) => s + p.amount, 0)
@@ -237,6 +217,43 @@ const RecurringPayments: React.FC = () => {
       </div>
     )
   }
+
+  const formFields = (
+    <>
+      <div>
+        <input
+          className={`${styles.input} ${errors.name ? 'inputError' : ''}`}
+          placeholder="Назва (Spotify...)"
+          value={form.name}
+          onChange={e => setField('name', e.target.value)}
+          autoFocus
+        />
+        {errors.name && <span className="errorMsg">{errors.name}</span>}
+      </div>
+      <div className={styles.formRow}>
+        <div>
+          <input
+            className={`${styles.input} ${errors.amount ? 'inputError' : ''}`}
+            type="number"
+            placeholder="Сума"
+            value={form.amount}
+            onChange={e => setField('amount', e.target.value)}
+          />
+          {errors.amount && <span className="errorMsg">{errors.amount}</span>}
+        </div>
+        <div>
+          <input
+            className={`${styles.input} ${errors.dayOfMonth ? 'inputError' : ''}`}
+            type="number"
+            placeholder="День (1–31)"
+            value={form.dayOfMonth}
+            onChange={e => setField('dayOfMonth', e.target.value)}
+          />
+          {errors.dayOfMonth && <span className="errorMsg">{errors.dayOfMonth}</span>}
+        </div>
+      </div>
+    </>
+  )
 
   return (
     <div className={styles.wrap}>
@@ -279,33 +296,7 @@ const RecurringPayments: React.FC = () => {
       {/* Add form */}
       {showAdd && (
         <form className={styles.addForm} onSubmit={handleAdd}>
-          <input
-            className={styles.input}
-            placeholder="Назва (Spotify...)"
-            value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            autoFocus
-          />
-          <div className={styles.formRow}>
-            <input
-              className={styles.input}
-              type="number"
-              placeholder="Сума"
-              value={form.amount}
-              onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-              min="1"
-            />
-            <input
-              className={styles.input}
-              type="number"
-              placeholder="День (1–31)"
-              value={form.dayOfMonth}
-              onChange={e => setForm(f => ({ ...f, dayOfMonth: e.target.value }))}
-              min="1"
-              max="31"
-            />
-          </div>
-          <CategorySelect value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} />
+          {formFields}
           <div className={styles.formActions}>
             <button type="submit" className={styles.submitBtn} disabled={saving}>Додати</button>
             <button type="button" className={styles.cancelBtn} onClick={() => setShowAdd(false)}>Скасувати</button>
@@ -316,33 +307,7 @@ const RecurringPayments: React.FC = () => {
       {/* Edit modal */}
       <Modal isOpen={!!editPayment} onClose={() => setEditPayment(null)} title="Редагування" draggable>
         <form onSubmit={handleEdit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <input
-            className={styles.input}
-            placeholder="Назва"
-            value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            autoFocus
-          />
-          <div className={styles.formRow}>
-            <input
-              className={styles.input}
-              type="number"
-              placeholder="Сума"
-              value={form.amount}
-              onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-              min="1"
-            />
-            <input
-              className={styles.input}
-              type="number"
-              placeholder="День (1–31)"
-              value={form.dayOfMonth}
-              onChange={e => setForm(f => ({ ...f, dayOfMonth: e.target.value }))}
-              min="1"
-              max="31"
-            />
-          </div>
-          <CategorySelect value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} />
+          {formFields}
           <div className={styles.formActions}>
             <button type="submit" className={styles.submitBtn} disabled={saving}>Зберегти</button>
             <button type="button" className={styles.deleteBtn} onClick={handleDelete}>Видалити</button>

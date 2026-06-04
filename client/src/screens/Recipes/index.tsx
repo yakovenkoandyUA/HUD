@@ -37,20 +37,24 @@ const Recipes: React.FC = () => {
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
   const [tab, setTab] = useState<'all' | 'saved'>('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [activeTag, setActiveTag] = useState<string | null>(null)
 
   const baseRecipes = tab === 'saved'
     ? recipes.filter(r => wishlistIds.includes(r.id))
     : recipes
 
-  const visibleRecipes = selectedCategory === null
-    ? baseRecipes
-    : baseRecipes.filter(r => (r.category ?? 'Інше') === selectedCategory)
+  const availableTags = [...new Set(baseRecipes.flatMap(r => r.tags ?? []))].sort()
+
+  const visibleRecipes = baseRecipes
+    .filter(r => selectedCategory === null || (r.category ?? 'Інше') === selectedCategory)
+    .filter(r => activeTag === null || (r.tags ?? []).includes(activeTag))
 
   useEffect(() => { fetchRecipes() }, [fetchRecipes])
 
   const handleTabChange = (next: 'all' | 'saved') => {
     setTab(next)
     setSelectedCategory(null)
+    setActiveTag(null)
   }
 
   const handleSave = (data: Omit<Recipe, 'id'>) => {
@@ -86,6 +90,22 @@ const Recipes: React.FC = () => {
 				{baseRecipes.length > 0 && (
 					<div className={styles.sliderWrap}>
 						<CategoriesSlider recipes={baseRecipes} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
+					</div>
+				)}
+
+				{/* ── Tags filter ── */}
+				{availableTags.length > 0 && (
+					<div className={styles.tagsFilter}>
+						{availableTags.map(tag => (
+							<button
+								key={tag}
+								type="button"
+								className={`${styles.tagChip} ${activeTag === tag ? styles.tagChipActive : ''}`}
+								onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+							>
+								{tag}
+							</button>
+						))}
 					</div>
 				)}
 

@@ -150,6 +150,40 @@
   z-index: 1;
 }
 
+/* ── Tags filter ─────────────────────────────────────────────── */
+
+.tagsFilter {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  margin: -4px -16px;
+  padding: 0 16px 4px;
+}
+.tagsFilter::-webkit-scrollbar { display: none; }
+
+.tagChip {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tagChipActive {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
 .sectionLabel {
   font-family: var(--font-ui);
   font-size: 11px;

@@ -80,18 +80,16 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
       return t.date >= start && t.date <= end
     })
 
-    const map: Record<string, { amount: number; count: number }> = {}
+    const map: Record<string, number> = {}
     expenses.forEach(t => {
       const cat = t.category ?? 'інше'
       if (cat === 'накопичення') return
-      if (!map[cat]) map[cat] = { amount: 0, count: 0 }
-      map[cat].amount += t.amount
-      map[cat].count  += 1
+      map[cat] = (map[cat] ?? 0) + t.amount
     })
 
-    const tot = Object.values(map).reduce((s, v) => s + v.amount, 0)
+    const tot = Object.values(map).reduce((s, v) => s + v, 0)
     const sorted = Object.entries(map)
-      .map(([cat, v]) => ({ cat, ...v }))
+      .map(([cat, amount]) => ({ cat, amount }))
       .sort((a, b) => b.amount - a.amount)
 
     return { entries: sorted, total: tot }
@@ -167,14 +165,11 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
         </div>
 
         <div className={styles.legend}>
-          {(showAll ? entries : entries.slice(0, VISIBLE_COUNT)).map(({ cat, amount, count }) => (
-            <div key={cat} className={styles.row}>
+          {(showAll ? entries : entries.slice(0, VISIBLE_COUNT)).map(({ cat, amount }) => (
+            <div key={cat} className={styles.legendItem}>
               <span className={styles.dot} style={{ background: colorOf(cat) }} />
-              <span className={styles.catCount}>
-                <span className={styles.cat}>{cat}</span>
-                <span className={styles.count}>{count}×</span>
-              </span>
-              <span className={styles.amt}>{fmt(amount)} ₴</span>
+              <span className={styles.legendName}>{cat}</span>
+              <span className={styles.legendAmount}>{fmt(amount)} ₴</span>
             </div>
           ))}
           {!showAll && entries.length > VISIBLE_COUNT && (

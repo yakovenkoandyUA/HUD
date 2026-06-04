@@ -111,10 +111,12 @@
   min-width: 0;
 }
 
-.row {
-  display: flex;
+.legendItem {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  gap: 6px;
   align-items: center;
-  gap: 8px;
+  min-width: 0;
 }
 
 .dot {
@@ -124,36 +126,24 @@
   flex-shrink: 0;
 }
 
-/* name + count grouped together */
-.catCount {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  flex: 1;
-  min-width: 0;
-}
-
-.cat {
+.legendName {
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text);
   text-transform: capitalize;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
-.count {
+.legendAmount {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text3);
-  flex-shrink: 0;
-}
-
-.amt {
-  font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
+  white-space: nowrap;
   flex-shrink: 0;
 }
 

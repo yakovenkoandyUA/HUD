@@ -621,8 +621,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   type="number"
                   className={styles.reminderAmountInput}
                   value={reminderAmount}
-                  min={1}
-                  max={999}
                   onFocus={e => e.target.select()}
                   onChange={e => setReminderAmount(e.target.value === '' ? '' : Math.min(999, Number(e.target.value)))}
                 />

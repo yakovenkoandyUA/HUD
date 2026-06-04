@@ -298,3 +298,17 @@ input, textarea, select {
   /* Prevent Safari iOS auto-zoom on focus (triggers when font-size < 16px) */
   font-size: max(16px, 1em);
 }
+
+/* ── Form validation ── */
+.inputError {
+  border-color: var(--negative) !important;
+  background: rgba(184, 58, 45, 0.08) !important;
+}
+
+.errorMsg {
+  color: var(--negative);
+  font-size: 11px;
+  font-family: var(--font-ui);
+  margin-top: 4px;
+  display: block;
+}

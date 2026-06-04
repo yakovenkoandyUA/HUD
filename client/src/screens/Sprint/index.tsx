@@ -11,7 +11,7 @@ import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
-import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
+import { getCurrentWeekStart, isRecurring } from '../../utils/sprint'
 import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
@@ -262,10 +262,11 @@ const Sprint: React.FC = () => {
 	const weekStart    = getCurrentWeekStart()
 	const routineItems = items.filter(t => isRecurring(t))
 
-	const [selY, selM, selD] = selectedDay.split('-').map(Number)
-	const selectedDate = new Date(selY, selM - 1, selD)
+	// const [selY, selM, selD] = selectedDay.split('-').map(Number)
+	// const selectedDate = new Date(selY, selM - 1, selD)
 
-	const dayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, selectedDate))
+	// const dayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, selectedDate))
+	const dayRoutines = routineItems
 
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
