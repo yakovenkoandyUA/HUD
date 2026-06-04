@@ -11,8 +11,8 @@ import styles from './ThemePicker.module.css'
 /**
  * ThemePicker
  * -----------
- * Вибір теми (2×2 сітка) + секція ПРОФІЛЬ.
- * Профіль: аватар з можливістю змінити, ім'я, кнопка "Змінити профіль".
+ * Модалка налаштувань: ПРОФІЛЬ → ТЕМА → ДОДАТКОВО.
+ * Логіку тем, профілю та кешу не змінювати.
  *
  * Props:
  * @prop {() => void} onClose — закрити після вибору
@@ -121,66 +121,12 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
 
   return (
     <>
-      {/* ── Теми ── */}
-      <div className={styles.grid}>
-        {PALETTES.map((p) => {
-          const isActive = theme === p.id
-          return (
-            <button
-              key={p.id}
-              type="button"
-              className={styles.card}
-              style={{
-                background: p.bg,
-                border: isActive
-                  ? `2px solid ${p.accent}`
-                  : `1.5px solid ${p.border}`,
-                boxShadow: isActive ? `0 0 16px ${p.accent}44` : 'none',
-              }}
-              onClick={() => handlePick(p.id)}
-            >
-              <span
-                className={styles.name}
-                style={{ color: p.accent, fontFamily: 'var(--font-display)' }}
-              >
-                {p.name}
-              </span>
-
-              <div className={styles.swatches}>
-                <span className={styles.swatch} style={{ background: p.accent }} />
-                <span className={styles.swatch} style={{ background: p.second }} />
-                <span className={styles.swatch} style={{ background: p.gold }}   />
-                <span className={styles.swatch} style={{ background: p.text, opacity: 0.7 }} />
-              </div>
-
-              <div className={styles.preview}>
-                <div className={styles.previewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                  <div className={styles.previewDot}  style={{ background: p.accent }} />
-                  <div className={styles.previewLine} style={{ background: p.text, opacity: 0.6 }} />
-                  <div className={styles.previewLine} style={{ background: p.text, opacity: 0.3, width: '40%' }} />
-                </div>
-                <div className={styles.previewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
-                  <div className={styles.previewDot}  style={{ background: p.second }} />
-                  <div className={styles.previewLine} style={{ background: p.text, opacity: 0.6 }} />
-                  <div className={styles.previewLine} style={{ background: p.text, opacity: 0.3, width: '55%' }} />
-                </div>
-              </div>
-
-              {isActive && (
-                <span className={styles.activeTick} style={{ color: p.accent }}>✓</span>
-              )}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* ── Профіль ── */}
+      {/* ── 1. ПРОФІЛЬ ── */}
       {activeProfile && (
         <div className={styles.profileSection}>
           <p className={styles.sectionLabel}>ПРОФІЛЬ</p>
 
           <div className={styles.profileRow}>
-            {/* Avatar */}
             <button
               type="button"
               className={styles.avatarBtn}
@@ -197,7 +143,6 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
               <span className={styles.avatarOverlay}>✎</span>
             </button>
 
-            {/* Name + buttons */}
             <div className={styles.profileInfo}>
               <span className={styles.profileName}>{activeProfile.name}</span>
               <div className={styles.profileActions}>
@@ -206,7 +151,7 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
                   className={styles.editBtn}
                   onClick={() => setEditOpen(true)}
                 >
-                  ✎ Редагувати
+                  Редагувати
                 </button>
                 <button
                   type="button"
@@ -221,13 +166,81 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
         </div>
       )}
 
-      <ProfileEditModal isOpen={editOpen} onClose={() => setEditOpen(false)} />
+      {/* ── 2. ТЕМА ── */}
+      <div className={styles.themeSection}>
+        <p className={styles.sectionLabel}>ТЕМА</p>
+        <div className={styles.grid}>
+          {PALETTES.map((p) => {
+            const isActive = theme === p.id
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={styles.card}
+                style={{
+                  background: p.bg,
+                  border: isActive
+                    ? `2px solid ${p.accent}`
+                    : `1.5px solid ${p.border}`,
+                  boxShadow: isActive ? `0 0 16px ${p.accent}44` : 'none',
+                }}
+                onClick={() => handlePick(p.id)}
+              >
+                <span
+                  className={styles.name}
+                  style={{ color: p.accent, fontFamily: 'var(--font-display)' }}
+                >
+                  {p.name}
+                </span>
 
-      {/* ── Встановити ── */}
-      {showInstall && (
-        <div className={styles.installSection}>
-          <p className={styles.sectionLabel}>ДОДАТОК</p>
-          {isIOS ? (
+                <div className={styles.swatches}>
+                  <span className={styles.swatch} style={{ background: p.accent }} />
+                  <span className={styles.swatch} style={{ background: p.second }} />
+                  <span className={styles.swatch} style={{ background: p.gold }}   />
+                  <span className={styles.swatch} style={{ background: p.text, opacity: 0.7 }} />
+                </div>
+
+                <div className={styles.preview}>
+                  <div className={styles.previewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div className={styles.previewDot}  style={{ background: p.accent }} />
+                    <div className={styles.previewLine} style={{ background: p.text, opacity: 0.6 }} />
+                    <div className={styles.previewLine} style={{ background: p.text, opacity: 0.3, width: '40%' }} />
+                  </div>
+                  <div className={styles.previewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div className={styles.previewDot}  style={{ background: p.second }} />
+                    <div className={styles.previewLine} style={{ background: p.text, opacity: 0.6 }} />
+                    <div className={styles.previewLine} style={{ background: p.text, opacity: 0.3, width: '55%' }} />
+                  </div>
+                </div>
+
+                {isActive && (
+                  <span className={styles.activeTick} style={{ color: p.accent }}>✓</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── 3. ДОДАТКОВО ── */}
+      <div className={styles.extraSection}>
+        <p className={styles.sectionLabel}>ДОДАТКОВО</p>
+
+        {updateAvailable && (
+          <div className={styles.updateRow}>
+            <span className={styles.updateLabel}>🔄 Доступне оновлення</span>
+            <button
+              type="button"
+              className={styles.updateBtn}
+              onClick={() => window.location.reload()}
+            >
+              ОНОВИТИ
+            </button>
+          </div>
+        )}
+
+        {showInstall && (
+          isIOS ? (
             <p className={styles.installHint}>
               Натисніть <strong>⎙ Share</strong> → <strong>«Додати на початковий екран»</strong> щоб встановити MIMIR як додаток.
             </p>
@@ -240,32 +253,19 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
               <span className={styles.installIcon}>⬇</span>
               Встановити додаток
             </button>
-          )}
-        </div>
-      )}
+          )
+        )}
 
-      {/* ── Оновлення ── */}
-      {updateAvailable && (
-        <div className={styles.updateRow}>
-          <span className={styles.updateLabel}>🔄 Доступне оновлення</span>
-          <button
-            type="button"
-            className={styles.updateBtn}
-            onClick={() => window.location.reload()}
-          >
-            ОНОВИТИ
-          </button>
-        </div>
-      )}
+        <button
+          type="button"
+          className={`${styles.clearBtn} ${cleared ? styles.clearBtnDone : ''}`}
+          onClick={handleClearCache}
+        >
+          {cleared ? '✓ Кеш очищено' : 'Очистити кеш'}
+        </button>
+      </div>
 
-      {/* ── Кеш ── */}
-      <button
-        type="button"
-        className={`${styles.clearBtn} ${cleared ? styles.clearBtnDone : ''}`}
-        onClick={handleClearCache}
-      >
-        {cleared ? '✓ Кеш очищено' : 'Очистити кеш'}
-      </button>
+      <ProfileEditModal isOpen={editOpen} onClose={() => setEditOpen(false)} />
     </>
   )
 }

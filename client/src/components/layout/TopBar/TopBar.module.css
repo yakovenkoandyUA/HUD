@@ -64,23 +64,43 @@
   line-height: 1;
 }
 
-/* ── Palette icon button ── */
+/* ── Avatar button ── */
 
-.themeBtn {
+.avatarBtn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--text3);
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  background: none;
+  padding: 0;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  overflow: hidden;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
 }
-.themeBtn:hover {
-  color: var(--accent);
-  border-color: var(--accent-dim);
-  background: var(--accent-soft);
+.avatarBtn:hover { border-color: var(--accent); }
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarFallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface2);
+  color: var(--gold);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
