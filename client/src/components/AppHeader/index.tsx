@@ -3,17 +3,18 @@ import MimirLogo from '../../assets/mimir-logo.svg?react'
 import Modal from '../ui/Modal'
 import ThemePicker from '../layout/ThemePicker'
 import { useLongPress } from '../../hooks/useLongPress'
+import { useProfileStore } from '../../store/profileStore'
 import styles from './AppHeader.module.css'
 
 /**
  * AppHeader
  * ---------
  * Єдиний шапковий компонент для всіх екранів.
- * Ліво: живий годинник (год:хв), Центр: SVG-логотип, Право: кнопка теми.
+ * Ліво: живий годинник (год:хв), Центр: SVG-логотип, Право: аватар профілю.
  *
  * Props:
  * @prop {() => void}      [onLogoLongPress] — Easter egg (NASA APOD, тільки Dashboard)
- * @prop {React.ReactNode} [right]           — додатковий вміст зліва від кнопки теми
+ * @prop {React.ReactNode} [right]           — додатковий вміст зліва від аватара
  */
 interface AppHeaderProps {
   onLogoLongPress?: () => void
@@ -30,6 +31,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onLogoLongPress, right }) => {
   const [now, setNow] = useState(new Date())
   const [showPicker, setShowPicker] = useState(false)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const { activeProfile } = useProfileStore()
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
@@ -68,29 +70,26 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onLogoLongPress, right }) => {
           {right}
           <button
             type="button"
-            className={styles.themeBtn}
+            className={styles.avatarBtn}
             onClick={() => setShowPicker(true)}
-            aria-label="Змінити тему"
+            aria-label="Профіль і налаштування"
           >
-            <GridIcon />
+            {activeProfile?.avatarUrl ? (
+              <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatar} />
+            ) : (
+              <div className={styles.avatarFallback}>
+                {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
+              </div>
+            )}
           </button>
         </div>
       </header>
 
-      <Modal isOpen={showPicker} onClose={() => setShowPicker(false)} title="Тема">
+      <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
         <ThemePicker onClose={() => setShowPicker(false)} />
       </Modal>
     </>
   )
 }
-
-const GridIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <rect x="1"  y="1"  width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="9"  y="1"  width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="1"  y="9"  width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="9"  y="9"  width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-  </svg>
-)
 
 export default AppHeader
