@@ -96,6 +96,13 @@
   gap: 8px;
 }
 
+/* ── Card + inline deposit form wrapper ── */
+.goalCardWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
 /* ── Compact goal card ── */
 .goalCard {
   display: flex;
@@ -166,6 +173,84 @@
   border-radius: 999px;
   transition: width 0.3s ease;
 }
+
+/* ── Plus button ── */
+.plusBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.plusBtn:hover { background: var(--gold-dim); }
+
+/* ── Quick deposit inline form ── */
+.quickDeposit {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+.depositInput {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  min-width: 0;
+}
+.depositInput:focus { border-color: var(--gold); }
+.depositInput::placeholder { color: var(--text3); }
+
+.depositConfirm {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--gold);
+  color: #000;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+.depositConfirm:hover { opacity: 0.85; }
+
+.depositCancel {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text3);
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+.depositCancel:hover { color: var(--text); }
 
 /* ── Action buttons ── */
 .goalActions {
