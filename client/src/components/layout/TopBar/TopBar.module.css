@@ -67,29 +67,25 @@
 /* ── Avatar button ── */
 
 .avatarBtn {
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1.5px solid var(--border2);
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  overflow: hidden;
-  transition: border-color 0.15s;
-  flex-shrink: 0;
 }
-.avatarBtn:hover { border-color: var(--accent); }
 
 .avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  border: 1px solid var(--border2);
   display: block;
+  transition: border-color 0.15s;
 }
+.avatarBtn:hover .avatar { border-color: var(--accent); }
 
 .avatarFallback {
   width: 32px;
@@ -98,9 +94,12 @@
   background: var(--surface2);
   color: var(--gold);
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--border2);
+  transition: border-color 0.15s;
 }
+.avatarBtn:hover .avatarFallback { border-color: var(--accent); }

@@ -86,7 +86,7 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) =>
               <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatar} />
             ) : (
               <div className={styles.avatarFallback}>
-                {activeProfile ? activeProfile.name[0].toUpperCase() : '?'}
+                {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}
           </button>
