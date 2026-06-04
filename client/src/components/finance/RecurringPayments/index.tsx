@@ -85,15 +85,62 @@ const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange }) => {
   )
 }
 
-function paymentEmoji(name: string, category: string): string {
+const KNOWN_SERVICES: Record<string, string> = {
+  'netflix':          'netflix.com',
+  'spotify':          'spotify.com',
+  'youtube':          'youtube.com',
+  'youtube premium':  'youtube.com',
+  'apple music':      'music.apple.com',
+  'apple tv':         'tv.apple.com',
+  'icloud':           'icloud.com',
+  'google one':       'one.google.com',
+  'amazon':           'amazon.com',
+  'amazon prime':     'amazon.com',
+  'disney':           'disneyplus.com',
+  'disney+':          'disneyplus.com',
+  'hbo':              'hbomax.com',
+  'twitch':           'twitch.tv',
+  'discord':          'discord.com',
+  'notion':           'notion.so',
+  'figma':            'figma.com',
+  'github':           'github.com',
+  'chatgpt':          'openai.com',
+  'claude':           'anthropic.com',
+  'midjourney':       'midjourney.com',
+  'playstation':      'playstation.com',
+  'xbox':             'xbox.com',
+  'nintendo':         'nintendo.com',
+  'київстар':         'kyivstar.ua',
+  'vodafone':         'vodafone.ua',
+  'lifecell':         'lifecell.ua',
+}
+
+function getCategoryEmoji(name: string): string {
   const n = name.toLowerCase()
-  const c = category.toLowerCase()
-  if (c.includes('музик') || n.includes('spotify') || n.includes('apple music') || n.includes('youtube music')) return '🎵'
-  if (c.includes('відео') || c.includes('стрімінг') || n.includes('netflix') || n.includes('youtube') || n.includes('disney') || n.includes('megogo')) return '🎬'
-  if (c.includes('ігр') || n.includes('steam') || n.includes('xbox') || n.includes('playstation') || n.includes('nintendo')) return '🎮'
-  if (c.includes('хмар') || n.includes('icloud') || n.includes('google one') || n.includes('dropbox')) return '☁️'
-  if (c.includes('комун') || n.includes('інтернет') || n.includes('мобіл')) return '🏠'
+  if (n.includes('музик') || n.includes('music')) return '🎵'
+  if (n.includes('відео') || n.includes('video') || n.includes('tv')) return '🎬'
+  if (n.includes('гр') || n.includes('game')) return '🎮'
+  if (n.includes('хмар') || n.includes('cloud') || n.includes('storage')) return '☁️'
+  if (n.includes("зв'яз") || n.includes('мобіл')) return '📱'
   return '💳'
+}
+
+const ServiceLogo: React.FC<{ name: string }> = ({ name }) => {
+  const [imgError, setImgError] = useState(false)
+  const domain = KNOWN_SERVICES[name.toLowerCase().trim()]
+  const logoUrl = domain ? `https://logo.clearbit.com/${domain}` : null
+
+  if (logoUrl && !imgError) {
+    return (
+      <img
+        src={logoUrl}
+        alt={name}
+        className={styles.serviceLogo}
+        onError={() => setImgError(true)}
+      />
+    )
+  }
+  return <span className={styles.serviceEmoji}>{getCategoryEmoji(name)}</span>
 }
 
 function dayLabel(day: number): string {
@@ -218,7 +265,7 @@ const RecurringPayments: React.FC = () => {
               className={`${styles.row} ${isToday ? styles.rowToday : ''} ${!p.isActive ? styles.rowInactive : ''}`}
               onClick={() => openEdit(p)}
             >
-              <span className={styles.emoji}>{paymentEmoji(p.name, p.category)}</span>
+              <ServiceLogo name={p.name} />
               <span className={styles.name}>{p.name}</span>
               <span className={styles.day}>{dayLabel(p.dayOfMonth)}</span>
               <span className={`${styles.amount} ${isToday ? styles.amountToday : ''}`}>

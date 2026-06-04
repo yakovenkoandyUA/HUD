@@ -81,10 +81,22 @@
   opacity: 0.45;
 }
 
-.emoji {
+.serviceLogo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.serviceEmoji {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
-  line-height: 1;
 }
 
 .name {
