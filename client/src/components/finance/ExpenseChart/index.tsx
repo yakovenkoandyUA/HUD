@@ -83,6 +83,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
     const map: Record<string, { amount: number; count: number }> = {}
     expenses.forEach(t => {
       const cat = t.category ?? 'інше'
+      if (cat === 'накопичення') return
       if (!map[cat]) map[cat] = { amount: 0, count: 0 }
       map[cat].amount += t.amount
       map[cat].count  += 1
