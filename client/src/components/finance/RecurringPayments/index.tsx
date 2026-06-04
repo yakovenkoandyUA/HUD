@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { authFetch } from '../../../services/api'
 import { fmt } from '../../../utils/finance'
 import Modal from '../../ui/Modal'
@@ -31,6 +31,59 @@ interface FormState {
 const EMPTY_FORM: FormState = { name: '', amount: '', dayOfMonth: '', category: 'Підписки' }
 
 const CATEGORIES = ['Підписки', 'Музика', 'Відео', 'Ігри', 'Хмара', 'Комунальні', 'Інше']
+
+interface CategorySelectProps {
+  value: string
+  onChange: (v: string) => void
+}
+
+const CategorySelect: React.FC<CategorySelectProps> = ({ value, onChange }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div className={styles.catSelect} ref={ref}>
+      <button
+        type="button"
+        className={styles.catSelectBtn}
+        onClick={() => setOpen(v => !v)}
+      >
+        <span>{value}</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={`${styles.catChevron} ${open ? styles.catChevronOpen : ''}`}>
+          <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && (
+        <div className={styles.catDropdown}>
+          {CATEGORIES.map(c => (
+            <button
+              key={c}
+              type="button"
+              className={`${styles.catOption} ${c === value ? styles.catOptionActive : ''}`}
+              onClick={() => { onChange(c); setOpen(false) }}
+            >
+              {c === value && (
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function paymentEmoji(name: string, category: string): string {
   const n = name.toLowerCase()
@@ -205,13 +258,7 @@ const RecurringPayments: React.FC = () => {
               max="31"
             />
           </div>
-          <select
-            className={styles.select}
-            value={form.category}
-            onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-          >
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <CategorySelect value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} />
           <div className={styles.formActions}>
             <button type="submit" className={styles.submitBtn} disabled={saving}>Додати</button>
             <button type="button" className={styles.cancelBtn} onClick={() => setShowAdd(false)}>Скасувати</button>
@@ -248,13 +295,7 @@ const RecurringPayments: React.FC = () => {
               max="31"
             />
           </div>
-          <select
-            className={styles.select}
-            value={form.category}
-            onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-          >
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <CategorySelect value={form.category} onChange={v => setForm(f => ({ ...f, category: v }))} />
           <div className={styles.formActions}>
             <button type="submit" className={styles.submitBtn} disabled={saving}>Зберегти</button>
             <button type="button" className={styles.deleteBtn} onClick={handleDelete}>Видалити</button>
