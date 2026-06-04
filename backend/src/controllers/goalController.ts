@@ -21,6 +21,17 @@ export async function update(req: Request, res: Response): Promise<void> {
   res.json(item)
 }
 
+export async function deposit(req: Request, res: Response): Promise<void> {
+  const { amount } = req.body as { amount?: number }
+  if (!amount || amount <= 0) { res.status(400).json({ error: 'invalid amount' }); return }
+  const goal = await SavingsGoal.findOne({ _id: req.params.id, userId: req.userId })
+  if (!goal) { res.status(404).json({ error: 'Not found' }); return }
+  goal.currentAmount = Math.min(goal.currentAmount + amount, goal.targetAmount)
+  goal.deposits.push({ amount, date: new Date() })
+  await goal.save()
+  res.json(goal)
+}
+
 export async function remove(req: Request, res: Response): Promise<void> {
   await SavingsGoal.findOneAndDelete({ _id: req.params.id, userId: req.userId })
   res.status(204).end()

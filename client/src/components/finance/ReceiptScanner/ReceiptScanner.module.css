@@ -75,31 +75,69 @@
 .itemRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 7px 14px;
+  gap: 6px;
+  padding: 4px 8px 4px 14px;
   border-bottom: 1px solid var(--border);
 }
 .itemRow:last-child { border-bottom: none; }
 
-.itemName {
+.itemNameInput {
+  flex: 1;
+  min-width: 0;
   font-family: var(--font-body);
   font-size: 13px;
   color: var(--text);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 6px;
+  outline: none;
+  transition: border-color 0.12s, background 0.12s;
+}
+.itemNameInput:focus {
+  border-color: var(--accent);
+  background: var(--bg3);
 }
 
-.itemPrice {
+.itemPriceInput {
+  width: 64px;
+  flex-shrink: 0;
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text2);
-  flex-shrink: 0;
-  white-space: nowrap;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 6px;
+  outline: none;
+  text-align: right;
+  transition: border-color 0.12s, background 0.12s;
 }
+.itemPriceInput:focus {
+  border-color: var(--accent);
+  background: var(--bg3);
+  color: var(--text);
+}
+.itemPriceInput::-webkit-inner-spin-button,
+.itemPriceInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.itemRemoveBtn {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: color 0.12s, background 0.12s;
+}
+.itemRemoveBtn:hover { color: var(--accent); background: var(--accent-soft); }
 
 /* ── Category row ── */
 .categoryRow {

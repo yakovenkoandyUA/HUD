@@ -107,7 +107,10 @@
   border-radius: 12px;
   padding: 10px 12px;
   min-height: 72px;
+  cursor: pointer;
+  transition: border-color 0.15s;
 }
+.goalCard:hover { border-color: var(--gold); }
 
 .ring {
   flex-shrink: 0;

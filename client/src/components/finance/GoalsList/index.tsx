@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { useGoalsStore } from '../../../store/goalsStore'
 import { fmt } from '../../../utils/finance'
 import type { Goal } from '../../../types'
+import GoalDetail from '../GoalDetail'
 import styles from './GoalsList.module.css'
 
 /**
  * GoalsList
  * ---------
  * Список цілей накопичення. Кожна ціль — компактний горизонтальний рядок
- * з SVG кільцем 48px і тонким прогрес-баром.
+ * з SVG кільцем 48px і тонким прогрес-баром. Тап на картку відкриває GoalDetail.
  *
  * Props:
  * @prop {number} [addTrigger] — збільшення відкриває форму додавання
@@ -22,11 +23,10 @@ const CIRC = 2 * Math.PI * R
 
 interface GoalRowProps {
   goal: Goal
-  onContribute: (goal: Goal) => void
-  onDelete: (id: string) => void
+  onClick: () => void
 }
 
-const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
+const GoalRow: React.FC<GoalRowProps> = ({ goal, onClick }) => {
   const pct       = goal.targetAmount > 0
     ? Math.min(Math.round((goal.currentAmount / goal.targetAmount) * 100), 100)
     : 0
@@ -36,13 +36,10 @@ const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
   const barColor  = done ? 'var(--second)' : 'var(--gold)'
 
   return (
-    <div className={styles.goalCard}>
-      {/* ── SVG ring 48px ── */}
+    <div className={styles.goalCard} onClick={onClick} role="button" tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && onClick()}>
       <svg width="48" height="48" viewBox="0 0 48 48" className={styles.ring}>
-        <circle
-          cx={CX} cy={CY} r={R}
-          fill="none" stroke="var(--border2)" strokeWidth={SW}
-        />
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--border2)" strokeWidth={SW} />
         <circle
           cx={CX} cy={CY} r={R}
           fill="none" stroke={ringColor} strokeWidth={SW}
@@ -63,7 +60,6 @@ const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
         </text>
       </svg>
 
-      {/* ── Centre: name + amount + thin progress bar ── */}
       <div className={styles.goalInfo}>
         <div className={styles.goalHeader}>
           <span className={styles.goalName}>{goal.title}</span>
@@ -72,33 +68,8 @@ const GoalRow: React.FC<GoalRowProps> = ({ goal, onContribute, onDelete }) => {
           </span>
         </div>
         <div className={styles.progressBar}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${pct}%`, background: barColor }}
-          />
+          <div className={styles.progressFill} style={{ width: `${pct}%`, background: barColor }} />
         </div>
-      </div>
-
-      {/* ── Action buttons ── */}
-      <div className={styles.goalActions}>
-        {!done && (
-          <button
-            type="button"
-            className={styles.contributeBtn}
-            onClick={() => onContribute(goal)}
-            aria-label="Поповнити"
-          >
-            +
-          </button>
-        )}
-        <button
-          type="button"
-          className={styles.deleteBtn}
-          onClick={() => onDelete(goal.id)}
-          aria-label="Видалити"
-        >
-          ×
-        </button>
       </div>
     </div>
   )
@@ -109,13 +80,11 @@ interface GoalsListProps {
 }
 
 const GoalsList: React.FC<GoalsListProps> = ({ addTrigger }) => {
-  const { goals, fetchGoals, addGoal, contribute, deleteGoal } = useGoalsStore()
-  const [showAdd, setShowAdd]               = useState(false)
-  const [showContribute, setShowContribute] = useState(false)
-  const [activeGoal, setActiveGoal]         = useState<Goal | null>(null)
-  const [newTitle, setNewTitle]             = useState('')
-  const [newTarget, setNewTarget]           = useState('')
-  const [contribAmount, setContribAmount]   = useState('')
+  const { goals, fetchGoals, addGoal } = useGoalsStore()
+  const [showAdd, setShowAdd]         = useState(false)
+  const [newTitle, setNewTitle]       = useState('')
+  const [newTarget, setNewTarget]     = useState('')
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null)
 
   useEffect(() => {
     if (addTrigger && addTrigger > 0) setShowAdd(true)
@@ -133,21 +102,9 @@ const GoalsList: React.FC<GoalsListProps> = ({ addTrigger }) => {
     setShowAdd(false)
   }
 
-  const handleContribute = (e: React.FormEvent) => {
-    e.preventDefault()
-    const amt = parseFloat(contribAmount)
-    if (!activeGoal || !amt || amt <= 0) return
-    contribute(activeGoal.id, amt)
-    setContribAmount('')
-    setShowContribute(false)
-    setActiveGoal(null)
-  }
-
-  const openContribute = (goal: Goal) => {
-    setActiveGoal(goal)
-    setContribAmount('')
-    setShowContribute(true)
-  }
+  const selectedGoal = selectedGoalId
+    ? goals.find(g => g.id === selectedGoalId) ?? null
+    : null
 
   return (
     <div className={styles.wrap}>
@@ -156,7 +113,7 @@ const GoalsList: React.FC<GoalsListProps> = ({ addTrigger }) => {
         <button
           type="button"
           className={styles.addBtn}
-          onClick={() => setShowAdd((v) => !v)}
+          onClick={() => setShowAdd(v => !v)}
         >
           {showAdd ? '✕' : 'Нова ціль'}
         </button>
@@ -168,7 +125,7 @@ const GoalsList: React.FC<GoalsListProps> = ({ addTrigger }) => {
             className={styles.input}
             placeholder="Назва цілі..."
             value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
+            onChange={e => setNewTitle(e.target.value)}
             autoFocus
           />
           <input
@@ -176,7 +133,7 @@ const GoalsList: React.FC<GoalsListProps> = ({ addTrigger }) => {
             type="number"
             placeholder="Ціль (₴)"
             value={newTarget}
-            onChange={(e) => setNewTarget(e.target.value)}
+            onChange={e => setNewTarget(e.target.value)}
             min="1"
           />
           <button type="submit" className={styles.submitBtn}>Додати</button>
@@ -187,40 +144,17 @@ const GoalsList: React.FC<GoalsListProps> = ({ addTrigger }) => {
         <p className={styles.empty}>Немає цілей накопичення</p>
       ) : (
         <div className={styles.list}>
-          {goals.map((g) => (
-            <GoalRow
-              key={g.id}
-              goal={g}
-              onContribute={openContribute}
-              onDelete={deleteGoal}
-            />
+          {goals.map(g => (
+            <GoalRow key={g.id} goal={g} onClick={() => setSelectedGoalId(g.id)} />
           ))}
         </div>
       )}
 
-      {showContribute && activeGoal && (
-        <form className={styles.contribForm} onSubmit={handleContribute}>
-          <span className={styles.contribLabel}>
-            Поповнити «{activeGoal.title}»
-          </span>
-          <div className={styles.contribRow}>
-            <input
-              className={styles.input}
-              type="number"
-              placeholder="Сума (₴)"
-              value={contribAmount}
-              onChange={(e) => setContribAmount(e.target.value)}
-              min="1"
-              autoFocus
-            />
-            <button type="submit" className={styles.submitBtn}>OK</button>
-            <button
-              type="button"
-              className={styles.cancelBtn}
-              onClick={() => { setShowContribute(false); setActiveGoal(null) }}
-            >✕</button>
-          </div>
-        </form>
+      {selectedGoal && (
+        <GoalDetail
+          goal={selectedGoal}
+          onClose={() => setSelectedGoalId(null)}
+        />
       )}
     </div>
   )

@@ -45,6 +45,8 @@ export interface Goal {
   targetAmount: number
   currentAmount: number
   deadline?: string
+  imageUrl?: string
+  deposits?: { amount: number; date: string }[]
 }
 
 export type TodoPriority = 'urgent' | 'normal' | 'low'

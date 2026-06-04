@@ -8,7 +8,7 @@ import styles from './ReceiptScanner.module.css'
  * ---------------
  * Компонент preview та підтвердження розпізнаного чеку.
  * Отримує файл фото, надсилає в /api/receipt/scan (Anthropic Vision),
- * показує лоадер → preview → підтвердження.
+ * показує лоадер → preview з редагуванням позицій → підтвердження.
  *
  * Props:
  * @prop {File}                          file           — фото чеку (вже вибрано користувачем)
@@ -40,8 +40,9 @@ const fmtPrice = (n: number) =>
   n.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, onSave, onCancel }) => {
-  const [status, setStatus]     = useState<'loading' | 'preview' | 'error'>('loading')
+  const [status, setStatus]     = useState<'loading' | 'preview'>('loading')
   const [result, setResult]     = useState<ReceiptResult | null>(null)
+  const [items, setItems]       = useState<ReceiptItem[]>([])
   const [category, setCategory] = useState(allCategories[0]?.value ?? 'продукти')
   const { showToast }           = useUiStore()
 
@@ -62,6 +63,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
 
         if (!cancelled) {
           setResult(data)
+          setItems(data.items)
           setStatus('preview')
         }
       } catch {
@@ -77,10 +79,20 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const updateItem = (i: number, field: 'name' | 'price', value: string | number) => {
+    setItems(prev => prev.map((item, idx) => idx === i ? { ...item, [field]: value } : item))
+  }
+
+  const removeItem = (i: number) => {
+    setItems(prev => prev.filter((_, idx) => idx !== i))
+  }
+
+  const computedTotal = items.reduce((sum, item) => sum + (item.price || 0), 0)
+
   const handleSave = () => {
     if (!result) return
-    const description = JSON.stringify({ store: result.store, items: result.items })
-    onSave(result.total, description, category)
+    const description = JSON.stringify({ store: result.store, items })
+    onSave(computedTotal, description, category)
   }
 
   if (status === 'loading') {
@@ -97,16 +109,33 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
       <div className={styles.previewPanel}>
         <div className={styles.previewHeader}>
           <span className={styles.previewStore}>🧾 {result.store || 'Чек'}</span>
-          <span className={styles.previewTotal}>{fmtPrice(result.total)} ₴</span>
+          <span className={styles.previewTotal}>{fmtPrice(computedTotal)} ₴</span>
         </div>
 
         <div className={styles.divider} />
 
         <ul className={styles.itemList}>
-          {result.items.map((item, i) => (
+          {items.map((item, i) => (
             <li key={i} className={styles.itemRow}>
-              <span className={styles.itemName}>{item.name}</span>
-              <span className={styles.itemPrice}>{fmtPrice(item.price)} ₴</span>
+              <input
+                className={styles.itemNameInput}
+                value={item.name}
+                onChange={e => updateItem(i, 'name', e.target.value)}
+              />
+              <input
+                className={styles.itemPriceInput}
+                type="number"
+                value={item.price}
+                onChange={e => updateItem(i, 'price', parseFloat(e.target.value) || 0)}
+              />
+              <button
+                type="button"
+                className={styles.itemRemoveBtn}
+                onClick={() => removeItem(i)}
+                aria-label="Видалити позицію"
+              >
+                ×
+              </button>
             </li>
           ))}
         </ul>
@@ -131,7 +160,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
             Скасувати
           </button>
           <button type="button" className={styles.saveBtn} onClick={handleSave}>
-            Записати {fmtPrice(result.total)} ₴
+            Записати {fmtPrice(computedTotal)} ₴
           </button>
         </div>
       </div>

@@ -10,6 +10,8 @@ interface ApiGoal {
   targetAmount: number
   currentAmount: number
   deadline: string
+  imageUrl: string
+  deposits: { amount: number; date: string }[]
 }
 
 function fromApi(raw: ApiGoal): Goal {
@@ -20,6 +22,8 @@ function fromApi(raw: ApiGoal): Goal {
     targetAmount: raw.targetAmount,
     currentAmount: raw.currentAmount,
     deadline: raw.deadline || '',
+    imageUrl: raw.imageUrl || '',
+    deposits: raw.deposits || [],
   }
 }
 
@@ -28,6 +32,7 @@ interface GoalsState {
   fetchGoals: () => Promise<void>
   addGoal: (title: string, targetAmount: number, emoji?: string, deadline?: string) => void
   contribute: (id: string, amount: number) => void
+  updateImage: (id: string, imageUrl: string) => void
   deleteGoal: (id: string) => void
 }
 
@@ -72,15 +77,24 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
     if (!goal) return
     const newAmount = Math.min(goal.currentAmount + amount, goal.targetAmount)
     set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, currentAmount: newAmount } : g) }))
-    authFetch(`/api/goals/${id}`, {
+    authFetch(`/api/goals/${id}/deposit`, {
       method: 'PATCH',
-      body: JSON.stringify({ currentAmount: newAmount }),
+      body: JSON.stringify({ amount }),
     })
       .then(r => {
         if (!r.ok) throw new Error()
         useFinanceStore.getState().addExpense(amount, `Ціль: ${goal.title}`, 'накопичення')
+        return get().fetchGoals()
       })
       .catch(() => {})
+  },
+
+  updateImage: (id, imageUrl) => {
+    set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, imageUrl } : g) }))
+    authFetch(`/api/goals/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ imageUrl }),
+    }).catch(() => {})
   },
 
   deleteGoal: (id) => {

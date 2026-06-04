@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import type { Transaction } from '../../../types'
 import { fmt } from '../../../utils/finance'
+import { authFetch } from '../../../services/api'
 import styles from './ExpenseChart.module.css'
 
 /**
@@ -48,8 +49,26 @@ function getWeekBounds(): { start: string; end: string } {
   return { start: iso(mon), end: iso(sun) }
 }
 
+const VISIBLE_COUNT = 5
+
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
-  const [period, setPeriod] = useState<Period>('month')
+  const [period, setPeriod]             = useState<Period>('month')
+  const [customColors, setCustomColors] = useState<Record<string, string>>({})
+  const [showAll, setShowAll]           = useState(false)
+
+  useEffect(() => {
+    authFetch('/api/categories')
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { name: string; color: string }[]) => {
+        const map: Record<string, string> = {}
+        data.forEach(c => { map[c.name.toLowerCase()] = c.color })
+        setCustomColors(map)
+      })
+      .catch(() => {})
+  }, [])
+
+  const colorOf = (cat: string): string =>
+    COLORS[cat] ?? customColors[cat] ?? FALLBACK
 
   const { entries, total } = useMemo(() => {
     const monthStart = new Date().toISOString().slice(0, 7)
@@ -104,14 +123,14 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
           <button
             type="button"
             className={`${styles.switchBtn} ${period === 'month' ? styles.switchActive : ''}`}
-            onClick={() => setPeriod('month')}
+            onClick={() => { setPeriod('month'); setShowAll(false) }}
           >
             Місяць
           </button>
           <button
             type="button"
             className={`${styles.switchBtn} ${period === 'week' ? styles.switchActive : ''}`}
-            onClick={() => setPeriod('week')}
+            onClick={() => { setPeriod('week'); setShowAll(false) }}
           >
             Тиждень
           </button>
@@ -132,7 +151,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
                 key={cat}
                 cx={CX} cy={CY} r={R}
                 fill="none"
-                stroke={COLORS[cat] ?? FALLBACK}
+                stroke={colorOf(cat)}
                 strokeWidth={SW}
                 strokeDasharray={`${dashLen} ${CIRC}`}
                 transform={`rotate(${start - 90} ${CX} ${CY})`}
@@ -147,9 +166,9 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
         </div>
 
         <div className={styles.legend}>
-          {entries.map(({ cat, amount, count }) => (
+          {(showAll ? entries : entries.slice(0, VISIBLE_COUNT)).map(({ cat, amount, count }) => (
             <div key={cat} className={styles.row}>
-              <span className={styles.dot} style={{ background: COLORS[cat] ?? FALLBACK }} />
+              <span className={styles.dot} style={{ background: colorOf(cat) }} />
               <span className={styles.catCount}>
                 <span className={styles.cat}>{cat}</span>
                 <span className={styles.count}>{count}×</span>
@@ -157,6 +176,16 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
               <span className={styles.amt}>{fmt(amount)} ₴</span>
             </div>
           ))}
+          {!showAll && entries.length > VISIBLE_COUNT && (
+            <button className={styles.showMore} onClick={() => setShowAll(true)}>
+              ще {entries.length - VISIBLE_COUNT} →
+            </button>
+          )}
+          {showAll && entries.length > VISIBLE_COUNT && (
+            <button className={styles.showMore} onClick={() => setShowAll(false)}>
+              згорнути ↑
+            </button>
+          )}
         </div>
       </div>
 
