@@ -45,7 +45,9 @@ components/
 ├── finance/
 │   ├── BalanceHero, TodayCard, StatsGrid
 │   ├── TopupForm, ExpenseForm, TransactionList
-│   ├── ShoppingTracker, GoalsList, SavingsGoalCard
+│   ├── ShoppingTracker, GoalsList, GoalDetail  ← GoalDetail: модалка деталей цілі накопичення
+│   ├── ReceiptScanner      ← Anthropic Vision API, розпізнавання чеків
+│   ├── RecurringPayments   ← регулярні платежі з іконками сервісів
 │   └── ExpenseChart        ← Recharts donut
 ├── f1/
 │   ├── NextRaceCard        ← наступна гонка з TrackSVG і RaceCountdown
@@ -79,12 +81,19 @@ components/
 │   ├── CategoriesSlider    ← горизонтальний slider фільтра категорій
 │   └── CategoryCard        ← картка категорії з grid 1–4 фото рецептів
 ├── watchlist/
-│   └── WatchlistHero, WatchlistGrid, WatchlistSearch, WatchlistDetail
+│   ├── WatchlistHero, WatchlistGrid
+│   ├── WatchlistSearch     ← fullscreen search overlay (backdrop + "Скасувати"), TMDB + Google Books
+│   ├── WatchlistDetail     ← деталі + статус chips (book-aware labels) + StarRating + EpisodesList
+│   ├── WatchlistCard       ← pill-бейдж статусу на постері (book-aware labels)
+│   ├── StarRating          ← зіркова оцінка 1–10, readOnly та interactive режими
+│   └── EpisodesList        ← список епізодів для серіалів/аніме
 ├── memories/
 │   └── MemoryCard, MemoryForm, PhotoGrid
 └── dashboard/
     ├── CarHero             ← Three.js McLaren, 260px canvas, 80 частинок, OrbitControls
-    ├── HeroCard            ← hero-блок: баланс + nextRace + спринт-прогрес
+    ├── HeroCard            ← компактний hero-блок: баланс + nextRace + спринт-прогрес
+    │                          border-left gold accent, Furore для числа балансу
+    ├── RaceHeroCard        ← F1 блок в Dashboard (тільки для admin, f1Enabled)
     ├── ClockBlock          ← годинник Furore + дата
     ├── TasksAccordion      ← акордеон Задачі / Покупки (expand/collapse секції)
     │                          анімація strike+fadeout при відмітці покупки

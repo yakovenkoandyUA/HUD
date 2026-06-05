@@ -38,6 +38,17 @@
 | `/api/memories/:id` | PATCH/DELETE | Оновити/видалити спогад |
 | `/api/memories/:id/photos` | POST | Додати фото до спогаду |
 | `/api/memories/:id/photos/:photoId` | PATCH/DELETE | Оновити/видалити фото |
+| `/api/categories` | GET/POST | Кастомні категорії транзакцій |
+| `/api/categories/:id` | PATCH/DELETE | Оновити/видалити категорію |
+| `/api/receipt/scan` | POST | Сканування чеку (Anthropic Vision API) |
+| `/api/recurring` | GET/POST | Регулярні платежі |
+| `/api/recurring/:id` | PATCH/DELETE | Оновити/видалити регулярний платіж |
+| `/api/shopping` | GET/POST | Список покупок |
+| `/api/shopping/:id` | PATCH/DELETE | Оновити/видалити елемент покупок |
+| `/api/labels` | GET/POST | Глобальні мітки спринту |
+| `/api/labels/:id` | PATCH/DELETE | Оновити/видалити мітку |
+| `/api/books/search` | GET | Пошук книг (Google Books proxy, кеш 10 хв) |
+| `/api/f1/predictions` | GET/POST/PATCH | F1 прогнози гонок |
 
 ## Env змінні
 
@@ -46,6 +57,8 @@ MONGODB_URI=mongodb+srv://...
 JWT_SECRET=...
 VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
+ANTHROPIC_API_KEY=...       # сканування чеків (ReceiptScanner)
+GOOGLE_BOOKS_KEY=...        # пошук книг (опціонально, знімає rate limit)
 ```
 
 ## Сідинг бази
@@ -64,5 +77,5 @@ railway run npx ts-node src/scripts/migrateToKotka.ts # мігрує дані з
 | **OpenF1 API** | Залік пілотів (`/v1/championship_drivers?year=2026`) | Не потрібен |
 | **Jolpica API** | Залік команд (`/ergast/f1/current/constructorstandings/`) | Не потрібен |
 | **TMDB API** | Пошук фільмів/серіалів у Watchlist | Потрібен ключ |
-| **Google Books** | Пошук книг у Watchlist | Не потрібен |
+| **Google Books** | Пошук книг у Watchlist (через backend proxy) | Опціонально (знімає rate limit) |
 | **Cloudinary** | Upload аватарів, постерів, фото | unsigned preset |

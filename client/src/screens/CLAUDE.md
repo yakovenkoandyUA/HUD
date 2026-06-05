@@ -2,21 +2,25 @@
 
 ## 1. Dashboard (`/`)
 - ClockBlock — годинник (Furore) + дата зліва, ThemePicker справа
-- HeroCard — баланс, dailyBudget, nextRace, sprint-прогрес в одному блоці
+- HeroCard — компактний hero-блок: баланс (Furore, gold border-left), dailyBudget bar, nextRace, sprint-прогрес
+- TodayRoutines — inline рядок "Сьогодні: назва · назва" для рутин без `isDoneToday`
 - TasksAccordion — акордеон з двома секціями: **Задачі** (sprint, expand за замовчуванням) та **Покупки** (shopping/todo, закрито за замовчуванням)
   - Анімація закреслення + fade-out при відмітці покупки виконаною
 - NASA APOD через довгий тап на логотип HUD
 - CarHero — 3D McLaren MP4/5 (Three.js, 260px, OrbitControls + particles)
-- FAB кнопка — швидке додавання витрати (ExpenseForm модалка)
+- FAB — розкривний (rotate 45° при відкритті), 3 опції: **Витрата** / **Квест** / **Покупка**; закривається кліком поза меню
 - `fetchTransactions()` викликається при mount (баланс завантажується одразу)
 
 ## 2. Finance (`/finance`)
 - BalanceHero, TodayCard, StatsGrid
-- TopupForm, ExpenseForm (модалки)
-- TransactionList — кожна категорія свого кольору
+- TopupForm, ExpenseForm (модалки) — кастомні категорії з `/api/categories`
+- TransactionList — фільтри з анімацією, кожна категорія свого кольору
+- ReceiptScanner — сканування чеків через Anthropic Vision API
+- RecurringPayments — регулярні платежі з іконками сервісів
 - ShoppingTracker — трекер магазинних покупок
-- GoalsList — savings goals з горизонтальним скролом (backend)
+- GoalsList + GoalDetail — savings goals з горизонтальним скролом (backend), деталі у модалці
 - ExpenseChart — donut chart (Recharts)
+- streakStore — streak економії (persist local)
 
 **Логіка бюджету:**
 ```
@@ -55,14 +59,16 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 **Дані:** `client/src/data/circuitData.ts` — CircuitInfo (length/laps/distance/turns/city/firstRace/lapRecord/mostWins) для всіх 22 трас; `ROUND_TO_CIRCUIT_ID` маппінг round → circuit key.
 
 ## 5. Sprint (`/sprint`)
-- WeekHeader + SprintProgress (прогрес тижня)
+- WeekHeader — мінімалістичний, фільтрація по дню тапом
 - Єдиний список задач: **sprint** / **shopping** / **todo** + уроки (lessonStore)
+- Рутини отримують індикатор сповіщень (badge) якщо не виконані сьогодні
 - **Фільтр** (`≡`) — панель з dropdown-select:
   - Тип: Всі / Спринт / Покупки / Todo / Уроки
   - Статус: Активні (default) / Завершені / Всі
   - Кнопки "Скинути" та "Готово" в футері
 - За замовчуванням — тільки **активні** (не done) задачі
 - TaskDetailModal — МІТКИ / ДЕДЛАЙН / ЧЕК-ЛІСТ / ОПИС + LabelPicker
+  - Swipe-to-dismiss: imperative `addEventListener('touchmove', fn, { passive: false })`; перевірка `bodyRef.current.scrollTop > 0` перед drag
 - Форма додавання: тип + назва + пріоритет (для shopping/todo)
 - Категорії спринту (dev/mentorship/personal/learning) — тільки через TaskDetailModal
 
@@ -91,8 +97,10 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 
 ## 9. Watchlist (`/watchlist`)
 - Категорії: movie / series / anime / book
-- Пошук через TMDB API (фільми/серіали/аніме) та Google Books API
-- WatchlistDetail — статус, рейтинг, нагадування
+- Пошук: TMDB API (фільми/серіали/аніме) або backend proxy `/api/books/search` (книги, Google Books з кешем)
+- Search overlay: fullscreen backdrop, fixed search bar під AppHeader (`--header-height: 56px`), "Скасувати"
+- WatchlistCard — pill-бейдж статусу на постері, book-aware лейбли (ЧИТАЮ / ПРОЧИТАВ)
+- WatchlistDetail — status chips (book-aware), StarRating, EpisodesList для серіалів/аніме
 - Кастомний постер через ImageUploadButton + Cloudinary
 
 ## 10. Memories (`/memories`, `/memories/:id`)

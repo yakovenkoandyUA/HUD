@@ -64,25 +64,18 @@ Service Worker підключений до Web Push (VAPID).
 
 ---
 
-## Статус (2026-05-31)
+## Статус (2026-06-05)
 
-**Зроблено:**
-- Повний scaffold, дизайн-система (6 тем), всі екрани
-- Backend інтеграція: transactions / sprint / goals / watchlist / lessons / recipes / memories
-- Auth мультипрофіль (Котька admin / Коська user), PWA, Cloudinary, Three.js
-- F1 розширення: DriverStatsCard, ConstructorStatsCard, LastRaceCard, PixelCar
-- F1 прогнози: RacePredictionCard + f1PredictionsStore (local persist, scoring, lockout)
-- MySeasonStats: streak, accuracy, race-by-race за сезон
-- RaceDetail: circuit data, session schedule (Jolpica), weather (wttr.in), podium results
-- circuitData.ts: 22 траси 2026 з характеристиками та рекордами
-- RecipeDetail screen з stepper порцій + wishlist
-- ShoppingList screen + shoppingListStore (local persist, addFromRecipe з ingredient parsing)
-- RecipeForm: кастомні chip-picker категорій (emoji) та 3-кнопковий picker складності
-- Dashboard: TasksAccordion (Задачі + Покупки), анімація при відмітці покупки
+**Зроблено з останнього спринту:**
+- Finance: редизайн екрану, цілі накопичення з GoalDetail, сканування чеків (Anthropic Vision API), регулярні платежі з іконками сервісів, фільтри транзакцій з анімацією, кастомні категорії (backend `/api/categories`), streak економії, прогноз залишку
+- Sprint: мінімалістичний WeekHeader, фільтрація по дню, drag-to-dismiss модалки (imperative passive:false listeners), індикатор сповіщень на рутинах, видалено WeekProgress
+- Recipes: двокрокова форма, теги, бейдж складності, компактні інструменти
+- Watchlist: search overlay (fullscreen, backdrop, "Скасувати"), редизайн pill-бейджів на постерах, пошук книг через Google Books API (backend proxy `/api/books/search` з кешем)
+- Dashboard: рутини сьогодні (inline row), компактний HeroCard, розкривний FAB (3 опції: Витрата/Квест/Покупка), виправлена фільтрація типів задач
+- Глобально: аватар в TopBar замість іконки, F1 як опціональний модуль (`f1Enabled` в профілі + `F1Route`), аудит localStorage → backend (shoppingList → `/api/shopping`, f1Predictions → `/api/f1/predictions`, globalLabels → `/api/labels`)
 
-**Наступне:**
+**Pending:**
 - ⬜ Push-нотифікації (VAPID підключено, логіка відправки не реалізована)
-- ⬜ Фінансовий аналітик / менторський помічник (агенти)
 
 ---
 
@@ -92,34 +85,19 @@ Service Worker підключений до Web Push (VAPID).
 - Звіт в кінці місяця: топ витрат, порівняння з попереднім місяцем
 - Виключити категорію "Накопичення" з графіку витрат і аналітики
 - Найдешевший/найдорожчий тиждень місяця
-- Рекомендації де можна зекономити (на основі категорій)
-
-### Sprint: асайн профілів до задач (сімейні відносини)
-
-**Концепція:** профілі можуть бути пов'язані як "сім'я" — тоді вони можуть
-асайнити один одного до задач і покупок.
-
-**Backend:**
-- Додати поле `familyId` або `linkedProfiles: ObjectId[]` в модель User
-- Ендпоінт `POST /api/profiles/link` — зв'язати два профілі
-- Задачі (sprint tasks, shopping items) отримують поле `assignedTo: ObjectId[]`
-- GET задач повертає задачі де `userId === me` OR `assignedTo includes me`
-
-**Frontend:**
-- В TaskDetailModal і ShoppingItem — секція "ВИКОНАВЦІ"
-- Показувати аватари доступних профілів (тільки linked)
-- Тап на аватар → toggle assignee
-- В списку задач — маленький аватар виконавця поруч з назвою
-- Якщо задача заасайнена на тебе іншим профілем → окремий бейдж або секція "Від Коськи"
-
-**Сімейні відносини:**
-- Зробити універсально — не хардкодити Котька/Коська
-- `POST /api/profiles/link { targetUsername }` — запит на зв'язок
-- В майбутньому: підтвердження з боку другого профілю
+- Рекомендації де можна зекономити
 
 ### Recipes: генерація рецепту через AI
-- Кнопка "🤖 Згенерувати рецепт" на сторінці рецептів
+- Кнопка "Згенерувати рецепт" на сторінці рецептів
 - Модалка: textarea "Що є в холодильнику? Які обмеження?"
 - `POST /api/recipes/generate` → Anthropic API
 - Claude повертає JSON рецепту в форматі моделі Recipe
 - Одразу відкривається форма з заповненими полями для підтвердження
+
+### Sprint: асайн профілів до задач (сімейні відносини)
+- Додати `familyId` або `linkedProfiles: ObjectId[]` в модель User
+- Задачі отримують поле `assignedTo: ObjectId[]`
+- В TaskDetailModal секція "ВИКОНАВЦІ" з аватарами linked профілів
+- Задачі заасайнені на тебе відображаються окремо "Від Коськи"
+- Зробити універсально — не хардкодити профілі
+- `POST /api/profiles/link { targetUsername }` — запит на зв'язок

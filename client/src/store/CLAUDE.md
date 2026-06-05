@@ -4,26 +4,29 @@
 
 ```
 store/
-├── profileStore.ts        — token, activeProfile, profiles
+├── profileStore.ts        — token, activeProfile, profiles, f1Enabled
 │                            persist: token+profile (ключ: profile-storage)
 ├── financeStore.ts        — balance, transactions
 │                            БЕЗ persist (backend-only)
 ├── goalsStore.ts          — savings goals
 │                            БЕЗ persist (backend-only)
+├── streakStore.ts         — streak економії (currentStreak, bestStreak)
+│                            persist local (ключ: hud-streak)
 ├── sprintStore.ts         — items, globalLabels
-│                            persist тільки items+globalLabels (ключ: hud-sprint-v2)
+│                            persist тільки items (ключ: hud-sprint-v2)
+│                            globalLabels → backend /api/labels
 ├── lessonStore.ts         — уроки
 │                            БЕЗ persist (backend-only, /api/lessons)
 ├── recipesStore.ts        — рецепти (backend-only) + mealOfWeek
 │                            persist тільки mealOfWeek+mealWeekKey (ключ: hud-recipes)
 ├── shoppingListStore.ts   — список покупок
-│                            persist (ключ: hud-shopping-v1), повністю local
+│                            БЕЗ persist (backend-only, /api/shopping)
 ├── watchlistStore.ts      — watchlist items
 │                            БЕЗ persist (backend-only)
 ├── memoriesStore.ts       — спогади + фото
 │                            БЕЗ persist (backend-only, /api/memories)
 ├── f1PredictionsStore.ts  — прогнози гонок F1 + підрахунок очок
-│                            persist (ключ: f1-predictions-storage), повністю local
+│                            БЕЗ persist (backend-only, /api/f1/predictions)
 └── uiStore.ts             — theme, toasts
                              persist тільки theme (ключ: hud-ui)
 ```
@@ -35,7 +38,8 @@ store/
 - `recipesStore` — persist тільки `mealOfWeek` + `mealWeekKey` (TheMealDB кеш на тиждень); рецепти — backend
 - `shoppingListStore` — **без** persist, backend `/api/shopping`; `fetchItems()` при mount
 - `f1PredictionsStore` — **без** persist, backend `/api/f1/predictions`; `fetchPredictions()` при mount F1Screen
-- Жодного юзерського контенту в localStorage — тільки auth token, тема UI, sprint items (rich local cache)
+- `streakStore` — persist local (лише числові лічильники, не контент)
+- Жодного юзерського контенту в localStorage — тільки auth token, тема UI, sprint items (rich local cache), streak лічильники
 
 ## shoppingListStore — структура
 
