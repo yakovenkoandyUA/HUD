@@ -7,6 +7,7 @@ const router = Router()
 router.use(requireAuth)
 router.get('/', getAll)
 router.post('/', create)
+router.patch('/:id', update)
 router.put('/:id', update)
 router.delete('/:id', remove)
 

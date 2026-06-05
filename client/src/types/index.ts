@@ -161,4 +161,12 @@ export interface WatchlistItem {
   authors?: string[]
   pageCount?: number
   thumbnail?: string
+  currentSeason?: number | null
+  currentEpisode?: number | null
+  totalEpisodes?: number | null
+  totalSeasons?: number | null
+  notifyNewEpisode?: boolean
+  notifyNewSeason?: boolean
+  nextEpisodeDate?: string | null
+  nextSeasonDate?: string | null
 }

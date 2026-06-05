@@ -4,6 +4,7 @@ import cors from 'cors'
 import { connectDB } from './config/db'
 import { initWebPush } from './services/webpush'
 import { startF1Scheduler } from './services/f1Scheduler'
+import './jobs/pushJobs'
 import { errorHandler } from './middleware/errorHandler'
 
 import authRoutes from './routes/auth'

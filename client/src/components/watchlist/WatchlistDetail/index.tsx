@@ -1,11 +1,22 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import StarRating from '../StarRating'
 import EpisodesList from '../EpisodesList'
-import CustomDatePicker from '../../ui/CustomDatePicker'
 import ImageUploadButton from '../../ui/ImageUploadButton'
+import CustomDatePicker from '../../ui/CustomDatePicker'
 import { formatDateUA } from '../../../utils/formatDate'
+import { authFetch } from '../../../services/api'
+import { useSeriesEpisodes } from '../../../hooks/useSeriesEpisodes'
 import styles from './WatchlistDetail.module.css'
 import type { WatchlistItem, WatchlistStatus } from '../../../types'
+
+function formatNextEpisode(date: Date | null): string {
+  if (!date) return 'Дата невідома'
+  const diff = Math.ceil((date.getTime() - Date.now()) / 1000 / 60 / 60 / 24)
+  if (diff === 0) return 'Виходить сьогодні!'
+  if (diff === 1) return 'Виходить завтра'
+  if (diff > 0) return `Через ${diff} д`
+  return 'Вже вийшла'
+}
 
 /**
  * WatchlistDetail
@@ -19,8 +30,8 @@ import type { WatchlistItem, WatchlistStatus } from '../../../types'
  * @prop {() => void}                          onClose
  * @prop {(status: WatchlistStatus) => void}   onStatusChange
  * @prop {(rating: number | null) => void}     onRatingChange
- * @prop {(date?: string) => void}             onToggleReminder
  * @prop {(url: string) => void}               [onImageChange]  — upload custom poster/backdrop
+ * @prop {(patch) => void}                     [onNotifyChange] — toggle episode/season notifications
  * @prop {() => void}                          onDelete
  */
 interface WatchlistDetailProps {
@@ -29,8 +40,10 @@ interface WatchlistDetailProps {
   onClose: () => void
   onStatusChange: (status: WatchlistStatus) => void
   onRatingChange: (rating: number | null) => void
-  onToggleReminder: (date?: string) => void
   onImageChange?: (url: string) => void
+  onGenresChange?: (genres: string[]) => void
+  onProgressChange?: (patch: { currentSeason?: number; currentEpisode?: number }) => void
+  onNotifyChange?: (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean }) => void
   onDelete: () => void
 }
 
@@ -56,15 +69,76 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   onClose,
   onStatusChange,
   onRatingChange,
-  onToggleReminder,
   onImageChange,
+  onGenresChange,
+  onProgressChange,
+  onNotifyChange,
   onDelete,
 }) => {
   const [mounted, setMounted]             = useState(isOpen)
   const [visible, setVisible]             = useState(isOpen)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [reminderDate, setReminderDate]   = useState(item.reminderDate ?? '')
-  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [genreInput, setGenreInput]       = useState('')
+  const [currentSeason, setCurrentSeason]   = useState(item.currentSeason ?? 1)
+  const [currentEpisode, setCurrentEpisode] = useState(item.currentEpisode ?? 0)
+  const [nextEpisodeDate, setNextEpisodeDate] = useState<Date | null>(
+    item.nextEpisodeDate ? new Date(item.nextEpisodeDate) : null
+  )
+  const [nextSeasonDate, setNextSeasonDate]     = useState<string | null>(item.nextSeasonDate ?? null)
+  const [showSeasonDatePicker, setShowSeasonDatePicker] = useState(false)
+  const genreInputRef      = useRef<HTMLInputElement>(null)
+  const progressMounted    = useRef(false)
+  const initialNextEpRef   = useRef(item.nextEpisodeDate)
+
+  const isSeriesLike = item.category === 'series' || item.category === 'anime'
+  const { episodes } = useSeriesEpisodes(isSeriesLike && item.tmdbId > 0 ? item.tmdbId : null)
+
+  // When episodes load — find nearest future episode and persist its date
+  useEffect(() => {
+    if (!episodes.length) return
+    const now = new Date()
+    const nextEp = episodes
+      .filter(ep => ep.air_date && new Date(ep.air_date) > now)
+      .sort((a, b) => new Date(a.air_date!).getTime() - new Date(b.air_date!).getTime())[0]
+
+    const stored = initialNextEpRef.current
+    const shouldUpdate = nextEp?.air_date && (!stored || new Date(stored) < now)
+    if (shouldUpdate) {
+      setNextEpisodeDate(new Date(nextEp.air_date!))
+      authFetch(`/api/watchlist/${item.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ nextEpisodeDate: nextEp.air_date }),
+      }).catch(console.error)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episodes])
+
+  // Debounced PATCH — fires 800ms after last stepper tap, skips initial mount
+  useEffect(() => {
+    if (!progressMounted.current) { progressMounted.current = true; return }
+    const timer = setTimeout(() => {
+      authFetch(`/api/watchlist/${item.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ currentSeason, currentEpisode }),
+      }).catch(console.error)
+    }, 800)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSeason, currentEpisode])
+
+  const maxSeason  = item.totalSeasons  ?? 1
+  const maxEpisode = item.totalEpisodes ?? 99
+
+  const handleSeasonMinus  = () => { if (currentSeason  <= 1)           return; setCurrentSeason(s  => Math.max(1, s - 1)); setCurrentEpisode(0) }
+  const handleSeasonPlus   = () => { if (currentSeason  >= maxSeason)   return; setCurrentSeason(s  => s + 1); setCurrentEpisode(0) }
+  const handleEpisodeMinus = () => { if (currentEpisode <= 0)           return; setCurrentEpisode(e => Math.max(0, e - 1)) }
+  const handleEpisodePlus  = () => { if (currentEpisode >= maxEpisode)  return; setCurrentEpisode(e => e + 1) }
+
+  const requestNotifyPermission = () => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -99,10 +173,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
       : null
 
   const canRemind = item.category === 'series' || item.category === 'anime'
-
-  const handleReminderToggle = () => {
-    onToggleReminder(reminderDate || undefined)
-  }
 
   return (
     <>
@@ -140,9 +210,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
           {/* Meta row */}
           <div className={styles.metaRow}>
             {item.year && <span className={styles.metaChip}>{item.year}</span>}
-            {item.genres.slice(0, 3).map((g) => (
-              <span key={g} className={styles.metaChip}>{g}</span>
-            ))}
             {item.pageCount != null && item.pageCount > 0 && (
               <span className={styles.metaChip}>{item.pageCount} стор.</span>
             )}
@@ -150,6 +217,43 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
               <span className={styles.metaChip}>{item.authors[0]}</span>
             )}
           </div>
+
+          {/* Genres */}
+          {onGenresChange && (
+            <>
+              <p className={styles.sectionLabel}>Жанри</p>
+              <div className={styles.genreChips}>
+                {(item.genres ?? []).map((g) => (
+                  <span key={g} className={styles.genreChip}>
+                    {g}
+                    <button
+                      type="button"
+                      className={styles.genreRemove}
+                      onClick={() => onGenresChange((item.genres ?? []).filter((x) => x !== g))}
+                      aria-label={`Видалити ${g}`}
+                    >×</button>
+                  </span>
+                ))}
+                <div className={styles.genreInputWrap}>
+                  <input
+                    ref={genreInputRef}
+                    className={styles.genreInput}
+                    value={genreInput}
+                    onChange={(e) => setGenreInput(e.target.value)}
+                    placeholder="+ жанр"
+                    onKeyDown={(e) => {
+                      if ((e.key === 'Enter' || e.key === ',') && genreInput.trim()) {
+                        e.preventDefault()
+                        const next = [...new Set([...(item.genres ?? []), genreInput.trim()])]
+                        onGenresChange(next)
+                        setGenreInput('')
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Custom poster — show when no TMDB backdrop */}
           {!item.backdropPath && onImageChange && (
@@ -177,8 +281,8 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
               <button
                 key={s.value}
                 type="button"
-                className={`${styles.statusChip} ${item.status === s.value ? styles.statusChipActive : ''}`}
-                style={item.status === s.value ? { borderColor: s.color, color: s.color } : {}}
+                className={`${styles.statusChip} ${item.status === s.value ? styles.active : ''}`}
+                data-status={s.value}
                 onClick={() => onStatusChange(s.value)}
               >
                 {s.label}
@@ -205,42 +309,97 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             </>
           )}
 
-          {/* Episodes - series only */}
-          {item.category === 'series' && item.tmdbId > 0 && (
-            <>
-              <p className={styles.sectionLabel}>Епізоди</p>
-              <EpisodesList tmdbId={item.tmdbId} />
-            </>
+          {/* Progress — series/anime */}
+          {(item.category === 'series' || item.category === 'anime') && (
+            <div className={styles.progressSection}>
+              <div className={styles.stepperGroup}>
+                <span className={styles.stepperLabel}>Сезон</span>
+                <div className={styles.stepper}>
+                  <button type="button" className={styles.stepBtn} onClick={handleSeasonMinus}  disabled={currentSeason  <= 1}>−</button>
+                  <span className={styles.stepperValue}>{currentSeason}</span>
+                  <button type="button" className={styles.stepBtn} onClick={handleSeasonPlus}   disabled={currentSeason  >= maxSeason}>+</button>
+                </div>
+              </div>
+              <div className={styles.stepperSep} />
+              <div className={styles.stepperGroup}>
+                <span className={styles.stepperLabel}>Епізод</span>
+                <div className={styles.stepper}>
+                  <button type="button" className={styles.stepBtn} onClick={handleEpisodeMinus} disabled={currentEpisode <= 0}>−</button>
+                  <span className={styles.stepperValue}>{currentEpisode}</span>
+                  <button type="button" className={styles.stepBtn} onClick={handleEpisodePlus}  disabled={currentEpisode >= maxEpisode}>+</button>
+                </div>
+              </div>
+            </div>
           )}
 
-          {/* Season reminder - series/anime only */}
-          {canRemind && (
-            <>
-              <p className={styles.sectionLabel}>Нагадати про новий сезон</p>
-              <div className={styles.reminderRow}>
+          {/* Episodes - series only */}
+          {item.category === 'series' && item.tmdbId > 0 && (
+            <EpisodesList tmdbId={item.tmdbId} />
+          )}
+
+          {/* Notify — series/anime only */}
+          {canRemind && onNotifyChange && (
+            <div className={styles.notifySection}>
+              <div className={styles.notifyRow}>
+                <div className={styles.notifyText}>
+                  <p className={styles.notifyTitle}>Нова серія</p>
+                  <p className={styles.notifyDesc}>{formatNextEpisode(nextEpisodeDate)}</p>
+                </div>
                 <button
                   type="button"
-                  className={`${styles.toggleBtn} ${item.seasonReminder ? styles.toggleOn : ''}`}
-                  onClick={handleReminderToggle}
+                  className={`${styles.toggleBtn} ${item.notifyNewEpisode ? styles.toggleOn : ''}`}
+                  onClick={() => {
+                    if (!item.notifyNewEpisode) requestNotifyPermission()
+                    onNotifyChange({ notifyNewEpisode: !item.notifyNewEpisode })
+                  }}
                 >
                   <span className={styles.toggleKnob} />
                 </button>
-                {item.seasonReminder && (
-                  <button
-                    type="button"
-                    className={styles.reminderDateTrigger}
-                    onClick={() => setShowDatePicker(true)}
-                  >
-                    {reminderDate ? formatDateUA(reminderDate) : 'Вибрати дату'}
-                  </button>
-                )}
               </div>
-              {item.seasonReminder && item.reminderDate && (
-                <p className={styles.reminderNote}>
-                  Нагадування заплановано на {formatDateUA(item.reminderDate)}
-                </p>
-              )}
-            </>
+              <div className={styles.notifyRow}>
+                <div className={styles.notifyText}>
+                  <p className={styles.notifyTitle}>Новий сезон</p>
+                  <p className={styles.notifyDesc}>
+                    {nextSeasonDate ? (
+                      <button
+                        type="button"
+                        className={styles.pickDateBtn}
+                        onClick={() => setShowSeasonDatePicker(true)}
+                      >
+                        {formatDateUA(nextSeasonDate)} ✎
+                      </button>
+                    ) : item.notifyNewSeason ? (
+                      <button
+                        type="button"
+                        className={styles.pickDateBtn}
+                        onClick={() => setShowSeasonDatePicker(true)}
+                      >
+                        + Обрати дату
+                      </button>
+                    ) : 'Дата невідома'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={`${styles.toggleBtn} ${item.notifyNewSeason ? styles.toggleOn : ''}`}
+                  onClick={() => {
+                    if (!item.notifyNewSeason) requestNotifyPermission()
+                    const newVal = !item.notifyNewSeason
+                    onNotifyChange({ notifyNewSeason: newVal })
+                    if (!newVal) {
+                      setNextSeasonDate(null)
+                      setShowSeasonDatePicker(false)
+                      authFetch(`/api/watchlist/${item.id}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ nextSeasonDate: null }),
+                      }).catch(console.error)
+                    }
+                  }}
+                >
+                  <span className={styles.toggleKnob} />
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Delete */}
@@ -273,11 +432,19 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
       </div>
     </div>
 
-    {showDatePicker && (
+    {showSeasonDatePicker && (
       <CustomDatePicker
-        value={reminderDate || undefined}
-        onChange={(val) => { setReminderDate(val); setShowDatePicker(false) }}
-        onClose={() => setShowDatePicker(false)}
+        value={nextSeasonDate ?? undefined}
+        onChange={(dateStr) => {
+          setNextSeasonDate(dateStr)
+          setShowSeasonDatePicker(false)
+          authFetch(`/api/watchlist/${item.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ nextSeasonDate: dateStr }),
+          }).catch(console.error)
+        }}
+        onClose={() => setShowSeasonDatePicker(false)}
+        minDate={new Date()}
       />
     )}
     </>

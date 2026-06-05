@@ -22,6 +22,16 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 8px;
+  transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stat:active {
+  opacity: 0.7;
 }
 
 .statVal {
@@ -29,6 +39,7 @@
   font-size: 16px;
   color: var(--text);
   line-height: 1;
+  transition: color 0.15s;
 }
 
 .statLabel {
@@ -38,6 +49,25 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text3);
+  transition: color 0.15s;
+}
+
+.statActive .statVal {
+  color: var(--gold);
+}
+
+.statActive .statLabel {
+  color: var(--gold);
+  opacity: 0.8;
+}
+
+.statClear {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text2);
+  line-height: 1;
 }
 
 .statDivider {
@@ -84,6 +114,38 @@
   color: #fff;
 }
 
+/* ── Genre strip ── */
+.genreStrip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 16px;
+  scrollbar-width: none;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+.genreStrip::-webkit-scrollbar { display: none; }
+
+.genreTag {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.genreTagActive {
+  border-color: var(--second);
+  color: var(--second);
+  background: var(--second-soft);
+}
+
 /* ── Content ── */
 .content {
   flex: 1;
@@ -92,8 +154,87 @@
   flex-direction: column;
 }
 
+.contentAnimated {
+  animation: tabFadeIn 0.2s ease both;
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .searchWrap {
   padding: 12px 0 8px;
   position: relative;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 16px;
+}
+
+.sortWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sortBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sortBtnActive {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.sortDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 160px;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  animation: dropIn 0.12s ease both;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sortOption {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.sortOption:hover {
+  background: var(--surface2);
+}
+
+.sortOptionActive {
+  color: var(--accent);
+  font-weight: 600;
 }

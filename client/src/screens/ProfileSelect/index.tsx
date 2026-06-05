@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
+import { isPushSubscribed, subscribeToPush } from '../../utils/pushManager'
 import styles from './ProfileSelect.module.css'
 
 /**
@@ -23,6 +24,9 @@ const ProfileSelectScreen: React.FC = () => {
     try {
       await selectProfile(username)
       navigate('/')
+      isPushSubscribed().then((subscribed) => {
+        if (!subscribed) subscribeToPush()
+      })
     } catch {
       /* toast error could go here */
     }

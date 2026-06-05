@@ -1,4 +1,5 @@
 import webpush, { PushSubscription, SendResult } from 'web-push'
+import PushSubscriptionModel from '../models/PushSubscription'
 
 export function initWebPush(): void {
   const pub   = process.env.VAPID_PUBLIC_KEY
@@ -27,6 +28,24 @@ export async function sendNotification(
     console.error('Push send error:', err)
     return null
   }
+}
+
+export async function sendPushToUser(
+  userId: string,
+  payload: { title: string; body: string; icon?: string; url?: string }
+): Promise<void> {
+  const subs = await PushSubscriptionModel.find({ userId })
+  await Promise.allSettled(
+    subs.map(async (sub) => {
+      try {
+        await sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload)
+      } catch (err: unknown) {
+        if ((err as { expired?: boolean }).expired) {
+          await PushSubscriptionModel.deleteOne({ _id: sub._id })
+        }
+      }
+    })
+  )
 }
 
 export async function sendToAll(

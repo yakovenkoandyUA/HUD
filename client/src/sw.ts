@@ -30,14 +30,14 @@ self.addEventListener('push', (event: PushEvent) => {
       body: data.body,
       icon: data.icon ?? '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
-      data: { url: data.url ?? '/f1' },
+      data: { url: data.url ?? '/' },
     })
   )
 })
 
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close()
-  const url = (event.notification.data as { url?: string } | undefined)?.url ?? '/f1'
+  const url = (event.notification.data as { url?: string } | undefined)?.url ?? '/'
   event.waitUntil(
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })

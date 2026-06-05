@@ -145,26 +145,29 @@
 /* ── Status chips ── */
 .statusChips {
   display: flex;
+  gap: 6px;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 4px;
 }
 
 .statusChip {
   padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text2);
+  border-radius: 6px;
   font-family: var(--font-ui);
-  font-size: 13px;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.statusChipActive {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   background: var(--surface2);
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
 }
+.statusChip:active { opacity: 0.7; }
+
+.statusChip[data-status="want"].active     { background: rgba(139,111,212,0.2); color: #d4c8f8; }
+.statusChip[data-status="watching"].active { background: rgba(45,212,191,0.2);  color: #99f6e4; }
+.statusChip[data-status="watched"].active  { background: rgba(201,147,58,0.2);  color: #f0d49a; }
+.statusChip[data-status="dropped"].active  { background: rgba(107,101,96,0.2);  color: #b0a9a4; }
 
 /* ── Rating ── */
 .ratingRow {
@@ -182,7 +185,48 @@
   text-decoration: underline;
 }
 
-/* ── Reminder ── */
+/* ── Notify section ── */
+.notifySection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.notifyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.notifyText { flex: 1; }
+.notifyTitle {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.notifyDesc {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.pickDateBtn {
+  background: none;
+  border: 1px dashed var(--border2);
+  border-radius: 4px;
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pickDateBtn:active { border-color: var(--gold); color: var(--gold); }
+
+/* ── Toggle ── */
 .reminderRow {
   display: flex;
   align-items: center;
@@ -294,3 +338,119 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
+/* ── Progress steppers ── */
+.progressSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepperGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stepperLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.stepperValue {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  min-width: 24px;
+  text-align: center;
+}
+
+.stepperSep {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.stepBtn {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.stepBtn:active { color: var(--accent); }
+.stepBtn:disabled { opacity: 0.2; cursor: default; }
+
+/* ── Genre chips ── */
+.genreChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.genreChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--surface2);
+  border-radius: 20px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.genreRemove {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.genreInputWrap {
+  display: flex;
+  align-items: center;
+}
+
+.genreInput {
+  background: none;
+  border: 1px dashed var(--border2);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text);
+  width: 80px;
+  outline: none;
+}
+.genreInput::placeholder { color: var(--text3); }

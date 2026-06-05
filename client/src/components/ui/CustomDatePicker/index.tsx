@@ -16,6 +16,7 @@ interface CustomDatePickerProps {
   value?: string
   onChange: (date: string) => void
   onClose: () => void
+  minDate?: Date
 }
 
 const MONTHS_UA = [
@@ -56,7 +57,7 @@ function buildCalendarCells(year: number, month: number): Date[] {
   return cells
 }
 
-const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, onClose }) => {
+const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, onClose, minDate }) => {
   const initial = value ? parseIso(value) : new Date()
 
   const [viewYear, setViewYear]   = useState(initial.getFullYear())
@@ -113,23 +114,26 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, on
         {/* ── Calendar grid ── */}
         <div className={styles.grid}>
           {cells.map((cell, i) => {
+            const cellDay        = toLocalMidnight(cell)
+            const minDay         = minDate ? toLocalMidnight(minDate) : today
             const isCurrentMonth = cell.getMonth() === viewMonth
-            const isToday        = cell.getTime() === today.getTime()
-            const isPast         = cell.getTime() < today.getTime()
-            const isSelected     = selected !== null && cell.getTime() === toLocalMidnight(selected).getTime()
+            const isToday        = cellDay.getTime() === today.getTime()
+            const isBlocked      = cellDay.getTime() < minDay.getTime()
+            const isSelected     = selected !== null && cellDay.getTime() === toLocalMidnight(selected).getTime()
 
             return (
               <button
                 key={i}
                 type="button"
+                disabled={isBlocked}
                 className={[
                   styles.cell,
                   !isCurrentMonth ? styles.cellOtherMonth : '',
-                  isPast && !isSelected ? styles.cellPast : '',
+                  isBlocked && !isSelected ? styles.cellPast : '',
                   isToday && !isSelected ? styles.cellToday : '',
                   isSelected ? styles.cellSelected : '',
                 ].filter(Boolean).join(' ')}
-                onClick={() => setSelected(toLocalMidnight(cell))}
+                onClick={() => !isBlocked && setSelected(cellDay)}
               >
                 {cell.getDate()}
               </button>

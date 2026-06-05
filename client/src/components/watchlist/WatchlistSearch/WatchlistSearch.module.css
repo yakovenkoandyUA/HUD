@@ -1,6 +1,7 @@
 .wrap {
   padding: 0 16px;
   position: relative;
+  width: 100%;
 }
 
 /* ── Search overlay ─────────────────────────────────────────── */

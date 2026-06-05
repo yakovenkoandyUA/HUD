@@ -17,6 +17,14 @@ export interface IWatchlistItem extends Document {
   authors: string[]
   pageCount: number
   thumbnail: string
+  currentSeason: number | null
+  currentEpisode: number | null
+  totalEpisodes: number | null
+  totalSeasons: number | null
+  notifyNewEpisode: boolean
+  notifyNewSeason: boolean
+  nextEpisodeDate: Date | null
+  nextSeasonDate: Date | null
   userId: string
   addedAt: string
 }
@@ -35,9 +43,17 @@ const schema = new Schema<IWatchlistItem>({
   rating:        { type: Number, default: null },
   seasonReminder:{ type: Boolean, default: false },
   reminderDate:  { type: String, default: '' },
-  authors:       { type: [String], default: [] },
-  pageCount:     { type: Number, default: 0 },
-  thumbnail:     { type: String, default: '' },
+  authors:        { type: [String], default: [] },
+  pageCount:      { type: Number, default: 0 },
+  thumbnail:      { type: String, default: '' },
+  currentSeason:    { type: Number,  default: null  },
+  currentEpisode:   { type: Number,  default: null  },
+  totalEpisodes:    { type: Number,  default: null  },
+  totalSeasons:     { type: Number,  default: null  },
+  notifyNewEpisode: { type: Boolean, default: false },
+  notifyNewSeason:  { type: Boolean, default: false },
+  nextEpisodeDate:  { type: Date,    default: null  },
+  nextSeasonDate:   { type: Date,    default: null  },
   userId:  { type: String, required: true, index: true },
   addedAt: { type: String, default: () => new Date().toISOString() },
 }, { timestamps: true })

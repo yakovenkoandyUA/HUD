@@ -42,14 +42,36 @@
 .statusBadge {
   position: absolute;
   top: 8px;
-  right: 8px;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-size: 10px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.78);
+  border-left: 3px solid;
+  padding: 4px 8px 4px 6px;
+  border-radius: 0 4px 4px 0;
+  font-size: 9px;
   font-family: var(--font-ui);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  backdrop-filter: blur(4px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.statusWatching {
+  border-color: #2DD4BF;
+  color: #99f6e4;
+}
+
+.statusWatched {
+  border-color: #C9933A;
+  color: #f0d49a;
+}
+
+.statusWant {
+  border-color: #8B6FD4;
+  color: #d4c8f8;
+}
+
+.statusDropped {
+  border-color: #6B6560;
+  color: #b0a9a4;
 }
 
 /* ── Watching indicator ── */
@@ -86,4 +108,20 @@
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text3);
+}
+
+.episodeTag {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text2);
+  margin-top: 2px;
+  display: block;
+}
+
+.ratingTag {
+  font-size: 10px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+  display: block;
 }

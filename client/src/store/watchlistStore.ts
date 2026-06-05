@@ -23,6 +23,14 @@ interface ApiWatchlistItem {
   pageCount?: number
   thumbnail?: string
   addedAt: string
+  currentSeason?: number | null
+  currentEpisode?: number | null
+  totalEpisodes?: number | null
+  totalSeasons?: number | null
+  notifyNewEpisode?: boolean
+  notifyNewSeason?: boolean
+  nextEpisodeDate?: string | null
+  nextSeasonDate?: string | null
 }
 
 function fromApi(raw: ApiWatchlistItem): WatchlistItem {
@@ -45,6 +53,14 @@ function fromApi(raw: ApiWatchlistItem): WatchlistItem {
     pageCount: raw.pageCount,
     thumbnail: raw.thumbnail,
     addedAt: raw.addedAt,
+    currentSeason: raw.currentSeason ?? null,
+    currentEpisode: raw.currentEpisode ?? null,
+    totalEpisodes: raw.totalEpisodes ?? null,
+    totalSeasons: raw.totalSeasons ?? null,
+    notifyNewEpisode: raw.notifyNewEpisode ?? false,
+    notifyNewSeason: raw.notifyNewSeason ?? false,
+    nextEpisodeDate: raw.nextEpisodeDate ?? null,
+    nextSeasonDate: raw.nextSeasonDate ?? null,
   }
 }
 

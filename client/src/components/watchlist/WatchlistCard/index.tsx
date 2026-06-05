@@ -1,5 +1,4 @@
 import React from 'react'
-import StarRating from '../StarRating'
 import styles from './WatchlistCard.module.css'
 import type { WatchlistItem } from '../../../types'
 
@@ -24,19 +23,29 @@ const CATEGORY_ICON: Record<string, string> = {
   book: '📚',
 }
 
-const STATUS_BADGE: Record<string, { label: string; bg: string; color: string }> = {
-  want:     { label: 'ХОЧУ',    bg: 'var(--surface2)',    color: 'var(--text3)'    },
-  watching: { label: 'ДИВЛЮСЬ', bg: 'var(--second-soft)', color: 'var(--second)'   },
-  watched:  { label: 'ГЛЯНУВ',  bg: 'var(--gold-dim)',    color: 'var(--gold)'     },
-  dropped:  { label: 'КИНУВ',   bg: 'var(--accent-soft)', color: 'var(--negative)' },
+const STATUS_LABEL: Record<string, string> = {
+  want:     'ХОЧУ',
+  watching: 'ДИВЛЮСЬ',
+  watched:  'ГЛЯНУВ',
+  dropped:  'КИНУВ',
 }
 
-const STATUS_BADGE_BOOK: Record<string, { label: string; bg: string; color: string }> = {
-  want:     { label: 'ХОЧУ',     bg: 'var(--surface2)',    color: 'var(--text3)'    },
-  watching: { label: 'ЧИТАЮ',    bg: 'var(--second-soft)', color: 'var(--second)'   },
-  watched:  { label: 'ПРОЧИТАВ', bg: 'var(--gold-dim)',    color: 'var(--gold)'     },
-  dropped:  { label: 'КИНУВ',    bg: 'var(--accent-soft)', color: 'var(--negative)' },
+const STATUS_LABEL_BOOK: Record<string, string> = {
+  want:     'ХОЧУ',
+  watching: 'ЧИТАЮ',
+  watched:  'ПРОЧИТАВ',
+  dropped:  'КИНУВ',
 }
+
+const STATUS_CLASS: Record<string, string> = {
+  want:     styles.statusWant,
+  watching: styles.statusWatching,
+  watched:  styles.statusWatched,
+  dropped:  styles.statusDropped,
+}
+
+const getStatusLabel = (item: WatchlistItem) =>
+  (item.category === 'book' ? STATUS_LABEL_BOOK : STATUS_LABEL)[item.status] ?? null
 
 const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
   const imgSrc = item.category === 'book'
@@ -56,15 +65,9 @@ const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
           </div>
         )}
 
-        {(item.category === 'book' ? STATUS_BADGE_BOOK : STATUS_BADGE)[item.status] && (
-          <span
-            className={styles.statusBadge}
-            style={{
-              background: (item.category === 'book' ? STATUS_BADGE_BOOK : STATUS_BADGE)[item.status].bg,
-              color:      (item.category === 'book' ? STATUS_BADGE_BOOK : STATUS_BADGE)[item.status].color,
-            }}
-          >
-            {(item.category === 'book' ? STATUS_BADGE_BOOK : STATUS_BADGE)[item.status].label}
+        {getStatusLabel(item) && (
+          <span className={`${styles.statusBadge} ${STATUS_CLASS[item.status] ?? ''}`}>
+            {getStatusLabel(item)}
           </span>
         )}
 
@@ -74,8 +77,12 @@ const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
       <div className={styles.info}>
         <p className={styles.title}>{item.title}</p>
         {item.year && <span className={styles.year}>{item.year}</span>}
+        {(item.category === 'series' || item.category === 'anime') &&
+          item.currentSeason != null && item.currentEpisode != null && (
+          <span className={styles.episodeTag}>S{item.currentSeason} E{item.currentEpisode}</span>
+        )}
         {item.status === 'watched' && item.rating != null && item.rating > 0 && (
-          <StarRating value={item.rating} readOnly size="sm" />
+          <span className={styles.ratingTag}>★ {item.rating}</span>
         )}
       </div>
     </button>

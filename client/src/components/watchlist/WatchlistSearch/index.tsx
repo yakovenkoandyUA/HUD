@@ -41,6 +41,9 @@ interface SearchResult {
   authors?: string[]
   pageCount?: number
   thumbnail?: string
+  totalEpisodes?: number | null
+  totalSeasons?: number | null
+  nextEpisodeDate?: string | null
 }
 
 /**
@@ -152,11 +155,27 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     setSearchActive(false)
   }, [category])
 
-  const handleSelect = (r: SearchResult) => {
-    setSelected(r)
+  const handleSelect = async (r: SearchResult) => {
     setIsOpen(false)
     setQuery('')
     setResults([])
+    let enriched = r
+    if ((category === 'series' || category === 'anime') && r.tmdbId > 0 && hasKey) {
+      try {
+        const detail = await fetch(
+          `https://api.themoviedb.org/3/tv/${r.tmdbId}?api_key=${TMDB_KEY}`
+        )
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const d: any = await detail.json()
+        enriched = {
+          ...r,
+          totalEpisodes:  d.number_of_episodes             ?? null,
+          totalSeasons:   d.number_of_seasons              ?? null,
+          nextEpisodeDate: d.next_episode_to_air?.air_date ?? null,
+        }
+      } catch { /* silent */ }
+    }
+    setSelected(enriched)
   }
 
   const handleAdd = () => {
@@ -178,6 +197,9 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
       authors: selected.authors,
       pageCount: selected.pageCount,
       thumbnail: selected.thumbnail,
+      totalEpisodes:   selected.totalEpisodes,
+      totalSeasons:    selected.totalSeasons,
+      nextEpisodeDate: selected.nextEpisodeDate,
     })
     setSelected(null)
     setStatus('want')

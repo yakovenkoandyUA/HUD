@@ -2,23 +2,22 @@ import React from 'react'
 import styles from './WatchlistHero.module.css'
 import type { WatchlistItem } from '../../../types'
 
+const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w780'
+const TMDB_POSTER   = 'https://image.tmdb.org/t/p/w342'
+
 /**
  * WatchlistHero
  * -------------
- * Horizontal scroll strip showing "Дивлюсь зараз" items
- * with wide backdrop images.
+ * "Дивлюсь зараз" horizontal scroll strip with large poster cards.
+ * Two cards visible at once, third peeks from the edge.
  *
  * Props:
- * @prop {WatchlistItem[]} items    — items with status "watching"
- * @prop {(item: WatchlistItem) => void} onTap — open detail modal
+ * @prop {WatchlistItem[]}                    items — watching items
+ * @prop {(item: WatchlistItem) => void}      onTap — open detail modal
  */
 interface WatchlistHeroProps {
   items: WatchlistItem[]
   onTap: (item: WatchlistItem) => void
-}
-
-const CATEGORY_ICON: Record<string, string> = {
-  movie: '🎬', series: '📺', anime: '🎌', book: '📚',
 }
 
 const WatchlistHero: React.FC<WatchlistHeroProps> = ({ items, onTap }) => {
@@ -26,35 +25,30 @@ const WatchlistHero: React.FC<WatchlistHeroProps> = ({ items, onTap }) => {
 
   return (
     <div className={styles.wrap}>
-      <p className={styles.label}>Дивлюсь зараз</p>
-      <div className={styles.strip}>
+      <p className={styles.label}>ДИВЛЮСЬ ЗАРАЗ</p>
+      <div className={styles.scrollRow}>
         {items.map((item) => {
-          const backdropSrc = item.backdropPath
-            ? `https://image.tmdb.org/t/p/w500${item.backdropPath}`
-            : item.thumbnail ?? null
+          const heroSrc = item.category === 'book'
+            ? item.thumbnail ?? null
+            : item.backdropPath
+              ? `${TMDB_BACKDROP}${item.backdropPath}`
+              : item.posterPath
+                ? `${TMDB_POSTER}${item.posterPath}`
+                : item.thumbnail ?? null
 
           return (
-            <button
+            <div
               key={item.id}
-              type="button"
-              className={styles.card}
+              className={styles.heroCard}
               onClick={() => onTap(item)}
             >
-              <div className={styles.imgWrap}>
-                {backdropSrc ? (
-                  <img src={backdropSrc} alt={item.title} className={styles.img} loading="lazy" />
-                ) : (
-                  <div className={styles.noImg}>
-                    <span>{CATEGORY_ICON[item.category]}</span>
-                  </div>
-                )}
-                <div className={styles.overlay} />
-              </div>
-              <div className={styles.cardInfo}>
-                <p className={styles.cardTitle}>{item.title}</p>
-                {/* {item.year && <span className={styles.cardYear}>{item.year}</span>} */}
-              </div>
-            </button>
+              {heroSrc
+                ? <img src={heroSrc} alt={item.title} className={styles.heroPoster} loading="lazy" />
+                : <div className={styles.heroPosterFallback} />
+              }
+              <div className={styles.heroGradient} />
+              <span className={styles.heroTitle}>{item.title}</span>
+            </div>
           )
         })}
       </div>
