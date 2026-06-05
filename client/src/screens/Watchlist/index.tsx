@@ -157,7 +157,7 @@ const Watchlist: React.FC = () => {
           { status: 'watched',  count: stats.watched,  label: 'Переглянув' },
           { status: 'watching', count: stats.watching, label: 'Дивлюсь'    },
           { status: 'want',     count: stats.want,     label: 'Хочу'       },
-        ] as const).map(({ status, count, label }, i, arr) => {
+        ] as const).map(({ status, count, label }, i) => {
           const isActive = activeStatus === status
           return (
             <React.Fragment key={status}>

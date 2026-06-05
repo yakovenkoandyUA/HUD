@@ -71,7 +71,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   onRatingChange,
   onImageChange,
   onGenresChange,
-  onProgressChange,
   onNotifyChange,
   onDelete,
 }) => {
