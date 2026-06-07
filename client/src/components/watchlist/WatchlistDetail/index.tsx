@@ -84,6 +84,9 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [showSeasonDatePicker, setShowSeasonDatePicker] = useState(false)
   const progressMounted    = useRef(false)
   const initialNextEpRef   = useRef(item.nextEpisodeDate)
+  const sheetRef           = useRef<HTMLDivElement>(null)
+  const swipeStartY        = useRef(0)
+  const swipeCurrentY      = useRef(0)
 
   const isSeriesLike = item.category === 'series' || item.category === 'anime'
   const { episodes } = useSeriesEpisodes(isSeriesLike && item.tmdbId > 0 ? item.tmdbId : null)
@@ -155,6 +158,50 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
+  // Imperative touchmove — passive:false needed to allow preventDefault
+  useEffect(() => {
+    if (!mounted) return
+    const sheet = sheetRef.current
+    if (!sheet) return
+
+    const onMove = (e: TouchEvent) => {
+      swipeCurrentY.current = e.touches[0].clientY
+      const delta = swipeCurrentY.current - swipeStartY.current
+      if (delta > 0 && sheet.scrollTop === 0) {
+        e.preventDefault()
+        sheet.style.transform = `translateY(${Math.min(delta * 0.4, 80)}px)`
+        sheet.style.transition = 'none'
+      }
+    }
+
+    sheet.addEventListener('touchmove', onMove, { passive: false })
+    return () => sheet.removeEventListener('touchmove', onMove)
+  }, [mounted])
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    swipeStartY.current = e.touches[0].clientY
+    swipeCurrentY.current = e.touches[0].clientY
+  }
+
+  const handleTouchEnd = () => {
+    const sheet = sheetRef.current
+    if (!sheet) return
+    const delta = swipeCurrentY.current - swipeStartY.current
+    sheet.style.transition = 'transform 0.25s ease'
+    if (delta > 80) {
+      sheet.style.transform = 'translateY(100%)'
+      setTimeout(onClose, 250)
+    } else {
+      sheet.style.transform = 'translateY(0)'
+      setTimeout(() => {
+        if (sheetRef.current) {
+          sheetRef.current.style.transform = ''
+          sheetRef.current.style.transition = ''
+        }
+      }, 280)
+    }
+  }
+
   if (!mounted) return null
 
   const backdropSrc = item.backdropPath
@@ -179,9 +226,13 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
       onClick={onClose}
     >
       <div
+        ref={sheetRef}
         className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
+        <div className={styles.handle} />
         {/* ── Backdrop ── */}
         <div className={styles.backdropWrap}>
           {backdropSrc ? (
@@ -207,12 +258,15 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
         <div className={styles.body}>
           {/* Meta row */}
           <div className={styles.metaRow}>
-            {item.year && <span className={styles.metaChip}>{item.year}</span>}
+            {item.year && <span className={styles.year}>{item.year}</span>}
             {item.pageCount != null && item.pageCount > 0 && (
               <span className={styles.metaChip}>{item.pageCount} стор.</span>
             )}
             {item.authors && item.authors.length > 0 && (
               <span className={styles.metaChip}>{item.authors[0]}</span>
+            )}
+            {item.rating != null && item.rating > 0 && (
+              <span className={styles.ratingInline}>★ {item.rating}</span>
             )}
           </div>
 
@@ -263,23 +317,11 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             ))}
           </div>
 
-          {/* Rating - only if watched */}
-          {item.status === 'watched' && (
-            <>
-              <p className={styles.sectionLabel}>Моя оцінка</p>
-              <div className={styles.ratingRow}>
-                <StarRating value={item.rating} onChange={onRatingChange} size="md" />
-                {item.rating != null && item.rating > 0 && (
-                  <button
-                    type="button"
-                    className={styles.clearRating}
-                    onClick={() => onRatingChange(null)}
-                  >
-                    прибрати
-                  </button>
-                )}
-              </div>
-            </>
+          {/* Rating — interactive only when no rating set yet */}
+          {item.status === 'watched' && (item.rating == null || item.rating === 0) && (
+            <div className={styles.ratingRow}>
+              <StarRating value={item.rating} onChange={onRatingChange} size="md" />
+            </div>
           )}
 
           {/* Progress — series/anime */}

@@ -96,6 +96,7 @@ export interface UnifiedTodo {
   quantity?: string
   weekStart?: string
   createdAt: string
+  category?: string | null
   // Rich card fields (local-only, not synced to backend)
   description?: string
   dueDate?: string
