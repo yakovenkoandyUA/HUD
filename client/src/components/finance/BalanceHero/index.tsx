@@ -26,7 +26,6 @@ interface BalanceHeroProps {
   daysLeft: number
   progressPct: number
   todaySpent: number
-  daysElapsed: number
 }
 
 const BalanceHero: React.FC<BalanceHeroProps> = ({
@@ -36,7 +35,7 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   daysLeft,
   progressPct,
   todaySpent,
-  daysElapsed,
+  
 }) => {
   const { currentStreak, checkToday } = useStreakStore()
 
