@@ -181,6 +181,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [showReminderPicker, setShowReminderPicker] = useState(false)
   const [reminderAmount, setReminderAmount] = useState<number | ''>(1)
   const [reminderUnit, setReminderUnit] = useState<ReminderUnit>('days')
+  const [showConfirm, setShowConfirm]         = useState(false)
+  const [animatingDone, setAnimatingDone]     = useState(false)
 
   const titleRef      = useRef<HTMLTextAreaElement>(null)
   const descRef       = useRef<HTMLTextAreaElement>(null)
@@ -207,6 +209,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
       setShowRepeatConfig(false)
       setShowNextDuePicker(false)
       setShowReminderPicker(false)
+      setShowConfirm(false)
+      setAnimatingDone(false)
     } else {
       if (!dragClosing.current) {
         // Normal close — clear inline drag styles so CSS exit animation works
@@ -312,6 +316,23 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     if (descDraft !== (task.description ?? '')) updateTask(task.id, { description: descDraft })
   }, [task, descDraft, updateTask])
 
+  const handleCheckboxClick = () => {
+    if (task?.done) {
+      toggleItem(task.id)
+      return
+    }
+    setShowConfirm(true)
+  }
+
+  const handleConfirmDone = async () => {
+    if (!task) return
+    setShowConfirm(false)
+    setAnimatingDone(true)
+    await new Promise<void>(r => setTimeout(r, 600))
+    toggleItem(task.id)
+    onClose()
+  }
+
   const handleAddChecklist = () => {
     if (!task || !checkInput.trim()) return
     addChecklistItem(task.id, checkInput.trim())
@@ -366,7 +387,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
             <button
               type="button"
               className={`${styles.headerCheck} ${task.done ? styles.headerCheckDone : ''}`}
-              onClick={() => toggleItem(task.id)}
+              onClick={handleCheckboxClick}
               aria-label={task.done ? 'Позначити невиконаним' : 'Виконати'}
             >
               {task.done && (
@@ -377,7 +398,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
             </button>
             <textarea
               ref={titleRef}
-              className={`${styles.titleEdit} ${task.done ? styles.titleDone : ''}`}
+              className={`${styles.titleEdit} ${task.done ? styles.titleDone : ''} ${animatingDone ? styles.titleStrike : ''}`}
               value={titleDraft}
               onChange={e => setTitleDraft(e.target.value)}
               onBlur={handleTitleBlur}
@@ -388,6 +409,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
             )}
             <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">✕</button>
           </div>
+
+          {/* ── Confirm close ── */}
+          {showConfirm && (
+            <div className={styles.confirmRow}>
+              <span className={styles.confirmText}>Закриваємо квест?</span>
+              <button type="button" className={styles.confirmYes} onClick={handleConfirmDone}>Так</button>
+              <button type="button" className={styles.confirmNo} onClick={() => setShowConfirm(false)}>Ні</button>
+            </div>
+          )}
 
           {/* ── Scrollable body ── */}
           <div ref={bodyRef} className={styles.body}>

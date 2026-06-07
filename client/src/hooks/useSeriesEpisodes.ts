@@ -53,14 +53,14 @@ function writeCache(tmdbId: number, season: number, data: SeasonData) {
   }
 }
 
-export function useSeriesEpisodes(tmdbId: number | null) {
+export function useSeriesEpisodes(tmdbId: number | null, initialSeason?: number) {
   const [totalSeasons, setTotalSeasons] = useState<number>(0)
-  const [activeSeason, setActiveSeason] = useState<number>(1)
+  const [activeSeason, setActiveSeason] = useState<number>(initialSeason ?? 1)
   const [episodes, setEpisodes] = useState<TmdbEpisode[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
 
-  // fetch TV details to know number_of_seasons + current season
+  // fetch TV details to know number_of_seasons
   useEffect(() => {
     if (!tmdbId || !TMDB_KEY) return
     fetch(
@@ -68,10 +68,7 @@ export function useSeriesEpisodes(tmdbId: number | null) {
     )
       .then(r => r.json())
       .then((d: TmdbTvDetails) => {
-        const n = d.number_of_seasons ?? 1
-        setTotalSeasons(n)
-        const current = d.last_episode_to_air?.season_number ?? n
-        setActiveSeason(current)
+        setTotalSeasons(d.number_of_seasons ?? 1)
       })
       .catch(() => {})
   }, [tmdbId])

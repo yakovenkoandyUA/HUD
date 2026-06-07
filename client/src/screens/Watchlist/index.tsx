@@ -117,12 +117,6 @@ const Watchlist: React.FC = () => {
     setSelected((prev) => prev ? { ...prev, thumbnail: url || undefined } : null)
   }
 
-  const handleProgressChange = (patch: { currentSeason?: number; currentEpisode?: number }) => {
-    if (!selected) return
-    updateItem(selected.id, patch)
-    setSelected((prev) => prev ? { ...prev, ...patch } : null)
-  }
-
   const handleNotifyChange = (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean }) => {
     if (!selected) return
     updateItem(selected.id, patch)
@@ -264,7 +258,6 @@ const Watchlist: React.FC = () => {
           onStatusChange={handleStatusChange}
           onRatingChange={handleRatingChange}
           onImageChange={handleImageChange}
-          onProgressChange={handleProgressChange}
           onNotifyChange={handleNotifyChange}
           onDelete={handleDelete}
         />

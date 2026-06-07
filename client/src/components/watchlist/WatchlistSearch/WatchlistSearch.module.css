@@ -314,3 +314,224 @@
   transition: opacity 0.15s;
 }
 .addBtn:active { opacity: 0.8; }
+
+/* ── Fullscreen Preview ─────────────────────────────────────── */
+
+.previewScreen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 200;
+  overflow-y: auto;
+  animation: slideInRight 0.25s ease;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.previewHero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.previewHeroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.previewHeroFallback {
+  width: 100%;
+  height: 100%;
+  background: var(--surface2);
+}
+
+.previewHeroGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.85) 100%);
+}
+
+.previewBack {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.previewTitleWrap {
+  position: absolute;
+  bottom: 12px;
+  left: 14px;
+  right: 14px;
+}
+
+.previewTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: #fff;
+  line-height: 1.2;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  margin: 0;
+}
+
+.previewOriginal {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  margin: 2px 0 0;
+}
+
+.previewContent {
+  padding: 16px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.previewSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.previewSkeletonLine {
+  height: 12px;
+  border-radius: 4px;
+  background: var(--surface2);
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+.previewMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.previewMetaChip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.previewRating {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.previewGenres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.previewGenre {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+.previewOverview {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.previewStatusWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.previewStatusLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  margin: 0;
+}
+
+.previewStatusChips {
+  display: flex;
+  gap: 8px;
+}
+
+.previewStatusChip {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.previewStatusActive {
+  background: rgba(201,147,58,0.18);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.previewAddBtn {
+  width: 100%;
+  padding: 13px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--gold);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.previewAddBtn:active { opacity: 0.8; }

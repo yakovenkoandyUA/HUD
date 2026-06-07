@@ -25,6 +25,7 @@ export interface IWatchlistItem extends Document {
   notifyNewSeason: boolean
   nextEpisodeDate: Date | null
   nextSeasonDate: Date | null
+  watchedEpisodes: { season: number; episode: number }[]
   userId: string
   addedAt: string
 }
@@ -54,6 +55,10 @@ const schema = new Schema<IWatchlistItem>({
   notifyNewSeason:  { type: Boolean, default: false },
   nextEpisodeDate:  { type: Date,    default: null  },
   nextSeasonDate:   { type: Date,    default: null  },
+  watchedEpisodes: {
+    type: [{ season: { type: Number, required: true }, episode: { type: Number, required: true } }],
+    default: [],
+  },
   userId:  { type: String, required: true, index: true },
   addedAt: { type: String, default: () => new Date().toISOString() },
 }, { timestamps: true })

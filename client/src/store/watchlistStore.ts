@@ -31,6 +31,7 @@ interface ApiWatchlistItem {
   notifyNewSeason?: boolean
   nextEpisodeDate?: string | null
   nextSeasonDate?: string | null
+  watchedEpisodes?: { season: number; episode: number }[]
 }
 
 function fromApi(raw: ApiWatchlistItem): WatchlistItem {
@@ -61,6 +62,7 @@ function fromApi(raw: ApiWatchlistItem): WatchlistItem {
     notifyNewSeason: raw.notifyNewSeason ?? false,
     nextEpisodeDate: raw.nextEpisodeDate ?? null,
     nextSeasonDate: raw.nextSeasonDate ?? null,
+    watchedEpisodes: raw.watchedEpisodes ?? [],
   }
 }
 

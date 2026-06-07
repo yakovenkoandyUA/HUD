@@ -23,6 +23,7 @@ import recurringRoutes from './routes/recurringPayments'
 import shoppingRoutes from './routes/shopping'
 import labelRoutes from './routes/labels'
 import booksRoutes from './routes/books'
+import watchlistCommentsRouter from './routes/watchlistComments'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -40,6 +41,7 @@ app.use('/api/sprint', sprintRoutes)
 app.use('/api/lessons', lessonRoutes)
 app.use('/api/recipes', recipeRoutes)
 app.use('/api/watchlist', watchlistRoutes)
+app.use('/api/watchlist/:id/comments', watchlistCommentsRouter)
 app.use('/api/goals', goalRoutes)
 app.use('/api/push', pushRoutes)
 app.use('/api/memories', memoryRoutes)

@@ -6,8 +6,31 @@ import CustomDatePicker from '../../ui/CustomDatePicker'
 import { formatDateUA } from '../../../utils/formatDate'
 import { authFetch } from '../../../services/api'
 import { useSeriesEpisodes } from '../../../hooks/useSeriesEpisodes'
+import { useProfileStore } from '../../../store/profileStore'
 import styles from './WatchlistDetail.module.css'
 import type { WatchlistItem, WatchlistStatus } from '../../../types'
+
+interface Comment {
+  _id: string
+  userId: string
+  username: string
+  avatarUrl: string | null
+  text: string
+  createdAt: string
+}
+
+function formatRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins  = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days  = Math.floor(diff / 86400000)
+
+  if (mins < 1)   return 'щойно'
+  if (mins < 60)  return `${mins}хв тому`
+  if (hours < 24) return `${hours}г тому`
+  if (days < 7)   return `${days}д тому`
+  return new Date(dateStr).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
+}
 
 function formatNextEpisode(date: Date | null): string {
   if (!date) return 'Дата невідома'
@@ -41,7 +64,6 @@ interface WatchlistDetailProps {
   onStatusChange: (status: WatchlistStatus) => void
   onRatingChange: (rating: number | null) => void
   onImageChange?: (url: string) => void
-  onProgressChange?: (patch: { currentSeason?: number; currentEpisode?: number }) => void
   onNotifyChange?: (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean }) => void
   onDelete: () => void
 }
@@ -72,17 +94,23 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   onNotifyChange,
   onDelete,
 }) => {
+  const activeProfile = useProfileStore(s => s.activeProfile)
+
   const [mounted, setMounted]             = useState(isOpen)
   const [visible, setVisible]             = useState(isOpen)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [currentSeason, setCurrentSeason]   = useState(item.currentSeason ?? 1)
-  const [currentEpisode, setCurrentEpisode] = useState(item.currentEpisode ?? 0)
+
+  const [comments, setComments]     = useState<Comment[]>([])
+  const [newComment, setNewComment] = useState('')
+  const [sending, setSending]       = useState(false)
+  const [watchedEpisodes, setWatchedEpisodes] = useState<{ season: number; episode: number }[]>(
+    item.watchedEpisodes ?? []
+  )
   const [nextEpisodeDate, setNextEpisodeDate] = useState<Date | null>(
     item.nextEpisodeDate ? new Date(item.nextEpisodeDate) : null
   )
   const [nextSeasonDate, setNextSeasonDate]     = useState<string | null>(item.nextSeasonDate ?? null)
   const [showSeasonDatePicker, setShowSeasonDatePicker] = useState(false)
-  const progressMounted    = useRef(false)
   const initialNextEpRef   = useRef(item.nextEpisodeDate)
   const sheetRef           = useRef<HTMLDivElement>(null)
   const swipeStartY        = useRef(0)
@@ -90,6 +118,68 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
   const isSeriesLike = item.category === 'series' || item.category === 'anime'
   const { episodes } = useSeriesEpisodes(isSeriesLike && item.tmdbId > 0 ? item.tmdbId : null)
+
+  const seasons = Array.from({ length: item.totalSeasons ?? 1 }, (_, i) => i + 1)
+
+  const handleToggleEpisode = (season: number, episode: number) => {
+    const already = watchedEpisodes.some(w => w.season === season && w.episode === episode)
+    const updated = already
+      ? watchedEpisodes.filter(w => !(w.season === season && w.episode === episode))
+      : [...watchedEpisodes, { season, episode }]
+    setWatchedEpisodes(updated)
+    authFetch(`/api/watchlist/${item.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ watchedEpisodes: updated }),
+    }).catch(console.error)
+  }
+
+  // Load comments when item changes
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const r = await authFetch(`/api/watchlist/${item.id}/comments`)
+        if (r.ok && !cancelled) setComments(await r.json())
+      } catch { /* silent */ }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [item.id])
+
+  const handleSend = async () => {
+    if (!newComment.trim() || sending) return
+    setSending(true)
+    const text = newComment.trim()
+    const temp: Comment = {
+      _id: `temp_${Date.now()}`,
+      userId: activeProfile?.id ?? '',
+      username: activeProfile?.username ?? '',
+      avatarUrl: activeProfile?.avatarUrl ?? null,
+      text,
+      createdAt: new Date().toISOString(),
+    }
+    setComments(prev => [...prev, temp])
+    setNewComment('')
+    try {
+      const r = await authFetch(`/api/watchlist/${item.id}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ text }),
+      })
+      if (r.ok) {
+        const saved: Comment = await r.json()
+        setComments(prev => prev.map(c => c._id === temp._id ? saved : c))
+      }
+    } catch {
+      setComments(prev => prev.filter(c => c._id !== temp._id))
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleDeleteComment = async (commentId: string) => {
+    setComments(prev => prev.filter(c => c._id !== commentId))
+    await authFetch(`/api/watchlist/${item.id}/comments/${commentId}`, { method: 'DELETE' })
+  }
 
   // When episodes load — find nearest future episode and persist its date
   useEffect(() => {
@@ -110,27 +200,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episodes])
-
-  // Debounced PATCH — fires 800ms after last stepper tap, skips initial mount
-  useEffect(() => {
-    if (!progressMounted.current) { progressMounted.current = true; return }
-    const timer = setTimeout(() => {
-      authFetch(`/api/watchlist/${item.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ currentSeason, currentEpisode }),
-      }).catch(console.error)
-    }, 800)
-    return () => clearTimeout(timer)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSeason, currentEpisode])
-
-  const maxSeason  = item.totalSeasons  ?? 1
-  const maxEpisode = item.totalEpisodes ?? 99
-
-  const handleSeasonMinus  = () => { if (currentSeason  <= 1)           return; setCurrentSeason(s  => Math.max(1, s - 1)); setCurrentEpisode(0) }
-  const handleSeasonPlus   = () => { if (currentSeason  >= maxSeason)   return; setCurrentSeason(s  => s + 1); setCurrentEpisode(0) }
-  const handleEpisodeMinus = () => { if (currentEpisode <= 0)           return; setCurrentEpisode(e => Math.max(0, e - 1)) }
-  const handleEpisodePlus  = () => { if (currentEpisode >= maxEpisode)  return; setCurrentEpisode(e => e + 1) }
 
   const requestNotifyPermission = () => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
@@ -324,32 +393,17 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             </div>
           )}
 
-          {/* Progress — series/anime */}
-          {(item.category === 'series' || item.category === 'anime') && (
-            <div className={styles.progressSection}>
-              <div className={styles.stepperGroup}>
-                <span className={styles.stepperLabel}>Сезон</span>
-                <div className={styles.stepper}>
-                  <button type="button" className={styles.stepBtn} onClick={handleSeasonMinus}  disabled={currentSeason  <= 1}>−</button>
-                  <span className={styles.stepperValue}>{currentSeason}</span>
-                  <button type="button" className={styles.stepBtn} onClick={handleSeasonPlus}   disabled={currentSeason  >= maxSeason}>+</button>
-                </div>
-              </div>
-              <div className={styles.stepperSep} />
-              <div className={styles.stepperGroup}>
-                <span className={styles.stepperLabel}>Епізод</span>
-                <div className={styles.stepper}>
-                  <button type="button" className={styles.stepBtn} onClick={handleEpisodeMinus} disabled={currentEpisode <= 0}>−</button>
-                  <span className={styles.stepperValue}>{currentEpisode}</span>
-                  <button type="button" className={styles.stepBtn} onClick={handleEpisodePlus}  disabled={currentEpisode >= maxEpisode}>+</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Episodes - series only */}
-          {item.category === 'series' && item.tmdbId > 0 && (
-            <EpisodesList tmdbId={item.tmdbId} />
+          {/* Episodes — series and anime */}
+          {isSeriesLike && item.tmdbId > 0 && (
+            <EpisodesList
+              tmdbId={item.tmdbId}
+              seasons={seasons}
+              watchedEpisodes={watchedEpisodes}
+              onToggleEpisode={handleToggleEpisode}
+              status={item.status}
+              initialSeason={item.currentSeason ?? 1}
+              onMarkWatched={() => onStatusChange('watched')}
+            />
           )}
 
           {/* Notify — series/anime only */}
@@ -373,7 +427,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                   </button>
                 </div>
               )}
-              <div className={styles.notifyRow}>
+              {episodes.length > 0 && <div className={styles.notifyRow}>
                 <div className={styles.notifyText}>
                   <p className={styles.notifyTitle}>Новий сезон</p>
                   <p className={styles.notifyDesc}>
@@ -415,9 +469,72 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                 >
                   <span className={styles.toggleKnob} />
                 </button>
-              </div>
+              </div>}
             </div>
           )}
+
+          {/* Comments */}
+          <div className={styles.commentsSection}>
+            <p className={styles.sectionLabel}>
+              КОМЕНТАРІ{comments.length > 0 ? ` · ${comments.length}` : ''}
+            </p>
+
+            {comments.length > 0 && (
+              <div className={styles.commentsList}>
+                {comments.map(c => (
+                  <div key={c._id} className={styles.comment}>
+                    <div className={styles.commentAvatar}>
+                      {c.avatarUrl
+                        ? <img src={c.avatarUrl} alt={c.username} />
+                        : <span>{c.username[0]?.toUpperCase() ?? '?'}</span>
+                      }
+                    </div>
+                    <div className={styles.commentBody}>
+                      <div className={styles.commentMeta}>
+                        <span className={styles.commentAuthor}>{c.username}</span>
+                        <span className={styles.commentTime}>{formatRelativeTime(c.createdAt)}</span>
+                        {c.userId === activeProfile?.id && (
+                          <button
+                            type="button"
+                            className={styles.commentDelete}
+                            onClick={() => handleDeleteComment(c._id)}
+                            aria-label="Видалити коментар"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      <p className={styles.commentText}>{c.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className={styles.commentInput}>
+              <input
+                className={styles.commentField}
+                placeholder="Залишити коментар..."
+                value={newComment}
+                onChange={e => setNewComment(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSend() }}
+                maxLength={500}
+              />
+              <button
+                type="button"
+                className={styles.commentSend}
+                onClick={handleSend}
+                disabled={!newComment.trim() || sending}
+                aria-label="Надіслати"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M14 8H2M14 8l-5-5M14 8l-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
 
           {/* Delete */}
           <div className={styles.deleteSection}>

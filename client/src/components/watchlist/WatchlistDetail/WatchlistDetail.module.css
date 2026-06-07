@@ -371,72 +371,6 @@
   cursor: pointer;
 }
 
-/* ── Progress steppers ── */
-.progressSection {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stepperGroup {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.stepperLabel {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text3);
-}
-
-.stepper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px 6px;
-}
-
-.stepperValue {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gold);
-  min-width: 24px;
-  text-align: center;
-}
-
-.stepperSep {
-  width: 1px;
-  height: 40px;
-  background: var(--border);
-  flex-shrink: 0;
-}
-
-.stepBtn {
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: none;
-  color: var(--text2);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-.stepBtn:active { color: var(--accent); }
-.stepBtn:disabled { opacity: 0.2; cursor: default; }
-
 /* ── Genre chips ── */
 .genreChips {
   display: flex;
@@ -485,3 +419,130 @@
   outline: none;
 }
 .genreInput::placeholder { color: var(--text3); }
+
+/* ── Comments ── */
+.commentsSection {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.commentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.comment {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.commentAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.commentAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.commentBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.commentMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.commentAuthor {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+}
+
+.commentTime {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.commentDelete {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.commentDelete:active { color: var(--negative); }
+
+.commentText {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  word-break: break-word;
+  margin: 0;
+}
+
+.commentInput {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.commentField {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.commentField:focus { border-color: var(--border2); }
+.commentField::placeholder { color: var(--text3); }
+
+.commentSend {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.commentSend:disabled { opacity: 0.3; cursor: default; }
