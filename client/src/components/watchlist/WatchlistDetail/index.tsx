@@ -395,7 +395,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   }
 
   const handleStartWatching = () => {
-    handleStatusChange('watching')
+    onStatusChange('watching')
     setTimeout(() => {
       episodesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 300)
