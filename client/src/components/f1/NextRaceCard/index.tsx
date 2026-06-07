@@ -38,7 +38,7 @@ const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => (
       <h2 className={styles.name}>{race.name}</h2>
     </div>
     <div className={styles.circuit}>{race.circuit}</div>
-    <RaceCountdown raceDate={race.date} />
+    <RaceCountdown raceDate={race.date} raceTime="14:00:00Z" />
     <div className={styles.date}>
       {new Date(race.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
     </div>

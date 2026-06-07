@@ -97,8 +97,7 @@ components/
     ├── ClockBlock          ← годинник Furore + дата
     ├── TasksAccordion      ← акордеон Задачі / Покупки (expand/collapse секції)
     │                          анімація strike+fadeout при відмітці покупки
-    ├── SprintMini, LessonsMini, TodosMini
-    └── NasaApod            ← NASA APOD через довгий тап на логотип
+    └── SprintMini, LessonsMini, TodosMini
 ```
 
 ---

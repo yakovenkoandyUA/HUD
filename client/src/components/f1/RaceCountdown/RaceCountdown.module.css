@@ -1,39 +1,67 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.clockWrap {
+  flex-shrink: 0;
+}
+
+.clock {
+  width: 130px;
+  height: 130px;
+}
+
 .countdown {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.seg {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-}
-
-.num {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-  letter-spacing: 0.02em;
-}
-
-.unit {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text3);
-}
-
-.sep {
-  font-family: var(--font-display);
-  font-size: 28px;
-  color: var(--border2);
-  margin: 0 2px;
+  flex: 1;
 }
 
 .raceDay {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   color: var(--accent);
   letter-spacing: 0.05em;
+}
+
+.cdGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.cdCell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cdAccent {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+}
+
+.cdNum {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.cdAccent .cdNum {
+  color: var(--accent);
+}
+
+.cdLabel {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  font-weight: 700;
 }

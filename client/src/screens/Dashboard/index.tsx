@@ -1,14 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader'
 import HeroCard from '../../components/dashboard/HeroCard'
 import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
 import TasksAccordion from '../../components/dashboard/TasksAccordion'
-import NasaApod from '../../components/dashboard/NasaApod'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
-import { useNasaApod } from '../../hooks/useNasaApod'
 import { useFinanceStore } from '../../store/financeStore'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
@@ -28,14 +26,12 @@ const Dashboard: React.FC = () => {
   const f1Enabled = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
 
   const [showExpense, setShowExpense] = useState(false)
-  const [showApod, setShowApod]       = useState(false)
   const [fabOpen, setFabOpen]         = useState(false)
   const [questTitle, setQuestTitle]   = useState('')
   const [shopTitle, setShopTitle]     = useState('')
   const [showQuest, setShowQuest]     = useState(false)
   const [showShop, setShowShop]       = useState(false)
 
-  const { data: apodData, loading: apodLoading, error: apodError, fetchApod } = useNasaApod()
   const fabRef  = useRef<HTMLDivElement>(null)
   const bgRef   = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -50,11 +46,6 @@ const Dashboard: React.FC = () => {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [fabOpen])
-
-  const handleLogoLongPress = useCallback(() => {
-    setShowApod(true)
-    fetchApod()
-  }, [fetchApod])
 
   const isRetro = theme === 'retro'
 
@@ -114,7 +105,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className={styles.screen}>
       {isRetro && <div ref={bgRef} className={styles.bg} />}
-      <AppHeader onLogoLongPress={handleLogoLongPress} />
+      <AppHeader />
       <div ref={contentRef} className={styles.content}>
         {raceThisWeek ? (
           <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
@@ -226,13 +217,6 @@ const Dashboard: React.FC = () => {
         </div>
       </Modal>
 
-      <NasaApod
-        isOpen={showApod}
-        onClose={() => setShowApod(false)}
-        data={apodData}
-        loading={apodLoading}
-        error={apodError}
-      />
     </div>
   )
 }

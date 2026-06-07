@@ -6,7 +6,6 @@
 - TodayRoutines — inline рядок "Сьогодні: назва · назва" для рутин без `isDoneToday`
 - TasksAccordion — акордеон з двома секціями: **Задачі** (sprint, expand за замовчуванням) та **Покупки** (shopping/todo, закрито за замовчуванням)
   - Анімація закреслення + fade-out при відмітці покупки виконаною
-- NASA APOD через довгий тап на логотип HUD
 - CarHero — 3D McLaren MP4/5 (Three.js, 260px, OrbitControls + particles)
 - FAB — розкривний (rotate 45° при відкритті), 3 опції: **Витрата** / **Квест** / **Покупка**; закривається кліком поза меню
 - `fetchTransactions()` викликається при mount (баланс завантажується одразу)

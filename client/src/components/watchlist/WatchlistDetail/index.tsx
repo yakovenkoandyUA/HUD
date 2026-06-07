@@ -41,7 +41,6 @@ interface WatchlistDetailProps {
   onStatusChange: (status: WatchlistStatus) => void
   onRatingChange: (rating: number | null) => void
   onImageChange?: (url: string) => void
-  onGenresChange?: (genres: string[]) => void
   onProgressChange?: (patch: { currentSeason?: number; currentEpisode?: number }) => void
   onNotifyChange?: (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean }) => void
   onDelete: () => void
@@ -70,14 +69,12 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   onStatusChange,
   onRatingChange,
   onImageChange,
-  onGenresChange,
   onNotifyChange,
   onDelete,
 }) => {
   const [mounted, setMounted]             = useState(isOpen)
   const [visible, setVisible]             = useState(isOpen)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [genreInput, setGenreInput]       = useState('')
   const [currentSeason, setCurrentSeason]   = useState(item.currentSeason ?? 1)
   const [currentEpisode, setCurrentEpisode] = useState(item.currentEpisode ?? 0)
   const [nextEpisodeDate, setNextEpisodeDate] = useState<Date | null>(
@@ -85,7 +82,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   )
   const [nextSeasonDate, setNextSeasonDate]     = useState<string | null>(item.nextSeasonDate ?? null)
   const [showSeasonDatePicker, setShowSeasonDatePicker] = useState(false)
-  const genreInputRef      = useRef<HTMLInputElement>(null)
   const progressMounted    = useRef(false)
   const initialNextEpRef   = useRef(item.nextEpisodeDate)
 
@@ -173,6 +169,9 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
   const canRemind = item.category === 'series' || item.category === 'anime'
 
+  const allEpisodesAired = episodes.length > 0 &&
+    episodes.every(ep => ep.air_date && new Date(ep.air_date) <= new Date())
+
   return (
     <>
     <div
@@ -217,41 +216,16 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             )}
           </div>
 
-          {/* Genres */}
-          {onGenresChange && (
-            <>
-              <p className={styles.sectionLabel}>Жанри</p>
+          {/* Genres — read-only */}
+          {item.genres && item.genres.length > 0 && (
+            <div className={styles.section}>
+              <p className={styles.sectionLabel}>ЖАНРИ</p>
               <div className={styles.genreChips}>
-                {(item.genres ?? []).map((g) => (
-                  <span key={g} className={styles.genreChip}>
-                    {g}
-                    <button
-                      type="button"
-                      className={styles.genreRemove}
-                      onClick={() => onGenresChange((item.genres ?? []).filter((x) => x !== g))}
-                      aria-label={`Видалити ${g}`}
-                    >×</button>
-                  </span>
+                {item.genres.map(g => (
+                  <span key={g} className={styles.genreChip}>{g}</span>
                 ))}
-                <div className={styles.genreInputWrap}>
-                  <input
-                    ref={genreInputRef}
-                    className={styles.genreInput}
-                    value={genreInput}
-                    onChange={(e) => setGenreInput(e.target.value)}
-                    placeholder="+ жанр"
-                    onKeyDown={(e) => {
-                      if ((e.key === 'Enter' || e.key === ',') && genreInput.trim()) {
-                        e.preventDefault()
-                        const next = [...new Set([...(item.genres ?? []), genreInput.trim()])]
-                        onGenresChange(next)
-                        setGenreInput('')
-                      }
-                    }}
-                  />
-                </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* Custom poster — show when no TMDB backdrop */}
@@ -339,22 +313,24 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
           {/* Notify — series/anime only */}
           {canRemind && onNotifyChange && (
             <div className={styles.notifySection}>
-              <div className={styles.notifyRow}>
-                <div className={styles.notifyText}>
-                  <p className={styles.notifyTitle}>Нова серія</p>
-                  <p className={styles.notifyDesc}>{formatNextEpisode(nextEpisodeDate)}</p>
+              {!allEpisodesAired && (
+                <div className={styles.notifyRow}>
+                  <div className={styles.notifyText}>
+                    <p className={styles.notifyTitle}>Нова серія</p>
+                    <p className={styles.notifyDesc}>{formatNextEpisode(nextEpisodeDate)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={`${styles.toggleBtn} ${item.notifyNewEpisode ? styles.toggleOn : ''}`}
+                    onClick={() => {
+                      if (!item.notifyNewEpisode) requestNotifyPermission()
+                      onNotifyChange({ notifyNewEpisode: !item.notifyNewEpisode })
+                    }}
+                  >
+                    <span className={styles.toggleKnob} />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className={`${styles.toggleBtn} ${item.notifyNewEpisode ? styles.toggleOn : ''}`}
-                  onClick={() => {
-                    if (!item.notifyNewEpisode) requestNotifyPermission()
-                    onNotifyChange({ notifyNewEpisode: !item.notifyNewEpisode })
-                  }}
-                >
-                  <span className={styles.toggleKnob} />
-                </button>
-              </div>
+              )}
               <div className={styles.notifyRow}>
                 <div className={styles.notifyText}>
                   <p className={styles.notifyTitle}>Новий сезон</p>

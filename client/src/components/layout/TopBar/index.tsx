@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import MimirLogo from '../../../assets/mimir-logo.svg?react'
 import Modal from '../../ui/Modal'
 import ThemePicker from '../ThemePicker'
-import { useLongPress } from '../../../hooks/useLongPress'
 import { useProfileStore } from '../../../store/profileStore'
 import styles from './TopBar.module.css'
 
@@ -12,15 +11,13 @@ import styles from './TopBar.module.css'
  * Верхня панель: годинник зліва, SVG логотип по центру, аватар профілю справа.
  *
  * Props:
- * @prop {string}          [title]            — назва поточного екрану
- * @prop {boolean}         [showClock]        — показати живий годинник зліва (Dashboard)
- * @prop {() => void}      [onLogoLongPress]  — активує Easter egg (NASA APOD)
- * @prop {React.ReactNode} [right]            — додатковий вміст зліва від аватара
+ * @prop {string}          [title]     — назва поточного екрану
+ * @prop {boolean}         [showClock] — показати живий годинник зліва (Dashboard)
+ * @prop {React.ReactNode} [right]     — додатковий вміст зліва від аватара
  */
 interface TopBarProps {
   title?: string
   showClock?: boolean
-  onLogoLongPress?: () => void
   right?: React.ReactNode
 }
 
@@ -28,12 +25,9 @@ function formatTime(d: Date): string {
   return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
 }
 
-const HINT_KEY = 'hud_nasa_hint_shown'
-
-const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) => {
+const TopBar: React.FC<TopBarProps> = ({ showClock, right }) => {
   const [now, setNow] = useState(new Date())
   const [showPicker, setShowPicker] = useState(false)
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([])
   const { activeProfile } = useProfileStore()
 
   useEffect(() => {
@@ -41,25 +35,6 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) =>
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [showClock])
-
-  useEffect(() => {
-    if (!onLogoLongPress || localStorage.getItem(HINT_KEY)) return
-    const t = timers.current
-    t.push(setTimeout(() => {
-      localStorage.setItem(HINT_KEY, '1')
-    }, 3800))
-    return () => t.forEach(clearTimeout)
-  }, [onLogoLongPress])
-
-  const longPress = useLongPress(onLogoLongPress ?? (() => {}))
-
-  const logoEl = onLogoLongPress ? (
-    <button type="button" className={styles.logoBtn} aria-label="Hold for NASA APOD" {...longPress}>
-      <MimirLogo className={styles.logoSvg} />
-    </button>
-  ) : (
-    <MimirLogo className={styles.logoSvg} />
-  )
 
   return (
     <>
@@ -71,7 +46,7 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, onLogoLongPress, right }) =>
         </div>
 
         <div className={styles.center}>
-          {logoEl}
+          <MimirLogo className={styles.logoSvg} />
         </div>
 
         <div className={styles.right}>

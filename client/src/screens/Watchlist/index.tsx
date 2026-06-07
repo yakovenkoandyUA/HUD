@@ -77,15 +77,15 @@ const Watchlist: React.FC = () => {
   }, [sortOpen])
 
   const stats = useMemo(() => {
-    const watched  = items.filter((i) => i.status === 'watched').length
-    const watching = items.filter((i) => i.status === 'watching').length
-    const want     = items.filter((i) => i.status === 'want').length
-    const rated    = items.filter((i) => i.rating !== null)
+    const watched  = byCategoryItems.filter((i) => i.status === 'watched').length
+    const watching = byCategoryItems.filter((i) => i.status === 'watching').length
+    const want     = byCategoryItems.filter((i) => i.status === 'want').length
+    const rated    = byCategoryItems.filter((i) => i.rating !== null)
     const avg      = rated.length
       ? (rated.reduce((s, i) => s + (i.rating ?? 0), 0) / rated.length).toFixed(1)
       : null
     return { watched, watching, want, avg }
-  }, [items])
+  }, [byCategoryItems])
 
   const handleAdd = (item: Omit<WatchlistItem, 'id' | 'addedAt'>) => {
     const alreadyExists = items.some(
@@ -115,12 +115,6 @@ const Watchlist: React.FC = () => {
     if (!selected) return
     updateItem(selected.id, { thumbnail: url || undefined })
     setSelected((prev) => prev ? { ...prev, thumbnail: url || undefined } : null)
-  }
-
-  const handleGenresChange = (genres: string[]) => {
-    if (!selected) return
-    updateItem(selected.id, { genres })
-    setSelected((prev) => prev ? { ...prev, genres } : null)
   }
 
   const handleProgressChange = (patch: { currentSeason?: number; currentEpisode?: number }) => {
@@ -270,7 +264,6 @@ const Watchlist: React.FC = () => {
           onStatusChange={handleStatusChange}
           onRatingChange={handleRatingChange}
           onImageChange={handleImageChange}
-          onGenresChange={handleGenresChange}
           onProgressChange={handleProgressChange}
           onNotifyChange={handleNotifyChange}
           onDelete={handleDelete}
