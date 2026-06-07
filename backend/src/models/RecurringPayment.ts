@@ -4,6 +4,8 @@ export interface IRecurringPayment extends Document {
   userId: string
   name: string
   amount: number
+  amountForeign: number | null
+  currency: 'UAH' | 'USD' | 'EUR'
   dayOfMonth: number
   category: string
   isActive: boolean
@@ -11,12 +13,14 @@ export interface IRecurringPayment extends Document {
 }
 
 const schema = new Schema<IRecurringPayment>({
-  userId:     { type: String, required: true, index: true },
-  name:       { type: String, required: true },
-  amount:     { type: Number, required: true },
-  dayOfMonth: { type: Number, required: true, min: 1, max: 31 },
-  category:   { type: String, default: 'Інше' },
-  isActive:   { type: Boolean, default: true },
+  userId:        { type: String, required: true, index: true },
+  name:          { type: String, required: true },
+  amount:        { type: Number, required: true },
+  amountForeign: { type: Number, default: null },
+  currency:      { type: String, enum: ['UAH', 'USD', 'EUR'], default: 'UAH' },
+  dayOfMonth:    { type: Number, required: true, min: 1, max: 31 },
+  category:      { type: String, default: 'Інше' },
+  isActive:      { type: Boolean, default: true },
 }, { timestamps: true })
 
 export default model<IRecurringPayment>('RecurringPayment', schema)

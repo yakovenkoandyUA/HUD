@@ -167,14 +167,22 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
 
   const isDefault = typeFilter === 'all' && categoryFilter === 'all'
 
+  const sorted = useMemo(() =>
+    [...transactions].sort((a, b) => {
+      const tA = new Date(a.createdAt ?? a.date).getTime()
+      const tB = new Date(b.createdAt ?? b.date).getTime()
+      return tB - tA
+    }),
+  [transactions])
+
   const list = useMemo(() => isDefault
-    ? transactions.slice(0, 20)
-    : transactions
+    ? sorted.slice(0, 20)
+    : sorted
         .filter(t => t.date.startsWith(currentMonth))
         .filter(t => typeFilter === 'all' || (typeFilter === 'income' ? t.type === 'topup' : t.type === 'expense'))
         .filter(t => categoryFilter === 'all' || t.category === categoryFilter),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [transactions, typeFilter, categoryFilter])
+  [sorted, typeFilter, categoryFilter])
 
   // Animate on filter change
   useEffect(() => {

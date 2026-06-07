@@ -10,12 +10,21 @@ import styles from './RecurringPayments.module.css'
  * Список регулярних платежів (підписки, комунальні тощо).
  * Підсвічує платіж якщо сьогодні його день.
  * Тап на платіж → модалка редагування.
+ * Показує перші 4, решта — "Ще N платежів".
+ * Підтримує валюти UAH / USD / EUR з конвертацією за поточним курсом.
  */
+
+const CURRENCIES = ['UAH', 'USD', 'EUR'] as const
+type Currency = typeof CURRENCIES[number]
+const CURRENCY_SYMBOL: Record<Currency, string> = { UAH: '₴', USD: '$', EUR: '€' }
+const VISIBLE_LIMIT = 4
 
 interface RecurringPayment {
   _id: string
   name: string
   amount: number
+  amountForeign?: number | null
+  currency?: Currency
   dayOfMonth: number
   category: string
   isActive: boolean
@@ -43,6 +52,12 @@ function validatePaymentForm(form: FormState): FormErrors {
   const day = parseInt(form.dayOfMonth, 10)
   if (!day || day < 1 || day > 31) errs.dayOfMonth = 'День від 1 до 31'
   return errs
+}
+
+function hiddenLabel(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return `Ще ${n} платіж`
+  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `Ще ${n} платежі`
+  return `Ще ${n} платежів`
 }
 
 const KNOWN_SERVICES: Record<string, string> = {
@@ -109,12 +124,16 @@ function dayLabel(day: number): string {
 }
 
 const RecurringPayments: React.FC = () => {
-  const [payments, setPayments]       = useState<RecurringPayment[]>([])
-  const [showAdd, setShowAdd]         = useState(false)
-  const [editPayment, setEditPayment] = useState<RecurringPayment | null>(null)
-  const [form, setForm]               = useState<FormState>(EMPTY_FORM)
-  const [errors, setErrors]           = useState<FormErrors>({})
-  const [saving, setSaving]           = useState(false)
+  const [payments, setPayments]         = useState<RecurringPayment[]>([])
+  const [showAll, setShowAll]           = useState(false)
+  const [showAdd, setShowAdd]           = useState(false)
+  const [editPayment, setEditPayment]   = useState<RecurringPayment | null>(null)
+  const [form, setForm]                 = useState<FormState>(EMPTY_FORM)
+  const [errors, setErrors]             = useState<FormErrors>({})
+  const [saving, setSaving]             = useState(false)
+  const [currency, setCurrency]         = useState<Currency>('UAH')
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null)
+  const [rateLoading, setRateLoading]   = useState(false)
 
   const today = new Date().getDate()
 
@@ -127,22 +146,80 @@ const RecurringPayments: React.FC = () => {
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
 
+  useEffect(() => {
+    if (currency === 'UAH') {
+      setExchangeRate(null)
+      setRateLoading(false)
+      return
+    }
+
+    let cancelled = false
+
+    const fetchRate = async () => {
+      setRateLoading(true)
+      try {
+        const r = await fetch(`https://api.exchangerate-api.com/v4/latest/${currency}`)
+        const data = await r.json()
+        if (!cancelled) {
+          setExchangeRate(data.rates.UAH)
+          setRateLoading(false)
+        }
+      } catch {
+        if (!cancelled) {
+          setExchangeRate(null)
+          setRateLoading(false)
+        }
+      }
+    }
+
+    fetchRate()
+
+    return () => { cancelled = true }
+  }, [currency])
+
+  // Fix 2: sync form state when editPayment changes (incl. after background refresh)
+  useEffect(() => {
+    if (!editPayment) return
+    setForm({
+      name: editPayment.name,
+      amount: String(editPayment.amountForeign ?? editPayment.amount),
+      dayOfMonth: String(editPayment.dayOfMonth),
+    })
+    setCurrency(editPayment.currency ?? 'UAH')
+    setErrors({})
+  }, [editPayment])
+
+  const amountForeignNum = parseFloat(form.amount) || 0
+  const amountUAH = currency === 'UAH'
+    ? amountForeignNum
+    : exchangeRate
+      ? Math.round(amountForeignNum * exchangeRate)
+      : null
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     const errs = validatePaymentForm(form)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
-    const amount = parseFloat(form.amount)
+    const amountForeign = parseFloat(form.amount)
+    const amount = amountUAH ?? amountForeign
     const day = parseInt(form.dayOfMonth, 10)
     setSaving(true)
     try {
       const r = await authFetch('/api/recurring', {
         method: 'POST',
-        body: JSON.stringify({ name: form.name.trim(), amount, dayOfMonth: day }),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          amount,
+          amountForeign: currency !== 'UAH' ? amountForeign : undefined,
+          currency,
+          dayOfMonth: day,
+        }),
       })
       if (r.ok) {
         await fetchPayments()
         setForm(EMPTY_FORM)
+        setCurrency('UAH')
         setShowAdd(false)
       }
     } finally { setSaving(false) }
@@ -154,16 +231,31 @@ const RecurringPayments: React.FC = () => {
     const errs = validatePaymentForm(form)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
-    const amount = parseFloat(form.amount)
+    const amountForeign = parseFloat(form.amount)
+    const amount = amountUAH ?? amountForeign
     const day = parseInt(form.dayOfMonth, 10)
     setSaving(true)
     try {
       const r = await authFetch(`/api/recurring/${editPayment._id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ name: form.name.trim(), amount, dayOfMonth: day }),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          amount,
+          amountForeign: currency !== 'UAH' ? amountForeign : null,
+          currency,
+          dayOfMonth: day,
+        }),
       })
       if (r.ok) {
-        await fetchPayments()
+        const updated: RecurringPayment = {
+          ...editPayment,
+          name: form.name.trim(),
+          amount,
+          amountForeign: currency !== 'UAH' ? amountForeign : null,
+          currency,
+          dayOfMonth: day,
+        }
+        setPayments(prev => prev.map(p => p._id === editPayment._id ? updated : p))
         setEditPayment(null)
       }
     } finally { setSaving(false) }
@@ -177,13 +269,19 @@ const RecurringPayments: React.FC = () => {
   }
 
   const openEdit = (p: RecurringPayment) => {
-    setForm({ name: p.name, amount: String(p.amount), dayOfMonth: String(p.dayOfMonth) })
+    setForm({
+      name: p.name,
+      amount: String(p.amountForeign ?? p.amount),
+      dayOfMonth: String(p.dayOfMonth),
+    })
+    setCurrency(p.currency ?? 'UAH')
     setErrors({})
     setEditPayment(p)
   }
 
   const openAdd = () => {
     setForm(EMPTY_FORM)
+    setCurrency('UAH')
     setErrors({})
     setShowAdd(true)
   }
@@ -201,22 +299,8 @@ const RecurringPayments: React.FC = () => {
   }
 
   const totalMonthly = payments.filter(p => p.isActive).reduce((s, p) => s + p.amount, 0)
-
-  if (payments.length === 0 && !showAdd) {
-    return (
-      <div className={styles.wrap}>
-        <div className={styles.header}>
-          <span className={styles.title}>Регулярні платежі</span>
-          <button type="button" className={styles.addBtn} onClick={openAdd}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-            Додати
-          </button>
-        </div>
-      </div>
-    )
-  }
+  const visiblePayments = showAll ? payments : payments.slice(0, VISIBLE_LIMIT)
+  const hiddenCount = payments.length - VISIBLE_LIMIT
 
   const formFields = (
     <>
@@ -230,12 +314,26 @@ const RecurringPayments: React.FC = () => {
         />
         {errors.name && <span className="errorMsg">{errors.name}</span>}
       </div>
+
+      <div className={styles.currencySwitch}>
+        {CURRENCIES.map(c => (
+          <button
+            key={c}
+            type="button"
+            className={`${styles.currencyBtn} ${currency === c ? styles.currencyActive : ''}`}
+            onClick={() => setCurrency(c)}
+          >
+            {CURRENCY_SYMBOL[c]} {c}
+          </button>
+        ))}
+      </div>
+
       <div className={styles.formRow}>
         <div>
           <input
             className={`${styles.input} ${errors.amount ? 'inputError' : ''}`}
             type="number"
-            placeholder="Сума"
+            placeholder={`Сума, ${CURRENCY_SYMBOL[currency]}`}
             value={form.amount}
             onChange={e => setField('amount', e.target.value)}
           />
@@ -252,8 +350,37 @@ const RecurringPayments: React.FC = () => {
           {errors.dayOfMonth && <span className="errorMsg">{errors.dayOfMonth}</span>}
         </div>
       </div>
+
+      {currency !== 'UAH' && (
+        <div className={styles.conversionHint}>
+          {rateLoading
+            ? 'Завантаження курсу...'
+            : exchangeRate && amountUAH && amountForeignNum > 0
+              ? `≈ ${amountUAH.toLocaleString('uk-UA')} ₴ (курс ${exchangeRate.toFixed(1)} ₴/${currency})`
+              : exchangeRate
+                ? `Курс: ${exchangeRate.toFixed(1)} ₴/${currency}`
+                : 'Курс недоступний'
+          }
+        </div>
+      )}
     </>
   )
+
+  if (payments.length === 0 && !showAdd) {
+    return (
+      <div className={styles.wrap}>
+        <div className={styles.header}>
+          <span className={styles.title}>Регулярні платежі</span>
+          <button type="button" className={styles.addBtn} onClick={openAdd}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            Додати
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.wrap}>
@@ -273,8 +400,9 @@ const RecurringPayments: React.FC = () => {
       </div>
 
       <div className={styles.list}>
-        {payments.map(p => {
+        {visiblePayments.map(p => {
           const isToday = p.dayOfMonth === today
+          const hasForeign = p.currency && p.currency !== 'UAH' && p.amountForeign
           return (
             <button
               key={p._id}
@@ -285,15 +413,31 @@ const RecurringPayments: React.FC = () => {
               <ServiceLogo name={p.name} />
               <span className={styles.name}>{p.name}</span>
               <span className={styles.day}>{dayLabel(p.dayOfMonth)}</span>
-              <span className={`${styles.amount} ${isToday ? styles.amountToday : ''}`}>
-                {fmt(p.amount)} ₴
-              </span>
+              {hasForeign ? (
+                <span className={`${styles.amount} ${isToday ? styles.amountToday : ''}`}>
+                  {CURRENCY_SYMBOL[p.currency as Currency]}{p.amountForeign}
+                </span>
+              ) : (
+                <span className={`${styles.amount} ${isToday ? styles.amountToday : ''}`}>
+                  {fmt(p.amount)} ₴
+                </span>
+              )}
             </button>
           )
         })}
       </div>
 
-      {/* Add form */}
+      {payments.length > VISIBLE_LIMIT && (
+        <button
+          type="button"
+          className={styles.showMoreBtn}
+          onClick={() => setShowAll(v => !v)}
+        >
+          {showAll ? 'Згорнути' : hiddenLabel(hiddenCount)}
+          <i className={`ti ${showAll ? 'ti-chevron-up' : 'ti-chevron-down'}`} aria-hidden="true" />
+        </button>
+      )}
+
       {showAdd && (
         <form className={styles.addForm} onSubmit={handleAdd}>
           {formFields}
@@ -304,9 +448,9 @@ const RecurringPayments: React.FC = () => {
         </form>
       )}
 
-      {/* Edit modal */}
       <Modal isOpen={!!editPayment} onClose={() => setEditPayment(null)} title="Редагування" draggable>
-        <form onSubmit={handleEdit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* Fix 1: key forces form DOM reset when switching between payments */}
+        <form key={editPayment?._id ?? ''} onSubmit={handleEdit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {formFields}
           <div className={styles.formActions}>
             <button type="submit" className={styles.submitBtn} disabled={saving}>Зберегти</button>

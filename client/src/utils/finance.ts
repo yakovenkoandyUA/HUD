@@ -29,3 +29,14 @@ export function getDaysElapsed(): number {
 export function calcDailyBudget(balance: number): number {
   return Math.floor(balance / Math.max(1, getDaysLeftInMonth()))
 }
+
+// Returns the start date of the current budget cycle (10th of this or previous month)
+export function getPeriodStart(): string {
+  const now = new Date()
+  const today = now.getDate()
+  if (today >= PAYDAY) {
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-10`
+  }
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}-10`
+}

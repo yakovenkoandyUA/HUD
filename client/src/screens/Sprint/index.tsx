@@ -16,22 +16,22 @@ import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
 
-const PANEL_ANIM_MS = 220
-
-type FilterType = 'all' | 'sprint' | 'shopping' | 'todo'
+type FilterType = 'all' | 'sprint' | 'shopping' | 'todo' | 'lesson'
 type StatusFilter = 'active' | 'done' | 'all'
 
-const TYPE_OPTIONS: { key: FilterType; label: string }[] = [
-	{ key: 'all',      label: 'Всі' },
-	{ key: 'shopping', label: 'Покупки' },
-	{ key: 'todo',     label: 'Справи' },
-]
+const TYPE_LABELS: Record<string, string> = {
+  all:      'ВСІ',
+  sprint:   'КВЕСТИ',
+  shopping: 'ПОКУПКИ',
+}
 
-const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
-	{ key: 'all',    label: 'Всі' },
-	{ key: 'active', label: 'Активні' },
-	{ key: 'done',   label: 'Завершені' },
-]
+const STATUS_OPTIONS = ['all', 'active', 'done'] as const
+
+const STATUS_LABELS: Record<string, string> = {
+  all:    'ВСІ',
+  active: 'АКТИВНІ',
+  done:   'ЗАВЕРШЕНІ',
+}
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'normal', 'low']
 
@@ -151,30 +151,6 @@ function formatRoutineDue(dateStr: string): string {
 	return `${DAYS[target.getDay()]} ${target.getDate()} ${MONTHS[target.getMonth()]}`
 }
 
-// ── Chip group ────────────────────────────────────────────────────────────────
-
-interface ChipGroupProps<T extends string> {
-	label: string
-	options: { key: T; label: string }[]
-	value: T
-	onChange: (v: T) => void
-}
-
-function ChipGroup<T extends string>({ label, options, value, onChange }: ChipGroupProps<T>) {
-	return (
-		<div className={styles.chipGroup}>
-			<span className={styles.chipGroupLabel}>{label}</span>
-			<div className={styles.chipRow}>
-				{options.map(opt => (
-					<button key={opt.key} type="button" className={`${styles.chip} ${value === opt.key ? styles.chipActive : ''}`} onClick={() => onChange(opt.key)}>
-						{opt.label}
-					</button>
-				))}
-			</div>
-		</div>
-	)
-}
-
 const IconFilter: React.FC<{ active?: boolean }> = ({ active }) => (
 	<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">
 		<path d="M1 1.5h13M3.5 6.5h8M6 11.5h3" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round" />
@@ -186,13 +162,9 @@ const IconFilter: React.FC<{ active?: boolean }> = ({ active }) => (
 const Sprint: React.FC = () => {
 	const { items, addItem, toggleItem, deleteItem, fetchItems } = useSprintStore()
 	const { showToast } = useUiStore()
-	const [filter, setFilter]             = useState<FilterType>('all')
-	const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
-	const [showFilterPanel, setShowFilterPanel]       = useState(false)
-	const [filterPanelMounted, setFilterPanelMounted] = useState(false)
-	const [filterPanelVisible, setFilterPanelVisible] = useState(false)
-	const filterPanelRef  = useRef<HTMLDivElement>(null)
-	const filterTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const [filterType, setFilterType]     = useState<FilterType>('all')
+	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
+	const [showFilter, setShowFilter]     = useState(false)
 
 	const [showAdd, setShowAdd]       = useState(false)
 	const [newType, setNewType]       = useState<UnifiedTodo['type']>('todo')
@@ -221,31 +193,6 @@ const Sprint: React.FC = () => {
 	const [binHidden, setBinHidden]           = useState(true)
 	const binTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-	const openPanel = () => {
-		if (filterTimerRef.current !== null) {
-			clearTimeout(filterTimerRef.current)
-			filterTimerRef.current = null
-		}
-		setShowFilterPanel(true)
-		setFilterPanelMounted(true)
-		requestAnimationFrame(() => requestAnimationFrame(() => setFilterPanelVisible(true)))
-	}
-
-	const closePanel = () => {
-		setShowFilterPanel(false)
-		setFilterPanelVisible(false)
-		filterTimerRef.current = setTimeout(() => setFilterPanelMounted(false), PANEL_ANIM_MS)
-	}
-
-	const togglePanel = () => (showFilterPanel ? closePanel() : openPanel())
-
-	useEffect(
-		() => () => {
-			if (filterTimerRef.current !== null) clearTimeout(filterTimerRef.current)
-		},
-		[],
-	)
-
 	useEffect(
 		() => () => {
 			if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
@@ -270,9 +217,9 @@ const Sprint: React.FC = () => {
 
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
-		if (filter !== 'all' && t.type !== filter) return false
-		if (statusFilter === 'active') return !t.done
-		if (statusFilter === 'done')   return t.done
+		if (filterType !== 'all' && t.type !== filterType) return false
+		if (filterStatus === 'active') return !t.done
+		if (filterStatus === 'done')   return t.done
 		return true
 	})
 
@@ -281,7 +228,7 @@ const Sprint: React.FC = () => {
 		? filteredItems
 		: filteredItems.filter(t => t.type !== 'shopping' && t.dueDate === selectedDay)
 
-	const isFiltered = filter !== 'all' || statusFilter !== 'active'
+	const isFiltered = filterType !== 'all' || filterStatus !== 'active'
 
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
@@ -414,12 +361,12 @@ const Sprint: React.FC = () => {
 					<span className={styles.sectionTitle}>Квести</span>
 					<div className={styles.sectionActions}>
 						<button
-							className={`${styles.filterBtn} ${showFilterPanel ? styles.filterBtnOpen : ''} ${isFiltered && !showFilterPanel ? styles.filterBtnActive : ''}`}
-							onClick={togglePanel}
+							className={`${styles.filterBtn} ${isFiltered ? styles.filterBtnActive : ''}`}
+							onClick={() => setShowFilter(v => !v)}
 							aria-label="Фільтр"
 						>
 							<IconFilter active={isFiltered} />
-							{isFiltered && !showFilterPanel && <span className={styles.filterDot} />}
+							{isFiltered && <span className={styles.filterDot} />}
 						</button>
 						<button className={styles.addBtn} onClick={() => setShowAdd(true)} aria-label="Додати">
 							<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -429,58 +376,24 @@ const Sprint: React.FC = () => {
 					</div>
 				</div>
 
-				{/* ── Filter panel ── */}
-				{filterPanelMounted && (
-					<div className={`${styles.filterPanel} ${filterPanelVisible ? styles.filterPanelVisible : styles.filterPanelHidden}`} ref={filterPanelRef}>
-						<ChipGroup label="Тип" options={TYPE_OPTIONS} value={filter} onChange={setFilter} />
-						<ChipGroup label="Статус" options={STATUS_OPTIONS} value={statusFilter} onChange={setStatusFilter} />
-						<div className={styles.filterFooter}>
-							{isFiltered && (
-								<button
-									className={styles.resetBtn}
-									onClick={() => {
-										setFilter('all')
-										setStatusFilter('active')
-									}}
-								>
-									Скинути все
-								</button>
-							)}
-							<button className={styles.doneBtn} onClick={closePanel}>
-								Готово
+				{/* ── Active filter pills — shown when filters are non-default ── */}
+				{isFiltered && (
+					<div className={styles.activeFilters}>
+						{filterStatus !== 'active' && (
+							<button className={styles.filterPill} onClick={() => setFilterStatus('active')}>
+								{STATUS_LABELS[filterStatus]} <span>×</span>
 							</button>
-						</div>
-					</div>
-				)}
-
-				{/* ── Active filter pills — always visible ── */}
-				{!showFilterPanel && (
-					<div className={styles.activePills}>
-						<button className={`${styles.activePill} ${filter === 'all' ? styles.activePillDefault : ''}`} onClick={() => (filter !== 'all' ? setFilter('all') : undefined)} aria-label="Фільтр типу">
-							{TYPE_OPTIONS.find(o => o.key === filter)?.label ?? 'Всі'}
-							{filter !== 'all' && (
-								<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
-									<path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-								</svg>
-							)}
-						</button>
-						<button
-							className={`${styles.activePill} ${statusFilter === 'active' ? styles.activePillDefault : ''}`}
-							onClick={() => (statusFilter !== 'active' ? setStatusFilter('active') : undefined)}
-							aria-label="Фільтр статусу"
-						>
-							{STATUS_OPTIONS.find(o => o.key === statusFilter)?.label ?? 'Активні'}
-							{statusFilter !== 'active' && (
-								<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
-									<path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-								</svg>
-							)}
-						</button>
+						)}
+						{filterType !== 'all' && (
+							<button className={styles.filterPill} onClick={() => setFilterType('all')}>
+								{TYPE_LABELS[filterType]} <span>×</span>
+							</button>
+						)}
 					</div>
 				)}
 
 				{/* ── List ── */}
-				<div key={`${filter}-${statusFilter}-${selectedDay}`} className={styles.tabContent}>
+				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
 					{dayQuests.length === 0 ? (
 						<p className={styles.dayEmptyText}>Немає задач на цей день</p>
 					) : (
@@ -492,6 +405,65 @@ const Sprint: React.FC = () => {
 					)}
 				</div>
 			</div>
+
+			{/* ── Filter bottom sheet ── */}
+			{showFilter && (
+				<>
+					<div className={styles.sheetOverlay} onClick={() => setShowFilter(false)} />
+					<div className={styles.sheet}>
+						<div className={styles.sheetHandle} />
+
+						<div className={styles.sheetSection}>
+							<p className={styles.sheetLabel}>ТИП</p>
+							<div className={styles.chipsRow}>
+								{(['all', 'sprint', 'shopping'] as FilterType[]).map(type => (
+									<button
+										key={type}
+										type="button"
+										className={`${styles.chip} ${filterType === type ? styles.chipActiveType : ''}`}
+										onClick={() => setFilterType(type)}
+									>
+										{TYPE_LABELS[type]}
+									</button>
+								))}
+							</div>
+						</div>
+
+						<div className={styles.sheetSection}>
+							<p className={styles.sheetLabel}>СТАТУС</p>
+							<div className={styles.chipsRow}>
+								{STATUS_OPTIONS.map(status => (
+									<button
+										key={status}
+										type="button"
+										className={`${styles.chip} ${filterStatus === status ? styles.chipActiveStatus : ''}`}
+										onClick={() => setFilterStatus(status)}
+									>
+										{STATUS_LABELS[status]}
+									</button>
+								))}
+							</div>
+						</div>
+
+						<div className={styles.sheetFooter}>
+							<button
+								type="button"
+								className={styles.btnReset}
+								onClick={() => { setFilterType('all'); setFilterStatus('active') }}
+							>
+								СКИНУТИ
+							</button>
+							<button
+								type="button"
+								className={styles.btnDone}
+								onClick={() => setShowFilter(false)}
+							>
+								ГОТОВО
+							</button>
+						</div>
+					</div>
+				</>
+			)}
 
 			{/* ── Add modal ── */}
 			<Modal

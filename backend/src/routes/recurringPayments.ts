@@ -11,8 +11,9 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 })
 
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-  const { name, amount, dayOfMonth, category } = req.body as {
+  const { name, amount, dayOfMonth, category, currency, amountForeign } = req.body as {
     name?: string; amount?: number; dayOfMonth?: number; category?: string
+    currency?: 'UAH' | 'USD' | 'EUR'; amountForeign?: number
   }
   if (!name?.trim() || !amount || !dayOfMonth) {
     res.status(400).json({ error: 'name, amount and dayOfMonth are required' }); return
@@ -23,17 +24,29 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     amount,
     dayOfMonth,
     category: category?.trim() || 'Інше',
+    currency: currency || 'UAH',
+    amountForeign: amountForeign ?? null,
   })
   res.status(201).json(item)
 })
 
 router.patch('/:id', async (req: Request, res: Response): Promise<void> => {
-  const item = await RecurringPayment.findOneAndUpdate(
-    { _id: req.params.id, userId: req.userId },
-    req.body,
-    { new: true }
-  )
+  const { name, amount, amountForeign, currency, dayOfMonth, isActive } = req.body as {
+    name?: string; amount?: number; amountForeign?: number | null
+    currency?: 'UAH' | 'USD' | 'EUR'; dayOfMonth?: number; isActive?: boolean
+  }
+
+  const item = await RecurringPayment.findOne({ _id: req.params.id, userId: req.userId })
   if (!item) { res.status(404).json({ error: 'Not found' }); return }
+
+  if (name          !== undefined) item.name          = name.trim()
+  if (amount        !== undefined) item.amount        = amount
+  if (amountForeign !== undefined) item.amountForeign = amountForeign ?? null
+  if (currency      !== undefined) item.currency      = currency
+  if (dayOfMonth    !== undefined) item.dayOfMonth    = dayOfMonth
+  if (isActive      !== undefined) item.isActive      = isActive
+
+  await item.save()
   res.json(item)
 })
 

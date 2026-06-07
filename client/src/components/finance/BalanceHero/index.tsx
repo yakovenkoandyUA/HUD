@@ -44,9 +44,8 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
     checkToday(todaySpent, dailyBudget)
   }, [todaySpent, dailyBudget, checkToday])
 
-  const avgPerDay = daysElapsed > 0 ? monthSpent / daysElapsed : 0
-  const projectedBalance = balance - avgPerDay * daysLeft
-  const showForecast = daysElapsed > 0 && avgPerDay > 0
+  const projectedBalance = balance - dailyBudget * daysLeft
+  const showForecast = daysLeft > 0
 
   return (
     <div className={styles.hero}>
@@ -67,11 +66,11 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
       {showForecast && (
         <div className={styles.forecast}>
           {projectedBalance > 0 ? (
-            <>При такому темпі залишиться{' '}
+            <>За нормою залишиться{' '}
               <span className={styles.forecastPos}>~{fmt(projectedBalance)} ₴</span>
             </>
           ) : (
-            <>При такому темпі не вистачить{' '}
+            <>За нормою не вистачить{' '}
               <span className={styles.forecastNeg}>~{fmt(Math.abs(projectedBalance))} ₴</span>
             </>
           )}

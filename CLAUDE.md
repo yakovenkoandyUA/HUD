@@ -293,3 +293,117 @@ Service Worker підключений до Web Push (VAPID).
 **Цільові показники (орієнтовно):**
 - Break-even: ~100 Pro юзерів (~$499/міс покриває інфраструктуру)
 - Ціль Year 1: 500 Pro юзерів
+
+---
+
+## Правила написання коду (обов'язково для кожної сесії)
+
+### React — useEffect
+- НІКОЛИ не викликати `setState` синхронно в тілі `useEffect`
+- Всі setState після async операцій — тільки всередині async функції
+- Завжди додавати `cancelled` flag для cleanup при fetch:
+
+```tsx
+useEffect(() => {
+  let cancelled = false
+  const load = async () => {
+    try {
+      const data = await fetchSomething()
+      if (!cancelled) setState(data)
+    } catch {
+      if (!cancelled) setError(true)
+    }
+  }
+  load()
+  return () => { cancelled = true }
+}, [dep])
+```
+
+- Якщо useEffect тільки скидає стан (без async) — синхронний setState ok
+- НІКОЛИ не змішувати синхронний setState з async в одному useEffect
+
+### React — загальні правила
+- Optimistic update: спочатку оновити UI локально, потім зберегти на бекенд
+- При помилці бекенду — відкотити до попереднього стану через `setPrev`
+- PATCH відправляти тільки змінені поля, не весь об'єкт
+- Debounce 800мс для полів що змінюються часто (степпери, текстові поля):
+
+```tsx
+useEffect(() => {
+  const timer = setTimeout(() => saveToBackend(value), 800)
+  return () => clearTimeout(timer)
+}, [value])
+```
+
+- Пропускати перший render при debounce через `useRef`:
+
+```tsx
+const isFirstRender = useRef(true)
+useEffect(() => {
+  if (isFirstRender.current) { isFirstRender.current = false; return }
+  const timer = setTimeout(() => save(value), 800)
+  return () => clearTimeout(timer)
+}, [value])
+```
+
+### Типізація
+- ЗАВЖДИ явний `interface` для props перед компонентом
+- ЗАВЖДИ JSDoc перед кожним компонентом (вже є в правилах, нагадування)
+- НІКОЛИ не використовувати `any` — тільки конкретні типи або `unknown`
+- Для union типів — `type Status = 'active' | 'done' | 'paused'`
+
+### UI — використовувати існуючі компоненти
+Перед створенням нового UI елементу — перевірити чи є готовий:
+
+| Потреба | Компонент |
+|---------|-----------|
+| Вибір дати | `CustomDatePicker` (`components/ui/CustomDatePicker`) |
+| Модалка | `Modal` (`components/ui/Modal`) з prop `draggable` |
+| Toast повідомлення | `useUiStore().showToast(text, type)` |
+| Завантаження фото | `ImageUploadButton` + `uploadToCloudinary` |
+| Пріоритет задачі | `PriorityBadge` (▲◆▽) |
+| Прогрес-бар | `ProgressBar` (`components/ui/ProgressBar`) |
+
+- НІКОЛИ не використовувати `input[type=date]` — тільки `CustomDatePicker`
+- НІКОЛИ не створювати нову модалку з нуля — тільки існуючий `Modal`
+- НІКОЛИ не використовувати нативний `select` без стилізації —
+  або стилізувати через CSS Modules або використати існуючий dropdown
+
+### Стилі
+- ЗАВЖДИ `var(--accent)` — ніколи hex напряму в CSS або inline styles
+- ЗАВЖДИ окрема папка компонента: `ComponentName/index.tsx` + `ComponentName.module.css`
+- НЕ використовувати inline styles крім динамічних значень (ширина, висота, transform)
+- НЕ використовувати `!important`
+- Числа і дати — `font-family: var(--font-mono)` (JetBrains Mono)
+- Гривня ₴ — `font-family: var(--font-ui)` (Furore не підтримує символ ₴)
+- Кнопки — SVG іконка, не текстові символи (+, ×, →, ←)
+
+### Збереження форм
+- `onBlur` + `Enter` для збереження — не окрема кнопка "Зберегти"
+  (якщо це inline редагування)
+- Валідація перед відправкою на бекенд — не довіряти тільки HTML validation
+- Показувати error стан на полі, не тільки загальний toast
+
+### Бекенд — PATCH endpoints
+Кожен PATCH handler має:
+1. Знайти документ з перевіркою `userId` (безпека)
+2. Оновлювати тільки поля що прийшли в `req.body` (не перезаписувати все)
+3. Підтримувати всі поля моделі — не ігнорувати нові поля
+
+```ts
+// Правильний патерн
+const doc = await Model.findOne({ _id: req.params.id, userId: req.userId })
+if (!doc) return res.status(404).json({ error: 'Not found' })
+const allowed = ['field1', 'field2', 'field3']
+allowed.forEach(key => {
+  if (req.body[key] !== undefined) doc[key] = req.body[key]
+})
+await doc.save()
+res.json(doc)
+```
+
+### Загальні заборони
+- НЕ додавати нові npm залежності без крайньої необхідності
+- НЕ використовувати `console.log` в продакшн коді (тільки `console.error`)
+- НЕ хардкодити userId, імена профілів або ролі
+- НЕ дублювати логіку — винести в утиліту якщо використовується 2+ рази

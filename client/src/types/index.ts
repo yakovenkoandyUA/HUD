@@ -18,6 +18,7 @@ export interface Transaction {
   title?: string
   date: string
   category?: ExpenseCategory
+  createdAt?: string
 }
 
 export interface SprintTask {

@@ -10,7 +10,7 @@ import RecurringPayments from '../../components/finance/RecurringPayments'
 import Modal from '../../components/ui/Modal'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
-import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, fmt } from '../../utils/finance'
+import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart, fmt } from '../../utils/finance'
 import { getToken } from '../../services/api'
 import type { ExpenseCategory } from '../../types'
 import styles from './Finance.module.css'
@@ -48,16 +48,16 @@ const Finance: React.FC = () => {
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))
     .reduce((s, t) => s + t.amount, 0)
 
-  const monthStart = new Date().toISOString().slice(0, 7)
+  const periodStart = getPeriodStart()
   const totalTopup = transactions
-    .filter((t) => t.type === 'topup' && t.date.startsWith(monthStart))
+    .filter((t) => t.type === 'topup' && t.date >= periodStart)
     .reduce((s, t) => s + t.amount, 0)
   const totalExpense = transactions
-    .filter((t) => t.type === 'expense' && t.date.startsWith(monthStart))
+    .filter((t) => t.type === 'expense' && t.date >= periodStart)
     .reduce((s, t) => s + t.amount, 0)
 
   const progressPct = totalTopup > 0 ? Math.round((totalExpense / totalTopup) * 100) : 0
-  const bonus = dailyBudget * daysElapsed - totalExpense
+  const avgPerDay = daysElapsed > 0 ? Math.round(totalExpense / daysElapsed) : 0
   const delta = dailyBudget - todaySpent
 
   const handleTopup = (amount: number, description: string) => {
@@ -122,9 +122,9 @@ const Finance: React.FC = () => {
               <span className={styles.statsTileValue}>{daysLeft}</span>
             </div>
             <div className={styles.statsTile}>
-              <span className={styles.statsTileLabel}>Бонус</span>
-              <span className={`${styles.statsTileValue} ${bonus >= 0 ? styles.accent : styles.neg}`}>
-                {bonus >= 0 ? '+' : ''}{fmt(bonus)} ₴
+              <span className={styles.statsTileLabel}>Середнє/день</span>
+              <span className={`${styles.statsTileValue} ${avgPerDay <= dailyBudget ? styles.accent : styles.neg}`}>
+                {fmt(avgPerDay)} ₴
               </span>
             </div>
           </div>

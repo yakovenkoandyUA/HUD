@@ -12,6 +12,7 @@ interface ApiTransaction {
   title?: string
   category: string
   date: string
+  createdAt?: string
 }
 
 function toApiBody(tx: Transaction): object {
@@ -33,6 +34,7 @@ function fromApi(raw: ApiTransaction): Transaction {
     title: raw.title || undefined,
     category: (raw.category as ExpenseCategory) || undefined,
     date: raw.date,
+    createdAt: raw.createdAt,
   }
 }
 
