@@ -10,6 +10,19 @@ import { useProfileStore } from '../../../store/profileStore'
 import styles from './WatchlistDetail.module.css'
 import type { WatchlistItem, WatchlistStatus } from '../../../types'
 
+const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY as string | undefined
+
+interface SimilarItem {
+  id: number
+  title?: string
+  name?: string
+  poster_path: string | null
+  backdrop_path: string | null
+  overview: string
+  release_date?: string
+  first_air_date?: string
+}
+
 interface Comment {
   _id: string
   userId: string
@@ -65,6 +78,7 @@ interface WatchlistDetailProps {
   onRatingChange: (rating: number | null) => void
   onImageChange?: (url: string) => void
   onNotifyChange?: (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean; watchTogether?: boolean }) => void
+  onSimilarAdd?: (item: Omit<WatchlistItem, 'id' | 'addedAt'>) => void
   onDelete: () => void
 }
 
@@ -92,6 +106,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   onRatingChange,
   onImageChange,
   onNotifyChange,
+  onSimilarAdd,
   onDelete,
 }) => {
   const activeProfile = useProfileStore(s => s.activeProfile)
@@ -103,6 +118,15 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [comments, setComments]     = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [sending, setSending]       = useState(false)
+
+  const [similar, setSimilar]                     = useState<SimilarItem[]>([])
+  const [similarPreview, setSimilarPreview]       = useState<SimilarItem | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [similarDetails, setSimilarDetails]       = useState<any>(null)
+  const [similarStatus, setSimilarStatus]         = useState<WatchlistStatus>('want')
+  const [loadingSimilarDet, setLoadingSimilarDet] = useState(false)
+  const [localRating, setLocalRating] = useState<number>(item.rating ?? 0)
+
   const [watchedEpisodes, setWatchedEpisodes] = useState<{ season: number; episode: number }[]>(
     item.watchedEpisodes ?? []
   )
@@ -112,9 +136,11 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [nextSeasonDate, setNextSeasonDate]     = useState<string | null>(item.nextSeasonDate ?? null)
   const [showSeasonDatePicker, setShowSeasonDatePicker] = useState(false)
   const initialNextEpRef   = useRef(item.nextEpisodeDate)
-  const sheetRef           = useRef<HTMLDivElement>(null)
-  const swipeStartY        = useRef(0)
-  const swipeCurrentY      = useRef(0)
+  const sheetRef              = useRef<HTMLDivElement>(null)
+  const episodesRef           = useRef<HTMLDivElement>(null)
+  const swipeStartY           = useRef(0)
+  const swipeCurrentY         = useRef(0)
+  const dragDismissAllowed    = useRef(false)
 
   const isSeriesLike = item.category === 'series' || item.category === 'anime'
   const { episodes } = useSeriesEpisodes(isSeriesLike && item.tmdbId > 0 ? item.tmdbId : null)
@@ -132,6 +158,10 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
       body: JSON.stringify({ watchedEpisodes: updated }),
     }).catch(console.error)
   }
+
+  useEffect(() => {
+    setLocalRating(item.rating ?? 0)
+  }, [item.rating])
 
   // Load comments when item changes
   useEffect(() => {
@@ -180,6 +210,93 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     setComments(prev => prev.filter(c => c._id !== commentId))
     await authFetch(`/api/watchlist/${item.id}/comments/${commentId}`, { method: 'DELETE' })
   }
+
+  // Load similar items from TMDB
+  useEffect(() => {
+    if (!item.tmdbId || item.category === 'book' || !TMDB_KEY) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const type = item.category === 'movie' ? 'movie' : 'tv'
+        const base = `https://api.themoviedb.org/3/${type}/${item.tmdbId}`
+        const qs   = `?api_key=${TMDB_KEY}&language=uk-UA&page=1`
+
+        let r = await fetch(`${base}/recommendations${qs}`)
+        if (r.ok) {
+          const data = await r.json()
+          if (data.results?.length > 0) {
+            if (!cancelled) setSimilar(data.results.slice(0, 10))
+            return
+          }
+        }
+        // Fallback to similar if recommendations is empty
+        r = await fetch(`${base}/similar${qs}`)
+        if (r.ok && !cancelled) {
+          const data = await r.json()
+          setSimilar(data.results?.slice(0, 10) ?? [])
+        }
+      } catch { /* silent */ }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [item.tmdbId, item.category])
+
+  const handleSimilarClick = async (s: SimilarItem) => {
+    setSimilarPreview(s)
+    setSimilarDetails(null)
+    setSimilarStatus('want')
+    if (!TMDB_KEY) return
+    setLoadingSimilarDet(true)
+    try {
+      const type = item.category === 'movie' ? 'movie' : 'tv'
+      const r = await fetch(`https://api.themoviedb.org/3/${type}/${s.id}?api_key=${TMDB_KEY}&language=uk-UA`)
+      if (r.ok) setSimilarDetails(await r.json())
+    } catch { /* silent */ }
+    finally { setLoadingSimilarDet(false) }
+  }
+
+  const closeSimilarPreview = () => { setSimilarPreview(null); setSimilarDetails(null) }
+
+  const handleSimilarAdd = () => {
+    if (!similarPreview || !onSimilarAdd) return
+    const d = similarDetails
+    const title = similarPreview.title ?? similarPreview.name ?? ''
+    const year = ((d?.release_date ?? d?.first_air_date ?? similarPreview.release_date ?? similarPreview.first_air_date) ?? '').slice(0, 4)
+    onSimilarAdd({
+      tmdbId:        similarPreview.id,
+      title,
+      originalTitle: d?.original_title ?? d?.original_name ?? title,
+      category:      item.category,
+      status:        similarStatus,
+      posterPath:    d?.poster_path ?? similarPreview.poster_path ?? null,
+      backdropPath:  d?.backdrop_path ?? similarPreview.backdrop_path ?? null,
+      overview:      d?.overview ?? similarPreview.overview ?? '',
+      year,
+      genres:        d?.genres?.map((g: { name: string }) => g.name) ?? [],
+      rating:        null,
+      seasonReminder: false,
+      reminderDate:  null,
+      totalEpisodes:   d?.number_of_episodes   ?? null,
+      totalSeasons:    d?.number_of_seasons    ?? null,
+      nextEpisodeDate: d?.next_episode_to_air?.air_date ?? null,
+      watchTogether:   false,
+    })
+    closeSimilarPreview()
+  }
+
+  const similarStatusOptions: { value: WatchlistStatus; label: string }[] = item.category === 'book'
+    ? [{ value: 'want', label: 'ХОЧУ' }, { value: 'watching', label: 'ЧИТАЮ' }, { value: 'watched', label: 'ПРОЧИТАВ' }]
+    : [{ value: 'want', label: 'ХОЧУ' }, { value: 'watching', label: 'ДИВЛЮСЬ' }, { value: 'watched', label: 'ГЛЯНУВ' }]
+
+  const simHeroSrc = similarPreview
+    ? (similarDetails?.backdrop_path
+        ? `https://image.tmdb.org/t/p/w780${similarDetails.backdrop_path}`
+        : similarPreview.backdrop_path
+          ? `https://image.tmdb.org/t/p/w780${similarPreview.backdrop_path}`
+          : similarPreview.poster_path
+            ? `https://image.tmdb.org/t/p/w500${similarPreview.poster_path}`
+            : null)
+    : null
 
   // When episodes load — find nearest future episode and persist its date
   useEffect(() => {
@@ -236,7 +353,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     const onMove = (e: TouchEvent) => {
       swipeCurrentY.current = e.touches[0].clientY
       const delta = swipeCurrentY.current - swipeStartY.current
-      if (delta > 0 && sheet.scrollTop === 0) {
+      if (delta > 0 && sheet.scrollTop === 0 && dragDismissAllowed.current) {
         e.preventDefault()
         sheet.style.transform = `translateY(${Math.min(delta * 0.4, 80)}px)`
         sheet.style.transition = 'none'
@@ -250,6 +367,12 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const handleTouchStart = (e: React.TouchEvent) => {
     swipeStartY.current = e.touches[0].clientY
     swipeCurrentY.current = e.touches[0].clientY
+    // Only allow drag-dismiss when touch starts in the handle zone (top 56px of sheet)
+    const sheet = sheetRef.current
+    if (sheet) {
+      const relY = e.touches[0].clientY - sheet.getBoundingClientRect().top
+      dragDismissAllowed.current = relY < 56
+    }
   }
 
   const handleTouchEnd = () => {
@@ -257,7 +380,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     if (!sheet) return
     const delta = swipeCurrentY.current - swipeStartY.current
     sheet.style.transition = 'transform 0.25s ease'
-    if (delta > 80) {
+    if (delta > 80 && dragDismissAllowed.current) {
       sheet.style.transform = 'translateY(100%)'
       setTimeout(onClose, 250)
     } else {
@@ -269,6 +392,13 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
         }
       }, 280)
     }
+  }
+
+  const handleStartWatching = () => {
+    handleStatusChange('watching')
+    setTimeout(() => {
+      episodesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 300)
   }
 
   if (!mounted) return null
@@ -386,24 +516,54 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             ))}
           </div>
 
-          {/* Rating — interactive only when no rating set yet */}
-          {item.status === 'watched' && (item.rating == null || item.rating === 0) && (
-            <div className={styles.ratingRow}>
-              <StarRating value={item.rating} onChange={onRatingChange} size="md" />
-            </div>
+          {/* Start Watching */}
+          {item.status === 'want' && isSeriesLike && (
+            <button
+              type="button"
+              className={styles.startWatchingBtn}
+              onClick={handleStartWatching}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 3l10 5-10 5V3z" fill="currentColor"/>
+              </svg>
+              Почати дивитись
+            </button>
           )}
+
+          {/* Rating */}
+          <div className={styles.ratingWrap}>
+            <p className={styles.sectionLabel}>МОЯ ОЦІНКА</p>
+            <div className={styles.ratingRow}>
+              <StarRating
+                value={localRating || null}
+                onChange={(r) => { setLocalRating(r); onRatingChange(r) }}
+                size="md"
+              />
+              {localRating > 0 && (
+                <button
+                  type="button"
+                  className={styles.clearRating}
+                  onClick={() => { setLocalRating(0); onRatingChange(null) }}
+                >
+                  прибрати
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* Episodes — series and anime */}
           {isSeriesLike && item.tmdbId > 0 && (
-            <EpisodesList
-              tmdbId={item.tmdbId}
-              seasons={seasons}
-              watchedEpisodes={watchedEpisodes}
-              onToggleEpisode={handleToggleEpisode}
-              status={item.status}
-              initialSeason={item.currentSeason ?? 1}
-              onMarkWatched={() => onStatusChange('watched')}
-            />
+            <div ref={episodesRef}>
+              <EpisodesList
+                tmdbId={item.tmdbId}
+                seasons={seasons}
+                watchedEpisodes={watchedEpisodes}
+                onToggleEpisode={handleToggleEpisode}
+                status={item.status}
+                initialSeason={item.currentSeason ?? 1}
+                onMarkWatched={() => onStatusChange('watched')}
+              />
+            </div>
           )}
 
           {/* Watch Together toggle */}
@@ -491,6 +651,37 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                   <span className={styles.toggleKnob} />
                 </button>
               </div>}
+            </div>
+          )}
+
+          {/* Similar */}
+          {similar.length > 0 && (
+            <div className={styles.similarSection}>
+              <p className={styles.sectionLabel}>СХОЖІ</p>
+              <div className={styles.similarRow}>
+                {similar.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={styles.similarCard}
+                    onClick={() => handleSimilarClick(s)}
+                  >
+                    {s.poster_path ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w185${s.poster_path}`}
+                        alt={s.title ?? s.name}
+                        className={styles.similarPoster}
+                      />
+                    ) : (
+                      <div className={styles.similarPosterFallback} />
+                    )}
+                    <p className={styles.similarTitle}>{s.title ?? s.name}</p>
+                    <p className={styles.similarYear}>
+                      {(s.release_date ?? s.first_air_date ?? '').slice(0, 4)}
+                    </p>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -586,6 +777,85 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
         </div>
       </div>
     </div>
+
+    {similarPreview && (
+      <div className={styles.simPreview}>
+        {/* Hero */}
+        <div className={styles.simHero}>
+          {simHeroSrc
+            ? <img src={simHeroSrc} alt={similarPreview.title ?? similarPreview.name} className={styles.simHeroImg} />
+            : <div className={styles.simHeroFallback} />
+          }
+          <div className={styles.simHeroGrad} />
+          <button type="button" className={styles.simBack} onClick={closeSimilarPreview} aria-label="Назад">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <div className={styles.simTitleWrap}>
+            <h2 className={styles.simTitle}>{similarPreview.title ?? similarPreview.name}</h2>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className={styles.simContent}>
+          {loadingSimilarDet ? (
+            <div className={styles.simSkeleton}>
+              <div className={styles.simSkeletonLine} />
+              <div className={styles.simSkeletonLine} style={{ width: '55%' }} />
+            </div>
+          ) : (
+            <>
+              <div className={styles.simMeta}>
+                {((similarDetails?.release_date ?? similarDetails?.first_air_date ?? similarPreview.release_date ?? similarPreview.first_air_date) ?? '').slice(0, 4) && (
+                  <span className={styles.simMetaChip}>
+                    {((similarDetails?.release_date ?? similarDetails?.first_air_date ?? similarPreview.release_date ?? similarPreview.first_air_date) ?? '').slice(0, 4)}
+                  </span>
+                )}
+                {similarDetails?.number_of_seasons > 0 && (
+                  <span className={styles.simMetaChip}>{similarDetails.number_of_seasons} сезонів</span>
+                )}
+                {similarDetails?.vote_average > 0 && (
+                  <span className={styles.simRating}>★ {similarDetails.vote_average.toFixed(1)}</span>
+                )}
+              </div>
+              {(similarDetails?.genres?.length > 0) && (
+                <div className={styles.simGenres}>
+                  {similarDetails.genres.slice(0, 3).map((g: { id: number; name: string }) => (
+                    <span key={g.id} className={styles.simGenre}>{g.name}</span>
+                  ))}
+                </div>
+              )}
+              {(similarDetails?.overview || similarPreview.overview) && (
+                <p className={styles.simOverview}>{similarDetails?.overview || similarPreview.overview}</p>
+              )}
+            </>
+          )}
+
+          <div className={styles.simStatusWrap}>
+            <p className={styles.simStatusLabel}>ДОДАТИ ЯК</p>
+            <div className={styles.simStatusChips}>
+              {similarStatusOptions.map(s => (
+                <button
+                  key={s.value}
+                  type="button"
+                  className={`${styles.simStatusChip} ${similarStatus === s.value ? styles.simStatusActive : ''}`}
+                  onClick={() => setSimilarStatus(s.value)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {onSimilarAdd && (
+            <button type="button" className={styles.simAddBtn} onClick={handleSimilarAdd}>
+              ДОДАТИ ДО СПИСКУ
+            </button>
+          )}
+        </div>
+      </div>
+    )}
 
     {showSeasonDatePicker && (
       <CustomDatePicker

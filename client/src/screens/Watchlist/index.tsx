@@ -20,6 +20,7 @@ const STATUS_ORDER: Record<string, number> = {
   dropped:  3,
 }
 
+
 const TABS: { id: Tab; label: string }[] = [
   { id: 'movie',  label: 'Фільми' },
   { id: 'series', label: 'Серіали' },
@@ -33,6 +34,7 @@ const Watchlist: React.FC = () => {
   const [tab, setTab] = useState<Tab>('movie')
   const [activeStatus, setActiveStatus] = useState<string | null>(null)
   const [activeGenre, setActiveGenre] = useState<string | null>(null)
+
   const [sortBy, setSortBy] = useState<SortBy>('newest')
   const [sortOpen, setSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
@@ -43,6 +45,12 @@ const Watchlist: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [selected, setSelected] = useState<WatchlistItem | null>(null)
+
+  // Keep selected in sync with store so toggles (watchTogether, notify) reflect immediately
+  const effectiveSelected = useMemo(
+    () => selected ? (items.find(i => i.id === selected.id) ?? selected) : null,
+    [items, selected]
+  )
 
   const watchingItems = useMemo(
     () => items.filter((i) => i.status === 'watching'),
@@ -206,6 +214,7 @@ const Watchlist: React.FC = () => {
         </div>
       )}
 
+
       {/* ── Content ── */}
       <div className={styles.content}>
         <div className={styles.searchWrap}>
@@ -250,15 +259,16 @@ const Watchlist: React.FC = () => {
       </div>
 
       {/* ── Detail modal ── */}
-      {selected && (
+      {effectiveSelected && (
         <WatchlistDetail
-          item={selected}
+          item={effectiveSelected}
           isOpen={!!selected}
           onClose={() => setSelected(null)}
           onStatusChange={handleStatusChange}
           onRatingChange={handleRatingChange}
           onImageChange={handleImageChange}
           onNotifyChange={handleNotifyChange}
+          onSimilarAdd={addItem}
           onDelete={handleDelete}
         />
       )}

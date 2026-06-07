@@ -24,6 +24,7 @@ import shoppingRoutes from './routes/shopping'
 import labelRoutes from './routes/labels'
 import booksRoutes from './routes/books'
 import watchlistCommentsRouter from './routes/watchlistComments'
+import plansRouter from './routes/plans'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -52,6 +53,7 @@ app.use('/api/recurring', recurringRoutes)
 app.use('/api/shopping', shoppingRoutes)
 app.use('/api/labels', labelRoutes)
 app.use('/api/books', booksRoutes)
+app.use('/api/plans', plansRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
