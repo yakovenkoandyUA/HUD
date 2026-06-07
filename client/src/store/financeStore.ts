@@ -9,6 +9,7 @@ interface ApiTransaction {
   type: 'income' | 'expense'
   amount: number
   desc: string
+  title?: string
   category: string
   date: string
 }
@@ -29,6 +30,7 @@ function fromApi(raw: ApiTransaction): Transaction {
     type: raw.type === 'income' ? 'topup' : 'expense',
     amount: raw.amount,
     description: raw.desc,
+    title: raw.title || undefined,
     category: (raw.category as ExpenseCategory) || undefined,
     date: raw.date,
   }
@@ -47,6 +49,7 @@ interface FinanceState {
   addTopup: (amount: number, description: string) => void
   addExpense: (amount: number, description: string, category?: ExpenseCategory) => void
   deleteTransaction: (id: string) => void
+  renameTransaction: (id: string, title: string | undefined) => void
   setSyncStatus: (s: SyncStatus) => void
 }
 
@@ -120,6 +123,11 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       })
       .catch(() => set({ syncStatus: 'error' }))
   },
+
+  renameTransaction: (id, title) =>
+    set(s => ({
+      transactions: s.transactions.map(t => t.id === id ? { ...t, title } : t),
+    })),
 
   deleteTransaction: (id) => {
     const s = get()

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import type { Transaction } from '../../../types'
 import { fmt } from '../../../utils/finance'
+import { authFetch } from '../../../services/api'
+import { useFinanceStore } from '../../../store/financeStore'
 import Modal from '../../ui/Modal'
 import styles from './TransactionList.module.css'
 
@@ -141,12 +143,16 @@ const TYPE_OPTIONS: DropOption[] = [
 ]
 
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete }) => {
+  const renameTransaction = useFinanceStore(s => s.renameTransaction)
+
   const [pendingDelete, setPendingDelete]         = useState<string | null>(null)
   const [typeFilter, setTypeFilter]               = useState<TypeFilter>('all')
   const [categoryFilter, setCategoryFilter]       = useState('all')
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<Transaction | null>(null)
   const [isAnimating, setIsAnimating]             = useState(false)
   const [displayedList, setDisplayedList]         = useState<Transaction[]>([])
+  const [editingId, setEditingId]                 = useState<string | null>(null)
+  const [editingTitle, setEditingTitle]           = useState('')
 
   const currentMonth = new Date().toISOString().slice(0, 7)
 
@@ -190,6 +196,31 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const handleDeleteClick   = (id: string) => setPendingDelete(id)
   const handleConfirmDelete = (id: string) => { onDelete?.(id); setPendingDelete(null) }
   const handleCancelDelete  = () => setPendingDelete(null)
+
+  const handleTitleClick = (e: React.MouseEvent, t: Transaction) => {
+    e.stopPropagation()
+    const receipt = parseReceipt(t.description)
+    setEditingId(t.id)
+    setEditingTitle(t.title ?? (receipt ? receipt.store : t.description))
+  }
+
+  const handleTitleSave = async (id: string) => {
+    const trimmed = editingTitle.trim()
+    setEditingId(null)
+    if (!trimmed) return
+    const tx = transactions.find(t => t.id === id)
+    if (!tx) return
+    const oldTitle = tx.title
+    renameTransaction(id, trimmed)
+    try {
+      await authFetch(`/api/transactions/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ title: trimmed }),
+      })
+    } catch {
+      renameTransaction(id, oldTitle)
+    }
+  }
 
   const receiptModalData = selectedReceiptTx ? parseReceipt(selectedReceiptTx.description) : null
 
@@ -260,14 +291,32 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                       )}
                       <div>
                         <div className={styles.desc}>
-                          {receipt ? (
+                          {editingId === t.id ? (
+                            <input
+                              className={styles.titleInput}
+                              value={editingTitle}
+                              autoFocus
+                              onChange={e => setEditingTitle(e.target.value)}
+                              onBlur={() => handleTitleSave(t.id)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleTitleSave(t.id)
+                                if (e.key === 'Escape') setEditingId(null)
+                              }}
+                              onClick={e => e.stopPropagation()}
+                            />
+                          ) : (
                             <>
-                              {receipt.store}
-                              {t.category && (
+                              <span
+                                className={styles.titleEditable}
+                                onClick={e => handleTitleClick(e, t)}
+                              >
+                                {t.title ?? (receipt ? receipt.store : t.description)}
+                              </span>
+                              {receipt && t.category && (
                                 <span className={styles.txCategory}> · {t.category}</span>
                               )}
                             </>
-                          ) : t.description}
+                          )}
                         </div>
                         <div className={styles.date}>{formatDate(t.date)}</div>
                       </div>

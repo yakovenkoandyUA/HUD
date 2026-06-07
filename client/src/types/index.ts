@@ -15,6 +15,7 @@ export interface Transaction {
   type: 'topup' | 'expense'
   amount: number
   description: string
+  title?: string
   date: string
   category?: ExpenseCategory
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { authFetch } from '../../../services/api'
 import { useSprintStore } from '../../../store/sprintStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LabelPicker from '../LabelPicker'
@@ -299,7 +300,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
   const handleTitleBlur = useCallback(() => {
     if (!task || !titleDraft.trim()) return
-    if (titleDraft.trim() !== task.title) updateTask(task.id, { title: titleDraft.trim() })
+    const trimmed = titleDraft.trim()
+    if (trimmed === task.title) return
+    updateTask(task.id, { title: trimmed })
+    const endpoint = task.type === 'sprint' ? `/api/sprint/tasks/${task.id}` : `/api/sprint/todos/${task.id}`
+    authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ title: trimmed }) }).catch(console.error)
   }, [task, titleDraft, updateTask])
 
   const handleDescBlur = useCallback(() => {
