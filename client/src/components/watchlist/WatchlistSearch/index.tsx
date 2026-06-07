@@ -229,6 +229,17 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     category === 'series' ? 'Пошук серіалу...' :
                             'Пошук фільму...'
 
+  const closePreview = () => { setPreview(null); setPreviewDetails(null) }
+
+  const handleHeroSwipe = (e: React.TouchEvent) => {
+    const startY = e.touches[0].clientY
+    const handleEnd = (ev: TouchEvent) => {
+      if (ev.changedTouches[0].clientY - startY > 60) closePreview()
+      document.removeEventListener('touchend', handleEnd)
+    }
+    document.addEventListener('touchend', handleEnd)
+  }
+
   const heroSrc = (() => {
     if (!preview) return null
     if (previewDetails?.backdrop_path) return `https://image.tmdb.org/t/p/w780${previewDetails.backdrop_path}`
@@ -329,7 +340,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
       {preview && (
         <div className={styles.previewScreen}>
           {/* Hero */}
-          <div className={styles.previewHero}>
+          <div className={styles.previewHero} onTouchStart={handleHeroSwipe}>
             {heroSrc ? (
               <img src={heroSrc} alt={preview.title} className={styles.previewHeroImg} />
             ) : (
@@ -340,7 +351,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
             <button
               type="button"
               className={styles.previewBack}
-              onClick={() => { setPreview(null); setPreviewDetails(null) }}
+              onClick={closePreview}
               aria-label="Назад"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

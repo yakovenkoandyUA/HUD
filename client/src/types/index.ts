@@ -173,4 +173,5 @@ export interface WatchlistItem {
   nextEpisodeDate?: string | null
   nextSeasonDate?: string | null
   watchedEpisodes?: { season: number; episode: number }[]
+  watchTogether?: boolean
 }

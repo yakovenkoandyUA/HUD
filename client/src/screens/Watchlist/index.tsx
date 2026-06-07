@@ -13,6 +13,13 @@ import styles from './Watchlist.module.css'
 type Tab = WatchlistCategory
 type SortBy = 'newest' | 'oldest' | 'year_desc' | 'year_asc' | 'rating'
 
+const STATUS_ORDER: Record<string, number> = {
+  watching: 0,
+  want:     1,
+  watched:  2,
+  dropped:  3,
+}
+
 const TABS: { id: Tab; label: string }[] = [
   { id: 'movie',  label: 'Фільми' },
   { id: 'series', label: 'Серіали' },
@@ -57,12 +64,14 @@ const Watchlist: React.FC = () => {
       (i) => (!activeStatus || i.status === activeStatus) && (!activeGenre || (i.genres ?? []).includes(activeGenre))
     )
     const arr = [...filtered]
+    const byStatus = (a: WatchlistItem, b: WatchlistItem) =>
+      (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)
     switch (sortBy) {
-      case 'oldest':    return arr.sort((a, b) => a.addedAt.localeCompare(b.addedAt))
-      case 'year_desc': return arr.sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0))
-      case 'year_asc':  return arr.sort((a, b) => (Number(a.year) || 0) - (Number(b.year) || 0))
-      case 'rating':    return arr.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-      default:          return arr.sort((a, b) => b.addedAt.localeCompare(a.addedAt))
+      case 'oldest':    return arr.sort((a, b) => byStatus(a, b) || a.addedAt.localeCompare(b.addedAt))
+      case 'year_desc': return arr.sort((a, b) => byStatus(a, b) || (Number(b.year) || 0) - (Number(a.year) || 0))
+      case 'year_asc':  return arr.sort((a, b) => byStatus(a, b) || (Number(a.year) || 0) - (Number(b.year) || 0))
+      case 'rating':    return arr.sort((a, b) => byStatus(a, b) || (b.rating ?? 0) - (a.rating ?? 0))
+      default:          return arr.sort((a, b) => byStatus(a, b) || b.addedAt.localeCompare(a.addedAt))
     }
   }, [byCategoryItems, activeStatus, activeGenre, sortBy])
 
@@ -117,7 +126,7 @@ const Watchlist: React.FC = () => {
     setSelected((prev) => prev ? { ...prev, thumbnail: url || undefined } : null)
   }
 
-  const handleNotifyChange = (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean }) => {
+  const handleNotifyChange = (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean; watchTogether?: boolean }) => {
     if (!selected) return
     updateItem(selected.id, patch)
     setSelected((prev) => prev ? { ...prev, ...patch } : null)
@@ -164,15 +173,6 @@ const Watchlist: React.FC = () => {
             </React.Fragment>
           )
         })}
-        {stats.avg && (
-          <>
-            <div className={styles.statDivider} />
-            <div className={styles.stat}>
-              <span className={styles.statVal}>{stats.avg}★</span>
-              <span className={styles.statLabel}>Рейтинг</span>
-            </div>
-          </>
-        )}
       </div>
 
       {/* ── Tabs ── */}

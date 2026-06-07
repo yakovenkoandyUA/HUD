@@ -18,7 +18,9 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding: 0 16px 10px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 8px;
   scrollbar-width: none;
 }
 .scrollRow::-webkit-scrollbar { display: none; }

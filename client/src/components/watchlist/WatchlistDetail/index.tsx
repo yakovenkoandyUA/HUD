@@ -64,7 +64,7 @@ interface WatchlistDetailProps {
   onStatusChange: (status: WatchlistStatus) => void
   onRatingChange: (rating: number | null) => void
   onImageChange?: (url: string) => void
-  onNotifyChange?: (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean }) => void
+  onNotifyChange?: (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean; watchTogether?: boolean }) => void
   onDelete: () => void
 }
 
@@ -404,6 +404,27 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
               initialSeason={item.currentSeason ?? 1}
               onMarkWatched={() => onStatusChange('watched')}
             />
+          )}
+
+          {/* Watch Together toggle */}
+          {onNotifyChange && (
+            <div className={styles.togetherRow}>
+              <div className={styles.togetherInfo}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M5 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M11 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M1 14s0-3 4-3M15 14s0-3-4-3M8 11c2.5 0 4 1.5 4 3H4c0-1.5 1.5-3 4-3Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+                <span className={styles.togetherLabel}>Дивитись разом</span>
+              </div>
+              <button
+                type="button"
+                className={`${styles.toggleBtn} ${item.watchTogether ? styles.toggleOn : ''}`}
+                onClick={() => onNotifyChange({ watchTogether: !item.watchTogether })}
+              >
+                <span className={styles.toggleKnob} />
+              </button>
+            </div>
           )}
 
           {/* Notify — series/anime only */}

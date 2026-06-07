@@ -62,6 +62,16 @@ const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
 
 				{getStatusLabel(item) && <span className={`${styles.statusBadge} ${STATUS_CLASS[item.status] ?? ''}`}>{getStatusLabel(item)}</span>}
 
+				{item.watchTogether && (
+					<div className={styles.togetherBadge}>
+						<svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+							<path d="M5 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.5"/>
+							<path d="M11 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.5"/>
+							<path d="M1 14s0-3 4-3M15 14s0-3-4-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+						</svg>
+					</div>
+				)}
+
 				{item.status === 'watching' && <div className={styles.watchingBar} />}
 			</div>
 

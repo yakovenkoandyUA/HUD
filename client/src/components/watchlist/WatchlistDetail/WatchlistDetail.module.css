@@ -420,6 +420,29 @@
 }
 .genreInput::placeholder { color: var(--text3); }
 
+/* ── Watch Together ── */
+.togetherRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.togetherInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text2);
+}
+
+.togetherLabel {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
 /* ── Comments ── */
 .commentsSection {
   padding-top: 16px;
