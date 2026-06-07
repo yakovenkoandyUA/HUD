@@ -89,7 +89,6 @@ const Finance: React.FC = () => {
           daysLeft={daysLeft}
           progressPct={progressPct}
           todaySpent={todaySpent}
-          daysElapsed={daysElapsed}
         />
 
         <GoalsList />
