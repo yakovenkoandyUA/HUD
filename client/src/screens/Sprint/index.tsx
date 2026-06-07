@@ -160,7 +160,7 @@ const IconFilter: React.FC<{ active?: boolean }> = ({ active }) => (
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const Sprint: React.FC = () => {
-	const { items, addItem, toggleItem, deleteItem, fetchItems } = useSprintStore()
+	const { items, loading, addItem, toggleItem, deleteItem, fetchItems, migrateFromLocalStorage } = useSprintStore()
 	const { showToast } = useUiStore()
 	const [filterType, setFilterType]     = useState<FilterType>('all')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
@@ -202,7 +202,11 @@ const Sprint: React.FC = () => {
 
 	useEffect(() => {
 		if (!getToken()) return
-		fetchItems()
+		const run = async () => {
+			await migrateFromLocalStorage()
+			fetchItems()
+		}
+		run()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
@@ -394,7 +398,9 @@ const Sprint: React.FC = () => {
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
-					{dayQuests.length === 0 ? (
+					{loading && items.length === 0 ? (
+						<p className={styles.dayEmptyText}>Завантаження...</p>
+					) : dayQuests.length === 0 ? (
 						<p className={styles.dayEmptyText}>Немає задач на цей день</p>
 					) : (
 						<ul className={styles.list}>

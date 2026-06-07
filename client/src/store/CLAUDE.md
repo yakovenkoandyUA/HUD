@@ -13,8 +13,9 @@ store/
 ├── streakStore.ts         — streak економії (currentStreak, bestStreak)
 │                            persist local (ключ: hud-streak)
 ├── sprintStore.ts         — items, globalLabels
-│                            persist тільки items (ключ: hud-sprint-v2)
+│                            БЕЗ persist (backend-only, /api/sprint/tasks)
 │                            globalLabels → backend /api/labels
+│                            migrateFromLocalStorage() — одноразова міграція з hud-sprint-v2
 ├── lessonStore.ts         — уроки
 │                            БЕЗ persist (backend-only, /api/lessons)
 ├── recipesStore.ts        — рецепти (backend-only) + mealOfWeek
@@ -34,7 +35,7 @@ store/
 ## Правила persist
 
 - `financeStore`, `watchlistStore`, `goalsStore`, `lessonStore`, `memoriesStore` — **без** persist, дані завжди з backend
-- `sprintStore` — часткова persist: тільки `items` (rich local fields: checklist/labels/dueDate/description); `globalLabels` — backend `/api/labels`
+- `sprintStore` — **без** persist, backend-only `/api/sprint/tasks`; всі поля (checklist/labels/dueDate/description) зберігаються на бекенді; `globalLabels` — `/api/labels`
 - `recipesStore` — persist тільки `mealOfWeek` + `mealWeekKey` (TheMealDB кеш на тиждень); рецепти — backend
 - `shoppingListStore` — **без** persist, backend `/api/shopping`; `fetchItems()` при mount
 - `f1PredictionsStore` — **без** persist, backend `/api/f1/predictions`; `fetchPredictions()` при mount F1Screen
