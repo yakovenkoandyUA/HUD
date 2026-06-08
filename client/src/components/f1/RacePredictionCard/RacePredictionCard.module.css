@@ -144,29 +144,6 @@
   margin: 2px 0;
 }
 
-/* ── Saved rows ── */
-.savedRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 2px 0;
-}
-
-.savedDriver {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  flex: 1;
-}
-
-.savedTeam {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text3);
-  flex-shrink: 0;
-}
-
 /* ── Shared position label ── */
 .posLabel {
   font-family: var(--font-mono);
@@ -177,20 +154,113 @@
   flex-shrink: 0;
 }
 
-/* ── Driver picker ── */
-.picker {
+/* ── Summary (collapsed saved view) ── */
+.summary {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.posTabs {
+.summaryPodium {
+  display: flex;
+  gap: 6px;
+}
+
+.summarySlot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 4px;
+}
+
+.summaryPos {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+.summaryName {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.summaryMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.metaChip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 8px;
+}
+
+.metaDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Sections ── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pts {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--gold);
+  background: var(--gold-dim, rgba(220,201,169,0.1));
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* ── Position slots (P1/P2/P3 grid) ── */
+.positionSlots {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 6px;
 }
 
-.posTab {
+.posSlot {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -198,42 +268,70 @@
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px;
+  padding: 7px 4px;
   cursor: pointer;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 
-.posTabActive {
+.posSlotActive {
   background: var(--accent-soft);
   border-color: var(--accent);
 }
 
-.posTabLabel {
+.posSlotLabel {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--text3);
 }
 
-.posTabActive .posTabLabel {
+.posSlotActive .posSlotLabel {
   color: var(--accent);
 }
 
-.posSelected {
+.posSlotAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid var(--border2);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.posSlotActive .posSlotAvatar {
+  border-color: var(--accent);
+}
+
+.posSlotAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.posSlotCode {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 9px;
   font-weight: 700;
-  color: var(--text);
+  color: var(--text2);
+  letter-spacing: 0.03em;
 }
 
-.posEmpty {
-  font-size: 13px;
+.posSlotActive .posSlotCode {
+  color: var(--accent);
+}
+
+.posSlotEmpty {
+  font-size: 14px;
   color: var(--text3);
+  line-height: 32px;
 }
 
-.driversRow {
+/* ── Driver scroll (shared: top-3 picker + DOTD) ── */
+.driverScroll {
   display: flex;
   gap: 6px;
   overflow-x: auto;
@@ -242,7 +340,7 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.driversRow::-webkit-scrollbar { display: none; }
+.driverScroll::-webkit-scrollbar { display: none; }
 
 .driverChip {
   display: flex;
@@ -255,7 +353,7 @@
   padding: 8px 6px;
   cursor: pointer;
   flex-shrink: 0;
-  width: 58px;
+  width: 54px;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -275,8 +373,8 @@
 }
 
 .chipAvatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   overflow: hidden;
   border: 1.5px solid var(--border2);
@@ -296,14 +394,120 @@
 
 .chipCode {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text2);
+  letter-spacing: 0.03em;
+}
+
+.driverChipSelected .chipCode {
+  color: var(--accent);
+}
+
+/* ── Constructor chip scroll ── */
+.chipScroll {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chipScroll::-webkit-scrollbar { display: none; }
+
+.teamChip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.teamChip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.teamChipActive {
+  background: color-mix(in srgb, var(--tc) 12%, var(--surface2));
+  border-color: var(--tc);
+}
+
+.teamChipDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tc, var(--border2));
+  flex-shrink: 0;
+}
+
+.teamChipCode {
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 700;
   color: var(--text2);
   letter-spacing: 0.04em;
 }
 
-.driverChipSelected .chipCode {
+.teamChipActive .teamChipCode {
+  color: var(--tc);
+}
+
+/* ── Safety Car toggle ── */
+.toggleRow {
+  display: flex;
+  gap: 6px;
+}
+
+.toggleChip {
+  padding: 6px 20px;
+  border-radius: 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggleChip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.toggleChipActive {
+  background: var(--accent-soft);
+  border-color: var(--accent);
   color: var(--accent);
+}
+
+/* ── Max points ── */
+.maxPts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--border);
+}
+
+.maxPtsLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+}
+
+.maxPtsNum {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
 }
 
 /* ── Lock note ── */
@@ -348,133 +552,3 @@
   transition: opacity 0.15s;
 }
 .changeBtn:hover { opacity: 0.75; }
-
-/* ── Sections ── */
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-
-.sectionLabel {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--text3);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.pts {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--gold);
-  background: var(--gold-dim, rgba(220,201,169,0.1));
-  border-radius: 4px;
-  padding: 2px 6px;
-}
-
-/* ── Teams ── */
-.teamsRow {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 4px;
-  -webkit-overflow-scrolling: touch;
-}
-.teamsRow::-webkit-scrollbar { display: none; }
-
-.teamChip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.teamChip:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.teamChipActive {
-  background: var(--surface);
-  border-color: var(--gold);
-}
-
-.teamColor {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.teamName {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text2);
-  white-space: nowrap;
-}
-
-.teamChipActive .teamName { color: var(--gold); }
-
-/* ── Safety Car ── */
-.boolPicker {
-  display: flex;
-  gap: 8px;
-}
-
-.boolBtn {
-  flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.boolBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.boolBtnActive {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-/* ── Max points ── */
-.maxPts {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0 4px;
-  border-top: 1px solid var(--border);
-}
-
-.maxPtsLabel {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--text3);
-}
-
-.maxPtsNum {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--gold);
-}

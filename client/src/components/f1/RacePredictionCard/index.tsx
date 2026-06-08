@@ -9,7 +9,9 @@ import styles from './RacePredictionCard.module.css'
  * RacePredictionCard
  * ------------------
  * Картка прогнозу на наступну гонку. Максимум 43 pts за гонку.
- * Секції: топ-3 (tab picker), конструктор (10 команд), DOTD, Safety Car.
+ * Секції: топ-3 (positionSlots + driverScroll), конструктор (chipScroll),
+ * DOTD (driverScroll), Safety Car (toggleRow).
+ * Collapsed summary після збереження; form якщо немає прогнозу.
  * Persist у backend. Auto-check p1/p2/p3 через useLastRace.
  *
  * Props:
@@ -22,20 +24,21 @@ interface Driver {
   photoUrl?: string
 }
 
-const TEAMS = [
-  { id: 'mercedes', name: 'Mercedes', color: '#00D2BE' },
-  { id: 'ferrari',  name: 'Ferrari',  color: '#DC0000' },
-  { id: 'redbull',  name: 'Red Bull', color: '#0600EF' },
-  { id: 'mclaren',  name: 'McLaren',  color: '#FF8000' },
-  { id: 'aston',    name: 'Aston',    color: '#006F62' },
-  { id: 'alpine',   name: 'Alpine',   color: '#0090FF' },
-  { id: 'williams', name: 'Williams', color: '#005AFF' },
-  { id: 'haas',     name: 'Haas',     color: '#B6BABD' },
-  { id: 'rb',       name: 'RB',       color: '#1434CB' },
-  { id: 'sauber',   name: 'Sauber',   color: '#00CF46' },
+const CONSTRUCTORS = [
+  { id: 'mercedes',     short: 'MER', color: '#00D2BE' },
+  { id: 'ferrari',      short: 'FER', color: '#E8002D' },
+  { id: 'red_bull',     short: 'RBR', color: '#3671C6' },
+  { id: 'mclaren',      short: 'MCL', color: '#FF8000' },
+  { id: 'aston_martin', short: 'AMR', color: '#229971' },
+  { id: 'alpine',       short: 'ALP', color: '#FF87BC' },
+  { id: 'williams',     short: 'WIL', color: '#64C4FF' },
+  { id: 'haas',         short: 'HAA', color: '#B6BABD' },
+  { id: 'racing_bulls', short: 'RBU', color: '#6692FF' },
+  { id: 'audi',         short: 'AUD', color: '#BB0000' },
 ]
 
 const POSITIONS = ['p1', 'p2', 'p3'] as const
+type Pos = typeof POSITIONS[number]
 
 function hoursToRace(date: string): number {
   const ms = new Date(date + 'T13:00:00Z').getTime() - Date.now()
@@ -49,39 +52,30 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
   const { drivers } = useChampionshipStandings()
   const { data: lastRace } = useLastRace()
 
-  const [p1, setP1] = useState('')
-  const [p2, setP2] = useState('')
-  const [p3, setP3] = useState('')
-  const [constructorPick, setConstructorPick] = useState<string | null>(null)
-  const [driverOfTheDay,  setDriverOfTheDay]  = useState<string | null>(null)
-  const [safetyCarPick,   setSafetyCarPick]   = useState<boolean | null>(null)
-  const [editing,   setEditing]   = useState(false)
-  const [activePos, setActivePos] = useState<'p1' | 'p2' | 'p3'>('p1')
+  const raceId      = toRaceId(race)
+  const locked      = isRaceLocked(race)
+  const currentPred = predictions.find(p => p.raceId === raceId)
 
-  // Auto-check top-3 when last race data arrives
+  const [isEditing, setIsEditing] = useState(() => !predictions.find(p => p.raceId === raceId))
+  const [p1, setP1] = useState(currentPred?.p1 ?? '')
+  const [p2, setP2] = useState(currentPred?.p2 ?? '')
+  const [p3, setP3] = useState(currentPred?.p3 ?? '')
+  const [constructorPick, setConstructorPick] = useState<string | null>(currentPred?.constructorPick ?? null)
+  const [driverOfTheDay,  setDriverOfTheDay]  = useState<string | null>(currentPred?.driverOfTheDay ?? null)
+  const [safetyCarPick,   setSafetyCarPick]   = useState<boolean | null>(currentPred?.safetyCarPick ?? null)
+  const [activePos, setActivePos] = useState<Pos>('p1')
+  const [hoursLeft] = useState(() => hoursToRace(race.date))
+
   useEffect(() => {
     if (!lastRace || lastRace.podium.length < 3) return
     const id0 = lastRace.podium[0].driverId
     const id1 = lastRace.podium[1].driverId
     const id2 = lastRace.podium[2].driverId
     if (!id0 || !id1 || !id2) return
-    const raceId = `${lastRace.date.slice(0, 4)}-r${lastRace.round}`
-    checkResult(raceId, id0, id1, id2)
+    const rId = `${lastRace.date.slice(0, 4)}-r${lastRace.round}`
+    checkResult(rId, id0, id1, id2)
   }, [lastRace]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const raceId      = toRaceId(race)
-  const locked      = isRaceLocked(race)
-  const currentPred = predictions.find(p => p.raceId === raceId)
-
-  const latestResult = [...predictions]
-    .filter(p => p.result && p.raceRound < race.round)
-    .sort((a, b) => b.raceRound - a.raceRound)[0]
-
-  const showResultFor    = currentPred?.result ? currentPred : (latestResult ?? null)
-  const resultForCurrent = showResultFor === currentPred
-  const showPredForm     = !currentPred?.result
-
-  // Helpers
   const validDrivers = drivers.filter(d => d.driverId)
   const driverById   = (id: string) => validDrivers.find(d => d.driverId === id)
   const lastName     = (id: string) => {
@@ -90,7 +84,6 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
     const parts = d.full_name.trim().split(' ')
     return parts[parts.length - 1]
   }
-  const teamOf  = (id: string) => driverById(id)?.team_name ?? ''
   const getCode = (id: string) => driverById(id)?.broadcast_name ?? id
 
   const driverList: Driver[] = validDrivers.map(d => ({
@@ -100,13 +93,6 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
       ? `https://images.weserv.nl/?url=${encodeURIComponent(d.headshot_url)}&w=72&h=72&fit=cover&a=top`
       : undefined,
   }))
-
-  const [hoursLeft] = useState(() => hoursToRace(race.date))
-  const lockText = locked
-    ? '🔒 Прогноз закрито'
-    : hoursLeft <= 24
-    ? `⏱ Закривається через ${hoursLeft} год`
-    : null
 
   const preds   = { p1, p2, p3 }
   const setters = { p1: setP1, p2: setP2, p3: setP3 }
@@ -120,7 +106,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
   const handleSave = () => {
     if (!p1 || !p2 || !p3 || new Set([p1, p2, p3]).size < 3) return
     savePrediction(race, p1, p2, p3, constructorPick, driverOfTheDay, safetyCarPick)
-    setEditing(false)
+    setIsEditing(false)
   }
 
   const handleEdit = () => {
@@ -131,8 +117,20 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
       setSafetyCarPick(currentPred.safetyCarPick)
     }
     setActivePos('p1')
-    setEditing(true)
+    setIsEditing(true)
   }
+
+  const lockText = locked
+    ? '🔒 Прогноз закрито'
+    : hoursLeft <= 24 ? `⏱ Закривається через ${hoursLeft} год` : null
+
+  const latestResult = [...predictions]
+    .filter(p => p.result && p.raceRound < race.round)
+    .sort((a, b) => b.raceRound - a.raceRound)[0]
+
+  const showResultFor    = currentPred?.result ? currentPred : (latestResult ?? null)
+  const resultForCurrent = showResultFor === currentPred
+  const showPredForm     = !currentPred?.result
 
   return (
     <div className={styles.card}>
@@ -143,7 +141,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
         <span className={styles.title}>МІЙ ПРОГНОЗ</span>
         <span className={styles.dot}>·</span>
         <span className={styles.gpName}>{race.name.toUpperCase()}</span>
-        {currentPred && !editing && <span className={styles.savedMark}>✓</span>}
+        {currentPred && !isEditing && <span className={styles.savedMark}>✓</span>}
       </div>
 
       {/* ── Result section ── */}
@@ -163,12 +161,12 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
                 <span className={styles.posLabel}>P{i + 1}</span>
                 <span className={styles.resultDriver}>{lastName(driverId)}</span>
                 <span className={
-                  match === 'exact'   ? styles.matchExact :
+                  match === 'exact'   ? styles.matchExact   :
                   match === 'partial' ? styles.matchPartial :
                                         styles.matchMiss
                 }>
-                  {match === 'exact'   ? '✅ +10 pts'              :
-                   match === 'partial' ? '🔄 +5 pts'               :
+                  {match === 'exact'   ? '✅ +10 pts'                :
+                   match === 'partial' ? '🔄 +5 pts'                 :
                                         `❌ (був ${lastName(actualId)})`}
                 </span>
               </div>
@@ -213,46 +211,49 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
         </div>
       )}
 
-      {/* ── Divider ── */}
       {showResultFor && showPredForm && <div className={styles.divider} />}
 
-      {/* ── Saved mode ── */}
-      {showPredForm && currentPred && !editing && (
-        <>
-          {POSITIONS.map((pos, i) => (
-            <div key={pos} className={styles.savedRow}>
-              <span className={styles.posLabel}>P{i + 1}</span>
-              <span className={styles.savedDriver}>{lastName(currentPred[pos])}</span>
-              <span className={styles.savedTeam}>· {teamOf(currentPred[pos])}</span>
-            </div>
-          ))}
-          {currentPred.constructorPick && (
-            <div className={styles.savedRow}>
-              <span className={styles.posLabel}>КОН</span>
-              <span className={styles.savedDriver}>{TEAMS.find(t => t.id === currentPred.constructorPick)?.name ?? currentPred.constructorPick}</span>
-            </div>
-          )}
-          {currentPred.driverOfTheDay && (
-            <div className={styles.savedRow}>
-              <span className={styles.posLabel}>DOTD</span>
-              <span className={styles.savedDriver}>{getCode(currentPred.driverOfTheDay)}</span>
-            </div>
-          )}
-          {currentPred.safetyCarPick !== null && (
-            <div className={styles.savedRow}>
-              <span className={styles.posLabel}>SC</span>
-              <span className={styles.savedDriver}>{currentPred.safetyCarPick ? 'ТАК' : 'НІ'}</span>
+      {/* ── Summary (collapsed saved prediction) ── */}
+      {showPredForm && currentPred && !isEditing && (
+        <div className={styles.summary}>
+          <div className={styles.summaryPodium}>
+            {POSITIONS.map((pos, i) => (
+              <div key={pos} className={styles.summarySlot}>
+                <span className={styles.summaryPos}>P{i + 1}</span>
+                <span className={styles.summaryName}>{getCode(currentPred[pos])}</span>
+              </div>
+            ))}
+          </div>
+          {(currentPred.constructorPick || currentPred.driverOfTheDay || currentPred.safetyCarPick !== null) && (
+            <div className={styles.summaryMeta}>
+              {currentPred.constructorPick && (() => {
+                const con = CONSTRUCTORS.find(c => c.id === currentPred.constructorPick)
+                return (
+                  <span className={styles.metaChip}>
+                    <span className={styles.metaDot} style={{ background: con?.color }} />
+                    {con?.short ?? currentPred.constructorPick}
+                  </span>
+                )
+              })()}
+              {currentPred.driverOfTheDay && (
+                <span className={styles.metaChip}>⭐ {getCode(currentPred.driverOfTheDay)}</span>
+              )}
+              {currentPred.safetyCarPick !== null && (
+                <span className={styles.metaChip}>
+                  🚗 {currentPred.safetyCarPick ? 'SC: ТАК' : 'SC: НІ'}
+                </span>
+              )}
             </div>
           )}
           {locked
             ? <p className={styles.lockNote}>🔒 Прогноз закрито</p>
-            : <button className={styles.changeBtn} onClick={handleEdit}>Змінити</button>
+            : <button className={styles.changeBtn} onClick={handleEdit}>Редагувати</button>
           }
-        </>
+        </div>
       )}
 
-      {/* ── Input mode ── */}
-      {showPredForm && (!currentPred || editing) && (
+      {/* ── Form (input mode) ── */}
+      {showPredForm && (!currentPred || isEditing) && (
         <>
           {/* Top-3 */}
           <div className={styles.section}>
@@ -260,23 +261,39 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
               ТОП-3 ФІНІШУ
               <span className={styles.pts}>до +30 pts</span>
             </p>
-            <div className={styles.posTabs}>
-              {POSITIONS.map((pos, i) => (
-                <button
-                  key={pos}
-                  type="button"
-                  className={`${styles.posTab} ${activePos === pos ? styles.posTabActive : ''}`}
-                  onClick={() => setActivePos(pos)}
-                >
-                  <span className={styles.posTabLabel}>P{i + 1}</span>
-                  {preds[pos]
-                    ? <span className={styles.posSelected}>{getCode(preds[pos])}</span>
-                    : <span className={styles.posEmpty}>—</span>
-                  }
-                </button>
-              ))}
+            <div className={styles.positionSlots}>
+              {POSITIONS.map((pos, i) => {
+                const selId     = preds[pos]
+                const selDriver = selId ? driverList.find(d => d.driverId === selId) : null
+                return (
+                  <button
+                    key={pos}
+                    type="button"
+                    className={`${styles.posSlot} ${activePos === pos ? styles.posSlotActive : ''}`}
+                    onClick={() => setActivePos(pos)}
+                  >
+                    <span className={styles.posSlotLabel}>P{i + 1}</span>
+                    {selDriver ? (
+                      <>
+                        <div className={styles.posSlotAvatar}>
+                          {selDriver.photoUrl && (
+                            <img
+                              src={selDriver.photoUrl}
+                              alt={selDriver.code}
+                              onError={e => { e.currentTarget.style.display = 'none' }}
+                            />
+                          )}
+                        </div>
+                        <span className={styles.posSlotCode}>{selDriver.code}</span>
+                      </>
+                    ) : (
+                      <span className={styles.posSlotEmpty}>—</span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
-            <div className={styles.driversRow}>
+            <div className={styles.driverScroll}>
               {driverList.map(d => {
                 const isSelected = preds[activePos] === d.driverId
                 const isUsed     = Object.values(preds).includes(d.driverId) && !isSelected
@@ -303,48 +320,52 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
           {/* Constructor */}
           <div className={styles.section}>
             <p className={styles.sectionLabel}>
-              КОНСТРУКТОР ГОНКИ
+              КОНСТРУКТОР
               <span className={styles.pts}>+5 pts</span>
             </p>
-            <div className={styles.teamsRow}>
-              {TEAMS.map(team => (
+            <div className={styles.chipScroll}>
+              {CONSTRUCTORS.map(c => (
                 <button
-                  key={team.id}
+                  key={c.id}
                   type="button"
                   disabled={locked}
-                  className={`${styles.teamChip} ${constructorPick === team.id ? styles.teamChipActive : ''}`}
-                  onClick={() => setConstructorPick(constructorPick === team.id ? null : team.id)}
+                  className={`${styles.teamChip} ${constructorPick === c.id ? styles.teamChipActive : ''}`}
+                  style={{ '--tc': c.color } as React.CSSProperties}
+                  onClick={() => setConstructorPick(constructorPick === c.id ? null : c.id)}
                 >
-                  <div className={styles.teamColor} style={{ background: team.color }} />
-                  <span className={styles.teamName}>{team.name}</span>
+                  <span className={styles.teamChipDot} />
+                  <span className={styles.teamChipCode}>{c.short}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Driver of the Day */}
+          {/* DOTD */}
           <div className={styles.section}>
             <p className={styles.sectionLabel}>
               DRIVER OF THE DAY
               <span className={styles.pts}>+5 pts</span>
             </p>
-            <div className={styles.driversRow}>
-              {driverList.map(d => (
-                <button
-                  key={d.driverId}
-                  type="button"
-                  disabled={locked}
-                  className={`${styles.driverChip} ${driverOfTheDay === d.driverId ? styles.driverChipSelected : ''}`}
-                  onClick={() => setDriverOfTheDay(driverOfTheDay === d.driverId ? null : d.driverId)}
-                >
-                  <div className={styles.chipAvatar}>
-                    {d.photoUrl && (
-                      <img src={d.photoUrl} alt={d.code} onError={e => { e.currentTarget.style.display = 'none' }} />
-                    )}
-                  </div>
-                  <span className={styles.chipCode}>{d.code}</span>
-                </button>
-              ))}
+            <div className={styles.driverScroll}>
+              {driverList.map(d => {
+                const isSelected = driverOfTheDay === d.driverId
+                return (
+                  <button
+                    key={d.driverId}
+                    type="button"
+                    disabled={locked}
+                    className={`${styles.driverChip} ${isSelected ? styles.driverChipSelected : ''}`}
+                    onClick={() => setDriverOfTheDay(isSelected ? null : d.driverId)}
+                  >
+                    <div className={styles.chipAvatar}>
+                      {d.photoUrl && (
+                        <img src={d.photoUrl} alt={d.code} onError={e => { e.currentTarget.style.display = 'none' }} />
+                      )}
+                    </div>
+                    <span className={styles.chipCode}>{d.code}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -354,11 +375,11 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
               SAFETY CAR?
               <span className={styles.pts}>+3 pts</span>
             </p>
-            <div className={styles.boolPicker}>
+            <div className={styles.toggleRow}>
               <button
                 type="button"
                 disabled={locked}
-                className={`${styles.boolBtn} ${safetyCarPick === true ? styles.boolBtnActive : ''}`}
+                className={`${styles.toggleChip} ${safetyCarPick === true ? styles.toggleChipActive : ''}`}
                 onClick={() => setSafetyCarPick(safetyCarPick === true ? null : true)}
               >
                 ТАК
@@ -366,7 +387,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
               <button
                 type="button"
                 disabled={locked}
-                className={`${styles.boolBtn} ${safetyCarPick === false ? styles.boolBtnActive : ''}`}
+                className={`${styles.toggleChip} ${safetyCarPick === false ? styles.toggleChipActive : ''}`}
                 onClick={() => setSafetyCarPick(safetyCarPick === false ? null : false)}
               >
                 НІ
@@ -374,7 +395,6 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
             </div>
           </div>
 
-          {/* Max pts */}
           <div className={styles.maxPts}>
             <span className={styles.maxPtsLabel}>МАКС ЗА ГОНКУ</span>
             <span className={styles.maxPtsNum}>43 pts</span>
@@ -388,7 +408,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
               disabled={!p1 || !p2 || !p3 || new Set([p1, p2, p3]).size < 3}
               onClick={handleSave}
             >
-              {editing ? 'Оновити прогноз' : 'Зберегти прогноз'}
+              {isEditing && currentPred ? 'Оновити прогноз' : 'Зберегти прогноз'}
             </button>
           )}
         </>
