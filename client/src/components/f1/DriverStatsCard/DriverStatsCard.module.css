@@ -1,3 +1,82 @@
+/* ── Card wrapper ── */
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  height: 140px;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 25%, var(--bg3)) 0%,
+    var(--bg2) 100%
+  );
+  display: flex;
+  align-items: flex-end;
+  padding: 12px;
+}
+
+.heroNumber {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  font-family: var(--font-display);
+  font-size: 130px;
+  font-weight: 700;
+  color: var(--team-color);
+  opacity: 0.12;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+}
+
+.speedLines {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 55px;
+  height: 100%;
+  z-index: 1;
+  opacity: 0.85;
+}
+
+.heroInfo {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.heroFirstName {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.heroLastName {
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--text);
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.heroTeam {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--team-color);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
 /* ── Container ── */
 .inner {
   background: var(--surface-2, var(--surface));

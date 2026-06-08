@@ -5,6 +5,7 @@ import styles from './DriverStatsCard.module.css'
  * DriverStatsCard
  * ---------------
  * Розгортна картка статистики пілота в таблиці пілотів.
+ * Верхній hero: ім'я, номер, колір команди, speed lines.
  * Дані з Jolpica (results + qualifying) кешуються у батьківському компоненті.
  *
  * Props:
@@ -16,13 +17,16 @@ import styles from './DriverStatsCard.module.css'
  */
 
 export interface DriverStats {
-  wins:        number
-  poles:       number
-  podiums:     number
-  fastestLaps: number
-  dnf:         number
-  nationality: string
-  number:      string
+  wins:            number
+  poles:           number
+  podiums:         number
+  fastestLaps:     number
+  dnf:             number
+  nationality:     string
+  number:          string
+  familyName:      string
+  givenName:       string
+  constructorName: string
 }
 
 interface Props {
@@ -31,6 +35,29 @@ interface Props {
   maxPoints:   number
   cachedStats: DriverStats | undefined
   onStats:     (id: string, stats: DriverStats) => void
+}
+
+const DRIVER_TEAM_COLOR: Record<string, string> = {
+  antonelli:   '#00D2BE',
+  russell:     '#00D2BE',
+  leclerc:     '#E8002D',
+  hamilton:    '#E8002D',
+  norris:      '#FF8000',
+  piastri:     '#FF8000',
+  verstappen:  '#3671C6',
+  hadjar:      '#3671C6',
+  gasly:       '#FF87BC',
+  colapinto:   '#FF87BC',
+  albon:       '#64C4FF',
+  sainz:       '#64C4FF',
+  alonso:      '#229971',
+  stroll:      '#229971',
+  bearman:     '#B6BABD',
+  hulkenberg:  '#B6BABD',
+  lawson:      '#6692FF',
+  lindblad:    '#6692FF',
+  bortoleto:   '#BB0000',
+  bottas:      '#BB0000',
 }
 
 const NATIONALITY_UA: Record<string, { flag: string; ua: string }> = {
@@ -56,7 +83,7 @@ const NATIONALITY_UA: Record<string, { flag: string; ua: string }> = {
   'Argentine':     { flag: '🇦🇷', ua: 'Аргентина' },
 }
 
-function SkeletonRows() {
+function SkeletonStats() {
   return (
     <div className={styles.inner}>
       {[80, 60, 70].map((w, i) => (
@@ -89,20 +116,25 @@ const DriverStatsCard: React.FC<Props> = ({
         const quali   = (quaJson?.MRData?.RaceTable?.Races ?? []).flatMap((r: any) => r.QualifyingResults ?? [])
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const d0      = results[0]?.Driver ?? {}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c0      = results[0]?.Constructor ?? {}
 
         const parsed: DriverStats = {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          wins:        results.filter((r: any) => r.position === '1').length,
+          wins:            results.filter((r: any) => r.position === '1').length,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          podiums:     results.filter((r: any) => Number(r.position) <= 3).length,
+          podiums:         results.filter((r: any) => Number(r.position) <= 3).length,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          fastestLaps: results.filter((r: any) => r.FastestLap?.rank === '1').length,
+          fastestLaps:     results.filter((r: any) => r.FastestLap?.rank === '1').length,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          dnf:         results.filter((r: any) => ['DNF','DNS','DSQ'].includes(r.status ?? '')).length,
+          dnf:             results.filter((r: any) => ['DNF','DNS','DSQ'].includes(r.status ?? '')).length,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          poles:       quali.filter((r: any) => r.position === '1').length,
-          nationality: d0.nationality ?? '',
-          number:      d0.permanentNumber ?? '',
+          poles:           quali.filter((r: any) => r.position === '1').length,
+          nationality:     d0.nationality ?? '',
+          number:          d0.permanentNumber ?? '',
+          familyName:      d0.familyName ?? '',
+          givenName:       d0.givenName ?? '',
+          constructorName: c0.name ?? '',
         }
         setStats(parsed)
         onStats(driverId, parsed)
@@ -113,46 +145,73 @@ const DriverStatsCard: React.FC<Props> = ({
     return () => { cancelled = true }
   }, [driverId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) return <SkeletonRows />
-  if (!stats)  return null
-
-  const pct = maxPoints > 0 ? Math.min(100, Math.round((points / maxPoints) * 100)) : 0
-  const nat = NATIONALITY_UA[stats.nationality]
+  const teamColor  = DRIVER_TEAM_COLOR[driverId] ?? 'var(--accent)'
+  const driverNum  = stats?.number ?? ''
+  const lastName   = stats?.familyName?.toUpperCase() ?? driverId.toUpperCase()
+  const firstName  = stats?.givenName ?? ''
+  const constrName = stats?.constructorName ?? ''
+  const pct        = maxPoints > 0 ? Math.min(100, Math.round((points / maxPoints) * 100)) : 0
+  const nat        = stats ? NATIONALITY_UA[stats.nationality] : undefined
 
   return (
-    <div className={styles.inner}>
+    <div className={styles.card}>
 
-      {/* Stats */}
-      <div className={styles.statsGrid}>
-        <span className={styles.statLabel}><span className={styles.icon}>🏆</span>Перемоги</span>
-        <span className={styles.statVal}>{stats.wins}</span>
+      {/* ── Hero ── */}
+      <div
+        className={styles.hero}
+        style={{ '--team-color': teamColor } as React.CSSProperties}
+      >
+        <span className={styles.heroNumber}>{driverNum}</span>
 
-        <span className={styles.statLabel}><span className={styles.icon}>🥇</span>Поули</span>
-        <span className={styles.statVal}>{stats.poles}</span>
+        <svg className={styles.speedLines} viewBox="0 0 60 120" preserveAspectRatio="none">
+          <rect x="4"  y="0"  width="5" height="120" rx="2" fill="var(--team-color)" opacity="1"/>
+          <rect x="14" y="15" width="5" height="105" rx="2" fill="var(--team-color)" opacity="0.7"/>
+          <rect x="24" y="30" width="5" height="90"  rx="2" fill="var(--team-color)" opacity="0.45"/>
+          <rect x="34" y="50" width="5" height="70"  rx="2" fill="var(--team-color)" opacity="0.25"/>
+        </svg>
 
-        <span className={styles.statLabel}><span className={styles.icon}>🏅</span>Подіуми</span>
-        <span className={styles.statVal}>{stats.podiums}</span>
-
-        <span className={styles.statLabel}><span className={styles.icon}>⚡</span>Fastest laps</span>
-        <span className={styles.statVal}>{stats.fastestLaps}</span>
-
-        <span className={styles.statLabel}><span className={styles.icon}>✕</span>DNF</span>
-        <span className={styles.statVal}>{stats.dnf}</span>
-      </div>
-
-      {/* Progress bar */}
-      <div className={styles.progress}>
-        <div className={styles.track}>
-          <div className={styles.fill} style={{ width: `${pct}%` }} />
+        <div className={styles.heroInfo}>
+          <span className={styles.heroFirstName}>{firstName}</span>
+          <span className={styles.heroLastName}>{lastName}</span>
+          <span className={styles.heroTeam}>{constrName}</span>
         </div>
-        <span className={styles.progressLabel}>{points} / {maxPoints} pts</span>
       </div>
 
-      {/* Meta */}
-      <div className={styles.meta}>
-        {nat && <span className={styles.metaItem}>{nat.flag}&nbsp;{nat.ua}</span>}
-        {stats.number && <span className={styles.metaItem}>#{stats.number}</span>}
-      </div>
+      {/* ── Stats ── */}
+      {loading ? <SkeletonStats /> : !stats ? null : (
+        <div className={styles.inner}>
+
+          <div className={styles.statsGrid}>
+            <span className={styles.statLabel}><span className={styles.icon}>🏆</span>Перемоги</span>
+            <span className={styles.statVal}>{stats.wins}</span>
+
+            <span className={styles.statLabel}><span className={styles.icon}>🥇</span>Поули</span>
+            <span className={styles.statVal}>{stats.poles}</span>
+
+            <span className={styles.statLabel}><span className={styles.icon}>🏅</span>Подіуми</span>
+            <span className={styles.statVal}>{stats.podiums}</span>
+
+            <span className={styles.statLabel}><span className={styles.icon}>⚡</span>Fastest laps</span>
+            <span className={styles.statVal}>{stats.fastestLaps}</span>
+
+            <span className={styles.statLabel}><span className={styles.icon}>✕</span>DNF</span>
+            <span className={styles.statVal}>{stats.dnf}</span>
+          </div>
+
+          <div className={styles.progress}>
+            <div className={styles.track}>
+              <div className={styles.fill} style={{ width: `${pct}%` }} />
+            </div>
+            <span className={styles.progressLabel}>{points} / {maxPoints} pts</span>
+          </div>
+
+          <div className={styles.meta}>
+            {nat && <span className={styles.metaItem}>{nat.flag}&nbsp;{nat.ua}</span>}
+            {stats.number && <span className={styles.metaItem}>#{stats.number}</span>}
+          </div>
+
+        </div>
+      )}
 
     </div>
   )
