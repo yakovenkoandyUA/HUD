@@ -10,7 +10,7 @@ import styles from './RaceCalendarList.module.css'
  * ----------------
  * Повний список Гран Прі сезону.
  * Пройдені — згорнута секція, клік → bottom sheet з результатами.
- * Майбутні — завжди відкриті, наступна виділена, клік → /f1/:round.
+ * Майбутні — list або grid режим (toggle + localStorage persist).
  *
  * Props:
  * @prop {F1Race[]} races     — повний список гонок
@@ -104,6 +104,14 @@ const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound })
 
   const pastRaces   = races.filter(r => r.date < today)
   const futureRaces = races.filter(r => r.date >= today)
+
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>(
+    () => (localStorage.getItem('f1-calendar-view') as 'list' | 'grid') ?? 'list'
+  )
+  const handleViewMode = (mode: 'list' | 'grid') => {
+    setViewMode(mode)
+    localStorage.setItem('f1-calendar-view', mode)
+  }
 
   const [pastExpanded,   setPastExpanded]   = useState(false)
   const [selectedRace,   setSelectedRace]   = useState<F1Race | null>(null)
@@ -217,42 +225,103 @@ const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound })
           </div>
         )}
 
-        {/* ── МАЙБУТНІ — always open ── */}
+        {/* ── МАЙБУТНІ — list or grid ── */}
         <div className={styles.section}>
-          <div className={styles.rows}>
-            {futureRaces.map(race => {
-              const isNext = race.round === nextRound
-              return (
-                <div
-                  key={race.round}
-                  className={`${styles.row} ${isNext ? styles.rowNext : ''}`}
-                  onClick={() => navigate(`/f1/${race.round}`)}
-                >
-                  <span className={styles.roundNum}>
-                    {String(race.round).padStart(2, '0')}
-                  </span>
-                  <span className={styles.flag}>{race.flag}</span>
-                  <div className={styles.info}>
-                    <span className={styles.name}>{race.name}</span>
-                    <span className={styles.circuit}>{race.circuit}</span>
-                  </div>
-                  <span className={styles.date}>{fmtDate(race.date)}</span>
-                  {race.trackSvg && (
-                    <div className={styles.trackWrap}>
-                      <TrackSVG
-                        src={race.trackSvg}
-                        color={isNext ? 'var(--accent)' : 'var(--text2)'}
-                        strokeWidth={1}
-                        animated={false}
-                        preserveAspectRatio="xMidYMid meet"
-                        className={styles.trackSvg}
-                      />
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+          <div className={styles.futureHeader}>
+            <span className={styles.sectionTitle}>МАЙБУТНІ</span>
+            <span className={styles.sectionCount}>{futureRaces.length}</span>
+            <div className={styles.viewToggle}>
+              <button
+                className={`${styles.toggleBtn} ${viewMode === 'list' ? styles.toggleBtnActive : ''}`}
+                onClick={() => handleViewMode('list')}
+                aria-label="Список"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+                </svg>
+              </button>
+              <button
+                className={`${styles.toggleBtn} ${viewMode === 'grid' ? styles.toggleBtnActive : ''}`}
+                onClick={() => handleViewMode('grid')}
+                aria-label="Сітка"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                </svg>
+              </button>
+            </div>
           </div>
+
+          {viewMode === 'grid' ? (
+            <div className={styles.grid}>
+              {futureRaces.map(race => {
+                const isNext = race.round === nextRound
+                return (
+                  <div
+                    key={race.round}
+                    className={`${styles.gridCell} ${isNext ? styles.gridCellNext : ''}`}
+                    onClick={() => navigate(`/f1/${race.round}`)}
+                  >
+                    {isNext && (
+                      <span className={styles.gridNextBadge}>НАСТУПНА</span>
+                    )}
+                    <div className={styles.gridTrackWrap}>
+                      {race.trackSvg ? (
+                        <TrackSVG
+                          src={race.trackSvg}
+                          color="var(--accent)"
+                          strokeWidth={1}
+                          animated={false}
+                          preserveAspectRatio="xMidYMid meet"
+                          className={styles.gridTrackSvg}
+                        />
+                      ) : (
+                        <div className={styles.gridTrackEmpty} />
+                      )}
+                    </div>
+                    <span className={styles.gridName}>{race.shortName}</span>
+                    <span className={styles.gridDate}>{fmtDate(race.date)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className={styles.rows}>
+              {futureRaces.map(race => {
+                const isNext = race.round === nextRound
+                return (
+                  <div
+                    key={race.round}
+                    className={`${styles.row} ${isNext ? styles.rowNext : ''}`}
+                    onClick={() => navigate(`/f1/${race.round}`)}
+                  >
+                    <span className={styles.roundNum}>
+                      {String(race.round).padStart(2, '0')}
+                    </span>
+                    <span className={styles.flag}>{race.flag}</span>
+                    <div className={styles.info}>
+                      <span className={styles.name}>{race.name}</span>
+                      <span className={styles.circuit}>{race.circuit}</span>
+                    </div>
+                    <span className={styles.date}>{fmtDate(race.date)}</span>
+                    {race.trackSvg && (
+                      <div className={styles.trackWrap}>
+                        <TrackSVG
+                          src={race.trackSvg}
+                          color={isNext ? 'var(--accent)' : 'var(--text2)'}
+                          strokeWidth={1}
+                          animated={false}
+                          preserveAspectRatio="xMidYMid meet"
+                          className={styles.trackSvg}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
       </div>

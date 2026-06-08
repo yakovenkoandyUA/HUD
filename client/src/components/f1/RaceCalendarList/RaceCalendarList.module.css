@@ -171,6 +171,131 @@
   opacity: 1;
 }
 
+/* ── Future header with view toggle ── */
+.futureHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px;
+}
+
+.viewToggle {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggleBtnActive {
+  background: var(--bg2);
+  color: var(--gold);
+}
+
+/* ── Grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.gridCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px 7px;
+  border-radius: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gridCell:active {
+  border-color: var(--accent);
+}
+
+.gridCellNext {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg2));
+}
+
+.gridNextBadge {
+  font-family: var(--font-ui);
+  font-size: 7px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gridTrackWrap {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gridTrackSvg {
+  width: 100%;
+  height: 100%;
+}
+
+.gridTrackSvg path,
+.gridTrackSvg polyline,
+.gridTrackSvg line {
+  stroke: var(--accent) !important;
+}
+
+.gridTrackEmpty {
+  width: 50%;
+  height: 50%;
+  border: 1px dashed var(--border2);
+  border-radius: 3px;
+}
+
+.gridName {
+  font-family: var(--font-ui);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  white-space: pre-line;
+}
+
+.gridCellNext .gridName {
+  color: var(--text);
+}
+
+.gridDate {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text3);
+}
+
 /* ── Bottom sheet overlay ── */
 .overlay {
   position: fixed;
