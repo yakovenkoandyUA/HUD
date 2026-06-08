@@ -29,11 +29,10 @@
 }
 
 .raceItemPast {
-	opacity: 0.45;
+	opacity: 0.4;
 }
 .raceItemPast .name {
-	text-decoration: line-through;
-	text-decoration-color: var(--border2);
+	text-decoration: none;
 }
 
 .checkmark {
