@@ -189,39 +189,41 @@ const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound })
               </svg>
             </button>
 
-            {pastExpanded && (
-              <div className={styles.rows}>
-                {pastRaces.map(race => (
-                  <div
-                    key={race.round}
-                    className={`${styles.row} ${styles.rowPast}`}
-                    onClick={() => handlePastRaceClick(race)}
-                  >
-                    <span className={styles.roundNum}>
-                      {String(race.round).padStart(2, '0')}
-                    </span>
-                    <span className={styles.flag}>{race.flag}</span>
-                    <div className={styles.info}>
-                      <span className={styles.name}>{race.name}</span>
-                      <span className={styles.circuit}>{race.circuit}</span>
-                    </div>
-                    <span className={styles.date}>{fmtDate(race.date)}</span>
-                    {race.trackSvg && (
-                      <div className={styles.trackWrap}>
-                        <TrackSVG
-                          src={race.trackSvg}
-                          color="var(--text3)"
-                          strokeWidth={1}
-                          animated={false}
-                          preserveAspectRatio="xMidYMid meet"
-                          className={styles.trackSvg}
-                        />
+            <div className={`${styles.accordionWrap} ${pastExpanded ? styles.accordionOpen : ''}`}>
+              <div className={styles.accordionInner}>
+                <div className={styles.rows}>
+                  {pastRaces.map(race => (
+                    <div
+                      key={race.round}
+                      className={`${styles.row} ${styles.rowPast}`}
+                      onClick={() => handlePastRaceClick(race)}
+                    >
+                      <span className={styles.roundNum}>
+                        {String(race.round).padStart(2, '0')}
+                      </span>
+                      <span className={styles.flag}>{race.flag}</span>
+                      <div className={styles.info}>
+                        <span className={styles.name}>{race.name}</span>
+                        <span className={styles.circuit}>{race.circuit}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <span className={styles.date}>{fmtDate(race.date)}</span>
+                      {race.trackSvg && (
+                        <div className={styles.trackWrap}>
+                          <TrackSVG
+                            src={race.trackSvg}
+                            color="var(--text3)"
+                            strokeWidth={1}
+                            animated={false}
+                            preserveAspectRatio="xMidYMid meet"
+                            className={styles.trackSvg}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -254,7 +256,7 @@ const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound })
           </div>
 
           {viewMode === 'grid' ? (
-            <div className={styles.grid}>
+            <div key="grid" className={`${styles.grid} ${styles.viewContent}`}>
               {futureRaces.map(race => {
                 const isNext = race.round === nextRound
                 return (
@@ -263,9 +265,9 @@ const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound })
                     className={`${styles.gridCell} ${isNext ? styles.gridCellNext : ''}`}
                     onClick={() => navigate(`/f1/${race.round}`)}
                   >
-                    {isNext && (
+                    {/* {isNext && (
                       <span className={styles.gridNextBadge}>НАСТУПНА</span>
-                    )}
+                    )} */}
                     <div className={styles.gridTrackWrap}>
                       {race.trackSvg ? (
                         <TrackSVG
@@ -287,7 +289,7 @@ const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound })
               })}
             </div>
           ) : (
-            <div className={styles.rows}>
+            <div key="list" className={`${styles.rows} ${styles.viewContent}`}>
               {futureRaces.map(race => {
                 const isNext = race.round === nextRound
                 return (
