@@ -11,21 +11,15 @@ import styles from './RaceDetail.module.css'
  * RaceDetailPage
  * --------------
  * Повна сторінка деталей гонки.
- * Секції: SVG треку, базова інформація, характеристики траси,
- * рекорди, розклад сесій, погода (майбутні) / результати (завершені).
+ * Секції: hero-трек, інфо-бар, характеристики траси,
+ * таймлайн сесій, погода (майбутні) / результати (завершені).
  */
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 
 function formatFullDate(iso: string): string {
   return new Date(iso + 'T12:00:00').toLocaleDateString('uk-UA', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  })
-}
-
-function fmtDay(date: string, time: string): string {
-  return new Date(date + 'T' + time).toLocaleDateString('uk-UA', {
-    weekday: 'short', day: 'numeric', month: 'short',
+    day: 'numeric', month: 'long', year: 'numeric',
   })
 }
 
@@ -35,27 +29,49 @@ function fmtTime(date: string, time: string): string {
   })
 }
 
-function weatherIcon(desc: string): string {
+function fmtDayHeader(dateStr: string): string {
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('uk-UA', {
+    weekday: 'short', day: 'numeric', month: 'short',
+  }).toUpperCase()
+}
+
+function weatherDesc2Icon(desc: string): string {
   const d = desc.toLowerCase()
-  if (d.includes('thunder'))                            return '⛈'
-  if (d.includes('rain') || d.includes('shower'))       return '🌧'
-  if (d.includes('snow'))                               return '🌨'
-  if (d.includes('fog') || d.includes('mist'))          return '🌫'
-  if (d.includes('partly') || d.includes('overcast'))   return '⛅'
-  if (d.includes('cloud'))                              return '☁️'
-  if (d.includes('sun') || d.includes('clear'))         return '☀️'
+  if (d.includes('thunder'))                           return '⛈'
+  if (d.includes('rain') || d.includes('shower'))      return '🌧'
+  if (d.includes('snow'))                              return '🌨'
+  if (d.includes('fog') || d.includes('mist'))         return '🌫'
+  if (d.includes('partly') || d.includes('overcast'))  return '⛅'
+  if (d.includes('cloud'))                             return '☁️'
+  if (d.includes('sun') || d.includes('clear'))        return '☀️'
   return '🌤'
 }
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 interface SessionEntry {
-  label: string
-  icon:  string
-  date:  string
-  time:  string
-  isRace?: boolean
+  label:     string
+  icon:      string
+  date:      string
+  time:      string
+  isRace?:   boolean
   isSprint?: boolean
+}
+
+type SessionType = 'race' | 'sprint' | 'sprint_quali' | 'qualifying' | 'practice'
+
+function getSessionType(s: SessionEntry): SessionType {
+  if (s.isRace) return 'race'
+  if (s.isSprint) return s.label.toLowerCase().includes('qualifying') ? 'sprint_quali' : 'sprint'
+  if (s.label.toLowerCase().includes('qualifying')) return 'qualifying'
+  return 'practice'
+}
+
+function getSessionIcon(type: SessionType): string {
+  if (type === 'race')                                  return '🏁'
+  if (type === 'sprint')                                return '🔄'
+  if (type === 'sprint_quali' || type === 'qualifying') return '⏱'
+  return '🔧'
 }
 
 function useRaceSchedule(round: number) {
@@ -93,11 +109,11 @@ function useRaceSchedule(round: number) {
         }
 
         const entries: (SessionEntry | null)[] = [
-          addIf('FirstPractice',  'Practice 1',            '🔧'),
+          addIf('FirstPractice',  'Practice 1',                     '🔧'),
           addIf('SecondPractice', isSprintWeekend ? 'Sprint Qualifying' : 'Practice 2', '🔧', isSprintWeekend ? { isSprint: true } : {}),
-          addIf('ThirdPractice',  'Practice 3',            '🔧'),
-          addIf('Sprint',         'Sprint Race',           '🔄', { isSprint: true }),
-          addIf('Qualifying',     'Qualifying',            '⚡'),
+          addIf('ThirdPractice',  'Practice 3',                     '🔧'),
+          addIf('Sprint',         'Sprint Race',                    '🔄', { isSprint: true }),
+          addIf('Qualifying',     'Qualifying',                     '⏱'),
           race.date && race.time
             ? { label: 'Race', icon: '🏁', date: race.date as string, time: race.time as string, isRace: true }
             : null,
@@ -119,7 +135,7 @@ function useRaceSchedule(round: number) {
   return { sessions, loading }
 }
 
-interface WeatherData { tempC: string; windKmph: string; desc: string }
+interface WeatherData { tempC: string; windKmph: string; desc: string; humidity: string }
 
 function useRaceWeather(city: string, enabled: boolean) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -141,9 +157,10 @@ function useRaceWeather(city: string, enabled: boolean) {
         const c = json?.current_condition?.[0]
         if (!c) return
         setWeather({
-          tempC:   c.temp_C ?? '?',
+          tempC:    c.temp_C ?? '?',
           windKmph: c.windspeedKmph ?? '?',
-          desc:    c.weatherDesc?.[0]?.value ?? '',
+          desc:     c.weatherDesc?.[0]?.value ?? '',
+          humidity: c.humidity ?? '?',
         })
       })
       .catch(() => { /* silent fail */ })
@@ -157,44 +174,54 @@ function useRaceWeather(city: string, enabled: boolean) {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <div className={styles.sectionTitle}>{children}</div>
-}
-
-function StatRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className={styles.statRow}>
-      <span className={styles.statLabel}>{label}</span>
-      <span className={styles.statValue}>{value}</span>
-    </div>
-  )
-}
-
 function CircuitStatsSection({ info }: { info: CircuitInfo }) {
   return (
     <div className={styles.section}>
-      <SectionTitle>ХАРАКТЕРИСТИКИ ТРАСИ</SectionTitle>
-      <StatRow label="⬡ Довжина кола"    value={`${info.length} км`} />
-      <StatRow label="↺ Кількість кіл"   value={String(info.laps)} />
-      <StatRow label="📏 Дистанція"       value={`${info.distance} км`} />
-      <StatRow label="↪ Поворотів"        value={String(info.turns)} />
-      <StatRow label="📍 Місто"           value={info.city} />
-      <StatRow label="🏁 Перша гонка"     value={String(info.firstRace)} />
+      <div className={styles.sectionTitle}>ХАРАКТЕРИСТИКИ ТРАСИ</div>
 
-      {(info.lapRecord || info.mostWins) && (
-        <>
-          <SectionTitle>РЕКОРДИ</SectionTitle>
-          {info.lapRecord && (
-            <>
-              <StatRow label="⏱ Рекорд кола" value={info.lapRecord.time} />
-              <StatRow label="👤 Пілот"       value={`${info.lapRecord.driver} (${info.lapRecord.year})`} />
-            </>
-          )}
-          {info.mostWins && (
-            <StatRow label="🏆 Найбільше перемог" value={`${info.mostWins.driver} (${info.mostWins.count})`} />
-          )}
-        </>
-      )}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCell}>
+          <span className={styles.statValue}>{info.length} км</span>
+          <span className={styles.statLabel}>Довжина кола</span>
+        </div>
+        <div className={styles.statCell}>
+          <span className={styles.statValue}>{info.laps}</span>
+          <span className={styles.statLabel}>Кількість кіл</span>
+        </div>
+        <div className={styles.statCell}>
+          <span className={styles.statValue}>{info.distance} км</span>
+          <span className={styles.statLabel}>Дистанція</span>
+        </div>
+        <div className={styles.statCell}>
+          <span className={styles.statValue}>{info.turns}</span>
+          <span className={styles.statLabel}>Поворотів</span>
+        </div>
+      </div>
+
+      <div className={styles.recordRows}>
+        {info.lapRecord && (
+          <>
+            <div className={styles.recordRow}>
+              <span className={styles.recordLabel}>Рекорд кола</span>
+              <span className={styles.recordValue}>{info.lapRecord.time}</span>
+            </div>
+            <div className={styles.recordRow}>
+              <span className={styles.recordMeta}>{info.lapRecord.driver}</span>
+              <span className={styles.recordMeta}>{info.lapRecord.year}</span>
+            </div>
+          </>
+        )}
+        {info.mostWins && (
+          <div className={styles.recordRow}>
+            <span className={styles.recordLabel}>Найбільше перемог</span>
+            <span className={styles.recordValue}>{info.mostWins.driver} ({info.mostWins.count})</span>
+          </div>
+        )}
+        <div className={styles.recordRow}>
+          <span className={styles.recordLabel}>Перша гонка</span>
+          <span className={styles.recordValue}>{info.firstRace}</span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -205,29 +232,67 @@ function SessionScheduleSection({ round }: { round: number }) {
   if (loading) {
     return (
       <div className={styles.section}>
-        <SectionTitle>РОЗКЛАД СЕСІЙ</SectionTitle>
-        <div className={styles.skLine} style={{ width: '80%' }} />
-        <div className={styles.skLine} style={{ width: '60%' }} />
-        <div className={styles.skLine} style={{ width: '70%' }} />
+        <div className={styles.sectionTitle}>РОЗКЛАД СЕСІЙ</div>
+        {[80, 60, 70].map((w, i) => (
+          <div key={i} className={styles.skLine} style={{ width: `${w}%` }} />
+        ))}
       </div>
     )
   }
   if (!sessions || sessions.length === 0) return null
 
+  // Group sessions by day
+  const sessionsByDay: Record<string, SessionEntry[]> = {}
+  for (const s of sessions) {
+    const key = fmtDayHeader(s.date)
+    if (!sessionsByDay[key]) sessionsByDay[key] = []
+    sessionsByDay[key].push(s)
+  }
+  const dayEntries = Object.entries(sessionsByDay)
+
   return (
     <div className={styles.section}>
-      <SectionTitle>РОЗКЛАД СЕСІЙ</SectionTitle>
-      {sessions.map((s, i) => (
-        <div
-          key={i}
-          className={`${styles.sessionRow} ${s.isRace ? styles.sessionRace : ''} ${s.isSprint ? styles.sessionSprint : ''}`}
-        >
-          <span className={styles.sessionDay}>{fmtDay(s.date, s.time)}</span>
-          <span className={styles.sessionIcon}>{s.icon}</span>
-          <span className={styles.sessionLabel}>{s.label}</span>
-          <span className={styles.sessionTime}>{fmtTime(s.date, s.time)}</span>
-        </div>
-      ))}
+      <div className={styles.sectionTitle}>РОЗКЛАД СЕСІЙ</div>
+      <div className={styles.timeline}>
+        {dayEntries.map(([day, daySessions], dayIdx) => (
+          <div key={day} className={styles.dayGroup}>
+            <div className={styles.dayHeader}>{day}</div>
+            {daySessions.map((s, i) => {
+              const type = getSessionType(s)
+              const isLast = dayIdx === dayEntries.length - 1 && i === daySessions.length - 1
+              return (
+                <div key={i} className={styles.tlRow}>
+                  <div className={styles.tlLineCol}>
+                    <div className={`
+                      ${styles.tlDot}
+                      ${type === 'race' ? styles.tlDotRace : ''}
+                      ${type === 'qualifying' || type === 'sprint_quali' ? styles.tlDotQuali : ''}
+                      ${type === 'sprint' ? styles.tlDotSprint : ''}
+                    `} />
+                    {!isLast && <div className={styles.tlConnector} />}
+                  </div>
+                  <div className={styles.tlContent}>
+                    <span className={`
+                      ${styles.tlName}
+                      ${type === 'race' ? styles.tlNameRace : ''}
+                      ${type === 'qualifying' ? styles.tlNameQuali : ''}
+                      ${type === 'sprint_quali' ? styles.tlNameQuali : ''}
+                    `}>
+                      {getSessionIcon(type)} {s.label}
+                    </span>
+                    <span className={`
+                      ${styles.tlTime}
+                      ${type === 'race' ? styles.tlTimeRace : ''}
+                    `}>
+                      {fmtTime(s.date, s.time)}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -238,14 +303,23 @@ function RaceWeatherSection({ city }: { city: string }) {
 
   return (
     <div className={styles.section}>
-      <SectionTitle>ПОГОДА</SectionTitle>
-      <div className={styles.weatherRow}>
-        <span className={styles.weatherIcon}>{weatherIcon(weather.desc)}</span>
-        <span className={styles.weatherTemp}>{weather.tempC}°C</span>
-        <span className={styles.weatherSep}>·</span>
-        <span className={styles.weatherDetail}>Вітер {weather.windKmph} км/г</span>
-        <span className={styles.weatherSep}>·</span>
-        <span className={styles.weatherDetail}>{weather.desc}</span>
+      <div className={styles.sectionTitle}>ПОГОДА</div>
+      <div className={styles.weatherGrid}>
+        <div className={styles.weatherMetric}>
+          <span className={styles.wmIcon}>🌡</span>
+          <span className={styles.wmValue}>{weather.tempC}°</span>
+          <span className={styles.wmLabel}>Температура</span>
+        </div>
+        <div className={styles.weatherMetric}>
+          <span className={styles.wmIcon}>💨</span>
+          <span className={styles.wmValue}>{weather.windKmph}</span>
+          <span className={styles.wmLabel}>км/г вітер</span>
+        </div>
+        <div className={styles.weatherMetric}>
+          <span className={styles.wmIcon}>💧</span>
+          <span className={styles.wmValue}>{weather.humidity}%</span>
+          <span className={styles.wmLabel}>Вологість</span>
+        </div>
       </div>
     </div>
   )
@@ -257,24 +331,23 @@ function RacePodiumSection({ round }: { round: number }) {
   if (!data || data.round !== round || data.podium.length < 3) return null
 
   const [p1, p2, p3] = data.podium
-  const MEDALS = ['🥇', '🥈', '🥉']
 
   return (
     <div className={styles.section}>
-      <SectionTitle>РЕЗУЛЬТАТИ</SectionTitle>
+      <div className={styles.sectionTitle}>РЕЗУЛЬТАТ</div>
       {[p1, p2, p3].map((entry, i) => (
         <div key={entry.code} className={styles.podiumRow}>
-          <span className={styles.podiumMedal}>{MEDALS[i]}</span>
+          <span className={styles.podiumPos}>{i + 1}</span>
           <span className={styles.podiumName}>{entry.lastName}</span>
           <span className={styles.podiumTeam}>{entry.team}</span>
           <span className={styles.podiumGap}>{entry.gap}</span>
         </div>
       ))}
       {data.fastestLap && (
-        <div className={styles.fastestLap}>
-          <span className={styles.flIcon}>⚡</span>
-          <span className={styles.flDriver}>{data.fastestLap.code}</span>
-          <span className={styles.flTime}>{data.fastestLap.time}</span>
+        <div className={styles.fastestRow}>
+          <span className={styles.fastestDot} />
+          <span className={styles.fastestDriver}>{data.fastestLap.code}</span>
+          <span className={styles.fastestTime}>{data.fastestLap.time}</span>
         </div>
       )}
     </div>
@@ -308,6 +381,8 @@ const RaceDetailPage: React.FC = () => {
 
   return (
     <div className={styles.screen}>
+
+      {/* ── Top bar ── */}
       <header className={styles.topBar}>
         <button className={styles.back} onClick={() => navigate('/f1')}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -318,45 +393,53 @@ const RaceDetailPage: React.FC = () => {
         <span className={styles.roundLabel}>Раунд {String(race.round).padStart(2, '0')}</span>
       </header>
 
-      {/* ── Hero ── */}
+      {/* ── Track hero ── */}
       <div className={styles.hero}>
-        {race.trackSvg && (
-          <div className={styles.heroTrackMain}>
-            <TrackSVG src={race.trackSvg} color={trackColor} strokeWidth={1.5} animated />
+        {race.trackSvg ? (
+          <TrackSVG
+            src={race.trackSvg}
+            color={trackColor}
+            strokeWidth={1.5}
+            animated={!isPast}
+          />
+        ) : (
+          <div className={styles.heroEmpty}>
+            <span className={styles.heroEmptyFlag}>{race.flag}</span>
           </div>
         )}
-        <div className={styles.heroContent}>
-          <div className={styles.heroMeta}>
-            <span className={styles.heroRound}>РАУНД {race.round}</span>
-            {isPast
-              ? <span className={styles.heroBadgeDone}>ПРОЙДЕНО</span>
-              : <span className={styles.heroBadgeNext}>НАСТУПНА</span>
-            }
-            {race.sprint && <span className={styles.sprintBadge}>SPRINT</span>}
-          </div>
-          <div className={styles.heroTitle}>
-            <span className={styles.heroFlag}>{race.flag}</span>
-            <h1 className={styles.heroName}>{race.name}</h1>
-          </div>
-          <p className={styles.heroCircuit}>{race.circuit}</p>
-          <p className={styles.heroDate}>{formatFullDate(race.date)}</p>
+      </div>
+
+      {/* ── Info bar ── */}
+      <div className={styles.infoBar}>
+        <div className={styles.metaRow}>
+          <span className={styles.metaRound}>РАУНД {String(race.round).padStart(2, '0')}</span>
+          {isPast
+            ? <span className={styles.badgeDone}>ПРОЙДЕНО</span>
+            : <span className={styles.badgeNext}>НАСТУПНА</span>
+          }
+          {race.sprint && <span className={styles.badgeSprint}>SPRINT</span>}
         </div>
+        <div className={styles.nameRow}>
+          <span className={styles.infoFlag}>{race.flag}</span>
+          <h1 className={styles.infoName}>{race.name.toUpperCase()}</h1>
+        </div>
+        <p className={styles.infoSub}>{race.circuit} · {race.country}</p>
+        <p className={styles.infoDate}>{formatFullDate(race.date)}</p>
       </div>
 
+      {/* ── Sections ── */}
       <div className={styles.content}>
-
-        {/* Extended sections */}
         {circuitInfo && <CircuitStatsSection info={circuitInfo} />}
-
         <SessionScheduleSection round={race.round} />
-
         {!isPast && circuitInfo && <RaceWeatherSection city={circuitInfo.city} />}
-
         {isPast && <RacePodiumSection round={race.round} />}
-
       </div>
+
     </div>
   )
 }
 
 export default RaceDetailPage
+
+// ── Export weather helper for NextRaceCard ────────────────────────────────────
+export { weatherDesc2Icon }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import type { F1Race } from '../../../data/f1Season2026'
+import { CIRCUIT_DATA, ROUND_TO_CIRCUIT_ID } from '../../../data/circuitData'
 import TrackSVG from '../TrackSVG'
 import styles from './NextRaceCard.module.css'
 
@@ -10,6 +11,7 @@ import styles from './NextRaceCard.module.css'
  * Три стани: нормальний countdown (дні > 0), race week (день гонки, > 2г),
  * race day (< 2г до старту) — мигаючі F1 start lights + живий таймер.
  * Фоновий SVG треку (статичний, opacity 0.07).
+ * Компактний рядок погоди міста гонки (wttr.in, silent fail).
  *
  * Props:
  * @prop {F1Race} race — дані наступної гонки
@@ -20,6 +22,13 @@ interface NextRaceCardProps {
 
 interface Cd { d: number; h: number; m: number; s: number }
 
+interface WeatherStrip {
+  temp:     string
+  wind:     string
+  humidity: string
+  icon:     string
+}
+
 function getCountdown(date: string): Cd {
   const diff = Math.max(0, new Date(date + 'T14:00:00Z').getTime() - Date.now())
   const s = Math.floor(diff / 1000)
@@ -28,6 +37,18 @@ function getCountdown(date: string): Cd {
 
 function formatRaceDate(iso: string): string {
   return new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' }).toUpperCase()
+}
+
+function weatherIcon(desc: string): string {
+  const d = desc.toLowerCase()
+  if (d.includes('thunder'))                           return '⛈'
+  if (d.includes('rain') || d.includes('shower'))      return '🌧'
+  if (d.includes('snow'))                              return '🌨'
+  if (d.includes('fog') || d.includes('mist'))         return '🌫'
+  if (d.includes('partly') || d.includes('overcast'))  return '⛅'
+  if (d.includes('cloud'))                             return '☁️'
+  if (d.includes('sun') || d.includes('clear'))        return '☀️'
+  return '🌤'
 }
 
 type LightColor = 'red' | 'orange' | 'yellow' | 'green'
@@ -56,6 +77,7 @@ function getDots(_value: number, label: string) {
 const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
   const [cd, setCd]             = useState<Cd>(() => getCountdown(race.date))
   const [lightsOn, setLightsOn] = useState(true)
+  const [weather, setWeather]   = useState<WeatherStrip | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setCd(getCountdown(race.date)), 1000)
@@ -71,7 +93,40 @@ const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
     return () => clearInterval(id)
   }, [isRaceDay])
 
-  const gpLabel      = race.name.replace(' Grand Prix', '').replace(' GP', '').toUpperCase()
+  // Fetch weather for race city
+  useEffect(() => {
+    const circuitId = ROUND_TO_CIRCUIT_ID[race.round] ?? ''
+    const city = CIRCUIT_DATA[circuitId]?.city
+    if (!city) return
+
+    let cancelled = false
+    const ctrl = new AbortController()
+    const t = setTimeout(() => ctrl.abort(), 6000)
+
+    fetch(`https://wttr.in/${encodeURIComponent(city.split(',')[0].trim())}?format=j1`, {
+      signal: ctrl.signal,
+      headers: { Accept: 'application/json' },
+    })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then((json: any) => {
+        if (cancelled) return
+        const c = json?.current_condition?.[0]
+        if (!c) return
+        setWeather({
+          temp:     c.temp_C ?? '?',
+          wind:     c.windspeedKmph ?? '?',
+          humidity: c.humidity ?? '?',
+          icon:     weatherIcon(c.weatherDesc?.[0]?.value ?? ''),
+        })
+      })
+      .catch(() => { /* silent fail */ })
+      .finally(() => clearTimeout(t))
+
+    return () => { cancelled = true; ctrl.abort() }
+  }, [race.round])
+
+  const gpLabel       = race.name.replace(' Grand Prix', '').replace(' GP', '').toUpperCase()
   const formattedDate = formatRaceDate(race.date)
 
   const countdownUnits = [
@@ -148,6 +203,18 @@ const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
               <span className={styles.countdownLabel}>{label}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Weather strip ── */}
+      {weather && (
+        <div className={styles.weatherStrip}>
+          <span className={styles.weatherStripIcon}>{weather.icon}</span>
+          <span className={styles.weatherStripTemp}>{weather.temp}°</span>
+          <span className={styles.weatherStripSep}>·</span>
+          <span className={styles.weatherStripWind}>💨 {weather.wind} км/г</span>
+          <span className={styles.weatherStripSep}>·</span>
+          <span className={styles.weatherStripHumidity}>💧 {weather.humidity}%</span>
         </div>
       )}
 

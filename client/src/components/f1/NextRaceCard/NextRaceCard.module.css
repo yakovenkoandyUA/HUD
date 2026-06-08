@@ -170,6 +170,32 @@
 }
 
 
+/* ── Weather strip ── */
+.weatherStrip {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.weatherStripIcon { font-size: 14px; }
+
+.weatherStripTemp {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.weatherStripSep { color: var(--text3); }
+
+.weatherStripWind,
+.weatherStripHumidity { color: var(--text2); }
+
 /* ── Race Day ── */
 .raceDayWrap {
   position: relative;

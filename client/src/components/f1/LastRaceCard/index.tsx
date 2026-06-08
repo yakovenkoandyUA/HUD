@@ -124,7 +124,7 @@ const LastRaceCard: React.FC = () => {
           <div className={styles.titleRow}>
             <span className={styles.flag}>{flag}</span>
             <h2 className={styles.raceName}>{data.raceName}</h2>
-            <span className={styles.laps}>{data.laps} кл</span>
+            {/* <span className={styles.laps}>{data.laps} кіл</span> */}
           </div>
           {data.fastestLap && (
             <div className={styles.fastestRow}>
