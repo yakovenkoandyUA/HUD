@@ -44,6 +44,19 @@
   opacity: 0.85;
 }
 
+.heroPhoto {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 55%;
+  object-fit: cover;
+  object-position: top center;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 35%);
+  mask-image: linear-gradient(to right, transparent 0%, black 35%);
+  pointer-events: none;
+}
+
 .heroInfo {
   position: relative;
   z-index: 2;

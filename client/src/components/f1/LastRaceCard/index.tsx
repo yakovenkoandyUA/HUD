@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { useChampionshipStandings } from '../../../hooks/useChampionshipStandings'
 import { useLastRace, type LastRaceData, type PodiumEntry } from './useLastRace'
+import { getDriverHeadshot } from '../../../utils/f1'
 import styles from './LastRaceCard.module.css'
 
 /**
@@ -36,15 +36,16 @@ const COUNTRY_FLAG: Record<string, string> = {
 type ImgStage = 'direct' | 'proxy' | 'initials'
 
 const DriverAvatar: React.FC<{
-  code: string
-  headshotUrl?: string
-  size?: number
-  gold?: boolean
-}> = ({ code, headshotUrl, size = 52, gold = false }) => {
-  const [stage, setStage] = useState<ImgStage>(headshotUrl ? 'direct' : 'initials')
+  code:     string
+  driverId: string
+  size?:    number
+  gold?:    boolean
+}> = ({ code, driverId, size = 52, gold = false }) => {
+  const url = getDriverHeadshot(driverId)
+  const [stage, setStage] = useState<ImgStage>(url ? 'direct' : 'initials')
   const avatarStyle = { width: size, height: size }
 
-  if (stage === 'initials' || !headshotUrl) {
+  if (stage === 'initials' || !url) {
     return (
       <div className={`${styles.avatar} ${gold ? styles.avatarGold : ''}`} style={avatarStyle}>
         <span className={styles.avatarInitials}>{code}</span>
@@ -53,8 +54,8 @@ const DriverAvatar: React.FC<{
   }
 
   const src = stage === 'proxy'
-    ? `https://images.weserv.nl/?url=${encodeURIComponent(headshotUrl)}`
-    : headshotUrl
+    ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}`
+    : url
 
   return (
     <div className={`${styles.avatar} ${gold ? styles.avatarGold : ''}`} style={avatarStyle}>
@@ -99,13 +100,6 @@ function Skeleton() {
 
 const LastRaceCard: React.FC = () => {
   const { data, isLoading, error } = useLastRace()
-  const { drivers } = useChampionshipStandings()
-
-  // broadcast_name in standings == 3-letter code from Jolpica results
-  const headshotMap: Record<string, string | undefined> = {}
-  for (const d of drivers) {
-    headshotMap[d.broadcast_name] = d.headshot_url
-  }
 
   if (isLoading) return <Skeleton />
   if (error || !data) return null
@@ -133,7 +127,7 @@ const LastRaceCard: React.FC = () => {
 
         {/* P2 */}
         <div className={`${styles.podiumEntry} ${styles.p2}`}>
-          <DriverAvatar code={p2.code} headshotUrl={headshotMap[p2.code]} size={52} />
+          <DriverAvatar code={p2.code} driverId={p2.driverId} size={52} />
           <span className={styles.code}>{p2.code}</span>
           <span className={styles.team}>{p2.team}</span>
           <span className={styles.gap}>{p2.gap}</span>
@@ -144,7 +138,7 @@ const LastRaceCard: React.FC = () => {
 
         {/* P1 */}
         <div className={`${styles.podiumEntry} ${styles.p1}`}>
-          <DriverAvatar code={p1.code} headshotUrl={headshotMap[p1.code]} size={64} gold />
+          <DriverAvatar code={p1.code} driverId={p1.driverId} size={64} gold />
           <span className={styles.code}>{p1.code}</span>
           <span className={styles.team}>{p1.team}</span>
           <span className={styles.gap}>{p1.gap}</span>
@@ -155,7 +149,7 @@ const LastRaceCard: React.FC = () => {
 
         {/* P3 */}
         <div className={`${styles.podiumEntry} ${styles.p3}`}>
-          <DriverAvatar code={p3.code} headshotUrl={headshotMap[p3.code]} size={52} />
+          <DriverAvatar code={p3.code} driverId={p3.driverId} size={52} />
           <span className={styles.code}>{p3.code}</span>
           <span className={styles.team}>{p3.team}</span>
           <span className={styles.gap}>{p3.gap}</span>

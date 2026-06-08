@@ -3,6 +3,7 @@ import type { F1Race } from '../../../data/f1Season2026'
 import { useF1PredictionsStore, toRaceId, isRaceLocked } from '../../../store/f1PredictionsStore'
 import { useChampionshipStandings } from '../../../hooks/useChampionshipStandings'
 import { useLastRace } from '../LastRaceCard'
+import { getDriverHeadshot } from '../../../utils/f1'
 import styles from './RacePredictionCard.module.css'
 
 /**
@@ -86,13 +87,17 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
   }
   const getCode = (id: string) => driverById(id)?.broadcast_name ?? id
 
-  const driverList: Driver[] = validDrivers.map(d => ({
-    driverId: d.driverId!,
-    code:     d.broadcast_name,
-    photoUrl: d.headshot_url
-      ? `https://images.weserv.nl/?url=${encodeURIComponent(d.headshot_url)}&w=72&h=72&fit=cover&a=top`
-      : undefined,
-  }))
+  const driverList: Driver[] = validDrivers.map(d => {
+    const f1Url = getDriverHeadshot(d.driverId!)
+    const rawUrl = f1Url ?? d.headshot_url
+    return {
+      driverId: d.driverId!,
+      code:     d.broadcast_name,
+      photoUrl: rawUrl
+        ? `https://images.weserv.nl/?url=${encodeURIComponent(rawUrl)}&w=72&h=72&fit=cover&a=top`
+        : undefined,
+    }
+  })
 
   const preds   = { p1, p2, p3 }
   const setters = { p1: setP1, p2: setP2, p3: setP3 }

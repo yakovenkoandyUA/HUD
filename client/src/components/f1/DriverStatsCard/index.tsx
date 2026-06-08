@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { getDriverHeadshot } from '../../../utils/f1'
 import styles from './DriverStatsCard.module.css'
 
 /**
@@ -145,13 +146,15 @@ const DriverStatsCard: React.FC<Props> = ({
     return () => { cancelled = true }
   }, [driverId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const teamColor  = DRIVER_TEAM_COLOR[driverId] ?? 'var(--accent)'
-  const driverNum  = stats?.number ?? ''
-  const lastName   = stats?.familyName?.toUpperCase() ?? driverId.toUpperCase()
-  const firstName  = stats?.givenName ?? ''
-  const constrName = stats?.constructorName ?? ''
-  const pct        = maxPoints > 0 ? Math.min(100, Math.round((points / maxPoints) * 100)) : 0
-  const nat        = stats ? NATIONALITY_UA[stats.nationality] : undefined
+  const teamColor    = DRIVER_TEAM_COLOR[driverId] ?? 'var(--accent)'
+  const driverNum    = stats?.number ?? ''
+  const lastName     = stats?.familyName?.toUpperCase() ?? driverId.toUpperCase()
+  const firstName    = stats?.givenName ?? ''
+  const constrName   = stats?.constructorName ?? ''
+  const pct          = maxPoints > 0 ? Math.min(100, Math.round((points / maxPoints) * 100)) : 0
+  const nat          = stats ? NATIONALITY_UA[stats.nationality] : undefined
+  const headshotUrl  = getDriverHeadshot(driverId)
+  const [photoOk, setPhotoOk] = useState(true)
 
   return (
     <div className={styles.card}>
@@ -169,6 +172,17 @@ const DriverStatsCard: React.FC<Props> = ({
           <rect x="24" y="30" width="5" height="90"  rx="2" fill="var(--team-color)" opacity="0.45"/>
           <rect x="34" y="50" width="5" height="70"  rx="2" fill="var(--team-color)" opacity="0.25"/>
         </svg>
+
+        {headshotUrl && photoOk && (
+          <img
+            className={styles.heroPhoto}
+            src={headshotUrl}
+            alt={lastName}
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
+            onError={() => setPhotoOk(false)}
+          />
+        )}
 
         <div className={styles.heroInfo}>
           <span className={styles.heroFirstName}>{firstName}</span>

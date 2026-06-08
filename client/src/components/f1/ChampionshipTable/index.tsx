@@ -3,6 +3,7 @@ import { useChampionshipStandings, type DriverStanding } from '../../../hooks/us
 // import PixelCar from '../../PixelCar'
 import DriverStatsCard, { type DriverStats } from '../DriverStatsCard'
 import ConstructorStatsCard, { type ConstructorStats } from '../ConstructorStatsCard'
+import { getDriverHeadshot } from '../../../utils/f1'
 import styles from './ChampionshipTable.module.css'
 
 /**
@@ -56,9 +57,10 @@ function initials(name: string): string {
 type ImgStage = 'direct' | 'proxy' | 'initials'
 
 function DriverAvatar({ driver }: { driver: DriverStanding }) {
-  const [stage, setStage] = useState<ImgStage>(driver.headshot_url ? 'direct' : 'initials')
+  const url = getDriverHeadshot(driver.driverId ?? '') ?? driver.headshot_url
+  const [stage, setStage] = useState<ImgStage>(url ? 'direct' : 'initials')
 
-  if (stage === 'initials' || !driver.headshot_url) {
+  if (stage === 'initials' || !url) {
     return (
       <div className={styles.avatar}>
         <span className={styles.avatarInitials}>{initials(driver.full_name)}</span>
@@ -67,8 +69,8 @@ function DriverAvatar({ driver }: { driver: DriverStanding }) {
   }
 
   const src = stage === 'proxy'
-    ? `https://images.weserv.nl/?url=${encodeURIComponent(driver.headshot_url)}`
-    : driver.headshot_url
+    ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}`
+    : url
 
   const handleError = () => {
     if (stage === 'direct') setStage('proxy')
