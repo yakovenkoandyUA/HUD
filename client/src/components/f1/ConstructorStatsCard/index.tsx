@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react'
 import styles from './ConstructorStatsCard.module.css'
 
 const TEAM_CAR_IMAGE: Record<string, string> = {
-  mercedes:     '/teams/mercedes.png',
-  ferrari:      '/teams/ferrari.png',
-  mclaren:      '/teams/mclaren.png',
-  red_bull:     '/teams/redbull.png',
-  alpine:       '/teams/alpine.png',
-  williams:     '/teams/williams.png',
-  aston_martin: '/teams/aston_martin.png',
-  haas:         '/teams/haas.png',
-  racing_bulls: '/teams/racing_bulls.png',
+  mercedes:     '/teams/mercedes_mini.avif',
+  ferrari:      '/teams/ferrari_mini.avif',
+  mclaren:      '/teams/mclaren_mini.avif',
+  red_bull:     '/teams/redbull_mini.avif',
+  alpine:       '/teams/alpine_mini.avif',
+  williams:     '/teams/williams_mini.avif',
+  aston_martin: '/teams/aston_martin_mini.avif',
+  haas:         '/teams/haas_mini.avif',
+  racing_bulls: '/teams/racing_bulls_mini.avif',
+  audi:         '/teams/audi_mini.avif',
+  cadillac:     '/teams/cadillac_mini.avif',
 }
 
 const TEAM_COLOR: Record<string, string> = {
@@ -24,7 +26,7 @@ const TEAM_COLOR: Record<string, string> = {
   haas:         '#B6BABD',
   racing_bulls: '#6692FF',
   audi:         '#BB0000',
-  cadillac:     '#FFFFFF',
+  cadillac:     '#C0C0C0',
 }
 
 /**
@@ -129,13 +131,6 @@ const ConstructorStatsCard: React.FC<Props> = ({
         className={styles.hero}
         style={{ '--team-color': teamColor } as React.CSSProperties}
       >
-        <svg className={styles.speedLines} viewBox="0 0 60 120" preserveAspectRatio="none">
-          <rect x="8"  y="0"  width="6" height="120" rx="3" fill="var(--team-color)" opacity="0.9"/>
-          <rect x="20" y="15" width="6" height="105" rx="3" fill="var(--team-color)" opacity="0.7"/>
-          <rect x="32" y="30" width="6" height="90"  rx="3" fill="var(--team-color)" opacity="0.5"/>
-          <rect x="44" y="50" width="6" height="70"  rx="3" fill="var(--team-color)" opacity="0.3"/>
-        </svg>
-
         {carImage && (
           <img
             src={carImage}
@@ -145,11 +140,21 @@ const ConstructorStatsCard: React.FC<Props> = ({
           />
         )}
 
+        <div className={styles.heroFade} />
+
+        <svg className={styles.speedLines} viewBox="0 0 60 120" preserveAspectRatio="none">
+          <rect x="4"  y="0"  width="5" height="120" rx="2" fill="var(--team-color)" opacity="1"/>
+          <rect x="14" y="15" width="5" height="105" rx="2" fill="var(--team-color)" opacity="0.7"/>
+          <rect x="24" y="30" width="5" height="90"  rx="2" fill="var(--team-color)" opacity="0.45"/>
+          <rect x="34" y="50" width="5" height="70"  rx="2" fill="var(--team-color)" opacity="0.25"/>
+        </svg>
+
         <div className={styles.heroInfo}>
           <span className={styles.heroName}>{teamName}</span>
-          <span className={styles.heroPts}>
-            {points} <em>pts</em>
-          </span>
+          <div className={styles.heroPtsRow}>
+            <span className={styles.heroPts}>{points}</span>
+            <span className={styles.heroPtsLabel}>pts</span>
+          </div>
         </div>
       </div>
 
