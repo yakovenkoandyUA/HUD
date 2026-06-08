@@ -20,6 +20,8 @@ function toMemory(d: Record<string, any>): Memory {
     location:  d.location || undefined,
     date:      d.date,
     coverUrl:  d.coverUrl ?? '',
+    notes:     d.notes ?? '',
+    tags:      d.tags ?? [],
     photos:    (d.photos ?? []).map(toPhoto),
     createdAt: typeof d.createdAt === 'string' ? d.createdAt : new Date(d.createdAt).toISOString(),
   }

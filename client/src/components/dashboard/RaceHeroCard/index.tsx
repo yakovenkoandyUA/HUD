@@ -120,7 +120,10 @@ const RaceHeroCard: React.FC<RaceHeroCardProps> = ({ race, onClick }) => {
           </div>
         </div>
       ) : (
-        <div className={styles.raceDay}>RACE DAY! 🏁</div>
+        <div className={styles.raceDay}>
+          <span className={styles.raceDayText}>RACE DAY!</span>
+          <span className={styles.raceDayFlag}>🏁</span>
+        </div>
       )}
 
       <div className={styles.meta}>

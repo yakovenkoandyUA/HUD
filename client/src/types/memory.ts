@@ -21,6 +21,8 @@ export interface Memory {
   location?: string
   date: string
   coverUrl: string
+  notes?: string
+  tags?: string[]
   photos: MemoryPhoto[]
   createdAt: string
 }

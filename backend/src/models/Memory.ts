@@ -12,6 +12,8 @@ export interface IMemory extends Document {
   location: string
   date: string
   coverUrl: string
+  notes: string
+  tags: string[]
   photos: Types.DocumentArray<IMemoryPhoto>
   userId: string
 }
@@ -27,6 +29,8 @@ const schema = new Schema<IMemory>({
   location: { type: String, default: '' },
   date:     { type: String, required: true },
   coverUrl: { type: String, default: '' },
+  notes:    { type: String, default: '' },
+  tags:     [{ type: String }],
   photos:   { type: [photoSchema], default: [] },
   userId:   { type: String, required: true, index: true },
 }, { timestamps: true })

@@ -105,55 +105,164 @@
   padding: 12px 16px 4px;
 }
 
-.addPhotoBtn {
+.btnPhoto {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 12px;
-  background: var(--surface);
-  border: 1px dashed var(--border2);
+  padding: 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
   border-radius: 10px;
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--accent);
+  color: var(--text2);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s;
 }
-.addPhotoBtn:hover:not(:disabled) {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-}
-.addPhotoBtn:disabled {
-  opacity: 0.6;
+.btnPhoto:hover:not(:disabled) { background: var(--surface); }
+.btnPhoto:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.posterBtn {
+.btnPoster {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
+  padding: 11px;
+  background: linear-gradient(135deg, rgba(184,58,45,0.15) 0%, rgba(220,201,169,0.1) 100%);
+  border: 1px solid rgba(220,201,169,0.25);
   border-radius: 10px;
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--second);
+  color: var(--gold, var(--accent));
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: opacity 0.15s;
 }
-.posterBtn:active {
-  background: rgba(var(--second-rgb, 100,149,237), 0.1);
-  border-color: var(--second);
+.btnPoster:active { opacity: 0.75; }
+
+/* ── Notes ── */
+.notesSection {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
 }
+
+.sectionLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  margin: 0 0 8px;
+}
+
+.notesText {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.7;
+  cursor: pointer;
+  min-height: 28px;
+  margin: 0;
+}
+
+.notesPlaceholder {
+  color: var(--text3);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.notesTextarea {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--accent);
+  border-radius: 0;
+  padding: 4px 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.7;
+  resize: none;
+  outline: none;
+}
+
+/* ── Tags ── */
+.tagsSection {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.tagsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.tagHash {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.tagRemove {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 0 0 2px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tagInputWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  border: 1px dashed var(--border2);
+  border-radius: 20px;
+}
+
+.tagInputPrefix {
+  color: var(--text3);
+  font-size: 11px;
+}
+
+.tagInput {
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+  width: 60px;
+}
+.tagInput::placeholder { color: var(--text3); }
 
 /* ── Empty photos ── */
 .emptyPhotos {
@@ -182,11 +291,12 @@
   color: var(--text3);
 }
 
-/* ── Masonry grid ── */
-.masonryGrid {
-  columns: 3;
-  column-gap: 8px;
-  padding: 8px 16px 24px;
+/* ── Photo grid ── */
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  padding-bottom: 24px;
 }
 
 @keyframes shimmer {
@@ -195,9 +305,7 @@
 }
 
 .photoItem {
-  break-inside: avoid;
-  margin-bottom: 8px;
-  border-radius: 8px;
+  aspect-ratio: 1;
   overflow: hidden;
   cursor: pointer;
   position: relative;

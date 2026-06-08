@@ -47,7 +47,7 @@ const PhotoItem: React.FC<PhotoItemProps> = ({ photo, onTap, onSetCover, onDelet
 
   return (
     <div className={styles.photoItem} {...longPress}>
-      {!loaded && <div className={styles.photoSkeleton} style={{ height: 120 }} />}
+      {!loaded && <div className={styles.photoSkeleton} />}
       <img
         src={photo.url}
         alt={photo.caption ?? ''}
@@ -163,6 +163,9 @@ const MemoryDetailScreen: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPosterGen, setShowPosterGen] = useState(false)
 
+  const [editingNotes, setEditingNotes] = useState(false)
+  const [localNotes, setLocalNotes]     = useState('')
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFilesChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,6 +199,27 @@ const MemoryDetailScreen: React.FC = () => {
   const handleDeleteMemory = () => {
     deleteMemory(id!)
     navigate(-1)
+  }
+
+  const handleSaveNotes = async (notes: string) => {
+    setEditingNotes(false)
+    updateMemory(id!, { notes })
+  }
+
+  const handleAddTag = (tag: string) => {
+    if (!tag || !memory) return
+    const trimmed = tag.trim().toLowerCase().replace(/\s+/g, '')
+    if (!trimmed) return
+    const current = memory.tags ?? []
+    if (current.includes(trimmed)) return
+    const updated = [...current, trimmed]
+    updateMemory(id!, { tags: updated })
+  }
+
+  const handleRemoveTag = (tag: string) => {
+    if (!memory) return
+    const updated = (memory.tags ?? []).filter(t => t !== tag)
+    updateMemory(id!, { tags: updated })
   }
 
   if (!memory) {
@@ -270,7 +294,7 @@ const MemoryDetailScreen: React.FC = () => {
         />
         <button
           type="button"
-          className={styles.addPhotoBtn}
+          className={styles.btnPhoto}
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
         >
@@ -288,7 +312,7 @@ const MemoryDetailScreen: React.FC = () => {
         </button>
         <button
           type="button"
-          className={styles.posterBtn}
+          className={styles.btnPoster}
           onClick={() => setShowPosterGen(true)}
         >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -300,6 +324,63 @@ const MemoryDetailScreen: React.FC = () => {
         </button>
       </div>
 
+      {/* ── Notes ── */}
+      <div className={styles.notesSection}>
+        <p className={styles.sectionLabel}>НОТАТКИ</p>
+        {editingNotes ? (
+          <textarea
+            className={styles.notesTextarea}
+            value={localNotes}
+            onChange={e => setLocalNotes(e.target.value)}
+            onBlur={() => handleSaveNotes(localNotes)}
+            autoFocus
+            rows={4}
+          />
+        ) : (
+          <p
+            className={styles.notesText}
+            onClick={() => { setLocalNotes(memory.notes ?? ''); setEditingNotes(true) }}
+          >
+            {memory.notes
+              ? memory.notes
+              : <span className={styles.notesPlaceholder}>Додати нотатки...</span>
+            }
+          </p>
+        )}
+      </div>
+
+      {/* ── Tags ── */}
+      <div className={styles.tagsSection}>
+        <p className={styles.sectionLabel}>ТЕГИ</p>
+        <div className={styles.tagsWrap}>
+          {(memory.tags ?? []).map(tag => (
+            <span key={tag} className={styles.tag}>
+              <span className={styles.tagHash}>#</span>
+              {tag}
+              <button
+                type="button"
+                className={styles.tagRemove}
+                onClick={() => handleRemoveTag(tag)}
+              >×</button>
+            </span>
+          ))}
+          <span className={styles.tagInputWrap}>
+            <span className={styles.tagInputPrefix}>#</span>
+            <input
+              className={styles.tagInput}
+              placeholder="тег"
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ',') {
+                  e.preventDefault()
+                  handleAddTag(e.currentTarget.value)
+                  e.currentTarget.value = ''
+                }
+              }}
+            />
+          </span>
+        </div>
+      </div>
+
       {/* ── Photos masonry grid ── */}
       {memory.photos.length === 0 ? (
         <div className={styles.emptyPhotos}>
@@ -308,7 +389,7 @@ const MemoryDetailScreen: React.FC = () => {
           <p className={styles.emptyHint}>Натисни «+ Додати фото» вище</p>
         </div>
       ) : (
-        <div className={styles.masonryGrid}>
+        <div className={styles.photoGrid}>
           {memory.photos.map((photo, i) => (
             <PhotoItem
               key={photo.id}

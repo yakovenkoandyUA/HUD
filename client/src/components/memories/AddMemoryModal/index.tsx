@@ -19,6 +19,8 @@ export interface AddMemoryData {
   location?: string
   date: string
   coverUrl: string
+  notes?: string
+  tags?: string[]
 }
 
 interface AddMemoryModalProps {
@@ -40,6 +42,8 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   const [location, setLocation] = useState('')
   const [date, setDate]         = useState(today())
   const [coverUrl, setCoverUrl] = useState('')
+  const [notes, setNotes]       = useState('')
+  const [tags, setTags]         = useState<string[]>([])
   const [showPicker, setShowPicker] = useState(false)
 
   const reset = () => {
@@ -47,6 +51,8 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
     setLocation('')
     setDate(today())
     setCoverUrl('')
+    setNotes('')
+    setTags([])
     setShowPicker(false)
   }
 
@@ -55,9 +61,27 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
     onClose()
   }
 
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const val = e.currentTarget.value.trim().toLowerCase().replace(/\s+/g, '')
+      if (val && !tags.includes(val)) setTags(prev => [...prev, val])
+      e.currentTarget.value = ''
+    }
+  }
+
+  const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag))
+
   const handleCreate = () => {
     if (!title.trim() || !date) return
-    onCreate({ title: title.trim(), location: location.trim() || undefined, date, coverUrl })
+    onCreate({
+      title:    title.trim(),
+      location: location.trim() || undefined,
+      date,
+      coverUrl,
+      notes:    notes.trim() || undefined,
+      tags:     tags.length ? tags : undefined,
+    })
     reset()
   }
 
@@ -119,6 +143,34 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
               onClose={() => setShowPicker(false)}
             />
           )}
+
+          <div className={styles.field}>
+            <label className={styles.label}>НОТАТКИ <span className={styles.optional}>(необов'язково)</span></label>
+            <textarea
+              className={styles.textarea}
+              placeholder="Що запам'яталось..."
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>ТЕГИ <span className={styles.optional}>(Enter або кома)</span></label>
+            <div className={styles.tagsWrap}>
+              {tags.map(tag => (
+                <span key={tag} className={styles.tag}>
+                  #{tag}
+                  <button type="button" className={styles.tagRemove} onClick={() => removeTag(tag)}>×</button>
+                </span>
+              ))}
+              <input
+                className={styles.tagInput}
+                placeholder="+ додати тег"
+                onKeyDown={handleTagKeyDown}
+              />
+            </div>
+          </div>
 
           <Button
             fullWidth

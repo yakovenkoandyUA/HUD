@@ -106,6 +106,8 @@ const MemoriesScreen: React.FC = () => {
       location: data.location,
       date:     data.date,
       coverUrl: data.coverUrl,
+      notes:    data.notes,
+      tags:     data.tags,
       photos:   [],
     })
     setShowAdd(false)

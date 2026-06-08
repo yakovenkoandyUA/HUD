@@ -33,13 +33,13 @@ const PosterGenerator: React.FC<PosterGeneratorProps> = ({ memory, onSetCover, o
     setPosterUrl(null)
 
     try {
-      const res = await authFetch('/api/memories/generate-poster-prompt', {
+      const res = await authFetch('/api/ai/poster-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title:    memory.title,
-          location: memory.location ?? '',
-          date:     memory.date,
+          title: memory.title,
+          notes: memory.notes ?? '',
+          date:  new Date(memory.date).toLocaleDateString('uk-UA'),
         }),
       })
 
