@@ -11,7 +11,8 @@ import styles from './TrackSVG.module.css'
  * @prop {string}  src           — URL до SVG файлу (/tracks/Monaco.svg)
  * @prop {string}  color         — CSS-значення stroke ('var(--accent)' тощо)
  * @prop {number}  [strokeWidth=1.5]
- * @prop {boolean} [animated=true] — увімкнути draw-path анімацію на mount
+ * @prop {boolean} [animated=true]             — увімкнути draw-path анімацію на mount
+ * @prop {string}  [preserveAspectRatio]       — SVG preserveAspectRatio атрибут
  * @prop {string}  [className]
  */
 interface TrackSVGProps {
@@ -19,6 +20,7 @@ interface TrackSVGProps {
   color: string
   strokeWidth?: number
   animated?: boolean
+  preserveAspectRatio?: string
   className?: string
 }
 
@@ -34,6 +36,7 @@ const TrackSVG: React.FC<TrackSVGProps> = ({
   color,
   strokeWidth = 1.5,
   animated = true,
+  preserveAspectRatio = 'xMidYMid meet',
   className,
 }) => {
   const [track, setTrack] = useState<TrackData | null>(cache.get(src) ?? null)
@@ -91,6 +94,7 @@ const TrackSVG: React.FC<TrackSVGProps> = ({
       key={src}
       viewBox={track.viewBox}
       fill="none"
+      preserveAspectRatio={preserveAspectRatio}
       className={`${styles.svg} ${className ?? ''}`}
       aria-hidden="true"
     >

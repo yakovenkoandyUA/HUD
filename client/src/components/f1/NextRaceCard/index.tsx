@@ -92,6 +92,7 @@ const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
             color="white"
             strokeWidth={2}
             animated={false}
+            preserveAspectRatio="xMidYMid meet"
             className={styles.trackBgSvg}
           />
         </div>
