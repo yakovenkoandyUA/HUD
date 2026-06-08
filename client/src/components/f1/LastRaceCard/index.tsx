@@ -78,14 +78,14 @@ function Skeleton() {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <div>
-          <div className={styles.skBar} style={{ width: 100, height: 9 }} />
-          <div className={styles.skBar} style={{ width: 150, height: 16, marginTop: 6 }} />
+        <div className={styles.headerLeft}>
+          <div className={styles.skBar} style={{ width: 20, height: 20, borderRadius: '4px' }} />
+          <div className={styles.skBar} style={{ width: 140, height: 18 }} />
         </div>
       </div>
       <div className={styles.podium}>
         {[52, 64, 52].map((size, i) => (
-          <div key={i} className={styles.col}>
+          <div key={i} className={styles.podiumEntry}>
             <div className={`${styles.skCircle} ${styles.skBar}`} style={{ width: size, height: size, borderRadius: '50%' }} />
             <div className={styles.skBar} style={{ width: 36, marginTop: 6 }} />
           </div>
@@ -118,60 +118,64 @@ const LastRaceCard: React.FC = () => {
 
       {/* ── Header ── */}
       <div className={styles.header}>
-        <div>
-          <span className={styles.label}>РАУНД {data.round} · РЕЗУЛЬТАТ</span>
-          <h2 className={styles.raceName}>{flag} {data.raceName}</h2>
+        <div className={styles.headerLeft}>
+          <span className={styles.flag}>{flag}</span>
+          <h2 className={styles.raceName}>{data.raceName}</h2>
         </div>
-        <span className={styles.date}>{formatDate(data.date)}</span>
+        <div className={styles.headerRight}>
+          <span className={styles.round}>Раунд {data.round}</span>
+          <span className={styles.date}>{formatDate(data.date)}</span>
+        </div>
       </div>
 
       {/* ── Podium: P2 | P1 | P3 ── */}
       <div className={styles.podium}>
 
         {/* P2 */}
-        <div className={`${styles.col} ${styles.p2}`}>
+        <div className={`${styles.podiumEntry} ${styles.p2}`}>
           <DriverAvatar code={p2.code} headshotUrl={headshotMap[p2.code]} size={52} />
           <span className={styles.code}>{p2.code}</span>
           <span className={styles.team}>{p2.team}</span>
           <span className={styles.gap}>{p2.gap}</span>
           <div className={`${styles.step} ${styles.step2}`}>
-            <span className={styles.stepNum}>2</span>
+            <span className={styles.pos}>2</span>
           </div>
         </div>
 
         {/* P1 */}
-        <div className={`${styles.col} ${styles.p1}`}>
+        <div className={`${styles.podiumEntry} ${styles.p1}`}>
           <DriverAvatar code={p1.code} headshotUrl={headshotMap[p1.code]} size={64} gold />
           <span className={styles.code}>{p1.code}</span>
           <span className={styles.team}>{p1.team}</span>
-          <span className={`${styles.gap} ${styles.winner}`}>WINNER</span>
+          <span className={styles.gap}>{p1.gap}</span>
           <div className={`${styles.step} ${styles.step1}`}>
-            <span className={styles.stepNum}>1</span>
+            <span className={styles.pos}>1</span>
           </div>
         </div>
 
         {/* P3 */}
-        <div className={`${styles.col} ${styles.p3}`}>
+        <div className={`${styles.podiumEntry} ${styles.p3}`}>
           <DriverAvatar code={p3.code} headshotUrl={headshotMap[p3.code]} size={52} />
           <span className={styles.code}>{p3.code}</span>
           <span className={styles.team}>{p3.team}</span>
           <span className={styles.gap}>{p3.gap}</span>
           <div className={`${styles.step} ${styles.step3}`}>
-            <span className={styles.stepNum}>3</span>
+            <span className={styles.pos}>3</span>
           </div>
         </div>
 
       </div>
 
-      {/* ── Footer ── */}
-      <div className={styles.footer}>
+      {/* ── Fastest ── */}
+      <div className={styles.fastest}>
+        <span className={styles.fastestDot} />
+        <span className={styles.fastestLabel}>FASTEST</span>
         {data.fastestLap && (
-          <div className={styles.fastestLap}>
-            <div className={styles.flDot} />
-            <span>FASTEST: {data.fastestLap.code} {data.fastestLap.time}</span>
-          </div>
+          <span className={styles.fastestValue}>
+            {data.fastestLap.code} {data.fastestLap.time}
+          </span>
         )}
-        <span className={styles.laps}>{data.laps} кіл</span>
+        <span className={styles.laps}>{data.laps} кл</span>
       </div>
 
     </div>

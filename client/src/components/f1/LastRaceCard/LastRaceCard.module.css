@@ -1,9 +1,13 @@
 /* ── Card shell ── */
 .card {
-  background: var(--surface);
-  border-radius: 14px;
+  border-radius: 16px;
+  background: var(--bg2);
   border: 1px solid var(--border);
-  /* overflow: hidden; */
+  overflow: hidden;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* ── Header ── */
@@ -11,58 +15,69 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 12px 14px 10px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.label {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--text3);
-  display: block;
-  margin-bottom: 4px;
+.flag {
+  font-size: 20px;
+  flex-shrink: 0;
 }
 
 .raceName {
   font-family: var(--font-display);
-  font-size: clamp(14px, 4vw, 18px);
+  font-size: 20px;
+  font-weight: 700;
   color: var(--text);
-  letter-spacing: 0.04em;
-  line-height: 1.1;
+  text-transform: uppercase;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 200px;
 }
 
-.date {
-  font-family: var(--font-mono);
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.round {
+  font-family: var(--font-ui);
   font-size: 10px;
   color: var(--text3);
-  white-space: nowrap;
-  flex-shrink: 0;
-  padding-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
 }
 
 /* ── Podium ── */
 .podium {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   align-items: flex-end;
-  justify-content: center;
-  padding: 16px 14px 0;
   gap: 4px;
 }
 
-.col {
+.podiumEntry {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  flex: 1;
+  gap: 3px;
 }
 
+/* ── Avatar (used by DriverAvatar sub-component) ── */
 .avatar {
   border-radius: 50%;
   overflow: hidden;
@@ -74,7 +89,10 @@
   background: var(--surface2);
 }
 
-.avatarGold { border-color: var(--gold, var(--accent)); }
+.avatarGold {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(220, 201, 169, 0.3);
+}
 
 .avatarInitials {
   font-family: var(--font-mono);
@@ -86,20 +104,18 @@
 
 .code {
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text);
-  letter-spacing: 0.06em;
 }
 
 .p1 .code {
-  color: var(--gold, var(--accent));
-  font-size: 13px;
+  color: var(--gold);
 }
 
 .team {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text3);
   text-align: center;
   white-space: nowrap;
@@ -111,89 +127,85 @@
 .gap {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--text3);
-  text-align: center;
-}
-
-.winner {
-  color: var(--second);
-  font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.06em;
+  color: var(--text2);
 }
 
 /* ── Steps ── */
 .step {
   width: 100%;
-  border-radius: 4px 4px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 6px;
+  border-radius: 6px 6px 0 0;
+  margin-top: 4px;
 }
 
 .step1 {
-  height: 44px;
-  background: rgba(220,201,169,0.1);
-  border: 1px solid rgba(220,201,169,0.2);
-  border-bottom: none;
+  height: 56px;
+  background: linear-gradient(180deg, var(--gold-dim, rgba(220,201,169,0.12)) 0%, var(--border) 100%);
+  border-top: 2px solid var(--gold);
 }
 
 .step2 {
-  height: 30px;
-  background: rgba(154,143,130,0.07);
-  border: 1px solid rgba(154,143,130,0.15);
-  border-bottom: none;
+  height: 40px;
+  background: linear-gradient(180deg, rgba(192,192,192,0.1) 0%, var(--border) 100%);
+  border-top: 2px solid #C0C0C0;
 }
 
 .step3 {
-  height: 20px;
-  background: rgba(139,101,56,0.07);
-  border: 1px solid rgba(139,101,56,0.15);
-  border-bottom: none;
+  height: 28px;
+  background: linear-gradient(180deg, rgba(205,127,50,0.1) 0%, var(--border) 100%);
+  border-top: 2px solid #CD7F32;
 }
 
-.stepNum {
-  font-family: var(--font-mono);
-  font-size: 15px;
+.pos {
+  font-family: var(--font-display);
+  font-size: 18px;
   font-weight: 700;
+  color: var(--text2);
 }
 
-.step1 .stepNum { color: var(--gold, var(--accent)); }
-.step2 .stepNum { color: var(--text2); }
-.step3 .stepNum { color: #8B6538; }
+.step1 .pos {
+  color: var(--gold);
+}
 
-/* ── Footer ── */
-.footer {
+/* ── Fastest ── */
+.fastest {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
+  gap: 8px;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
 }
 
-.fastestLap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.flDot {
-  width: 7px;
-  height: 7px;
+.fastestDot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;
 }
 
+.fastestLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+}
+
+.fastestValue {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .laps {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text3);
+  margin-left: auto;
 }
 
 /* ── Loading skeleton ── */
