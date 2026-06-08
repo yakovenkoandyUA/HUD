@@ -17,6 +17,62 @@ import styles from './RacePredictionCard.module.css'
  * @prop {F1Race} race — наступна гонка (nextRace з F1_SEASON_2026)
  */
 
+interface Driver {
+  driverId: string
+  code: string
+  photoUrl?: string
+}
+
+interface DriverPickerProps {
+  drivers: Driver[]
+  selected: string
+  onSelect: (driverId: string) => void
+  label: string
+  others: string[]
+  disabled: boolean
+}
+
+const DriverPicker: React.FC<DriverPickerProps> = ({
+  drivers, selected, onSelect, label, others, disabled,
+}) => (
+  <div className={styles.pickerWrap}>
+    <span className={styles.pickerLabel}>{label}</span>
+    <div className={styles.pickerScroll}>
+      {drivers.map(d => {
+        const isSelected = selected === d.driverId
+        const isDimmed   = !isSelected && others.includes(d.driverId)
+        const proxySrc   = d.photoUrl
+          ? `https://images.weserv.nl/?url=${encodeURIComponent(d.photoUrl)}&w=72&h=72&fit=cover&a=top`
+          : null
+        return (
+          <button
+            key={d.driverId}
+            type="button"
+            disabled={disabled}
+            className={`${styles.driverChip} ${isSelected ? styles.driverChipActive : ''} ${isDimmed ? styles.driverChipDimmed : ''}`}
+            onClick={() => onSelect(d.driverId)}
+          >
+            <div className={styles.driverChipAvatar}>
+              {proxySrc ? (
+                <img
+                  src={proxySrc}
+                  alt={d.code}
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
+                  onError={e => { e.currentTarget.style.display = 'none' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : null}
+              <span style={{ fontSize: 9, fontWeight: 700 }}>{d.code}</span>
+            </div>
+            <span className={styles.driverChipCode}>{d.code}</span>
+          </button>
+        )
+      })}
+    </div>
+  </div>
+)
+
 interface Props {
   race: F1Race
 }
@@ -70,6 +126,12 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
   }
   const teamOf = (id: string) => driverById(id)?.team_name ?? ''
 
+  const driverList: Driver[] = validDrivers.map(d => ({
+    driverId: d.driverId!,
+    code:     d.broadcast_name,
+    photoUrl: d.headshot_url,
+  }))
+
   const msToRace  = new Date(race.date + 'T13:00:00Z').getTime() - Date.now()
   const hoursLeft = Math.max(0, Math.floor(msToRace / 3_600_000))
   const lockText  = locked
@@ -88,9 +150,6 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
     if (currentPred) { setP1(currentPred.p1); setP2(currentPred.p2); setP3(currentPred.p3) }
     setEditing(true)
   }
-
-  const pValues  = [p1, p2, p3]
-  const pSetters = [setP1, setP2, setP3]
 
   return (
     <div className={styles.card}>
@@ -169,33 +228,30 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
       {/* ── Input mode ── */}
       {showPredForm && (!currentPred || editing) && (
         <>
-          {POSITIONS.map((pos, i) => {
-            const value  = pValues[i]
-            const setter = pSetters[i]
-            const others = pValues.filter((_, j) => j !== i)
-            return (
-              <div key={pos} className={styles.selectRow}>
-                <span className={styles.posLabel}>P{i + 1}</span>
-                <select
-                  className={styles.select}
-                  value={value}
-                  disabled={locked}
-                  onChange={e => setter(e.target.value)}
-                >
-                  <option value=''>Оберіть пілота</option>
-                  {validDrivers.map(d => (
-                    <option
-                      key={d.driverId}
-                      value={d.driverId!}
-                      disabled={others.includes(d.driverId!)}
-                    >
-                      {d.full_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )
-          })}
+          <DriverPicker
+            drivers={driverList}
+            selected={p1}
+            onSelect={setP1}
+            label="P1"
+            others={[p2, p3].filter(Boolean)}
+            disabled={locked}
+          />
+          <DriverPicker
+            drivers={driverList}
+            selected={p2}
+            onSelect={setP2}
+            label="P2"
+            others={[p1, p3].filter(Boolean)}
+            disabled={locked}
+          />
+          <DriverPicker
+            drivers={driverList}
+            selected={p3}
+            onSelect={setP3}
+            label="P3"
+            others={[p1, p2].filter(Boolean)}
+            disabled={locked}
+          />
 
           {lockText && <p className={styles.lockNote}>{lockText}</p>}
 

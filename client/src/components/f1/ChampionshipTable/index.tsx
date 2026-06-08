@@ -164,8 +164,14 @@ const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
                       <span className={styles.team}>{d.team_name}</span>
                     </div>
                   </div>
-                  <div className={styles.pts}>
-                    {d.points} <small className={styles.ptsSmall}>pts</small>
+                  <div className={styles.pointsWrap}>
+                    <span className={styles.points}>{d.points}</span>
+                    <div className={styles.pointsBar}>
+                      <div
+                        className={styles.pointsFill}
+                        style={{ width: `${(d.points / maxPts) * 100}%` }}
+                      />
+                    </div>
                   </div>
                   {driverId && (
                     <span className={`${styles.arrow} ${isOpen ? styles.arrowUp : ''}`}>▼</span>
@@ -225,8 +231,14 @@ const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
                       </div>
                     )}
                   </div>
-                  <div className={styles.pts}>
-                    {c.points} <small className={styles.ptsSmall}>pts</small>
+                  <div className={styles.pointsWrap}>
+                    <span className={styles.points}>{c.points}</span>
+                    <div className={styles.pointsBar}>
+                      <div
+                        className={styles.pointsFill}
+                        style={{ width: `${(c.points / maxPts) * 100}%` }}
+                      />
+                    </div>
                   </div>
                   {cid && (
                     <span className={`${styles.arrow} ${isOpen ? styles.arrowUp : ''}`}>▼</span>

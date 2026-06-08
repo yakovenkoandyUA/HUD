@@ -1,71 +1,61 @@
 /* ── Card shell ── */
 .card {
   background: var(--surface);
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   border: 1px solid var(--border);
-  border-left: 3px solid var(--gold);
-  padding: 14px 16px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  /* overflow: hidden; */
 }
 
 /* ── Header ── */
 .header {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  gap: 8px;
 }
 
-.tick {
-  font-family: var(--font-mono);
-  font-size: 11px;
+.label {
+  font-family: var(--font-ui);
+  font-size: 9px;
   font-weight: 700;
-  color: var(--positive);
-  flex-shrink: 0;
-}
-
-.roundLabel {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--text3);
-  flex-shrink: 0;
-}
-
-.dot {
-  color: var(--border2);
-  font-size: 12px;
-  flex-shrink: 0;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .raceName {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: clamp(14px, 4vw, 18px);
   color: var(--text);
-  letter-spacing: 0.06em;
-  flex: 1;
-  min-width: 0;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 200px;
 }
 
-.flag {
-  font-size: 15px;
+.date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
   flex-shrink: 0;
+  padding-top: 2px;
 }
 
 /* ── Podium ── */
 .podium {
   display: flex;
   align-items: flex-end;
-  gap: 6px;
+  justify-content: center;
+  padding: 16px 14px 0;
+  gap: 4px;
 }
 
-.entry {
+.col {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -73,44 +63,41 @@
   flex: 1;
 }
 
-/* P1 (center) is elevated */
-.entryFirst {
-  margin-bottom: 20px;
-}
-
-.medal {
-  font-size: 14px;
-  line-height: 1;
-}
-
 .avatar {
-  width: 44px;
-  height: 44px;
   border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--border2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.04em;
   flex-shrink: 0;
+  background: var(--surface2);
 }
 
-.driverName {
-  font-family: var(--font-ui);
+.avatarGold { border-color: var(--gold, var(--accent)); }
+
+.avatarInitials {
+  font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  font-weight: 700;
+  color: var(--text2);
+  letter-spacing: 0.04em;
 }
 
-.teamName {
+.code {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.06em;
+}
+
+.p1 .code {
+  color: var(--gold, var(--accent));
+  font-size: 13px;
+}
+
+.team {
   font-family: var(--font-mono);
   font-size: 9px;
   color: var(--text3);
@@ -123,55 +110,90 @@
 
 .gap {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text3);
   text-align: center;
 }
 
-.gapWinner {
-  color: var(--positive);
-  font-weight: 600;
+.winner {
+  color: var(--second);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.06em;
 }
+
+/* ── Steps ── */
+.step {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.step1 {
+  height: 44px;
+  background: rgba(220,201,169,0.1);
+  border: 1px solid rgba(220,201,169,0.2);
+  border-bottom: none;
+}
+
+.step2 {
+  height: 30px;
+  background: rgba(154,143,130,0.07);
+  border: 1px solid rgba(154,143,130,0.15);
+  border-bottom: none;
+}
+
+.step3 {
+  height: 20px;
+  background: rgba(139,101,56,0.07);
+  border: 1px solid rgba(139,101,56,0.15);
+  border-bottom: none;
+}
+
+.stepNum {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.step1 .stepNum { color: var(--gold, var(--accent)); }
+.step2 .stepNum { color: var(--text2); }
+.step3 .stepNum { color: #8B6538; }
 
 /* ── Footer ── */
 .footer {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  padding: 10px 14px;
   border-top: 1px solid var(--border);
-  padding-top: 10px;
 }
 
 .fastestLap {
   display: flex;
   align-items: center;
-  gap: 5px;
-  flex: 1;
-}
-
-.flIcon {
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.flText {
+  gap: 6px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  color: #9B59B6;
+  color: var(--accent);
 }
 
-.flTime {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: #9B59B6;
+.flDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
 }
 
 .laps {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text3);
-  flex-shrink: 0;
 }
 
 /* ── Loading skeleton ── */
@@ -187,12 +209,4 @@
   animation: skPulse 1.4s ease-in-out infinite;
 }
 
-.skHeader {
-  padding-bottom: 2px;
-}
-
-.skCircle {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-}
+.skCircle { border-radius: 50%; }

@@ -24,27 +24,30 @@ const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound })
   return (
     <ul className={styles.list}>
       {races.map((race) => {
-        const isPast = race.round < nextRound
-        const isNext = race.round === nextRound
-        const trackColor = isNext ? 'var(--accent)' : 'var(--text3)'
+        const isPast    = race.round < nextRound
+        const isCurrent = race.round === nextRound
+        const trackColor = isCurrent ? 'var(--accent)' : 'var(--text3)'
         return (
           <li
             key={race.round}
-            className={`${styles.item} ${isNext ? styles.next : ''}`}
+            className={`${styles.item} ${isPast ? styles.raceItemPast : ''} ${isCurrent ? styles.raceItemCurrent : ''}`}
             onClick={() => navigate(`/f1/${race.round}`)}
           >
-            <span className={`${styles.round} ${isPast ? styles.roundPast : ''}`}>
-              {isPast ? '✓' : String(race.round).padStart(2, '0')}
+            <span className={styles.round}>
+              {isPast
+                ? <span className={styles.checkmark}>✓</span>
+                : String(race.round).padStart(2, '0')
+              }
             </span>
-            <span className={`${styles.flag} ${isPast ? styles.dimPast : ''}`}>{race.flag}</span>
+            <span className={styles.flag}>{race.flag}</span>
             <div className={styles.info}>
-              <span className={`${styles.name} ${isPast ? styles.dimPast : ''}`}>{race.name}</span>
-              <span className={`${styles.circuit} ${isPast ? styles.dimPast : ''}`}>{race.circuit}</span>
+              <span className={styles.name}>{race.name}</span>
+              <span className={styles.circuit}>{race.circuit}</span>
             </div>
-            <span className={`${styles.date} ${isPast ? styles.dimPast : ''}`}>
+            <span className={styles.date}>
               {new Date(race.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
             </span>
-            <div className={`${styles.trackWrap} ${isPast ? styles.trackPast : ''}`}>
+            <div className={styles.trackWrap}>
               {race.trackSvg ? (
                 <TrackSVG
                   src={race.trackSvg}

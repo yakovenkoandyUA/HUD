@@ -73,6 +73,23 @@ const MySeasonStats: React.FC = () => {
   const streakIcon  = streak >= 3 ? '🔥' : streak >= 1 ? '⚡' : ''
   const streakPulse = streak >= 5
 
+  if (predictions.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <div className={styles.emptyIcon}>🎯</div>
+        <h3 className={styles.emptyTitle}>Ще немає прогнозів</h3>
+        <p className={styles.emptyText}>
+          Зроби прогноз перед наступною гонкою —{'\n'}
+          хто фінішує в топ-3?
+        </p>
+        <div className={styles.emptyScore}>
+          <span className={styles.emptyScoreNum}>30</span>
+          <span className={styles.emptyScoreLabel}>макс очок за гонку</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.wrap}>
 

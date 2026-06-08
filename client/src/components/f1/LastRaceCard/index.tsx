@@ -1,59 +1,22 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
+import { useChampionshipStandings } from '../../../hooks/useChampionshipStandings'
+import { useLastRace, type LastRaceData, type PodiumEntry } from './useLastRace'
 import styles from './LastRaceCard.module.css'
 
 /**
  * LastRaceCard
  * ------------
  * Картка результатів останньої завершеної гонки Ф1.
- * Показує подіум (P1-P3), быстрий круг та кількість кіл.
- * Дані з Jolpica (Ergast). Кешується в sessionStorage на день.
- *
- * Не рендерується: поки дані завантажуються з помилкою або якщо
- * остання гонка ще не відбулась.
+ * Показує подіум (P2 | P1 | P3) зі ступеньками та фото пілотів,
+ * швидке коло і кількість кіл.
+ * Дані з Jolpica (Ergast), кеш sessionStorage на день.
  */
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-export interface PodiumEntry {
-  pos:      number
-  code:     string    // e.g. "HAM"
-  driverId: string    // e.g. "hamilton"
-  lastName: string
-  team:     string
-  gap:      string    // "+4.234s" | "—" | "DNF" | "+1 Lap"
-}
-
-interface FastestLapInfo {
-  code: string
-  time: string
-}
-
-export interface LastRaceData {
-  raceName:   string
-  round:      number
-  date:       string
-  country:    string
-  laps:       number
-  podium:     PodiumEntry[]
-  fastestLap: FastestLapInfo | null
-}
+// ── Re-export types for consumers that import from this path ──────────────────
+export type { LastRaceData, PodiumEntry }
+export { useLastRace }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const JOLPICA_LAST = 'https://api.jolpi.ca/ergast/f1/current/last/results.json'
-
-const TEAM_COLORS: Record<string, string> = {
-  'Mercedes':     '#00D2BE',
-  'Ferrari':      '#E8002D',
-  'McLaren':      '#FF8000',
-  'Red Bull':     '#3671C6',
-  'Alpine':       '#FF87BC',
-  'Aston Martin': '#229971',
-  'Williams':     '#64C4FF',
-  'Haas':         '#B6BABD',
-  'Kick Sauber':  '#52E252',
-  'RB':           '#6692FF',
-}
 
 const COUNTRY_FLAG: Record<string, string> = {
   'Australia': '🇦🇺', 'China': '🇨🇳', 'Japan': '🇯🇵',
@@ -68,147 +31,63 @@ const COUNTRY_FLAG: Record<string, string> = {
   'Portugal': '🇵🇹',
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function cacheKey() {
-  return `hud-last-race-v2-${new Date().toISOString().split('T')[0]}`
-}
-
-function readCache(): LastRaceData | null {
-  try {
-    const raw = sessionStorage.getItem(cacheKey())
-    return raw ? (JSON.parse(raw) as LastRaceData) : null
-  } catch { return null }
-}
-
-function writeCache(d: LastRaceData) {
-  try { sessionStorage.setItem(cacheKey(), JSON.stringify(d)) } catch { /* noop */ }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function formatGap(r: any, pos: number): string {
-  if (pos === 1) return '—'
-  const t: string | undefined = r.Time?.time
-  if (t) {
-    if (/^\+[\d.]+$/.test(t)) return t + 's'
-    return t
-  }
-  const s: string = r.status ?? ''
-  if (s.startsWith('+')) return s
-  return s.slice(0, 8)
-}
-
-function gpShortName(name: string): string {
-  return name.replace(' Grand Prix', ' GP').toUpperCase()
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseRace(json: any): LastRaceData | null {
-  const race = json?.MRData?.RaceTable?.Races?.[0]
-  if (!race) return null
-
-  const today = new Date().toISOString().split('T')[0]
-  if ((race.date as string) >= today) return null   // race not yet completed
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const results: any[] = race.Results ?? []
-  if (results.length < 3) return null
-
-  const podium: PodiumEntry[] = results.slice(0, 3).map(r => ({
-    pos:      Number(r.position),
-    code:     r.Driver?.code ?? '???',
-    driverId: r.Driver?.driverId ?? '',
-    lastName: r.Driver?.familyName ?? '',
-    team:     r.Constructor?.name ?? '',
-    gap:      formatGap(r, Number(r.position)),
-  }))
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const flResult = results.find((r: any) => r.FastestLap?.rank === '1')
-  const fastestLap: FastestLapInfo | null = flResult
-    ? { code: flResult.Driver?.code ?? '', time: flResult.FastestLap.Time?.time ?? '' }
-    : null
-
-  return {
-    raceName:   gpShortName(race.raceName ?? ''),
-    round:      Number(race.round),
-    date:       race.date,
-    country:    race.Circuit?.Location?.country ?? '',
-    laps:       Number(results[0]?.laps ?? 0),
-    podium,
-    fastestLap,
-  }
-}
-
-// ── Hook ──────────────────────────────────────────────────────────────────────
-
-export function useLastRace() {
-  const [data, setData]         = useState<LastRaceData | null>(readCache)
-  const [isLoading, setLoading] = useState<boolean>(!readCache())
-  const [error, setError]       = useState<string | null>(null)
-
-  useEffect(() => {
-    if (data) { setLoading(false); return }
-    let cancelled = false
-    fetch(JOLPICA_LAST, { headers: { Accept: 'application/json' } })
-      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() })
-      .then(json => {
-        if (cancelled) return
-        const parsed = parseRace(json)
-        if (parsed) writeCache(parsed)
-        setData(parsed)
-        setLoading(false)
-      })
-      .catch(err => {
-        if (cancelled) return
-        setError(err.message)
-        setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  return { data, isLoading, error }
-}
-
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-const MEDALS = ['🥇', '🥈', '🥉']
+type ImgStage = 'direct' | 'proxy' | 'initials'
 
-function PodiumAvatar({ code, team }: { code: string; team: string }) {
-  const bg = TEAM_COLORS[team] ?? '#444'
+const DriverAvatar: React.FC<{
+  code: string
+  headshotUrl?: string
+  size?: number
+  gold?: boolean
+}> = ({ code, headshotUrl, size = 52, gold = false }) => {
+  const [stage, setStage] = useState<ImgStage>(headshotUrl ? 'direct' : 'initials')
+  const avatarStyle = { width: size, height: size }
+
+  if (stage === 'initials' || !headshotUrl) {
+    return (
+      <div className={`${styles.avatar} ${gold ? styles.avatarGold : ''}`} style={avatarStyle}>
+        <span className={styles.avatarInitials}>{code}</span>
+      </div>
+    )
+  }
+
+  const src = stage === 'proxy'
+    ? `https://images.weserv.nl/?url=${encodeURIComponent(headshotUrl)}`
+    : headshotUrl
+
   return (
-    <div className={styles.avatar} style={{ background: bg }}>
-      {code}
+    <div className={`${styles.avatar} ${gold ? styles.avatarGold : ''}`} style={avatarStyle}>
+      <img
+        src={src}
+        alt={code}
+        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
+        onError={() => { if (stage === 'direct') setStage('proxy'); else setStage('initials') }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+      />
     </div>
   )
 }
 
-function PodiumEntryView({ entry, isFirst }: { entry: PodiumEntry; isFirst: boolean }) {
-  return (
-    <div className={`${styles.entry} ${isFirst ? styles.entryFirst : ''}`}>
-      <span className={styles.medal}>{MEDALS[entry.pos - 1]}</span>
-      <PodiumAvatar code={entry.code} team={entry.team} />
-      <span className={styles.driverName}>{entry.lastName}</span>
-      <span className={styles.teamName}>{entry.team}</span>
-      <span className={`${styles.gap} ${entry.pos === 1 ? styles.gapWinner : ''}`}>
-        {entry.gap}
-      </span>
-    </div>
-  )
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })
 }
 
 function Skeleton() {
   return (
     <div className={styles.card}>
-      <div className={styles.skHeader}>
-        <div className={styles.skBar} style={{ width: 120 }} />
+      <div className={styles.header}>
+        <div>
+          <div className={styles.skBar} style={{ width: 100, height: 9 }} />
+          <div className={styles.skBar} style={{ width: 150, height: 16, marginTop: 6 }} />
+        </div>
       </div>
       <div className={styles.podium}>
-        {[0, 1, 2].map(i => (
-          <div key={i} className={`${styles.entry} ${i === 1 ? styles.entryFirst : ''}`}>
-            <div className={`${styles.skCircle} ${styles.skBar}`} />
-            <div className={styles.skBar} style={{ width: 52, marginTop: 4 }} />
-            <div className={styles.skBar} style={{ width: 36, marginTop: 2, opacity: 0.6 }} />
+        {[52, 64, 52].map((size, i) => (
+          <div key={i} className={styles.col}>
+            <div className={`${styles.skCircle} ${styles.skBar}`} style={{ width: size, height: size, borderRadius: '50%' }} />
+            <div className={styles.skBar} style={{ width: 36, marginTop: 6 }} />
           </div>
         ))}
       </div>
@@ -220,13 +99,18 @@ function Skeleton() {
 
 const LastRaceCard: React.FC = () => {
   const { data, isLoading, error } = useLastRace()
+  const { drivers } = useChampionshipStandings()
+
+  // broadcast_name in standings == 3-letter code from Jolpica results
+  const headshotMap: Record<string, string | undefined> = {}
+  for (const d of drivers) {
+    headshotMap[d.broadcast_name] = d.headshot_url
+  }
 
   if (isLoading) return <Skeleton />
   if (error || !data) return null
 
-  // Podium display order: P2 (left), P1 (center), P3 (right)
   const [p1, p2, p3] = data.podium
-  const displayOrder = [p2, p1, p3]
   const flag = COUNTRY_FLAG[data.country] ?? ''
 
   return (
@@ -234,31 +118,57 @@ const LastRaceCard: React.FC = () => {
 
       {/* ── Header ── */}
       <div className={styles.header}>
-        <span className={styles.tick}>✓</span>
-        <span className={styles.roundLabel}>РАУНД {data.round}</span>
-        <span className={styles.dot}>·</span>
-        <span className={styles.raceName}>{data.raceName}</span>
-        {flag && <span className={styles.flag}>{flag}</span>}
+        <div>
+          <span className={styles.label}>РАУНД {data.round} · РЕЗУЛЬТАТ</span>
+          <h2 className={styles.raceName}>{flag} {data.raceName}</h2>
+        </div>
+        <span className={styles.date}>{formatDate(data.date)}</span>
       </div>
 
-      {/* ── Podium ── */}
+      {/* ── Podium: P2 | P1 | P3 ── */}
       <div className={styles.podium}>
-        {displayOrder.map((entry, i) => (
-          <PodiumEntryView
-            key={entry.code}
-            entry={entry}
-            isFirst={i === 1}
-          />
-        ))}
+
+        {/* P2 */}
+        <div className={`${styles.col} ${styles.p2}`}>
+          <DriverAvatar code={p2.code} headshotUrl={headshotMap[p2.code]} size={52} />
+          <span className={styles.code}>{p2.code}</span>
+          <span className={styles.team}>{p2.team}</span>
+          <span className={styles.gap}>{p2.gap}</span>
+          <div className={`${styles.step} ${styles.step2}`}>
+            <span className={styles.stepNum}>2</span>
+          </div>
+        </div>
+
+        {/* P1 */}
+        <div className={`${styles.col} ${styles.p1}`}>
+          <DriverAvatar code={p1.code} headshotUrl={headshotMap[p1.code]} size={64} gold />
+          <span className={styles.code}>{p1.code}</span>
+          <span className={styles.team}>{p1.team}</span>
+          <span className={`${styles.gap} ${styles.winner}`}>WINNER</span>
+          <div className={`${styles.step} ${styles.step1}`}>
+            <span className={styles.stepNum}>1</span>
+          </div>
+        </div>
+
+        {/* P3 */}
+        <div className={`${styles.col} ${styles.p3}`}>
+          <DriverAvatar code={p3.code} headshotUrl={headshotMap[p3.code]} size={52} />
+          <span className={styles.code}>{p3.code}</span>
+          <span className={styles.team}>{p3.team}</span>
+          <span className={styles.gap}>{p3.gap}</span>
+          <div className={`${styles.step} ${styles.step3}`}>
+            <span className={styles.stepNum}>3</span>
+          </div>
+        </div>
+
       </div>
 
       {/* ── Footer ── */}
       <div className={styles.footer}>
         {data.fastestLap && (
           <div className={styles.fastestLap}>
-            <span className={styles.flIcon}>⚡</span>
-            <span className={styles.flText}>{data.fastestLap.code}</span>
-            <span className={styles.flTime}>{data.fastestLap.time}</span>
+            <div className={styles.flDot} />
+            <span>FASTEST: {data.fastestLap.code} {data.fastestLap.time}</span>
           </div>
         )}
         <span className={styles.laps}>{data.laps} кіл</span>

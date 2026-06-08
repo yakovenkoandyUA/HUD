@@ -4,7 +4,6 @@ import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRound } from '../../utils/f1'
 import { CIRCUIT_DATA, ROUND_TO_CIRCUIT_ID, type CircuitInfo } from '../../data/circuitData'
 import { useLastRace } from '../../components/f1/LastRaceCard'
-import TrackSVG from '../../components/f1/TrackSVG'
 import styles from './RaceDetail.module.css'
 
 /**
@@ -16,6 +15,12 @@ import styles from './RaceDetail.module.css'
  */
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
+
+function formatFullDate(iso: string): string {
+  return new Date(iso + 'T12:00:00').toLocaleDateString('uk-UA', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
 
 function fmtDay(date: string, time: string): string {
   return new Date(date + 'T' + time).toLocaleDateString('uk-UA', {
@@ -65,8 +70,7 @@ function useRaceSchedule(round: number) {
   const [loading, setLoading]   = useState(!fromCache())
 
   useEffect(() => {
-    const cached = fromCache()
-    if (cached) { setSessions(cached); setLoading(false); return }
+    if (fromCache()) return
     let cancelled = false
 
     fetch(`https://api.jolpi.ca/ergast/f1/2026/${round}.json`, {
@@ -81,7 +85,6 @@ function useRaceSchedule(round: number) {
         if (!race) { setLoading(false); return }
 
         const isSprintWeekend = !!race.Sprint
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const addIf = (key: string, label: string, icon: string, extra?: Partial<SessionEntry>) => {
           const s = race[key]
           if (s?.date && s?.time) return { label, icon, date: s.date as string, time: s.time as string, ...extra }
@@ -296,9 +299,7 @@ const RaceDetailPage: React.FC = () => {
     )
   }
 
-  const isPast    = race.round < nextRound
-  const isNext    = race.round === nextRound
-  const trackColor = isPast ? 'var(--text2)' : 'var(--accent)'
+  const isPast = race.round < nextRound
 
   const circuitId   = ROUND_TO_CIRCUIT_ID[race.round] ?? ''
   const circuitInfo = CIRCUIT_DATA[circuitId] ?? null
@@ -315,35 +316,32 @@ const RaceDetailPage: React.FC = () => {
         <span className={styles.roundLabel}>Раунд {String(race.round).padStart(2, '0')}</span>
       </header>
 
-      <div className={styles.content}>
-
-        {/* Track SVG */}
-        {race.trackSvg ? (
-          <div className={styles.trackWrap}>
-            <TrackSVG src={race.trackSvg} color={trackColor} strokeWidth={1.5} animated />
-          </div>
-        ) : (
-          <div className={styles.trackPlaceholder}>
-            <span>Карта треку недоступна</span>
+      {/* ── Hero ── */}
+      <div className={styles.hero}>
+        {race.trackSvg && (
+          <div className={styles.heroTrack}>
+            <img src={race.trackSvg} alt="" className={styles.heroTrackImg} />
           </div>
         )}
-
-        {/* Race header info */}
-        <div className={styles.info}>
-          <div className={styles.flagRow}>
-            <span className={styles.flag}>{race.flag}</span>
-            {isNext && <span className={styles.nextBadge}>НАСТУПНА</span>}
-            {isPast && <span className={styles.pastBadge}>ПРОЙДЕНО</span>}
+        <div className={styles.heroContent}>
+          <div className={styles.heroMeta}>
+            <span className={styles.heroRound}>РАУНД {race.round}</span>
+            {isPast
+              ? <span className={styles.heroBadgeDone}>ПРОЙДЕНО</span>
+              : <span className={styles.heroBadgeNext}>НАСТУПНА</span>
+            }
             {race.sprint && <span className={styles.sprintBadge}>SPRINT</span>}
           </div>
-          <h1 className={styles.name}>{race.name}</h1>
-          <div className={styles.circuit}>{race.circuit}</div>
-          <div className={styles.date}>
-            {new Date(race.date + 'T12:00:00').toLocaleDateString('uk-UA', {
-              weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-            })}
+          <div className={styles.heroTitle}>
+            <span className={styles.heroFlag}>{race.flag}</span>
+            <h1 className={styles.heroName}>{race.name}</h1>
           </div>
+          <p className={styles.heroCircuit}>{race.circuit}</p>
+          <p className={styles.heroDate}>{formatFullDate(race.date)}</p>
         </div>
+      </div>
+
+      <div className={styles.content}>
 
         {/* Extended sections */}
         {circuitInfo && <CircuitStatsSection info={circuitInfo} />}
