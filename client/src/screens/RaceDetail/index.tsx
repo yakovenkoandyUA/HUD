@@ -4,6 +4,7 @@ import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRound } from '../../utils/f1'
 import { CIRCUIT_DATA, ROUND_TO_CIRCUIT_ID, type CircuitInfo } from '../../data/circuitData'
 import { useLastRace } from '../../components/f1/LastRaceCard'
+import TrackSVG from '../../components/f1/TrackSVG'
 import styles from './RaceDetail.module.css'
 
 /**
@@ -299,7 +300,8 @@ const RaceDetailPage: React.FC = () => {
     )
   }
 
-  const isPast = race.round < nextRound
+  const isPast     = race.round < nextRound
+  const trackColor = isPast ? 'var(--text2)' : 'var(--accent)'
 
   const circuitId   = ROUND_TO_CIRCUIT_ID[race.round] ?? ''
   const circuitInfo = CIRCUIT_DATA[circuitId] ?? null
@@ -319,8 +321,8 @@ const RaceDetailPage: React.FC = () => {
       {/* ── Hero ── */}
       <div className={styles.hero}>
         {race.trackSvg && (
-          <div className={styles.heroTrack}>
-            <img src={race.trackSvg} alt="" className={styles.heroTrackImg} />
+          <div className={styles.heroTrackMain}>
+            <TrackSVG src={race.trackSvg} color={trackColor} strokeWidth={1.5} animated />
           </div>
         )}
         <div className={styles.heroContent}>
