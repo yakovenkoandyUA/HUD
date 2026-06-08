@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import type { F1Race } from '../../../data/f1Season2026'
+import TrackSVG from '../TrackSVG'
 import styles from './NextRaceCard.module.css'
 
 /**
@@ -8,6 +9,7 @@ import styles from './NextRaceCard.module.css'
  * Hero-картка наступного Гран Прі на екрані F1.
  * Три стани: нормальний countdown (дні > 0), race week (день гонки, > 2г),
  * race day (< 2г до старту) — мигаючі F1 start lights + живий таймер.
+ * Фоновий SVG треку (статичний, opacity 0.07).
  *
  * Props:
  * @prop {F1Race} race — дані наступної гонки
@@ -30,15 +32,29 @@ function formatRaceDate(iso: string): string {
 
 type LightColor = 'red' | 'orange' | 'yellow' | 'green'
 
+const DOT_COLOR: Record<string, LightColor> = {
+  'ДНІВ':   'red',
+  'ГОДИН':  'orange',
+  'ХВИЛИН': 'yellow',
+  'СЕК':    'green',
+}
+
 const LIGHT_CLASS: Record<LightColor, string> = {
-  red:    styles.lightRed,
-  orange: styles.lightOrange,
-  yellow: styles.lightYellow,
-  green:  styles.lightGreen,
+  red:    styles.dotRed,
+  orange: styles.dotOrange,
+  yellow: styles.dotYellow,
+  green:  styles.dotGreen,
+}
+
+function getDots(value: number, label: string) {
+  const color = DOT_COLOR[label] ?? 'red'
+  return Array.from({ length: 3 }, (_, j) => (
+    <div key={j} className={`${styles.dot} ${LIGHT_CLASS[color]}`} />
+  ))
 }
 
 const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
-  const [cd, setCd]           = useState<Cd>(() => getCountdown(race.date))
+  const [cd, setCd]             = useState<Cd>(() => getCountdown(race.date))
   const [lightsOn, setLightsOn] = useState(true)
 
   useEffect(() => {
@@ -47,10 +63,7 @@ const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
   }, [race.date])
 
   const { d: days, h: hours, m: minutes, s: seconds } = cd
-
-  const isRaceDay  = days === 0 && hours < 2
-  const isRaceWeek = days === 0 && hours >= 2
-  const isNormal   = days > 0
+  const isRaceDay = days === 0 && hours < 2
 
   useEffect(() => {
     if (!isRaceDay) return
@@ -58,88 +71,50 @@ const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
     return () => clearInterval(id)
   }, [isRaceDay])
 
-  const gpLabel = race.name.replace(' GP', '').replace(' Grand Prix', '').toUpperCase()
+  const gpLabel      = race.name.replace(' Grand Prix', '').replace(' GP', '').toUpperCase()
+  const formattedDate = formatRaceDate(race.date)
 
-  const normalSegments = [
-    { key: 'd' as keyof Cd, value: days,    label: 'ДНІВ',   color: 'red'    as LightColor },
-    { key: 'h' as keyof Cd, value: hours,   label: 'ГОДИН',  color: 'orange' as LightColor },
-    { key: 'm' as keyof Cd, value: minutes, label: 'ХВИЛИН', color: 'yellow' as LightColor },
-    { key: 's' as keyof Cd, value: seconds, label: 'СЕК',    color: 'green'  as LightColor },
-  ]
-
-  const weekSegments = [
-    { value: hours,   label: 'ГОДИН',  color: 'orange' as LightColor },
-    { value: minutes, label: 'ХВИЛИН', color: 'yellow' as LightColor },
-    { value: seconds, label: 'СЕК',    color: 'green'  as LightColor },
+  const countdownUnits = [
+    { value: days,    label: 'ДНІВ'   },
+    { value: hours,   label: 'ГОДИН'  },
+    { value: minutes, label: 'ХВИЛИН' },
+    { value: seconds, label: 'СЕК'    },
   ]
 
   return (
     <div className={styles.card}>
+
+      {/* ── Track SVG as background ── */}
+      {race.trackSvg && (
+        <div className={styles.trackBg}>
+          <TrackSVG
+            src={race.trackSvg}
+            color="white"
+            strokeWidth={2}
+            animated={false}
+            className={styles.trackBgSvg}
+          />
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className={styles.header}>
-        {race.trackSvg && (
-          <div className={styles.trackBg}>
-            <img
-              src={race.trackSvg}
-              alt=""
-              className={styles.trackBgImg}
-              aria-hidden="true"
-            />
-          </div>
-        )}
-        <div className={styles.headerLeft}>
-          <span className={styles.roundTag}>РАУНД {String(race.round).padStart(2, '0')}</span>
-          <div className={styles.titleRow}>
-            <span className={styles.flag}>{race.flag}</span>
-            <h2 className={styles.raceName}>{gpLabel}</h2>
-          </div>
-          <span className={styles.circuit}>{race.circuit}</span>
+        <div className={styles.meta}>
+          <span className={styles.round}>РАУНД {String(race.round).padStart(2, '0')}</span>
+          <span className={styles.metaDot}>·</span>
+          <span className={styles.date}>{formattedDate}</span>
         </div>
-        <div className={styles.datePill}>{formatRaceDate(race.date)}</div>
+        <div className={styles.titleRow}>
+          <span className={styles.flag}>{race.flag}</span>
+          <h2 className={styles.raceName}>{gpLabel}</h2>
+        </div>
+        <span className={styles.circuit}>{race.circuit}</span>
       </div>
 
-      {/* ── Normal countdown (days > 0) ── */}
-      {isNormal && (
-        <div className={styles.countdown}>
-          {normalSegments.map((seg, i) => (
-            <React.Fragment key={seg.label}>
-              {i > 0 && <span className={styles.sep}>:</span>}
-              <div className={styles.segment}>
-                <div className={styles.lights}>
-                  {Array.from({ length: 3 }, (_, j) => (
-                    <div key={j} className={`${styles.light} ${LIGHT_CLASS[seg.color]}`} />
-                  ))}
-                </div>
-                <span className={styles.segNum}>{String(seg.value).padStart(2, '0')}</span>
-                <span className={styles.segLabel}>{seg.label}</span>
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-      )}
+      <div className={styles.divider} />
 
-      {/* ── Race week (day of race, > 2h) ── */}
-      {isRaceWeek && (
-        <div className={styles.countdown}>
-          {weekSegments.map((seg, i) => (
-            <React.Fragment key={seg.label}>
-              {i > 0 && <span className={styles.sep}>:</span>}
-              <div className={styles.segment}>
-                <div className={styles.lights}>
-                  {Array.from({ length: 3 }, (_, j) => (
-                    <div key={j} className={`${styles.light} ${LIGHT_CLASS[seg.color]}`} />
-                  ))}
-                </div>
-                <span className={styles.segNum}>{String(seg.value).padStart(2, '0')}</span>
-                <span className={styles.segLabel}>{seg.label}</span>
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-      )}
-
-      {/* ── Race day (< 2h) ── */}
-      {isRaceDay && (
+      {/* ── Race Day ── */}
+      {isRaceDay ? (
         <div className={styles.raceDayWrap}>
           <div className={styles.startLights}>
             {Array.from({ length: 5 }, (_, i) => (
@@ -157,7 +132,24 @@ const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
             {String(seconds).padStart(2, '0')}
           </div>
         </div>
+      ) : (
+        /* ── Countdown ── */
+        <div className={styles.countdown}>
+          {countdownUnits.map(({ value, label }, i) => (
+            <div key={label} className={styles.countdownUnit}>
+              {i > 0 && <span className={styles.colon}>:</span>}
+              <div className={styles.countdownDots}>
+                {getDots(value, label)}
+              </div>
+              <span className={styles.countdownValue}>
+                {String(value).padStart(2, '0')}
+              </span>
+              <span className={styles.countdownLabel}>{label}</span>
+            </div>
+          ))}
+        </div>
       )}
+
     </div>
   )
 }

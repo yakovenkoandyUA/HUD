@@ -1,211 +1,214 @@
+/* ── Card ── */
 .card {
   position: relative;
-  background: var(--surface);
+  border-radius: 16px;
+  background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 14px;
   /* overflow: hidden; */
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Track SVG background ── */
+.trackBg {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  pointer-events: none;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+  overflow: hidden;
+}
+
+.trackBgSvg {
+  width: 65%;
+  height: 90%;
+  opacity: 0.07;
+  filter: brightness(2);
 }
 
 /* ── Header ── */
 .header {
   position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 12px 14px 10px;
-  gap: 8px;
-}
-
-/* ── Track as background in header ── */
-.trackBg {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 150px;
-  height: 110px;
-  opacity: 0.1;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.trackBgImg {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  /* filter: invert(1) sepia(1) saturate(0); */
-}
-
-.headerLeft {
-  position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
+  gap: 4px;
 }
 
-.roundTag {
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metaDot {
+  color: var(--text3);
+  font-size: 12px;
+}
+
+.date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.round {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
   color: var(--accent);
+  letter-spacing: 0.1em;
 }
 
 .titleRow {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 2px 0;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.flag { font-size: 18px; line-height: 1; }
+.flag {
+  font-size: 22px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
 
 .raceName {
   font-family: var(--font-display);
-  font-size: clamp(16px, 4.5vw, 22px);
-  line-height: 1;
+  font-size: 22px;
+  font-weight: 700;
   color: var(--text);
-  letter-spacing: 0.03em;
-  white-space: nowrap;
+  text-transform: uppercase;
+  line-height: 1.15;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 220px;
 }
 
 .circuit {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text3);
+  margin-left: 30px;
 }
 
-.datePill {
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: var(--border);
   position: relative;
   z-index: 1;
-  background: rgba(184,58,45,0.12);
-  border: 1px solid rgba(184,58,45,0.3);
-  border-radius: 20px;
-  padding: 5px 12px;
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--accent);
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 /* ── Countdown ── */
 .countdown {
+  position: relative;
+  z-index: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 14px 14px;
-  border-top: 1px solid var(--border);
-  background: var(--bg);
-  gap: 4px;
+  align-items: flex-end;
+  gap: 0;
 }
 
-.segment {
+.countdownUnit {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 2px;
   flex: 1;
+  position: relative;
 }
 
-.lights {
+.colon {
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-60%);
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--text3);
+}
+
+.countdownDots {
   display: flex;
-  gap: 4px;
-  margin-bottom: 6px;
+  gap: 3px;
+  height: 10px;
+  align-items: center;
 }
 
-.light {
-  width: 8px;
-  height: 8px;
+.dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
 }
 
-.lightRed    { background: #ff3300; border-color: #ff3300; }
-.lightOrange { background: #ff6600; border-color: #ff6600; }
-.lightYellow { background: #ffcc00; border-color: #ffcc00; }
-.lightGreen  { background: #00cc44; border-color: #00cc44; }
+.dotRed    { background: #e74c3c; }
+.dotOrange { background: #e67e22; }
+.dotYellow { background: #f1c40f; }
+.dotGreen  { background: #2ecc71; }
 
-.segNum {
-  font-family: 'Russo One', var(--font-display), sans-serif;
-  font-size: 32px;
-  font-weight: 400;
-  color: var(--gold, var(--accent));
+.countdownValue {
+  font-family: var(--font-display);
+  font-size: 36px;
   line-height: 1;
-  letter-spacing: 0.02em;
+  color: var(--gold);
 }
 
-.segLabel {
+.countdownLabel {
   font-family: var(--font-ui);
   font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
   color: var(--text3);
-  margin-top: 3px;
+  letter-spacing: 0.06em;
 }
 
-.sep {
-  font-family: var(--font-mono);
-  font-size: 22px;
-  color: var(--border2);
-  padding: 0 2px;
-  margin-bottom: 18px;
-  align-self: center;
-  flex-shrink: 0;
-}
 
 /* ── Race Day ── */
 .raceDayWrap {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 14px;
-  border-top: 1px solid var(--border);
-  background: var(--bg);
+  gap: 8px;
+  padding: 4px 0;
 }
 
 .startLights {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  gap: 6px;
 }
 
 .startLight {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #1c1a18;
-  border: 2px solid #2e2b27;
-  transition: all 0.15s;
+  background: var(--border2);
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .startLightOn {
   background: #ff1801;
-  border-color: #cc1401;
-  box-shadow: 0 0 8px rgba(255,24,1,0.6);
+  box-shadow: 0 0 8px rgba(255, 24, 1, 0.6);
 }
 
 .raceDayText {
   font-family: 'Russo One', var(--font-display), sans-serif;
-  font-size: 22px;
-  color: var(--gold);
-  letter-spacing: 0.1em;
+  font-size: 28px;
+  font-weight: 400;
+  color: #ff1801;
+  letter-spacing: 0.08em;
 }
 
 .raceDayTime {
-  font-family: 'Russo One', var(--font-mono), sans-serif;
-  font-size: 28px;
-  color: #ff1801;
+  font-family: 'Russo One', var(--font-display), sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--text);
   letter-spacing: 0.04em;
-  line-height: 1;
 }
