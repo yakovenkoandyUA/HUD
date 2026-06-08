@@ -1,3 +1,75 @@
+/* ── Card wrapper ── */
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  height: 140px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 15%, var(--bg3, var(--bg))) 0%,
+    var(--bg2, var(--bg)) 100%
+  );
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 12px;
+}
+
+.speedLines {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 70px;
+  height: 100%;
+  opacity: 0.6;
+}
+
+.carImage {
+  position: absolute;
+  right: -10px;
+  bottom: -5px;
+  height: 110px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+
+.heroInfo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heroName {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.heroPts {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--team-color);
+  line-height: 1;
+}
+
+.heroPts em {
+  font-style: normal;
+  font-size: 13px;
+  color: var(--text3);
+  margin-left: 2px;
+}
+
 /* ── Container ── */
 .inner {
   background: var(--surface-2, var(--surface));
@@ -6,18 +78,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-/* ── Animated PixelCar ── */
-@keyframes driveIn {
-  from { transform: translateX(-20px); opacity: 0; }
-  to   { transform: translateX(0);     opacity: 1; }
-}
-
-.carWrap {
-  display: flex;
-  align-items: center;
-  animation: driveIn 0.5s ease forwards;
 }
 
 /* ── Drivers list ── */
