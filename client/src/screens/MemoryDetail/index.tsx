@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import PhotoViewerModal from '../../components/memories/PhotoViewerModal'
+import Modal from '../../components/ui/Modal'
+import PosterGenerator from '../../components/memories/PosterGenerator'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { useLongPress } from '../../hooks/useLongPress'
@@ -159,6 +161,7 @@ const MemoryDetailScreen: React.FC = () => {
   const [menuOpen, setMenuOpen]         = useState(false)
   const [showEdit, setShowEdit]         = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showPosterGen, setShowPosterGen] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -255,7 +258,7 @@ const MemoryDetailScreen: React.FC = () => {
         )}
       </div>
 
-      {/* ── Add photo button ── */}
+      {/* ── Upload row ── */}
       <div className={styles.uploadRow}>
         <input
           ref={fileInputRef}
@@ -272,9 +275,28 @@ const MemoryDetailScreen: React.FC = () => {
           disabled={uploading}
         >
           {uploading && uploadProgress
-            ? `Завантаження ${uploadProgress.done}/${uploadProgress.total}...`
-            : '+ ДОДАТИ ФОТО'
+            ? `${uploadProgress.done}/${uploadProgress.total}...`
+            : (
+              <>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                ФОТО
+              </>
+            )
           }
+        </button>
+        <button
+          type="button"
+          className={styles.posterBtn}
+          onClick={() => setShowPosterGen(true)}
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M6.5 1v1.5M6.5 10.5V12M1 6.5h1.5M10.5 6.5H12M2.7 2.7l1.06 1.06M9.24 9.24l1.06 1.06M2.7 10.3l1.06-1.06M9.24 3.76l1.06-1.06"
+              stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" strokeWidth="1.3"/>
+          </svg>
+          AI ПОСТЕР
         </button>
       </div>
 
@@ -327,6 +349,20 @@ const MemoryDetailScreen: React.FC = () => {
           onClose={() => setShowEdit(false)}
         />
       )}
+
+      {/* ── AI Poster generator ── */}
+      <Modal
+        isOpen={showPosterGen}
+        onClose={() => setShowPosterGen(false)}
+        title="AI ПОСТЕР"
+        draggable
+      >
+        <PosterGenerator
+          memory={memory}
+          onSetCover={(url) => { setCover(id!, url) }}
+          onClose={() => setShowPosterGen(false)}
+        />
+      </Modal>
 
       {/* ── Delete confirm ── */}
       {showDeleteConfirm && (

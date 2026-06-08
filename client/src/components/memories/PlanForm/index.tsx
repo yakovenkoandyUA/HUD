@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import LocationSearch from '../LocationSearch'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import { formatDateUA } from '../../../utils/formatDate'
+import { uploadToCloudinary } from '../../../utils/uploadToCloudinary'
 import type { PlanInput, PlanLocation } from '../../../store/plansStore'
 import styles from './PlanForm.module.css'
 
@@ -9,7 +10,8 @@ import styles from './PlanForm.module.css'
  * PlanForm
  * --------
  * Bottom-sheet form for creating a new plan.
- * Fields: title, location (Nominatim autocomplete), status, planned date, notes.
+ * Fields: title, location, status, planned date, notes, photos.
+ * Photos are uploaded to Cloudinary immediately on pick and bundled into photos[] on submit.
  *
  * Props:
  * @prop {(data: PlanInput) => void} onSubmit — called with completed plan data
@@ -23,9 +25,9 @@ interface PlanFormProps {
 type PlanStatus = 'want' | 'planned' | 'visited'
 
 const STATUS_OPTIONS: { value: PlanStatus; label: string }[] = [
-  { value: 'want',    label: 'Хочу відвідати' },
-  { value: 'planned', label: 'Заплановано' },
-  { value: 'visited', label: 'Вже відвідали' },
+  { value: 'want',    label: 'Хочу' },
+  { value: 'planned', label: 'План' },
+  { value: 'visited', label: 'Були' },
 ]
 
 const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
@@ -35,8 +37,25 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
   const [plannedDate,  setPlannedDate]  = useState<string | null>(null)
   const [notes,        setNotes]        = useState('')
   const [showDatePick, setShowDatePick] = useState(false)
+  const [photoUrls,    setPhotoUrls]    = useState<string[]>([])
+  const [uploading,    setUploading]    = useState(false)
 
   const canSubmit = title.trim().length > 0
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file, 'mimir/plans')
+      setPhotoUrls(prev => [...prev, url])
+    } catch { /* silent — user can retry */ }
+    finally { setUploading(false); e.target.value = '' }
+  }
+
+  const removePhoto = (url: string) => {
+    setPhotoUrls(prev => prev.filter(u => u !== url))
+  }
 
   const handleSubmit = () => {
     if (!canSubmit) return
@@ -45,11 +64,16 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
       location,
       withProfiles: [],
       notes:        notes.trim(),
-      photos:       [],
+      photos:       photoUrls.map(url => ({
+        _id:       '',
+        url,
+        caption:   '',
+        createdAt: new Date().toISOString(),
+      })),
       status,
-      plannedDate:  plannedDate,
-      visitedDate:  null,
-      memoryId:     null,
+      plannedDate,
+      visitedDate: null,
+      memoryId:    null,
     })
     onClose()
   }
@@ -84,13 +108,12 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
           {/* Status */}
           <div className={styles.field}>
             <label className={styles.label}>СТАТУС</label>
-            <div className={styles.statusRow}>
+            <div className={styles.statusChips}>
               {STATUS_OPTIONS.map(o => (
                 <button
                   key={o.value}
                   type="button"
-                  className={`${styles.statusBtn} ${status === o.value ? styles.statusActive : ''}`}
-                  data-s={o.value}
+                  className={`${styles.statusChip} ${status === o.value ? styles.statusActive : ''}`}
                   onClick={() => setStatus(o.value)}
                 >
                   {o.label}
@@ -131,13 +154,51 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
               rows={3}
             />
           </div>
+
+          {/* Photos */}
+          <div className={styles.field}>
+            <label className={styles.label}>ФОТО</label>
+            <div className={styles.photoRow}>
+              {photoUrls.map(url => (
+                <div key={url} className={styles.photoThumb}>
+                  <img src={url} alt="" className={styles.thumbImg} />
+                  <button
+                    type="button"
+                    className={styles.removeThumb}
+                    onClick={() => removePhoto(url)}
+                    aria-label="Видалити фото"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              <label className={`${styles.addThumb} ${uploading ? styles.addThumbLoading : ''}`}>
+                {uploading ? (
+                  <span className={styles.spinner} />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M2 9h14M9 2v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  </svg>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className={styles.fileInput}
+                  disabled={uploading}
+                  onChange={handlePhotoChange}
+                />
+              </label>
+            </div>
+          </div>
         </div>
 
         <button
           type="button"
           className={styles.submitBtn}
           onClick={handleSubmit}
-          disabled={!canSubmit}
+          disabled={!canSubmit || uploading}
         >
           ДОДАТИ ПЛАН
         </button>

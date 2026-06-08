@@ -26,9 +26,36 @@ interface NominatimResult {
 }
 
 const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' }) => {
-  const [query,   setQuery]   = useState(initial)
-  const [results, setResults] = useState<NominatimResult[]>([])
-  const [loading, setLoading] = useState(false)
+  const [query,       setQuery]       = useState(initial)
+  const [results,     setResults]     = useState<NominatimResult[]>([])
+  const [loading,     setLoading]     = useState(false)
+  const [countryCode, setCountryCode] = useState<string>('ua')
+
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    let cancelled = false
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const r = await fetch(
+            `https://nominatim.openstreetmap.org/reverse` +
+            `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`,
+            { headers: { 'User-Agent': 'MIMIR-App/1.0' } }
+          )
+          if (r.ok && !cancelled) {
+            const data = await r.json()
+            const code = data.address?.country_code
+            if (code) setCountryCode(code)
+          }
+        } catch { /* fallback ua */ }
+      },
+      () => { /* permission denied — keep ua */ },
+      { timeout: 5000 }
+    )
+
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     if (query.length < 3) { setResults([]); return }
@@ -39,7 +66,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
       try {
         const r = await fetch(
           `https://nominatim.openstreetmap.org/search` +
-          `?q=${encodeURIComponent(query)}&format=json&limit=5&accept-language=uk`,
+          `?q=${encodeURIComponent(query)}&format=json&limit=5` +
+          `&accept-language=uk&countrycodes=${countryCode}`,
           { headers: { 'User-Agent': 'MIMIR-App/1.0' } }
         )
         if (r.ok && !cancelled) setResults(await r.json())
@@ -48,7 +76,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
     }, 500)
 
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [query])
+  }, [query, countryCode])
 
   const handlePick = (r: NominatimResult) => {
     onSelect({

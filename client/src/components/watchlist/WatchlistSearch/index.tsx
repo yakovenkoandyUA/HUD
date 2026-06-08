@@ -76,8 +76,9 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
   const [selectedStatus, setSelectedStatus] = useState<WatchlistStatus>('want')
   const [loadingDetails, setLoadingDetails] = useState(false)
 
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const inputRef   = useRef<HTMLInputElement>(null)
+  const heroStartY = useRef(0)
 
   const activateSearch = () => {
     setSearchActive(true)
@@ -231,13 +232,13 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
 
   const closePreview = () => { setPreview(null); setPreviewDetails(null) }
 
-  const handleHeroSwipe = (e: React.TouchEvent) => {
-    const startY = e.touches[0].clientY
-    const handleEnd = (ev: TouchEvent) => {
-      if (ev.changedTouches[0].clientY - startY > 60) closePreview()
-      document.removeEventListener('touchend', handleEnd)
-    }
-    document.addEventListener('touchend', handleEnd)
+  const handleHeroTouchStart = (e: React.TouchEvent) => {
+    heroStartY.current = e.touches[0].clientY
+  }
+
+  const handleHeroTouchEnd = (e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientY - heroStartY.current
+    if (delta > 60) closePreview()
   }
 
   const heroSrc = (() => {
@@ -340,7 +341,11 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
       {preview && (
         <div className={styles.previewScreen}>
           {/* Hero */}
-          <div className={styles.previewHero} onTouchStart={handleHeroSwipe}>
+          <div
+            className={styles.previewHero}
+            onTouchStart={handleHeroTouchStart}
+            onTouchEnd={handleHeroTouchEnd}
+          >
             {heroSrc ? (
               <img src={heroSrc} alt={preview.title} className={styles.previewHeroImg} />
             ) : (

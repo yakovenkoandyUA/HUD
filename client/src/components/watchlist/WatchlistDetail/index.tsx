@@ -136,11 +136,11 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [nextSeasonDate, setNextSeasonDate]     = useState<string | null>(item.nextSeasonDate ?? null)
   const [showSeasonDatePicker, setShowSeasonDatePicker] = useState(false)
   const initialNextEpRef   = useRef(item.nextEpisodeDate)
-  const sheetRef              = useRef<HTMLDivElement>(null)
-  const episodesRef           = useRef<HTMLDivElement>(null)
-  const swipeStartY           = useRef(0)
-  const swipeCurrentY         = useRef(0)
-  const dragDismissAllowed    = useRef(false)
+  const sheetRef        = useRef<HTMLDivElement>(null)
+  const episodesRef     = useRef<HTMLDivElement>(null)
+  const startY          = useRef(0)
+  const startScrollTop  = useRef(0)
+  const isDragging      = useRef(false)
 
   const isSeriesLike = item.category === 'series' || item.category === 'anime'
   const { episodes } = useSeriesEpisodes(isSeriesLike && item.tmdbId > 0 ? item.tmdbId : null)
@@ -344,18 +344,23 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
-  // Imperative touchmove — passive:false needed to allow preventDefault
+  // Imperative touchmove — passive:false required to call preventDefault
   useEffect(() => {
     if (!mounted) return
     const sheet = sheetRef.current
     if (!sheet) return
 
     const onMove = (e: TouchEvent) => {
-      swipeCurrentY.current = e.touches[0].clientY
-      const delta = swipeCurrentY.current - swipeStartY.current
-      if (delta > 0 && sheet.scrollTop === 0 && dragDismissAllowed.current) {
+      const deltaY = e.touches[0].clientY - startY.current
+
+      if (deltaY > 0 && sheet.scrollTop === 0 && startScrollTop.current === 0) {
         e.preventDefault()
-        sheet.style.transform = `translateY(${Math.min(delta * 0.4, 80)}px)`
+        isDragging.current = true
+        sheet.style.transform  = `translateY(${Math.min(deltaY * 0.4, 120)}px)`
+        sheet.style.transition = 'none'
+      } else {
+        isDragging.current     = false
+        sheet.style.transform  = 'translateY(0)'
         sheet.style.transition = 'none'
       }
     }
@@ -365,33 +370,30 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   }, [mounted])
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    swipeStartY.current = e.touches[0].clientY
-    swipeCurrentY.current = e.touches[0].clientY
-    // Only allow drag-dismiss when touch starts in the handle zone (top 56px of sheet)
-    const sheet = sheetRef.current
-    if (sheet) {
-      const relY = e.touches[0].clientY - sheet.getBoundingClientRect().top
-      dragDismissAllowed.current = relY < 56
-    }
+    startY.current         = e.touches[0].clientY
+    startScrollTop.current = sheetRef.current?.scrollTop ?? 0
+    isDragging.current     = false
   }
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     const sheet = sheetRef.current
     if (!sheet) return
-    const delta = swipeCurrentY.current - swipeStartY.current
+
     sheet.style.transition = 'transform 0.25s ease'
-    if (delta > 80 && dragDismissAllowed.current) {
-      sheet.style.transform = 'translateY(100%)'
-      setTimeout(onClose, 250)
+
+    if (isDragging.current) {
+      const deltaY = e.changedTouches[0].clientY - startY.current
+      if (deltaY > 80) {
+        sheet.style.transform = 'translateY(100%)'
+        setTimeout(onClose, 250)
+      } else {
+        sheet.style.transform = 'translateY(0)'
+      }
     } else {
       sheet.style.transform = 'translateY(0)'
-      setTimeout(() => {
-        if (sheetRef.current) {
-          sheetRef.current.style.transform = ''
-          sheetRef.current.style.transition = ''
-        }
-      }, 280)
     }
+
+    isDragging.current = false
   }
 
   const handleStartWatching = () => {

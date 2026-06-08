@@ -100,11 +100,17 @@
 
 /* ── Upload row ── */
 .uploadRow {
+  display: flex;
+  gap: 8px;
   padding: 12px 16px 4px;
 }
 
 .addPhotoBtn {
-  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 12px;
   background: var(--surface);
   border: 1px dashed var(--border2);
@@ -124,6 +130,29 @@
 .addPhotoBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.posterBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--second);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.posterBtn:active {
+  background: rgba(var(--second-rgb, 100,149,237), 0.1);
+  border-color: var(--second);
 }
 
 /* ── Empty photos ── */

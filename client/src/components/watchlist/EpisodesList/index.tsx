@@ -46,17 +46,18 @@ function relativeLabel(days: number): string {
 const EpisodesList: React.FC<EpisodesListProps> = ({
   tmdbId, seasons, watchedEpisodes, onToggleEpisode, status, initialSeason, onMarkWatched,
 }) => {
-  // Season 0 on TMDB = Specials/OVA — filter to keep only main seasons
   const validSeasons = seasons.filter(s => s > 0)
-  const seasonsToShow = validSeasons.length > 0 ? validSeasons : [1]
+  const fallbackSeason = (initialSeason && initialSeason > 0 ? initialSeason : null) ?? validSeasons[0] ?? 1
 
-  const maxSeason = seasonsToShow[seasonsToShow.length - 1] ?? 1
-  const defaultSeason = initialSeason && initialSeason > 0 && initialSeason <= maxSeason
-    ? initialSeason
-    : seasonsToShow[0] ?? 1
+  // totalSeasons from hook is authoritative (fetched from TMDB) —
+  // item.totalSeasons may be stale or null for older entries
+  const { activeSeason, setActiveSeason, episodes, loading, error, totalSeasons: hookTotalSeasons } =
+    useSeriesEpisodes(tmdbId, fallbackSeason)
 
-  const { activeSeason, setActiveSeason, episodes, loading, error } =
-    useSeriesEpisodes(tmdbId, defaultSeason)
+  const effectiveCount = Math.max(validSeasons.length, hookTotalSeasons)
+  const seasonsToShow = effectiveCount > 0
+    ? Array.from({ length: effectiveCount }, (_, i) => i + 1)
+    : [1]
 
   const isWatched = (s: number, e: number) =>
     watchedEpisodes.some(w => w.season === s && w.episode === e)
