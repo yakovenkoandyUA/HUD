@@ -46,7 +46,7 @@ const LIGHT_CLASS: Record<LightColor, string> = {
   green:  styles.dotGreen,
 }
 
-function getDots(value: number, label: string) {
+function getDots(_value: number, label: string) {
   const color = DOT_COLOR[label] ?? 'red'
   return Array.from({ length: 3 }, (_, j) => (
     <div key={j} className={`${styles.dot} ${LIGHT_CLASS[color]}`} />
