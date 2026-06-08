@@ -141,6 +141,7 @@ const ConstructorStatsCard: React.FC<Props> = ({
             src={carImage}
             alt={teamName}
             className={styles.carImage}
+            onError={e => { e.currentTarget.style.display = 'none' }}
           />
         )}
 
