@@ -1,30 +1,36 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader'
 import NextRaceCard from '../../components/f1/NextRaceCard'
 import RaceCalendarList from '../../components/f1/RaceCalendarList'
 import ChampionshipTable from '../../components/f1/ChampionshipTable'
 import LastRaceCard from '../../components/f1/LastRaceCard'
-import RacePredictionCard from '../../components/f1/RacePredictionCard'
-import MySeasonStats from '../../components/f1/MySeasonStats'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getNextRound } from '../../utils/f1'
 import { useUiStore } from '../../store/uiStore'
 import { useF1PredictionsStore } from '../../store/f1PredictionsStore'
 import styles from './F1.module.css'
 
-type F1Tab = 'calendar' | 'drivers' | 'constructors' | 'myseason'
+type F1Tab = 'calendar' | 'drivers' | 'constructors'
 
 const TABS: { id: F1Tab; label: string }[] = [
-  { id: 'calendar',     label: 'Календар'  },
-  { id: 'drivers',      label: 'Пілоти'    },
-  { id: 'constructors', label: 'Команди'   },
-  { id: 'myseason',     label: 'МІЙ СЕЗОН' },
+  { id: 'calendar',     label: 'Календар' },
+  { id: 'drivers',      label: 'Пілоти'   },
+  { id: 'constructors', label: 'Команди'  },
 ]
 
 const F1Screen: React.FC = () => {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<F1Tab>('calendar')
   const { theme } = useUiStore()
-  const { fetchPredictions } = useF1PredictionsStore()
+  const { fetchPredictions, predictions } = useF1PredictionsStore()
+
+  const completed     = predictions.filter(p => p.result)
+  const totalPts      = completed.reduce((sum, p) => sum + (p.result?.points ?? 0), 0)
+  const totalRaces    = completed.length
+  const correctPicks  = completed.filter(p =>
+    [p.result!.p1Match, p.result!.p2Match, p.result!.p3Match].some(m => m !== 'miss')
+  ).length
   const nextRace = getNextRace(F1_SEASON_2026)
   const nextRound = getNextRound(F1_SEASON_2026)
   const bgRef = useRef<HTMLDivElement>(null)
@@ -59,16 +65,24 @@ const F1Screen: React.FC = () => {
 
         <LastRaceCard />
 
-        {nextRace && (
-          <button
-            className={styles.predictionTeaser}
-            onClick={() => setTab('myseason')}
-          >
-            <span>🎯</span>
-            <span>Прогноз · {nextRace.name}</span>
-            <span className={styles.teaserArrow}>→</span>
-          </button>
-        )}
+        <button
+          className={styles.mySeasonCard}
+          onClick={() => navigate('/f1/my-season')}
+        >
+          <div className={styles.mySeasonCardLeft}>
+            <div className={styles.mySeasonCardTitle}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4l3 3"/>
+              </svg>
+              ПРОГНОЗИ
+            </div>
+            <span className={styles.mySeasonCardSub}>
+              {totalPts} pts · {correctPicks}/{totalRaces} влучань
+            </span>
+          </div>
+          <span className={styles.mySeasonCardArrow}>→</span>
+        </button>
 
         <div className={styles.tabs}>
           {TABS.map((t) => (
@@ -88,13 +102,6 @@ const F1Screen: React.FC = () => {
 
         {(tab === 'drivers' || tab === 'constructors') && (
           <ChampionshipTable tab={tab} />
-        )}
-
-        {tab === 'myseason' && (
-          <>
-            {nextRace && <RacePredictionCard race={nextRace} />}
-            <MySeasonStats />
-          </>
         )}
       </div>
     </div>

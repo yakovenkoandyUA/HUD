@@ -21,49 +21,50 @@ interface RaceCalendarListProps {
 
 const RaceCalendarList: React.FC<RaceCalendarListProps> = ({ races, nextRound }) => {
   const navigate = useNavigate()
+  const today = new Date().toISOString().slice(0, 10)
+
   return (
-    <ul className={styles.list}>
+    <div className={styles.list}>
       {races.map((race) => {
-        const isPast    = race.round < nextRound
-        const isCurrent = race.round === nextRound
-        const trackColor = isCurrent ? 'var(--accent)' : 'var(--text3)'
+        const isPast = race.date < today
+        const isNext = race.round === nextRound
         return (
-          <li
+          <div
             key={race.round}
-            className={`${styles.item} ${isPast ? styles.raceItemPast : ''} ${isCurrent ? styles.raceItemCurrent : ''}`}
+            className={`${styles.row} ${isPast ? styles.rowPast : ''} ${isNext ? styles.rowNext : ''}`}
             onClick={() => navigate(`/f1/${race.round}`)}
           >
             <span className={styles.round}>
-              {isPast
-                ? <span className={styles.checkmark}>✓</span>
-                : String(race.round).padStart(2, '0')
-              }
+              {String(race.round).padStart(2, '0')}
             </span>
+
             <span className={styles.flag}>{race.flag}</span>
+
             <div className={styles.info}>
               <span className={styles.name}>{race.name}</span>
               <span className={styles.circuit}>{race.circuit}</span>
             </div>
+
             <span className={styles.date}>
               {new Date(race.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
             </span>
-            <div className={styles.trackWrap}>
-              {race.trackSvg ? (
+
+            {race.trackSvg && (
+              <div className={styles.trackWrap}>
                 <TrackSVG
                   src={race.trackSvg}
-                  color={trackColor}
+                  color={isNext ? 'var(--accent)' : 'var(--text2)'}
                   strokeWidth={1}
                   animated={false}
-                  className={styles.track}
+                  preserveAspectRatio="xMidYMid meet"
+                  className={styles.trackSvg}
                 />
-              ) : (
-                <div className={styles.trackMissing} />
-              )}
-            </div>
-          </li>
+              </div>
+            )}
+          </div>
         )
       })}
-    </ul>
+    </div>
   )
 }
 

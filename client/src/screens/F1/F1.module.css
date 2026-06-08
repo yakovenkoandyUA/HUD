@@ -76,24 +76,52 @@
   margin-top: 4px;
 }
 
-.predictionTeaser {
+.mySeasonCard {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border2);
   background: var(--bg2);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--text2);
   cursor: pointer;
+  text-align: left;
   -webkit-tap-highlight-color: transparent;
 }
 
-.teaserArrow {
-  margin-left: auto;
+.mySeasonCardLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mySeasonCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mySeasonCardTitle svg {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.mySeasonCardSub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+.mySeasonCardArrow {
+  font-size: 16px;
   color: var(--gold);
 }
 

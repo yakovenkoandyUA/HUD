@@ -12,6 +12,7 @@ import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
 import F1Screen from './screens/F1'
 import RaceDetailPage from './screens/RaceDetail'
+import MySeasonPage from './screens/MySeasonPage'
 import Sprint from './screens/Sprint'
 import Recipes from './screens/Recipes'
 import RecipeDetailScreen from './screens/RecipeDetail'
@@ -60,6 +61,7 @@ const AnimatedRoutes: React.FC = () => {
           {/* F1 module — f1Enabled only */}
           <Route element={<F1Route />}>
             <Route path="/f1" element={<F1Screen />} />
+            <Route path="/f1/my-season" element={<MySeasonPage />} />
             <Route path="/f1/:round" element={<RaceDetailPage />} />
           </Route>
         </Route>
@@ -74,6 +76,7 @@ const AnimatedRoutes: React.FC = () => {
 const NavGuard: React.FC = () => {
   const { pathname } = useLocation()
   if (/^\/f1\/\d+$/.test(pathname)) return null
+  if (pathname === '/f1/my-season') return null
   if (/^\/memories\/.+/.test(pathname)) return null
   if (/^\/recipes\/.+/.test(pathname)) return null
   if (pathname === '/shopping') return null
