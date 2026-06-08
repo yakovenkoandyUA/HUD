@@ -121,8 +121,19 @@ const LastRaceCard: React.FC = () => {
       {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.flag}>{flag}</span>
-          <h2 className={styles.raceName}>{data.raceName}</h2>
+          <div className={styles.titleRow}>
+            <span className={styles.flag}>{flag}</span>
+            <h2 className={styles.raceName}>{data.raceName}</h2>
+            <span className={styles.laps}>{data.laps} кл</span>
+          </div>
+          {data.fastestLap && (
+            <div className={styles.fastestRow}>
+              <span className={styles.fastestDot} />
+              <span className={styles.fastestText}>
+                {data.fastestLap.code} {data.fastestLap.time}
+              </span>
+            </div>
+          )}
         </div>
         <div className={styles.headerRight}>
           <span className={styles.round}>Раунд {data.round}</span>
@@ -168,17 +179,6 @@ const LastRaceCard: React.FC = () => {
 
       </div>
 
-      {/* ── Fastest ── */}
-      <div className={styles.fastest}>
-        <span className={styles.fastestDot} />
-        <span className={styles.fastestLabel}>FASTEST</span>
-        {data.fastestLap && (
-          <span className={styles.fastestValue}>
-            {data.fastestLap.code} {data.fastestLap.time}
-          </span>
-        )}
-        <span className={styles.laps}>{data.laps} кл</span>
-      </div>
 
     </div>
   )
