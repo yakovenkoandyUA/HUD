@@ -7,18 +7,21 @@
 /* ── Hero ── */
 .hero {
   position: relative;
-  height: 150px;
+  height: 160px;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
+  background: color-mix(in srgb, var(--team-color) 20%, var(--bg3));
 }
 
 .carImage {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  right: 0;
+  top: 0;
+  width: 80%;
   height: 100%;
   object-fit: cover;
-  object-position: center center;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%);
+  mask-image: linear-gradient(to right, transparent 0%, black 25%);
 }
 
 .heroFade {
@@ -26,8 +29,8 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    transparent 20%,
-    rgba(0,0,0,0.75) 100%
+    transparent 30%,
+    rgba(0, 0, 0, 0.8) 100%
   );
   z-index: 1;
 }
@@ -36,10 +39,10 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 55px;
+  width: 60px;
   height: 100%;
   z-index: 2;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .heroInfo {
