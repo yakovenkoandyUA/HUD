@@ -7,13 +7,19 @@ export async function getPredictions(req: Request, res: Response): Promise<void>
 }
 
 export async function savePrediction(req: Request, res: Response): Promise<void> {
-  const { raceId, raceName, raceRound, p1, p2, p3, savedAt } = req.body as {
+  const {
+    raceId, raceName, raceRound, p1, p2, p3, savedAt,
+    constructorPick = null, driverOfTheDay = null, safetyCarPick = null,
+  } = req.body as {
     raceId: string; raceName: string; raceRound: number
     p1: string; p2: string; p3: string; savedAt: string
+    constructorPick?: string | null
+    driverOfTheDay?: string | null
+    safetyCarPick?: boolean | null
   }
   const item = await F1Prediction.findOneAndUpdate(
     { raceId, userId: req.userId },
-    { raceName, raceRound, p1, p2, p3, savedAt, result: null },
+    { raceName, raceRound, p1, p2, p3, constructorPick, driverOfTheDay, safetyCarPick, savedAt, result: null },
     { upsert: true, new: true }
   )
   res.json(item)

@@ -3,13 +3,16 @@ import type { F1Race } from '../data/f1Season2026'
 import { authFetch, isBackendConfigured, getToken } from '../services/api'
 
 export interface RacePrediction {
-  raceId:    string   // "2026-r6"
-  raceName:  string
-  raceRound: number
-  p1: string          // driverId
-  p2: string
-  p3: string
-  savedAt:   string   // ISO timestamp
+  raceId:          string   // "2026-r6"
+  raceName:        string
+  raceRound:       number
+  p1:              string   // driverId
+  p2:              string
+  p3:              string
+  constructorPick: string | null
+  driverOfTheDay:  string | null
+  safetyCarPick:   boolean | null
+  savedAt:         string   // ISO timestamp
   result?: {
     p1Match:  'exact' | 'partial' | 'miss'
     p2Match:  'exact' | 'partial' | 'miss'
@@ -17,16 +20,31 @@ export interface RacePrediction {
     actualP1: string
     actualP2: string
     actualP3: string
+    constructorMatch?: boolean
+    dotdMatch?:        boolean
+    scMatch?:          boolean
     points:   number
   }
 }
 
 interface F1PredictionsStore {
-  predictions: RacePrediction[]
-  totalPoints: number
+  predictions:      RacePrediction[]
+  totalPoints:      number
   fetchPredictions: () => Promise<void>
-  savePrediction: (race: F1Race, p1: string, p2: string, p3: string) => void
-  checkResult:    (raceId: string, actualP1: string, actualP2: string, actualP3: string) => void
+  savePrediction:   (
+    race: F1Race,
+    p1: string, p2: string, p3: string,
+    constructorPick?: string | null,
+    driverOfTheDay?: string | null,
+    safetyCarPick?: boolean | null,
+  ) => void
+  checkResult: (
+    raceId: string,
+    actualP1: string, actualP2: string, actualP3: string,
+    constructorWinner?: string,
+    dotd?: string,
+    hadSC?: boolean,
+  ) => void
 }
 
 export function toRaceId(race: F1Race): string {
@@ -52,26 +70,32 @@ function calcTotal(predictions: RacePrediction[]): number {
 }
 
 interface ApiPrediction {
-  _id: string
-  raceId: string
-  raceName: string
-  raceRound: number
-  p1: string
-  p2: string
-  p3: string
-  savedAt: string
-  result?: RacePrediction['result'] | null
+  _id:             string
+  raceId:          string
+  raceName:        string
+  raceRound:       number
+  p1:              string
+  p2:              string
+  p3:              string
+  constructorPick: string | null
+  driverOfTheDay:  string | null
+  safetyCarPick:   boolean | null
+  savedAt:         string
+  result?:         RacePrediction['result'] | null
 }
 
 function fromApi(item: ApiPrediction): RacePrediction {
   return {
-    raceId:    item.raceId,
-    raceName:  item.raceName,
-    raceRound: item.raceRound,
-    p1: item.p1,
-    p2: item.p2,
-    p3: item.p3,
-    savedAt: item.savedAt,
+    raceId:          item.raceId,
+    raceName:        item.raceName,
+    raceRound:       item.raceRound,
+    p1:              item.p1,
+    p2:              item.p2,
+    p3:              item.p3,
+    constructorPick: item.constructorPick ?? null,
+    driverOfTheDay:  item.driverOfTheDay ?? null,
+    safetyCarPick:   item.safetyCarPick ?? null,
+    savedAt:         item.savedAt,
     ...(item.result ? { result: item.result } : {}),
   }
 }
@@ -91,11 +115,12 @@ export const useF1PredictionsStore = create<F1PredictionsStore>()((set, get) => 
     } catch { /* offline */ }
   },
 
-  savePrediction: (race, p1, p2, p3) => {
+  savePrediction: (race, p1, p2, p3, constructorPick = null, driverOfTheDay = null, safetyCarPick = null) => {
     const raceId  = toRaceId(race)
     const savedAt = new Date().toISOString()
     const next: RacePrediction = {
-      raceId, raceName: race.name, raceRound: race.round, p1, p2, p3, savedAt,
+      raceId, raceName: race.name, raceRound: race.round,
+      p1, p2, p3, constructorPick, driverOfTheDay, safetyCarPick, savedAt,
     }
     set(s => ({
       predictions: [
@@ -107,11 +132,14 @@ export const useF1PredictionsStore = create<F1PredictionsStore>()((set, get) => 
     if (!getToken() || !isBackendConfigured()) return
     authFetch('/api/f1/predictions', {
       method: 'POST',
-      body: JSON.stringify({ raceId, raceName: race.name, raceRound: race.round, p1, p2, p3, savedAt }),
+      body: JSON.stringify({
+        raceId, raceName: race.name, raceRound: race.round,
+        p1, p2, p3, constructorPick, driverOfTheDay, safetyCarPick, savedAt,
+      }),
     }).catch(() => {})
   },
 
-  checkResult: (raceId, actualP1, actualP2, actualP3) => {
+  checkResult: (raceId, actualP1, actualP2, actualP3, constructorWinner, dotd, hadSC) => {
     const pred = get().predictions.find(p => p.raceId === raceId)
     if (!pred || pred.result) return
 
@@ -119,10 +147,34 @@ export const useF1PredictionsStore = create<F1PredictionsStore>()((set, get) => 
     const p1Match = matchAt(pred.p1, 0, actual)
     const p2Match = matchAt(pred.p2, 1, actual)
     const p3Match = matchAt(pred.p3, 2, actual)
-    const pts = (m: 'exact' | 'partial' | 'miss') =>
+
+    const posPts = (m: 'exact' | 'partial' | 'miss') =>
       m === 'exact' ? 10 : m === 'partial' ? 5 : 0
-    const points = pts(p1Match) + pts(p2Match) + pts(p3Match)
-    const result = { p1Match, p2Match, p3Match, actualP1, actualP2, actualP3, points }
+
+    let points = posPts(p1Match) + posPts(p2Match) + posPts(p3Match)
+
+    const constructorMatch = constructorWinner !== undefined
+      ? pred.constructorPick === constructorWinner
+      : undefined
+    const dotdMatch = dotd !== undefined
+      ? pred.driverOfTheDay === dotd
+      : undefined
+    const scMatch = hadSC !== undefined
+      ? pred.safetyCarPick === hadSC
+      : undefined
+
+    if (constructorMatch) points += 5
+    if (dotdMatch)        points += 5
+    if (scMatch)          points += 3
+
+    const result = {
+      p1Match, p2Match, p3Match,
+      actualP1, actualP2, actualP3,
+      ...(constructorMatch !== undefined ? { constructorMatch } : {}),
+      ...(dotdMatch !== undefined        ? { dotdMatch }        : {}),
+      ...(scMatch !== undefined          ? { scMatch }          : {}),
+      points,
+    }
 
     set(s => {
       const predictions = s.predictions.map(p =>

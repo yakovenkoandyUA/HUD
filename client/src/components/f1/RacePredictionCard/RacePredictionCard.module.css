@@ -348,3 +348,133 @@
   transition: opacity 0.15s;
 }
 .changeBtn:hover { opacity: 0.75; }
+
+/* ── Sections ── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pts {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--gold);
+  background: var(--gold-dim, rgba(220,201,169,0.1));
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* ── Teams ── */
+.teamsRow {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.teamsRow::-webkit-scrollbar { display: none; }
+
+.teamChip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.teamChip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.teamChipActive {
+  background: var(--surface);
+  border-color: var(--gold);
+}
+
+.teamColor {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.teamName {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.teamChipActive .teamName { color: var(--gold); }
+
+/* ── Safety Car ── */
+.boolPicker {
+  display: flex;
+  gap: 8px;
+}
+
+.boolBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.boolBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.boolBtnActive {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Max points ── */
+.maxPts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--border);
+}
+
+.maxPtsLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+}
+
+.maxPtsNum {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+}

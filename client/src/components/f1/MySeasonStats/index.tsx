@@ -83,7 +83,7 @@ const MySeasonStats: React.FC = () => {
           хто фінішує в топ-3?
         </p>
         <div className={styles.emptyScore}>
-          <span className={styles.emptyScoreNum}>30</span>
+          <span className={styles.emptyScoreNum}>43</span>
           <span className={styles.emptyScoreLabel}>макс очок за гонку</span>
         </div>
       </div>
