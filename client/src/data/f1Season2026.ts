@@ -11,7 +11,7 @@ export interface F1Race {
 
 export const F1_SEASON_2026: F1Race[] = [
   { round: 1,  name: 'Australian GP',          circuit: 'Albert Park',                  date: '2026-03-08', flag: '🇦🇺', country: 'Australia',  trackSvg: '/tracks/Australian.svg' },
-  { round: 2,  name: 'Chinese GP',             circuit: 'Shanghai',                     date: '2026-03-15', flag: '🇨🇳', country: 'China',       trackSvg: null,                              sprint: true },
+  { round: 2,  name: 'Chinese GP',             circuit: 'Shanghai',                     date: '2026-03-15', flag: '🇨🇳', country: 'China',       trackSvg: '/tracks/China.svg',               sprint: true },
   { round: 3,  name: 'Japanese GP',            circuit: 'Suzuka',                       date: '2026-03-29', flag: '🇯🇵', country: 'Japan',       trackSvg: '/tracks/Japanese(suzuka).svg' },
   { round: 4,  name: 'Miami GP',               circuit: 'Miami International',          date: '2026-05-03', flag: '🇺🇸', country: 'USA',         trackSvg: '/tracks/Miami.svg',               sprint: true },
   { round: 5,  name: 'Canadian GP',            circuit: 'Circuit Gilles Villeneuve',    date: '2026-05-24', flag: '🇨🇦', country: 'Canada',      trackSvg: '/tracks/Canadian.svg',            sprint: true },
@@ -23,7 +23,7 @@ export const F1_SEASON_2026: F1Race[] = [
   { round: 11, name: 'Hungarian GP',           circuit: 'Hungaroring',                  date: '2026-07-26', flag: '🇭🇺', country: 'Hungary',     trackSvg: '/tracks/Hungarian.svg' },
   { round: 12, name: 'Dutch GP',               circuit: 'Zandvoort',                    date: '2026-08-23', flag: '🇳🇱', country: 'Netherlands', trackSvg: '/tracks/Dutch.svg',               sprint: true },
   { round: 13, name: 'Italian GP',             circuit: 'Monza',                        date: '2026-09-06', flag: '🇮🇹', country: 'Italy',       trackSvg: '/tracks/Italia(monza).svg' },
-  { round: 14, name: 'Spanish GP — Madrid',    circuit: 'Madring',                      date: '2026-09-13', flag: '🇪🇸', country: 'Spain',       trackSvg: '/tracks/Madrid.svg' },
+  { round: 14, name: 'Spanish GP — Madrid',    circuit: 'Madring',                      date: '2026-09-13', flag: '🇪🇸', country: 'Spain',       trackSvg: '/tracks/Madrid.svg'  },
   { round: 15, name: 'Azerbaijan GP',          circuit: 'Baku City Circuit',            date: '2026-09-26', flag: '🇦🇿', country: 'Azerbaijan',  trackSvg: '/tracks/Azerbaijan.svg' },
   { round: 16, name: 'Singapore GP',           circuit: 'Marina Bay',                   date: '2026-10-11', flag: '🇸🇬', country: 'Singapore',   trackSvg: '/tracks/Singapore.svg',           sprint: true },
   { round: 17, name: 'United States GP',       circuit: 'Circuit of the Americas',      date: '2026-10-25', flag: '🇺🇸', country: 'USA',         trackSvg: '/tracks/USA(ostin).svg' },
