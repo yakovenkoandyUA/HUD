@@ -3,7 +3,7 @@
   border-radius: 16px;
   background: var(--bg2);
   border: 1px solid var(--border);
-  overflow: hidden;
+  /* overflow: hidden; */
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -81,18 +81,15 @@
 .avatar {
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid var(--border2);
+  /* border: 2px solid var(--border2); */
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: var(--surface2);
+  /* background: var(--surface2); */
 }
 
-.avatarGold {
-  border-color: var(--gold);
-  box-shadow: 0 0 12px rgba(220, 201, 169, 0.3);
-}
+
 
 .avatarInitials {
   font-family: var(--font-mono);
