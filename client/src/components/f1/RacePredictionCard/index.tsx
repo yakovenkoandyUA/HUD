@@ -10,68 +10,23 @@ import styles from './RacePredictionCard.module.css'
  * ------------------
  * Картка прогнозу на наступну гонку.
  * Три стани: введення (до збереження), збережено (до гонки), результат (після).
- * Дані пілотів з useChampionshipStandings. Auto-check через useLastRace.
- * Persist у localStorage (f1-predictions-storage).
+ * Компактний picker: таби P1/P2/P3 + один горизонтальний ряд пілотів.
+ * Після вибору — автоперехід на наступну незаповнену позицію.
  *
  * Props:
  * @prop {F1Race} race — наступна гонка (nextRace з F1_SEASON_2026)
  */
+
+function hoursToRace(date: string): number {
+  const ms = new Date(date + 'T13:00:00Z').getTime() - Date.now()
+  return Math.max(0, Math.floor(ms / 3_600_000))
+}
 
 interface Driver {
   driverId: string
   code: string
   photoUrl?: string
 }
-
-interface DriverPickerProps {
-  drivers: Driver[]
-  selected: string
-  onSelect: (driverId: string) => void
-  label: string
-  others: string[]
-  disabled: boolean
-}
-
-const DriverPicker: React.FC<DriverPickerProps> = ({
-  drivers, selected, onSelect, label, others, disabled,
-}) => (
-  <div className={styles.pickerWrap}>
-    <span className={styles.pickerLabel}>{label}</span>
-    <div className={styles.pickerScroll}>
-      {drivers.map(d => {
-        const isSelected = selected === d.driverId
-        const isDimmed   = !isSelected && others.includes(d.driverId)
-        const proxySrc   = d.photoUrl
-          ? `https://images.weserv.nl/?url=${encodeURIComponent(d.photoUrl)}&w=72&h=72&fit=cover&a=top`
-          : null
-        return (
-          <button
-            key={d.driverId}
-            type="button"
-            disabled={disabled}
-            className={`${styles.driverChip} ${isSelected ? styles.driverChipActive : ''} ${isDimmed ? styles.driverChipDimmed : ''}`}
-            onClick={() => onSelect(d.driverId)}
-          >
-            <div className={styles.driverChipAvatar}>
-              {proxySrc ? (
-                <img
-                  src={proxySrc}
-                  alt={d.code}
-                  crossOrigin="anonymous"
-                  referrerPolicy="no-referrer"
-                  onError={e => { e.currentTarget.style.display = 'none' }}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : null}
-              <span style={{ fontSize: 9, fontWeight: 700 }}>{d.code}</span>
-            </div>
-            <span className={styles.driverChipCode}>{d.code}</span>
-          </button>
-        )
-      })}
-    </div>
-  </div>
-)
 
 interface Props {
   race: F1Race
@@ -87,9 +42,10 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
   const [p1, setP1] = useState('')
   const [p2, setP2] = useState('')
   const [p3, setP3] = useState('')
-  const [editing, setEditing] = useState(false)
+  const [editing,   setEditing]   = useState(false)
+  const [activePos, setActivePos] = useState<'p1' | 'p2' | 'p3'>('p1')
 
-  // Auto-check: когда последние данные гонки загружены
+  // Auto-check: when last race data is loaded
   useEffect(() => {
     if (!lastRace || lastRace.podium.length < 3) return
     const id0 = lastRace.podium[0].driverId
@@ -104,15 +60,12 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
   const locked      = isRaceLocked(race)
   const currentPred = predictions.find(p => p.raceId === raceId)
 
-  // Most recently scored prediction from a past race
   const latestResult = [...predictions]
     .filter(p => p.result && p.raceRound < race.round)
     .sort((a, b) => b.raceRound - a.raceRound)[0]
 
-  // What to display: result for current race (race-day edge case) or last scored
   const showResultFor    = currentPred?.result ? currentPred : (latestResult ?? null)
   const resultForCurrent = showResultFor === currentPred
-  // Don't show prediction form when current race result is just in
   const showPredForm     = !currentPred?.result
 
   // Helpers
@@ -124,21 +77,32 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
     const parts = d.full_name.trim().split(' ')
     return parts[parts.length - 1]
   }
-  const teamOf = (id: string) => driverById(id)?.team_name ?? ''
+  const teamOf       = (id: string) => driverById(id)?.team_name ?? ''
+  const getCode      = (id: string) => driverById(id)?.broadcast_name ?? id
 
   const driverList: Driver[] = validDrivers.map(d => ({
     driverId: d.driverId!,
     code:     d.broadcast_name,
-    photoUrl: d.headshot_url,
+    photoUrl: d.headshot_url
+      ? `https://images.weserv.nl/?url=${encodeURIComponent(d.headshot_url)}&w=72&h=72&fit=cover&a=top`
+      : undefined,
   }))
 
-  const msToRace  = new Date(race.date + 'T13:00:00Z').getTime() - Date.now()
-  const hoursLeft = Math.max(0, Math.floor(msToRace / 3_600_000))
+  const [hoursLeft] = useState(() => hoursToRace(race.date))
   const lockText  = locked
     ? '🔒 Прогноз закрито'
     : hoursLeft <= 24
     ? `⏱ Закривається через ${hoursLeft} год`
     : null
+
+  const preds    = { p1, p2, p3 }
+  const setters  = { p1: setP1, p2: setP2, p3: setP3 }
+
+  const handleSelect = (driverId: string) => {
+    setters[activePos](driverId)
+    const nextEmpty = POSITIONS.find(p => p !== activePos && !preds[p])
+    if (nextEmpty) setActivePos(nextEmpty)
+  }
 
   const handleSave = () => {
     if (!p1 || !p2 || !p3 || new Set([p1, p2, p3]).size < 3) return
@@ -148,6 +112,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
 
   const handleEdit = () => {
     if (currentPred) { setP1(currentPred.p1); setP2(currentPred.p2); setP3(currentPred.p3) }
+    setActivePos('p1')
     setEditing(true)
   }
 
@@ -228,30 +193,56 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
       {/* ── Input mode ── */}
       {showPredForm && (!currentPred || editing) && (
         <>
-          <DriverPicker
-            drivers={driverList}
-            selected={p1}
-            onSelect={setP1}
-            label="P1"
-            others={[p2, p3].filter(Boolean)}
-            disabled={locked}
-          />
-          <DriverPicker
-            drivers={driverList}
-            selected={p2}
-            onSelect={setP2}
-            label="P2"
-            others={[p1, p3].filter(Boolean)}
-            disabled={locked}
-          />
-          <DriverPicker
-            drivers={driverList}
-            selected={p3}
-            onSelect={setP3}
-            label="P3"
-            others={[p1, p2].filter(Boolean)}
-            disabled={locked}
-          />
+          <div className={styles.picker}>
+
+            {/* Position tabs */}
+            <div className={styles.posTabs}>
+              {POSITIONS.map((pos, i) => (
+                <button
+                  key={pos}
+                  type="button"
+                  className={`${styles.posTab} ${activePos === pos ? styles.posTabActive : ''}`}
+                  onClick={() => setActivePos(pos)}
+                >
+                  <span className={styles.posTabLabel}>P{i + 1}</span>
+                  {preds[pos] ? (
+                    <span className={styles.posSelected}>{getCode(preds[pos])}</span>
+                  ) : (
+                    <span className={styles.posEmpty}>—</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Driver chips row */}
+            <div className={styles.driversRow}>
+              {driverList.map(d => {
+                const isSelected = preds[activePos] === d.driverId
+                const isUsed     = Object.values(preds).includes(d.driverId) && !isSelected
+                return (
+                  <button
+                    key={d.driverId}
+                    type="button"
+                    disabled={locked}
+                    className={`${styles.driverChip} ${isSelected ? styles.driverChipSelected : ''} ${isUsed ? styles.driverChipUsed : ''}`}
+                    onClick={() => handleSelect(d.driverId)}
+                  >
+                    <div className={styles.chipAvatar}>
+                      {d.photoUrl && (
+                        <img
+                          src={d.photoUrl}
+                          alt={d.code}
+                          onError={e => { e.currentTarget.style.display = 'none' }}
+                        />
+                      )}
+                    </div>
+                    <span className={styles.chipCode}>{d.code}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+          </div>
 
           {lockText && <p className={styles.lockNote}>{lockText}</p>}
 

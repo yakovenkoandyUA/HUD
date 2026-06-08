@@ -178,31 +178,71 @@
 }
 
 /* ── Driver picker ── */
-.pickerWrap {
+.picker {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.posTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 6px;
 }
 
-.pickerLabel {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--gold);
-  min-width: 22px;
+.posTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.pickerScroll {
+.posTabActive {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.posTabLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+}
+
+.posTabActive .posTabLabel {
+  color: var(--accent);
+}
+
+.posSelected {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.posEmpty {
+  font-size: 13px;
+  color: var(--text3);
+}
+
+.driversRow {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
 }
 
-.pickerScroll::-webkit-scrollbar { display: none; }
+.driversRow::-webkit-scrollbar { display: none; }
 
 .driverChip {
   display: flex;
@@ -212,12 +252,12 @@
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 8px 6px;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  width: 58px;
+  transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
-  min-width: 56px;
 }
 
 .driverChip:disabled {
@@ -225,33 +265,36 @@
   opacity: 0.4;
 }
 
-.driverChipActive {
-  background: var(--accent-soft, rgba(184,58,45,0.12));
+.driverChipSelected {
+  background: var(--accent-soft);
   border-color: var(--accent);
 }
 
-.driverChipDimmed {
+.driverChipUsed {
   opacity: 0.35;
 }
 
-.driverChipAvatar {
+.chipAvatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   overflow: hidden;
   border: 1.5px solid var(--border2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: var(--surface);
-  color: var(--text2);
 }
 
-.driverChipActive .driverChipAvatar {
+.driverChipSelected .chipAvatar {
   border-color: var(--accent);
 }
 
-.driverChipCode {
+.chipAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.chipCode {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
@@ -259,7 +302,7 @@
   letter-spacing: 0.04em;
 }
 
-.driverChipActive .driverChipCode {
+.driverChipSelected .chipCode {
   color: var(--accent);
 }
 
