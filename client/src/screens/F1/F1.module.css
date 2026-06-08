@@ -76,6 +76,27 @@
   margin-top: 4px;
 }
 
+.predictionTeaser {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.teaserArrow {
+  margin-left: auto;
+  color: var(--gold);
+}
+
 .done {
   font-family: var(--font-ui);
   font-size: 16px;

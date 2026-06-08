@@ -59,7 +59,16 @@ const F1Screen: React.FC = () => {
 
         <LastRaceCard />
 
-        {nextRace && <RacePredictionCard race={nextRace} />}
+        {nextRace && (
+          <button
+            className={styles.predictionTeaser}
+            onClick={() => setTab('myseason')}
+          >
+            <span>🎯</span>
+            <span>Прогноз · {nextRace.name}</span>
+            <span className={styles.teaserArrow}>→</span>
+          </button>
+        )}
 
         <div className={styles.tabs}>
           {TABS.map((t) => (
@@ -82,7 +91,10 @@ const F1Screen: React.FC = () => {
         )}
 
         {tab === 'myseason' && (
-          <MySeasonStats />
+          <>
+            {nextRace && <RacePredictionCard race={nextRace} />}
+            <MySeasonStats />
+          </>
         )}
       </div>
     </div>
