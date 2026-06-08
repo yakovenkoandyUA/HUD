@@ -190,14 +190,14 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--accent);
+  background: #BF00FF;
   flex-shrink: 0;
 }
 
 .fastestText {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--accent);
+  color: #BF00FF;
   font-weight: 700;
 }
 
