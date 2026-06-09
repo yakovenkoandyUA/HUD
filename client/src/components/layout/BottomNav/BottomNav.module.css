@@ -33,3 +33,10 @@
   display: block;
   flex-shrink: 0;
 }
+
+.item:nth-child(3) .icon {
+  width: 30px;
+}
+.item:nth-child(5) .icon {
+  stroke-width: 1.5px;
+}

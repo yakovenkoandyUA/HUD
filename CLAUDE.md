@@ -359,3 +359,46 @@ res.json(doc)
 - НЕ `console.log` в продакшн (тільки `console.error`)
 - НЕ хардкодити userId, імена профілів, ролі
 - НЕ дублювати логіку — утиліта якщо 2+ рази
+
+## F1 Live Race Dashboard — Беклог
+
+### Джерело даних
+**OpenF1 API** — `https://api.openf1.org/v1/` — безкоштовний, затримка ~3-4 сек
+
+### Роутинг
+`/f1/live` — новий роут, захищений F1Route, активний тільки під час гонки
+
+### Фічі (пріоритет)
+1. **Race Info хедер** — назва гонки, круг X/Y, race time, статус (RACING/SC/VSC/RED FLAG)
+   - Endpoint: `/v1/sessions`, `/v1/laps`
+
+2. **Live Standings таблиця** — позиція, пілот, команда, gap, піти, tire compound
+   - Endpoint: `/v1/position`, `/v1/intervals`, `/v1/drivers`
+
+3. **Tire Compounds** — тип гуми + tyre age для кожного пілота
+   - Endpoint: `/v1/stints`
+   - Кольори: червоний=Soft, жовтий=Medium, сірий=Hard, зелений=Inter, синій=Wet
+
+4. **Circuit Map** — SVG траси + кольорові крапки пілотів в реальному часі
+   - Endpoint: `/v1/location` (X/Y координати)
+   - SVG файли вже є в `/client/public/tracks/`
+
+5. **Sector Times** — S1/S2/S3 останнього кола
+   - Endpoint: `/v1/laps`
+   - Кольори: фіолетовий=fastest overall, зелений=personal best, жовтий=normal
+
+6. **Telemetry** — швидкість, gear, RPM, tyre age для обраного пілота
+   - Endpoint: `/v1/car_data`
+
+7. **DRS статус** — enabled/disabled
+   - Endpoint: `/v1/car_data`
+
+### Polling інтервали
+- Позиції на мапі: 3000ms
+- Таблиця standings: 5000ms  
+- Телеметрія: 1000ms
+
+### Важливо
+- Показувати тільки під час активної сесії
+- Визначати активну сесію: `GET /v1/sessions?date_start>=now`
+- Поза гонкою → редірект на `/f1`
