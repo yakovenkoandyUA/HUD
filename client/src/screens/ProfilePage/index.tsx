@@ -45,11 +45,11 @@ const PlusIcon: React.FC = () => (
   </svg>
 )
 
-const TrashIcon: React.FC = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-    <path d="M2 3.5h10M5 3.5V2.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M3.5 3.5l.8 8h5.4l.8-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
+// const TrashIcon: React.FC = () => (
+//   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+//     <path d="M2 3.5h10M5 3.5V2.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M3.5 3.5l.8 8h5.4l.8-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+//   </svg>
+// )
 
 // ── Toggle switch ─────────────────────────────────────────────────────────────
 interface ToggleProps { on: boolean; onToggle: () => void }
