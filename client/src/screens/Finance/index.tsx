@@ -12,7 +12,6 @@ import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart, fmt } from '../../utils/finance'
 import { getToken } from '../../services/api'
-import type { ExpenseCategory } from '../../types'
 import styles from './Finance.module.css'
 
 const IconExpense: React.FC = () => (
@@ -67,7 +66,7 @@ const Finance: React.FC = () => {
   }
 
   const handleExpense = (amount: number, description: string, category?: string) => {
-    addExpense(amount, description, category as ExpenseCategory | undefined)
+    addExpense(amount, description, category)
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')
   }

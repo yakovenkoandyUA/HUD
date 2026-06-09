@@ -42,113 +42,132 @@
 }
 .scanBtn:hover { border-color: var(--accent); color: var(--accent); }
 
-.chips {
+/* ── Category chips (horizontal scroll) ── */
+.categoriesScroll {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
 }
+.categoriesScroll::-webkit-scrollbar { display: none; }
 
-.chip {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text2);
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-
-.chip:active {
-  opacity: 0.8;
-}
-
-.chipActive {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--text);
-}
-
-/* ── Custom category chip ── */
-.chipCustom {
-  display: inline-flex;
+.catChip {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 4px;
-}
-
-.chipDelete {
-  font-size: 15px;
-  line-height: 1;
-  color: var(--text3);
-  transition: color 0.12s;
-  flex-shrink: 0;
-}
-.chipDelete:hover {
-  color: var(--accent);
-}
-
-/* ── "+ Нова..." chip ── */
-.chipNew {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px dashed var(--border2);
-  background: transparent;
-  color: var(--text3);
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 64px;
+}
+.catChip:active { opacity: 0.8; }
+
+.catChipActive {
+  border-color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 12%, var(--bg3));
+}
+
+.catChipIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--cat-color) 15%, var(--bg3));
+}
+
+.catChipIcon i {
+  font-size: 16px;
+  color: var(--cat-color);
+}
+
+.catChipActive .catChipIcon {
+  background: color-mix(in srgb, var(--cat-color) 25%, var(--bg3));
+}
+
+.catChipName {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text2);
   white-space: nowrap;
 }
-.chipNew:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+
+.catChipActive .catChipName {
+  color: var(--cat-color);
+  font-weight: 700;
 }
 
-/* ── New category inline input ── */
-.newCatRow {
+/* ── Add new category chip ── */
+.catChipAdd {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
   align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px dashed var(--border2);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+  min-width: 58px;
+}
+.catChipAdd:hover { border-color: var(--accent); }
+.catChipAdd:hover .catChipAddIcon { background: var(--accent-soft); color: var(--accent); }
+.catChipAdd:hover .catChipName { color: var(--accent); }
+
+.catChipAddIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  color: var(--text3);
+  transition: background 0.15s, color 0.15s;
+}
+
+/* ── Inline new category input ── */
+.newCatInline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .newCatInput {
-  flex: 1;
+  width: 110px;
   background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 7px 12px;
-  font-family: var(--font-body);
-  font-size: 14px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
   color: var(--text);
   outline: none;
 }
-.newCatInput:focus { border-color: var(--accent); }
 .newCatInput::placeholder { color: var(--text3); }
 
 .newCatSaveBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: var(--radius);
-  padding: 7px 14px;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 8px;
   cursor: pointer;
-  white-space: nowrap;
+  flex-shrink: 0;
   transition: opacity 0.15s;
 }
-.newCatSaveBtn:disabled { opacity: 0.5; cursor: default; }
-
-.newCatCancelBtn {
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 7px 10px;
-  font-size: 14px;
-  color: var(--text3);
-  cursor: pointer;
-}
+.newCatSaveBtn:disabled { opacity: 0.4; cursor: default; }

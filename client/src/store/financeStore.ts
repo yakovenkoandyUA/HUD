@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Transaction, ExpenseCategory } from '../types'
+import type { Transaction } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
 
 export type SyncStatus = 'local' | 'syncing' | 'synced' | 'error'
@@ -32,7 +32,7 @@ function fromApi(raw: ApiTransaction): Transaction {
     amount: raw.amount,
     description: raw.desc,
     title: raw.title || undefined,
-    category: (raw.category as ExpenseCategory) || undefined,
+    category: raw.category || undefined,
     date: raw.date,
     createdAt: raw.createdAt,
   }
@@ -49,7 +49,7 @@ interface FinanceState {
 
   fetchTransactions: (month?: string) => Promise<void>
   addTopup: (amount: number, description: string) => void
-  addExpense: (amount: number, description: string, category?: ExpenseCategory) => void
+  addExpense: (amount: number, description: string, category?: string) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
   setSyncStatus: (s: SyncStatus) => void

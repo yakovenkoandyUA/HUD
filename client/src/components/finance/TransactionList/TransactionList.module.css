@@ -192,6 +192,22 @@
 .dotGreen { background: var(--positive); }
 .dotRed   { background: var(--negative); }
 
+.txCatIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--cat-color) 15%, var(--bg3));
+  flex-shrink: 0;
+}
+
+.txCatIcon i {
+  font-size: 16px;
+  color: var(--cat-color);
+}
+
 .desc {
   font-family: var(--font-body);
   font-size: 14px;

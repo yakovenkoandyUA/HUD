@@ -2,24 +2,21 @@ import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
+import { useCategoryStore } from '../../store/categoryStore'
 import { authFetch } from '../../services/api'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
-import { BASE_CATEGORIES } from '../../constants/categories'
+import type { Category } from '../../types'
 import styles from './ProfilePage.module.css'
 
 /**
  * ProfilePage
  * -----------
  * Сторінка профілю: аватар, ім'я (inline edit) та управління категоріями витрат.
- * Відкривається з ThemePicker → «Редагувати».
+ * Категорії беруться з useCategoryStore: базові (isDefault) — тільки toggle isActive;
+ * кастомні — toggle + видалення.
  *
  * Props: none
  */
-
-interface CustomCategory {
-  _id: string
-  name: string
-}
 
 // ── SVG icons ────────────────────────────────────────────────────────────────
 
@@ -54,35 +51,39 @@ const TrashIcon: React.FC = () => (
   </svg>
 )
 
+// ── Toggle switch ─────────────────────────────────────────────────────────────
+interface ToggleProps { on: boolean; onToggle: () => void }
+const Toggle: React.FC<ToggleProps> = ({ on, onToggle }) => (
+  <button
+    type="button"
+    className={`${styles.toggle} ${on ? styles.toggleOn : ''}`}
+    onClick={onToggle}
+    aria-label={on ? 'Вимкнути' : 'Увімкнути'}
+  />
+)
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate()
   const { activeProfile, updateProfile } = useProfileStore()
   const { showToast } = useUiStore()
+  const { categories, fetchCategories, addCategory, removeCategory, toggleActive } = useCategoryStore()
 
-  const [nameInput, setNameInput] = useState(activeProfile?.name ?? '')
-  const [editingName, setEditingName] = useState(false)
-  const [savingName, setSavingName] = useState(false)
+  const [nameInput, setNameInput]         = useState(activeProfile?.name ?? '')
+  const [editingName, setEditingName]     = useState(false)
+  const [savingName, setSavingName]       = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
-  const [customCats, setCustomCats] = useState<CustomCategory[]>([])
+  const [addingCat, setAddingCat]   = useState(false)
   const [newCatValue, setNewCatValue] = useState('')
-  const [addingCat, setAddingCat] = useState(false)
-  const [savingCat, setSavingCat] = useState(false)
+  const [savingCat, setSavingCat]   = useState(false)
 
-  const fileRef = useRef<HTMLInputElement>(null)
-  const nameRef = useRef<HTMLInputElement>(null)
+  const fileRef   = useRef<HTMLInputElement>(null)
+  const nameRef   = useRef<HTMLInputElement>(null)
   const newCatRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    authFetch('/api/categories')
-      .then(r => r.ok ? r.json() : [])
-      .then((data: CustomCategory[]) => { if (!cancelled) setCustomCats(data) })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [])
+  useEffect(() => { fetchCategories() }, [fetchCategories])
 
   useEffect(() => {
     if (editingName) nameRef.current?.focus()
@@ -139,8 +140,8 @@ const ProfilePage: React.FC = () => {
         body: JSON.stringify({ name: trimmed }),
       })
       if (res.ok) {
-        const created: CustomCategory = await res.json()
-        setCustomCats(prev => [...prev, created])
+        const created: Category = await res.json()
+        addCategory(created)
         setNewCatValue('')
         setAddingCat(false)
       }
@@ -149,7 +150,7 @@ const ProfilePage: React.FC = () => {
     } finally {
       setSavingCat(false)
     }
-  }, [newCatValue, showToast])
+  }, [newCatValue, addCategory, showToast])
 
   const handleNewCatKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter')  saveNewCat()
@@ -157,13 +158,14 @@ const ProfilePage: React.FC = () => {
   }
 
   const deleteCat = useCallback(async (id: string) => {
-    setCustomCats(prev => prev.filter(c => c._id !== id))
+    removeCategory(id)
     authFetch(`/api/categories/${id}`, { method: 'DELETE' }).catch(() => {})
-  }, [])
+  }, [removeCategory])
 
   if (!activeProfile) return null
 
-  const displayUrl = activeProfile.avatarUrl
+  const defaultCats = categories.filter(c => c.isDefault)
+  const customCats  = categories.filter(c => !c.isDefault)
 
   return (
     <div className={styles.page}>
@@ -187,19 +189,15 @@ const ProfilePage: React.FC = () => {
               disabled={uploadingAvatar}
               aria-label="Змінити аватар"
             >
-              {displayUrl ? (
-                <img src={displayUrl} alt={activeProfile.name} className={styles.avatarImg} />
+              {activeProfile.avatarUrl ? (
+                <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
               ) : (
                 <span className={styles.avatarInitial}>
                   {activeProfile.name[0].toUpperCase()}
                 </span>
               )}
               <div className={styles.cameraOverlay}>
-                {uploadingAvatar ? (
-                  <div className={styles.spinner} />
-                ) : (
-                  <CameraIcon />
-                )}
+                {uploadingAvatar ? <div className={styles.spinner} /> : <CameraIcon />}
               </div>
             </button>
             <input
@@ -211,7 +209,6 @@ const ProfilePage: React.FC = () => {
             />
           </div>
 
-          {/* Name */}
           {editingName ? (
             <div className={styles.nameEditRow}>
               <input
@@ -250,43 +247,29 @@ const ProfilePage: React.FC = () => {
 
         {/* ── Categories ── */}
         <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>КАТЕГОРІЇ ВИТРАТ</span>
-          </div>
+          <span className={styles.sectionTitle}>КАТЕГОРІЇ ВИТРАТ</span>
 
-          {/* Built-in */}
-          <div className={styles.catGrid}>
-            {BASE_CATEGORIES.map(cat => (
-              <div key={cat.id} className={styles.catChip}>
-                <span className={styles.catEmoji}>{cat.emoji}</span>
-                <span className={styles.catLabel}>{cat.label}</span>
-              </div>
-            ))}
-          </div>
+          {/* Default categories */}
+          {defaultCats.map(cat => (
+            <CatRow
+              key={cat._id}
+              cat={cat}
+              onToggle={() => toggleActive(cat._id)}
+              onDelete={null}
+            />
+          ))}
 
           {/* Custom categories */}
-          {customCats.length > 0 && (
-            <div className={styles.customSection}>
-              <span className={styles.customLabel}>Власні</span>
-              <div className={styles.customList}>
-                {customCats.map(cat => (
-                  <div key={cat._id} className={styles.customChip}>
-                    <span className={styles.customChipName}>{cat.name}</span>
-                    <button
-                      type="button"
-                      className={styles.deleteCatBtn}
-                      onClick={() => deleteCat(cat._id)}
-                      aria-label={`Видалити ${cat.name}`}
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {customCats.map(cat => (
+            <CatRow
+              key={cat._id}
+              cat={cat}
+              onToggle={() => toggleActive(cat._id)}
+              onDelete={() => deleteCat(cat._id)}
+            />
+          ))}
 
-          {/* Add custom category */}
+          {/* Add new */}
           {addingCat ? (
             <div className={styles.addCatRow}>
               <input
@@ -294,7 +277,7 @@ const ProfilePage: React.FC = () => {
                 type="text"
                 value={newCatValue}
                 onChange={e => setNewCatValue(e.target.value)}
-                onBlur={() => { if (!newCatValue.trim()) { setAddingCat(false) } }}
+                onBlur={() => { if (!newCatValue.trim()) setAddingCat(false) }}
                 onKeyDown={handleNewCatKeyDown}
                 className={styles.addCatInput}
                 placeholder="Назва категорії"
@@ -311,11 +294,7 @@ const ProfilePage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              className={styles.addCatBtn}
-              onClick={() => setAddingCat(true)}
-            >
+            <button type="button" className={styles.addCatBtn} onClick={() => setAddingCat(true)}>
               <PlusIcon />
               Додати категорію
             </button>
@@ -325,5 +304,39 @@ const ProfilePage: React.FC = () => {
     </div>
   )
 }
+
+// ── Category row ──────────────────────────────────────────────────────────────
+interface CatRowProps {
+  cat: Category
+  onToggle: () => void
+  onDelete: (() => void) | null
+}
+
+const CatRow: React.FC<CatRowProps> = ({ cat, onToggle, onDelete }) => (
+  <div className={`${styles.catRow} ${!cat.isActive ? styles.catRowInactive : ''}`}>
+    <div
+      className={styles.catIconWrap}
+      style={{ '--cat-color': cat.color } as React.CSSProperties}
+    >
+      <i className={`ti ${cat.icon}`} />
+    </div>
+    <span className={styles.catName}>{cat.name}</span>
+    <div className={styles.catActions}>
+      <Toggle on={cat.isActive} onToggle={onToggle} />
+      {onDelete && (
+        <button
+          type="button"
+          className={styles.deleteCatBtn}
+          onClick={onDelete}
+          aria-label={`Видалити ${cat.name}`}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 3.5h10M5 3.5V2.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M3.5 3.5l.8 8h5.4l.8-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+    </div>
+  </div>
+)
 
 export default ProfilePage

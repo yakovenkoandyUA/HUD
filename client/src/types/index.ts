@@ -1,5 +1,6 @@
 export type Theme = 'retro' | 'warm' | 'dark' | 'japan' | 'heroes'
 
+/** @deprecated — kept for legacy transaction data; new categories come from the backend */
 export type ExpenseCategory =
   | 'кава'
   | 'продукти'
@@ -10,6 +11,16 @@ export type ExpenseCategory =
   | 'інше'
   | 'накопичення'
 
+export interface Category {
+  _id: string
+  name: string
+  icon: string
+  color: string
+  isDefault: boolean
+  isActive: boolean
+  order: number
+}
+
 export interface Transaction {
   id: string
   type: 'topup' | 'expense'
@@ -17,7 +28,7 @@ export interface Transaction {
   description: string
   title?: string
   date: string
-  category?: ExpenseCategory
+  category?: string
   createdAt?: string
 }
 

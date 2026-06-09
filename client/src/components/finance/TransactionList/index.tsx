@@ -1,21 +1,14 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
-import type { Transaction } from '../../../types'
+import type { Transaction, Category } from '../../../types'
 import { fmt } from '../../../utils/finance'
 import { authFetch } from '../../../services/api'
 import { useFinanceStore } from '../../../store/financeStore'
+import { useCategoryStore } from '../../../store/categoryStore'
 import Modal from '../../ui/Modal'
 import styles from './TransactionList.module.css'
 
-const CATEGORY_COLORS: Record<string, string> = {
-  кава:      '#8B5E3C',
-  продукти:  '#4A8B3C',
-  таксі:     '#E67E22',
-  метро:     '#3498DB',
-  транспорт: '#E67E22',
-  фібі:      '#9B59B6',
-  інше:      '#5a5652',
-  'транспорт-інше': '#E67E22',
-}
+const FALLBACK_COLOR = 'var(--text3)'
+const FALLBACK_ICON  = 'ti-dots'
 
 /**
  * TransactionList
@@ -142,8 +135,17 @@ const TYPE_OPTIONS: DropOption[] = [
   { value: 'expense', label: 'Витрати' },
 ]
 
+function getCategoryForTx(tx: Transaction, cats: Category[]): Category | undefined {
+  return cats.find(c =>
+    c.name.toLowerCase() === (tx.category ?? '').toLowerCase()
+  )
+}
+
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete }) => {
-  const renameTransaction = useFinanceStore(s => s.renameTransaction)
+  const renameTransaction                  = useFinanceStore(s => s.renameTransaction)
+  const { categories, fetchCategories }    = useCategoryStore()
+
+  useEffect(() => { fetchCategories() }, [fetchCategories])
 
   const [pendingDelete, setPendingDelete]         = useState<string | null>(null)
   const [typeFilter, setTypeFilter]               = useState<TypeFilter>('all')
@@ -282,16 +284,24 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                       className={`${styles.left} ${receipt ? styles.leftClickable : ''}`}
                       onClick={receipt ? () => setSelectedReceiptTx(t) : undefined}
                     >
-                      <span
-                        className={styles.dot}
-                        style={
-                          t.type === 'expense' && t.category
-                            ? { background: CATEGORY_COLORS[t.category] ?? 'var(--negative)' }
-                            : t.type === 'topup'
-                              ? { background: 'var(--positive)' }
-                              : { background: 'var(--negative)' }
-                        }
-                      />
+                      {t.type === 'expense' ? (() => {
+                        const cat = getCategoryForTx(t, categories)
+                        return (
+                          <div
+                            className={styles.txCatIcon}
+                            style={{ '--cat-color': cat?.color ?? FALLBACK_COLOR } as React.CSSProperties}
+                          >
+                            <i className={`ti ${cat?.icon ?? FALLBACK_ICON}`} />
+                          </div>
+                        )
+                      })() : (
+                        <div
+                          className={styles.txCatIcon}
+                          style={{ '--cat-color': t.type === 'topup' ? 'var(--positive)' : 'var(--negative)' } as React.CSSProperties}
+                        >
+                          <i className={`ti ${t.type === 'topup' ? 'ti-arrow-up' : 'ti-arrow-down'}`} />
+                        </div>
+                      )}
                       {receipt && (
                         <span className={styles.receiptIconWrap}>
                           <ReceiptIcon />

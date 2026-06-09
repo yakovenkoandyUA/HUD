@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import type { Transaction } from '../../../types'
 import { fmt } from '../../../utils/finance'
-import { authFetch } from '../../../services/api'
+import { useCategoryStore } from '../../../store/categoryStore'
 import styles from './ExpenseChart.module.css'
 
 /**
@@ -17,15 +17,6 @@ interface ExpenseChartProps {
   transactions: Transaction[]
 }
 
-const COLORS: Record<string, string> = {
-  'таксі':      '#e8944a',
-  'продукти':   '#5aad7c',
-  'кава':       '#a07848',
-  'метро':      '#6a8fb8',
-  'транспорт':  '#9b72c8',
-  'фібі':       '#c87a9a',
-  'інше':       '#7a7a8c',
-}
 const FALLBACK = '#7a7a8c'
 
 const R    = 66
@@ -52,23 +43,16 @@ function getWeekBounds(): { start: string; end: string } {
 const VISIBLE_COUNT = 5
 
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
+  const { categories, fetchCategories } = useCategoryStore()
   const [period, setPeriod]             = useState<Period>('month')
-  const [customColors, setCustomColors] = useState<Record<string, string>>({})
   const [showAll, setShowAll]           = useState(false)
 
-  useEffect(() => {
-    authFetch('/api/categories')
-      .then(r => r.ok ? r.json() : [])
-      .then((data: { name: string; color: string }[]) => {
-        const map: Record<string, string> = {}
-        data.forEach(c => { map[c.name.toLowerCase()] = c.color })
-        setCustomColors(map)
-      })
-      .catch(() => {})
-  }, [])
+  useEffect(() => { fetchCategories() }, [fetchCategories])
 
-  const colorOf = (cat: string): string =>
-    COLORS[cat] ?? customColors[cat] ?? FALLBACK
+  const colorOf = (catName: string): string => {
+    const found = categories.find(c => c.name.toLowerCase() === catName.toLowerCase())
+    return found?.color ?? FALLBACK
+  }
 
   const { entries, total } = useMemo(() => {
     const monthStart = new Date().toISOString().slice(0, 7)

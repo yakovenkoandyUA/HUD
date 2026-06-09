@@ -224,71 +224,84 @@
   color: var(--text3);
 }
 
-/* ── Category grid (built-in) ── */
-.catGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.catChip {
+/* ── Category row ── */
+.catRow {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 6px 12px;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.2s;
+}
+.catRow:last-of-type { border-bottom: none; }
+
+.catRowInactive {
+  opacity: 0.45;
 }
 
-.catEmoji {
+.catIconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--cat-color) 15%, var(--bg3));
+  flex-shrink: 0;
+}
+
+.catIconWrap i {
+  font-size: 17px;
+  color: var(--cat-color);
+}
+
+.catName {
+  flex: 1;
+  font-family: var(--font-ui);
   font-size: 14px;
-  line-height: 1;
+  font-weight: 500;
+  color: var(--text);
 }
 
-.catLabel {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--text2);
-}
-
-/* ── Custom categories ── */
-.customSection {
+.catActions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.customLabel {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--text3);
-  text-transform: uppercase;
-}
-
-.customList {
-  display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
 }
 
-.customChip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-dim);
-  border-radius: 20px;
-  padding: 6px 10px 6px 14px;
+/* ── Toggle switch ── */
+.toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: none;
+  background: var(--border2);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.customChipName {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--accent);
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text3);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.toggleOn {
+  background: color-mix(in srgb, var(--accent) 30%, var(--border2));
+}
+
+.toggleOn::after {
+  transform: translateX(18px);
+  background: var(--accent);
 }
 
 .deleteCatBtn {
