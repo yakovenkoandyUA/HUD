@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { User } from '../models/User'
+import { seedCategoriesForUser } from '../scripts/seedCategories'
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { password } = req.body as { password?: string }
@@ -83,16 +84,21 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
       return
     }
 
+    const userId = (user._id as { toString(): string }).toString()
+
     const token = jwt.sign(
-      { userId: (user._id as { toString(): string }).toString(), role: user.role },
+      { userId, role: user.role },
       process.env.JWT_SECRET!,
       { expiresIn: '30d' }
     )
 
+    // Idempotent — seeds default categories only if not yet present
+    await seedCategoriesForUser(userId)
+
     res.json({
       token,
       user: {
-        id: (user._id as { toString(): string }).toString(),
+        id: userId,
         name: user.name,
         username: user.username,
         avatarUrl: user.avatarUrl,
