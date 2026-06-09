@@ -64,11 +64,6 @@ const LabelPicker: React.FC<LabelPickerProps> = ({ selectedLabels, onToggle, onC
   const content = (
       <div className={styles.pickerSheet} onClick={e => e.stopPropagation()}>
 
-        {/* <div className={styles.pickerHeader}>
-          <span className={styles.pickerTitle}>Мітки</span>
-          <button type="button" className={styles.pickerClose} onClick={onClose} aria-label="Закрити">✕</button>
-        </div> */}
-
         {pickerView === 'list' ? (
           <>
             <div className={styles.pickerList}>

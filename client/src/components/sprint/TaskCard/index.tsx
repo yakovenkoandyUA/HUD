@@ -1,6 +1,7 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react'
 import PriorityBadge from '../../ui/PriorityBadge'
 import type { UnifiedTodo, SprintTag } from '../../../types'
+import { isRecurring, isRoutineDueOnDay } from '../../../utils/sprint'
 import styles from './TaskCard.module.css'
 
 /**
@@ -70,6 +71,24 @@ function getChecklistColors(pct: number): { bar: string; counter: string } {
   return               { bar: 'var(--negative)',  counter: 'var(--text3)' }
 }
 
+function getMissedDays(item: UnifiedTodo): number {
+  if (!isRecurring(item)) return 0
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStr = today.toISOString().split('T')[0]
+  if (item.completionLog?.includes(todayStr)) return 0
+  let missed = 0
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    if (isRoutineDueOnDay(item, d) && !(item.completionLog?.includes(iso))) {
+      missed++
+    }
+  }
+  return missed
+}
+
 const SWIPE_THRESHOLD = 80
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDetail }) => {
@@ -77,10 +96,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const checkTotal = (item.checklist ?? []).length
   const checkPct   = checkTotal > 0 ? Math.round((checkDone / checkTotal) * 100) : 0
 
+  const missedDays   = getMissedDays(item)
+  const hasMissed    = missedDays > 0
   const hasLabels    = (item.labels ?? []).length > 0
   const hasChecklist = checkTotal > 0
   const hasDueDate   = !!item.dueDate
-  const hasExtras    = hasLabels || hasChecklist || hasDueDate
+  const hasExtras    = hasLabels || hasChecklist || hasDueDate || hasMissed
   const showBar      = hasChecklist && checkPct > 0
 
   const { bar: barColor, counter: counterColor } = getChecklistColors(checkPct)
@@ -265,10 +286,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
     }
   }
 
+  const missedClass = !item.done && missedDays >= 3 ? styles.itemDanger
+    : !item.done && missedDays >= 1 ? styles.itemWarn : ''
+
   return (
     <li
       ref={itemRef}
-      className={`${styles.item} ${item.done ? styles.done : ''}`}
+      className={`${styles.item} ${item.done ? styles.done : ''} ${missedClass}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -323,6 +347,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                       <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                     </svg>
                     {formatDueDate(item.dueDate!)}
+                  </span>
+                )}
+                {hasMissed && !item.done && (
+                  <span className={`${styles.missedBadge} ${missedDays >= 3 ? styles.missedBadgeDanger : ''}`}>
+                    ⚠ {missedDays} д.
                   </span>
                 )}
               </div>
