@@ -1014,3 +1014,128 @@
   transition: opacity 0.15s;
 }
 .formReminderDoneBtn:hover { opacity: 0.85; }
+
+/* ── Checklist in form ── */
+.checklistSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checklistToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px dashed var(--border2);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+}
+
+.checklistToggleActive {
+  border-color: var(--gold);
+  border-style: solid;
+  color: var(--gold);
+}
+
+.checklistCount {
+  background: var(--gold-dim, rgba(220,201,169,0.12));
+  color: var(--gold);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 2px;
+}
+
+.checklistBody {
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--border);
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+}
+
+.checklistDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text3);
+  flex-shrink: 0;
+}
+
+.checklistItemText {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.checklistRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.checklistInputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px;
+}
+
+.checklistInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  padding: 2px 0;
+}
+
+.checklistInput::placeholder {
+  color: var(--text3);
+}
+
+.checklistAdd {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: var(--gold-dim, rgba(220,201,169,0.12));
+  color: var(--gold);
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}

@@ -18,11 +18,12 @@ interface LabelPickerProps {
   selectedLabels: SprintLabel[]
   onToggle: (label: SprintLabel) => void
   onClose: () => void
+  noOverlay?: boolean
 }
 
 type PickerView = 'list' | 'create' | 'edit'
 
-const LabelPicker: React.FC<LabelPickerProps> = ({ selectedLabels, onToggle, onClose }) => {
+const LabelPicker: React.FC<LabelPickerProps> = ({ selectedLabels, onToggle, onClose, noOverlay = false }) => {
   const { globalLabels, addGlobalLabel, updateGlobalLabel, deleteGlobalLabel } = useSprintStore()
 
   const [pickerView, setPickerView] = useState<PickerView>('list')
@@ -60,14 +61,13 @@ const LabelPicker: React.FC<LabelPickerProps> = ({ selectedLabels, onToggle, onC
     setPickerView('list')
   }
 
-  return (
-    <div className={styles.pickerOverlay} onClick={onClose}>
+  const content = (
       <div className={styles.pickerSheet} onClick={e => e.stopPropagation()}>
 
-        <div className={styles.pickerHeader}>
+        {/* <div className={styles.pickerHeader}>
           <span className={styles.pickerTitle}>Мітки</span>
           <button type="button" className={styles.pickerClose} onClick={onClose} aria-label="Закрити">✕</button>
-        </div>
+        </div> */}
 
         {pickerView === 'list' ? (
           <>
@@ -173,6 +173,13 @@ const LabelPicker: React.FC<LabelPickerProps> = ({ selectedLabels, onToggle, onC
           </div>
         )}
       </div>
+  )
+
+  if (noOverlay) return content
+
+  return (
+    <div className={styles.pickerOverlay} onClick={onClose}>
+      {content}
     </div>
   )
 }

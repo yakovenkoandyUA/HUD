@@ -47,6 +47,9 @@
   --gold:        #DCC9A9;
   --gold-dim:    rgba(220, 201, 169, 0.15);
 
+  --task-quest:    var(--accent);
+  --task-shopping: var(--gold);
+
   --text:   #EDE0CC;
   --text2:  #9a8f82;
   --text3:  #5c5248;
@@ -82,6 +85,9 @@
 
   --gold:        #E9C46A;
   --gold-dim:    rgba(233, 196, 106, 0.15);
+
+  --task-quest:    var(--accent);
+  --task-shopping: var(--gold);
 
   --text:   #f0ece8;
   --text2:  #9ab0b8;
@@ -119,6 +125,9 @@
   --gold:        #d4a017;
   --gold-dim:    rgba(212, 160, 23, 0.15);
 
+  --task-quest:    var(--accent);
+  --task-shopping: var(--gold);
+
   --text:   #f0ece8;
   --text2:  #9a9490;
   --text3:  #5a5652;
@@ -152,6 +161,9 @@
 
   --gold:        #8B7355;
   --gold-dim:    rgba(139, 115, 85, 0.15);
+
+  --task-quest:    var(--accent);
+  --task-shopping: var(--gold);
 
   --text:   #1a1a1a;
   --text2:  #6b6560;
@@ -191,6 +203,9 @@
   --gold:        #d4a017;
   --gold-dim:    rgba(212, 160, 23, 0.15);
 
+  --task-quest:    var(--accent);
+  --task-shopping: var(--second);   /* accent === gold in heroes, so use second (purple) */
+
   --text:   #e8d5a0;
   --text2:  #a89060;
   --text3:  #6a5830;
@@ -229,6 +244,9 @@
 
   --gold:        #85A3B2;
   --gold-dim:    rgba(133, 163, 178, 0.15);
+
+  --task-quest:    var(--accent);
+  --task-shopping: var(--gold);
 
   --text:   #E9D8C8;
   --text2:  #85A3B2;

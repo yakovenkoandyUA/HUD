@@ -21,6 +21,7 @@ import Watchlist from './screens/Watchlist'
 import MemoriesScreen from './screens/Memories'
 import MemoryDetailScreen from './screens/MemoryDetail'
 import ProfileSelectScreen from './screens/ProfileSelect'
+import ProfilePage from './screens/ProfilePage'
 import './App.css'
 
 /** Redirects to /profile-select if no token */
@@ -57,6 +58,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/memories" element={<MemoriesScreen />} />
           <Route path="/memories/:id" element={<MemoryDetailScreen />} />
+          <Route path="/profile" element={<ProfilePage />} />
 
           {/* F1 module — f1Enabled only */}
           <Route element={<F1Route />}>
@@ -81,6 +83,7 @@ const NavGuard: React.FC = () => {
   if (/^\/recipes\/.+/.test(pathname)) return null
   if (pathname === '/shopping') return null
   if (pathname === '/profile-select') return null
+  if (pathname === '/profile') return null
   return <BottomNav />
 }
 

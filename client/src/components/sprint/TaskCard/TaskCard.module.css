@@ -74,26 +74,26 @@
 }
 
 .done .checkBox {
-  border-color: var(--accent);
-  background: var(--accent-soft);
+  border-color: var(--task-quest);
+  background: color-mix(in srgb, var(--task-quest) 14%, transparent);
 }
 
-.checkBoxSprint { color: var(--second); }
+.checkBoxSprint { color: var(--task-quest); }
 .done .checkBoxSprint {
-  border-color: var(--second);
-  background: var(--second-soft);
+  border-color: var(--task-quest);
+  background: color-mix(in srgb, var(--task-quest) 14%, transparent);
 }
 
-.checkBoxShopping { border-color: var(--gold); color: var(--gold); }
+.checkBoxShopping { border-color: var(--task-shopping); color: var(--task-shopping); }
 .done .checkBoxShopping {
-  border-color: var(--gold);
-  background: var(--gold-dim);
+  border-color: var(--task-shopping);
+  background: color-mix(in srgb, var(--task-shopping) 14%, transparent);
 }
 
-.checkBoxTodo { border-color: #7F77DD; color: #7F77DD; }
+.checkBoxTodo { border-color: var(--task-quest); color: var(--task-quest); }
 .done .checkBoxTodo {
-  border-color: #7F77DD;
-  background: rgba(127, 119, 221, 0.12);
+  border-color: var(--task-quest);
+  background: color-mix(in srgb, var(--task-quest) 14%, transparent);
 }
 
 /* ── Body (clickable) ── */
@@ -226,3 +226,55 @@
   align-self: flex-start;
 }
 .del:hover { color: var(--accent); }
+
+/* ── Confirm close banner ── */
+.confirmBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.confirmText {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text2);
+}
+
+.confirmBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.confirmNo {
+  padding: 5px 14px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.confirmNo:hover { color: var(--text); }
+
+.confirmYes {
+  padding: 5px 14px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.confirmYes:hover { opacity: 0.85; }

@@ -46,12 +46,19 @@
   gap: 8px;
 }
 
-.badge {
+.count {
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
+  color: var(--text3);
+  background: var(--bg3);
+  padding: 2px 7px;
+  border-radius: 10px;
   line-height: 1;
+}
+
+.countDone {
+  color: var(--second);
+  background: var(--second-soft);
 }
 
 .arrow {
@@ -131,7 +138,7 @@
   border-bottom: none;
 }
 
-/* ── Checkbox — quest/todo (rounded square, var(--second) border) ── */
+/* ── Checkbox — quest/todo ── */
 .checkbox {
   flex-shrink: 0;
   width: 18px;
@@ -145,41 +152,39 @@
   transition: background 0.15s, border-color 0.15s;
   color: #fff;
   padding: 0;
-  border: 1.5px solid var(--second);
+  border: 1.5px solid var(--task-quest);
 }
 
-/* undone quest checkbox — var(--second) border, transparent bg */
 .checkboxUndone {
-  border-color: var(--second);
+  border-color: var(--task-quest);
 }
 
-/* done quest checkbox — var(--second) fill */
 .checkboxDone {
-  background: var(--second);
-  border-color: var(--second);
+  background: var(--task-quest);
+  border-color: var(--task-quest);
 }
 
-/* ── Checkbox — shopping (square, var(--gold) border) ── */
+/* ── Checkbox — shopping ── */
 .checkboxShop {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  border: 1.5px solid var(--gold);
+  border: 1.5px solid var(--task-shopping);
   background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--bg);
   padding: 0;
   transition: background 0.15s, border-color 0.15s;
 }
-.checkboxShop:hover { background: var(--gold-dim); }
+.checkboxShop:hover { background: color-mix(in srgb, var(--task-shopping) 14%, transparent); }
 
 .checkboxShopDone {
-  background: var(--gold);
-  border-color: var(--gold);
+  background: var(--task-shopping);
+  border-color: var(--task-shopping);
 }
 
 /* ── Item title ── */

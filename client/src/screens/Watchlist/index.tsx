@@ -33,7 +33,7 @@ const Watchlist: React.FC = () => {
   const { showToast } = useUiStore()
   const [tab, setTab] = useState<Tab>('movie')
   const [activeStatus, setActiveStatus] = useState<string | null>(null)
-  const [activeGenre, setActiveGenre] = useState<string | null>(null)
+  const [activeGenres, setActiveGenres] = useState<Set<string>>(new Set())
 
   const [sortBy, setSortBy] = useState<SortBy>('newest')
   const [sortOpen, setSortOpen] = useState(false)
@@ -69,7 +69,7 @@ const Watchlist: React.FC = () => {
 
   const tabItems = useMemo(() => {
     const filtered = byCategoryItems.filter(
-      (i) => (!activeStatus || i.status === activeStatus) && (!activeGenre || (i.genres ?? []).includes(activeGenre))
+      (i) => (!activeStatus || i.status === activeStatus) && (activeGenres.size === 0 || (i.genres ?? []).some(g => activeGenres.has(g)))
     )
     const arr = [...filtered]
     const byStatus = (a: WatchlistItem, b: WatchlistItem) =>
@@ -81,7 +81,7 @@ const Watchlist: React.FC = () => {
       case 'rating':    return arr.sort((a, b) => byStatus(a, b) || (b.rating ?? 0) - (a.rating ?? 0))
       default:          return arr.sort((a, b) => byStatus(a, b) || b.addedAt.localeCompare(a.addedAt))
     }
-  }, [byCategoryItems, activeStatus, activeGenre, sortBy])
+  }, [byCategoryItems, activeStatus, activeGenres, sortBy])
 
   useEffect(() => {
     if (!sortOpen) return
@@ -190,7 +190,7 @@ const Watchlist: React.FC = () => {
             <button
               key={t.id}
               className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
-              onClick={() => { setTab(t.id); setActiveStatus(null); setActiveGenre(null) }}
+              onClick={() => { setTab(t.id); setActiveStatus(null); setActiveGenres(new Set()) }}
             >
               {t.label}
             </button>
@@ -205,8 +205,12 @@ const Watchlist: React.FC = () => {
             <button
               key={g}
               type="button"
-              className={`${styles.genreTag} ${activeGenre === g ? styles.genreTagActive : ''}`}
-              onClick={() => setActiveGenre(activeGenre === g ? null : g)}
+              className={`${styles.genreTag} ${activeGenres.has(g) ? styles.genreTagActive : ''}`}
+              onClick={() => setActiveGenres(prev => {
+                const next = new Set(prev)
+                next.has(g) ? next.delete(g) : next.add(g)
+                return next
+              })}
             >
               {g}
             </button>
@@ -253,7 +257,7 @@ const Watchlist: React.FC = () => {
           </div>
         </div>
 
-        <div key={`${tab}-${activeStatus ?? ''}-${activeGenre ?? ''}`} className={styles.contentAnimated}>
+        <div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}`} className={styles.contentAnimated}>
           <WatchlistGrid items={tabItems} onTap={setSelected} />
         </div>
       </div>

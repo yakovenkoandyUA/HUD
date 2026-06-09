@@ -168,6 +168,7 @@ interface TodoState {
   addChecklistItem: (taskId: string, title: string) => void
   toggleChecklistItem: (taskId: string, itemId: string) => void
   removeChecklistItem: (taskId: string, itemId: string) => void
+  updateChecklist: (taskId: string, newList: ChecklistItem[]) => void
   addLabel: (taskId: string, label: SprintLabel) => void
   removeLabel: (taskId: string, labelId: string) => void
   addGlobalLabel: (label: SprintLabel) => void
@@ -471,6 +472,17 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     authFetch(`/api/sprint/tasks/${taskId}`, {
       method: 'PATCH',
       body: JSON.stringify({ checklist: newChecklist }),
+    }).catch(() => {})
+  },
+
+  updateChecklist: (taskId, newList) => {
+    set(s => ({
+      items: s.items.map(i => i.id === taskId ? { ...i, checklist: newList } : i)
+    }))
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch(`/api/sprint/tasks/${taskId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ checklist: newList }),
     }).catch(() => {})
   },
 

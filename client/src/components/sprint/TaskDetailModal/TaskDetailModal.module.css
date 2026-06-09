@@ -25,6 +25,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .sheetIn  { animation: slideUp   0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
@@ -276,106 +277,108 @@
 }
 
 .checklistList {
-  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0;
   margin-bottom: 8px;
 }
 
-.checklistItem {
+.checkItem {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border);
-  user-select: none;
-  overflow: hidden;
-  max-height: 60px;
-  opacity: 1;
-  transform: translateX(0);
-  transition:
-    max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.22s ease,
-    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-    padding 0.28s ease,
-    border-bottom-color 0.28s ease;
+  transition: opacity 0.2s;
 }
-.checklistItem:last-child { border-bottom: none; }
+.checkItem:last-child { border-bottom: none; }
 
-.checklistItemDeleting {
-  max-height: 0;
-  opacity: 0;
-  transform: translateX(40px);
-  padding-top: 0;
-  padding-bottom: 0;
-  border-bottom-color: transparent;
-}
+.checkItemDone { opacity: 0.5; }
 
-.checklistCheckbox {
+.checkbox {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1.5px solid var(--border2);
-  background: none;
-  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 2px solid var(--border2);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  cursor: pointer;
+  color: var(--bg);
   padding: 0;
   transition: background 0.15s, border-color 0.15s;
 }
 
-.checklistCheckboxDone {
-  background: var(--accent);
-  border-color: var(--accent);
+.checkboxDone {
+  background: var(--gold);
+  border-color: var(--gold);
 }
 
-.checklistTitle {
+.checkItemText {
   flex: 1;
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
-  transition: color 0.15s;
+  cursor: default;
+  min-width: 0;
 }
 
-.checklistTitleDone {
-  color: var(--text3);
+.checkItemTextDone {
   text-decoration: line-through;
+  color: var(--text3);
 }
 
-.checklistDeleteBtn {
+.checkItemInput {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg3);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  padding: 3px 8px;
+  outline: none;
+  min-width: 0;
+}
+
+.checkItemActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: transparent;
-  border: none;
-  color: var(--text3);
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
+}
+
+.checkItemBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.4;
-  transition: background 0.15s, color 0.15s, opacity 0.15s, transform 0.1s;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s;
 }
+.checkItemBtn:disabled { opacity: 0.2; pointer-events: none; }
+.checkItemBtn:active   { color: var(--gold); }
 
-.checklistItem:hover .checklistDeleteBtn {
-  opacity: 1;
+.checkItemBtnDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s;
 }
-
-.checklistDeleteBtn:hover {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.checklistDeleteBtn:active {
-  transform: scale(0.88);
-}
+.checkItemBtnDelete:active { color: var(--accent); }
 
 .checklistAdd {
   display: flex;
@@ -475,7 +478,42 @@
 .descTextarea:focus { border-color: var(--accent); }
 .descTextarea::placeholder { color: var(--text3); }
 
-/* ── Label Picker Overlay ── */
+/* ── Label Picker — absolute overlay inside sheet ── */
+.labelPickerOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.labelPickerSheet {
+  background: var(--bg2);
+  border-radius: 16px 16px 0 0;
+  padding: 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 75%;
+  overflow: hidden;
+}
+
+.labelPickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+/* ── Label Picker Overlay (legacy, kept for other usages) ── */
 .pickerOverlay {
   position: fixed;
   inset: 0;

@@ -183,6 +183,9 @@ const Sprint: React.FC = () => {
 	const [newReminderUnit, setNewReminderUnit]     = useState<ReminderUnit>('days')
 	const [newReminder, setNewReminder]             = useState<{ amount: number; unit: ReminderUnit } | null>(null)
 	const [showFormReminderPicker, setShowFormReminderPicker] = useState(false)
+	const [checklistOpen, setChecklistOpen]   = useState(false)
+	const [checklistItems, setChecklistItems] = useState<string[]>([])
+	const [checklistInput, setChecklistInput] = useState('')
 	const _td = new Date()
 	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
 	const [selectedDay, setSelectedDay] = useState(todayStr)
@@ -260,6 +263,23 @@ const Sprint: React.FC = () => {
 		setNewReminderUnit('days')
 		setNewReminder(null)
 		setShowFormReminderPicker(false)
+		setChecklistOpen(false)
+		setChecklistItems([])
+		setChecklistInput('')
+	}
+
+	const addChecklistItem = () => {
+		const trimmed = checklistInput.trim()
+		if (!trimmed) return
+		setChecklistItems(prev => [...prev, trimmed])
+		setChecklistInput('')
+	}
+
+	const handleChecklistKeyUp = (e: React.KeyboardEvent) => {
+		if (e.key === 'Enter') {
+			e.preventDefault()
+			addChecklistItem()
+		}
 	}
 
 	const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
@@ -278,6 +298,9 @@ const Sprint: React.FC = () => {
 			priority: newType === 'shopping' ? newPriority : undefined,
 			...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
 			...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
+			...(newType === 'todo' && checklistItems.length > 0 ? {
+				checklist: checklistItems.map(text => ({ id: crypto.randomUUID(), title: text, done: false })),
+			} : {}),
 			...(newType === 'todo' && newRepeat !== 'none' ? {
 				repeat:       newRepeat,
 				repeatConfig: newRepeatConfig ?? { interval: 1, unit: repeatToUnit(newRepeat as Exclude<RepeatType, 'none' | 'custom'>), endsType: 'never' as const },
@@ -584,6 +607,68 @@ const Sprint: React.FC = () => {
 											</svg>
 											Сповіщення
 										</button>
+									)}
+								</div>
+							)}
+
+							{/* Checklist */}
+							{!showRepeatList && (
+								<div className={styles.checklistSection}>
+									<button
+										type="button"
+										className={`${styles.checklistToggle} ${checklistOpen ? styles.checklistToggleActive : ''}`}
+										onClick={() => setChecklistOpen(p => !p)}
+									>
+										<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+											<polyline points="9 11 12 14 22 4"/>
+											<path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+										</svg>
+										ЧЕК-ЛІСТ
+										{checklistItems.length > 0 && (
+											<span className={styles.checklistCount}>{checklistItems.length}</span>
+										)}
+									</button>
+
+									{checklistOpen && (
+										<div className={styles.checklistBody}>
+											{checklistItems.map((item, idx) => (
+												<div key={idx} className={styles.checklistItem}>
+													<span className={styles.checklistDot} />
+													<span className={styles.checklistItemText}>{item}</span>
+													<button
+														type="button"
+														className={styles.checklistRemove}
+														onClick={() => setChecklistItems(prev => prev.filter((_, i) => i !== idx))}
+													>
+														<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+															<line x1="18" y1="6" x2="6" y2="18"/>
+															<line x1="6" y1="6" x2="18" y2="18"/>
+														</svg>
+													</button>
+												</div>
+											))}
+											<div className={styles.checklistInputRow}>
+												<span className={styles.checklistDot} />
+												<input
+													type="text"
+													inputMode="text"
+													enterKeyHint="done"
+													className={styles.checklistInput}
+													placeholder="Додати пункт..."
+													value={checklistInput}
+													onChange={e => setChecklistInput(e.target.value)}
+													onKeyUp={handleChecklistKeyUp}
+												/>
+												{checklistInput.trim() && (
+													<button type="button" className={styles.checklistAdd} onClick={addChecklistItem}>
+														<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+															<line x1="12" y1="5" x2="12" y2="19"/>
+															<line x1="5" y1="12" x2="19" y2="12"/>
+														</svg>
+													</button>
+												)}
+											</div>
+										</div>
 									)}
 								</div>
 							)}

@@ -136,6 +136,16 @@
   font-family: var(--font-mono);
 }
 
+/* ── Reveal animation ── */
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rowRevealed {
+  animation: rowIn 0.22s ease both;
+}
+
 /* ── Show more ── */
 .showMoreBtn {
   width: 100%;

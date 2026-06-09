@@ -141,9 +141,9 @@
 }
 
 .genreTagActive {
-  border-color: var(--second);
-  color: var(--second);
-  background: var(--second-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* ── Content ── */

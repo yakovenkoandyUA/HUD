@@ -84,56 +84,6 @@ function formatDueDateHuman(dateStr: string): string {
   return `${DAY_SHORT[target.getDay()]} ${target.getDate()} ${MONTHS_SHORT[target.getMonth()]}`
 }
 
-// ── Checklist row with animated delete ───────────────────────────────────────
-
-interface ChecklistRowProps {
-  taskId: string
-  itemId: string
-  title: string
-  done: boolean
-}
-
-const ChecklistRow: React.FC<ChecklistRowProps> = ({ taskId, itemId, title, done }) => {
-  const { toggleChecklistItem, removeChecklistItem } = useSprintStore()
-  const [deleting, setDeleting] = useState(false)
-
-  const handleDelete = () => {
-    setDeleting(true)
-    setTimeout(() => {
-      removeChecklistItem(taskId, itemId)
-      setDeleting(false)
-    }, 280)
-  }
-
-  return (
-    <li className={`${styles.checklistItem} ${deleting ? styles.checklistItemDeleting : ''}`}>
-      <button
-        type="button"
-        className={`${styles.checklistCheckbox} ${done ? styles.checklistCheckboxDone : ''}`}
-        onClick={() => toggleChecklistItem(taskId, itemId)}
-        aria-label={done ? 'Позначити невиконаним' : 'Виконати'}
-      >
-        {done && (
-          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-            <path d="M1.5 4l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
-      </button>
-      <span className={`${styles.checklistTitle} ${done ? styles.checklistTitleDone : ''}`}>
-        {title}
-      </span>
-      <button
-        type="button"
-        className={styles.checklistDeleteBtn}
-        onClick={handleDelete}
-        aria-label="Видалити підзадачу"
-      >
-        ×
-      </button>
-    </li>
-  )
-}
-
 // ── Main component ───────────────────────────────────────────────────────────
 
 type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks'
@@ -163,7 +113,7 @@ function formatReminderLabel(reminder: { amount: number; unit: string }): string
 }
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
-  const { items, updateTask, toggleItem, addChecklistItem, addLabel, removeLabel, setReminder } = useSprintStore()
+  const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder } = useSprintStore()
 
   // Keep a snapshot so the task content stays visible during the close animation
   const liveTask = items.find(i => i.id === taskId) ?? null
@@ -191,14 +141,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const sheetRef   = useRef<HTMLDivElement>(null)
   const bodyRef    = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
-  const drag        = useRef({ startY: 0, startTime: 0, active: false })
   const dragClosing = useRef(false)
   const onCloseRef  = useRef(onClose)
   useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
-  const [titleDraft, setTitleDraft] = useState('')
-  const [descDraft, setDescDraft]   = useState('')
-  const [checkInput, setCheckInput] = useState('')
+  const [titleDraft, setTitleDraft]     = useState('')
+  const [descDraft, setDescDraft]       = useState('')
+  const [checkInput, setCheckInput]     = useState('')
+  const [editingIdx, setEditingIdx]     = useState<number | null>(null)
+  const [editingText, setEditingText]   = useState('')
 
   useEffect(() => {
     if (taskId) {
@@ -253,52 +204,65 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   }, [taskId, onClose])
 
   // Imperative drag-to-dismiss — passive:false so preventDefault() actually works.
-  // scrollTop check on bodyRef (the real scrollable child), not sheetRef.
   useEffect(() => {
     if (!mounted || !taskId) return
     const sheet = sheetRef.current
-    if (!sheet) return
+    const body  = bodyRef.current
+    if (!sheet || !body) return
 
-    const onStart = (e: TouchEvent) => {
-      if (bodyRef.current && bodyRef.current.scrollTop > 0) {
-        drag.current.active = false
+    let startY     = 0
+    let startTime  = 0
+    let currentY   = 0
+    let isDragging = false
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (body.scrollTop > 0) return
+      startY     = e.touches[0].clientY
+      startTime  = Date.now()
+      isDragging = true
+      sheet.style.transition = 'none'
+      if (overlayRef.current) overlayRef.current.style.transition = 'none'
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return
+      if (body.scrollTop > 0) {
+        isDragging = false
+        sheet.style.transform = ''
         return
       }
-      drag.current = { startY: e.touches[0].clientY, startTime: Date.now(), active: true }
+      currentY = e.touches[0].clientY
+      const delta = Math.max(0, currentY - startY)
+      sheet.style.transform = `translateY(${delta}px)`
+      if (overlayRef.current) overlayRef.current.style.opacity = String(Math.max(0, 1 - delta / 400))
+      if (delta > 10) e.preventDefault()
     }
 
-    const onMove = (e: TouchEvent) => {
-      if (!drag.current.active) return
-      const deltaY = e.touches[0].clientY - drag.current.startY
-      if (deltaY <= 0) { drag.current.active = false; return }
-      e.preventDefault()
-      if (sheetRef.current)   { sheetRef.current.style.transform = `translateY(${deltaY}px)`;   sheetRef.current.style.transition = 'none' }
-      if (overlayRef.current) { overlayRef.current.style.opacity = String(Math.max(0, 1 - deltaY / 400)); overlayRef.current.style.transition = 'none' }
-    }
-
-    const onEnd = (e: TouchEvent) => {
-      if (!drag.current.active) return
-      drag.current.active = false
-      const deltaY   = e.changedTouches[0].clientY - drag.current.startY
-      const velocity = deltaY / Math.max(1, Date.now() - drag.current.startTime)
-      if (deltaY >= 120 || (deltaY > 60 && velocity > 0.5)) {
+    const onTouchEnd = () => {
+      if (!isDragging) return
+      isDragging = false
+      const delta    = currentY - startY
+      const velocity = delta / Math.max(1, Date.now() - startTime)
+      if (delta >= 120 || (delta > 60 && velocity > 0.5)) {
         dragClosing.current = true
-        if (sheetRef.current)   { sheetRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'; sheetRef.current.style.transform = 'translateY(100%)' }
+        sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
+        sheet.style.transform  = 'translateY(100%)'
         if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '0' }
-        setTimeout(() => onCloseRef.current(), 300)
+        setTimeout(() => onCloseRef.current(), 280)
       } else {
-        if (sheetRef.current)   { sheetRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'; sheetRef.current.style.transform = 'translateY(0)' }
+        sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
+        sheet.style.transform  = ''
         if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '' }
       }
     }
 
-    sheet.addEventListener('touchstart', onStart, { passive: true  })
-    sheet.addEventListener('touchmove',  onMove,  { passive: false })
-    sheet.addEventListener('touchend',   onEnd,   { passive: true  })
+    sheet.addEventListener('touchstart', onTouchStart, { passive: true  })
+    sheet.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    sheet.addEventListener('touchend',   onTouchEnd,   { passive: true  })
     return () => {
-      sheet.removeEventListener('touchstart', onStart)
-      sheet.removeEventListener('touchmove',  onMove)
-      sheet.removeEventListener('touchend',   onEnd)
+      sheet.removeEventListener('touchstart', onTouchStart)
+      sheet.removeEventListener('touchmove',  onTouchMove)
+      sheet.removeEventListener('touchend',   onTouchEnd)
     }
   }, [mounted, taskId])
 
@@ -361,12 +325,42 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   if (!mounted || !task) return null
 
   const recurring  = isRecurring(task)
-  const checklist    = task.checklist ?? []
+  const checklist      = task.checklist ?? []
+  const sortedChecklist = [...checklist].sort((a, b) => {
+    if (a.done === b.done) return 0
+    return a.done ? 1 : -1
+  })
   const checkDone    = checklist.filter(c => c.done).length
   const checkPct     = checklist.length > 0 ? Math.round((checkDone / checklist.length) * 100) : 0
   const progressColor = checkPct === 100 ? 'var(--positive)' : checkPct >= 50 ? 'var(--gold)' : 'var(--negative)'
   const taskLabels   = task.labels ?? []
   const isOpen       = !!taskId
+
+  const moveItem = (sortedIdx: number, dir: 'up' | 'down') => {
+    const newList = [...sortedChecklist]
+    const targetIdx = dir === 'up' ? sortedIdx - 1 : sortedIdx + 1
+    if (targetIdx < 0 || targetIdx >= newList.length) return
+    ;[newList[sortedIdx], newList[targetIdx]] = [newList[targetIdx], newList[sortedIdx]]
+    updateChecklist(task.id, newList)
+  }
+
+  const startEdit = (idx: number, title: string) => {
+    setEditingIdx(idx)
+    setEditingText(title)
+  }
+
+  const saveEdit = (sortedIdx: number) => {
+    if (!editingText.trim()) { setEditingIdx(null); return }
+    const newList = [...sortedChecklist]
+    newList[sortedIdx] = { ...newList[sortedIdx], title: editingText.trim() }
+    updateChecklist(task.id, newList)
+    setEditingIdx(null)
+  }
+
+  const handleEditKeyUp = (e: React.KeyboardEvent, sortedIdx: number) => {
+    if (e.key === 'Enter')  saveEdit(sortedIdx)
+    if (e.key === 'Escape') setEditingIdx(null)
+  }
 
   return (
     <>
@@ -416,6 +410,32 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               <span className={styles.confirmText}>Закриваємо квест?</span>
               <button type="button" className={styles.confirmYes} onClick={handleConfirmDone}>Так</button>
               <button type="button" className={styles.confirmNo} onClick={() => setShowConfirm(false)}>Ні</button>
+            </div>
+          )}
+
+          {/* ── Label Picker — absolute overlay inside sheet ── */}
+          {labelPickerOpen && (
+            <div className={styles.labelPickerOverlay} onClick={() => setLabelPickerOpen(false)}>
+              <div className={styles.labelPickerSheet} onClick={e => e.stopPropagation()}>
+                <div className={styles.labelPickerHeader}>
+                  <span>МІТКИ</span>
+                  <button type="button" className={styles.closeBtn} onClick={() => setLabelPickerOpen(false)} aria-label="Закрити">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M2 2l9 9M11 2l-9 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+                <LabelPicker
+                  noOverlay
+                  selectedLabels={taskLabels}
+                  onToggle={label => {
+                    const isOn = taskLabels.some(l => l.id === label.id)
+                    if (isOn) removeLabel(task.id, label.id)
+                    else      addLabel(task.id, label)
+                  }}
+                  onClose={() => setLabelPickerOpen(false)}
+                />
+              </div>
             </div>
           )}
 
@@ -569,27 +589,99 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                           style={{ width: `${checkPct}%`, background: progressColor }}
                         />
                       </div>
-                      <ul className={styles.checklistList}>
-                        {checklist.map(item => (
-                          <ChecklistRow
-                            key={item.id}
-                            taskId={task.id}
-                            itemId={item.id}
-                            title={item.title}
-                            done={item.done}
-                          />
-                        ))}
-                      </ul>
+                      <div className={styles.checklistList}>
+                        {sortedChecklist.map((item, idx) => {
+                          const isEditing = editingIdx === idx
+                          const isDone    = item.done
+                          const undoneCount = sortedChecklist.filter(i => !i.done).length
+                          return (
+                            <div key={item.id} className={`${styles.checkItem} ${isDone ? styles.checkItemDone : ''}`}>
+                              <button
+                                type="button"
+                                className={`${styles.checkbox} ${isDone ? styles.checkboxDone : ''}`}
+                                onClick={() => toggleChecklistItem(task.id, item.id)}
+                                aria-label={isDone ? 'Позначити невиконаним' : 'Виконати'}
+                              >
+                                {isDone && (
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                  </svg>
+                                )}
+                              </button>
+
+                              {isEditing ? (
+                                <input
+                                  className={styles.checkItemInput}
+                                  value={editingText}
+                                  autoFocus
+                                  inputMode="text"
+                                  enterKeyHint="done"
+                                  onChange={e => setEditingText(e.target.value)}
+                                  onKeyUp={e => handleEditKeyUp(e, idx)}
+                                  onBlur={() => saveEdit(idx)}
+                                />
+                              ) : (
+                                <span
+                                  className={`${styles.checkItemText} ${isDone ? styles.checkItemTextDone : ''}`}
+                                  onDoubleClick={() => !isDone && startEdit(idx, item.title)}
+                                >
+                                  {item.title}
+                                </span>
+                              )}
+
+                              {!isDone && !isEditing && (
+                                <div className={styles.checkItemActions}>
+                                  <button
+                                    type="button"
+                                    className={styles.checkItemBtn}
+                                    onClick={() => moveItem(idx, 'up')}
+                                    disabled={idx === 0}
+                                    aria-label="Вгору"
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <polyline points="18 15 12 9 6 15"/>
+                                    </svg>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={styles.checkItemBtn}
+                                    onClick={() => moveItem(idx, 'down')}
+                                    disabled={idx === undoneCount - 1}
+                                    aria-label="Вниз"
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={styles.checkItemBtnDelete}
+                                    onClick={() => removeChecklistItem(task.id, item.id)}
+                                    aria-label="Видалити підзадачу"
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <line x1="18" y1="6" x2="6" y2="18"/>
+                                      <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
                     </>
                   )}
                   <div className={styles.checklistAdd}>
                     <input
                       ref={checkInputRef}
                       className={styles.checklistInput}
+                      inputMode="text"
+                      enterKeyHint="done"
                       value={checkInput}
                       onChange={e => setCheckInput(e.target.value)}
                       placeholder="Додати підзадачу..."
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddChecklist() } }}
+                      onKeyUp={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddChecklist() } }}
                     />
                     <button
                       type="button"
@@ -621,19 +713,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
           </div>
         </div>
       </div>
-
-      {/* ── Label Picker (separate fixed overlay, z-index 300) ── */}
-      {labelPickerOpen && (
-        <LabelPicker
-          selectedLabels={taskLabels}
-          onToggle={label => {
-            const isOn = taskLabels.some(l => l.id === label.id)
-            if (isOn) removeLabel(task.id, label.id)
-            else      addLabel(task.id, label)
-          }}
-          onClose={() => setLabelPickerOpen(false)}
-        />
-      )}
 
       {/* ── Date Picker for deadline (z-index 400) ── */}
       {showDatePicker && (

@@ -400,14 +400,16 @@ const RecurringPayments: React.FC = () => {
       </div>
 
       <div className={styles.list}>
-        {visiblePayments.map(p => {
+        {visiblePayments.map((p, i) => {
           const isToday = p.dayOfMonth === today
           const hasForeign = p.currency && p.currency !== 'UAH' && p.amountForeign
+          const isRevealed = showAll && i >= VISIBLE_LIMIT
           return (
             <button
               key={p._id}
               type="button"
-              className={`${styles.row} ${isToday ? styles.rowToday : ''} ${!p.isActive ? styles.rowInactive : ''}`}
+              className={`${styles.row} ${isToday ? styles.rowToday : ''} ${!p.isActive ? styles.rowInactive : ''} ${isRevealed ? styles.rowRevealed : ''}`}
+              style={isRevealed ? { animationDelay: `${(i - VISIBLE_LIMIT) * 0.06}s` } : undefined}
               onClick={() => openEdit(p)}
             >
               <ServiceLogo name={p.name} />

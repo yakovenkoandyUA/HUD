@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useEffect } from 'react'
+import React, { useRef, useCallback, useEffect, useState } from 'react'
 import PriorityBadge from '../../ui/PriorityBadge'
 import type { UnifiedTodo, SprintTag } from '../../../types'
 import styles from './TaskCard.module.css'
@@ -94,10 +94,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const swipingRef = useRef(false)
   const deletingRef = useRef(false)
 
+  const [confirmClose, setConfirmClose] = useState(false)
+
   // Keep latest prop refs so imperative handlers don't go stale
   const onDeleteRef  = useRef(onDelete)
+  const onToggleRef  = useRef(onToggle)
   const titleRef     = useRef(item.title)
   useEffect(() => { onDeleteRef.current = onDelete },    [onDelete])
+  useEffect(() => { onToggleRef.current = onToggle },    [onToggle])
   useEffect(() => { titleRef.current    = item.title },  [item.title])
 
   const applyOffset = useCallback((offset: number, animate = false) => {
@@ -187,6 +191,36 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const triggerDeleteRef = useRef(triggerDelete)
   useEffect(() => { triggerDeleteRef.current = triggerDelete }, [triggerDelete])
 
+  const handleToggleDone = useCallback(() => {
+    if (item.done) {
+      onToggleRef.current()
+    } else {
+      setConfirmClose(true)
+    }
+  }, [item.done])
+
+  const handleConfirmClose = useCallback(() => {
+    setConfirmClose(false)
+    const cardEl = itemRef.current
+    if (cardEl) {
+      cardEl.style.transition = 'transform 0.2s ease, opacity 0.18s ease'
+      cardEl.style.transform  = 'translateX(28px)'
+      cardEl.style.opacity    = '0'
+      setTimeout(() => {
+        const h = cardEl.offsetHeight
+        cardEl.style.maxHeight = `${h}px`
+        cardEl.style.overflow  = 'hidden'
+        requestAnimationFrame(() => {
+          cardEl.style.transition = 'max-height 0.18s ease'
+          cardEl.style.maxHeight  = '0'
+        })
+        setTimeout(() => onToggleRef.current(), 200)
+      }, 200)
+    } else {
+      onToggleRef.current()
+    }
+  }, [])
+
   // Non-passive touchmove so e.preventDefault() actually prevents scroll
   useEffect(() => {
     const el = itemRef.current
@@ -249,7 +283,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
       {/* Sliding content layer */}
       <div ref={slideRef} className={styles.slideContent}>
         <div className={styles.inner}>
-          <button type="button" className={styles.check} onClick={onToggle} aria-label="Toggle">
+          <button type="button" className={styles.check} onClick={handleToggleDone} aria-label="Toggle">
             <span className={`${styles.checkBox} ${item.type === 'sprint' ? styles.checkBoxSprint : item.type === 'shopping' ? styles.checkBoxShopping : item.type === 'todo' ? styles.checkBoxTodo : ''}`}>{item.done ? '✓' : ''}</span>
           </button>
 
@@ -299,6 +333,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
             ✕
           </button>
         </div>
+
+        {confirmClose && (
+          <div className={styles.confirmBanner}>
+            <span className={styles.confirmText}>Закриваємо квест?</span>
+            <div className={styles.confirmBtns}>
+              <button type="button" className={styles.confirmNo} onClick={() => setConfirmClose(false)}>Ні</button>
+              <button type="button" className={styles.confirmYes} onClick={handleConfirmClose}>Так</button>
+            </div>
+          </div>
+        )}
 
         {showBar && (
           <div className={styles.progressTrack}>

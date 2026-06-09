@@ -149,7 +149,7 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
                 <button
                   type="button"
                   className={styles.editBtn}
-                  onClick={() => setEditOpen(true)}
+                  onClick={() => { onClose(); navigate('/profile') }}
                 >
                   Редагувати
                 </button>

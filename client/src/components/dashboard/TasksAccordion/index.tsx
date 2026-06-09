@@ -62,8 +62,6 @@ const TasksAccordion: React.FC = () => {
     }
   }
 
-  const todoDone    = todoItems.filter((t) => isDoneToday(t)).length
-  const todoAllDone = todoItems.length > 0 && todoDone === todoItems.length
   const todoVisible = todoActive.slice(0, SPRINT_LIMIT)
   const todoRest    = todoActive.length - SPRINT_LIMIT
 
@@ -88,11 +86,8 @@ const TasksAccordion: React.FC = () => {
           <span className={styles.headerLabel}>Квести</span>
           <div className={styles.headerRight}>
             {todoItems.length > 0 && (
-              <span
-                className={styles.badge}
-                style={{ color: todoAllDone ? 'var(--second)' : 'var(--accent)' }}
-              >
-                {todoDone}/{todoItems.length}
+              <span className={`${styles.count} ${todoActive.length === 0 ? styles.countDone : ''}`}>
+                {todoActive.length === 0 ? '✓' : todoActive.length}
               </span>
             )}
             <svg
@@ -174,7 +169,7 @@ const TasksAccordion: React.FC = () => {
           <span className={styles.headerLabel}>Покупки</span>
           <div className={styles.headerRight}>
             {shoppingTotal > 0 && (
-              <span className={styles.badge} style={{ color: 'var(--second)' }}>
+              <span className={styles.count}>
                 {shoppingTotal}
               </span>
             )}
