@@ -33,6 +33,10 @@ const PosterGenerator: React.FC<PosterGeneratorProps> = ({ memory, onSetCover, o
     setPosterUrl(null)
 
     try {
+      // Step 1 — prompt via Anthropic (backend)
+      console.log('[PosterGenerator] Step 1: requesting prompt from /api/ai/poster-prompt')
+      console.log('[PosterGenerator] payload:', { title: memory.title, notes: memory.notes, date: memory.date })
+
       const res = await authFetch('/api/ai/poster-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,22 +47,34 @@ const PosterGenerator: React.FC<PosterGeneratorProps> = ({ memory, onSetCover, o
         }),
       })
 
-      if (!res.ok) throw new Error('prompt failed')
-      const { prompt } = await res.json() as { prompt: string }
+      console.log('[PosterGenerator] Step 1 response status:', res.status)
 
+      if (!res.ok) {
+        const errBody = await res.text()
+        console.error('[PosterGenerator] Step 1 failed:', res.status, errBody)
+        throw new Error(`prompt failed: ${res.status} ${errBody}`)
+      }
+
+      const { prompt } = await res.json() as { prompt: string }
+      console.log('[PosterGenerator] Step 1 prompt received:', prompt)
+
+      // Step 2 — generate image via Pollinations
       const seed = Math.floor(Math.random() * 999999)
       const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=768&seed=${seed}&nologo=true`
+      console.log('[PosterGenerator] Step 2: loading image from Pollinations:', url)
 
       await new Promise<void>((resolve, reject) => {
         const img = new Image()
-        img.onload  = () => resolve()
-        img.onerror = () => reject(new Error('image load failed'))
+        img.onload  = () => { console.log('[PosterGenerator] Step 2: image loaded OK'); resolve() }
+        img.onerror = (e) => { console.error('[PosterGenerator] Step 2: image load failed', e); reject(new Error('image load failed')) }
         img.src = url
       })
 
       setPosterUrl(url)
       setGenState('done')
-    } catch {
+      console.log('[PosterGenerator] Done.')
+    } catch (err) {
+      console.error('[PosterGenerator] Generation failed:', err)
       setGenState('error')
     }
   }, [memory])
