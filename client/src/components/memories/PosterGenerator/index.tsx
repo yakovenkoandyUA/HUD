@@ -58,19 +58,26 @@ const PosterGenerator: React.FC<PosterGeneratorProps> = ({ memory, onSetCover, o
       const { prompt } = await res.json() as { prompt: string }
       console.log('[PosterGenerator] Step 1 prompt received:', prompt)
 
-      // Step 2 — generate image via Pollinations
-      const seed = Math.floor(Math.random() * 999999)
-      const url  = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=768&seed=${seed}&nologo=true`
-      console.log('[PosterGenerator] Step 2: loading image from Pollinations:', url)
-
-      await new Promise<void>((resolve, reject) => {
-        const img = new Image()
-        img.onload  = () => { console.log('[PosterGenerator] Step 2: image loaded OK'); resolve() }
-        img.onerror = (e) => { console.error('[PosterGenerator] Step 2: image load failed', e); reject(new Error('image load failed')) }
-        img.src = url
+      // Step 2 — backend proxy: fetch Pollinations + upload to Cloudinary
+      console.log('[PosterGenerator] Step 2: requesting poster image via backend proxy...')
+      const imgRes = await authFetch('/api/memories/generate-poster-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
       })
 
-      setPosterUrl(url)
+      console.log('[PosterGenerator] Step 2 response status:', imgRes.status)
+
+      if (!imgRes.ok) {
+        const errBody = await imgRes.text()
+        console.error('[PosterGenerator] Step 2 failed:', imgRes.status, errBody)
+        throw new Error(`image generation failed: ${imgRes.status} ${errBody}`)
+      }
+
+      const { imageUrl } = await imgRes.json() as { imageUrl: string }
+      console.log('[PosterGenerator] Step 2 Cloudinary URL:', imageUrl)
+
+      setPosterUrl(imageUrl)
       setGenState('done')
       console.log('[PosterGenerator] Done.')
     } catch (err) {
