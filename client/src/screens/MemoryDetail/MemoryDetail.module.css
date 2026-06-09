@@ -148,6 +148,7 @@
   transition: opacity 0.15s;
 }
 .btnPoster:active { opacity: 0.75; }
+.btnPoster:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
 
 /* ── Notes ── */
 .notesSection {

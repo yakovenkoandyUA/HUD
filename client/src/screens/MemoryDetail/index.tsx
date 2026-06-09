@@ -313,7 +313,8 @@ const MemoryDetailScreen: React.FC = () => {
         <button
           type="button"
           className={styles.btnPoster}
-          onClick={() => setShowPosterGen(true)}
+          disabled
+          title="Тимчасово недоступно"
         >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <path d="M6.5 1v1.5M6.5 10.5V12M1 6.5h1.5M10.5 6.5H12M2.7 2.7l1.06 1.06M9.24 9.24l1.06 1.06M2.7 10.3l1.06-1.06M9.24 3.76l1.06-1.06"
