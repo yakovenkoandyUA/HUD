@@ -371,6 +371,55 @@
   color: var(--text);
 }
 
+/* ── Editable receipt items ── */
+.receiptItemEditable {
+  cursor: text;
+  border-radius: 3px;
+  transition: background 0.1s;
+}
+.receiptItemEditable:hover {
+  background: var(--surface2);
+  text-decoration: underline dotted var(--text3);
+}
+
+.receiptItemInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+}
+
+.receiptItemInputPrice {
+  flex: 0 0 80px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: right;
+}
+
+.receiptSaveBtn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px 0;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.receiptSaveBtn:hover:not(:disabled) { opacity: 0.85; }
+.receiptSaveBtn:disabled { opacity: 0.5; cursor: default; }
+
 /* ── Inline title edit ── */
 .titleEditable {
   cursor: text;

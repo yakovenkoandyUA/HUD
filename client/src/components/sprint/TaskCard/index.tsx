@@ -65,11 +65,6 @@ function formatDueDate(dateStr: string): string {
   return `${DAYS[target.getDay()]} ${target.getDate()} ${MONTHS[target.getMonth()]}`
 }
 
-function getChecklistColors(pct: number): { bar: string; counter: string } {
-  if (pct === 100) return { bar: 'var(--positive)', counter: 'var(--positive)' }
-  if (pct >= 50)   return { bar: 'var(--gold)',     counter: 'var(--gold)' }
-  return               { bar: 'var(--negative)',  counter: 'var(--text3)' }
-}
 
 function getMissedDays(item: UnifiedTodo): number {
   if (!isRecurring(item)) return 0

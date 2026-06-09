@@ -52,6 +52,7 @@ interface FinanceState {
   addExpense: (amount: number, description: string, category?: string) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
+  patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => void
   setSyncStatus: (s: SyncStatus) => void
 }
 
@@ -130,6 +131,21 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     set(s => ({
       transactions: s.transactions.map(t => t.id === id ? { ...t, title } : t),
     })),
+
+  patchTransaction: (id, patch) => {
+    const s = get()
+    const tx = s.transactions.find(t => t.id === id)
+    if (!tx) return
+    const prevAmount = tx.amount
+    const nextAmount = patch.amount ?? prevAmount
+    const delta = tx.type === 'topup'
+      ? nextAmount - prevAmount
+      : prevAmount - nextAmount
+    set(s2 => ({
+      balance: s2.balance + delta,
+      transactions: s2.transactions.map(t => t.id === id ? { ...t, ...patch } : t),
+    }))
+  },
 
   deleteTransaction: (id) => {
     const s = get()

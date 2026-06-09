@@ -84,6 +84,7 @@ interface ApiTask {
   completionHistory?: string[]
   reminder?: { amount: number; unit: string } | null
   checklist?: ApiChecklist[]
+  isPinned?: boolean
 }
 
 // ── Repeat helpers ────────────────────────────────────────────────────────────

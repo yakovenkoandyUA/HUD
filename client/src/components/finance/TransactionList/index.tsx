@@ -143,6 +143,7 @@ function getCategoryForTx(tx: Transaction, cats: Category[]): Category | undefin
 
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete }) => {
   const renameTransaction                  = useFinanceStore(s => s.renameTransaction)
+  const patchTransaction                   = useFinanceStore(s => s.patchTransaction)
   const { categories, fetchCategories }    = useCategoryStore()
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
@@ -155,6 +156,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const [displayedList, setDisplayedList]         = useState<Transaction[]>([])
   const [editingId, setEditingId]                 = useState<string | null>(null)
   const [editingTitle, setEditingTitle]           = useState('')
+
+  // ── Receipt item editing ──
+  type ReceiptItem = { name: string; price: number; category: string }
+  const [editingItems, setEditingItems]       = useState<ReceiptItem[]>([])
+  const [itemEditKey, setItemEditKey]         = useState<string | null>(null) // "idx-name" | "idx-price"
+  const [savingReceipt, setSavingReceipt]     = useState(false)
 
   const currentMonth = new Date().toISOString().slice(0, 7)
 
@@ -233,6 +240,39 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   }
 
   const receiptModalData = selectedReceiptTx ? parseReceipt(selectedReceiptTx.description) : null
+
+  // Sync editable items when modal opens
+  useEffect(() => {
+    if (receiptModalData) {
+      setEditingItems(receiptModalData.items.map(i => ({ ...i })))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedReceiptTx])
+
+  const receiptNewTotal = editingItems.reduce((s, i) => s + i.price, 0)
+
+  const handleReceiptSave = async () => {
+    if (!selectedReceiptTx || !receiptModalData || savingReceipt) return
+    setSavingReceipt(true)
+    const newDesc   = JSON.stringify({ store: receiptModalData.store, items: editingItems })
+    const newAmount = Math.round(receiptNewTotal * 100) / 100
+    const prevDesc   = selectedReceiptTx.description
+    const prevAmount = selectedReceiptTx.amount
+    patchTransaction(selectedReceiptTx.id, { description: newDesc, amount: newAmount })
+    try {
+      const res = await authFetch(`/api/transactions/${selectedReceiptTx.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ desc: newDesc, amount: newAmount }),
+      })
+      if (!res.ok) throw new Error()
+      // Keep modal open with updated tx reflected via store
+      setSelectedReceiptTx(prev => prev ? { ...prev, description: newDesc, amount: newAmount } : null)
+    } catch {
+      patchTransaction(selectedReceiptTx.id, { description: prevDesc, amount: prevAmount })
+    } finally {
+      setSavingReceipt(false)
+    }
+  }
 
   return (
     <div>
@@ -377,18 +417,64 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
             </div>
 
             <div className={styles.receiptModalItems}>
-              {receiptModalData.items.map((item, i) => (
+              {editingItems.map((item, i) => (
                 <div key={i} className={styles.receiptModalItem}>
-                  <span className={styles.receiptModalItemName}>{item.name}</span>
-                  <span className={styles.receiptModalItemPrice}>{fmt(item.price)} ₴</span>
+                  {/* Name cell */}
+                  {itemEditKey === `${i}-name` ? (
+                    <input
+                      className={styles.receiptItemInput}
+                      value={item.name}
+                      autoFocus
+                      onChange={e => setEditingItems(prev => prev.map((it, j) => j === i ? { ...it, name: e.target.value } : it))}
+                      onBlur={() => setItemEditKey(null)}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setItemEditKey(null) }}
+                    />
+                  ) : (
+                    <span
+                      className={`${styles.receiptModalItemName} ${styles.receiptItemEditable}`}
+                      onClick={() => setItemEditKey(`${i}-name`)}
+                    >
+                      {item.name}
+                    </span>
+                  )}
+                  {/* Price cell */}
+                  {itemEditKey === `${i}-price` ? (
+                    <input
+                      className={`${styles.receiptItemInput} ${styles.receiptItemInputPrice}`}
+                      type="number"
+                      value={item.price}
+                      autoFocus
+                      min={0}
+                      step={0.01}
+                      onChange={e => setEditingItems(prev => prev.map((it, j) => j === i ? { ...it, price: parseFloat(e.target.value) || 0 } : it))}
+                      onBlur={() => setItemEditKey(null)}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setItemEditKey(null) }}
+                    />
+                  ) : (
+                    <span
+                      className={`${styles.receiptModalItemPrice} ${styles.receiptItemEditable}`}
+                      onClick={() => setItemEditKey(`${i}-price`)}
+                    >
+                      {fmt(item.price)} ₴
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
 
             <div className={styles.receiptModalTotal}>
               <span>Разом</span>
-              <span>{fmt(selectedReceiptTx.amount)} ₴</span>
+              <span>{fmt(receiptNewTotal)} ₴</span>
             </div>
+
+            <button
+              type="button"
+              className={styles.receiptSaveBtn}
+              onClick={handleReceiptSave}
+              disabled={savingReceipt}
+            >
+              {savingReceipt ? 'Збереження...' : 'Зберегти зміни'}
+            </button>
           </div>
         )}
       </Modal>

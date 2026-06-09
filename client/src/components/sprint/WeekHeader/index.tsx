@@ -66,7 +66,7 @@ function getWeekDays(weekStart: string): Date[] {
 }
 
 const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, onExpand, hideTitle, routineItems = [], selectedDay, onDaySelect, onLongPress }) => {
-  const longPressTimer = useRef<ReturnType<typeof setTimeout>>()
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const days = getWeekDays(weekStart)
   const mon  = days[0]
   const sun  = days[6]

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
 import ReceiptScanner from '../ReceiptScanner'
-import { authFetch } from '../../../services/api'
 import { useCategoryStore } from '../../../store/categoryStore'
 import type { Category } from '../../../types'
 import styles from './ExpenseForm.module.css'
@@ -28,11 +27,6 @@ const CameraIcon: React.FC = () => (
   </svg>
 )
 
-const CheckIcon: React.FC = () => (
-  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-    <path d="M2 7l3 3 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const { categories, fetchCategories } = useCategoryStore()
