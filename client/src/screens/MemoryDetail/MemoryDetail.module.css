@@ -291,11 +291,11 @@
   color: var(--text3);
 }
 
-/* ── Photo grid ── */
+/* ── Photo grid (masonry via CSS columns) ── */
 .photoGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3px;
+  columns: 3;
+  column-gap: 4px;
+  width: 100%;
   padding-bottom: 24px;
 }
 
@@ -305,10 +305,15 @@
 }
 
 .photoItem {
-  aspect-ratio: 1;
+  break-inside: avoid;
+  margin-bottom: 4px;
+  width: 100%;
+  display: block;
+  border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
   position: relative;
+  min-height: 60px; /* skeleton placeholder before image loads */
 }
 
 .photoSkeleton {
@@ -327,6 +332,7 @@
 
 .photoImg {
   width: 100%;
+  height: auto;
   display: block;
   object-fit: cover;
   opacity: 0;
