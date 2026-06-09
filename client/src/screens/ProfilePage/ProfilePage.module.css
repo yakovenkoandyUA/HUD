@@ -206,7 +206,7 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .sectionHeader {
@@ -224,92 +224,90 @@
   color: var(--text3);
 }
 
-/* ── Category row ── */
-.catRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  transition: opacity 0.2s;
-}
-.catRow:last-of-type { border-bottom: none; }
-
-.catRowInactive {
-  opacity: 0.45;
+.sectionCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
 }
 
-.catIconWrap {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--cat-color) 15%, var(--bg3));
-  flex-shrink: 0;
-}
-
-.catIconWrap i {
-  font-size: 17px;
-  color: var(--cat-color);
-}
-
-.catName {
-  flex: 1;
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text);
-}
-
-.catActions {
-  display: flex;
-  align-items: center;
+/* ── Category grid ── */
+.catGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-/* ── Toggle switch ── */
-.toggle {
-  width: 40px;
-  height: 22px;
-  border-radius: 11px;
-  border: none;
-  background: var(--border2);
+/* ── CatCard ── */
+.catCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 6px 8px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
   cursor: pointer;
   position: relative;
-  transition: background 0.2s;
-  flex-shrink: 0;
-  padding: 0;
+  transition: border-color 0.15s, opacity 0.2s, background 0.15s;
+  user-select: none;
+  outline: none;
+}
+.catCard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.catCardActive {
+  border-color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 5%, var(--surface));
 }
 
-.toggle::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--text3);
-  transition: transform 0.2s, background 0.2s;
+.catCardInactive {
+  opacity: 0.42;
 }
 
-.toggleOn {
-  background: color-mix(in srgb, var(--accent) 30%, var(--border2));
-}
-
-.toggleOn::after {
-  transform: translateX(18px);
-  background: var(--accent);
-}
-
-.deleteCatBtn {
+.catCardIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  background: color-mix(in srgb, var(--cat-color) 16%, var(--bg3));
+  flex-shrink: 0;
+}
+
+.catCardIcon i {
+  font-size: 19px;
+  color: var(--cat-color);
+}
+
+.catCardName {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.catCardCheck {
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cat-color);
+}
+
+.catCardDel {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   color: var(--text3);
@@ -317,45 +315,52 @@
   border-radius: 50%;
   padding: 0;
   transition: color 0.15s, background 0.15s;
-  flex-shrink: 0;
+  z-index: 1;
 }
-.deleteCatBtn:hover { color: var(--accent); background: var(--accent-soft); }
+.catCardDel:hover { color: var(--accent); background: var(--accent-soft); }
 
-/* ── Add category ── */
+/* ── Add category card ── */
 .addCatBtn {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px 6px 8px;
   background: none;
-  border: 1px dashed var(--border2);
-  border-radius: 20px;
-  padding: 7px 14px;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
+  border: 1.5px dashed var(--border2);
+  border-radius: 14px;
   color: var(--text3);
   cursor: pointer;
-  align-self: flex-start;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
   transition: border-color 0.15s, color 0.15s;
+  min-height: 88px;
 }
 .addCatBtn:hover { border-color: var(--accent); color: var(--accent); }
 
-.addCatRow {
+.addCatCard {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--accent);
+  border-radius: 14px;
 }
 
 .addCatInput {
-  flex: 1;
-  background: var(--bg3);
-  border: 1px solid var(--accent);
-  border-radius: 20px;
-  padding: 7px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border2);
+  padding: 4px 2px;
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text);
   outline: none;
+  text-align: center;
 }
 .addCatInput::placeholder { color: var(--text3); }
 
@@ -363,8 +368,259 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 100%;
+  height: 28px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.addCatSaveBtn:hover:not(:disabled) { opacity: 0.85; }
+.addCatSaveBtn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Total active ── */
+.totalActive {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+  margin-top: -8px;
+}
+
+/* ── Migration modal body ── */
+.migrateBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+
+.migrateHint {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.migrateList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.migrateItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+}
+.migrateItem:hover:not(:disabled) {
+  border-color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 8%, var(--surface));
+}
+.migrateItem:disabled { opacity: 0.5; cursor: default; }
+
+.migrateItemIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--cat-color) 15%, var(--bg3));
+  flex-shrink: 0;
+}
+
+.migrateItemIcon i {
+  font-size: 16px;
+  color: var(--cat-color);
+}
+
+.migrateItemName {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+.migrateNone {
+  align-self: center;
+  background: none;
+  border: 1px dashed var(--border2);
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.migrateNone:hover:not(:disabled) { border-color: var(--text2); color: var(--text2); }
+.migrateNone:disabled { opacity: 0.5; cursor: default; }
+
+/* ── SubCategory modal body ── */
+.subModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+
+.subModalCatHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+}
+
+.subModalCatHeaderActive {
+  border-color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 6%, var(--surface));
+}
+
+.subModalCatIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--cat-color) 16%, var(--bg3));
+  flex-shrink: 0;
+}
+.subModalCatIcon i {
+  font-size: 19px;
+  color: var(--cat-color);
+}
+
+.subModalCatName {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.subModalToggleBtn {
+  padding: 5px 12px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.subModalToggleBtn:hover { border-color: var(--accent); color: var(--accent); }
+.subModalToggleBtnActive {
+  border-color: var(--cat-color);
+  color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 10%, var(--surface2));
+}
+
+.subModalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subModalSectionTitle {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+}
+
+.subList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.subItemName {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.subItemDel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.subItemDel:hover { color: var(--accent); background: var(--accent-soft); }
+
+.subAddRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subAddInput {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.subAddInput:focus { border-color: var(--accent); }
+.subAddInput::placeholder { color: var(--text3); }
+
+.subAddBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   background: var(--accent);
   color: #fff;
   border: none;
@@ -373,5 +629,13 @@
   flex-shrink: 0;
   transition: opacity 0.15s;
 }
-.addCatSaveBtn:hover:not(:disabled) { opacity: 0.85; }
-.addCatSaveBtn:disabled { opacity: 0.4; cursor: default; }
+.subAddBtn:disabled { opacity: 0.4; cursor: default; }
+.subAddBtn:hover:not(:disabled) { opacity: 0.85; }
+
+.subEmpty {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  padding: 8px 0 4px;
+}

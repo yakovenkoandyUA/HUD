@@ -8,6 +8,7 @@ export interface ICategory extends Document {
   isDefault: boolean
   isActive:  boolean
   order:     number
+  parentId:  string | null
   createdAt: Date
 }
 
@@ -19,6 +20,7 @@ const schema = new Schema<ICategory>({
   isDefault: { type: Boolean, default: false },
   isActive:  { type: Boolean, default: true },
   order:     { type: Number, default: 0 },
+  parentId:  { type: String, default: null },
 }, { timestamps: true })
 
 export default model<ICategory>('Category', schema)

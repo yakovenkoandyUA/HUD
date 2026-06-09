@@ -47,7 +47,6 @@
 /* ── Header ── */
 .header {
   display: flex;
-  align-items: flex-start;
   gap: 10px;
   padding: 12px 16px 10px;
   flex-shrink: 0;
@@ -118,6 +117,20 @@
   margin-top: 1px;
 }
 .closeBtn:hover { color: var(--text); }
+
+.pinBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.pinBtn:hover { color: var(--gold); }
+.pinBtnActive { color: var(--gold); }
 
 /* ── Body ── */
 .body {

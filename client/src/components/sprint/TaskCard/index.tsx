@@ -89,6 +89,12 @@ function getMissedDays(item: UnifiedTodo): number {
   return missed
 }
 
+function getDayWord(n: number): string {
+  if (n === 1) return 'день'
+  if (n >= 2 && n <= 4) return 'дні'
+  return 'днів'
+}
+
 const SWIPE_THRESHOLD = 80
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDetail }) => {
@@ -99,12 +105,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const missedDays   = getMissedDays(item)
   const hasMissed    = missedDays > 0
   const hasLabels    = (item.labels ?? []).length > 0
-  const hasChecklist = checkTotal > 0
   const hasDueDate   = !!item.dueDate
-  const hasExtras    = hasLabels || hasChecklist || hasDueDate || hasMissed
-  const showBar      = hasChecklist && checkPct > 0
-
-  const { bar: barColor, counter: counterColor } = getChecklistColors(checkPct)
+  const hasExtras    = hasLabels || hasDueDate || hasMissed
+  const showBar      = checkTotal > 0 && checkPct > 0
 
   // Swipe-to-delete
   const itemRef    = useRef<HTMLLIElement>(null)
@@ -212,15 +215,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const triggerDeleteRef = useRef(triggerDelete)
   useEffect(() => { triggerDeleteRef.current = triggerDelete }, [triggerDelete])
 
-  const handleToggleDone = useCallback(() => {
+  const handleToggleDone = () => {
     if (item.done) {
-      onToggleRef.current()
-    } else {
-      setConfirmClose(true)
+      onToggleRef.current?.()
+      return
     }
-  }, [item.done])
+    setConfirmClose(true)
+  }
 
-  const handleConfirmClose = useCallback(() => {
+  const handleConfirmClose = () => {
     setConfirmClose(false)
     const cardEl = itemRef.current
     if (cardEl) {
@@ -235,12 +238,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
           cardEl.style.transition = 'max-height 0.18s ease'
           cardEl.style.maxHeight  = '0'
         })
-        setTimeout(() => onToggleRef.current(), 200)
+        setTimeout(() => onToggleRef.current?.(), 200)
       }, 200)
     } else {
-      onToggleRef.current()
+      onToggleRef.current?.()
     }
-  }, [])
+  }
 
   // Non-passive touchmove so e.preventDefault() actually prevents scroll
   useEffect(() => {
@@ -286,13 +289,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
     }
   }
 
-  const missedClass = !item.done && missedDays >= 3 ? styles.itemDanger
-    : !item.done && missedDays >= 1 ? styles.itemWarn : ''
+  const missedLevel = !item.done
+    ? missedDays === 0 ? 'none' : missedDays === 1 ? 'warn' : 'danger'
+    : 'none'
 
   return (
     <li
       ref={itemRef}
-      className={`${styles.item} ${item.done ? styles.done : ''} ${missedClass}`}
+      className={`${styles.item} ${item.done ? styles.done : ''} ${missedLevel === 'warn' ? styles.cardWarn : missedLevel === 'danger' ? styles.cardDanger : ''}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -314,8 +318,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
           {/* Clickable body → open detail */}
           <div className={styles.body} onClick={onOpenDetail} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && onOpenDetail()}>
             <div className={styles.topRow}>
-              <span className={styles.title}>{item.title}</span>
+              <div className={styles.titleLine}>
+                {item.isPinned && (
+                  <svg className={styles.pinIcon} width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" aria-hidden="true">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                )}
+                <span className={styles.title}>{item.title}</span>
+              </div>
               <div className={styles.meta}>
+                {checkTotal > 0 && !item.done && (
+                  <span className={styles.checklistBadge}>{checkDone}/{checkTotal}</span>
+                )}
                 {item.type === 'sprint' && item.tag && (
                   <span className={styles.tagChip} style={{ color: TAG_COLOR[item.tag], background: TAG_BG[item.tag] }}>
                     {TAG_LABEL[item.tag]}
@@ -335,11 +349,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                     ))}
                   </div>
                 )}
-                {hasChecklist && (
-                  <span className={styles.checklistCounter} style={{ color: counterColor }}>
-                    {checkDone} / {checkTotal}
-                  </span>
-                )}
                 {hasDueDate && (
                   <span className={styles.dueDateBadge} style={{ color: getDueDateColor(item.dueDate!) }}>
                     <svg width="9" height="9" viewBox="0 0 10 10" fill="none" className={styles.dueDateIcon}>
@@ -350,8 +359,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                   </span>
                 )}
                 {hasMissed && !item.done && (
-                  <span className={`${styles.missedBadge} ${missedDays >= 3 ? styles.missedBadgeDanger : ''}`}>
-                    ⚠ {missedDays} д.
+                  <span className={`${styles.missedBadge} ${missedLevel === 'danger' ? styles.missedBadgeDanger : ''}`}>
+                    Пропущено {missedDays} {getDayWord(missedDays)}
                   </span>
                 )}
               </div>
@@ -375,7 +384,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
 
         {showBar && (
           <div className={styles.progressTrack}>
-            <div className={styles.progressFill} style={{ width: `${checkPct}%`, background: barColor }} />
+            <div className={styles.progressFill} style={{ width: `${checkPct}%` }} />
           </div>
         )}
       </div>

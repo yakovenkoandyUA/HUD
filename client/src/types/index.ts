@@ -19,6 +19,7 @@ export interface Category {
   isDefault: boolean
   isActive: boolean
   order: number
+  parentId?: string | null
 }
 
 export interface Transaction {
@@ -125,6 +126,7 @@ export interface UnifiedTodo {
     amount: number
     unit: 'minutes' | 'hours' | 'days' | 'weeks'
   }
+  isPinned?: boolean
 }
 
 export interface RepeatConfig {

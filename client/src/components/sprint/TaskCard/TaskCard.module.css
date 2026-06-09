@@ -5,8 +5,6 @@
   overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
   border-top: 1px solid var(--border);
-  /* border-bottom: 1px solid var(--border); */
-  /* border-radius: 12px; */
   transition: background 0.15s;
 }
 
@@ -114,6 +112,16 @@
   gap: 8px;
 }
 
+.titleLine {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pinIcon { flex-shrink: 0; }
+
 .title {
   font-family: var(--font-body);
   font-size: 14px;
@@ -125,12 +133,20 @@
   white-space: nowrap;
 }
 
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.checklistBadge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--task-quest);
   flex-shrink: 0;
 }
+
+/* .meta { */
+  /* display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0; */
+/* } */
 
 .tagChip {
   font-family: var(--font-ui);
@@ -182,14 +198,18 @@
 
 .progressTrack {
   width: 100%;
-  height: 4px;
-  /* background: var(--border); */
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
   flex-shrink: 0;
 }
 
 .progressFill {
   height: 100%;
-  transition: width 0.3s ease, background 0.3s ease;
+  background: var(--task-quest);
+  border-radius: 1px;
+  transition: width 0.3s ease;
 }
 
 .dueDateBadge {
@@ -280,22 +300,22 @@
 .confirmYes:hover { opacity: 0.85; }
 
 /* ── Routine missed states ── */
-.itemWarn {
-  border-left: 2px solid var(--gold);
+.cardWarn {
+  border-color: var(--gold) !important;
 }
-.itemDanger {
-  border-left: 2px solid var(--negative);
+
+.cardDanger {
+  border-color: var(--accent) !important;
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg2));
 }
 
 .missedBadge {
-  display: flex;
-  align-items: center;
-  gap: 2px;
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--gold);
 }
+
 .missedBadgeDanger {
-  color: var(--negative);
+  color: var(--accent);
 }

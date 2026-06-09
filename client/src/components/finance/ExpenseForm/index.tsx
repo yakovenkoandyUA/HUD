@@ -10,8 +10,9 @@ import styles from './ExpenseForm.module.css'
 /**
  * ExpenseForm
  * -----------
- * Форма запису витрат з вибором категорії (іконка + колір з бекенду) та скануванням чеку.
- * Категорії завантажуються з /api/categories, активні (isActive: true) відображаються.
+ * Форма запису витрат з 4-колонковим гридом категорій (іконка + колір з бекенду).
+ * При виборі категорії з підкатегоріями — показує горизонтальні chips для деталізації.
+ * Фінальна категорія: selectedSubCategoryId ?? selectedCategoryId.
  *
  * Props:
  * @prop {(amount: number, description: string, category: string) => void} onExpense — колбек після підтвердження
@@ -27,12 +28,6 @@ const CameraIcon: React.FC = () => (
   </svg>
 )
 
-const PlusIcon: React.FC = () => (
-  <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-    <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-  </svg>
-)
-
 const CheckIcon: React.FC = () => (
   <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
     <path d="M2 7l3 3 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -40,61 +35,45 @@ const CheckIcon: React.FC = () => (
 )
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
-  const { categories, fetchCategories, addCategory } = useCategoryStore()
-  const [amount, setAmount]             = useState('')
-  const [description, setDescription]  = useState('')
-  const [selectedId, setSelectedId]     = useState<string | null>(null)
-  const [scannerFile, setScannerFile]   = useState<File | null>(null)
-
-  const [addingCat, setAddingCat]       = useState(false)
-  const [newCatValue, setNewCatValue]   = useState('')
-  const [savingCat, setSavingCat]       = useState(false)
-  const fileInputRef                    = useRef<HTMLInputElement>(null)
-  const newCatRef                       = useRef<HTMLInputElement>(null)
+  const { categories, fetchCategories } = useCategoryStore()
+  const [amount, setAmount]                     = useState('')
+  const [description, setDescription]          = useState('')
+  const [selectedCatId, setSelectedCatId]       = useState<string | null>(null)
+  const [selectedSubCatId, setSelectedSubCatId] = useState<string | null>(null)
+  const [scannerFile, setScannerFile]           = useState<File | null>(null)
+  const fileInputRef                            = useRef<HTMLInputElement>(null)
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
-  useEffect(() => {
-    if (addingCat) newCatRef.current?.focus()
-  }, [addingCat])
-
   const activeCategories = categories.filter(c => c.isActive)
-  const selectedCat      = activeCategories.find(c => c._id === selectedId) ?? null
-  const canSubmit        = !!amount && parseFloat(amount) > 0 && !!selectedId
+  const parentCats       = activeCategories.filter(c => !c.parentId)
+  const selectedCat      = parentCats.find(c => c._id === selectedCatId) ?? null
+  const subCats          = selectedCatId
+    ? activeCategories.filter(c => c.parentId === selectedCatId)
+    : []
+  const selectedSubCat   = subCats.find(c => c._id === selectedSubCatId) ?? null
+  const finalCat         = selectedSubCat ?? selectedCat
+  const canSubmit        = !!amount && parseFloat(amount) > 0 && !!finalCat
+
+  const handleCatSelect = (cat: Category) => {
+    if (selectedCatId === cat._id) {
+      setSelectedCatId(null)
+      setSelectedSubCatId(null)
+    } else {
+      setSelectedCatId(cat._id)
+      setSelectedSubCatId(null)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canSubmit || !selectedCat) return
-    const desc = description.trim() || selectedCat.name
-    onExpense(parseFloat(amount), desc, selectedCat.name.toLowerCase())
+    if (!canSubmit || !finalCat) return
+    const desc = description.trim() || finalCat.name
+    onExpense(parseFloat(amount), desc, finalCat.name.toLowerCase())
     setAmount('')
     setDescription('')
-    setSelectedId(null)
-  }
-
-  const handleCatSelect = (cat: Category) => {
-    setSelectedId(cat._id)
-    if (!description) setDescription('')
-  }
-
-  const saveNewCategory = async () => {
-    const name = newCatValue.trim()
-    if (!name || savingCat) return
-    setSavingCat(true)
-    try {
-      const r = await authFetch('/api/categories', {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      })
-      if (!r.ok) throw new Error()
-      const created: Category = await r.json()
-      addCategory(created)
-      setSelectedId(created._id)
-      setNewCatValue('')
-      setAddingCat(false)
-    } catch { /* ignore */ } finally {
-      setSavingCat(false)
-    }
+    setSelectedCatId(null)
+    setSelectedSubCatId(null)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,7 +115,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
         placeholder="0"
       />
 
-      {/* ── Category picker ── */}
+      {/* ── Category grid ── */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionLabel}>Категорія</span>
@@ -146,60 +125,39 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
           </button>
         </div>
 
-        <div className={styles.categoriesScroll}>
-          {activeCategories.map(cat => (
+        <div className={styles.catGrid}>
+          {parentCats.map(cat => (
             <button
               key={cat._id}
               type="button"
-              className={`${styles.catChip} ${selectedId === cat._id ? styles.catChipActive : ''}`}
+              className={`${styles.catCell} ${selectedCatId === cat._id ? styles.catCellActive : ''}`}
               style={{ '--cat-color': cat.color } as React.CSSProperties}
               onClick={() => handleCatSelect(cat)}
             >
-              <div className={styles.catChipIcon}>
+              <div className={styles.catCellIcon}>
                 <i className={`ti ${cat.icon}`} />
               </div>
-              <span className={styles.catChipName}>{cat.name}</span>
+              <span className={styles.catCellName}>{cat.name}</span>
             </button>
           ))}
-
-          {/* Add new category */}
-          {addingCat ? (
-            <div className={styles.newCatInline}>
-              <input
-                ref={newCatRef}
-                className={styles.newCatInput}
-                placeholder="Назва..."
-                value={newCatValue}
-                onChange={e => setNewCatValue(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') { e.preventDefault(); saveNewCategory() }
-                  if (e.key === 'Escape') { setAddingCat(false); setNewCatValue('') }
-                }}
-                onBlur={() => { if (!newCatValue.trim()) { setAddingCat(false) } }}
-                maxLength={24}
-              />
-              <button
-                type="button"
-                className={styles.newCatSaveBtn}
-                onClick={saveNewCategory}
-                disabled={savingCat || !newCatValue.trim()}
-              >
-                <CheckIcon />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className={styles.catChipAdd}
-              onClick={() => setAddingCat(true)}
-            >
-              <div className={styles.catChipAddIcon}>
-                <PlusIcon />
-              </div>
-              <span className={styles.catChipName}>Нова</span>
-            </button>
-          )}
         </div>
+
+        {/* ── Subcategory chips ── */}
+        {subCats.length > 0 && (
+          <div className={styles.subCatScroll}>
+            {subCats.map(sub => (
+              <button
+                key={sub._id}
+                type="button"
+                className={`${styles.subChip} ${selectedSubCatId === sub._id ? styles.subChipActive : ''}`}
+                style={{ '--cat-color': selectedCat?.color ?? '#9CA3AF' } as React.CSSProperties}
+                onClick={() => setSelectedSubCatId(prev => prev === sub._id ? null : sub._id)}
+              >
+                {sub.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Optional description ── */}
@@ -207,8 +165,28 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
         label={`Опис (необов'язково)`}
         value={description}
         onChange={setDescription}
-        placeholder={selectedCat?.name ?? 'Деталі...'}
+        placeholder={finalCat?.name ?? 'Деталі...'}
       />
+
+      {finalCat && (
+        <div className={styles.selectedInfo}>
+          <div
+            className={styles.selectedDot}
+            style={{ background: finalCat.parentId ? (selectedCat?.color ?? finalCat.color) : finalCat.color }}
+          />
+          <span>{finalCat.name}</span>
+          {selectedSubCat && selectedCat && (
+            <span className={styles.selectedParent}> · {selectedCat.name}</span>
+          )}
+          <button
+            type="button"
+            className={styles.selectedClear}
+            onClick={() => { setSelectedCatId(null); setSelectedSubCatId(null) }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <Button type="submit" fullWidth disabled={!canSubmit}>
         Записати витрату

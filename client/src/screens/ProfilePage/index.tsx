@@ -5,6 +5,7 @@ import { useUiStore } from '../../store/uiStore'
 import { useCategoryStore } from '../../store/categoryStore'
 import { authFetch } from '../../services/api'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
+import Modal from '../../components/ui/Modal'
 import type { Category } from '../../types'
 import styles from './ProfilePage.module.css'
 
@@ -12,8 +13,9 @@ import styles from './ProfilePage.module.css'
  * ProfilePage
  * -----------
  * Сторінка профілю: аватар, ім'я (inline edit) та управління категоріями витрат.
- * Категорії беруться з useCategoryStore: базові (isDefault) — тільки toggle isActive;
- * кастомні — toggle + видалення.
+ * Категорії відображаються 3-колонковим гридом (CatCard).
+ * Тап на CatCard → bottom sheet: toggle активності + управління підкатегоріями.
+ * При деактивації категорії з транзакціями — відкривається bottom sheet міграції.
  *
  * Props: none
  */
@@ -45,21 +47,10 @@ const PlusIcon: React.FC = () => (
   </svg>
 )
 
-// const TrashIcon: React.FC = () => (
-//   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-//     <path d="M2 3.5h10M5 3.5V2.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M3.5 3.5l.8 8h5.4l.8-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-//   </svg>
-// )
-
-// ── Toggle switch ─────────────────────────────────────────────────────────────
-interface ToggleProps { on: boolean; onToggle: () => void }
-const Toggle: React.FC<ToggleProps> = ({ on, onToggle }) => (
-  <button
-    type="button"
-    className={`${styles.toggle} ${on ? styles.toggleOn : ''}`}
-    onClick={onToggle}
-    aria-label={on ? 'Вимкнути' : 'Увімкнути'}
-  />
+const XSmallIcon: React.FC = () => (
+  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+    <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
 )
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -75,9 +66,18 @@ const ProfilePage: React.FC = () => {
   const [savingName, setSavingName]       = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
-  const [addingCat, setAddingCat]   = useState(false)
+  const [addingCat, setAddingCat]     = useState(false)
   const [newCatValue, setNewCatValue] = useState('')
-  const [savingCat, setSavingCat]   = useState(false)
+  const [savingCat, setSavingCat]     = useState(false)
+
+  const [migrateOpen, setMigrateOpen] = useState(false)
+  const [migrateFrom, setMigrateFrom] = useState<Category | null>(null)
+  const [migrating, setMigrating]     = useState(false)
+
+  const [subModalCat, setSubModalCat]   = useState<Category | null>(null)
+  const [newSubValue, setNewSubValue]   = useState('')
+  const [savingSub, setSavingSub]       = useState(false)
+  const subAddRef                       = useRef<HTMLInputElement>(null)
 
   const fileRef   = useRef<HTMLInputElement>(null)
   const nameRef   = useRef<HTMLInputElement>(null)
@@ -162,10 +162,87 @@ const ProfilePage: React.FC = () => {
     authFetch(`/api/categories/${id}`, { method: 'DELETE' }).catch(() => {})
   }, [removeCategory])
 
+  // ── Toggle with migration check ───────────────────────────────────────────
+
+  const optimisticToggle = useCallback(async (cat: Category) => {
+    toggleActive(cat._id)
+  }, [toggleActive])
+
+  const handleToggle = useCallback(async (cat: Category) => {
+    if (cat.isActive) {
+      // Check if any transactions use this category
+      try {
+        const res = await authFetch(`/api/transactions/count?category=${encodeURIComponent(cat.name)}`)
+        if (res.ok) {
+          const { count } = await res.json()
+          if (count > 0) {
+            setMigrateFrom(cat)
+            setMigrateOpen(true)
+            return
+          }
+        }
+      } catch { /* proceed with simple toggle on error */ }
+    }
+    optimisticToggle(cat)
+  }, [optimisticToggle])
+
+  const handleMigrate = useCallback(async (toName: string | null) => {
+    if (!migrateFrom) return
+    setMigrating(true)
+    try {
+      const res = await authFetch('/api/transactions/migrate-category', {
+        method: 'PATCH',
+        body: JSON.stringify({ from: migrateFrom.name, to: toName }),
+      })
+      if (!res.ok) throw new Error()
+      toggleActive(migrateFrom._id)
+      showToast('Транзакції перенесено', 'success')
+    } catch {
+      showToast('Помилка міграції', 'error')
+    } finally {
+      setMigrating(false)
+      setMigrateOpen(false)
+      setMigrateFrom(null)
+    }
+  }, [migrateFrom, toggleActive, showToast])
+
+  const handleAddSub = useCallback(async () => {
+    const name = newSubValue.trim()
+    if (!name || savingSub || !subModalCat) return
+    setSavingSub(true)
+    try {
+      const res = await authFetch('/api/categories', {
+        method: 'POST',
+        body: JSON.stringify({ name, parentId: subModalCat._id }),
+      })
+      if (res.ok) {
+        const created: Category = await res.json()
+        addCategory(created)
+        setNewSubValue('')
+        subAddRef.current?.focus()
+      }
+    } catch {
+      showToast('Помилка збереження', 'error')
+    } finally {
+      setSavingSub(false)
+    }
+  }, [newSubValue, savingSub, subModalCat, addCategory, showToast])
+
+  const handleDeleteSub = useCallback(async (subId: string) => {
+    removeCategory(subId)
+    authFetch(`/api/categories/${subId}`, { method: 'DELETE' }).catch(() => {})
+  }, [removeCategory])
+
   if (!activeProfile) return null
 
-  const defaultCats = categories.filter(c => c.isDefault)
-  const customCats  = categories.filter(c => !c.isDefault)
+  const topLevelCats     = categories.filter(c => !c.parentId)
+  const defaultCats      = topLevelCats.filter(c => c.isDefault)
+  const customCats       = topLevelCats.filter(c => !c.isDefault)
+  const activeCount      = topLevelCats.filter(c => c.isActive).length
+  const migrationTargets = topLevelCats.filter(c => c.isActive && c._id !== migrateFrom?._id)
+  const subCatsOfModal   = subModalCat
+    ? categories.filter(c => c.parentId === subModalCat._id)
+    : []
 
   return (
     <div className={styles.page}>
@@ -247,94 +324,255 @@ const ProfilePage: React.FC = () => {
 
         {/* ── Categories ── */}
         <section className={styles.section}>
-          <span className={styles.sectionTitle}>КАТЕГОРІЇ ВИТРАТ</span>
-
-          {/* Default categories */}
-          {defaultCats.map(cat => (
-            <CatRow
-              key={cat._id}
-              cat={cat}
-              onToggle={() => toggleActive(cat._id)}
-              onDelete={null}
-            />
-          ))}
-
-          {/* Custom categories */}
-          {customCats.map(cat => (
-            <CatRow
-              key={cat._id}
-              cat={cat}
-              onToggle={() => toggleActive(cat._id)}
-              onDelete={() => deleteCat(cat._id)}
-            />
-          ))}
-
-          {/* Add new */}
-          {addingCat ? (
-            <div className={styles.addCatRow}>
-              <input
-                ref={newCatRef}
-                type="text"
-                value={newCatValue}
-                onChange={e => setNewCatValue(e.target.value)}
-                onBlur={() => { if (!newCatValue.trim()) setAddingCat(false) }}
-                onKeyDown={handleNewCatKeyDown}
-                className={styles.addCatInput}
-                placeholder="Назва категорії"
-                maxLength={32}
-                disabled={savingCat}
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>БАЗОВІ КАТЕГОРІЇ</span>
+            <span className={styles.sectionCount}>{defaultCats.filter(c => c.isActive).length}/{defaultCats.length}</span>
+          </div>
+          <div className={styles.catGrid}>
+            {defaultCats.map(cat => (
+              <CatCard
+                key={cat._id}
+                cat={cat}
+                onToggle={() => setSubModalCat(cat)}
               />
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>МОЇ КАТЕГОРІЇ</span>
+            <span className={styles.sectionCount}>{customCats.filter(c => c.isActive).length}/{customCats.length}</span>
+          </div>
+          <div className={styles.catGrid}>
+            {customCats.map(cat => (
+              <CatCard
+                key={cat._id}
+                cat={cat}
+                onToggle={() => setSubModalCat(cat)}
+                onDelete={() => deleteCat(cat._id)}
+              />
+            ))}
+
+            {/* Add new */}
+            {addingCat ? (
+              <div className={styles.addCatCard}>
+                <input
+                  ref={newCatRef}
+                  type="text"
+                  value={newCatValue}
+                  onChange={e => setNewCatValue(e.target.value)}
+                  onBlur={() => { if (!newCatValue.trim()) setAddingCat(false) }}
+                  onKeyDown={handleNewCatKeyDown}
+                  className={styles.addCatInput}
+                  placeholder="Назва"
+                  maxLength={24}
+                  disabled={savingCat}
+                />
+                <button
+                  type="button"
+                  className={styles.addCatSaveBtn}
+                  onClick={saveNewCat}
+                  disabled={savingCat || !newCatValue.trim()}
+                >
+                  <CheckIcon />
+                </button>
+              </div>
+            ) : (
+              <button type="button" className={styles.addCatBtn} onClick={() => setAddingCat(true)}>
+                <PlusIcon />
+                <span>Нова</span>
+              </button>
+            )}
+          </div>
+        </section>
+
+        <div className={styles.totalActive}>
+          <span>{activeCount} активних категорій</span>
+        </div>
+      </div>
+
+      {/* ── SubCategory modal ── */}
+      <Modal
+        isOpen={!!subModalCat}
+        onClose={() => { setSubModalCat(null); setNewSubValue('') }}
+        title={subModalCat?.name ?? ''}
+        draggable
+      >
+        {subModalCat && (
+          <div className={styles.subModalBody}>
+            {/* Category header with toggle */}
+            <div
+              className={`${styles.subModalCatHeader} ${subModalCat.isActive ? styles.subModalCatHeaderActive : ''}`}
+              style={{ '--cat-color': subModalCat.color } as React.CSSProperties}
+            >
+              <div className={styles.subModalCatIcon}>
+                <i className={`ti ${subModalCat.icon}`} />
+              </div>
+              <span className={styles.subModalCatName}>{subModalCat.name}</span>
               <button
                 type="button"
-                className={styles.addCatSaveBtn}
-                onClick={saveNewCat}
-                disabled={savingCat || !newCatValue.trim()}
+                className={`${styles.subModalToggleBtn} ${subModalCat.isActive ? styles.subModalToggleBtnActive : ''}`}
+                style={{ '--cat-color': subModalCat.color } as React.CSSProperties}
+                onClick={() => {
+                  const cat = subModalCat
+                  if (!cat.isActive) {
+                    // Activating — just toggle, update local state
+                    optimisticToggle(cat)
+                    setSubModalCat(prev => prev ? { ...prev, isActive: true } : null)
+                  } else {
+                    // Deactivating — may trigger migration modal; close sub modal first
+                    setSubModalCat(null)
+                    setNewSubValue('')
+                    handleToggle(cat)
+                  }
+                }}
               >
-                <CheckIcon />
+                {subModalCat.isActive ? 'Активна' : 'Вимкнена'}
               </button>
             </div>
-          ) : (
-            <button type="button" className={styles.addCatBtn} onClick={() => setAddingCat(true)}>
-              <PlusIcon />
-              Додати категорію
-            </button>
-          )}
-        </section>
-      </div>
+
+            {/* Subcategories */}
+            <div className={styles.subModalSection}>
+              <span className={styles.subModalSectionTitle}>Підкатегорії</span>
+              {subCatsOfModal.length === 0 ? (
+                <p className={styles.subEmpty}>Немає підкатегорій</p>
+              ) : (
+                <div className={styles.subList}>
+                  {subCatsOfModal.map(sub => (
+                    <div key={sub._id} className={styles.subItem}>
+                      <span className={styles.subItemName}>{sub.name}</span>
+                      <button
+                        type="button"
+                        className={styles.subItemDel}
+                        onClick={() => handleDeleteSub(sub._id)}
+                        aria-label={`Видалити ${sub.name}`}
+                      >
+                        <XSmallIcon />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add sub */}
+              <div className={styles.subAddRow}>
+                <input
+                  ref={subAddRef}
+                  type="text"
+                  value={newSubValue}
+                  onChange={e => setNewSubValue(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddSub() } }}
+                  className={styles.subAddInput}
+                  placeholder="Нова підкатегорія..."
+                  maxLength={24}
+                  disabled={savingSub}
+                />
+                <button
+                  type="button"
+                  className={styles.subAddBtn}
+                  onClick={handleAddSub}
+                  disabled={savingSub || !newSubValue.trim()}
+                  aria-label="Додати підкатегорію"
+                >
+                  <PlusIcon />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── Migration sheet ── */}
+      <Modal
+        isOpen={migrateOpen}
+        onClose={() => { if (!migrating) { setMigrateOpen(false); setMigrateFrom(null) } }}
+        title="Перенести транзакції"
+        draggable
+      >
+        <div className={styles.migrateBody}>
+          <p className={styles.migrateHint}>
+            Категорія <strong>{migrateFrom?.name}</strong> використовується в транзакціях.
+            Перенести їх в:
+          </p>
+          <div className={styles.migrateList}>
+            {migrationTargets.map(cat => (
+              <button
+                key={cat._id}
+                type="button"
+                className={styles.migrateItem}
+                style={{ '--cat-color': cat.color } as React.CSSProperties}
+                onClick={() => handleMigrate(cat.name)}
+                disabled={migrating}
+              >
+                <div className={styles.migrateItemIcon}>
+                  <i className={`ti ${cat.icon}`} />
+                </div>
+                <span className={styles.migrateItemName}>{cat.name}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={styles.migrateNone}
+            onClick={() => handleMigrate(null)}
+            disabled={migrating}
+          >
+            Залишити без категорії
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }
 
-// ── Category row ──────────────────────────────────────────────────────────────
-interface CatRowProps {
+// ── CatCard ──────────────────────────────────────────────────────────────────
+
+/**
+ * CatCard
+ * -------
+ * Картка категорії витрат для 3-колонкового гриду.
+ * Активна — кольоровий border; неактивна — dimmed.
+ * Для кастомних категорій показує кнопку видалення.
+ *
+ * Props:
+ * @prop {Category}       cat       — категорія
+ * @prop {() => void}     onToggle  — toggle isActive
+ * @prop {() => void}     [onDelete]— видалити (тільки custom)
+ */
+interface CatCardProps {
   cat: Category
   onToggle: () => void
-  onDelete: (() => void) | null
+  onDelete?: () => void
 }
 
-const CatRow: React.FC<CatRowProps> = ({ cat, onToggle, onDelete }) => (
-  <div className={`${styles.catRow} ${!cat.isActive ? styles.catRowInactive : ''}`}>
-    <div
-      className={styles.catIconWrap}
-      style={{ '--cat-color': cat.color } as React.CSSProperties}
-    >
+const CatCard: React.FC<CatCardProps> = ({ cat, onToggle, onDelete }) => (
+  <div
+    className={`${styles.catCard} ${cat.isActive ? styles.catCardActive : styles.catCardInactive}`}
+    style={{ '--cat-color': cat.color } as React.CSSProperties}
+    onClick={onToggle}
+    role="button"
+    tabIndex={0}
+    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
+    aria-pressed={cat.isActive}
+    aria-label={cat.name}
+  >
+    {onDelete && (
+      <button
+        type="button"
+        className={styles.catCardDel}
+        onClick={e => { e.stopPropagation(); onDelete() }}
+        aria-label={`Видалити ${cat.name}`}
+      >
+        <XSmallIcon />
+      </button>
+    )}
+    <div className={styles.catCardIcon}>
       <i className={`ti ${cat.icon}`} />
     </div>
-    <span className={styles.catName}>{cat.name}</span>
-    <div className={styles.catActions}>
-      <Toggle on={cat.isActive} onToggle={onToggle} />
-      {onDelete && (
-        <button
-          type="button"
-          className={styles.deleteCatBtn}
-          onClick={onDelete}
-          aria-label={`Видалити ${cat.name}`}
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M2 3.5h10M5 3.5V2.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M3.5 3.5l.8 8h5.4l.8-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      )}
+    <span className={styles.catCardName}>{cat.name}</span>
+    <div className={styles.catCardCheck}>
+      {cat.isActive && <CheckIcon />}
     </div>
   </div>
 )

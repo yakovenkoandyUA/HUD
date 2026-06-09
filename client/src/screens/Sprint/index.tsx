@@ -16,22 +16,8 @@ import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
 
-type FilterType = 'all' | 'sprint' | 'shopping' | 'todo' | 'lesson'
-type StatusFilter = 'active' | 'done' | 'all'
-
-const TYPE_LABELS: Record<string, string> = {
-  all:      'ВСІ',
-  sprint:   'КВЕСТИ',
-  shopping: 'ПОКУПКИ',
-}
-
-const STATUS_OPTIONS = ['all', 'active', 'done'] as const
-
-const STATUS_LABELS: Record<string, string> = {
-  all:    'ВСІ',
-  active: 'АКТИВНІ',
-  done:   'ЗАВЕРШЕНІ',
-}
+type FilterType = 'all' | 'task' | 'shopping'
+type StatusFilter = 'active' | 'done'
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'normal', 'low']
 
@@ -151,12 +137,6 @@ function formatRoutineDue(dateStr: string): string {
 	return `${DAYS[target.getDay()]} ${target.getDate()} ${MONTHS[target.getMonth()]}`
 }
 
-const IconFilter: React.FC<{ active?: boolean }> = ({ active }) => (
-	<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">
-		<path d="M1 1.5h13M3.5 6.5h8M6 11.5h3" stroke="currentColor" strokeWidth={active ? 2 : 1.6} strokeLinecap="round" />
-	</svg>
-)
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const Sprint: React.FC = () => {
@@ -164,7 +144,6 @@ const Sprint: React.FC = () => {
 	const { showToast } = useUiStore()
 	const [filterType, setFilterType]     = useState<FilterType>('all')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
-	const [showFilter, setShowFilter]     = useState(false)
 
 	const [showAdd, setShowAdd]       = useState(false)
 	const [newType, setNewType]       = useState<UnifiedTodo['type']>('todo')
@@ -189,6 +168,7 @@ const Sprint: React.FC = () => {
 	const _td = new Date()
 	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
 	const [selectedDay, setSelectedDay] = useState(todayStr)
+	const [quickAddDate, setQuickAddDate] = useState<string | null>(null)
 	const [routinesOpen, setRoutinesOpen]     = useState(false)
 	const [completingRoutines, setCompletingRoutines] = useState<Set<string>>(new Set())
 	const [detailTaskId, setDetailTaskId]     = useState<string | null>(null)
@@ -224,18 +204,22 @@ const Sprint: React.FC = () => {
 
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
-		if (filterType !== 'all' && t.type !== filterType) return false
+		if (filterType === 'task'     && t.type === 'shopping') return false
+		if (filterType === 'shopping' && t.type !== 'shopping') return false
 		if (filterStatus === 'active') return !t.done
 		if (filterStatus === 'done')   return t.done
 		return true
 	})
 
 	const isDayToday = selectedDay === todayStr
-	const dayQuests  = isDayToday
+	const rawDayQuests = isDayToday
 		? filteredItems
 		: filteredItems.filter(t => t.type !== 'shopping' && t.dueDate === selectedDay)
-
-	const isFiltered = filterType !== 'all' || filterStatus !== 'active'
+	const dayQuests = [...rawDayQuests].sort((a, b) => {
+		if (a.isPinned && !b.isPinned) return -1
+		if (!a.isPinned && b.isPinned) return 1
+		return 0
+	})
 
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
@@ -266,6 +250,7 @@ const Sprint: React.FC = () => {
 		setChecklistOpen(false)
 		setChecklistItems([])
 		setChecklistInput('')
+		setQuickAddDate(null)
 	}
 
 	const addChecklistItem = () => {
@@ -296,6 +281,7 @@ const Sprint: React.FC = () => {
 			type:     newType,
 			title:    newTitle.trim(),
 			priority: newType === 'shopping' ? newPriority : undefined,
+			...(quickAddDate && newRepeat === 'none' ? { dueDate: quickAddDate } : {}),
 			...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
 			...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
 			...(newType === 'todo' && checklistItems.length > 0 ? {
@@ -312,6 +298,13 @@ const Sprint: React.FC = () => {
 		resetForm()
 		setShowAdd(false)
 		showToast('Справу додано', 'success')
+	}
+
+	const handleDayLongPress = (day: Date) => {
+		const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
+		setSelectedDay(iso)
+		setQuickAddDate(iso)
+		setShowAdd(true)
 	}
 
 	const handleRoutineToggle = (id: string) => {
@@ -336,6 +329,7 @@ const Sprint: React.FC = () => {
 					routineItems={routineItems}
 					selectedDay={selectedDay}
 					onDaySelect={(iso) => { if (iso !== selectedDay) setSelectedDay(iso) }}
+					onLongPress={handleDayLongPress}
 				/>
 
 				{/* ── Рутини accordion ── */}
@@ -344,7 +338,15 @@ const Sprint: React.FC = () => {
 						<button type="button" className={styles.routineHeader} onClick={() => setRoutinesOpen(v => !v)} aria-expanded={routinesOpen}>
 							<span className={styles.sectionTitle}>Рутини</span>
 							<div className={styles.sectionActions}>
-								<span className={styles.routineCount}>{dayRoutines.filter(t => !t.completionLog?.includes(selectedDay)).length}</span>
+								{(() => {
+									const done  = dayRoutines.filter(t => t.completionLog?.includes(selectedDay)).length
+									const total = dayRoutines.length
+									return (
+										<span className={`${styles.routineCount} ${done === total ? styles.routineCountDone : done > 0 ? styles.routineCountPartial : ''}`}>
+											{done}/{total}
+										</span>
+									)
+								})()}
 								<svg className={`${styles.routineArrow} ${routinesOpen ? styles.routineArrowOpen : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
 									<path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 								</svg>
@@ -383,41 +385,46 @@ const Sprint: React.FC = () => {
 					</div>
 				)}
 
-				{/* ── Section header ── */}
-				<div className={styles.sectionHeader}>
-					<span className={styles.sectionTitle}>Квести</span>
-					<div className={styles.sectionActions}>
-						<button
-							className={`${styles.filterBtn} ${isFiltered ? styles.filterBtnActive : ''}`}
-							onClick={() => setShowFilter(v => !v)}
-							aria-label="Фільтр"
-						>
-							<IconFilter active={isFiltered} />
-							{isFiltered && <span className={styles.filterDot} />}
-						</button>
-						<button className={styles.addBtn} onClick={() => setShowAdd(true)} aria-label="Додати">
-							<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-								<path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-							</svg>
-						</button>
-					</div>
+				{/* ── Quest header ── */}
+				<div className={styles.questHeader}>
+					<span className={styles.sectionTitle}>КВЕСТИ</span>
+					<button className={styles.addBtn} onClick={() => setShowAdd(true)} aria-label="Додати">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+							<line x1="12" y1="5" x2="12" y2="19"/>
+							<line x1="5" y1="12" x2="19" y2="12"/>
+						</svg>
+					</button>
 				</div>
 
-				{/* ── Active filter pills — shown when filters are non-default ── */}
-				{isFiltered && (
-					<div className={styles.activeFilters}>
-						{filterStatus !== 'active' && (
-							<button className={styles.filterPill} onClick={() => setFilterStatus('active')}>
-								{STATUS_LABELS[filterStatus]} <span>×</span>
-							</button>
-						)}
-						{filterType !== 'all' && (
-							<button className={styles.filterPill} onClick={() => setFilterType('all')}>
-								{TYPE_LABELS[filterType]} <span>×</span>
-							</button>
-						)}
+				{/* ── Filters row ── */}
+				<div className={styles.filtersRow}>
+					<div className={styles.typeFilter}>
+						{(['all', 'task', 'shopping'] as const).map((type, i) => (
+							<React.Fragment key={type}>
+								{i > 0 && <span className={styles.typeSep}>·</span>}
+								<button
+									className={`${styles.typeBtn} ${filterType === type ? styles.typeBtnActive : ''}`}
+									onClick={() => setFilterType(type)}
+								>
+									{type === 'all' ? 'ВСІ' : type === 'task' ? 'КВЕСТИ' : 'ПОКУПКИ'}
+								</button>
+							</React.Fragment>
+						))}
 					</div>
-				)}
+					<div className={styles.statusFilter}>
+						{(['active', 'done'] as const).map((status, i) => (
+							<React.Fragment key={status}>
+								{i > 0 && <span className={styles.typeSep}>·</span>}
+								<button
+									className={`${styles.typeBtn} ${filterStatus === status ? styles.typeBtnActive : ''}`}
+									onClick={() => setFilterStatus(status)}
+								>
+									{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
+								</button>
+							</React.Fragment>
+						))}
+					</div>
+				</div>
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
@@ -435,65 +442,6 @@ const Sprint: React.FC = () => {
 				</div>
 			</div>
 
-			{/* ── Filter bottom sheet ── */}
-			{showFilter && (
-				<>
-					<div className={styles.sheetOverlay} onClick={() => setShowFilter(false)} />
-					<div className={styles.sheet}>
-						<div className={styles.sheetHandle} />
-
-						<div className={styles.sheetSection}>
-							<p className={styles.sheetLabel}>ТИП</p>
-							<div className={styles.chipsRow}>
-								{(['all', 'sprint', 'shopping'] as FilterType[]).map(type => (
-									<button
-										key={type}
-										type="button"
-										className={`${styles.chip} ${filterType === type ? styles.chipActiveType : ''}`}
-										onClick={() => setFilterType(type)}
-									>
-										{TYPE_LABELS[type]}
-									</button>
-								))}
-							</div>
-						</div>
-
-						<div className={styles.sheetSection}>
-							<p className={styles.sheetLabel}>СТАТУС</p>
-							<div className={styles.chipsRow}>
-								{STATUS_OPTIONS.map(status => (
-									<button
-										key={status}
-										type="button"
-										className={`${styles.chip} ${filterStatus === status ? styles.chipActiveStatus : ''}`}
-										onClick={() => setFilterStatus(status)}
-									>
-										{STATUS_LABELS[status]}
-									</button>
-								))}
-							</div>
-						</div>
-
-						<div className={styles.sheetFooter}>
-							<button
-								type="button"
-								className={styles.btnReset}
-								onClick={() => { setFilterType('all'); setFilterStatus('active') }}
-							>
-								СКИНУТИ
-							</button>
-							<button
-								type="button"
-								className={styles.btnDone}
-								onClick={() => setShowFilter(false)}
-							>
-								ГОТОВО
-							</button>
-						</div>
-					</div>
-				</>
-			)}
-
 			{/* ── Add modal ── */}
 			<Modal
 				isOpen={showAdd}
@@ -504,6 +452,16 @@ const Sprint: React.FC = () => {
 				title="Нова справа"
 			>
 				<form onSubmit={handleAdd} className={styles.taskForm}>
+					{quickAddDate && (
+						<div className={styles.quickAddDateRow}>
+							<svg width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+								<rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+								<path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+							</svg>
+							<span>{formatStartDate(quickAddDate)}</span>
+							<button type="button" className={styles.quickAddDateClear} onClick={() => setQuickAddDate(null)} aria-label="Прибрати дату">×</button>
+						</div>
+					)}
 					<div className={styles.typeRow}>
 						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipTodo}     ${newType === 'todo' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('todo')}>
 							✓ Справа

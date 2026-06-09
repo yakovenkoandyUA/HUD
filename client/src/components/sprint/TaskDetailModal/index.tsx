@@ -113,7 +113,7 @@ function formatReminderLabel(reminder: { amount: number; unit: string }): string
 }
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
-  const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder } = useSprintStore()
+  const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem } = useSprintStore()
 
   // Keep a snapshot so the task content stays visible during the close animation
   const liveTask = items.find(i => i.id === taskId) ?? null
@@ -400,6 +400,18 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
             />
             {task.recipeImageUrl && (
               <img src={task.recipeImageUrl} className={styles.headerRecipeImg} alt="" />
+            )}
+            {!isRecurring(task) && task.type !== 'shopping' && (
+              <button
+                type="button"
+                className={`${styles.pinBtn} ${task.isPinned ? styles.pinBtnActive : ''}`}
+                onClick={() => pinItem(task.id)}
+                aria-label={task.isPinned ? 'Відкріпити' : 'Закріпити'}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={task.isPinned ? 'var(--gold)' : 'none'} stroke="currentColor" strokeWidth="2.2">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </button>
             )}
             <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">✕</button>
           </div>

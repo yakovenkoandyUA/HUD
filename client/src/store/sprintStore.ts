@@ -174,6 +174,7 @@ interface TodoState {
   addGlobalLabel: (label: SprintLabel) => void
   updateGlobalLabel: (id: string, updates: Partial<SprintLabel>) => void
   deleteGlobalLabel: (id: string) => void
+  pinItem: (id: string) => void
 }
 
 // ── Helper: build POST/PATCH body from UnifiedTodo ───────────────────────────
@@ -191,6 +192,7 @@ function taskBody(item: Partial<UnifiedTodo> & { type?: string }): Record<string
     ...(labelIds.length             && { labels:      labelIds }),
     ...(item.checklist !== undefined && { checklist:  item.checklist }),
     ...(item.reminder !== undefined && { reminder:    item.reminder ?? null }),
+    ...(item.isPinned !== undefined && { isPinned:   item.isPinned }),
     ...(item.repeat && item.repeat !== 'none' && {
       repeat:          item.repeat,
       nextDue:         item.nextDue,
@@ -278,6 +280,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           ...(t.repeatDay !== undefined && { repeatDay: t.repeatDay }),
           ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
           ...(t.completionHistory?.length && { completionLog: t.completionHistory }),
+          ...(t.isPinned && { isPinned: t.isPinned }),
         }
       })
 
@@ -617,6 +620,24 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     authFetch(`/api/sprint/tasks/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ done }),
+    }).catch(() => {})
+  },
+
+  // ── Pin ──────────────────────────────────────────────────────────────────
+
+  pinItem: (id) => {
+    const current = get().items.find(i => i.id === id)
+    const newPinned = !(current?.isPinned ?? false)
+    set(s => ({
+      items: s.items.map(i => ({
+        ...i,
+        isPinned: i.id === id ? newPinned : (newPinned ? false : i.isPinned),
+      }))
+    }))
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch(`/api/sprint/tasks/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isPinned: newPinned }),
     }).catch(() => {})
   },
 

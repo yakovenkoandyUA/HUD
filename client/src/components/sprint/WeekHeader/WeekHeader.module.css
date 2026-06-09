@@ -104,15 +104,14 @@
   opacity: 0.45;
 }
 
-/* ── Dots row ──────────────────────────────────────────────────── */
+/* ── Dot ───────────────────────────────────────────────────────── */
 
-.dotsRow {
+.dotWrap {
+  height: 6px;
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  height: 4px;
+  margin-top: 2px;
 }
 
 .dot {
@@ -123,6 +122,6 @@
   flex-shrink: 0;
 }
 
-.dotToday   { background: var(--gold); }
 .dotDone    { background: var(--second); }
-.dotPending { background: var(--gold); opacity: 0.45; }
+.dotPending { background: var(--gold); }
+.dotOverdue { background: var(--accent); }

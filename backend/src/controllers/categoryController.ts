@@ -8,7 +8,7 @@ export async function getAll(req: Request, res: Response): Promise<void> {
 }
 
 export async function create(req: Request, res: Response): Promise<void> {
-  const { name, icon, color } = req.body as { name?: string; icon?: string; color?: string }
+  const { name, icon, color, parentId } = req.body as { name?: string; icon?: string; color?: string; parentId?: string }
   if (!name?.trim()) { res.status(400).json({ error: 'name required' }); return }
   const item = await Category.create({
     name:   name.trim(),
@@ -17,6 +17,7 @@ export async function create(req: Request, res: Response): Promise<void> {
     userId: req.userId,
     isDefault: false,
     isActive:  true,
+    parentId:  parentId ?? null,
   })
   res.status(201).json(item)
 }
@@ -36,6 +37,7 @@ export async function update(req: Request, res: Response): Promise<void> {
     if (color?.trim()) cat.color = color.trim()
   }
   if (isActive !== undefined) cat.isActive = isActive
+  // parentId is intentionally not updatable — subcategory structure is set at creation
 
   await cat.save()
   res.json(cat)

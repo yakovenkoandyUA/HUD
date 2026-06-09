@@ -48,3 +48,20 @@ export async function remove(req: Request, res: Response): Promise<void> {
   await Transaction.findOneAndDelete({ _id: req.params.id, userId: req.userId })
   res.status(204).end()
 }
+
+export async function countByCategory(req: Request, res: Response): Promise<void> {
+  const { category } = req.query
+  if (!category || typeof category !== 'string') { res.status(400).json({ error: 'category required' }); return }
+  const count = await Transaction.countDocuments({ userId: req.userId, type: 'expense', category })
+  res.json({ count })
+}
+
+export async function migrateCategory(req: Request, res: Response): Promise<void> {
+  const { from, to } = req.body
+  if (!from) { res.status(400).json({ error: 'from required' }); return }
+  await Transaction.updateMany(
+    { userId: req.userId, category: from },
+    { $set: { category: to ?? '' } }
+  )
+  res.json({ ok: true })
+}

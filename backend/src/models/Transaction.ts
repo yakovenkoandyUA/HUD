@@ -6,18 +6,20 @@ export interface ITransaction extends Document {
   desc: string
   title?: string
   category: string
+  categoryId?: string | null
   date: string
   userId: string
 }
 
 const schema = new Schema<ITransaction>({
-  type:     { type: String, enum: ['income', 'expense'], required: true },
-  amount:   { type: Number, required: true },
-  desc:     { type: String, default: '' },
-  title:    { type: String, default: '' },
-  category: { type: String, default: '' },
-  date:     { type: String, required: true },
-  userId:   { type: String, required: true, index: true },
+  type:       { type: String, enum: ['income', 'expense'], required: true },
+  amount:     { type: Number, required: true },
+  desc:       { type: String, default: '' },
+  title:      { type: String, default: '' },
+  category:   { type: String, default: '' },
+  categoryId: { type: String, default: null },
+  date:       { type: String, required: true },
+  userId:     { type: String, required: true, index: true },
 }, { timestamps: true })
 
 schema.index({ userId: 1, date: -1 })
