@@ -7,39 +7,50 @@ import Modal from '../../components/ui/Modal'
 import AppHeader from '../../components/AppHeader'
 import { useRecipesStore } from '../../store/recipesStore'
 import { useUiStore } from '../../store/uiStore'
-// import { useSprintStore } from '../../store/sprintStore'
-import type { Recipe } from '../../types'
+import type { Recipe, RecipeScope } from '../../types'
 import styles from './Recipes.module.css'
 
 const GHOST_COUNT = 6
 
-// const BackIcon: React.FC = () => (
-//   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-//     <path d="M11 14L6 9l5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-//   </svg>
-// )
+const SCOPE_TABS: { value: RecipeScope; label: string }[] = [
+  { value: 'mine',   label: 'МОЄ'        },
+  { value: 'family', label: "СІМ'Я"      },
+  { value: 'all',    label: 'СПІЛЬНОТА'  },
+]
 
-// const CartIcon: React.FC = () => (
-//   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-//     <path d="M2 2h1.5l1.8 7.5h7l1.5-5H4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-//     <circle cx="6.5" cy="13" r="1" fill="currentColor"/>
-//     <circle cx="11.5" cy="13" r="1" fill="currentColor"/>
-//   </svg>
-// )
-
+/**
+ * Recipes
+ * -------
+ * Список рецептів з фільтром по scope (МОЄ / СІМ'Я / СПІЛЬНОТА),
+ * категоріях, тегах та wishlist.
+ */
 const Recipes: React.FC = () => {
   const navigate = useNavigate()
-  const { recipes, wishlistIds, fetchRecipes, addRecipe, updateRecipe } = useRecipesStore()
+  const { recipes, scope, wishlistIds, fetchRecipes, setScope, addRecipe, updateRecipe } = useRecipesStore()
   const { showToast } = useUiStore()
-  // const { items: sprintItems } = useSprintStore()
-  // const cartCount = sprintItems.filter(it => it.type === 'shopping' && !it.done && it.recipeId).length
-  const [showForm, setShowForm] = useState(false)
-  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
-  const [tab, setTab] = useState<'all' | 'saved'>('all')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [activeTag, setActiveTag] = useState<string | null>(null)
 
-  const baseRecipes = tab === 'saved'
+  const [showForm, setShowForm]       = useState(false)
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
+  const [savedOnly, setSavedOnly]     = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [activeTag, setActiveTag]     = useState<string | null>(null)
+
+  useEffect(() => { fetchRecipes() }, [fetchRecipes])
+
+  const handleScopeChange = (next: RecipeScope) => {
+    setSavedOnly(false)
+    setSelectedCategory(null)
+    setActiveTag(null)
+    setScope(next)
+  }
+
+  const handleSavedToggle = () => {
+    setSavedOnly(v => !v)
+    setSelectedCategory(null)
+    setActiveTag(null)
+  }
+
+  const baseRecipes = savedOnly
     ? recipes.filter(r => wishlistIds.includes(r.id))
     : recipes
 
@@ -48,14 +59,6 @@ const Recipes: React.FC = () => {
   const visibleRecipes = baseRecipes
     .filter(r => selectedCategory === null || (r.category ?? 'Інше') === selectedCategory)
     .filter(r => activeTag === null || (r.tags ?? []).includes(activeTag))
-
-  useEffect(() => { fetchRecipes() }, [fetchRecipes])
-
-  const handleTabChange = (next: 'all' | 'saved') => {
-    setTab(next)
-    setSelectedCategory(null)
-    setActiveTag(null)
-  }
 
   const handleSave = (data: Omit<Recipe, 'id'>) => {
     if (editingRecipe) {
@@ -69,108 +72,135 @@ const Recipes: React.FC = () => {
     setEditingRecipe(null)
   }
 
-  const sectionLabel = selectedCategory ?? (tab === 'saved' ? 'Збережені' : 'Всі рецепти')
+  const emptyMsg = recipes.length === 0
+    ? scope === 'mine'   ? 'Додай свій перший рецепт'
+    : scope === 'family' ? 'У сімейній книзі ще порожньо'
+    :                      'Спільнота поки мовчить'
+    : savedOnly ? 'Немає збережених'
+    : selectedCategory ? `Немає рецептів у «${selectedCategory}»`
+    : 'Нічого не знайдено'
 
   return (
-		<div className={styles.screen}>
-			<AppHeader />
+    <div className={styles.screen}>
+      <AppHeader />
 
-			<div className={styles.content}>
-				{/* ── Tabs ── */}
-				<div className={styles.tabs}>
-					<button type="button" className={`${styles.tabBtn} ${tab === 'all' ? styles.tabActive : ''}`} onClick={() => handleTabChange('all')}>
-						Всі {recipes.length > 0 && <span className={styles.tabCount}>{recipes.length}</span>}
-					</button>
-					<button type="button" className={`${styles.tabBtn} ${tab === 'saved' ? styles.tabActive : ''}`} onClick={() => handleTabChange('saved')}>
-						♡ Збережені {wishlistIds.length > 0 && <span className={styles.tabCount}>{wishlistIds.length}</span>}
-					</button>
-				</div>
+      <div className={styles.content}>
+        {/* ── Scope tabs ── */}
+        <div className={styles.scopeRow}>
+          <div className={styles.tabs}>
+            {SCOPE_TABS.map(t => (
+              <button
+                key={t.value}
+                type="button"
+                className={`${styles.tabBtn} ${scope === t.value && !savedOnly ? styles.tabActive : ''}`}
+                onClick={() => handleScopeChange(t.value)}
+              >
+                {t.label}
+                {t.value === scope && recipes.length > 0 && !savedOnly && (
+                  <span className={styles.tabCount}>{recipes.length}</span>
+                )}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={`${styles.savedBtn} ${savedOnly ? styles.savedBtnActive : ''}`}
+            onClick={handleSavedToggle}
+            aria-label="Збережені"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 13.5S2 9.5 2 5.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 14 5.5c0 4-6 8-6 8Z"
+                stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
+                fill={savedOnly ? 'currentColor' : 'none'}
+              />
+            </svg>
+            {wishlistIds.length > 0 && <span className={styles.savedCount}>{wishlistIds.length}</span>}
+          </button>
+        </div>
 
-				{/* ── Categories slider ── */}
-				{baseRecipes.length > 0 && (
-					<div className={styles.sliderWrap}>
-						<CategoriesSlider recipes={baseRecipes} selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
-					</div>
-				)}
+        {/* ── Categories slider ── */}
+        {baseRecipes.length > 0 && (
+          <div className={styles.sliderWrap}>
+            <CategoriesSlider
+              recipes={baseRecipes}
+              selectedCategory={selectedCategory}
+              onSelect={setSelectedCategory}
+            />
+          </div>
+        )}
 
-				{/* ── Tags filter ── */}
-				{availableTags.length > 0 && (
-					<div className={styles.tagsFilter}>
-						{availableTags.map(tag => (
-							<button
-								key={tag}
-								type="button"
-								className={`${styles.tagChip} ${activeTag === tag ? styles.tagChipActive : ''}`}
-								onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-							>
-								{tag}
-							</button>
-						))}
-					</div>
-				)}
+        {/* ── Tags filter ── */}
+        {availableTags.length > 0 && (
+          <div className={styles.tagsFilter}>
+            {availableTags.map(tag => (
+              <button
+                key={tag}
+                type="button"
+                className={`${styles.tagChip} ${activeTag === tag ? styles.tagChipActive : ''}`}
+                onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
 
-				{/* ── Section label ── */}
-				{baseRecipes.length > 0 && <p className={styles.sectionLabel}>{sectionLabel}</p>}
+        {/* ── Section label ── */}
+        {baseRecipes.length > 0 && (
+          <p className={styles.sectionLabel}>
+            {selectedCategory ?? (savedOnly ? 'Збережені' : SCOPE_TABS.find(t => t.value === scope)?.label)}
+          </p>
+        )}
 
-				{/* ── Grid ── */}
-				{visibleRecipes.length === 0 ? (
-					<div className={styles.ghostGrid}>
-						{Array.from({ length: GHOST_COUNT }).map((_, i) => (
-							<div key={i} className={styles.ghostCard}>
-								<div className={styles.ghostPhoto} />
-								<div className={styles.ghostLine} />
-								<div className={styles.ghostLineShort} />
-							</div>
-						))}
-						<div className={styles.ghostOverlay}>
-							<span className={styles.ghostMsg}>{recipes.length === 0 ? 'Додай свій перший рецепт' : tab === 'saved' ? 'Немає збережених' : `Немає рецептів у «${selectedCategory}»`}</span>
-						</div>
-					</div>
-				) : (
-					<div className={styles.recipeGrid}>
-						{visibleRecipes.map(r => (
-							<RecipeCard key={r.id} recipe={r} onClick={() => navigate(`/recipes/${r.id}`)} />
-						))}
-					</div>
-				)}
-			</div>
+        {/* ── Grid ── */}
+        {visibleRecipes.length === 0 ? (
+          <div className={styles.ghostGrid}>
+            {Array.from({ length: GHOST_COUNT }).map((_, i) => (
+              <div key={i} className={styles.ghostCard}>
+                <div className={styles.ghostPhoto} />
+                <div className={styles.ghostLine} />
+                <div className={styles.ghostLineShort} />
+              </div>
+            ))}
+            <div className={styles.ghostOverlay}>
+              <span className={styles.ghostMsg}>{emptyMsg}</span>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.recipeGrid}>
+            {visibleRecipes.map(r => (
+              <RecipeCard key={r.id} recipe={r} onClick={() => navigate(`/recipes/${r.id}`)} />
+            ))}
+          </div>
+        )}
+      </div>
 
-			{/* ── FAB ── */}
-			<button
-				type="button"
-				className={styles.fab}
-				onClick={() => {
-					setEditingRecipe(null)
-					setShowForm(true)
-				}}
-				aria-label="Додати рецепт"
-			>
-				<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-					<path d="M3 11h16M11 3v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-				</svg>
-			</button>
+      {/* ── FAB — тільки для власних рецептів ── */}
+      <button
+        type="button"
+        className={styles.fab}
+        onClick={() => { setEditingRecipe(null); setShowForm(true) }}
+        aria-label="Додати рецепт"
+      >
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M3 11h16M11 3v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
 
-			{/* ── Modals ── */}
-			<Modal
-				isOpen={showForm}
-				onClose={() => {
-					setShowForm(false)
-					setEditingRecipe(null)
-				}}
-				title={editingRecipe ? 'Редагувати рецепт' : 'Новий рецепт'}
-				draggable
-			>
-				<RecipeForm
-					initial={editingRecipe}
-					onSave={handleSave}
-					onCancel={() => {
-						setShowForm(false)
-						setEditingRecipe(null)
-					}}
-				/>
-			</Modal>
-		</div>
-	)
+      <Modal
+        isOpen={showForm}
+        onClose={() => { setShowForm(false); setEditingRecipe(null) }}
+        title={editingRecipe ? 'Редагувати рецепт' : 'Новий рецепт'}
+        draggable
+      >
+        <RecipeForm
+          initial={editingRecipe}
+          onSave={handleSave}
+          onCancel={() => { setShowForm(false); setEditingRecipe(null) }}
+        />
+      </Modal>
+    </div>
+  )
 }
 
 export default Recipes

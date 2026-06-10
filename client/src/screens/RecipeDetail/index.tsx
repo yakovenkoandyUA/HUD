@@ -154,23 +154,29 @@ const RecipeDetailScreen: React.FC = () => {
           <button type="button" className={styles.backBtn} onClick={() => navigate('/recipes')}>
             <BackIcon />
           </button>
-          <div className={styles.heroActions}>
-            <button type="button" className={styles.editBtn} onClick={() => setShowEdit(true)} aria-label="Редагувати">
-              <EditIcon />
-            </button>
-            <button type="button" className={`${styles.editBtn} ${confirmDelete ? styles.editBtnDanger : ''}`} onClick={() => setConfirmDelete(true)} aria-label="Видалити">
-              <TrashIcon />
-            </button>
-          </div>
+          {recipe.isOwn !== false && (
+            <div className={styles.heroActions}>
+              <button type="button" className={styles.editBtn} onClick={() => setShowEdit(true)} aria-label="Редагувати">
+                <EditIcon />
+              </button>
+              <button type="button" className={`${styles.editBtn} ${confirmDelete ? styles.editBtnDanger : ''}`} onClick={() => setConfirmDelete(true)} aria-label="Видалити">
+                <TrashIcon />
+              </button>
+            </div>
+          )}
           <div className={styles.authorRow}>
-            {activeProfile?.avatarUrl ? (
+            {recipe.isOwn === false && recipe.ownerAvatarUrl ? (
+              <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.authorAvatar} />
+            ) : recipe.isOwn === false ? (
+              <span className={styles.authorInitial}>{recipe.ownerName?.[0]?.toUpperCase() ?? '?'}</span>
+            ) : activeProfile?.avatarUrl ? (
               <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.authorAvatar} />
             ) : (
-              <span className={styles.authorInitial}>
-                {activeProfile?.name?.[0]?.toUpperCase() ?? 'A'}
-              </span>
+              <span className={styles.authorInitial}>{activeProfile?.name?.[0]?.toUpperCase() ?? 'A'}</span>
             )}
-            <span className={styles.authorName}>{activeProfile?.name ?? 'Автор'}</span>
+            <span className={styles.authorName}>
+              {recipe.isOwn === false ? (recipe.ownerName ?? 'Автор') : (activeProfile?.name ?? 'Автор')}
+            </span>
           </div>
         </div>
       ) : (
@@ -178,14 +184,16 @@ const RecipeDetailScreen: React.FC = () => {
           <button type="button" className={styles.backBtnDark} onClick={() => navigate('/recipes')}>
             <BackIcon />
           </button>
-          <div className={styles.noHeroActions}>
-            <button type="button" className={styles.editBtnDark} onClick={() => setShowEdit(true)} aria-label="Редагувати">
-              <EditIcon />
-            </button>
-            <button type="button" className={`${styles.editBtnDark} ${confirmDelete ? styles.editBtnDarkDanger : ''}`} onClick={() => setConfirmDelete(true)} aria-label="Видалити">
-              <TrashIcon />
-            </button>
-          </div>
+          {recipe.isOwn !== false && (
+            <div className={styles.noHeroActions}>
+              <button type="button" className={styles.editBtnDark} onClick={() => setShowEdit(true)} aria-label="Редагувати">
+                <EditIcon />
+              </button>
+              <button type="button" className={`${styles.editBtnDark} ${confirmDelete ? styles.editBtnDarkDanger : ''}`} onClick={() => setConfirmDelete(true)} aria-label="Видалити">
+                <TrashIcon />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

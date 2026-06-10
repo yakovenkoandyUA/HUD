@@ -141,6 +141,8 @@ export interface RepeatConfig {
 
 export type RecipeDifficulty = 'easy' | 'medium' | 'hard'
 
+export type RecipeScope = 'mine' | 'family' | 'all'
+
 export interface Recipe {
   id: string
   title: string
@@ -154,6 +156,9 @@ export interface Recipe {
   servings?: number
   equipment?: string[]
   tags?: string[]
+  ownerName?: string
+  ownerAvatarUrl?: string | null
+  isOwn?: boolean
 }
 
 export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'

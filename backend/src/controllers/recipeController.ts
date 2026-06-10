@@ -1,9 +1,47 @@
 import { Request, Response } from 'express'
 import Recipe from '../models/Recipe'
+import { User } from '../models/User'
+import { getAcceptedFamilyIds } from './familyController'
 
 export async function getAll(req: Request, res: Response): Promise<void> {
-  const items = await Recipe.find({ userId: req.userId }).sort({ createdAt: -1 })
-  res.json(items)
+  const scope = (req.query.scope as string) ?? 'mine'
+  const myId = req.userId as string
+
+  let filter: Record<string, unknown>
+  if (scope === 'mine') {
+    filter = { userId: myId }
+  } else if (scope === 'family') {
+    const familyIds = await getAcceptedFamilyIds(myId)
+    filter = { userId: { $in: [myId, ...familyIds] } }
+  } else {
+    filter = {}
+  }
+
+  const items = await Recipe.find(filter).sort({ createdAt: -1 })
+
+  if (scope === 'mine') {
+    res.json(items)
+    return
+  }
+
+  // Attach ownerName + ownerAvatarUrl + isOwn for family/all scopes
+  const ownerIds = [...new Set(items.map(r => r.userId))]
+  const owners = await User.find({ _id: { $in: ownerIds } }).select('_id username name avatarUrl')
+  const ownerMap = new Map<string, { name?: string; username?: string; avatarUrl?: string | null }>(
+    owners.map(u => [u._id.toString(), u.toObject()])
+  )
+
+  const result = items.map(r => {
+    const owner = ownerMap.get(r.userId)
+    return {
+      ...r.toObject(),
+      ownerName:     owner?.name ?? owner?.username ?? null,
+      ownerAvatarUrl: owner?.avatarUrl ?? null,
+      isOwn:         r.userId === myId,
+    }
+  })
+
+  res.json(result)
 }
 
 export async function create(req: Request, res: Response): Promise<void> {

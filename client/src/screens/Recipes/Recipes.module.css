@@ -98,11 +98,42 @@
   gap: 14px;
 }
 
-/* ── Tabs ─────────────────────────────────────────────────────── */
+/* ── Scope row ────────────────────────────────────────────────── */
+
+.scopeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 
 .tabs {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
+}
+
+.savedBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.savedBtn:hover { color: var(--accent); border-color: var(--accent-dim); }
+.savedBtnActive { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-soft); }
+
+.savedCount {
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
 .tabBtn {

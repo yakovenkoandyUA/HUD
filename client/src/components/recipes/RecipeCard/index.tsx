@@ -92,6 +92,15 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
             <span className={styles.metaTime}>⏱ {formatCookTime(recipe.cookTime)}</span>
           </div>
         )}
+
+        {recipe.isOwn === false && recipe.ownerName && (
+          <div className={styles.ownerBadge} title={recipe.ownerName}>
+            {recipe.ownerAvatarUrl
+              ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
+              : <span className={styles.ownerInitial}>{recipe.ownerName[0]}</span>
+            }
+          </div>
+        )}
       </div>
 
       <h3 className={styles.title}>{recipe.title}</h3>
