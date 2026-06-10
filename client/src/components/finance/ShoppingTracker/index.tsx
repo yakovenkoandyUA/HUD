@@ -105,7 +105,14 @@ const ShoppingTracker: React.FC<ShoppingTrackerProps> = ({ transactions }) => {
     grouped[cat].total += t.amount
     grouped[cat].count += 1
   }
-  const stats = Object.values(grouped).sort((a, b) => b.total - a.total)
+  const allStats = Object.values(grouped).sort((a, b) => b.total - a.total)
+  const TOP = 5
+  const stats = allStats.length > TOP
+    ? [
+        ...allStats.slice(0, TOP),
+        { category: 'інше (решта)', total: allStats.slice(TOP).reduce((s, c) => s + c.total, 0), count: allStats.slice(TOP).reduce((s, c) => s + c.count, 0) },
+      ]
+    : allStats
   const grandTotal = stats.reduce((s, c) => s + c.total, 0)
   const segments = grandTotal > 0 ? buildSegments(stats, grandTotal) : []
 
@@ -283,7 +290,6 @@ const ShoppingTracker: React.FC<ShoppingTrackerProps> = ({ transactions }) => {
                 />
                 <span className={styles.legendName}>
                   {CATEGORY_LABEL[seg.category] ?? seg.category}
-                  <span className={styles.legendCount}> {seg.count}×</span>
                 </span>
                 <span className={styles.legendAmt}>{fmt(seg.total)} ₴</span>
               </li>

@@ -117,12 +117,6 @@
   white-space: nowrap;
 }
 
-.legendCount {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text3);
-}
-
 .legendAmt {
   font-family: var(--font-mono);
   font-size: 12px;
