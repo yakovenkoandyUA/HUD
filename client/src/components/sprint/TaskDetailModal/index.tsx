@@ -145,6 +145,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [reminderUnit, setReminderUnit] = useState<ReminderUnit>('days')
   const [showConfirm, setShowConfirm]         = useState(false)
   const [animatingDone, setAnimatingDone]     = useState(false)
+  const [localAssignedTo, setLocalAssignedTo] = useState<string[]>([])
+  const assignDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isFirstAssignRender = useRef(true)
 
   const titleRef      = useRef<HTMLTextAreaElement>(null)
   const descRef       = useRef<HTMLTextAreaElement>(null)
@@ -207,8 +210,22 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitleDraft(task.title)
       setDescDraft(task.description ?? '')
+      setLocalAssignedTo(task.assignedTo ?? [])
+      isFirstAssignRender.current = true
     }
   }, [task?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Debounce assignedTo PATCH — fires 800ms after last chip toggle
+  useEffect(() => {
+    if (isFirstAssignRender.current) { isFirstAssignRender.current = false; return }
+    if (!task) return
+    if (assignDebounceRef.current) clearTimeout(assignDebounceRef.current)
+    assignDebounceRef.current = setTimeout(() => {
+      updateTask(task.id, { assignedTo: localAssignedTo })
+    }, 800)
+    return () => { if (assignDebounceRef.current) clearTimeout(assignDebounceRef.current) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localAssignedTo])
 
   useEffect(() => {
     const el = titleRef.current
@@ -659,18 +676,16 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                 <p className={styles.sectionLabel}>Виконавці</p>
                 <div className={styles.assigneeRow}>
                   {accepted.map(member => {
-                    const isAssigned = (task.assignedTo ?? []).includes(member.id)
+                    const isAssigned = localAssignedTo.includes(member.id)
                     return (
                       <button
                         key={member.id}
                         type="button"
                         className={`${styles.assigneeChip} ${isAssigned ? styles.assigneeChipOn : ''}`}
                         onClick={() => {
-                          const current = task.assignedTo ?? []
-                          const next = isAssigned
-                            ? current.filter(id => id !== member.id)
-                            : [...current, member.id]
-                          updateTask(task.id, { assignedTo: next })
+                          setLocalAssignedTo(prev =>
+                            isAssigned ? prev.filter(id => id !== member.id) : [...prev, member.id]
+                          )
                         }}
                       >
                         <span className={styles.assigneeAvatar}>
