@@ -6,12 +6,20 @@ import WatchlistGrid from '../../components/watchlist/WatchlistGrid'
 import WatchlistDetail from '../../components/watchlist/WatchlistDetail'
 import { useWatchlistStore } from '../../store/watchlistStore'
 import { useUiStore } from '../../store/uiStore'
+import { useFamilyStore } from '../../store/familyStore'
 import { getToken } from '../../services/api'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../types'
 import styles from './Watchlist.module.css'
 
 type Tab = WatchlistCategory
 type SortBy = 'newest' | 'oldest' | 'year_desc' | 'year_asc' | 'rating'
+type WatchScope = 'all' | 'together' | 'solo'
+
+const WATCH_SCOPE_OPTIONS: { key: WatchScope; label: string }[] = [
+  { key: 'all',      label: 'Всі'       },
+  { key: 'together', label: 'Разом'     },
+  { key: 'solo',     label: 'Особисте'  },
+]
 
 const STATUS_ORDER: Record<string, number> = {
   watching: 0,
@@ -31,9 +39,11 @@ const TABS: { id: Tab; label: string }[] = [
 const Watchlist: React.FC = () => {
   const { items, addItem, setStatus, setRating, updateItem, deleteItem, fetchWatchlist } = useWatchlistStore()
   const { showToast } = useUiStore()
+  const { accepted, fetchFamily } = useFamilyStore()
   const [tab, setTab] = useState<Tab>('movie')
   const [activeStatus, setActiveStatus] = useState<string | null>(null)
   const [activeGenres, setActiveGenres] = useState<Set<string>>(new Set())
+  const [watchScope, setWatchScope] = useState<WatchScope>('all')
 
   const [sortBy, setSortBy] = useState<SortBy>('newest')
   const [sortOpen, setSortOpen] = useState(false)
@@ -42,6 +52,7 @@ const Watchlist: React.FC = () => {
   useEffect(() => {
     if (!getToken()) return
     fetchWatchlist()
+    if (accepted.length === 0) fetchFamily()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [selected, setSelected] = useState<WatchlistItem | null>(null)
@@ -72,9 +83,13 @@ const Watchlist: React.FC = () => {
   }, [byCategoryItems])
 
   const tabItems = useMemo(() => {
-    const filtered = byCategoryItems.filter(
-      (i) => (!activeStatus || i.status === activeStatus) && (activeGenres.size === 0 || (i.genres ?? []).some(g => activeGenres.has(g)))
-    )
+    const filtered = byCategoryItems.filter(i => {
+      if (activeStatus && i.status !== activeStatus) return false
+      if (activeGenres.size > 0 && !(i.genres ?? []).some(g => activeGenres.has(g))) return false
+      if (watchScope === 'together') return (i.watchedWith ?? []).length > 0
+      if (watchScope === 'solo')     return (i.watchedWith ?? []).length === 0
+      return true
+    })
     const arr = [...filtered]
     const byStatus = (a: WatchlistItem, b: WatchlistItem) =>
       (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)
@@ -85,7 +100,7 @@ const Watchlist: React.FC = () => {
       case 'rating':    return arr.sort((a, b) => byStatus(a, b) || (b.rating ?? 0) - (a.rating ?? 0))
       default:          return arr.sort((a, b) => byStatus(a, b) || b.addedAt.localeCompare(a.addedAt))
     }
-  }, [byCategoryItems, activeStatus, activeGenres, sortBy])
+  }, [byCategoryItems, activeStatus, activeGenres, watchScope, sortBy])
 
   useEffect(() => {
     if (!sortOpen) return
@@ -230,7 +245,7 @@ const Watchlist: React.FC = () => {
           <div className={styles.sortWrap} ref={sortRef}>
             <button
               type="button"
-              className={`${styles.sortBtn} ${sortBy !== 'newest' ? styles.sortBtnActive : ''}`}
+              className={`${styles.sortBtn} ${sortBy !== 'newest' || watchScope !== 'all' ? styles.sortBtnActive : ''}`}
               onClick={() => setSortOpen((v) => !v)}
               aria-label="Сортування"
             >
@@ -240,6 +255,24 @@ const Watchlist: React.FC = () => {
             </button>
             {sortOpen && (
               <div className={styles.sortDropdown}>
+                {accepted.length > 0 && (
+                  <>
+                    <p className={styles.dropdownSection}>ПОКАЗАТИ</p>
+                    {WATCH_SCOPE_OPTIONS.map(o => (
+                      <button
+                        key={o.key}
+                        type="button"
+                        className={`${styles.sortOption} ${watchScope === o.key ? styles.sortOptionActive : ''}`}
+                        onClick={() => { setWatchScope(o.key); setSortOpen(false) }}
+                      >
+                        {watchScope === o.key && <span className={styles.sortOptionDot} />}
+                        {o.label}
+                      </button>
+                    ))}
+                    <div className={styles.dropdownDivider} />
+                  </>
+                )}
+                <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
                 {([
                   { key: 'newest',    label: 'Нові спочатку'  },
                   { key: 'oldest',    label: 'Старі спочатку' },
@@ -253,6 +286,7 @@ const Watchlist: React.FC = () => {
                     className={`${styles.sortOption} ${sortBy === o.key ? styles.sortOptionActive : ''}`}
                     onClick={() => { setSortBy(o.key); setSortOpen(false) }}
                   >
+                    {sortBy === o.key && <span className={styles.sortOptionDot} />}
                     {o.label}
                   </button>
                 ))}

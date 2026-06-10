@@ -531,7 +531,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                   <path d="M11 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.4"/>
                   <path d="M1 14s0-3 4-3M15 14s0-3-4-3M8 11c2.5 0 4 1.5 4 3H4c0-1.5 1.5-3 4-3Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                 </svg>
-                ДИВИЛИСЬ РАЗОМ
+                ДИВИТИСЬ РАЗОМ
               </p>
               <div className={styles.watchedWithList}>
                 {accepted.map(member => {

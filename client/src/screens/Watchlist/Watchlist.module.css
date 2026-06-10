@@ -166,7 +166,7 @@
 .searchWrap {
   padding: 12px 0 8px;
   position: relative;
-  z-index: 110;
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -217,7 +217,8 @@
 }
 
 .sortOption {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
   padding: 10px 14px;
   text-align: left;
@@ -237,4 +238,32 @@
 .sortOptionActive {
   color: var(--accent);
   font-weight: 600;
+}
+
+.dropdownSection {
+  padding: 8px 14px 4px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.sortOptionDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 8px;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
