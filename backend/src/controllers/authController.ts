@@ -7,10 +7,10 @@ import { Resend } from 'resend'
 import { User } from '../models/User'
 import { seedCategoriesForUser } from '../scripts/seedCategories'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const CLIENT_URL = process.env.CLIENT_URL ?? 'https://hud-murex.vercel.app'
 
 async function sendVerificationEmail(email: string, token: string, name: string): Promise<void> {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const link = `${CLIENT_URL}/verify?token=${token}`
   await resend.emails.send({
     from: 'MIMIR <noreply@mimir.app>',
