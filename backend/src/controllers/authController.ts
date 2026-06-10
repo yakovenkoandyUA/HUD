@@ -1,9 +1,27 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
+import { Resend } from 'resend'
 import { User } from '../models/User'
 import { seedCategoriesForUser } from '../scripts/seedCategories'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+const CLIENT_URL = process.env.CLIENT_URL ?? 'https://hud-murex.vercel.app'
+
+async function sendVerificationEmail(email: string, token: string, name: string): Promise<void> {
+  const link = `${CLIENT_URL}/verify?token=${token}`
+  await resend.emails.send({
+    from: 'MIMIR <noreply@mimir.app>',
+    to: email,
+    subject: 'Підтвердіть ваш email — MIMIR',
+    html: `<p>Привіт, ${name}!</p>
+<p>Натисніть посилання нижче, щоб підтвердити вашу адресу:</p>
+<p><a href="${link}">${link}</a></p>
+<p>Посилання дійсне 24 години.</p>`,
+  })
+}
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
@@ -16,6 +34,7 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   role: user.role,
   f1Enabled: user.f1Enabled ?? false,
   hasPIN: !!user.pinHash,
+  isVerified: user.isVerified ?? false,
 })
 
 function signToken(userId: string, role: string): string {
@@ -51,6 +70,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
+    const verificationToken = crypto.randomBytes(32).toString('hex')
     let user = await User.findOne({ username: username.trim() })
 
     if (user) {
@@ -61,6 +81,8 @@ export async function register(req: Request, res: Response): Promise<void> {
       // Claim existing account (migration)
       user.email = normalEmail
       user.passwordHash = passwordHash
+      user.isVerified = false
+      user.verificationToken = verificationToken
       if (!user.name || user.name === user.username) user.name = name.trim()
       await user.save()
     } else {
@@ -71,9 +93,16 @@ export async function register(req: Request, res: Response): Promise<void> {
         passwordHash,
         role: 'user',
         f1Enabled: false,
+        isVerified: false,
+        verificationToken,
       })
       const userId = (user._id as { toString(): string }).toString()
       await seedCategoriesForUser(userId)
+    }
+
+    // Send verification email (fire-and-forget — don't block registration)
+    if (process.env.RESEND_API_KEY) {
+      sendVerificationEmail(normalEmail, verificationToken, name.trim()).catch(() => {})
     }
 
     const userId = (user._id as { toString(): string }).toString()
@@ -222,6 +251,51 @@ export async function googleAuth(req: Request, res: Response): Promise<void> {
     res.json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
   } catch {
     res.status(401).json({ error: 'Invalid Google token' })
+  }
+}
+
+// ── Email verification ────────────────────────────────────────────────────────
+
+/** POST /auth/verify-email — { token } → marks isVerified = true */
+export async function verifyEmail(req: Request, res: Response): Promise<void> {
+  const { token } = req.body as { token?: string }
+  if (!token) {
+    res.status(400).json({ error: 'token required' })
+    return
+  }
+  try {
+    const user = await User.findOne({ verificationToken: token })
+    if (!user) {
+      res.status(400).json({ error: 'Невалідне або прострочене посилання' })
+      return
+    }
+    user.isVerified = true
+    user.verificationToken = null
+    await user.save()
+    res.json({ ok: true, user: USER_PUBLIC_FIELDS(user) })
+  } catch {
+    res.status(500).json({ error: 'Помилка верифікації' })
+  }
+}
+
+/** POST /auth/resend-verification — resends email for current user */
+export async function resendVerification(req: Request, res: Response): Promise<void> {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) { res.status(404).json({ error: 'User not found' }); return }
+    if (user.isVerified) { res.status(400).json({ error: 'Email вже підтверджено' }); return }
+    if (!user.email) { res.status(400).json({ error: 'Email не знайдено' }); return }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    user.verificationToken = verificationToken
+    await user.save()
+
+    if (process.env.RESEND_API_KEY) {
+      await sendVerificationEmail(user.email, verificationToken, user.name)
+    }
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Помилка відправки листа' })
   }
 }
 

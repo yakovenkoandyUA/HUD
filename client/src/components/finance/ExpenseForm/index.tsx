@@ -3,6 +3,8 @@ import Input from '../../ui/Input'
 import Button from '../../ui/Button'
 import ReceiptScanner from '../ReceiptScanner'
 import { useCategoryStore } from '../../../store/categoryStore'
+import { useProfileStore } from '../../../store/profileStore'
+import { useUiStore } from '../../../store/uiStore'
 import type { Category } from '../../../types'
 import styles from './ExpenseForm.module.css'
 
@@ -30,6 +32,8 @@ const CameraIcon: React.FC = () => (
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const { categories, fetchCategories } = useCategoryStore()
+  const { activeProfile } = useProfileStore()
+  const { showToast } = useUiStore()
   const [amount, setAmount]                     = useState('')
   const [description, setDescription]          = useState('')
   const [selectedCatId, setSelectedCatId]       = useState<string | null>(null)
@@ -113,7 +117,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionLabel}>Категорія</span>
-          <button type="button" className={styles.scanBtn} onClick={() => fileInputRef.current?.click()}>
+          <button type="button" className={styles.scanBtn} onClick={() => {
+              if (!activeProfile?.isVerified) { showToast('Підтвердіть email для сканування чеків', 'error'); return }
+              fileInputRef.current?.click()
+            }}>
             <CameraIcon />
             Сканувати чек
           </button>

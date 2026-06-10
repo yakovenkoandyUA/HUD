@@ -23,6 +23,7 @@ export interface Profile {
   role: 'admin' | 'user'
   f1Enabled: boolean
   hasPIN: boolean
+  isVerified: boolean
 }
 
 interface ProfileState {
@@ -43,6 +44,8 @@ interface ProfileState {
   verifyPIN: (pin: string) => Promise<boolean>
   lockWithPIN: () => void
   unlockPIN: () => void
+  verifyEmailToken: (token: string) => Promise<void>
+  resendVerification: () => Promise<void>
 }
 
 async function apiPost(path: string, body: unknown, token?: string | null) {
@@ -198,6 +201,27 @@ export const useProfileStore = create<ProfileState>()(
       },
 
       unlockPIN: () => set({ pinLocked: false }),
+
+      verifyEmailToken: async (token: string) => {
+        const res = await apiPost('/api/auth/verify-email', { token })
+        if (!res.ok) {
+          const data = await res.json() as { error?: string }
+          throw new Error(data.error ?? 'Помилка верифікації')
+        }
+        const { user } = await res.json() as { user: Profile }
+        const { activeProfile } = get()
+        if (activeProfile) set({ activeProfile: { ...activeProfile, isVerified: user.isVerified } })
+      },
+
+      resendVerification: async () => {
+        const { token } = get()
+        if (!token) throw new Error('Not authenticated')
+        const res = await apiPost('/api/auth/resend-verification', {}, token)
+        if (!res.ok) {
+          const data = await res.json() as { error?: string }
+          throw new Error(data.error ?? 'Помилка відправки')
+        }
+      },
     }),
     {
       name: 'profile-storage',

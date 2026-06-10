@@ -22,6 +22,8 @@
 | `/api/auth/google` | POST — { credential } Google ID token |
 | `/api/auth/pin` | PATCH (set), DELETE (remove) |
 | `/api/auth/pin/verify` | POST — { pin } |
+| `/api/auth/verify-email` | POST — { token } → isVerified = true |
+| `/api/auth/resend-verification` | POST (auth) → re-sends verification email |
 | `/api/auth/profiles` | GET — public list (legacy) |
 | `/api/auth/select` | POST — username-only (legacy) |
 | `/api/auth/me` | GET, PATCH |
@@ -70,6 +72,7 @@ ANTHROPIC_API_KEY=...
 GOOGLE_BOOKS_KEY=...
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
+RESEND_API_KEY=...
 ```
 
 ## Моделі — ключові поля
@@ -92,7 +95,7 @@ GOOGLE_CLIENT_SECRET=...
 
 **RecurringPayment** — `amountForeign` + `currency: 'UAH'|'USD'|'EUR'` для валютних платежів
 
-**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`. Існуючі профілі без email/password можна "заклеймити" через POST /auth/register з тим самим username.
+**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`. Існуючі профілі без email/password можна "заклеймити" через POST /auth/register з тим самим username. Email verification через Resend (RESEND_API_KEY env). Google OAuth users: isVerified=false до явного підтвердження (але вже мають валідний email).
 
 ## Зовнішні API (frontend)
 

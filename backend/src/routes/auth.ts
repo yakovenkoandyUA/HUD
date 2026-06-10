@@ -3,6 +3,7 @@ import {
   register, loginEmail, googleAuth,
   verify, me, getProfiles, selectProfile, updateMe,
   setPin, removePin, verifyPin,
+  verifyEmail, resendVerification,
 } from '../controllers/authController'
 import { requireAuth } from '../middleware/auth'
 
@@ -17,6 +18,10 @@ router.post('/google', googleAuth)
 router.patch('/pin', requireAuth, setPin)
 router.delete('/pin', requireAuth, removePin)
 router.post('/pin/verify', requireAuth, verifyPin)
+
+// Email verification
+router.post('/verify-email', verifyEmail)
+router.post('/resend-verification', requireAuth, resendVerification)
 
 // Session
 router.post('/verify', verify)

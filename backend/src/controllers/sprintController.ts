@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
 import { User } from '../models/User'
+import { sendPushToUser } from '../services/webpush'
 
 const TASK_ALLOWED = [
   'title', 'done', 'priority', 'category', 'labels', 'dueDate', 'description',
@@ -57,11 +58,29 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
   // Try SprintTask first (findOne+save for proper Mongoose middleware/strict handling)
   const task = await SprintTask.findOne({ _id: req.params.id, userId: req.userId })
   if (task) {
+    const prevAssigned: string[] = task.assignedTo ?? []
     TASK_ALLOWED.forEach(key => {
       if (req.body[key] !== undefined) (task as unknown as Record<string, unknown>)[key] = req.body[key]
     })
     await task.save()
     res.json(task)
+
+    // Notify newly assigned users (fire-and-forget)
+    const nextAssigned: string[] = task.assignedTo ?? []
+    const newlyAssigned = nextAssigned.filter(id => !prevAssigned.includes(id) && id !== req.userId)
+    if (newlyAssigned.length > 0) {
+      const assigner = await User.findById(req.userId, 'name username')
+      const assignerName = assigner?.name || assigner?.username || 'Хтось'
+      await Promise.allSettled(
+        newlyAssigned.map(uid =>
+          sendPushToUser(uid, {
+            title: '📋 Нова задача для тебе',
+            body: `${assignerName} призначив тебе на «${task.title}»`,
+            url: '/sprint',
+          })
+        )
+      )
+    }
     return
   }
 

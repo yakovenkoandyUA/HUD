@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import MimirLogo from '../../assets/mimir-logo.svg?react'
 import Modal from '../ui/Modal'
 import ThemePicker from '../layout/ThemePicker'
+import VerificationBanner from '../ui/VerificationBanner'
 import { useProfileStore } from '../../store/profileStore'
 import styles from './AppHeader.module.css'
 
@@ -61,6 +62,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
           </button>
         </div>
       </header>
+
+      <VerificationBanner />
 
       <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
         <ThemePicker onClose={() => setShowPicker(false)} />

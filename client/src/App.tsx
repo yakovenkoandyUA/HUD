@@ -24,6 +24,7 @@ import MemoryDetailScreen from './screens/MemoryDetail'
 import LoginScreen from './screens/Login'
 import RegisterScreen from './screens/Register'
 import ProfilePage from './screens/ProfilePage'
+import VerifyEmail from './screens/VerifyEmail'
 import './App.css'
 
 const PIN_TIMEOUT_MS = 5 * 60 * 1000 // 5 хв
@@ -51,6 +52,7 @@ const AnimatedRoutes: React.FC = () => {
         {/* Public */}
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/register" element={<RegisterScreen />} />
+        <Route path="/verify" element={<VerifyEmail />} />
         <Route path="/profile-select" element={<Navigate to="/login" replace />} />
 
         {/* Protected — require token */}
@@ -128,7 +130,7 @@ const App: React.FC = () => {
     () => sessionStorage.getItem('hud-city-splash') === '1'
   )
   const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
-  const { token } = useProfileStore()
+  const { token, activeProfile } = useProfileStore()
   const { setUpdateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe } = usePushSubscription()
 
@@ -148,7 +150,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (!token || !isSupported || isSubscribed) return
+    if (!token || !isSupported || isSubscribed || !activeProfile?.isVerified) return
     async function trySubscribe() {
       const perm = Notification.permission
       if (perm === 'denied') return
