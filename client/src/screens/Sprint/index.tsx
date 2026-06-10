@@ -705,7 +705,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 				</svg>
 			</div>
 
-			{weekExpanded && <WeekExpandedView weekStart={weekStart} routineItems={routineItems} onToggle={toggleItem} onOpenDetail={setDetailTaskId} onClose={() => setWeekExpanded(false)} />}
+			{weekExpanded && <WeekExpandedView weekStart={weekStart} routineItems={routineItems} allItems={items} onToggle={toggleItem} onOpenDetail={setDetailTaskId} onClose={() => setWeekExpanded(false)} initialDay={selectedDay} />}
 
 			{showLabelPicker && (
 				<LabelPicker

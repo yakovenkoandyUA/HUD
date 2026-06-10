@@ -70,7 +70,165 @@
 }
 .closeBtn:hover { color: var(--text); background: var(--surface2); }
 
-/* ── Timeline ── */
+/* ── Tabs ── */
+
+.tabs {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 0;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 11px 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tabBtn:hover { color: var(--text2); }
+.tabBtnActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Month view ── */
+
+.monthWrap {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  flex-shrink: 0;
+}
+
+.monthNavTitle {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.monthNavBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.monthNavBtn:hover { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-dim); }
+.monthNavBtn:active { opacity: 0.7; }
+
+.monthDowRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 8px 6px;
+  flex-shrink: 0;
+}
+
+.monthDow {
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 0 8px 20px;
+  flex: 1;
+}
+
+.gridDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px 5px;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+}
+.gridDay:active { opacity: 0.7; }
+
+.gridDayOther { opacity: 0.25; }
+
+.gridDayToday {
+  background: var(--gold-dim, rgba(201,162,39,0.12));
+}
+
+.gridDaySelected {
+  background: var(--accent-soft);
+  outline: 1px solid var(--accent-dim);
+}
+
+.gridDayNum {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1;
+}
+
+.gridDayToday .gridDayNum {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.gridDaySelected .gridDayNum { color: var(--accent); font-weight: 700; }
+
+.gridDots {
+  height: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.gridDot {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gridDotDone    { background: var(--second); }
+.gridDotPending { background: var(--gold); }
+.gridDotOverdue { background: var(--accent); }
+.gridDotTask    { background: var(--text3); }
+
+/* ── Timeline (week view) ── */
 
 .timeline {
   flex: 1;
@@ -192,8 +350,7 @@
   flex-shrink: 0;
 }
 
-.circlePurple { border-color: #7F77DD; color: #7F77DD; }
-.circleGold   { border-color: var(--accent); color: var(--accent); }
+.circleGold { border-color: var(--accent); color: var(--accent); }
 
 /* ── Task name ── */
 
@@ -241,17 +398,9 @@
   margin-bottom: 12px;
 }
 
-.statsRows {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+.statsRows { display: flex; flex-direction: column; gap: 10px; }
 
-.statsRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.statsRow { display: flex; align-items: center; gap: 10px; }
 
 .statsWeekLabel {
   font-family: var(--font-mono);
@@ -283,6 +432,55 @@
   width: 32px;
   flex-shrink: 0;
   text-align: right;
+}
+
+/* ── Day view ── */
+
+.dayViewHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.dayViewDate {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text2);
+  font-weight: 600;
+}
+
+.dayViewTodayBadge {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  background: var(--gold-dim, rgba(201,162,39,0.12));
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.daySectionLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin: 16px 16px 4px;
+  padding: 0;
+}
+
+.emptyDay {
+  padding: 32px 16px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text3);
+  text-align: center;
+  margin: 0;
 }
 
 /* ── Early-completion confirmation ── */
@@ -332,15 +530,9 @@
   line-height: 1.45;
 }
 
-.confirmTaskName {
-  color: var(--text2);
-}
+.confirmTaskName { color: var(--text2); }
 
-.confirmActions {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
+.confirmActions { display: flex; gap: 8px; margin-top: 4px; }
 
 .confirmCancel {
   flex: 1;
