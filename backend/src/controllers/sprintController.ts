@@ -11,7 +11,7 @@ const TASK_ALLOWED = [
 
 export async function getTasks(req: Request, res: Response): Promise<void> {
   const { week, year } = req.query
-  const filter: Record<string, unknown> = { userId: req.userId }
+  const filter: Record<string, unknown> = { userId: req.userId, deletedAt: null }
   if (week) filter.weekNumber = Number(week)
   if (year) filter.year = Number(year)
 
@@ -53,10 +53,34 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
 }
 
 export async function removeTask(req: Request, res: Response): Promise<void> {
-  const deleted = await SprintTask.findOneAndDelete({ _id: req.params.id, userId: req.userId })
-  if (!deleted) {
-    await TodoItem.findOneAndDelete({ _id: req.params.id, userId: req.userId })
+  // Soft-delete SprintTask — moves to trash for 24h
+  const task = await SprintTask.findOne({ _id: req.params.id, userId: req.userId, deletedAt: null })
+  if (task) {
+    task.deletedAt = new Date()
+    await task.save()
+    res.status(204).end()
+    return
   }
+  // Legacy TodoItem — hard delete
+  await TodoItem.findOneAndDelete({ _id: req.params.id, userId: req.userId })
+  res.status(204).end()
+}
+
+export async function getTrash(req: Request, res: Response): Promise<void> {
+  const tasks = await SprintTask.find({ userId: req.userId, deletedAt: { $ne: null } }).sort({ deletedAt: -1 })
+  res.json(tasks)
+}
+
+export async function restoreTask(req: Request, res: Response): Promise<void> {
+  const task = await SprintTask.findOne({ _id: req.params.id, userId: req.userId, deletedAt: { $ne: null } })
+  if (!task) { res.status(404).json({ error: 'Not found' }); return }
+  task.deletedAt = null
+  await task.save()
+  res.json(task)
+}
+
+export async function purgeTask(req: Request, res: Response): Promise<void> {
+  await SprintTask.findOneAndDelete({ _id: req.params.id, userId: req.userId, deletedAt: { $ne: null } })
   res.status(204).end()
 }
 

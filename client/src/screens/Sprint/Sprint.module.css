@@ -3,7 +3,7 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 16px calc(var(--bottom-nav-height, 64px));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -20,9 +20,6 @@
 /* ── Quest section header ─────────────────────────────────────────────────── */
 
 .questHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 4px 0 0;
 }
 
@@ -72,22 +69,26 @@
   pointer-events: none;
 }
 
-/* Add button */
-.addBtn {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: var(--bg3);
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height, 64px) + 16px);
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
   border: none;
-  color: var(--text2);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  flex-shrink: 0;
-  transition: color 0.15s, background 0.15s;
+  box-shadow: 0 4px 16px var(--accent-glow), 0 2px 6px rgba(0,0,0,0.4);
+  transition: transform 0.2s ease, box-shadow 0.15s ease;
+  z-index: 50;
 }
-.addBtn:hover { color: var(--accent); background: var(--accent-soft); }
+.fab:active { transform: scale(0.93); box-shadow: 0 2px 8px var(--accent-glow); }
 
 
 /* ── Empty states ─────────────────────────────────────────────────────────── */

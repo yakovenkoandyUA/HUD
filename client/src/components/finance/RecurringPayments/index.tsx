@@ -28,12 +28,15 @@ interface RecurringPayment {
   dayOfMonth: number
   category: string
   isActive: boolean
+  reminderDays?: number[]
+  lastConfirmedMonth?: string
 }
 
 interface FormState {
   name: string
   amount: string
   dayOfMonth: string
+  reminderDays: number[]
 }
 
 interface FormErrors {
@@ -42,7 +45,13 @@ interface FormErrors {
   dayOfMonth?: string
 }
 
-const EMPTY_FORM: FormState = { name: '', amount: '', dayOfMonth: '' }
+const EMPTY_FORM: FormState = { name: '', amount: '', dayOfMonth: '', reminderDays: [] }
+
+const REMINDER_OPTIONS = [
+  { days: 1,  label: 'За 1 день' },
+  { days: 2,  label: 'За 2 дні' },
+  { days: 7,  label: 'За тиждень' },
+]
 
 function validatePaymentForm(form: FormState): FormErrors {
   const errs: FormErrors = {}
@@ -123,8 +132,27 @@ function dayLabel(day: number): string {
   return `${day}-го`
 }
 
+const CACHE_KEY = 'hud-recurring-v1'
+const CACHE_TTL = 5 * 60 * 1000
+
+function readCache(): RecurringPayment[] | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY)
+    if (!raw) return null
+    const { data, ts } = JSON.parse(raw)
+    if (Date.now() - ts > CACHE_TTL) return null
+    return data
+  } catch { return null }
+}
+
+function writeCache(data: RecurringPayment[]) {
+  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })) } catch { /* quota */ }
+}
+
 const RecurringPayments: React.FC = () => {
-  const [payments, setPayments]         = useState<RecurringPayment[]>([])
+  const cached = readCache()
+  const [payments, setPayments]         = useState<RecurringPayment[]>(cached ?? [])
+  const [loading, setLoading]           = useState(!cached)
   const [showAll, setShowAll]           = useState(false)
   const [showAdd, setShowAdd]           = useState(false)
   const [editPayment, setEditPayment]   = useState<RecurringPayment | null>(null)
@@ -136,12 +164,19 @@ const RecurringPayments: React.FC = () => {
   const [rateLoading, setRateLoading]   = useState(false)
 
   const today = new Date().getDate()
+  const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
 
   const fetchPayments = useCallback(async () => {
     try {
       const r = await authFetch('/api/recurring')
-      if (r.ok) setPayments(await r.json())
-    } catch { /* silent */ }
+      if (r.ok) {
+        const data: RecurringPayment[] = await r.json()
+        setPayments(data)
+        writeCache(data)
+      }
+    } catch { /* silent */ } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
@@ -184,6 +219,7 @@ const RecurringPayments: React.FC = () => {
       name: editPayment.name,
       amount: String(editPayment.amountForeign ?? editPayment.amount),
       dayOfMonth: String(editPayment.dayOfMonth),
+      reminderDays: editPayment.reminderDays ?? [],
     })
     setCurrency(editPayment.currency ?? 'UAH')
     setErrors({})
@@ -214,6 +250,7 @@ const RecurringPayments: React.FC = () => {
           amountForeign: currency !== 'UAH' ? amountForeign : undefined,
           currency,
           dayOfMonth: day,
+          reminderDays: form.reminderDays,
         }),
       })
       if (r.ok) {
@@ -244,6 +281,7 @@ const RecurringPayments: React.FC = () => {
           amountForeign: currency !== 'UAH' ? amountForeign : null,
           currency,
           dayOfMonth: day,
+          reminderDays: form.reminderDays,
         }),
       })
       if (r.ok) {
@@ -273,6 +311,7 @@ const RecurringPayments: React.FC = () => {
       name: p.name,
       amount: String(p.amountForeign ?? p.amount),
       dayOfMonth: String(p.dayOfMonth),
+      reminderDays: p.reminderDays ?? [],
     })
     setCurrency(p.currency ?? 'UAH')
     setErrors({})
@@ -284,6 +323,17 @@ const RecurringPayments: React.FC = () => {
     setCurrency('UAH')
     setErrors({})
     setShowAdd(true)
+  }
+
+  const handleConfirm = async (p: RecurringPayment) => {
+    const r = await authFetch(`/api/recurring/${p._id}/confirm`, { method: 'POST' })
+    if (!r.ok) return
+    const { payment } = await r.json()
+    setPayments(prev => {
+      const updated = prev.map(x => x._id === p._id ? { ...x, lastConfirmedMonth: payment.lastConfirmedMonth } : x)
+      writeCache(updated)
+      return updated
+    })
   }
 
   const setField = (field: keyof FormState, value: string) => {
@@ -302,7 +352,7 @@ const RecurringPayments: React.FC = () => {
   const visiblePayments = showAll ? payments : payments.slice(0, VISIBLE_LIMIT)
   const hiddenCount = payments.length - VISIBLE_LIMIT
 
-  const formFields = (
+  const formFields = (nameAutoFocus = false) => (
     <>
       <div>
         <input
@@ -310,7 +360,7 @@ const RecurringPayments: React.FC = () => {
           placeholder="Назва (Spotify...)"
           value={form.name}
           onChange={e => setField('name', e.target.value)}
-          autoFocus
+          autoFocus={nameAutoFocus}
         />
         {errors.name && <span className="errorMsg">{errors.name}</span>}
       </div>
@@ -363,8 +413,48 @@ const RecurringPayments: React.FC = () => {
           }
         </div>
       )}
+
+      <div className={styles.reminderRow}>
+        <span className={styles.reminderLabel}>Нагадування</span>
+        <div className={styles.reminderChips}>
+          {REMINDER_OPTIONS.map(opt => (
+            <button
+              key={opt.days}
+              type="button"
+              className={`${styles.reminderChip} ${form.reminderDays.includes(opt.days) ? styles.reminderChipActive : ''}`}
+              onClick={() => setForm(f => ({
+                ...f,
+                reminderDays: f.reminderDays.includes(opt.days)
+                  ? f.reminderDays.filter(d => d !== opt.days)
+                  : [...f.reminderDays, opt.days],
+              }))}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
     </>
   )
+
+  if (loading && payments.length === 0) {
+    return (
+      <div className={styles.wrap}>
+        <div className={styles.header}>
+          <span className={styles.title}>Регулярні платежі</span>
+        </div>
+        <div className={styles.skeletonList}>
+          {[1, 2, 3].map(i => (
+            <div key={i} className={styles.skeletonRow}>
+              <div className={styles.skeletonIcon} />
+              <div className={styles.skeletonText} />
+              <div className={styles.skeletonAmount} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (payments.length === 0 && !showAdd) {
     return (
@@ -404,13 +494,16 @@ const RecurringPayments: React.FC = () => {
           const isToday = p.dayOfMonth === today
           const hasForeign = p.currency && p.currency !== 'UAH' && p.amountForeign
           const isRevealed = showAll && i >= VISIBLE_LIMIT
+          const showConfirm = isToday && p.isActive && p.lastConfirmedMonth !== currentMonth
           return (
-            <button
+            <div
               key={p._id}
-              type="button"
+              role="button"
+              tabIndex={0}
               className={`${styles.row} ${isToday ? styles.rowToday : ''} ${!p.isActive ? styles.rowInactive : ''} ${isRevealed ? styles.rowRevealed : ''}`}
               style={isRevealed ? { animationDelay: `${(i - VISIBLE_LIMIT) * 0.06}s` } : undefined}
               onClick={() => openEdit(p)}
+              onKeyDown={e => e.key === 'Enter' && openEdit(p)}
             >
               <ServiceLogo name={p.name} />
               <span className={styles.name}>{p.name}</span>
@@ -424,7 +517,16 @@ const RecurringPayments: React.FC = () => {
                   {fmt(p.amount)} ₴
                 </span>
               )}
-            </button>
+              {showConfirm && (
+                <button
+                  type="button"
+                  className={styles.confirmBtn}
+                  onClick={e => { e.stopPropagation(); handleConfirm(p) }}
+                >
+                  ✓ Списати
+                </button>
+              )}
+            </div>
           )
         })}
       </div>
@@ -442,7 +544,7 @@ const RecurringPayments: React.FC = () => {
 
       {showAdd && (
         <form className={styles.addForm} onSubmit={handleAdd}>
-          {formFields}
+          {formFields(true)}
           <div className={styles.formActions}>
             <button type="submit" className={styles.submitBtn} disabled={saving}>Додати</button>
             <button type="button" className={styles.cancelBtn} onClick={() => setShowAdd(false)}>Скасувати</button>
@@ -453,7 +555,7 @@ const RecurringPayments: React.FC = () => {
       <Modal isOpen={!!editPayment} onClose={() => setEditPayment(null)} title="Редагування" draggable>
         {/* Fix 1: key forces form DOM reset when switching between payments */}
         <form key={editPayment?._id ?? ''} onSubmit={handleEdit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {formFields}
+          {formFields(false)}
           <div className={styles.formActions}>
             <button type="submit" className={styles.submitBtn} disabled={saving}>Зберегти</button>
             <button type="button" className={styles.deleteBtn} onClick={handleDelete}>Видалити</button>

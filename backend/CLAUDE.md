@@ -1,11 +1,11 @@
-# Backend HUD
+# Backend — MIMIR
 
 ## Стек
 
 - **Node.js** + **Express** — REST API
 - **Mongoose** — ODM для MongoDB Atlas (512MB free tier)
-- **JWT** — авторизація (profile selection, без пароля), payload: `{ userId, role }`
-- **Web Push (VAPID)** — push-нотифікації на Android
+- **JWT** — авторизація, payload: `{ userId, role }`
+- **Web Push (VAPID)** — push-нотифікації
 - **Деплой** — Railway (`hud-production.up.railway.app`)
 
 ## Middleware
@@ -15,67 +15,86 @@
 
 ## API ендпоінти
 
-| Route | Метод | Опис |
-|-------|-------|------|
-| `/api/auth/profiles` | GET | Список профілів (публічний) |
-| `/api/auth/select` | POST | Видає JWT по username |
-| `/api/auth/me` | PATCH | Оновити avatarUrl |
-| `/api/transactions` | GET/POST | Транзакції |
-| `/api/transactions/:id` | DELETE | Видалити транзакцію |
-| `/api/sprint/tasks` | GET/POST | Sprint tasks |
-| `/api/sprint/tasks/:id` | PATCH/DELETE | Оновити/видалити task |
-| `/api/sprint/todos` | GET/POST | Todo items |
-| `/api/sprint/todos/:id` | PATCH/DELETE | Оновити/видалити todo |
-| `/api/goals` | GET/POST | Savings goals |
-| `/api/goals/:id` | PATCH/DELETE | Оновити/видалити goal |
-| `/api/watchlist` | GET/POST | Watchlist items |
-| `/api/watchlist/:id` | PATCH/DELETE | Оновити/видалити item |
-| `/api/lessons` | GET/POST | Уроки |
-| `/api/lessons/:id` | PUT/DELETE | Оновити/видалити урок |
-| `/api/recipes` | GET/POST | Особисті рецепти |
-| `/api/recipes/:id` | PUT/DELETE | Оновити/видалити рецепт |
-| `/api/memories` | GET/POST | Спогади |
-| `/api/memories/:id` | PATCH/DELETE | Оновити/видалити спогад |
-| `/api/memories/:id/photos` | POST | Додати фото до спогаду |
-| `/api/memories/:id/photos/:photoId` | PATCH/DELETE | Оновити/видалити фото |
-| `/api/categories` | GET/POST | Кастомні категорії транзакцій |
-| `/api/categories/:id` | PATCH/DELETE | Оновити/видалити категорію |
-| `/api/receipt/scan` | POST | Сканування чеку (Anthropic Vision API) |
-| `/api/recurring` | GET/POST | Регулярні платежі |
-| `/api/recurring/:id` | PATCH/DELETE | Оновити/видалити регулярний платіж |
-| `/api/shopping` | GET/POST | Список покупок |
-| `/api/shopping/:id` | PATCH/DELETE | Оновити/видалити елемент покупок |
-| `/api/labels` | GET/POST | Глобальні мітки спринту |
-| `/api/labels/:id` | PATCH/DELETE | Оновити/видалити мітку |
-| `/api/books/search` | GET | Пошук книг (Google Books proxy, кеш 10 хв) |
-| `/api/f1/predictions` | GET/POST/PATCH | F1 прогнози гонок |
+| Route | Методи |
+|-------|--------|
+| `/api/auth/profiles` | GET |
+| `/api/auth/select` | POST |
+| `/api/auth/me` | PATCH |
+| `/api/transactions` | GET, POST |
+| `/api/transactions/:id` | DELETE |
+| `/api/sprint/tasks` | GET, POST |
+| `/api/sprint/tasks/:id` | PATCH, DELETE |
+| `/api/sprint/todos` | GET, POST |
+| `/api/sprint/todos/:id` | PATCH, DELETE |
+| `/api/goals` | GET, POST |
+| `/api/goals/:id` | PATCH, DELETE |
+| `/api/watchlist` | GET, POST |
+| `/api/watchlist/:id` | PATCH, DELETE |
+| `/api/watchlist/:id/comments` | GET, POST |
+| `/api/recipes` | GET, POST |
+| `/api/recipes/:id` | PUT, DELETE |
+| `/api/memories` | GET, POST |
+| `/api/memories/:id` | PATCH, DELETE |
+| `/api/memories/:id/photos` | POST |
+| `/api/memories/:id/photos/:photoId` | PATCH, DELETE |
+| `/api/categories` | GET, POST |
+| `/api/categories/:id` | PATCH, DELETE |
+| `/api/receipt/scan` | POST |
+| `/api/recurring` | GET, POST |
+| `/api/recurring/:id` | PATCH, DELETE |
+| `/api/shopping` | GET, POST |
+| `/api/shopping/:id` | PATCH, DELETE |
+| `/api/labels` | GET, POST |
+| `/api/labels/:id` | PATCH, DELETE |
+| `/api/books/search` | GET (proxy Google Books, кеш 10хв) |
+| `/api/f1/predictions` | GET, POST, PATCH |
 
-## Env змінні
+## Env
 
 ```
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=...
 VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
-ANTHROPIC_API_KEY=...       # сканування чеків (ReceiptScanner)
-GOOGLE_BOOKS_KEY=...        # пошук книг (опціонально, знімає rate limit)
+ANTHROPIC_API_KEY=...
+GOOGLE_BOOKS_KEY=...
 ```
 
-## Сідинг бази
+## Моделі — ключові поля
+
+**Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, сортувати по `createdAt`
+
+**SprintTask** — `weekNumber + year` = ідентифікатор тижня, `type: 'task'|'routine'`, `repeat: string` для рутин
+
+**TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для рутин
+
+**WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchTogether: boolean`, `totalSeasons` з TMDB
+
+**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`
+
+**Plan** — `status: 'want'|'planned'|'visited'`; при 'visited' конвертується в Memory
+
+**SavingsGoal** — `deposits[]` subdocument array (amount + date), `currentAmount` = сума deposits
+
+**RecurringPayment** — `amountForeign` + `currency: 'UAH'|'USD'|'EUR'` для валютних платежів
+
+**User** — `role: 'admin'|'user'`, `f1Enabled: boolean`
+
+## Зовнішні API (frontend)
+
+| API | Використання |
+|-----|-------------|
+| **OpenF1 API** | F1 live data (`api.openf1.org/v1/`) |
+| **Jolpica API** | F1 залік команд/пілотів |
+| **TMDB API** | Пошук фільмів/серіалів |
+| **Google Books** | Пошук книг (через backend proxy) |
+| **Cloudinary** | Upload фото (unsigned preset) |
+| **Pollinations.ai** | Генерація постерів для спогадів |
+| **OpenStreetMap Nominatim** | Геокодування локацій для планів |
+
+## Сідинг
 
 ```bash
-railway run npx ts-node src/scripts/seedUsers.ts      # створює Котька + Коська
-railway run npx ts-node src/scripts/migrateToKotka.ts # мігрує дані зі старого userId:'admin'
+railway run npx ts-node src/scripts/seedUsers.ts
+railway run npx ts-node src/scripts/migrateToKotka.ts
 ```
-
-## Зовнішні API (використовуються на frontend)
-
-| API | Використання | Ключ |
-|-----|-------------|------|
-| **TheMealDB** | Блюдо тижня, рецепти | Не потрібен |
-| **NASA APOD** | Astronomy Picture of the Day | Безкоштовний (api.nasa.gov) |
-| **OpenF1 API** | Залік пілотів (`/v1/championship_drivers?year=2026`) | Не потрібен |
-| **Jolpica API** | Залік команд (`/ergast/f1/current/constructorstandings/`) | Не потрібен |
-| **TMDB API** | Пошук фільмів/серіалів у Watchlist | Потрібен ключ |
-| **Google Books** | Пошук книг у Watchlist (через backend proxy) | Опціонально (знімає rate limit) |
-| **Cloudinary** | Upload аватарів, постерів, фото | unsigned preset |

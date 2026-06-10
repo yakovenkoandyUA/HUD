@@ -127,6 +127,7 @@ export interface UnifiedTodo {
     unit: 'minutes' | 'hours' | 'days' | 'weeks'
   }
   isPinned?: boolean
+  deletedAt?: string
 }
 
 export interface RepeatConfig {

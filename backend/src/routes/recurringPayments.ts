@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import RecurringPayment from '../models/RecurringPayment'
+import Transaction from '../models/Transaction'
 import { requireAuth } from '../middleware/auth'
 
 const router = Router()
@@ -31,9 +32,10 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 })
 
 router.patch('/:id', async (req: Request, res: Response): Promise<void> => {
-  const { name, amount, amountForeign, currency, dayOfMonth, isActive } = req.body as {
+  const { name, amount, amountForeign, currency, dayOfMonth, isActive, reminderDays } = req.body as {
     name?: string; amount?: number; amountForeign?: number | null
     currency?: 'UAH' | 'USD' | 'EUR'; dayOfMonth?: number; isActive?: boolean
+    reminderDays?: number[]
   }
 
   const item = await RecurringPayment.findOne({ _id: req.params.id, userId: req.userId })
@@ -45,9 +47,38 @@ router.patch('/:id', async (req: Request, res: Response): Promise<void> => {
   if (currency      !== undefined) item.currency      = currency
   if (dayOfMonth    !== undefined) item.dayOfMonth    = dayOfMonth
   if (isActive      !== undefined) item.isActive      = isActive
+  if (reminderDays  !== undefined) item.reminderDays  = reminderDays
 
   await item.save()
   res.json(item)
+})
+
+router.post('/:id/confirm', async (req: Request, res: Response): Promise<void> => {
+  const item = await RecurringPayment.findOne({ _id: req.params.id, userId: req.userId })
+  if (!item) { res.status(404).json({ error: 'Not found' }); return }
+
+  const now = new Date()
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  if (item.lastConfirmedMonth === currentMonth) {
+    res.status(409).json({ error: 'Already confirmed this month' }); return
+  }
+
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const transaction = await Transaction.create({
+    userId:   req.userId,
+    type:     'expense',
+    amount:   item.amount,
+    category: item.category || item.name,
+    title:    item.name,
+    desc:     'Регулярний платіж',
+    date:     dateStr,
+  })
+
+  item.lastConfirmedMonth = currentMonth
+  await item.save()
+
+  res.json({ payment: item, transaction })
 })
 
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {

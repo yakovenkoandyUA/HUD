@@ -6,6 +6,7 @@ import { initWebPush } from './services/webpush'
 import { startF1Scheduler } from './services/f1Scheduler'
 import './jobs/pushJobs'
 import './jobs/routineReminders'
+import './jobs/recurringReminders'
 import { errorHandler } from './middleware/errorHandler'
 
 import authRoutes from './routes/auth'

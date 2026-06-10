@@ -151,18 +151,22 @@ interface ApiLabel { _id: string; title: string; color: string }
 
 interface TodoState {
   items: UnifiedTodo[]
+  trashItems: UnifiedTodo[]
   loading: boolean
   syncStatus: SyncStatus
   globalLabels: SprintLabel[]
 
   clearItems: () => void
   fetchItems: () => Promise<void>
+  fetchTrash: () => Promise<void>
   fetchLabels: () => Promise<void>
   migrateFromLocalStorage: () => Promise<void>
   addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>) => void
   addItems: (dataList: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>[]) => void
   toggleItem: (id: string, date?: string) => void
   deleteItem: (id: string) => void
+  restoreItem: (id: string) => void
+  purgeItem: (id: string) => void
   setSyncStatus: (s: SyncStatus) => void
   setReminder: (id: string, reminder: UnifiedTodo['reminder']) => void
   updateTask: (id: string, updates: Partial<UnifiedTodo>) => void
@@ -206,6 +210,7 @@ function taskBody(item: Partial<UnifiedTodo> & { type?: string }): Record<string
 
 export const useSprintStore = create<TodoState>((set, get) => ({
   items:        [],
+  trashItems:   [],
   loading:      false,
   syncStatus:   'local' as SyncStatus,
   globalLabels: DEFAULT_LABELS,
@@ -289,6 +294,52 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     } catch {
       set({ loading: false, syncStatus: 'error' })
     }
+  },
+
+  // ── Trash ─────────────────────────────────────────────────────────────────
+
+  fetchTrash: async () => {
+    if (!getToken() || !isBackendConfigured()) return
+    try {
+      const r = await authFetch('/api/sprint/tasks/trash')
+      if (!r.ok) return
+      const data: ApiTask[] = await r.json()
+      const { globalLabels } = get()
+      const mapped: UnifiedTodo[] = data.map(t => {
+        const labelObjs = (t.labels ?? [])
+          .map(id => globalLabels.find(l => l.id === id))
+          .filter((l): l is SprintLabel => l !== undefined)
+        return {
+          id:        t._id,
+          title:     t.title,
+          done:      t.done,
+          type:      (t.type as UnifiedTodo['type']) || 'todo',
+          createdAt: new Date().toISOString(),
+          ...(labelObjs.length && { labels: labelObjs }),
+          ...(t.dueDate && { dueDate: t.dueDate }),
+          deletedAt: (t as unknown as { deletedAt?: string }).deletedAt,
+        }
+      })
+      set({ trashItems: mapped })
+    } catch { /* offline */ }
+  },
+
+  restoreItem: (id) => {
+    const item = get().trashItems.find(i => i.id === id)
+    if (!item) return
+    set(s => ({
+      trashItems: s.trashItems.filter(i => i.id !== id),
+      items: sortItems([...s.items, { ...item, deletedAt: undefined }]),
+    }))
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch(`/api/sprint/tasks/${id}/restore`, { method: 'POST' })
+      .catch(() => get().fetchTrash())
+  },
+
+  purgeItem: (id) => {
+    set(s => ({ trashItems: s.trashItems.filter(i => i.id !== id) }))
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch(`/api/sprint/tasks/${id}/purge`, { method: 'DELETE' }).catch(() => {})
   },
 
   // ── Migration from localStorage ───────────────────────────────────────────

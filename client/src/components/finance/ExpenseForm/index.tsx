@@ -138,6 +138,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
 
         {/* ── Subcategory chips ── */}
         {subCats.length > 0 && (
+          <div>
+            <p className={styles.subCatLabel}>Уточнити</p>
           <div className={styles.subCatScroll}>
             {subCats.map(sub => (
               <button
@@ -150,6 +152,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
                 {sub.name}
               </button>
             ))}
+          </div>
           </div>
         )}
       </div>

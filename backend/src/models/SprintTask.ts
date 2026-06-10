@@ -23,6 +23,7 @@ export interface ISprintTask extends Document {
   reminder?: { amount: number; unit: string }
   checklist?: Array<{ id: string; title: string; done: boolean }>
   isPinned?: boolean
+  deletedAt?: Date | null
   userId: string
 }
 
@@ -49,6 +50,7 @@ const schema = new Schema<ISprintTask>({
   reminder:   { type: Schema.Types.Mixed, default: null },
   checklist:  { type: Schema.Types.Mixed, default: [] },
   isPinned:   { type: Boolean, default: false },
+  deletedAt:  { type: Date, default: null, index: { expireAfterSeconds: 86400 } },
   userId:     { type: String, required: true, index: true },
 }, { timestamps: true })
 

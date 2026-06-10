@@ -121,7 +121,7 @@ const GoalRow: React.FC<GoalRowProps> = ({
 }
 
 const GoalsList: React.FC = () => {
-  const { goals, fetchGoals, addGoal, contribute } = useGoalsStore()
+  const { goals, goalsLoading, fetchGoals, addGoal, contribute } = useGoalsStore()
   const [showAdd, setShowAdd]               = useState(false)
   const [newTitle, setNewTitle]             = useState('')
   const [newTarget, setNewTarget]           = useState('')
@@ -211,7 +211,19 @@ const GoalsList: React.FC = () => {
 				</form>
 			)}
 
-			{goals.length === 0 && !showAdd ? (
+			{goalsLoading && goals.length === 0 ? (
+				<div className={styles.skeletonList}>
+					{[1, 2].map(i => (
+						<div key={i} className={styles.skeletonRow}>
+							<div className={styles.skeletonRing} />
+							<div className={styles.skeletonInfo}>
+								<div className={styles.skeletonTitle} />
+								<div className={styles.skeletonBar} />
+							</div>
+						</div>
+					))}
+				</div>
+			) : goals.length === 0 && !showAdd ? (
 				<p className={styles.empty}>Немає цілей накопичення</p>
 			) : (
 				<div className={styles.list}>

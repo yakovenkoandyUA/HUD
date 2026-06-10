@@ -7,7 +7,7 @@ import CustomDatePicker from '../../ui/CustomDatePicker'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
 import { isRecurring } from '../../../utils/sprint'
-import type { ChecklistItem, RepeatConfig, UnifiedTodo } from '../../../types'
+import type { RepeatConfig, UnifiedTodo } from '../../../types'
 import styles from './TaskDetailModal.module.css'
 
 /**
@@ -117,6 +117,8 @@ function formatReminderLabel(reminder: { amount: number; unit: string }): string
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
   const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem } = useSprintStore()
 
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set())
+
   // Keep a snapshot so the task content stays visible during the close animation
   const liveTask = items.find(i => i.id === taskId) ?? null
   const lastTaskRef = useRef<UnifiedTodo | null>(null)
@@ -148,13 +150,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const onCloseRef  = useRef(onClose)
   useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
-  const [draggingIdx, setDraggingIdx]   = useState<number | null>(null)
-  const [dragOverIdx, setDragOverIdx]   = useState<number | null>(null)
-
   useModalHistory(onClose, !!taskId)
   useSwipeToDismiss(
     () => { dragClosing.current = true; onCloseRef.current() },
-    { enabled: mounted && !!taskId && draggingIdx === null, bodyRef, overlayRef, sheetRef },
+    { enabled: mounted && !!taskId, bodyRef, overlayRef, sheetRef },
   )
 
   const [titleDraft, setTitleDraft]     = useState('')
@@ -162,10 +161,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [checkInput, setCheckInput]     = useState('')
   const [editingIdx, setEditingIdx]     = useState<number | null>(null)
 
-  const dragIndexRef      = useRef<number | null>(null)
-  const dragOverIndexRef  = useRef<number | null>(null)
-  const checklistRef      = useRef<HTMLDivElement | null>(null)
-  const sortedChecklistRef = useRef<ChecklistItem[]>([])
 
   useEffect(() => {
     let raf: number | null = null
@@ -191,7 +186,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
         if (overlayRef.current) { overlayRef.current.style.opacity = '';   overlayRef.current.style.transition = '' }
       }
       dragClosing.current = false
-      timer = setTimeout(() => setMounted(false), 280)
+      timer = setTimeout(() => setMounted(false), 480)
     }
 
     return () => {
@@ -290,10 +285,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const recurring  = isRecurring(task)
   const checklist      = task.checklist ?? []
   const sortedChecklist = [...checklist].sort((a, b) => {
-    if (a.done === b.done) return 0
-    return a.done ? 1 : -1
+    const aDone = a.done && !animatingIds.has(a.id)
+    const bDone = b.done && !animatingIds.has(b.id)
+    if (aDone === bDone) return 0
+    return aDone ? 1 : -1
   })
-  sortedChecklistRef.current = sortedChecklist
   const checkDone    = checklist.filter(c => c.done).length
   const checkPct     = checklist.length > 0 ? Math.round((checkDone / checklist.length) * 100) : 0
   const progressColor = checkPct === 100 ? 'var(--positive)' : checkPct >= 50 ? 'var(--gold)' : 'var(--negative)'
@@ -309,59 +305,18 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     updateChecklist(task.id, newList)
   }
 
-  const startDrag = (idx: number, e: React.TouchEvent | React.MouseEvent) => {
-    e.stopPropagation()
-    dragIndexRef.current     = idx
-    dragOverIndexRef.current = idx
-    setDraggingIdx(idx)
-    setDragOverIdx(idx)
-
-    const getIdxFromY = (clientY: number): number => {
-      const el = checklistRef.current
-      if (!el) return idx
-      const items = el.querySelectorAll<HTMLElement>('[data-drag-idx]')
-      for (const item of items) {
-        const rect = item.getBoundingClientRect()
-        if (clientY < rect.bottom) return Number(item.dataset.dragIdx)
-      }
-      return sortedChecklistRef.current.length - 1
+  const handleCheckItemToggle = (itemId: string, currentlyDone: boolean) => {
+    toggleChecklistItem(task!.id, itemId)
+    if (!currentlyDone) {
+      setAnimatingIds(prev => new Set(prev).add(itemId))
+      setTimeout(() => {
+        setAnimatingIds(prev => {
+          const next = new Set(prev)
+          next.delete(itemId)
+          return next
+        })
+      }, 350)
     }
-
-    const onMove = (ev: TouchEvent | MouseEvent) => {
-      if ('touches' in ev) (ev as TouchEvent).preventDefault()
-      const clientY = 'touches' in ev ? (ev as TouchEvent).touches[0].clientY : (ev as MouseEvent).clientY
-      const newIdx = getIdxFromY(clientY)
-      if (newIdx !== dragOverIndexRef.current) {
-        dragOverIndexRef.current = newIdx
-        setDragOverIdx(newIdx)
-      }
-    }
-
-    const onEnd = () => {
-      document.removeEventListener('touchmove', onMove)
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('touchend',  onEnd)
-      document.removeEventListener('mouseup',   onEnd)
-
-      const from = dragIndexRef.current
-      const to   = dragOverIndexRef.current
-      dragIndexRef.current     = null
-      dragOverIndexRef.current = null
-      setDraggingIdx(null)
-      setDragOverIdx(null)
-
-      if (from !== null && to !== null && from !== to) {
-        const list = [...sortedChecklistRef.current]
-        const [moved] = list.splice(from, 1)
-        list.splice(to, 0, moved)
-        updateChecklist(task.id, list)
-      }
-    }
-
-    document.addEventListener('touchmove', onMove, { passive: false })
-    document.addEventListener('mousemove', onMove)
-    document.addEventListener('touchend',  onEnd, { passive: true })
-    document.addEventListener('mouseup',   onEnd)
   }
 
   return (
@@ -456,33 +411,21 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
           {/* ── Scrollable body ── */}
           <div ref={bodyRef} className={styles.body}>
 
-            {/* ── МІТКИ ── */}
-            <div className={styles.section}>
-              <p className={styles.sectionLabel}>Мітки</p>
-              <div className={styles.labelsRow}>
-                {taskLabels.map(l => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    className={styles.labelPill}
-                    style={{ background: l.color }}
-                    onClick={() => setLabelPickerOpen(true)}
-                  >
-                    {l.title && <span className={styles.labelPillText}>{l.title}</span>}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  className={styles.addLabelChip}
-                  onClick={() => setLabelPickerOpen(true)}
-                >
-                  + Додати
-                </button>
-              </div>
-            </div>
-
             {recurring ? (
               <>
+                {/* ── МІТКИ (рутини — окрема секція) ── */}
+                <div className={styles.section}>
+                  <p className={styles.sectionLabel}>Мітки</p>
+                  <div className={styles.labelsRow}>
+                    {taskLabels.map(l => (
+                      <button key={l.id} type="button" className={styles.labelPill} style={{ background: l.color }} onClick={() => setLabelPickerOpen(true)}>
+                        {l.title && <span className={styles.labelPillText}>{l.title}</span>}
+                      </button>
+                    ))}
+                    <button type="button" className={styles.addLabelChip} onClick={() => setLabelPickerOpen(true)}>+ Додати</button>
+                  </div>
+                </div>
+
                 {/* ── ПОВТОРЮВАНІСТЬ ── */}
                 <div className={styles.section}>
                   <p className={styles.sectionLabel}>Повторюваність</p>
@@ -554,34 +497,38 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               </>
             ) : (
               <>
-                {/* ── ДЕДЛАЙН ── */}
-                <div className={styles.section}>
-                  <p className={styles.sectionLabel}>Дедлайн</p>
-                  <div className={styles.deadlineRow}>
-                    <button type="button" className={styles.deadlineBtn} onClick={() => setShowDatePicker(true)}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={styles.deadlineIcon}>
-                        <rect x="1" y="2.5" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/>
-                        <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2"/>
-                        <path d="M4 1v3M10 1v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                      </svg>
-                      {task.dueDate ? (
-                        <span style={{ color: getDueDateColor(task.dueDate) }}>
-                          {formatDueDateHuman(task.dueDate)}
-                        </span>
-                      ) : (
-                        <span className={styles.deadlinePlaceholder}>Встановити дату</span>
-                      )}
-                    </button>
-                    {task.dueDate && (
-                      <button
-                        type="button"
-                        className={styles.deadlineClear}
-                        onClick={() => updateTask(task.id, { dueDate: undefined })}
-                        aria-label="Скинути дату"
-                      >
-                        ×
+                {/* ── МІТКИ + ДЕДЛАЙН ── */}
+                <div className={styles.metaRow}>
+                  <div className={styles.metaLeft}>
+                    <p className={styles.sectionLabel}>Мітки</p>
+                    <div className={styles.labelsRow}>
+                      {taskLabels.map(l => (
+                        <button key={l.id} type="button" className={styles.labelPill} style={{ background: l.color }} onClick={() => setLabelPickerOpen(true)}>
+                          {l.title && <span className={styles.labelPillText}>{l.title}</span>}
+                        </button>
+                      ))}
+                      <button type="button" className={styles.addLabelChip} onClick={() => setLabelPickerOpen(true)}>+ Додати</button>
+                    </div>
+                  </div>
+                  <div className={styles.metaRight}>
+                    <p className={styles.sectionLabel}>Дедлайн</p>
+                    <div className={styles.deadlineCompact}>
+                      <button type="button" className={styles.deadlineCompactBtn} onClick={() => setShowDatePicker(true)}>
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <rect x="1" y="2.5" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                          <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2"/>
+                          <path d="M4 1v3M10 1v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                        </svg>
+                        {task.dueDate ? (
+                          <span style={{ color: getDueDateColor(task.dueDate) }}>{formatDueDateHuman(task.dueDate)}</span>
+                        ) : (
+                          <span className={styles.deadlinePlaceholder}>Додати</span>
+                        )}
                       </button>
-                    )}
+                      {task.dueDate && (
+                        <button type="button" className={styles.deadlineClear} onClick={() => updateTask(task.id, { dueDate: undefined })} aria-label="Скинути дату">×</button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -595,47 +542,53 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                       </span>
                     )}
                   </div>
-                  {checklist.length > 0 && (
-                    <>
                       <div className={styles.checklistBar}>
                         <div
                           className={styles.checklistBarFill}
                           style={{ width: `${checkPct}%`, background: progressColor }}
                         />
                       </div>
-                      <div ref={checklistRef} className={styles.checklistList}>
+                  <div className={styles.checklistAdd}>
+                    <input
+                      ref={checkInputRef}
+                      className={styles.checklistInput}
+                      inputMode="text"
+                      enterKeyHint="done"
+                      value={checkInput}
+                      onChange={e => setCheckInput(e.target.value)}
+                      placeholder="Додати підзадачу..."
+                      onKeyUp={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddChecklist() } }}
+                    />
+                    <button
+                      type="button"
+                      className={styles.checklistAddBtn}
+                      onClick={handleAddChecklist}
+                      disabled={!checkInput.trim()}
+                    >
+                      Додати
+                    </button>
+                  </div>
+                  {checklist.length > 0 && (
+                    <>
+                      <div className={styles.checklistList}>
                         {sortedChecklist.map((item, idx) => {
-                          const isEditing = editingIdx === idx
-                          const isDone    = item.done
+                          const isEditing   = editingIdx === idx
+                          const isDone      = item.done
+                          const isAnimating = animatingIds.has(item.id)
                           return (
                             <div
                               key={item.id}
-                              data-drag-idx={idx}
                               className={[
                                 styles.checkItem,
-                                isDone          ? styles.checkItemDone     : '',
-                                draggingIdx === idx                        ? styles.checkItemDragging : '',
-                                dragOverIdx === idx && draggingIdx !== idx ? styles.checkItemDragOver : '',
+                                isDone      ? styles.checkItemDone      : '',
+                                isAnimating ? styles.checkItemAnimating : '',
                               ].filter(Boolean).join(' ')}
                             >
-                              {/* Drag handle */}
-                              <span
-                                className={styles.dragHandle}
-                                onMouseDown={e => startDrag(idx, e)}
-                                onTouchStart={e => startDrag(idx, e)}
-                                aria-hidden="true"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                                  <circle cx="4" cy="2.5" r="1"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="9.5" r="1"/>
-                                  <circle cx="8" cy="2.5" r="1"/><circle cx="8" cy="6" r="1"/><circle cx="8" cy="9.5" r="1"/>
-                                </svg>
-                              </span>
-
                               {/* Checkbox */}
                               <button
                                 type="button"
                                 className={`${styles.checkbox} ${isDone ? styles.checkboxDone : ''}`}
-                                onClick={() => toggleChecklistItem(task.id, item.id)}
+                                onClick={() => handleCheckItemToggle(item.id, isDone)}
                                 aria-label={isDone ? 'Позначити невиконаним' : 'Виконати'}
                               >
                                 {isDone && (
@@ -661,8 +614,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                                 />
                               ) : (
                                 <span
-                                  className={`${styles.checkItemText} ${isDone ? styles.checkItemTextDone : ''}`}
-                                  onClick={() => { if (!isDone && draggingIdx === null) setEditingIdx(idx) }}
+                                  className={[
+                                    styles.checkItemText,
+                                    isDone      ? styles.checkItemTextDone      : '',
+                                    isAnimating ? styles.checkItemTextAnimating : '',
+                                  ].filter(Boolean).join(' ')}
+                                  onClick={() => { if (!isDone) setEditingIdx(idx) }}
                                 >
                                   {item.title}
                                 </span>
@@ -685,26 +642,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                       </div>
                     </>
                   )}
-                  <div className={styles.checklistAdd}>
-                    <input
-                      ref={checkInputRef}
-                      className={styles.checklistInput}
-                      inputMode="text"
-                      enterKeyHint="done"
-                      value={checkInput}
-                      onChange={e => setCheckInput(e.target.value)}
-                      placeholder="Додати підзадачу..."
-                      onKeyUp={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddChecklist() } }}
-                    />
-                    <button
-                      type="button"
-                      className={styles.checklistAddBtn}
-                      onClick={handleAddChecklist}
-                      disabled={!checkInput.trim()}
-                    >
-                      Додати
-                    </button>
-                  </div>
                 </div>
               </>
             )}
@@ -722,6 +659,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                 rows={2}
               />
             </div>
+
+            {/* ── Close button ── */}
+            <button type="button" className={styles.closeBottomBtn} onClick={onClose}>
+              Закрити
+            </button>
 
           </div>
         </div>
