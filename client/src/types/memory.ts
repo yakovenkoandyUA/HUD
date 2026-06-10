@@ -25,4 +25,6 @@ export interface Memory {
   tags?: string[]
   photos: MemoryPhoto[]
   createdAt: string
+  ownerName?: string
+  ownerAvatarUrl?: string | null
 }

@@ -57,11 +57,19 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onClick }) => {
             {formatMemoryDate(memory.date)}
           </span>
         </div>
-        {memory.photos.length > 0 && (
-          <span className={styles.photoCount}>
-            🖼 {memory.photos.length}
-          </span>
-        )}
+        <div className={styles.bottom}>
+          {memory.photos.length > 0 && (
+            <span className={styles.photoCount}>🖼 {memory.photos.length}</span>
+          )}
+          {memory.ownerName && (
+            <div className={styles.ownerBadge} title={memory.ownerName}>
+              {memory.ownerAvatarUrl
+                ? <img src={memory.ownerAvatarUrl} alt={memory.ownerName} className={styles.ownerAvatar} />
+                : <span className={styles.ownerInitial}>{memory.ownerName[0]}</span>
+              }
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -761,3 +761,208 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* ── Family section ── */
+.familyPending {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.familyList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.familyPendingSent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  opacity: 0.7;
+}
+
+.familyRequest,
+.familyMember {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.familyAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.familyAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.familyAvatarInitial {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.familyInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.familyName {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.familyUsername {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.familyTag {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.familyRequestBtns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.familyAcceptBtn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.familyAcceptBtn:hover { background: var(--accent); color: var(--bg); }
+
+.familyRejectBtn {
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text3);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.familyRejectBtn:hover { border-color: var(--negative); color: var(--negative); }
+
+.familyRemoveBtn {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.familyRemoveBtn:hover { color: var(--negative); border-color: var(--negative); }
+
+.familySearchWrap {
+  position: relative;
+  margin-top: 4px;
+}
+
+.familySearchInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.familySearchInput::placeholder { color: var(--text3); }
+.familySearchInput:focus { border-color: var(--accent); }
+
+.familySearchResults {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 20;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.familySearchItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.familySearchItem:last-child { border-bottom: none; }
+.familySearchItem:hover { background: var(--surface); }
+.familySearchItem:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.familyAddIcon {
+  margin-left: auto;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+}
+
+.familyNoResults {
+  margin: 8px 0 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+}

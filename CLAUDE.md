@@ -28,11 +28,17 @@
 
 ## Автентифікація
 
-Мультипрофіль без пароля (тимчасово — до Фази 1):
+Email + password (bcrypt) + Google OAuth (GIS). JWT 30 днів → `profileStore` → `localStorage` (`profile-storage`).
+
 - **Котька** — `role: 'admin'` (F1 екран, повний доступ)
 - **Коська** — `role: 'user'` (без F1)
 
-Flow: `/profile-select` → `POST /api/auth/select { username }` → JWT 30 днів → `profileStore` → `localStorage` (`profile-storage`).
+Flow: `/login` → `POST /api/auth/login { email, password }` або Google → JWT → `profileStore`.
+Реєстрація: `POST /api/auth/register { email, password, name, username }` — якщо username вже існує без email, прикріплює credentials до існуючого профілю.
+Google OAuth: GIS `renderButton` → callback → `POST /api/auth/google { credential }` → JWT.
+
+**PIN-lock:** 4-цифровий PIN опціонально (bcrypt). Після 5 хв неактивності — `PinLock` overlay поверх усього app. `pinLocked` в store НЕ персистується.
+
 Всі запити через `authFetch` з Bearer токеном. Маршрути захищені `ProtectedRoute` / `AdminRoute`.
 
 **Env:**
@@ -42,7 +48,26 @@ VITE_API_URL=https://hud-production.up.railway.app
 VITE_CLOUDINARY_CLOUD_NAME=mimir-hud
 VITE_CLOUDINARY_UPLOAD_PRESET=mimirorg
 VITE_VAPID_PUBLIC_KEY=...
+VITE_GOOGLE_CLIENT_ID=1067623625292-c8jdgeea4q3ub1nf0bp0jgg5vf1nmigi.apps.googleusercontent.com
 ```
+
+## Сімейні профілі (FamilyLink)
+
+Модель `FamilyLink`: `requester`, `recipient`, `status: 'pending'|'accepted'`.
+
+**Ізоляція даних:**
+- **Спогади** — `userId: { $in: [myId, ...familyIds] }` — всі спогади сімейних профілів
+- **Watchlist** — `$or: [{userId: myId}, {userId: {$in: familyIds}, watchedWith: myId}]` — тільки позначені `watchedWith`
+
+**WatchlistItem.watchedWith** — `string[]` userId — замінив `watchTogether: boolean`.
+Відображається як family member checkboxes в WatchlistDetail (ДИВИЛИСЬ РАЗОМ).
+
+**MemoryCard** — показує аватар/ініціал власника якщо `ownerName` є (сімейна пам'ять).
+
+**API:** `GET|POST /api/family`, `GET /api/family/search`, `POST /api/family/request`,
+`POST /api/family/accept/:linkId`, `DELETE /api/family/:linkId`.
+
+**UI:** Секція СІМ'Я в ProfilePage — пошук, pending/accepted відображення.
 
 ---
 
@@ -83,10 +108,8 @@ Service Worker підключений до Web Push (VAPID) — підписка
 - Claude повертає JSON рецепту → форма з заповненими полями
 
 ### Sprint: асайн профілів до задач
-- `linkedProfiles: ObjectId[]` в модель User
-- `assignedTo: ObjectId[]` в задачах
-- `POST /api/profiles/link { targetUsername }`
-- TaskDetailModal секція "ВИКОНАВЦІ" з аватарами
+- `assignedTo: ObjectId[]` в задачах (використовувати існуючий FamilyLink для отримання family members)
+- TaskDetailModal секція "ВИКОНАВЦІ" з аватарами (з accepted family)
 - Задачі від іншого профілю — окрема секція "Від Коськи"
 
 ---

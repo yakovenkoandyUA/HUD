@@ -712,7 +712,7 @@
 }
 .startWatchingBtn:active { opacity: 0.8; }
 
-/* ── Watch Together ── */
+/* ── Watch Together (kept for potential reuse) ── */
 .togetherRow {
   display: flex;
   align-items: center;
@@ -720,19 +720,81 @@
   padding: 10px 0;
   border-top: 1px solid var(--border);
 }
-
 .togetherInfo {
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--text2);
 }
-
 .togetherLabel {
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
+}
+
+/* ── Watched With (family selector) ── */
+.watchedWithSection {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.watchedWithList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.watchedWithChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 5px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.watchedWithChipOn {
+  border-color: var(--accent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.watchedWithAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.watchedWithInitial {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.watchedWithName {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.watchedWithCheck {
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 /* ── Comments ── */

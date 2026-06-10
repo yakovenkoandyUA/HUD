@@ -15,15 +15,17 @@ function toPhoto(p: Record<string, any>): MemoryPhoto {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toMemory(d: Record<string, any>): Memory {
   return {
-    id:        d._id,
-    title:     d.title,
-    location:  d.location || undefined,
-    date:      d.date,
-    coverUrl:  d.coverUrl ?? '',
-    notes:     d.notes ?? '',
-    tags:      d.tags ?? [],
-    photos:    (d.photos ?? []).map(toPhoto),
-    createdAt: typeof d.createdAt === 'string' ? d.createdAt : new Date(d.createdAt).toISOString(),
+    id:             d._id,
+    title:          d.title,
+    location:       d.location || undefined,
+    date:           d.date,
+    coverUrl:       d.coverUrl ?? '',
+    notes:          d.notes ?? '',
+    tags:           d.tags ?? [],
+    photos:         (d.photos ?? []).map(toPhoto),
+    createdAt:      typeof d.createdAt === 'string' ? d.createdAt : new Date(d.createdAt).toISOString(),
+    ownerName:      d.ownerName ?? undefined,
+    ownerAvatarUrl: d.ownerAvatarUrl ?? undefined,
   }
 }
 

@@ -28,6 +28,7 @@ import booksRoutes from './routes/books'
 import watchlistCommentsRouter from './routes/watchlistComments'
 import plansRouter from './routes/plans'
 import aiRouter from './routes/ai'
+import familyRouter from './routes/family'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -58,6 +59,7 @@ app.use('/api/labels', labelRoutes)
 app.use('/api/books', booksRoutes)
 app.use('/api/plans', plansRouter)
 app.use('/api/ai', aiRouter)
+app.use('/api/family', familyRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

@@ -19,11 +19,17 @@
 |-------|--------|
 | `/api/auth/register` | POST — { email, password, name, username } |
 | `/api/auth/login` | POST — { email, password } |
+| `/api/auth/google` | POST — { credential } Google ID token |
 | `/api/auth/pin` | PATCH (set), DELETE (remove) |
 | `/api/auth/pin/verify` | POST — { pin } |
 | `/api/auth/profiles` | GET — public list (legacy) |
 | `/api/auth/select` | POST — username-only (legacy) |
 | `/api/auth/me` | GET, PATCH |
+| `/api/family` | GET — { accepted, pendingSent, pendingReceived } |
+| `/api/family/search` | GET ?q=username |
+| `/api/family/request` | POST — { recipientId } |
+| `/api/family/accept/:linkId` | POST |
+| `/api/family/:linkId` | DELETE |
 | `/api/transactions` | GET, POST |
 | `/api/transactions/:id` | DELETE |
 | `/api/sprint/tasks` | GET, POST |
@@ -62,6 +68,8 @@ VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
 ANTHROPIC_API_KEY=...
 GOOGLE_BOOKS_KEY=...
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
 ```
 
 ## Моделі — ключові поля
@@ -72,9 +80,11 @@ GOOGLE_BOOKS_KEY=...
 
 **TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для рутин
 
-**WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchTogether: boolean`, `totalSeasons` з TMDB
+**WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members — замінив `watchTogether`), `totalSeasons` з TMDB
 
-**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`
+**FamilyLink** — `requester: string`, `recipient: string`, `status: 'pending'|'accepted'`. Унікальний compound index `{requester, recipient}`. `getAcceptedFamilyIds(userId)` — shared helper для ізоляції даних.
+
+**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`. GET повертає `ownerName` + `ownerAvatarUrl` для сімейних записів.
 
 **Plan** — `status: 'want'|'planned'|'visited'`; при 'visited' конвертується в Memory
 

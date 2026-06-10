@@ -1,9 +1,37 @@
 import { Request, Response } from 'express'
 import Memory from '../models/Memory'
+import { User } from '../models/User'
+import { getAcceptedFamilyIds } from './familyController'
 
 export async function getAll(req: Request, res: Response): Promise<void> {
-  const items = await Memory.find({}).sort({ date: -1 })
-  res.json(items)
+  try {
+    const familyIds = await getAcceptedFamilyIds(req.userId!)
+    const allUserIds = [req.userId!, ...familyIds]
+
+    const items = await Memory.find({ userId: { $in: allUserIds } }).sort({ date: -1 })
+
+    // Attach owner info for family memories
+    let ownerMap = new Map<string, { name: string; avatarUrl: string | null }>()
+    if (familyIds.length > 0) {
+      const owners = await User.find({ _id: { $in: familyIds } }, { name: 1, avatarUrl: 1 })
+      owners.forEach(u => {
+        ownerMap.set((u._id as { toString(): string }).toString(), { name: u.name, avatarUrl: u.avatarUrl })
+      })
+    }
+
+    const result = items.map(m => {
+      const obj = m.toObject()
+      if (m.userId !== req.userId) {
+        const owner = ownerMap.get(m.userId)
+        return { ...obj, ownerName: owner?.name, ownerAvatarUrl: owner?.avatarUrl ?? null }
+      }
+      return obj
+    })
+
+    res.json(result)
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch memories' })
+  }
 }
 
 export async function create(req: Request, res: Response): Promise<void> {

@@ -138,7 +138,7 @@ const Watchlist: React.FC = () => {
     setSelected((prev) => prev ? { ...prev, thumbnail: url || undefined } : null)
   }
 
-  const handleNotifyChange = (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean; watchTogether?: boolean }) => {
+  const handleNotifyChange = (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean; watchedWith?: string[] }) => {
     if (!selected) return
     updateItem(selected.id, patch)
     setSelected((prev) => prev ? { ...prev, ...patch } : null)

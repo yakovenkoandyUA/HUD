@@ -9,6 +9,7 @@ import { formatDateUA } from '../../../utils/formatDate'
 import { authFetch } from '../../../services/api'
 import { useSeriesEpisodes } from '../../../hooks/useSeriesEpisodes'
 import { useProfileStore } from '../../../store/profileStore'
+import { useFamilyStore } from '../../../store/familyStore'
 import styles from './WatchlistDetail.module.css'
 import type { WatchlistItem, WatchlistStatus } from '../../../types'
 
@@ -79,7 +80,7 @@ interface WatchlistDetailProps {
   onStatusChange: (status: WatchlistStatus) => void
   onRatingChange: (rating: number | null) => void
   onImageChange?: (url: string) => void
-  onNotifyChange?: (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean; watchTogether?: boolean }) => void
+  onNotifyChange?: (patch: { notifyNewEpisode?: boolean; notifyNewSeason?: boolean; watchedWith?: string[] }) => void
   onSimilarAdd?: (item: Omit<WatchlistItem, 'id' | 'addedAt'>) => void
   onDelete: () => void
 }
@@ -112,6 +113,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   onDelete,
 }) => {
   const activeProfile = useProfileStore(s => s.activeProfile)
+  const { accepted, fetchFamily } = useFamilyStore()
 
   const [mounted, setMounted]             = useState(false)
   const [visible, setVisible]             = useState(false)
@@ -142,6 +144,11 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
   useModalHistory(onClose, isOpen)
   const sheetRef = useSwipeToDismiss(onClose, { enabled: mounted })
+
+  useEffect(() => {
+    if (accepted.length === 0) fetchFamily()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const isSeriesLike = item.category === 'series' || item.category === 'anime'
   const { episodes } = useSeriesEpisodes(isSeriesLike && item.tmdbId > 0 ? item.tmdbId : null)
@@ -515,24 +522,48 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             </div>
           )}
 
-          {/* Watch Together toggle */}
-          {onNotifyChange && (
-            <div className={styles.togetherRow}>
-              <div className={styles.togetherInfo}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          {/* Watch Together — family member selector */}
+          {onNotifyChange && accepted.length > 0 && (
+            <div className={styles.watchedWithSection}>
+              <p className={styles.sectionLabel}>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle', marginRight: 5 }}>
                   <path d="M5 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.4"/>
                   <path d="M11 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.4"/>
                   <path d="M1 14s0-3 4-3M15 14s0-3-4-3M8 11c2.5 0 4 1.5 4 3H4c0-1.5 1.5-3 4-3Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                 </svg>
-                <span className={styles.togetherLabel}>Дивитись разом</span>
+                ДИВИЛИСЬ РАЗОМ
+              </p>
+              <div className={styles.watchedWithList}>
+                {accepted.map(member => {
+                  const checked = (item.watchedWith ?? []).includes(member.id)
+                  const toggle = () => {
+                    const current = item.watchedWith ?? []
+                    const updated = checked
+                      ? current.filter(id => id !== member.id)
+                      : [...current, member.id]
+                    onNotifyChange({ watchedWith: updated })
+                  }
+                  return (
+                    <button
+                      key={member.id}
+                      type="button"
+                      className={`${styles.watchedWithChip} ${checked ? styles.watchedWithChipOn : ''}`}
+                      onClick={toggle}
+                    >
+                      {member.avatarUrl
+                        ? <img src={member.avatarUrl} alt={member.name} className={styles.watchedWithAvatar} />
+                        : <span className={styles.watchedWithInitial}>{member.name[0]}</span>
+                      }
+                      <span className={styles.watchedWithName}>{member.name}</span>
+                      {checked && (
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={styles.watchedWithCheck}>
+                          <path d="M1.5 5l2.5 2.5L8.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
-              <button
-                type="button"
-                className={`${styles.toggleBtn} ${item.watchTogether ? styles.toggleOn : ''}`}
-                onClick={() => onNotifyChange({ watchTogether: !item.watchTogether })}
-              >
-                <span className={styles.toggleKnob} />
-              </button>
             </div>
           )}
 
