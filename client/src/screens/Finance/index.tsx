@@ -82,13 +82,22 @@ const Finance: React.FC = () => {
 		<div className={styles.screen}>
 			<AppHeader />
 			<div className={styles.content}>
+				{/* 1. Баланс */}
 				<BalanceHero balance={balance} dailyBudget={dailyBudget} monthSpent={totalExpense} daysLeft={daysLeft} progressPct={progressPct} todaySpent={todaySpent} />
 
-				<GoalsList />
+				{/* 2. Швидкі дії */}
+				<div className={styles.actions}>
+					<button className={styles.btnExpense} onClick={() => setShowExpense(true)}>
+						<IconExpense />
+						Витрата
+					</button>
+					<button className={styles.btnTopup} onClick={() => setShowTopup(true)}>
+						<IconTopup />
+						Поповнення
+					</button>
+				</div>
 
-				<RecurringPayments />
-
-				{/* ── Merged TodayCard + StatsGrid ── */}
+				{/* 3. Статистика дня */}
 				<div className={styles.statsCard}>
 					<div className={styles.statsToday}>
 						<span className={styles.statsTodayLabel}>Сьогодні</span>
@@ -121,20 +130,17 @@ const Finance: React.FC = () => {
 					</div>
 				</div>
 
-				<div className={styles.actions}>
-					<button className={styles.btnExpense} onClick={() => setShowExpense(true)}>
-						<IconExpense />
-						Витрата
-					</button>
-					<button className={styles.btnTopup} onClick={() => setShowTopup(true)}>
-						<IconTopup />
-						Поповнення
-					</button>
-				</div>
-
-				{/* <ExpenseChart transactions={transactions} /> */}
-				<ShoppingTracker transactions={transactions} />
+				{/* 4. Місячна аналітика + AI */}
 				<MonthlyReport transactions={transactions} />
+
+				{/* 5. Donut chart категорій */}
+				<ShoppingTracker transactions={transactions} />
+
+				{/* 6. Цілі накопичення */}
+				<GoalsList />
+
+				{/* 7. Регулярні платежі */}
+				<RecurringPayments />
 
 				<div className={styles.section}>
 					<TransactionList transactions={transactions} onDelete={handleDelete} />
