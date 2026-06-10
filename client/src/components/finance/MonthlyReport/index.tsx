@@ -1,8 +1,23 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { fmt } from '../../../utils/finance'
+import { authFetch } from '../../../services/api'
 import { useCategoryStore } from '../../../store/categoryStore'
 import type { Transaction } from '../../../types'
 import styles from './MonthlyReport.module.css'
+
+function renderMarkdown(md: string): React.ReactNode[] {
+  return md.split('\n').map((line, i) => {
+    if (line.startsWith('## ')) {
+      return <p key={i} className={styles.aiSection}>{line.slice(3)}</p>
+    }
+    const bold = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    if (bold !== line) {
+      return <p key={i} className={styles.aiLine} dangerouslySetInnerHTML={{ __html: bold }} />
+    }
+    if (line.trim() === '') return <div key={i} className={styles.aiSpacer} />
+    return <p key={i} className={styles.aiLine}>{line}</p>
+  })
+}
 
 /**
  * MonthlyReport
@@ -57,6 +72,67 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const [year,  setYear]  = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
   const [open,  setOpen]  = useState(false)
+  const [aiContent,     setAiContent]     = useState<string | null>(null)
+  const [aiLoading,     setAiLoading]     = useState(false)
+  const [aiError,       setAiError]       = useState(false)
+  const [aiGeneratedAt, setAiGeneratedAt] = useState<Date | null>(null)
+  const aiMonthRef = useRef('')
+
+  const ym = toYearMonth(year, month)
+
+  useEffect(() => {
+    if (ym === aiMonthRef.current) return
+    aiMonthRef.current = ym
+    setAiContent(null)
+    setAiError(false)
+    setAiGeneratedAt(null)
+  }, [ym])
+
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    const load = async () => {
+      if (aiContent !== null || aiLoading) return
+      try {
+        const res = await authFetch(`/api/finance/report/${ym}`)
+        if (!cancelled) {
+          if (res.ok) {
+            const data = await res.json() as { content: string; generatedAt: string }
+            setAiContent(data.content)
+            setAiGeneratedAt(new Date(data.generatedAt))
+          }
+        }
+      } catch {
+        // silent — just no cached report
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, ym])
+
+  const generateReport = async () => {
+    let cancelled = false
+    setAiLoading(true)
+    setAiError(false)
+    try {
+      const res = await authFetch(`/api/finance/report/${ym}`, { method: 'POST' })
+      if (!cancelled) {
+        if (res.ok) {
+          const data = await res.json() as { content: string; generatedAt: string }
+          setAiContent(data.content)
+          setAiGeneratedAt(new Date(data.generatedAt))
+        } else {
+          setAiError(true)
+        }
+      }
+    } catch {
+      if (!cancelled) setAiError(true)
+    } finally {
+      if (!cancelled) setAiLoading(false)
+    }
+    return () => { cancelled = true }
+  }
 
   const colorOf = (name: string) =>
     categories.find(c => c.name.toLowerCase() === name.toLowerCase())?.color ?? FALLBACK_COLOR
@@ -267,6 +343,40 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                     <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
                   </svg>
                   <span>{recommendation}</span>
+                </div>
+              )}
+
+              {/* AI Analysis */}
+              <div className={styles.aiRow}>
+                <button
+                  type="button"
+                  className={styles.aiBtn}
+                  onClick={generateReport}
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? (
+                    <span className={styles.aiSpinner} />
+                  ) : (
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M6.5 1L7.7 4.8H11.7L8.5 7.1L9.7 10.9L6.5 8.6L3.3 10.9L4.5 7.1L1.3 4.8H5.3L6.5 1Z" fill="currentColor"/>
+                    </svg>
+                  )}
+                  {aiContent ? 'Оновити' : 'AI Аналіз'}
+                </button>
+                {aiGeneratedAt && (
+                  <span className={styles.aiDate}>
+                    {aiGeneratedAt.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </div>
+
+              {aiError && (
+                <p className={styles.aiError}>Помилка генерації. Спробуйте ще раз.</p>
+              )}
+
+              {aiContent && (
+                <div className={styles.aiContent}>
+                  {renderMarkdown(aiContent)}
                 </div>
               )}
             </>
