@@ -131,6 +131,7 @@ useEffect(() => {
 - ЗАВЖДИ явний `interface` для props
 - ЗАВЖДИ JSDoc перед компонентом
 - НІКОЛИ `any` — тільки конкретні типи або `unknown`
+- Якщо форма має `FormState` і `FormErrors` — `setField` повинен приймати `keyof FormErrors`, не `keyof FormState`. `FormErrors` містить лише поля що валідуються, а `FormState` може містити поля без валідації (масиви, булеани тощо) — індексація `errors[field]` де `field: keyof FormState` — помилка компіляції.
 
 ### UI — використовувати існуючі компоненти
 
