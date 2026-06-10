@@ -182,48 +182,24 @@ const RecurringPayments: React.FC = () => {
   useEffect(() => { fetchPayments() }, [fetchPayments])
 
   useEffect(() => {
-    if (currency === 'UAH') {
-      setExchangeRate(null)
-      setRateLoading(false)
-      return
-    }
-
     let cancelled = false
-
-    const fetchRate = async () => {
-      setRateLoading(true)
+    const load = async () => {
+      if (currency === 'UAH') {
+        if (!cancelled) { setExchangeRate(null); setRateLoading(false) }
+        return
+      }
+      if (!cancelled) setRateLoading(true)
       try {
         const r = await fetch(`https://api.exchangerate-api.com/v4/latest/${currency}`)
         const data = await r.json()
-        if (!cancelled) {
-          setExchangeRate(data.rates.UAH)
-          setRateLoading(false)
-        }
+        if (!cancelled) { setExchangeRate(data.rates.UAH); setRateLoading(false) }
       } catch {
-        if (!cancelled) {
-          setExchangeRate(null)
-          setRateLoading(false)
-        }
+        if (!cancelled) { setExchangeRate(null); setRateLoading(false) }
       }
     }
-
-    fetchRate()
-
+    load()
     return () => { cancelled = true }
   }, [currency])
-
-  // Fix 2: sync form state when editPayment changes (incl. after background refresh)
-  useEffect(() => {
-    if (!editPayment) return
-    setForm({
-      name: editPayment.name,
-      amount: String(editPayment.amountForeign ?? editPayment.amount),
-      dayOfMonth: String(editPayment.dayOfMonth),
-      reminderDays: editPayment.reminderDays ?? [],
-    })
-    setCurrency(editPayment.currency ?? 'UAH')
-    setErrors({})
-  }, [editPayment])
 
   const amountForeignNum = parseFloat(form.amount) || 0
   const amountUAH = currency === 'UAH'
