@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import PhotoViewerModal from '../../components/memories/PhotoViewerModal'
 import Modal from '../../components/ui/Modal'
 import PosterGenerator from '../../components/memories/PosterGenerator'
+import MimirIcon from '../../components/ui/MimirIcon'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { useLongPress } from '../../hooks/useLongPress'
@@ -316,11 +317,7 @@ const MemoryDetailScreen: React.FC = () => {
           disabled
           title="Тимчасово недоступно"
         >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M6.5 1v1.5M6.5 10.5V12M1 6.5h1.5M10.5 6.5H12M2.7 2.7l1.06 1.06M9.24 9.24l1.06 1.06M2.7 10.3l1.06-1.06M9.24 3.76l1.06-1.06"
-              stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-            <circle cx="6.5" cy="6.5" r="2" stroke="currentColor" strokeWidth="1.3"/>
-          </svg>
+          <MimirIcon size={13} />
           AI ПОСТЕР
         </button>
       </div>

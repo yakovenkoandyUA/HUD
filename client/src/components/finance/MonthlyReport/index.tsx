@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { fmt } from '../../../utils/finance'
 import { authFetch } from '../../../services/api'
 import { useCategoryStore } from '../../../store/categoryStore'
+import MimirIcon from '../../ui/MimirIcon'
 import type { Transaction } from '../../../types'
 import styles from './MonthlyReport.module.css'
 
@@ -357,9 +358,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                   {aiLoading ? (
                     <span className={styles.aiSpinner} />
                   ) : (
-                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                      <path d="M6.5 1L7.7 4.8H11.7L8.5 7.1L9.7 10.9L6.5 8.6L3.3 10.9L4.5 7.1L1.3 4.8H5.3L6.5 1Z" fill="currentColor"/>
-                    </svg>
+                    <MimirIcon size={13} />
                   )}
                   {aiContent ? 'Оновити' : 'AI Аналіз'}
                 </button>

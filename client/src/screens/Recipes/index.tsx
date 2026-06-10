@@ -6,6 +6,7 @@ import RecipeGeneratorModal from '../../components/recipes/RecipeGeneratorModal'
 import CategoriesSlider from '../../components/recipes/CategoriesSlider'
 import Modal from '../../components/ui/Modal'
 import AppHeader from '../../components/AppHeader'
+import MimirIcon from '../../components/ui/MimirIcon'
 import { useRecipesStore } from '../../store/recipesStore'
 import { useUiStore } from '../../store/uiStore'
 import type { Recipe, RecipeScope } from '../../types'
@@ -194,11 +195,7 @@ const Recipes: React.FC = () => {
           onClick={() => setShowGenerator(true)}
           aria-label="Згенерувати рецепт"
         >
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden>
-            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"
-              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
-          </svg>
+          <MimirIcon size={18} />
         </button>
         <button
           type="button"
@@ -215,7 +212,7 @@ const Recipes: React.FC = () => {
       <Modal
         isOpen={showForm}
         onClose={() => { setShowForm(false); setEditingRecipe(null); setPrefillData(null) }}
-        title={editingRecipe ? 'Редагувати рецепт' : prefillData ? '✨ AI рецепт' : 'Новий рецепт'}
+        title={editingRecipe ? 'Редагувати рецепт' : prefillData ? 'МІМІР: рецепт' : 'Новий рецепт'}
         draggable
       >
         <RecipeForm
@@ -228,7 +225,7 @@ const Recipes: React.FC = () => {
       <Modal
         isOpen={showGenerator}
         onClose={() => setShowGenerator(false)}
-        title="✨ Згенерувати рецепт"
+        title="МІМІР: згенерувати рецепт"
         draggable
       >
         <RecipeGeneratorModal
