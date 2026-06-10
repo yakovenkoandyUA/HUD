@@ -1,0 +1,312 @@
+.wrap {
+  margin: 0 16px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ── Accordion header ── */
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.headerTitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  text-transform: uppercase;
+}
+
+.chevron {
+  color: var(--text3);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.chevronOpen { transform: rotate(180deg); }
+
+/* ── Body (max-height accordion) ── */
+.body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 280ms ease-in-out, opacity 220ms ease-in-out;
+}
+.bodyOpen {
+  max-height: 900px;
+  opacity: 1;
+}
+
+.inner {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Month selector ── */
+.monthRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 10px;
+}
+
+.monthBtn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.monthBtn:active { opacity: 0.7; }
+
+.monthBtnDisabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.monthLabel {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monthCurrent {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 99px;
+  padding: 2px 8px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Total row ── */
+.totalRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.totalLabel {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+  flex: 1;
+}
+
+.totalValue {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.totalDelta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Section label ── */
+.sectionLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+/* ── Category bars ── */
+.catList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.catRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.catMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.catDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.catName {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+  flex: 1;
+  text-transform: capitalize;
+}
+
+.catDelta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.catNew {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.catAmount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text3);
+  align-self: flex-end;
+}
+
+.barWrap {
+  height: 4px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  opacity: 0.8;
+}
+
+/* ── Week bars ── */
+.weekGrid {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  align-items: flex-end;
+}
+
+.weekCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.weekBarWrap {
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  background: var(--bg3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.weekBar {
+  width: 100%;
+  background: var(--text3);
+  border-radius: 4px 4px 0 0;
+  opacity: 0.5;
+  transition: height 0.4s ease;
+}
+
+.weekBarMax {
+  background: var(--red, #e05c5c);
+  opacity: 0.8;
+}
+
+.weekBarMin {
+  background: var(--accent);
+  opacity: 0.8;
+}
+
+.weekSum {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text3);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.weekLabel {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text3);
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* ── Recommendation ── */
+.rec {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  border-radius: 8px;
+  color: var(--text3);
+}
+
+.rec svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.rec span {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text2);
+}
+
+/* ── Positive/negative delta colors ── */
+.pos { color: var(--green, #4caf82); }
+.neg { color: var(--red, #e05c5c); }
+
+/* ── Empty state ── */
+.empty {
+  padding: 20px 0 8px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text3);
+  text-align: center;
+  margin: 0;
+}

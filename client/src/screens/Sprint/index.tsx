@@ -200,8 +200,12 @@ const Sprint: React.FC = () => {
 	// const dayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, selectedDate))
 	const dayRoutines = routineItems
 
+	// Tasks assigned to me by others (always show, separate section)
+	const assignedFromOthers = items.filter(t => t.ownerName)
+
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
+		if (t.ownerName) return false  // excluded — shown in separate section
 		if (filterType === 'task'     && t.type === 'shopping') return false
 		if (filterType === 'shopping' && t.type !== 'shopping') return false
 		if (filterStatus === 'active') return !t.done
@@ -412,6 +416,28 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 						</ul>
 					)}
 				</div>
+
+				{/* ── Від інших — задачі, де мене призначили ── */}
+				{assignedFromOthers.length > 0 && (
+					<div className={styles.assignedSection}>
+						{Object.entries(
+							assignedFromOthers.reduce<Record<string, typeof assignedFromOthers>>((acc, t) => {
+								const key = t.ownerName!
+								;(acc[key] ??= []).push(t)
+								return acc
+							}, {})
+						).map(([ownerName, tasks]) => (
+							<div key={ownerName}>
+								<p className={styles.assignedSectionLabel}>Від {ownerName}</p>
+								<ul className={styles.list}>
+									{tasks.map(t => (
+										<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
+									))}
+								</ul>
+							</div>
+						))}
+					</div>
+				)}
 
 				{/* ── Trash accordion ── */}
 				<TrashBin />

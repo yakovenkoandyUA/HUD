@@ -3,6 +3,7 @@ import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import { useModalHistory } from '../../../hooks/useModalHistory'
 import { authFetch } from '../../../services/api'
 import { useSprintStore } from '../../../store/sprintStore'
+import { useFamilyStore } from '../../../store/familyStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
@@ -116,6 +117,12 @@ function formatReminderLabel(reminder: { amount: number; unit: string }): string
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
   const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem } = useSprintStore()
+  const { accepted, fetchFamily } = useFamilyStore()
+
+  useEffect(() => {
+    if (taskId && accepted.length === 0) fetchFamily()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId])
 
   const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set())
 
@@ -644,6 +651,45 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   )}
                 </div>
               </>
+            )}
+
+            {/* ── ВИКОНАВЦІ (тільки для власних задач, коли є сімейні зв'язки) ── */}
+            {!task.ownerName && accepted.length > 0 && (
+              <div className={styles.section}>
+                <p className={styles.sectionLabel}>Виконавці</p>
+                <div className={styles.assigneeRow}>
+                  {accepted.map(member => {
+                    const isAssigned = (task.assignedTo ?? []).includes(member.id)
+                    return (
+                      <button
+                        key={member.id}
+                        type="button"
+                        className={`${styles.assigneeChip} ${isAssigned ? styles.assigneeChipOn : ''}`}
+                        onClick={() => {
+                          const current = task.assignedTo ?? []
+                          const next = isAssigned
+                            ? current.filter(id => id !== member.id)
+                            : [...current, member.id]
+                          updateTask(task.id, { assignedTo: next })
+                        }}
+                      >
+                        <span className={styles.assigneeAvatar}>
+                          {member.avatarUrl
+                            ? <img src={member.avatarUrl} alt={member.name} className={styles.assigneeAvatarImg} />
+                            : <span className={styles.assigneeInitial}>{member.name.charAt(0).toUpperCase()}</span>
+                          }
+                        </span>
+                        <span className={styles.assigneeName}>{member.name}</span>
+                        {isAssigned && (
+                          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" className={styles.assigneeCheck}>
+                            <path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             )}
 
             {/* ── ОПИС ── */}

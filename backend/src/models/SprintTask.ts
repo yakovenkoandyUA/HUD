@@ -25,6 +25,7 @@ export interface ISprintTask extends Document {
   isPinned?: boolean
   deletedAt?: Date | null
   userId: string
+  assignedTo?: string[]
 }
 
 const schema = new Schema<ISprintTask>({
@@ -52,6 +53,7 @@ const schema = new Schema<ISprintTask>({
   isPinned:   { type: Boolean, default: false },
   deletedAt:  { type: Date, default: null, index: { expireAfterSeconds: 86400 } },
   userId:     { type: String, required: true, index: true },
+  assignedTo: { type: [String], default: [] },
 }, { timestamps: true })
 
 export default model<ISprintTask>('SprintTask', schema)

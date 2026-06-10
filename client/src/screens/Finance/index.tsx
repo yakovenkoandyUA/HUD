@@ -6,7 +6,9 @@ import TopupForm from '../../components/finance/TopupForm'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import TransactionList from '../../components/finance/TransactionList'
 import ExpenseChart from '../../components/finance/ExpenseChart'
+import MonthlyReport from '../../components/finance/MonthlyReport'
 import RecurringPayments from '../../components/finance/RecurringPayments'
+import ShoppingTracker from '../../components/finance/ShoppingTracker'
 import Modal from '../../components/ui/Modal'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
@@ -94,6 +96,8 @@ const Finance: React.FC = () => {
 
         <RecurringPayments />
 
+        <ShoppingTracker />
+
         {/* ── Merged TodayCard + StatsGrid ── */}
         <div className={styles.statsCard}>
           <div className={styles.statsToday}>
@@ -140,6 +144,8 @@ const Finance: React.FC = () => {
         </div>
 
         <ExpenseChart transactions={transactions} />
+
+        <MonthlyReport transactions={transactions} />
 
         <div className={styles.section}>
           <TransactionList transactions={transactions} onDelete={handleDelete} />

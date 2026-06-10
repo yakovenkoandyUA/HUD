@@ -85,6 +85,8 @@ interface ApiTask {
   reminder?: { amount: number; unit: string } | null
   checklist?: ApiChecklist[]
   isPinned?: boolean
+  assignedTo?: string[]
+  ownerName?: string
 }
 
 // ── Repeat helpers ────────────────────────────────────────────────────────────
@@ -197,7 +199,8 @@ function taskBody(item: Partial<UnifiedTodo> & { type?: string }): Record<string
     ...(labelIds.length             && { labels:      labelIds }),
     ...(item.checklist !== undefined && { checklist:  item.checklist }),
     ...(item.reminder !== undefined && { reminder:    item.reminder ?? null }),
-    ...(item.isPinned !== undefined && { isPinned:   item.isPinned }),
+    ...(item.isPinned   !== undefined && { isPinned:   item.isPinned }),
+    ...(item.assignedTo !== undefined && { assignedTo: item.assignedTo }),
     ...(item.repeat && item.repeat !== 'none' && {
       repeat:          item.repeat,
       nextDue:         item.nextDue,
@@ -286,7 +289,9 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           ...(t.repeatDay !== undefined && { repeatDay: t.repeatDay }),
           ...(t.repeatStartDate && { repeatStartDate: t.repeatStartDate }),
           ...(t.completionHistory?.length && { completionLog: t.completionHistory }),
-          ...(t.isPinned && { isPinned: t.isPinned }),
+          ...(t.isPinned    && { isPinned:    t.isPinned }),
+          ...(t.assignedTo?.length && { assignedTo: t.assignedTo }),
+          ...(t.ownerName   && { ownerName:   t.ownerName }),
         }
       })
 

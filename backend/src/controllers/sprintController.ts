@@ -1,28 +1,51 @@
 import { Request, Response } from 'express'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
+import { User } from '../models/User'
 
 const TASK_ALLOWED = [
   'title', 'done', 'priority', 'category', 'labels', 'dueDate', 'description',
   'checklist', 'order', 'tag', 'weekStart', 'weekNumber', 'year',
   'repeat', 'nextDue', 'repeatDay', 'repeatConfig', 'repeatStartDate',
-  'completionHistory', 'reminder', 'isPinned',
+  'completionHistory', 'reminder', 'isPinned', 'assignedTo',
 ]
 
 export async function getTasks(req: Request, res: Response): Promise<void> {
   const { week, year } = req.query
-  const filter: Record<string, unknown> = { userId: req.userId, deletedAt: null }
-  if (week) filter.weekNumber = Number(week)
-  if (year) filter.year = Number(year)
+  const myId = req.userId as string
 
-  const tasks = await SprintTask.find(filter).sort({ createdAt: 1 })
+  const myFilter: Record<string, unknown> = { userId: myId, deletedAt: null }
+  if (week) myFilter.weekNumber = Number(week)
+  if (year) myFilter.year = Number(year)
+
+  const myTasks = await SprintTask.find(myFilter).sort({ createdAt: 1 })
+
+  // Tasks assigned to me by others (no week filter — show regardless)
+  const assignedTasks = await SprintTask.find({
+    assignedTo: myId,
+    userId: { $ne: myId },
+    deletedAt: null,
+  }).sort({ createdAt: 1 })
+
+  // Attach ownerName for assigned tasks
+  let enrichedAssigned: (typeof assignedTasks[0] & { ownerName?: string })[] = []
+  if (assignedTasks.length > 0) {
+    const ownerIds = [...new Set(assignedTasks.map(t => t.userId))]
+    const owners = await User.find({ _id: { $in: ownerIds } }, 'name username')
+    const ownerMap = new Map(owners.map(u => [u._id.toString(), u.name]))
+    enrichedAssigned = assignedTasks.map(t => {
+      const obj = t.toObject() as typeof t & { ownerName?: string }
+      obj.ownerName = ownerMap.get(t.userId) ?? t.userId
+      return obj
+    })
+  }
 
   // Unified fetch (no week filter) — also include legacy TodoItem records
   const todos = (!week && !year)
-    ? await TodoItem.find({ userId: req.userId }).sort({ createdAt: 1 })
+    ? await TodoItem.find({ userId: myId }).sort({ createdAt: 1 })
     : []
 
-  res.json([...tasks, ...todos])
+  res.json([...myTasks, ...enrichedAssigned, ...todos])
 }
 
 export async function createTask(req: Request, res: Response): Promise<void> {

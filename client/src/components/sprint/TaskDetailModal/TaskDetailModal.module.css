@@ -1188,3 +1188,69 @@
   color: var(--text3) !important;
   transition: color 0.3s ease, text-decoration-color 0.3s ease;
 }
+
+/* ── Assignee chips ── */
+.assigneeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.assigneeChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.assigneeChipOn {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.assigneeAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assigneeAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.assigneeInitial {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.assigneeName {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.assigneeChipOn .assigneeName {
+  color: var(--accent);
+}
+
+.assigneeCheck {
+  color: var(--accent);
+  flex-shrink: 0;
+}

@@ -128,6 +128,8 @@ export interface UnifiedTodo {
   }
   isPinned?: boolean
   deletedAt?: string
+  assignedTo?: string[]
+  ownerName?: string
 }
 
 export interface RepeatConfig {

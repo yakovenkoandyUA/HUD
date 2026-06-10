@@ -16,7 +16,7 @@
   - ✅ Push-нагадування (1/2/7 днів, cron 09:00 UTC)
   - ✅ Підтвердження списання в день платежу → Transaction
 - Streak економії (persist local), бюджетний цикл від 10-го числа
-- ⚠️ ShoppingTracker — компонент є, але **не рендериться на Finance екрані**
+- ✅ ShoppingTracker — додано на Finance екран після RecurringPayments
 
 ### Sprint / Quests
 - Тижневий список задач: sprint / shopping / todo / уроки
@@ -27,7 +27,7 @@
 - TrashBin — soft-delete (TTL 24h MongoDB), відновлення або purge
 - useSwipeToDismiss + useModalHistory хуки
 - Spring-анімація відкриття TaskDetailModal (0.46s cubic-bezier)
-- ⬜ assignedTo / linkedProfiles — не реалізовано
+- ✅ assignedTo — TaskDetailModal секція ВИКОНАВЦІ, "Від {name}" блок на Sprint екрані
 
 ### Watchlist
 - Категорії: movie / series / anime / book
