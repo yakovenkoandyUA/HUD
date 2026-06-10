@@ -336,7 +336,7 @@ const RecurringPayments: React.FC = () => {
     })
   }
 
-  const setField = (field: keyof FormState, value: string) => {
+  const setField = (field: keyof FormErrors, value: string) => {
     setForm(f => ({ ...f, [field]: value }))
     if (errors[field]) {
       const valid =
