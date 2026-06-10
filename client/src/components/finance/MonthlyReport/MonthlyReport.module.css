@@ -312,33 +312,45 @@
   margin: 0;
 }
 
-/* ── AI Analysis ── */
-.aiRow {
+/* ── Header left group ── */
+.headerLeft {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 8px;
 }
 
+.headerIcon {
+  color: var(--gold, #c9a227);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── AI Analysis ── */
 .aiBtn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
+  gap: 5px;
+  padding: 5px 10px;
   border-radius: 999px;
   border: 1px solid var(--border2);
   background: var(--bg3);
   color: var(--gold, #c9a227);
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   cursor: pointer;
+  flex-shrink: 0;
   transition: background 0.15s, border-color 0.15s;
 }
 .aiBtn:hover { background: var(--surface2); border-color: var(--gold, #c9a227); }
 .aiBtn:active { opacity: 0.8; }
 .aiBtn:disabled { opacity: 0.5; cursor: default; }
+
+.aiBlock {
+  margin-bottom: 12px;
+}
 
 .aiDate {
   font-family: var(--font-mono);

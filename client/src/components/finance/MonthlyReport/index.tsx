@@ -231,7 +231,10 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
         onClick={() => setOpen(v => !v)}
         aria-expanded={open}
       >
-        <span className={styles.headerTitle}>МІСЯЧНА АНАЛІТИКА</span>
+        <span className={styles.headerLeft}>
+          <span className={styles.headerIcon}><MimirIcon size={13} /></span>
+          <span className={styles.headerTitle}>МІСЯЧНА АНАЛІТИКА</span>
+        </span>
         <svg
           className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}
           width="16" height="16" viewBox="0 0 16 16" fill="none"
@@ -271,7 +274,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
             <p className={styles.empty}>Немає витрат за цей місяць</p>
           ) : (
             <>
-              {/* Total */}
+              {/* Total + AI trigger */}
               <div className={styles.totalRow}>
                 <span className={styles.totalLabel}>Всього витрачено</span>
                 <span className={styles.totalValue}>{fmt(totalCur)} ₴</span>
@@ -280,7 +283,30 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                     {totalCur <= totalPrev ? '↓' : '↑'} {fmt(Math.abs(totalCur - totalPrev))} ₴
                   </span>
                 )}
+                <button
+                  type="button"
+                  className={styles.aiBtn}
+                  onClick={generateReport}
+                  disabled={aiLoading}
+                  title={aiContent ? 'Оновити аналіз' : 'Згенерувати AI аналіз'}
+                >
+                  {aiLoading ? <span className={styles.aiSpinner} /> : <MimirIcon size={12} />}
+                  {aiContent ? 'Оновити' : 'Аналіз'}
+                </button>
               </div>
+
+              {/* AI result + date */}
+              {(aiContent || aiError) && (
+                <div className={styles.aiBlock}>
+                  {aiGeneratedAt && (
+                    <span className={styles.aiDate}>
+                      {aiGeneratedAt.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                  {aiError && <p className={styles.aiError}>Помилка генерації. Спробуйте ще раз.</p>}
+                  {aiContent && <div className={styles.aiContent}>{renderMarkdown(aiContent)}</div>}
+                </div>
+              )}
 
               {/* Top-3 categories */}
               <p className={styles.sectionLabel}>ТОП КАТЕГОРІЇ</p>
@@ -344,38 +370,6 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                     <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
                   </svg>
                   <span>{recommendation}</span>
-                </div>
-              )}
-
-              {/* AI Analysis */}
-              <div className={styles.aiRow}>
-                <button
-                  type="button"
-                  className={styles.aiBtn}
-                  onClick={generateReport}
-                  disabled={aiLoading}
-                >
-                  {aiLoading ? (
-                    <span className={styles.aiSpinner} />
-                  ) : (
-                    <MimirIcon size={13} />
-                  )}
-                  {aiContent ? 'Оновити' : 'AI Аналіз'}
-                </button>
-                {aiGeneratedAt && (
-                  <span className={styles.aiDate}>
-                    {aiGeneratedAt.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                )}
-              </div>
-
-              {aiError && (
-                <p className={styles.aiError}>Помилка генерації. Спробуйте ще раз.</p>
-              )}
-
-              {aiContent && (
-                <div className={styles.aiContent}>
-                  {renderMarkdown(aiContent)}
                 </div>
               )}
             </>
