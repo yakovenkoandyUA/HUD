@@ -87,6 +87,35 @@ setTheme: (theme) => void
 
 ---
 
+## Кросбраузерність — обов'язкові правила
+
+### backdrop-filter — ЗАВЖДИ з `-webkit-` префіксом (Safari/iOS)
+```css
+/* ✅ ПРАВИЛЬНО */
+-webkit-backdrop-filter: blur(8px);
+backdrop-filter: blur(8px);
+
+/* ❌ НЕПРАВИЛЬНО — Safariігнорує без префіксу */
+backdrop-filter: blur(8px);
+```
+
+### color-mix() — підтримується в усіх сучасних браузерах (Chrome 111+, Firefox 113+, Safari 16.2+). Використовувати без застережень.
+
+### dvh/svh — підтримується в усіх сучасних браузерах (2022+). Використовувати без застережень.
+
+### Scrollbar styling — завжди парно:
+```css
+/* Firefox */
+scrollbar-width: thin;
+scrollbar-color: var(--border) transparent;
+/* Chrome/Safari */
+&::-webkit-scrollbar { width: 4px; }
+&::-webkit-scrollbar-track { background: transparent; }
+&::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+```
+
+---
+
 ## Правило CSS змінних
 
 Завжди семантичні змінні — ніколи hex напряму:

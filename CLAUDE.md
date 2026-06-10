@@ -224,6 +224,7 @@ useEffect(() => {
 - Числа/дати — `var(--font-mono)`
 - Гривня ₴ — `var(--font-ui)` (Furore не підтримує ₴)
 - Кнопки — SVG іконка, не символи
+- `backdrop-filter` — ЗАВЖДИ разом з `-webkit-backdrop-filter` (Safari/iOS вимагає префікс)
 
 ### Збереження форм
 - `onBlur` + `Enter` для inline редагування
