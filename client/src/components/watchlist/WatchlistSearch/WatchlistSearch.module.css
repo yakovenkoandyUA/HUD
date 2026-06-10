@@ -510,6 +510,83 @@
   margin: 0;
 }
 
+/* ── Cast ── */
+.previewCastWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.previewCast {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.previewCast::-webkit-scrollbar { display: none; }
+
+.castMember {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  width: 64px;
+}
+
+.castPhoto {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.castImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.castInitial {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--text3);
+}
+
+.castName {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.3;
+  width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.castCharacter {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--text3);
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .previewStatusWrap {
   display: flex;
   flex-direction: column;

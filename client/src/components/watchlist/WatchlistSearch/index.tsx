@@ -4,7 +4,15 @@ import styles from './WatchlistSearch.module.css'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../../types'
 
 const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY
-const TMDB_IMG = 'https://image.tmdb.org/t/p/w92'
+const TMDB_IMG  = 'https://image.tmdb.org/t/p/w92'
+const TMDB_FACE = 'https://image.tmdb.org/t/p/w185'
+
+interface CastMember {
+  id: number
+  name: string
+  character: string
+  profilePath: string | null
+}
 
 const TMDB_GENRES: Record<number, string> = {
   28: 'Бойовик', 12: 'Пригоди', 16: 'Анімація', 35: 'Комедія',
@@ -75,6 +83,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
   const [previewDetails, setPreviewDetails] = useState<any>(null)
   const [selectedStatus, setSelectedStatus] = useState<WatchlistStatus>('want')
   const [loadingDetails, setLoadingDetails] = useState(false)
+  const [previewCast, setPreviewCast]       = useState<CastMember[]>([])
 
   const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef   = useRef<HTMLInputElement>(null)
@@ -92,6 +101,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     setIsOpen(false)
     setPreview(null)
     setPreviewDetails(null)
+    setPreviewCast([])
     setSelectedStatus('want')
     inputRef.current?.blur()
   }
@@ -166,6 +176,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
   const handleResultClick = async (result: SearchResult) => {
     setPreview(result)
     setPreviewDetails(null)
+    setPreviewCast([])
     setSelectedStatus('want')
 
     if (category === 'book' || !TMDB_KEY) return
@@ -173,21 +184,35 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     setLoadingDetails(true)
     let cancelled = false
     try {
-      const endpoint = category === 'movie'
+      const base = category === 'movie'
         ? `https://api.themoviedb.org/3/movie/${result.tmdbId}`
         : `https://api.themoviedb.org/3/tv/${result.tmdbId}`
 
-      const r = await fetch(`${endpoint}?api_key=${TMDB_KEY}&language=uk-UA`)
-      if (r.ok && !cancelled) {
-        const data = await r.json()
-        setPreviewDetails(data)
+      const [detailsRes, creditsRes] = await Promise.all([
+        fetch(`${base}?api_key=${TMDB_KEY}&language=uk-UA`),
+        fetch(`${base}/credits?api_key=${TMDB_KEY}&language=uk-UA`),
+      ])
+
+      if (!cancelled) {
+        if (detailsRes.ok) setPreviewDetails(await detailsRes.json())
+        if (creditsRes.ok) {
+          const credits = await creditsRes.json()
+          const cast: CastMember[] = (credits.cast ?? [])
+            .slice(0, 8)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((m: any) => ({
+              id:          m.id,
+              name:        m.name,
+              character:   m.character ?? '',
+              profilePath: m.profile_path ?? null,
+            }))
+          setPreviewCast(cast)
+        }
       }
     } catch { /* silent */ }
     finally {
       if (!cancelled) setLoadingDetails(false)
     }
-    // allow GC to set cancelled if component unmounts during fetch
-    return () => { cancelled = true }
   }
 
   const handleAdd = () => {
@@ -230,7 +255,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     category === 'series' ? 'Пошук серіалу...' :
                             'Пошук фільму...'
 
-  const closePreview = () => { setPreview(null); setPreviewDetails(null) }
+  const closePreview = () => { setPreview(null); setPreviewDetails(null); setPreviewCast([]) }
 
   const handleHeroTouchStart = (e: React.TouchEvent) => {
     heroStartY.current = e.touches[0].clientY
@@ -435,6 +460,36 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
                   <p className={styles.previewOverview}>
                     {previewDetails?.overview || preview.overview}
                   </p>
+                )}
+
+                {/* Cast */}
+                {previewCast.length > 0 && (
+                  <div className={styles.previewCastWrap}>
+                    <p className={styles.previewStatusLabel}>У РОЛЯХ</p>
+                    <div className={styles.previewCast}>
+                      {previewCast.map(m => (
+                        <div key={m.id} className={styles.castMember}>
+                          <div className={styles.castPhoto}>
+                            {m.profilePath ? (
+                              <img
+                                src={`${TMDB_FACE}${m.profilePath}`}
+                                alt={m.name}
+                                className={styles.castImg}
+                              />
+                            ) : (
+                              <span className={styles.castInitial}>
+                                {m.name.charAt(0)}
+                              </span>
+                            )}
+                          </div>
+                          <span className={styles.castName}>{m.name}</span>
+                          {m.character && (
+                            <span className={styles.castCharacter}>{m.character}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </>
             )}
