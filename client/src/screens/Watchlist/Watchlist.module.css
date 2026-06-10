@@ -154,14 +154,7 @@
   flex-direction: column;
 }
 
-.contentAnimated {
-  animation: tabFadeIn 0.2s ease both;
-}
-
-@keyframes tabFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+.contentAnimated { /* wrapper, no animation here */ }
 
 .searchWrap {
   padding: 12px 0 8px;

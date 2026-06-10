@@ -295,7 +295,7 @@ const Watchlist: React.FC = () => {
           </div>
         </div>
 
-        <div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}`} className={styles.contentAnimated}>
+        <div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}-${sortBy}-${watchScope}`} className={styles.contentAnimated}>
           <WatchlistGrid items={tabItems} onTap={setSelected} />
         </div>
       </div>
