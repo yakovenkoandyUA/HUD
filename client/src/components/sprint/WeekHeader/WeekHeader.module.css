@@ -11,10 +11,29 @@
   justify-content: space-between;
 }
 
+.topLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .label {
   font-family: var(--font-display);
   font-size: 18px;
   color: var(--text);
+}
+
+.pastBadge {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 7px;
 }
 
 .topRight {

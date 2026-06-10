@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import AppHeader from '../../components/AppHeader'
 import TrashBin from '../../components/sprint/TrashBin'
-import WeekHeader from '../../components/sprint/WeekHeader'
+import WeekHeader, { addWeeks } from '../../components/sprint/WeekHeader'
 import TaskCard from '../../components/sprint/TaskCard'
 import TaskDetailModal from '../../components/sprint/TaskDetailModal'
 import WeekExpandedView from '../../components/sprint/WeekExpandedView'
@@ -191,7 +191,22 @@ const Sprint: React.FC = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	const weekStart    = getCurrentWeekStart()
+	const currentWeekStart = getCurrentWeekStart()
+	const [weekStart, setWeekStart] = useState(currentWeekStart)
+	const isCurrentWeek = weekStart === currentWeekStart
+
+	const goToPrevWeek = () => {
+		const prev = addWeeks(weekStart, -1)
+		setWeekStart(prev)
+		setSelectedDay(prev)
+	}
+	const goToNextWeek = () => {
+		if (isCurrentWeek) return
+		const next = addWeeks(weekStart, 1)
+		if (next > currentWeekStart) return
+		setWeekStart(next)
+		setSelectedDay(next === currentWeekStart ? todayStr : next)
+	}
 	const routineItems = items.filter(t => isRecurring(t))
 
 	// const [selY, selM, selD] = selectedDay.split('-').map(Number)
@@ -307,11 +322,14 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 			<div className={styles.content}>
 				<WeekHeader
 					weekStart={weekStart}
+					isCurrentWeek={isCurrentWeek}
 					onExpand={() => setWeekExpanded(true)}
 					routineItems={routineItems}
 					selectedDay={selectedDay}
 					onDaySelect={(iso) => { if (iso !== selectedDay) setSelectedDay(iso) }}
 					onLongPress={handleDayLongPress}
+					onPrevWeek={goToPrevWeek}
+					onNextWeek={!isCurrentWeek ? goToNextWeek : undefined}
 				/>
 
 				{/* ── Рутини accordion ── */}
