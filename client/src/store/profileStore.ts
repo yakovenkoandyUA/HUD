@@ -8,8 +8,8 @@ const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').tr
 /**
  * profileStore
  * ------------
- * Мульти-профільна система. Зберігає список профілів, активний профіль і JWT.
- * Профіль вибирається без пароля — тап на аватар → JWT на 30 днів.
+ * Auth + профіль. JWT-based з email+password.
+ * Зберігає token, activeProfile та pinLocked стан.
  *
  * Persist key: 'profile-storage' (token + activeProfile).
  */
@@ -18,21 +18,60 @@ export interface Profile {
   id: string
   name: string
   username: string
+  email?: string
   avatarUrl: string | null
   role: 'admin' | 'user'
   f1Enabled: boolean
+  hasPIN: boolean
 }
 
 interface ProfileState {
   profiles: Profile[]
   activeProfile: Profile | null
   token: string | null
+  pinLocked: boolean
 
   fetchProfiles: () => Promise<void>
+  loginWithEmail: (email: string, password: string) => Promise<void>
+  register: (email: string, password: string, name: string, username: string) => Promise<void>
   selectProfile: (username: string) => Promise<void>
   logout: () => void
   uploadAvatar: (file: File) => Promise<void>
   updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean }) => Promise<void>
+  setPIN: (pin: string) => Promise<void>
+  removePIN: () => Promise<void>
+  verifyPIN: (pin: string) => Promise<boolean>
+  lockWithPIN: () => void
+  unlockPIN: () => void
+}
+
+async function apiPost(path: string, body: unknown, token?: string | null) {
+  if (!BASE_URL) throw new Error('API not configured')
+  return fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  })
+}
+
+async function apiPatch(path: string, body: unknown, token: string) {
+  if (!BASE_URL) throw new Error('API not configured')
+  return fetch(`${BASE_URL}${path}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  })
+}
+
+async function apiDelete(path: string, token: string) {
+  if (!BASE_URL) throw new Error('API not configured')
+  return fetch(`${BASE_URL}${path}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
 }
 
 export const useProfileStore = create<ProfileState>()(
@@ -41,6 +80,7 @@ export const useProfileStore = create<ProfileState>()(
       profiles: [],
       activeProfile: null,
       token: null,
+      pinLocked: false,
 
       fetchProfiles: async () => {
         if (!BASE_URL) return
@@ -48,13 +88,38 @@ export const useProfileStore = create<ProfileState>()(
           const res = await fetch(`${BASE_URL}/api/auth/profiles`)
           if (!res.ok) return
           const profiles = await res.json() as Profile[]
-          // Also refresh activeProfile so f1Enabled (and other new fields) are always in sync
           const { activeProfile } = get()
+          // Merge server data with persisted profile — keep hasPIN/email which aren't in public list
+          const serverProfile = activeProfile
+            ? profiles.find(p => p.id === activeProfile.id)
+            : null
           const freshActive = activeProfile
-            ? (profiles.find(p => p.id === activeProfile.id) ?? activeProfile)
+            ? (serverProfile ? { ...activeProfile, ...serverProfile, hasPIN: activeProfile.hasPIN } : activeProfile)
             : null
           set({ profiles, activeProfile: freshActive })
         } catch { /* offline — use cached */ }
+      },
+
+      loginWithEmail: async (email: string, password: string) => {
+        const res = await apiPost('/api/auth/login', { email, password })
+        if (!res.ok) {
+          const data = await res.json() as { error?: string }
+          throw new Error(data.error ?? 'Помилка входу')
+        }
+        const { token, user } = await res.json() as { token: string; user: Profile }
+        useSprintStore.getState().clearItems()
+        set({ token, activeProfile: user, pinLocked: false })
+      },
+
+      register: async (email: string, password: string, name: string, username: string) => {
+        const res = await apiPost('/api/auth/register', { email, password, name, username })
+        if (!res.ok) {
+          const data = await res.json() as { error?: string }
+          throw new Error(data.error ?? 'Помилка реєстрації')
+        }
+        const { token, user } = await res.json() as { token: string; user: Profile }
+        useSprintStore.getState().clearItems()
+        set({ token, activeProfile: user, pinLocked: false })
       },
 
       selectProfile: async (username: string) => {
@@ -67,11 +132,11 @@ export const useProfileStore = create<ProfileState>()(
         if (!res.ok) throw new Error('Failed to select profile')
         const { token, user } = await res.json() as { token: string; user: Profile }
         useSprintStore.getState().clearItems()
-        set({ token, activeProfile: user })
+        set({ token, activeProfile: user, pinLocked: false })
       },
 
       logout: () => {
-        set({ token: null, activeProfile: null })
+        set({ token: null, activeProfile: null, pinLocked: false })
       },
 
       uploadAvatar: async (file: File) => {
@@ -84,14 +149,7 @@ export const useProfileStore = create<ProfileState>()(
         if (!activeProfile) return
 
         if (BASE_URL && token) {
-          const res = await fetch(`${BASE_URL}/api/auth/me`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(patch),
-          })
+          const res = await apiPatch('/api/auth/me', patch, token)
           if (!res.ok) throw new Error('Failed to update profile')
         }
 
@@ -103,6 +161,43 @@ export const useProfileStore = create<ProfileState>()(
           ),
         })
       },
+
+      setPIN: async (pin: string) => {
+        const { token, activeProfile } = get()
+        if (!token || !activeProfile) throw new Error('Not authenticated')
+        const res = await apiPatch('/api/auth/pin', { pin }, token)
+        if (!res.ok) {
+          const data = await res.json() as { error?: string }
+          throw new Error(data.error ?? 'Помилка збереження PIN')
+        }
+        set({ activeProfile: { ...activeProfile, hasPIN: true } })
+      },
+
+      removePIN: async () => {
+        const { token, activeProfile } = get()
+        if (!token || !activeProfile) throw new Error('Not authenticated')
+        const res = await apiDelete('/api/auth/pin', token)
+        if (!res.ok) throw new Error('Помилка видалення PIN')
+        set({ activeProfile: { ...activeProfile, hasPIN: false }, pinLocked: false })
+      },
+
+      verifyPIN: async (pin: string) => {
+        const { token } = get()
+        if (!token) return false
+        try {
+          const res = await apiPost('/api/auth/pin/verify', { pin }, token)
+          return res.ok
+        } catch {
+          return false
+        }
+      },
+
+      lockWithPIN: () => {
+        const { activeProfile } = get()
+        if (activeProfile?.hasPIN) set({ pinLocked: true })
+      },
+
+      unlockPIN: () => set({ pinLocked: false }),
     }),
     {
       name: 'profile-storage',

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import BottomNav from './components/layout/BottomNav'
 import ToastContainer from './components/ui/Toast'
 import PwaInstallBanner from './components/ui/PwaInstallBanner'
 import CitySplash from './components/ui/CitySplash'
+import PinLock from './components/ui/PinLock'
 import { usePwaInstall } from './hooks/usePwaInstall'
 import { useProfileStore } from './store/profileStore'
 import { useUiStore } from './store/uiStore'
@@ -20,14 +21,17 @@ import ShoppingListScreen from './screens/ShoppingList'
 import Watchlist from './screens/Watchlist'
 import MemoriesScreen from './screens/Memories'
 import MemoryDetailScreen from './screens/MemoryDetail'
-import ProfileSelectScreen from './screens/ProfileSelect'
+import LoginScreen from './screens/Login'
+import RegisterScreen from './screens/Register'
 import ProfilePage from './screens/ProfilePage'
 import './App.css'
 
-/** Redirects to /profile-select if no token */
+const PIN_TIMEOUT_MS = 5 * 60 * 1000 // 5 хв
+
+/** Redirects to /login if no token */
 const ProtectedRoute: React.FC = () => {
   const { token } = useProfileStore()
-  if (!token) return <Navigate to="/profile-select" replace />
+  if (!token) return <Navigate to="/login" replace />
   return <Outlet />
 }
 
@@ -45,7 +49,9 @@ const AnimatedRoutes: React.FC = () => {
     <div key={location.pathname} className="pageWrapper">
       <Routes location={location}>
         {/* Public */}
-        <Route path="/profile-select" element={<ProfileSelectScreen />} />
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/register" element={<RegisterScreen />} />
+        <Route path="/profile-select" element={<Navigate to="/login" replace />} />
 
         {/* Protected — require token */}
         <Route element={<ProtectedRoute />}>
@@ -82,9 +88,39 @@ const NavGuard: React.FC = () => {
   if (/^\/memories\/.+/.test(pathname)) return null
   if (/^\/recipes\/.+/.test(pathname)) return null
   if (pathname === '/shopping') return null
+  if (pathname === '/login') return null
+  if (pathname === '/register') return null
   if (pathname === '/profile-select') return null
   if (pathname === '/profile') return null
   return <BottomNav />
+}
+
+/** Tracks user inactivity and locks app with PIN after timeout */
+const PinGuard: React.FC = () => {
+  const { activeProfile, pinLocked, lockWithPIN } = useProfileStore()
+  const lastActivity = useRef(Date.now())
+
+  useEffect(() => {
+    if (!activeProfile?.hasPIN) return
+
+    const resetTimer = () => { lastActivity.current = Date.now() }
+    const events = ['mousemove', 'mousedown', 'touchstart', 'keydown', 'scroll'] as const
+    events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }))
+
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivity.current >= PIN_TIMEOUT_MS) {
+        lockWithPIN()
+      }
+    }, 30_000)
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, resetTimer))
+      clearInterval(interval)
+    }
+  }, [activeProfile?.hasPIN, lockWithPIN])
+
+  if (!pinLocked) return null
+  return <PinLock />
 }
 
 const App: React.FC = () => {
@@ -103,8 +139,6 @@ const App: React.FC = () => {
         setUpdateAvailable(true)
       })
     }
-    // If SW already controls the page, the next controllerchange is an update.
-    // Otherwise wait for the initial take-control, then watch for updates.
     if (navigator.serviceWorker.controller) {
       watchForUpdate()
     } else {
@@ -117,15 +151,12 @@ const App: React.FC = () => {
     if (!token || !isSupported || isSubscribed) return
     async function trySubscribe() {
       const perm = Notification.permission
-      console.log('[push] trySubscribe — permission:', perm)
       if (perm === 'denied') return
       const granted = perm === 'granted'
         ? true
         : await Notification.requestPermission().then(p => p === 'granted')
-      if (!granted) { console.log('[push] permission not granted'); return }
-      console.log('[push] calling subscribe…')
-      const ok = await subscribe()
-      console.log('[push] subscribe result:', ok)
+      if (!granted) return
+      await subscribe()
     }
     trySubscribe()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,6 +175,7 @@ const App: React.FC = () => {
         />
       )}
       <NavGuard />
+      <PinGuard />
       <ToastContainer />
       {!splashDone && <CitySplash onDone={() => setSplashDone(true)} />}
     </BrowserRouter>

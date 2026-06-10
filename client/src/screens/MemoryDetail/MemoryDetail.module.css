@@ -292,12 +292,20 @@
   color: var(--text3);
 }
 
-/* ── Photo grid (masonry via CSS columns) ── */
+/* ── Photo grid (2-column JS masonry) ── */
 .photoGrid {
-  columns: 3;
-  column-gap: 4px;
-  width: 100%;
-  padding-bottom: 24px;
+  display: flex;
+  gap: 3px;
+  padding: 0 4px 32px;
+  align-items: flex-start;
+}
+
+.photoColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
 @keyframes shimmer {
@@ -306,15 +314,13 @@
 }
 
 .photoItem {
-  break-inside: avoid;
-  margin-bottom: 4px;
   width: 100%;
   display: block;
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  min-height: 60px; /* skeleton placeholder before image loads */
+  min-height: 80px;
 }
 
 .photoSkeleton {

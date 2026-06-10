@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
 import type { MemoryPhoto } from '../../../types/memory'
 import styles from './PhotoViewerModal.module.css'
@@ -6,8 +6,8 @@ import styles from './PhotoViewerModal.module.css'
 /**
  * PhotoViewerModal
  * ----------------
- * Fullscreen перегляд фотографій з свайпом між ними.
- * Анімація відкриття/закриття (scale+fade) та слайд між фото (left/right).
+ * Fullscreen перегляд фотографій з live-drag свайпом між ними.
+ * Drag → translateX фідбек → snap або повернення. Стрілки збережені для десктопу.
  *
  * Props:
  * @prop {MemoryPhoto[]}             photos          — список фотографій
@@ -26,7 +26,8 @@ interface PhotoViewerModalProps {
 
 type SlideDir = 'next' | 'prev' | null
 
-const CLOSE_MS = 240
+const CLOSE_MS    = 240
+const SWIPE_THRESHOLD = 60
 
 const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   photos,
@@ -35,76 +36,115 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   onDelete,
   onCaption,
 }) => {
-  useModalHistory(onClose, true)
-
-  const [index, setIndex]         = useState(initialIndex)
-  const [showUI, setShowUI]       = useState(true)
+  const [index, setIndex]           = useState(initialIndex)
+  const [showUI, setShowUI]         = useState(true)
   const [editingCaption, setEditingCaption] = useState(false)
   const [captionInput, setCaptionInput]     = useState('')
-  const [slideDir, setSlideDir]   = useState<SlideDir>(null)
-  const [closing, setClosing]     = useState(false)
+  const [slideDir, setSlideDir]     = useState<SlideDir>(null)
+  const [closing, setClosing]       = useState(false)
+  const [dragX, setDragX]           = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
 
   const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+  const isDragLocked = useRef(false) // locked to horizontal after first 10px
 
   const photo = photos[index]
 
-  // ── Navigation ──────────────────────────────────────────────────────────────
-
-  const goNext = () => {
-    if (index >= photos.length - 1) return
-    setSlideDir('next')
-    setIndex(i => i + 1)
-  }
-
-  const goPrev = () => {
-    if (index <= 0) return
-    setSlideDir('prev')
-    setIndex(i => i - 1)
-  }
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setClosing(true)
     setTimeout(onClose, CLOSE_MS)
-  }
+  }, [onClose])
 
-  // ── Sync with parent ─────────────────────────────────────────────────────────
+  useModalHistory(handleClose, !closing)
+
+  const goNext = useCallback(() => {
+    if (index >= photos.length - 1) return
+    setSlideDir('next')
+    setDragX(0)
+    setIndex(i => i + 1)
+  }, [index, photos.length])
+
+  const goPrev = useCallback(() => {
+    if (index <= 0) return
+    setSlideDir('prev')
+    setDragX(0)
+    setIndex(i => i - 1)
+  }, [index])
+
+  // ── Sync with parent ──────────────────────────────────────────────────────────
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIndex(initialIndex)
     setSlideDir(null)
   }, [initialIndex])
 
   useEffect(() => {
     if (!photo) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCaptionInput(photo.caption ?? '')
     setEditingCaption(false)
   }, [photo?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Keyboard ─────────────────────────────────────────────────────────────────
+  // ── Keyboard ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape')      handleClose()
-      if (e.key === 'ArrowLeft')   goPrev()
-      if (e.key === 'ArrowRight')  goNext()
+      if (e.key === 'Escape')     handleClose()
+      if (e.key === 'ArrowLeft')  goPrev()
+      if (e.key === 'ArrowRight') goNext()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, photos.length])
+  }, [handleClose, goPrev, goNext])
 
-  // ── Touch swipe ───────────────────────────────────────────────────────────────
+  // ── Touch swipe with live drag ────────────────────────────────────────────────
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+    isDragLocked.current = false
+    setIsDragging(false)
+    setSlideDir(null)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const dx = e.touches[0].clientX - touchStartX.current
+    const dy = e.touches[0].clientY - touchStartY.current
+
+    if (!isDragLocked.current) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+      if (Math.abs(dy) > Math.abs(dx)) return // vertical scroll — ignore
+      isDragLocked.current = true
+    }
+
+    e.preventDefault()
+    setIsDragging(true)
+
+    // Resist at edges
+    const atStart = index === 0 && dx > 0
+    const atEnd   = index === photos.length - 1 && dx < 0
+    const resist  = atStart || atEnd
+    setDragX(resist ? dx * 0.25 : dx)
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    const delta = e.changedTouches[0].clientX - touchStartX.current
-    if (delta > 50)  goPrev()
-    if (delta < -50) goNext()
+    if (!isDragLocked.current) {
+      setDragX(0)
+      setIsDragging(false)
+      return
+    }
+
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    setIsDragging(false)
+
+    if (dx < -SWIPE_THRESHOLD && index < photos.length - 1) {
+      goNext()
+    } else if (dx > SWIPE_THRESHOLD && index > 0) {
+      goPrev()
+    } else {
+      // Spring back
+      setDragX(0)
+    }
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────────
@@ -130,20 +170,29 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
     slideDir === 'prev' ? styles.slideFromLeft  :
     styles.fadeIn
 
+  const imgStyle: React.CSSProperties = isDragging
+    ? { transform: `translateX(${dragX}px)`, transition: 'none' }
+    : dragX === 0
+      ? {}
+      : { transform: 'translateX(0)', transition: 'transform 0.25s cubic-bezier(0.2,0,0,1)' }
+
   return (
     <div className={`${styles.fullscreen} ${closing ? styles.viewerOut : styles.viewerIn}`}>
       {/* Photo */}
       <div
         className={styles.imageWrap}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={() => setShowUI(v => !v)}
+        onClick={() => { if (!isDragging) setShowUI(v => !v) }}
       >
         <img
           key={index}
           src={photo.url}
           alt={photo.caption ?? ''}
-          className={`${styles.image} ${slideClass}`}
+          className={`${styles.image} ${isDragging ? '' : slideClass}`}
+          style={imgStyle}
+          draggable={false}
         />
       </div>
 
@@ -180,7 +229,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
           </div>
         </div>
 
-        {/* Prev / Next */}
+        {/* Prev / Next — збережені для десктопу */}
         {index > 0 && (
           <button
             type="button"
@@ -211,6 +260,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
                 value={captionInput}
                 onChange={e => setCaptionInput(e.target.value)}
                 placeholder="Підпис..."
+                onKeyDown={e => { if (e.key === 'Enter') handleCaptionSave() }}
                 autoFocus
               />
               <button type="button" className={styles.captionSave} onClick={handleCaptionSave}>

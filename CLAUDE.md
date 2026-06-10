@@ -156,6 +156,29 @@ useEffect(() => {
 - НІКОЛИ `any` — тільки конкретні типи або `unknown`
 - Якщо форма має `FormState` і `FormErrors` — `setField` повинен приймати `keyof FormErrors`, не `keyof FormState`. `FormErrors` містить лише поля що валідуються, а `FormState` може містити поля без валідації (масиви, булеани тощо) — індексація `errors[field]` де `field: keyof FormState` — помилка компіляції.
 
+### Акордеони — завжди з анімацією
+- НІКОЛИ `{open && <Content />}` — це миттєвий mount/unmount без анімації
+- ЗАВЖДИ `max-height` + `opacity` transition:
+
+```css
+.body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 260ms ease-in-out, opacity 200ms ease-in-out;
+}
+.bodyOpen { max-height: 800px; opacity: 1; }
+```
+
+```tsx
+<div className={`${styles.body} ${open ? styles.bodyOpen : ''}`}>
+  {content}
+</div>
+```
+
+- Стрілка: `transition: transform 0.2s ease` + `rotate(180deg)` при open
+- `max-height` — ставити з запасом (800px для списків, 400px для форм)
+
 ### UI — використовувати існуючі компоненти
 
 | Потреба | Компонент |

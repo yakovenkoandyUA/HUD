@@ -47,6 +47,18 @@
   transform: rotate(180deg);
 }
 
+.body {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 260ms ease-in-out, opacity 200ms ease-in-out;
+}
+
+.bodyOpen {
+  max-height: 800px;
+  opacity: 1;
+}
+
 .list {
   list-style: none;
   padding: 0;

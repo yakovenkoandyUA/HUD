@@ -391,15 +391,34 @@ const MemoryDetailScreen: React.FC = () => {
         </div>
       ) : (
         <div className={styles.photoGrid}>
-          {memory.photos.map((photo, i) => (
-            <PhotoItem
-              key={photo.id}
-              photo={photo}
-              onTap={() => setViewerIndex(i)}
-              onSetCover={() => setCover(id!, photo.url)}
-              onDelete={() => deletePhoto(id!, photo.id)}
-            />
-          ))}
+          <div className={styles.photoColumn}>
+            {memory.photos.filter((_, i) => i % 2 === 0).map((photo) => {
+              const i = memory.photos.indexOf(photo)
+              return (
+                <PhotoItem
+                  key={photo.id}
+                  photo={photo}
+                  onTap={() => setViewerIndex(i)}
+                  onSetCover={() => setCover(id!, photo.url)}
+                  onDelete={() => deletePhoto(id!, photo.id)}
+                />
+              )
+            })}
+          </div>
+          <div className={styles.photoColumn}>
+            {memory.photos.filter((_, i) => i % 2 === 1).map((photo) => {
+              const i = memory.photos.indexOf(photo)
+              return (
+                <PhotoItem
+                  key={photo.id}
+                  photo={photo}
+                  onTap={() => setViewerIndex(i)}
+                  onSetCover={() => setCover(id!, photo.url)}
+                  onDelete={() => deletePhoto(id!, photo.id)}
+                />
+              )
+            })}
+          </div>
         </div>
       )}
 

@@ -1,35 +1,231 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { OAuth2Client } from 'google-auth-library'
 import { User } from '../models/User'
 import { seedCategoriesForUser } from '../scripts/seedCategories'
 
-export async function login(req: Request, res: Response): Promise<void> {
-  const { password } = req.body as { password?: string }
-  if (!password) {
-    res.status(400).json({ error: 'Password required' })
-    return
-  }
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
-  const hash = process.env.ADMIN_PASSWORD_HASH
-  if (!hash) {
-    res.status(500).json({ error: 'Server not configured' })
-    return
-  }
+const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
+  id: (user._id as { toString(): string }).toString(),
+  name: user.name,
+  username: user.username,
+  email: user.email,
+  avatarUrl: user.avatarUrl,
+  role: user.role,
+  f1Enabled: user.f1Enabled ?? false,
+  hasPIN: !!user.pinHash,
+})
 
-  const match = await bcrypt.compare(password, hash)
-  if (!match) {
-    res.status(401).json({ error: 'Invalid password' })
-    return
-  }
-
-  const token = jwt.sign(
-    { userId: 'admin', role: 'admin' },
-    process.env.JWT_SECRET!,
-    { expiresIn: '365d' }
-  )
-  res.json({ token })
+function signToken(userId: string, role: string): string {
+  return jwt.sign({ userId, role }, process.env.JWT_SECRET!, { expiresIn: '30d' })
 }
+
+// ── Email auth ────────────────────────────────────────────────────────────────
+
+/** POST /auth/register — { email, password, name, username } → JWT + user
+ *  If username exists but has no passwordHash → claims the existing account.
+ */
+export async function register(req: Request, res: Response): Promise<void> {
+  const { email, password, name, username } = req.body as {
+    email?: string; password?: string; name?: string; username?: string
+  }
+
+  if (!email || !password || !name || !username) {
+    res.status(400).json({ error: 'email, password, name, username required' })
+    return
+  }
+  if (password.length < 6) {
+    res.status(400).json({ error: 'Пароль мінімум 6 символів' })
+    return
+  }
+
+  try {
+    const normalEmail = email.toLowerCase().trim()
+
+    const emailExists = await User.findOne({ email: normalEmail })
+    if (emailExists) {
+      res.status(409).json({ error: 'Цей email вже використовується' })
+      return
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10)
+    let user = await User.findOne({ username: username.trim() })
+
+    if (user) {
+      if (user.passwordHash) {
+        res.status(409).json({ error: 'Цей логін вже зайнятий' })
+        return
+      }
+      // Claim existing account (migration)
+      user.email = normalEmail
+      user.passwordHash = passwordHash
+      if (!user.name || user.name === user.username) user.name = name.trim()
+      await user.save()
+    } else {
+      user = await User.create({
+        name: name.trim(),
+        username: username.trim().toLowerCase(),
+        email: normalEmail,
+        passwordHash,
+        role: 'user',
+        f1Enabled: false,
+      })
+      const userId = (user._id as { toString(): string }).toString()
+      await seedCategoriesForUser(userId)
+    }
+
+    const userId = (user._id as { toString(): string }).toString()
+    res.status(201).json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
+  } catch {
+    res.status(500).json({ error: 'Помилка реєстрації' })
+  }
+}
+
+/** POST /auth/login — { email, password } → JWT + user */
+export async function loginEmail(req: Request, res: Response): Promise<void> {
+  const { email, password } = req.body as { email?: string; password?: string }
+  if (!email || !password) {
+    res.status(400).json({ error: 'email and password required' })
+    return
+  }
+
+  try {
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
+    if (!user?.passwordHash) {
+      res.status(401).json({ error: 'Неправильний email або пароль' })
+      return
+    }
+
+    const match = await bcrypt.compare(password, user.passwordHash)
+    if (!match) {
+      res.status(401).json({ error: 'Неправильний email або пароль' })
+      return
+    }
+
+    const userId = (user._id as { toString(): string }).toString()
+    res.json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
+  } catch {
+    res.status(500).json({ error: 'Помилка входу' })
+  }
+}
+
+// ── PIN ───────────────────────────────────────────────────────────────────────
+
+/** PATCH /auth/pin — { pin: string (4 digits) } — set or change PIN */
+export async function setPin(req: Request, res: Response): Promise<void> {
+  const { pin } = req.body as { pin?: string }
+  if (!pin || !/^\d{4}$/.test(pin)) {
+    res.status(400).json({ error: 'PIN має бути 4 цифри' })
+    return
+  }
+
+  try {
+    const pinHash = await bcrypt.hash(pin, 10)
+    await User.findByIdAndUpdate(req.userId, { pinHash })
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Помилка збереження PIN' })
+  }
+}
+
+/** DELETE /auth/pin — remove PIN */
+export async function removePin(req: Request, res: Response): Promise<void> {
+  try {
+    await User.findByIdAndUpdate(req.userId, { $unset: { pinHash: '' } })
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Помилка видалення PIN' })
+  }
+}
+
+/** POST /auth/pin/verify — { pin } — verify PIN for unlock */
+export async function verifyPin(req: Request, res: Response): Promise<void> {
+  const { pin } = req.body as { pin?: string }
+  if (!pin) {
+    res.status(400).json({ error: 'pin required' })
+    return
+  }
+
+  try {
+    const user = await User.findById(req.userId)
+    if (!user?.pinHash) {
+      res.status(404).json({ error: 'PIN не встановлено' })
+      return
+    }
+
+    const match = await bcrypt.compare(pin, user.pinHash)
+    if (!match) {
+      res.status(401).json({ error: 'Неправильний PIN' })
+      return
+    }
+
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Помилка перевірки PIN' })
+  }
+}
+
+// ── Google OAuth ─────────────────────────────────────────────────────────────
+
+async function uniqueUsername(base: string): Promise<string> {
+  const clean = base.replace(/[^a-z0-9]/g, '').slice(0, 20) || 'user'
+  let candidate = clean
+  let suffix = 1
+  while (await User.exists({ username: candidate })) {
+    candidate = `${clean}${suffix++}`
+  }
+  return candidate
+}
+
+/** POST /auth/google — { credential: Google ID token } → JWT + user */
+export async function googleAuth(req: Request, res: Response): Promise<void> {
+  const { credential } = req.body as { credential?: string }
+  if (!credential) {
+    res.status(400).json({ error: 'credential required' })
+    return
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    })
+    const payload = ticket.getPayload()
+    if (!payload?.email) {
+      res.status(400).json({ error: 'Invalid Google token' })
+      return
+    }
+
+    const email = payload.email.toLowerCase()
+    let user = await User.findOne({ email })
+
+    if (!user) {
+      const username = await uniqueUsername(email.split('@')[0])
+      user = await User.create({
+        name: payload.name ?? username,
+        username,
+        email,
+        avatarUrl: payload.picture ?? null,
+        role: 'user',
+        f1Enabled: false,
+      })
+      const userId = (user._id as { toString(): string }).toString()
+      await seedCategoriesForUser(userId)
+    } else if (!user.avatarUrl && payload.picture) {
+      user.avatarUrl = payload.picture
+      await user.save()
+    }
+
+    const userId = (user._id as { toString(): string }).toString()
+    res.json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
+  } catch {
+    res.status(401).json({ error: 'Invalid Google token' })
+  }
+}
+
+// ── Legacy / multi-profile ────────────────────────────────────────────────────
 
 export function verify(req: Request, res: Response): void {
   const header = req.headers.authorization
@@ -38,18 +234,24 @@ export function verify(req: Request, res: Response): void {
     return
   }
   try {
-    const payload = jwt.verify(
-      header.slice(7),
-      process.env.JWT_SECRET!
-    ) as { userId: string }
+    const payload = jwt.verify(header.slice(7), process.env.JWT_SECRET!) as { userId: string }
     res.json({ valid: true, userId: payload.userId })
   } catch {
     res.status(401).json({ valid: false })
   }
 }
 
-export function me(req: Request, res: Response): void {
-  res.json({ userId: req.userId, role: req.userRole })
+export async function me(req: Request, res: Response): Promise<void> {
+  try {
+    const user = await User.findById(req.userId)
+    if (!user) {
+      res.status(404).json({ error: 'User not found' })
+      return
+    }
+    res.json({ ...USER_PUBLIC_FIELDS(user), userId: req.userId, role: req.userRole })
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch user' })
+  }
 }
 
 /** GET /auth/profiles — public list of all profiles */
@@ -69,7 +271,7 @@ export async function getProfiles(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** POST /auth/select — pick a profile, receive JWT (no password) */
+/** POST /auth/select — pick a profile, receive JWT (no password) — legacy */
 export async function selectProfile(req: Request, res: Response): Promise<void> {
   const { username } = req.body as { username?: string }
   if (!username) {
@@ -85,33 +287,15 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
     }
 
     const userId = (user._id as { toString(): string }).toString()
-
-    const token = jwt.sign(
-      { userId, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: '30d' }
-    )
-
-    // Idempotent — seeds default categories only if not yet present
     await seedCategoriesForUser(userId)
 
-    res.json({
-      token,
-      user: {
-        id: userId,
-        name: user.name,
-        username: user.username,
-        avatarUrl: user.avatarUrl,
-        role: user.role,
-        f1Enabled: user.f1Enabled ?? false,
-      },
-    })
+    res.json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
   } catch {
     res.status(500).json({ error: 'Failed to select profile' })
   }
 }
 
-/** PATCH /auth/me — update name, avatar, and/or f1Enabled for active user */
+/** PATCH /auth/me — update name, avatar, f1Enabled for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
   const { avatarUrl, name, f1Enabled } = req.body as { avatarUrl?: string; name?: string; f1Enabled?: boolean }
   if (!avatarUrl && !name && f1Enabled === undefined) {

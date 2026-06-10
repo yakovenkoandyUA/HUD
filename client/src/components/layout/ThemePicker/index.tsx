@@ -119,7 +119,7 @@ const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
   const handleSwitchProfile = () => {
     logout()
     onClose()
-    navigate('/profile-select')
+    navigate('/login')
   }
 
   return (

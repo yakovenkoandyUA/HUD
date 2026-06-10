@@ -17,9 +17,13 @@
 
 | Route | Методи |
 |-------|--------|
-| `/api/auth/profiles` | GET |
-| `/api/auth/select` | POST |
-| `/api/auth/me` | PATCH |
+| `/api/auth/register` | POST — { email, password, name, username } |
+| `/api/auth/login` | POST — { email, password } |
+| `/api/auth/pin` | PATCH (set), DELETE (remove) |
+| `/api/auth/pin/verify` | POST — { pin } |
+| `/api/auth/profiles` | GET — public list (legacy) |
+| `/api/auth/select` | POST — username-only (legacy) |
+| `/api/auth/me` | GET, PATCH |
 | `/api/transactions` | GET, POST |
 | `/api/transactions/:id` | DELETE |
 | `/api/sprint/tasks` | GET, POST |
@@ -78,7 +82,7 @@ GOOGLE_BOOKS_KEY=...
 
 **RecurringPayment** — `amountForeign` + `currency: 'UAH'|'USD'|'EUR'` для валютних платежів
 
-**User** — `role: 'admin'|'user'`, `f1Enabled: boolean`
+**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`. Існуючі профілі без email/password можна "заклеймити" через POST /auth/register з тим самим username.
 
 ## Зовнішні API (frontend)
 

@@ -57,7 +57,7 @@ const XSmallIcon: React.FC = () => (
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate()
-  const { activeProfile, updateProfile } = useProfileStore()
+  const { activeProfile, updateProfile, setPIN, removePIN } = useProfileStore()
   const { showToast } = useUiStore()
   const { categories, fetchCategories, addCategory, removeCategory, toggleActive } = useCategoryStore()
 
@@ -65,6 +65,13 @@ const ProfilePage: React.FC = () => {
   const [editingName, setEditingName]     = useState(false)
   const [savingName, setSavingName]       = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  // PIN management
+  const [pinStep, setPinStep]     = useState<'idle' | 'enter' | 'confirm'>('idle')
+  const [pinValue, setPinValue]   = useState('')
+  const [pinConfirm, setPinConfirm] = useState('')
+  const [pinError, setPinError]   = useState<string | null>(null)
+  const [savingPin, setSavingPin] = useState(false)
 
   const [addingCat, setAddingCat]     = useState(false)
   const [newCatValue, setNewCatValue] = useState('')
@@ -233,6 +240,64 @@ const ProfilePage: React.FC = () => {
     authFetch(`/api/categories/${subId}`, { method: 'DELETE' }).catch(() => {})
   }, [removeCategory])
 
+  const handlePinDigit = (digit: string) => {
+    if (pinStep === 'enter') {
+      const next = pinValue + digit
+      if (next.length > 4) return
+      setPinValue(next)
+      setPinError(null)
+      if (next.length === 4) setPinStep('confirm')
+    } else if (pinStep === 'confirm') {
+      const next = pinConfirm + digit
+      if (next.length > 4) return
+      setPinConfirm(next)
+      setPinError(null)
+      if (next.length === 4) {
+        if (next !== pinValue) {
+          setPinError('PIN не співпадає. Спробуй знову.')
+          setPinValue('')
+          setPinConfirm('')
+          setPinStep('enter')
+        } else {
+          handleSavePIN(next)
+        }
+      }
+    }
+  }
+
+  const handlePinDelete = () => {
+    if (pinStep === 'enter') setPinValue(p => p.slice(0, -1))
+    else if (pinStep === 'confirm') setPinConfirm(p => p.slice(0, -1))
+    setPinError(null)
+  }
+
+  const handleSavePIN = async (pin: string) => {
+    setSavingPin(true)
+    try {
+      await setPIN(pin)
+      showToast('PIN встановлено', 'success')
+      setPinStep('idle')
+      setPinValue('')
+      setPinConfirm('')
+    } catch {
+      showToast('Помилка збереження PIN', 'error')
+    } finally {
+      setSavingPin(false)
+    }
+  }
+
+  const handleRemovePIN = async () => {
+    setSavingPin(true)
+    try {
+      await removePIN()
+      showToast('PIN видалено', 'success')
+    } catch {
+      showToast('Помилка видалення PIN', 'error')
+    } finally {
+      setSavingPin(false)
+    }
+  }
+
   if (!activeProfile) return null
 
   const topLevelCats     = categories.filter(c => !c.parentId)
@@ -321,6 +386,68 @@ const ProfilePage: React.FC = () => {
 
           <span className={styles.username}>@{activeProfile.username}</span>
         </div>
+
+        {/* ── PIN ── */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>PIN-КОД</span>
+            <span className={styles.sectionCount}>{activeProfile.hasPIN ? 'Встановлено' : 'Не встановлено'}</span>
+          </div>
+          {pinStep === 'idle' ? (
+            <div className={styles.pinRow}>
+              <p className={styles.pinHint}>
+                {activeProfile.hasPIN
+                  ? 'Блокування після 5 хв бездіяльності.'
+                  : 'Встанови 4-значний PIN для захисту застосунку.'}
+              </p>
+              <div className={styles.pinActions}>
+                <button
+                  type="button"
+                  className={styles.pinBtn}
+                  onClick={() => { setPinStep('enter'); setPinValue(''); setPinConfirm(''); setPinError(null) }}
+                >
+                  {activeProfile.hasPIN ? 'Змінити PIN' : 'Встановити PIN'}
+                </button>
+                {activeProfile.hasPIN && (
+                  <button
+                    type="button"
+                    className={`${styles.pinBtn} ${styles.pinBtnDanger}`}
+                    onClick={handleRemovePIN}
+                    disabled={savingPin}
+                  >
+                    Видалити PIN
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className={styles.pinSetup}>
+              <p className={styles.pinSetupLabel}>
+                {pinStep === 'enter' ? 'Введи новий PIN' : 'Підтвердь PIN'}
+              </p>
+              <div className={styles.pinDots}>
+                {Array.from({ length: 4 }, (_, i) => {
+                  const filled = pinStep === 'enter' ? i < pinValue.length : i < pinConfirm.length
+                  return <span key={i} className={`${styles.pinDot} ${filled ? styles.pinDotFilled : ''}`} />
+                })}
+              </div>
+              {pinError && <p className={styles.pinError}>{pinError}</p>}
+              <div className={styles.pinPad}>
+                {['1','2','3','4','5','6','7','8','9'].map(d => (
+                  <button key={d} type="button" className={styles.pinPadBtn} onClick={() => handlePinDigit(d)} disabled={savingPin}>{d}</button>
+                ))}
+                <div />
+                <button type="button" className={styles.pinPadBtn} onClick={() => handlePinDigit('0')} disabled={savingPin}>0</button>
+                <button type="button" className={`${styles.pinPadBtn} ${styles.pinPadDel}`} onClick={handlePinDelete}>
+                  <svg width="16" height="11" viewBox="0 0 20 14" fill="none"><path d="M7.5 1H19a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H7.5L1 7l6.5-6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M12 5l4 4M16 5l-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </button>
+              </div>
+              <button type="button" className={styles.pinCancelBtn} onClick={() => { setPinStep('idle'); setPinValue(''); setPinConfirm('') }}>
+                Скасувати
+              </button>
+            </div>
+          )}
+        </section>
 
         {/* ── Categories ── */}
         <section className={styles.section}>

@@ -22,20 +22,6 @@ const TrashBin: React.FC = () => {
     }
   }, [open, loaded, fetchTrash])
 
-  if (trashItems.length === 0 && loaded && open) {
-    return (
-      <div className={styles.wrap}>
-        <button type="button" className={styles.header} onClick={() => setOpen(false)}>
-          <span className={styles.label}>Кошик</span>
-          <svg className={`${styles.arrow} ${styles.arrowOpen}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <p className={styles.empty}>Кошик порожній</p>
-      </div>
-    )
-  }
-
   return (
     <div className={styles.wrap}>
       <button type="button" className={styles.header} onClick={() => setOpen(v => !v)} aria-expanded={open}>
@@ -48,13 +34,17 @@ const TrashBin: React.FC = () => {
         </svg>
       </button>
 
-      {open && (
-        <ul className={styles.list}>
-          {trashItems.map(item => (
-            <TrashItem key={item.id} item={item} onRestore={restoreItem} onPurge={purgeItem} />
-          ))}
-        </ul>
-      )}
+      <div className={`${styles.body} ${open ? styles.bodyOpen : ''}`}>
+        {loaded && trashItems.length === 0 ? (
+          <p className={styles.empty}>Кошик порожній</p>
+        ) : (
+          <ul className={styles.list}>
+            {trashItems.map(item => (
+              <TrashItem key={item.id} item={item} onRestore={restoreItem} onPurge={purgeItem} />
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }

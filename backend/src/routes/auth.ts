@@ -1,15 +1,29 @@
 import { Router } from 'express'
-import { login, verify, me, getProfiles, selectProfile, updateMe } from '../controllers/authController'
+import {
+  register, loginEmail, googleAuth,
+  verify, me, getProfiles, selectProfile, updateMe,
+  setPin, removePin, verifyPin,
+} from '../controllers/authController'
 import { requireAuth } from '../middleware/auth'
 
 const router = Router()
 
-router.post('/login', login)
+// Email auth
+router.post('/register', register)
+router.post('/login', loginEmail)
+router.post('/google', googleAuth)
+
+// PIN
+router.patch('/pin', requireAuth, setPin)
+router.delete('/pin', requireAuth, removePin)
+router.post('/pin/verify', requireAuth, verifyPin)
+
+// Session
 router.post('/verify', verify)
 router.get('/me', requireAuth, me)
 router.patch('/me', requireAuth, updateMe)
 
-// Multi-profile (no password)
+// Multi-profile legacy
 router.get('/profiles', getProfiles)
 router.post('/select', selectProfile)
 
