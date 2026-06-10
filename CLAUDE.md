@@ -96,12 +96,33 @@ Service Worker підключений до Web Push (VAPID) — підписка
 ### React — useEffect
 - НІКОЛИ не викликати `setState` синхронно в тілі `useEffect`
 - Всі setState після async — тільки всередині async функції
-- Завжди `cancelled` flag для cleanup:
+- Завжди `cancelled` flag для cleanup
 
+**ЗАБОРОНЕНО** (синхронний setState в тілі ефекту):
+```tsx
+// ❌ НЕПРАВИЛЬНО — setForm/setLoading синхронно в тілі useEffect
+useEffect(() => {
+  if (currency === 'UAH') {
+    setExchangeRate(1)   // ← ПОМИЛКА: синхронно в тілі
+    setRateLoading(false) // ← ПОМИЛКА
+    return
+  }
+  setForm({ name: payment.name }) // ← ПОМИЛКА: синхронно перед async
+  const fetchRate = async () => { ... }
+  fetchRate()
+}, [dep])
+```
+
+**ПРАВИЛЬНО** — весь setState всередині async або через useMemo/initializer:
 ```tsx
 useEffect(() => {
   let cancelled = false
   const load = async () => {
+    if (currency === 'UAH') {
+      if (!cancelled) { setExchangeRate(1); setRateLoading(false) }
+      return
+    }
+    setRateLoading(true)
     try {
       const data = await fetchSomething()
       if (!cancelled) setState(data)
@@ -113,6 +134,8 @@ useEffect(() => {
   return () => { cancelled = true }
 }, [dep])
 ```
+
+> Якщо потрібно ініціалізувати форму з `editPayment` — передавати як `useState(initialValue)` або `useEffect` з повним async wrap, ніколи не `setForm(...)` голим рядком в тілі ефекту.
 
 ### React — загальні правила
 - Optimistic update: спочатку UI, потім бекенд
