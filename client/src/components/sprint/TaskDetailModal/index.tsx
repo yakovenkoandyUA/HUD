@@ -378,16 +378,16 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               </button>
             )}
             <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">✕</button>
-          </div>
 
-          {/* ── Confirm close ── */}
-          {showConfirm && (
-            <div className={styles.confirmRow}>
-              <span className={styles.confirmText}>Закриваємо квест?</span>
-              <button type="button" className={styles.confirmYes} onClick={handleConfirmDone}>Так</button>
-              <button type="button" className={styles.confirmNo} onClick={() => setShowConfirm(false)}>Ні</button>
-            </div>
-          )}
+            {/* ── Confirm — slides in over header from right ── */}
+            {showConfirm && (
+              <div className={styles.confirmRow}>
+                <span className={styles.confirmText}>Закриваємо квест?</span>
+                <button type="button" className={styles.confirmNo} onClick={() => setShowConfirm(false)}>Ні</button>
+                <button type="button" className={styles.confirmYes} onClick={handleConfirmDone}>Так</button>
+              </div>
+            )}
+          </div>
 
           {/* ── Label Picker — absolute overlay inside sheet ── */}
           {labelPickerOpen && (
