@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import styles from './Modal.module.css'
 
 /**
@@ -34,6 +35,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
   const handleRef  = useRef<HTMLDivElement>(null)
   const onCloseRef = useRef(onClose)
   useEffect(() => { onCloseRef.current = onClose }, [onClose])
+
+  useModalHistory(onClose, isOpen)
 
   const drag        = useRef({ startY: 0, startTime: 0, active: false })
   const dragClosing = useRef(false)
@@ -95,14 +98,15 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
     const onMove = (e: TouchEvent) => {
       if (!drag.current.active) return
       const deltaY = e.touches[0].clientY - drag.current.startY
-      if (deltaY <= 0) { drag.current.active = false; return }
-      e.preventDefault()
+      // Clamp to 0 — brief upward jitter should NOT cancel the drag
+      const delta = Math.max(0, deltaY)
+      if (delta > 0) e.preventDefault()
       if (modalRef.current) {
-        modalRef.current.style.transform  = `translateY(${deltaY}px)`
+        modalRef.current.style.transform  = `translateY(${delta}px)`
         modalRef.current.style.transition = 'none'
       }
       if (overlayRef.current) {
-        overlayRef.current.style.opacity    = String(Math.max(0, 1 - deltaY / 400))
+        overlayRef.current.style.opacity    = String(Math.max(0, 1 - delta / 400))
         overlayRef.current.style.transition = 'none'
       }
     }
@@ -113,7 +117,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
       const deltaY   = e.changedTouches[0].clientY - drag.current.startY
       const velocity = deltaY / Math.max(1, Date.now() - drag.current.startTime)
 
-      if (deltaY >= 120 || (deltaY > 60 && velocity > 0.5)) {
+      if (deltaY >= 80 || (deltaY > 60 && velocity > 0.5)) {
         dragClosing.current = true
         if (modalRef.current) {
           modalRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'

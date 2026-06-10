@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import ImageUploadButton from '../../ui/ImageUploadButton'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import Button from '../../ui/Button'
@@ -38,6 +39,8 @@ const today = () => {
 }
 
 const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCreate }) => {
+  useModalHistory(onClose, isOpen)
+
   const [title, setTitle]       = useState('')
   const [location, setLocation] = useState('')
   const [date, setDate]         = useState(today())

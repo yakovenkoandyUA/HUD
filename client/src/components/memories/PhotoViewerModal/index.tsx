@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import type { MemoryPhoto } from '../../../types/memory'
 import styles from './PhotoViewerModal.module.css'
 
@@ -34,6 +35,8 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   onDelete,
   onCaption,
 }) => {
+  useModalHistory(onClose, true)
+
   const [index, setIndex]         = useState(initialIndex)
   const [showUI, setShowUI]       = useState(true)
   const [editingCaption, setEditingCaption] = useState(false)

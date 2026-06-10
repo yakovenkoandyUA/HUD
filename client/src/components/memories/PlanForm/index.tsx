@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import LocationSearch from '../LocationSearch'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import { formatDateUA } from '../../../utils/formatDate'
@@ -31,6 +32,8 @@ const STATUS_OPTIONS: { value: PlanStatus; label: string }[] = [
 ]
 
 const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
+  useModalHistory(onClose, true)
+
   const [title,        setTitle]        = useState('')
   const [location,     setLocation]     = useState<PlanLocation>({ name: null, address: null, lat: null, lng: null })
   const [status,       setStatus]       = useState<PlanStatus>('want')

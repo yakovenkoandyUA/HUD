@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import { useNavigate } from 'react-router-dom'
 import { useUiStore } from '../../../store/uiStore'
 import { useProfileStore } from '../../../store/profileStore'
@@ -92,6 +93,8 @@ const PALETTES: ThemePalette[] = [
 ]
 
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
+  useModalHistory(onClose, true)
+
   const navigate = useNavigate()
   const { theme, setTheme, showToast, updateAvailable } = useUiStore()
   const { activeProfile, logout, updateProfile } = useProfileStore()

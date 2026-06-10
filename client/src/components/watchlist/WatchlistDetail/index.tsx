@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import StarRating from '../StarRating'
 import EpisodesList from '../EpisodesList'
 import ImageUploadButton from '../../ui/ImageUploadButton'
@@ -136,11 +138,10 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [nextSeasonDate, setNextSeasonDate]     = useState<string | null>(item.nextSeasonDate ?? null)
   const [showSeasonDatePicker, setShowSeasonDatePicker] = useState(false)
   const initialNextEpRef   = useRef(item.nextEpisodeDate)
-  const sheetRef        = useRef<HTMLDivElement>(null)
   const episodesRef     = useRef<HTMLDivElement>(null)
-  const startY          = useRef(0)
-  const startScrollTop  = useRef(0)
-  const isDragging      = useRef(false)
+
+  useModalHistory(onClose, isOpen)
+  const sheetRef = useSwipeToDismiss(onClose, { enabled: mounted })
 
   const isSeriesLike = item.category === 'series' || item.category === 'anime'
   const { episodes } = useSeriesEpisodes(isSeriesLike && item.tmdbId > 0 ? item.tmdbId : null)
@@ -344,58 +345,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
-  // Imperative touchmove — passive:false required to call preventDefault
-  useEffect(() => {
-    if (!mounted) return
-    const sheet = sheetRef.current
-    if (!sheet) return
-
-    const onMove = (e: TouchEvent) => {
-      const deltaY = e.touches[0].clientY - startY.current
-
-      if (deltaY > 0 && sheet.scrollTop === 0 && startScrollTop.current === 0) {
-        e.preventDefault()
-        isDragging.current = true
-        sheet.style.transform  = `translateY(${Math.min(deltaY * 0.4, 120)}px)`
-        sheet.style.transition = 'none'
-      } else {
-        isDragging.current     = false
-        sheet.style.transform  = 'translateY(0)'
-        sheet.style.transition = 'none'
-      }
-    }
-
-    sheet.addEventListener('touchmove', onMove, { passive: false })
-    return () => sheet.removeEventListener('touchmove', onMove)
-  }, [mounted])
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    startY.current         = e.touches[0].clientY
-    startScrollTop.current = sheetRef.current?.scrollTop ?? 0
-    isDragging.current     = false
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const sheet = sheetRef.current
-    if (!sheet) return
-
-    sheet.style.transition = 'transform 0.25s ease'
-
-    if (isDragging.current) {
-      const deltaY = e.changedTouches[0].clientY - startY.current
-      if (deltaY > 80) {
-        sheet.style.transform = 'translateY(100%)'
-        setTimeout(onClose, 250)
-      } else {
-        sheet.style.transform = 'translateY(0)'
-      }
-    } else {
-      sheet.style.transform = 'translateY(0)'
-    }
-
-    isDragging.current = false
-  }
-
   const handleStartWatching = () => {
     onStatusChange('watching')
     setTimeout(() => {
@@ -430,8 +379,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
         ref={sheetRef}
         className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`}
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
       >
         <div className={styles.handle} />
         {/* ── Backdrop ── */}

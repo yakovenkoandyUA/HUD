@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import type { UnifiedTodo } from '../../../types'
 import { isRoutineDueOnDay } from '../../../utils/sprint'
 import styles from './WeekExpandedView.module.css'
@@ -112,6 +113,8 @@ function calcWeekStats(routineItems: UnifiedTodo[]): WeekStat[] {
 const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
   weekStart, routineItems, onToggle, onOpenDetail, onClose,
 }) => {
+  useModalHistory(onClose, true)
+
   const days    = getWeekDays(weekStart)
   const today   = new Date(); today.setHours(0, 0, 0, 0)
   const todayStr = toIso(today)

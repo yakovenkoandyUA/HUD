@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import { authFetch } from '../../../services/api'
 import { useSprintStore } from '../../../store/sprintStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
 import { isRecurring } from '../../../utils/sprint'
-import type { RepeatConfig, UnifiedTodo } from '../../../types'
+import type { ChecklistItem, RepeatConfig, UnifiedTodo } from '../../../types'
 import styles from './TaskDetailModal.module.css'
 
 /**
@@ -124,6 +126,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const task = liveTask ?? lastTaskRef.current
 
   const [mounted, setMounted]                 = useState(false)
+  const [sheetVisible, setSheetVisible]       = useState(false)
   const [labelPickerOpen, setLabelPickerOpen] = useState(false)
   const [showDatePicker, setShowDatePicker]   = useState(false)
   const [showRepeatConfig, setShowRepeatConfig] = useState(false)
@@ -145,13 +148,29 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const onCloseRef  = useRef(onClose)
   useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
+  const [draggingIdx, setDraggingIdx]   = useState<number | null>(null)
+  const [dragOverIdx, setDragOverIdx]   = useState<number | null>(null)
+
+  useModalHistory(onClose, !!taskId)
+  useSwipeToDismiss(
+    () => { dragClosing.current = true; onCloseRef.current() },
+    { enabled: mounted && !!taskId && draggingIdx === null, bodyRef, overlayRef, sheetRef },
+  )
+
   const [titleDraft, setTitleDraft]     = useState('')
   const [descDraft, setDescDraft]       = useState('')
   const [checkInput, setCheckInput]     = useState('')
   const [editingIdx, setEditingIdx]     = useState<number | null>(null)
-  const [editingText, setEditingText]   = useState('')
+
+  const dragIndexRef      = useRef<number | null>(null)
+  const dragOverIndexRef  = useRef<number | null>(null)
+  const checklistRef      = useRef<HTMLDivElement | null>(null)
+  const sortedChecklistRef = useRef<ChecklistItem[]>([])
 
   useEffect(() => {
+    let raf: number | null = null
+    let timer: ReturnType<typeof setTimeout> | null = null
+
     if (taskId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true)
@@ -162,15 +181,22 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
       setShowReminderPicker(false)
       setShowConfirm(false)
       setAnimatingDone(false)
+      // RAF: component renders at translateY(100%), next frame trigger CSS transition to translateY(0)
+      raf = requestAnimationFrame(() => setSheetVisible(true))
     } else {
+      setSheetVisible(false)
       if (!dragClosing.current) {
-        // Normal close — clear inline drag styles so CSS exit animation works
+        // Clear any inline drag styles so CSS exit transition plays cleanly
         if (sheetRef.current)   { sheetRef.current.style.transform = '';   sheetRef.current.style.transition = '' }
         if (overlayRef.current) { overlayRef.current.style.opacity = '';   overlayRef.current.style.transition = '' }
       }
       dragClosing.current = false
-      const t = setTimeout(() => setMounted(false), 280)
-      return () => clearTimeout(t)
+      timer = setTimeout(() => setMounted(false), 280)
+    }
+
+    return () => {
+      if (raf   !== null) cancelAnimationFrame(raf)
+      if (timer !== null) clearTimeout(timer)
     }
   }, [taskId])
 
@@ -202,69 +228,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [taskId, onClose])
-
-  // Imperative drag-to-dismiss — passive:false so preventDefault() actually works.
-  useEffect(() => {
-    if (!mounted || !taskId) return
-    const sheet = sheetRef.current
-    const body  = bodyRef.current
-    if (!sheet || !body) return
-
-    let startY     = 0
-    let startTime  = 0
-    let currentY   = 0
-    let isDragging = false
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (body.scrollTop > 0) return
-      startY     = e.touches[0].clientY
-      startTime  = Date.now()
-      isDragging = true
-      sheet.style.transition = 'none'
-      if (overlayRef.current) overlayRef.current.style.transition = 'none'
-    }
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (!isDragging) return
-      if (body.scrollTop > 0) {
-        isDragging = false
-        sheet.style.transform = ''
-        return
-      }
-      currentY = e.touches[0].clientY
-      const delta = Math.max(0, currentY - startY)
-      sheet.style.transform = `translateY(${delta}px)`
-      if (overlayRef.current) overlayRef.current.style.opacity = String(Math.max(0, 1 - delta / 400))
-      if (delta > 10) e.preventDefault()
-    }
-
-    const onTouchEnd = () => {
-      if (!isDragging) return
-      isDragging = false
-      const delta    = currentY - startY
-      const velocity = delta / Math.max(1, Date.now() - startTime)
-      if (delta >= 120 || (delta > 60 && velocity > 0.5)) {
-        dragClosing.current = true
-        sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
-        sheet.style.transform  = 'translateY(100%)'
-        if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '0' }
-        setTimeout(() => onCloseRef.current(), 280)
-      } else {
-        sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
-        sheet.style.transform  = ''
-        if (overlayRef.current) { overlayRef.current.style.transition = 'opacity 0.3s ease'; overlayRef.current.style.opacity = '' }
-      }
-    }
-
-    sheet.addEventListener('touchstart', onTouchStart, { passive: true  })
-    sheet.addEventListener('touchmove',  onTouchMove,  { passive: false })
-    sheet.addEventListener('touchend',   onTouchEnd,   { passive: true  })
-    return () => {
-      sheet.removeEventListener('touchstart', onTouchStart)
-      sheet.removeEventListener('touchmove',  onTouchMove)
-      sheet.removeEventListener('touchend',   onTouchEnd)
-    }
-  }, [mounted, taskId])
 
   const handleTitleBlur = useCallback(() => {
     if (!task || !titleDraft.trim()) return
@@ -330,48 +293,87 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     if (a.done === b.done) return 0
     return a.done ? 1 : -1
   })
+  sortedChecklistRef.current = sortedChecklist
   const checkDone    = checklist.filter(c => c.done).length
   const checkPct     = checklist.length > 0 ? Math.round((checkDone / checklist.length) * 100) : 0
   const progressColor = checkPct === 100 ? 'var(--positive)' : checkPct >= 50 ? 'var(--gold)' : 'var(--negative)'
   const taskLabels   = task.labels ?? []
-  const isOpen       = !!taskId
 
-  const moveItem = (sortedIdx: number, dir: 'up' | 'down') => {
-    const newList = [...sortedChecklist]
-    const targetIdx = dir === 'up' ? sortedIdx - 1 : sortedIdx + 1
-    if (targetIdx < 0 || targetIdx >= newList.length) return
-    ;[newList[sortedIdx], newList[targetIdx]] = [newList[targetIdx], newList[sortedIdx]]
-    updateChecklist(task.id, newList)
-  }
 
-  const startEdit = (idx: number, title: string) => {
-    setEditingIdx(idx)
-    setEditingText(title)
-  }
-
-  const saveEdit = (sortedIdx: number) => {
-    if (!editingText.trim()) { setEditingIdx(null); return }
-    const newList = [...sortedChecklist]
-    newList[sortedIdx] = { ...newList[sortedIdx], title: editingText.trim() }
-    updateChecklist(task.id, newList)
+  const saveEdit = (sortedIdx: number, value: string) => {
+    const trimmed = value.trim()
     setEditingIdx(null)
+    if (!trimmed || trimmed === sortedChecklist[sortedIdx]?.title) return
+    const newList = [...sortedChecklist]
+    newList[sortedIdx] = { ...newList[sortedIdx], title: trimmed }
+    updateChecklist(task.id, newList)
   }
 
-  const handleEditKeyUp = (e: React.KeyboardEvent, sortedIdx: number) => {
-    if (e.key === 'Enter')  saveEdit(sortedIdx)
-    if (e.key === 'Escape') setEditingIdx(null)
+  const startDrag = (idx: number, e: React.TouchEvent | React.MouseEvent) => {
+    e.stopPropagation()
+    dragIndexRef.current     = idx
+    dragOverIndexRef.current = idx
+    setDraggingIdx(idx)
+    setDragOverIdx(idx)
+
+    const getIdxFromY = (clientY: number): number => {
+      const el = checklistRef.current
+      if (!el) return idx
+      const items = el.querySelectorAll<HTMLElement>('[data-drag-idx]')
+      for (const item of items) {
+        const rect = item.getBoundingClientRect()
+        if (clientY < rect.bottom) return Number(item.dataset.dragIdx)
+      }
+      return sortedChecklistRef.current.length - 1
+    }
+
+    const onMove = (ev: TouchEvent | MouseEvent) => {
+      if ('touches' in ev) (ev as TouchEvent).preventDefault()
+      const clientY = 'touches' in ev ? (ev as TouchEvent).touches[0].clientY : (ev as MouseEvent).clientY
+      const newIdx = getIdxFromY(clientY)
+      if (newIdx !== dragOverIndexRef.current) {
+        dragOverIndexRef.current = newIdx
+        setDragOverIdx(newIdx)
+      }
+    }
+
+    const onEnd = () => {
+      document.removeEventListener('touchmove', onMove)
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('touchend',  onEnd)
+      document.removeEventListener('mouseup',   onEnd)
+
+      const from = dragIndexRef.current
+      const to   = dragOverIndexRef.current
+      dragIndexRef.current     = null
+      dragOverIndexRef.current = null
+      setDraggingIdx(null)
+      setDragOverIdx(null)
+
+      if (from !== null && to !== null && from !== to) {
+        const list = [...sortedChecklistRef.current]
+        const [moved] = list.splice(from, 1)
+        list.splice(to, 0, moved)
+        updateChecklist(task.id, list)
+      }
+    }
+
+    document.addEventListener('touchmove', onMove, { passive: false })
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('touchend',  onEnd, { passive: true })
+    document.addEventListener('mouseup',   onEnd)
   }
 
   return (
     <>
       <div
         ref={overlayRef}
-        className={`${styles.overlay} ${isOpen ? styles.overlayIn : styles.overlayOut}`}
+        className={`${styles.overlay} ${sheetVisible ? styles.overlayVisible : ''}`}
         onClick={onClose}
       >
         <div
           ref={sheetRef}
-          className={`${styles.sheet} ${isOpen ? styles.sheetIn : styles.sheetOut}`}
+          className={`${styles.sheet} ${sheetVisible ? styles.sheetVisible : ''}`}
           onClick={e => e.stopPropagation()}
         >
           <div className={styles.handle} />
@@ -601,13 +603,35 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                           style={{ width: `${checkPct}%`, background: progressColor }}
                         />
                       </div>
-                      <div className={styles.checklistList}>
+                      <div ref={checklistRef} className={styles.checklistList}>
                         {sortedChecklist.map((item, idx) => {
                           const isEditing = editingIdx === idx
                           const isDone    = item.done
-                          const undoneCount = sortedChecklist.filter(i => !i.done).length
                           return (
-                            <div key={item.id} className={`${styles.checkItem} ${isDone ? styles.checkItemDone : ''}`}>
+                            <div
+                              key={item.id}
+                              data-drag-idx={idx}
+                              className={[
+                                styles.checkItem,
+                                isDone          ? styles.checkItemDone     : '',
+                                draggingIdx === idx                        ? styles.checkItemDragging : '',
+                                dragOverIdx === idx && draggingIdx !== idx ? styles.checkItemDragOver : '',
+                              ].filter(Boolean).join(' ')}
+                            >
+                              {/* Drag handle */}
+                              <span
+                                className={styles.dragHandle}
+                                onMouseDown={e => startDrag(idx, e)}
+                                onTouchStart={e => startDrag(idx, e)}
+                                aria-hidden="true"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                  <circle cx="4" cy="2.5" r="1"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="9.5" r="1"/>
+                                  <circle cx="8" cy="2.5" r="1"/><circle cx="8" cy="6" r="1"/><circle cx="8" cy="9.5" r="1"/>
+                                </svg>
+                              </span>
+
+                              {/* Checkbox */}
                               <button
                                 type="button"
                                 className={`${styles.checkbox} ${isDone ? styles.checkboxDone : ''}`}
@@ -621,63 +645,40 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                                 )}
                               </button>
 
+                              {/* Text or inline edit */}
                               {isEditing ? (
                                 <input
-                                  className={styles.checkItemInput}
-                                  value={editingText}
+                                  className={styles.checklistTextInput}
+                                  defaultValue={item.title}
                                   autoFocus
                                   inputMode="text"
                                   enterKeyHint="done"
-                                  onChange={e => setEditingText(e.target.value)}
-                                  onKeyUp={e => handleEditKeyUp(e, idx)}
-                                  onBlur={() => saveEdit(idx)}
+                                  onBlur={e  => saveEdit(idx, e.target.value)}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter')  { e.preventDefault(); saveEdit(idx, e.currentTarget.value) }
+                                    if (e.key === 'Escape') setEditingIdx(null)
+                                  }}
                                 />
                               ) : (
                                 <span
                                   className={`${styles.checkItemText} ${isDone ? styles.checkItemTextDone : ''}`}
-                                  onDoubleClick={() => !isDone && startEdit(idx, item.title)}
+                                  onClick={() => { if (!isDone && draggingIdx === null) setEditingIdx(idx) }}
                                 >
                                   {item.title}
                                 </span>
                               )}
 
-                              {!isDone && !isEditing && (
-                                <div className={styles.checkItemActions}>
-                                  <button
-                                    type="button"
-                                    className={styles.checkItemBtn}
-                                    onClick={() => moveItem(idx, 'up')}
-                                    disabled={idx === 0}
-                                    aria-label="Вгору"
-                                  >
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                      <polyline points="18 15 12 9 6 15"/>
-                                    </svg>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className={styles.checkItemBtn}
-                                    onClick={() => moveItem(idx, 'down')}
-                                    disabled={idx === undoneCount - 1}
-                                    aria-label="Вниз"
-                                  >
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                      <polyline points="6 9 12 15 18 9"/>
-                                    </svg>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className={styles.checkItemBtnDelete}
-                                    onClick={() => removeChecklistItem(task.id, item.id)}
-                                    aria-label="Видалити підзадачу"
-                                  >
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                      <line x1="18" y1="6" x2="6" y2="18"/>
-                                      <line x1="6" y1="6" x2="18" y2="18"/>
-                                    </svg>
-                                  </button>
-                                </div>
-                              )}
+                              {/* Delete */}
+                              <button
+                                type="button"
+                                className={styles.checkItemBtnDelete}
+                                onClick={() => removeChecklistItem(task.id, item.id)}
+                                aria-label="Видалити підзадачу"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                              </button>
                             </div>
                           )
                         })}
