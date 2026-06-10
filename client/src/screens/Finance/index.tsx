@@ -96,7 +96,7 @@ const Finance: React.FC = () => {
 
         <RecurringPayments />
 
-        <ShoppingTracker />
+        <ShoppingTracker transactions={transactions} />
 
         {/* ── Merged TodayCard + StatsGrid ── */}
         <div className={styles.statsCard}>
