@@ -45,12 +45,16 @@ const Watchlist: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [selected, setSelected] = useState<WatchlistItem | null>(null)
+  const lastSelectedRef = useRef<WatchlistItem | null>(null)
 
   // Keep selected in sync with store so toggles (watchTogether, notify) reflect immediately
   const effectiveSelected = useMemo(
     () => selected ? (items.find(i => i.id === selected.id) ?? selected) : null,
     [items, selected]
   )
+  // Hold the last non-null item so WatchlistDetail stays mounted during close animation
+  if (effectiveSelected) lastSelectedRef.current = effectiveSelected
+  const displayItem = effectiveSelected ?? lastSelectedRef.current
 
   const watchingItems = useMemo(
     () => items.filter((i) => i.status === 'watching'),
@@ -263,9 +267,9 @@ const Watchlist: React.FC = () => {
       </div>
 
       {/* ── Detail modal ── */}
-      {effectiveSelected && (
+      {displayItem && (
         <WatchlistDetail
-          item={effectiveSelected}
+          item={displayItem}
           isOpen={!!selected}
           onClose={() => setSelected(null)}
           onStatusChange={handleStatusChange}

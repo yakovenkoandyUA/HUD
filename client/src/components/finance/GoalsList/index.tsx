@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useGoalsStore } from '../../../store/goalsStore'
 import { fmt } from '../../../utils/finance'
 import type { Goal } from '../../../types'
@@ -127,6 +127,7 @@ const GoalsList: React.FC = () => {
   const [newTarget, setNewTarget]           = useState('')
   const [addErrors, setAddErrors]           = useState<{ title?: string; target?: string }>({})
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null)
+  const lastGoalRef = useRef<Goal | null>(null)
   const [depositGoalId, setDepositGoalId]   = useState<string | null>(null)
   const [depositAmount, setDepositAmount]   = useState('')
   const [depositError, setDepositError]     = useState<string | undefined>()
@@ -164,6 +165,8 @@ const GoalsList: React.FC = () => {
   const selectedGoal = selectedGoalId
     ? goals.find(g => g.id === selectedGoalId) ?? null
     : null
+  if (selectedGoal) lastGoalRef.current = selectedGoal
+  const displayGoal = selectedGoal ?? lastGoalRef.current
 
   return (
 		<div className={styles.wrap}>
@@ -256,7 +259,7 @@ const GoalsList: React.FC = () => {
 				</div>
 			)}
 
-			{selectedGoal && <GoalDetail goal={selectedGoal} onClose={() => setSelectedGoalId(null)} />}
+			{displayGoal && <GoalDetail goal={displayGoal} isOpen={!!selectedGoalId} onClose={() => setSelectedGoalId(null)} />}
 		</div>
 	)
 }

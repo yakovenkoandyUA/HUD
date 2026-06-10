@@ -31,8 +31,17 @@ const STATUS_OPTIONS: { value: PlanStatus; label: string }[] = [
   { value: 'visited', label: 'Були' },
 ]
 
+const CLOSE_MS = 260
+
 const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
-  useModalHistory(onClose, true)
+  const [closing, setClosing] = useState(false)
+
+  const handleClose = () => {
+    setClosing(true)
+    setTimeout(onClose, CLOSE_MS)
+  }
+
+  useModalHistory(handleClose, !closing)
 
   const [title,        setTitle]        = useState('')
   const [location,     setLocation]     = useState<PlanLocation>({ name: null, address: null, lat: null, lng: null })
@@ -78,13 +87,13 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
       visitedDate: null,
       memoryId:    null,
     })
-    onClose()
+    handleClose()
   }
 
   return (
     <>
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+    <div className={`${styles.overlay} ${closing ? styles.overlayOut : ''}`} onClick={handleClose}>
+      <div className={`${styles.sheet} ${closing ? styles.sheetOut : ''}`} onClick={e => e.stopPropagation()}>
         <div className={styles.handle} />
         <h2 className={styles.heading}>Новий план</h2>
 

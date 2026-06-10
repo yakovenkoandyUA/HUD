@@ -14,10 +14,12 @@ import styles from './GoalDetail.module.css'
  *
  * Props:
  * @prop {Goal}        goal    — ціль з goalsStore (реактивна — оновлюється після contribute)
+ * @prop {boolean}     isOpen  — контролює анімацію відкриття/закриття Modal
  * @prop {() => void}  onClose — закрити модалку
  */
 interface GoalDetailProps {
   goal: Goal
+  isOpen: boolean
   onClose: () => void
 }
 
@@ -43,7 +45,7 @@ function calcForecast(goal: Goal): string {
   return `~${months} міс.`
 }
 
-const GoalDetail: React.FC<GoalDetailProps> = ({ goal, onClose }) => {
+const GoalDetail: React.FC<GoalDetailProps> = ({ goal, isOpen, onClose }) => {
   const { contribute, updateImage, deleteGoal } = useGoalsStore()
   const [contribAmount, setContribAmount] = useState('')
   const [contribError, setContribError]   = useState<string | undefined>()
@@ -79,7 +81,7 @@ const GoalDetail: React.FC<GoalDetailProps> = ({ goal, onClose }) => {
   }, [goal.deposits])
 
   return (
-    <Modal isOpen onClose={onClose} draggable>
+    <Modal isOpen={isOpen} onClose={onClose} draggable>
       <div className={styles.wrap}>
 
         <ImageUploadButton

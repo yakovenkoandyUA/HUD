@@ -24,7 +24,7 @@
     opacity   0.38s ease;
 }
 .sheetVisible { transform: translateY(0); opacity: 1; }
-.sheetHidden  { transform: translateY(60px); opacity: 0; }
+.sheetHidden  { transform: translateY(100%); opacity: 0; }
 
 .handle {
   width: 36px;

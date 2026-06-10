@@ -331,6 +331,61 @@
   to   { transform: translateX(0); }
 }
 
+/* Sticky header inside preview */
+.previewHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.previewBack {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.previewBack:active { opacity: 0.7; }
+
+.previewSearchTrigger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  color: var(--text3);
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s;
+}
+.previewSearchTrigger:active { border-color: var(--accent); }
+
+.previewSearchQuery {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .previewHero {
   position: relative;
   width: 100%;
@@ -357,26 +412,6 @@
   inset: 0;
   background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.85) 100%);
 }
-
-.previewBack {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  width: 40px;
-  height: 40px;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  -webkit-tap-highlight-color: transparent;
-  backdrop-filter: blur(4px);
-}
-.previewBack:active { opacity: 0.7; }
 
 .previewTitleWrap {
   position: absolute;
@@ -472,10 +507,6 @@
   font-size: 13px;
   color: var(--text2);
   line-height: 1.6;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   margin: 0;
 }
 

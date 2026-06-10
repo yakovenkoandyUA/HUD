@@ -340,6 +340,31 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
       {/* ── Fullscreen Preview ── */}
       {preview && (
         <div className={styles.previewScreen}>
+          {/* Sticky header: back + search */}
+          <div className={styles.previewHeader}>
+            <button
+              type="button"
+              className={styles.previewBack}
+              onClick={closePreview}
+              aria-label="Назад"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={styles.previewSearchTrigger}
+              onClick={() => { closePreview(); setTimeout(() => inputRef.current?.focus(), 80) }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span className={styles.previewSearchQuery}>{query || placeholder}</span>
+            </button>
+          </div>
+
           {/* Hero */}
           <div
             className={styles.previewHero}
@@ -352,17 +377,6 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
               <div className={styles.previewHeroFallback} />
             )}
             <div className={styles.previewHeroGradient} />
-
-            <button
-              type="button"
-              className={styles.previewBack}
-              onClick={closePreview}
-              aria-label="Назад"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
 
             <div className={styles.previewTitleWrap}>
               <h2 className={styles.previewTitle}>{preview.title}</h2>

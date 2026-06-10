@@ -14,6 +14,13 @@
   to   { opacity: 1; }
 }
 
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.overlayOut { animation: fadeOut 0.26s ease both; }
+
 .sheet {
   background: var(--bg2);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -29,6 +36,13 @@
   from { transform: translateY(80px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
+
+@keyframes slideDown {
+  from { transform: translateY(0);     opacity: 1; }
+  to   { transform: translateY(100%);  opacity: 0; }
+}
+
+.sheetOut { animation: slideDown 0.26s cubic-bezier(0.4, 0, 1, 1) both; }
 
 .handle {
   width: 36px;

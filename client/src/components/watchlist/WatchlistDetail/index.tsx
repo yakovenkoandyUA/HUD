@@ -113,8 +113,8 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 }) => {
   const activeProfile = useProfileStore(s => s.activeProfile)
 
-  const [mounted, setMounted]             = useState(isOpen)
-  const [visible, setVisible]             = useState(isOpen)
+  const [mounted, setMounted]             = useState(false)
+  const [visible, setVisible]             = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const [comments, setComments]     = useState<Comment[]>([])
