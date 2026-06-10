@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import type { UnifiedTodo } from '../../../types'
 import { isRoutineDueOnDay } from '../../../utils/sprint'
 import styles from './WeekHeader.module.css'
@@ -87,6 +87,18 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const swipeStartX    = useRef<number | null>(null)
   const swipeStartY    = useRef<number | null>(null)
+  const prevWeekStart  = useRef<string>(weekStart)
+  const [slideClass, setSlideClass] = useState<string>('')
+
+  useEffect(() => {
+    if (prevWeekStart.current === weekStart) return
+    const dir = weekStart > prevWeekStart.current ? styles.slideFromRight : styles.slideFromLeft
+    prevWeekStart.current = weekStart
+    setSlideClass(dir)
+    const t = setTimeout(() => setSlideClass(''), 280)
+    return () => clearTimeout(t)
+  }, [weekStart])
+
   const days = getWeekDays(weekStart)
   const mon  = days[0]
   const sun  = days[6]
@@ -145,7 +157,7 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
         </div>
       )}
 
-      <div className={styles.weekRow}>
+      <div className={`${styles.weekRow} ${slideClass}`}>
         {days.map((day, i) => {
           const dayTime = new Date(day)
           dayTime.setHours(0, 0, 0, 0)

@@ -144,3 +144,18 @@
 .dotDone    { background: var(--second); }
 .dotPending { background: var(--gold); }
 .dotOverdue { background: var(--accent); }
+
+/* ── Week slide animations ── */
+
+@keyframes slideFromRight {
+  from { transform: translateX(28px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes slideFromLeft {
+  from { transform: translateX(-28px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+.slideFromRight { animation: slideFromRight 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.slideFromLeft  { animation: slideFromLeft  0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
