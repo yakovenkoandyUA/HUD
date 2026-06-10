@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RecipeCard from '../../components/recipes/RecipeCard'
 import RecipeForm from '../../components/recipes/RecipeForm'
+import RecipeGeneratorModal from '../../components/recipes/RecipeGeneratorModal'
 import CategoriesSlider from '../../components/recipes/CategoriesSlider'
 import Modal from '../../components/ui/Modal'
 import AppHeader from '../../components/AppHeader'
@@ -29,9 +30,11 @@ const Recipes: React.FC = () => {
   const { recipes, scope, wishlistIds, fetchRecipes, setScope, addRecipe, updateRecipe } = useRecipesStore()
   const { showToast } = useUiStore()
 
-  const [showForm, setShowForm]       = useState(false)
+  const [showForm, setShowForm]           = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
-  const [savedOnly, setSavedOnly]     = useState(false)
+  const [showGenerator, setShowGenerator] = useState(false)
+  const [prefillData, setPrefillData]     = useState<Partial<Omit<Recipe, 'id'>> | null>(null)
+  const [savedOnly, setSavedOnly]         = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [activeTag, setActiveTag]     = useState<string | null>(null)
 
@@ -70,6 +73,14 @@ const Recipes: React.FC = () => {
     }
     setShowForm(false)
     setEditingRecipe(null)
+    setPrefillData(null)
+  }
+
+  const handleGenerated = (data: Partial<Omit<Recipe, 'id'>>) => {
+    setPrefillData(data)
+    setShowGenerator(false)
+    setEditingRecipe(null)
+    setShowForm(true)
   }
 
   const emptyMsg = recipes.length === 0
@@ -175,28 +186,54 @@ const Recipes: React.FC = () => {
         )}
       </div>
 
-      {/* ── FAB — тільки для власних рецептів ── */}
-      <button
-        type="button"
-        className={styles.fab}
-        onClick={() => { setEditingRecipe(null); setShowForm(true) }}
-        aria-label="Додати рецепт"
-      >
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path d="M3 11h16M11 3v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-      </button>
+      {/* ── FABs ── */}
+      <div className={styles.fabGroup}>
+        <button
+          type="button"
+          className={styles.fabAi}
+          onClick={() => setShowGenerator(true)}
+          aria-label="Згенерувати рецепт"
+        >
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"
+              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          className={styles.fab}
+          onClick={() => { setEditingRecipe(null); setPrefillData(null); setShowForm(true) }}
+          aria-label="Додати рецепт"
+        >
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M3 11h16M11 3v16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
 
       <Modal
         isOpen={showForm}
-        onClose={() => { setShowForm(false); setEditingRecipe(null) }}
-        title={editingRecipe ? 'Редагувати рецепт' : 'Новий рецепт'}
+        onClose={() => { setShowForm(false); setEditingRecipe(null); setPrefillData(null) }}
+        title={editingRecipe ? 'Редагувати рецепт' : prefillData ? '✨ AI рецепт' : 'Новий рецепт'}
         draggable
       >
         <RecipeForm
-          initial={editingRecipe}
+          initial={(prefillData ?? editingRecipe) as Recipe | null}
           onSave={handleSave}
-          onCancel={() => { setShowForm(false); setEditingRecipe(null) }}
+          onCancel={() => { setShowForm(false); setEditingRecipe(null); setPrefillData(null) }}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={showGenerator}
+        onClose={() => setShowGenerator(false)}
+        title="✨ Згенерувати рецепт"
+        draggable
+      >
+        <RecipeGeneratorModal
+          onGenerated={handleGenerated}
+          onCancel={() => setShowGenerator(false)}
         />
       </Modal>
     </div>
