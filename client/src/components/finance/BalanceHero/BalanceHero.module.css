@@ -27,6 +27,13 @@
   line-height: 1;
 }
 
+.currency {
+  font-family: var(--font-ui);
+  font-size: 26px;
+  font-weight: 700;
+  vertical-align: baseline;
+}
+
 .meta {
   display: flex;
   justify-content: space-between;

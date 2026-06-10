@@ -49,7 +49,9 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   return (
     <div className={styles.hero}>
       <div className={styles.label}>Баланс</div>
-      <div className={styles.balance}>{fmt(balance)} ₴</div>
+      <div className={styles.balance}>
+        {fmt(balance)}<span className={styles.currency}> ₴</span>
+      </div>
 
       {currentStreak > 0 && (
         <span className={styles.streak}>🔥 {currentStreak} {currentStreak === 1 ? 'день' : currentStreak < 5 ? 'дні' : 'днів'} в рамках бюджету</span>
