@@ -249,12 +249,20 @@
 
 /* ── Confirm close banner ── */
 .confirmBanner {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px 10px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
+  padding: 0 14px;
+  background: var(--bg);
+  z-index: 2;
+  animation: confirmSlide 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes confirmSlide {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
 }
 
 .confirmText {
