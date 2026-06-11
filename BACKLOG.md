@@ -27,7 +27,6 @@
 - Streak економії (persist local)
 - ✅ salaryDay — конфігурований день зарплати (1-31), зберігається в профілі; бюджетний цикл рахується від нього
 - financeStore: sessionStorage кеш при mount (миттєве відображення без мерехтіння)
-- ⬜ Місячна аналітика (MonthlyReport) — не реалізовано
 
 ### Sprint / Quests
 - Тижневий список задач: sprint / shopping / todo / уроки
@@ -49,7 +48,6 @@
 - Push-нотифікації: нові епізоди (13:00) + нові сезони
 - Схожі рекомендації, decade фільтр, жанровий фільтр
 - Swipe-to-dismiss, fullscreen search preview
-- ⬜ Прогрес читання книг (pageCount є в моделі, але currentPage/UI нема)
 
 ### F1 (тільки admin)
 - NextRaceCard (TrackSVG + draw-path + RaceCountdown)
