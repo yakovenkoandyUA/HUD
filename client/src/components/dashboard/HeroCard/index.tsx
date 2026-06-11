@@ -8,7 +8,7 @@ import styles from './HeroCard.module.css'
  * --------
  * Компактна баланс-картка Dashboard з опціональним F1-таймером праворуч.
  * Анімований лічильник балансу при першому завантаженні.
- * Sparkline останніх 7 днів витрат під сумою балансу.
+ * Інтерактивна sparkline останніх 7 днів — тап на точку показує суму дня.
  *
  * Props:
  * @prop {number}       balance       — поточний баланс (грн)
@@ -51,18 +51,174 @@ function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
-function sparkPoints(data: number[]): string {
-  const w = 80
-  const h = 16
-  const max = Math.max(...data, 1)
-  return data
-    .map((v, i) => {
-      const x = ((i / (data.length - 1)) * w).toFixed(1)
-      const y = (h - (v / max) * (h - 2) - 1).toFixed(1)
-      return `${x},${y}`
-    })
-    .join(' ')
+const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+const CHART_H = 48
+const SEG_PAD_X = 10
+
+function getSparkDays(): string[] {
+  const today = new Date()
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(today.getDate() - (6 - i))
+    return DAYS_SHORT[d.getDay()]
+  })
 }
+
+/**
+ * SparklineChart
+ * --------------
+ * 7-денний інтерактивний графік витрат.
+ * Тап/hover на день → tooltip з сумою.
+ *
+ * Props:
+ * @prop {number[]} data — витрати за 7 днів (oldest→newest)
+ * @prop {string[]} days — мітки днів тижня
+ */
+interface SparklineChartProps {
+  data: number[]
+  days: string[]
+}
+
+const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
+  const [activeIdx, setActiveIdx] = useState<number | null>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [w, setW] = useState(280)
+  const dismissRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const obs = new ResizeObserver(entries => {
+      setW(entries[0].contentRect.width)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  /* Auto-dismiss tooltip after 2s on touch */
+  useEffect(() => {
+    if (activeIdx === null) return
+    if (dismissRef.current) clearTimeout(dismissRef.current)
+    dismissRef.current = setTimeout(() => setActiveIdx(null), 2000)
+    return () => { if (dismissRef.current) clearTimeout(dismissRef.current) }
+  }, [activeIdx])
+
+  const max = Math.max(...data, 1)
+  const segW = (w - SEG_PAD_X * 2) / (data.length - 1)
+
+  const pts = data.map((v, i) => ({
+    x: SEG_PAD_X + i * segW,
+    y: CHART_H - (v / max) * (CHART_H - 10) - 4,
+    v,
+  }))
+
+  const polyPts = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+
+  const areaPath =
+    `M ${pts[0].x.toFixed(1)},${CHART_H} ` +
+    pts.map(p => `L ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') +
+    ` L ${pts[pts.length - 1].x.toFixed(1)},${CHART_H} Z`
+
+  const handleTap = (i: number) => {
+    setActiveIdx(prev => (prev === i ? null : i))
+  }
+
+  return (
+    <div
+      ref={wrapRef}
+      className={styles.sparkWrap}
+      onMouseLeave={() => setActiveIdx(null)}
+    >
+      {/* Tooltip */}
+      {activeIdx !== null && (
+        <div
+          className={styles.sparkTip}
+          style={{ left: `${((pts[activeIdx].x / w) * 100).toFixed(1)}%` }}
+        >
+          <span className={styles.sparkTipDay}>{days[activeIdx]}</span>
+          <span className={styles.sparkTipAmt}>
+            {data[activeIdx] > 0 ? `${fmt(data[activeIdx])} ₴` : '—'}
+          </span>
+        </div>
+      )}
+
+      <svg
+        width={w}
+        height={CHART_H}
+        className={styles.sparkSvg}
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="sparkAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* Area fill */}
+        <path d={areaPath} fill="url(#sparkAreaGrad)" />
+
+        {/* Line */}
+        <polyline
+          points={polyPts}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+
+        {/* Dots */}
+        {pts.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={activeIdx === i ? 4.5 : 2.5}
+            fill={activeIdx === i ? 'currentColor' : 'var(--bg2)'}
+            stroke="currentColor"
+            strokeWidth="1.5"
+            style={{ transition: 'r 0.12s ease' }}
+          />
+        ))}
+
+        {/* Invisible tap columns */}
+        {pts.map((p, i) => {
+          const halfSeg = segW / 2
+          const x = i === 0 ? 0 : p.x - halfSeg
+          const colW = i === 0 || i === data.length - 1 ? halfSeg + SEG_PAD_X : segW
+          return (
+            <rect
+              key={i}
+              x={x}
+              y={0}
+              width={colW}
+              height={CHART_H}
+              fill="transparent"
+              onMouseEnter={() => setActiveIdx(i)}
+              onPointerDown={() => handleTap(i)}
+              style={{ cursor: 'pointer', touchAction: 'manipulation' }}
+            />
+          )
+        })}
+      </svg>
+
+      {/* Day labels */}
+      <div className={styles.sparkDays}>
+        {days.map((d, i) => (
+          <span
+            key={i}
+            className={`${styles.sparkDay} ${activeIdx === i ? styles.sparkDayActive : ''} ${i === 6 ? styles.sparkDayToday : ''}`}
+          >
+            {d}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── HeroCard ─────────────────────────────────────────────────────────────────
 
 const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, race, compact, sparklineData }) => {
   const [countdown, setCountdown] = useState<Countdown | null>(
@@ -116,7 +272,8 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
   const overBudget = todaySpent > dailyBudget
   const showRace = !compact && !!race
 
-  const hasSparkline = sparklineData && sparklineData.length >= 2 && sparklineData.some(v => v > 0)
+  const hasSparkline = sparklineData && sparklineData.length === 7 && sparklineData.some(v => v > 0)
+  const sparkDays = hasSparkline ? getSparkDays() : []
 
   return (
     <div className={styles.balanceCard}>
@@ -125,25 +282,6 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
           <span className={styles.balanceAmount}>
             {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
           </span>
-
-          {hasSparkline && (
-            <svg
-              className={styles.sparkline}
-              viewBox="0 0 80 16"
-              preserveAspectRatio="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <polyline
-                points={sparkPoints(sparklineData!)}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            </svg>
-          )}
-
           <span className={styles.balanceToday}>
             Сьогодні: {fmt(todaySpent)} / {fmt(dailyBudget)} ₴
           </span>
@@ -183,6 +321,10 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
           </>
         )}
       </div>
+
+      {hasSparkline && (
+        <SparklineChart data={sparklineData!} days={sparkDays} />
+      )}
 
       <div className={styles.balanceBar}>
         <div
