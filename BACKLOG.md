@@ -97,15 +97,63 @@
 
 ### 🔴 P1 — Quicknotes
 
-**Чому зараз:** найшвидша фіча, максимальна цінність для щоденного використання.
+**Мета:** швидко записати думку/ідею/нагадування прямо з дашборду.
 
-**ТЗ:**
-- FAB на Dashboard: додати 4-ю опцію "Нотатка"
-- Backend: `POST /api/notes { text, tags? }`, `GET /api/notes`, `PATCH`, `DELETE`
-- Model: `{ text, tags[], isPinned, userId, createdAt }`
-- Screen `/notes` або модалка список нотаток (вирішити окремо)
-- Підтримка тегів-пінів, пошук по тексту
-- Без форматування — тільки plain text
+---
+
+#### Backend
+
+**Model** `Note` (`backend/src/models/Note.ts`):
+```ts
+{ text: string, userId: ObjectId, createdAt: Date, updatedAt: Date }
+```
+
+**Routes** `backend/src/routes/notes.ts` → підключити в `app.ts` як `/api/notes`:
+- `GET /api/notes` — всі нотатки юзера, сортування `-createdAt`
+- `POST /api/notes { text }` — створити
+- `PATCH /api/notes/:id { text }` — оновити текст
+- `DELETE /api/notes/:id` — видалити
+
+Всі роути через `requireAuth`. PATCH/DELETE перевіряють `userId === req.userId`.
+
+---
+
+#### Frontend
+
+**Store** `client/src/store/notesStore.ts` (Zustand, **без persist** — дані в БД):
+```ts
+{ notes: Note[], fetchNotes, addNote, updateNote, deleteNote }
+```
+`authFetch` для всіх запитів. Optimistic update: спочатку UI, потім бекенд, відкат при помилці.
+
+**Screen** `client/src/screens/Notes/index.tsx` + `Notes.module.css`:
+- Роут `/notes` в `App.tsx` (захищений `ProtectedRoute`)
+- `AppHeader` зверху
+- Пошук: `input` з іконкою лупи — фільтрує локально по `text.includes(query)`, з'являється тільки якщо є нотатки
+- Список нотаток: картки в колонку, найновіша зверху
+- Кожна картка: текст (до 3 рядків з `overflow: hidden`), дата (JetBrains Mono, `--text3`), кнопка видалити (×, з'являється при tap/hover)
+- Тап на картку → inline редагування: `textarea` розгортається на місці, `onBlur` + `Enter` (без Shift) зберігають, `Escape` скасовує
+- Порожній стан: "Ще немає нотаток. Додай першу через +" (центровано)
+
+**FAB** (`client/src/components/dashboard/FAB/index.tsx`):
+- Додати 4-й пункт "Нотатка" з іконкою олівця
+- Тап → закрити FAB + `navigate('/notes')` + невеликий `state: { autoFocus: true }` щоб екран одразу відкривав нову нотатку
+
+**NotesScreen при `autoFocus: true`**:
+- При mount якщо `location.state?.autoFocus` — одразу показати `textarea` для нової нотатки вгорі списку
+- `onBlur` + непорожній текст → `addNote(text)` → очистити textarea
+
+**BottomNav**: нотатки не отримують окремої таби — доступ тільки через FAB і прямий URL. Не перевантажуємо nav.
+
+---
+
+#### Порядок реалізації
+1. Backend: Model + routes + підключення
+2. `notesStore`
+3. `Notes` screen (список + пошук + inline edit)
+4. FAB 4-й пункт
+5. `autoFocus` flow при переході з FAB
+6. `tsc --noEmit` на client + backend, commit, push
 
 ---
 
