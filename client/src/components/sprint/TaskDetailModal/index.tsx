@@ -116,7 +116,7 @@ function formatReminderLabel(reminder: { amount: number; unit: string }): string
 }
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
-  const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem } = useSprintStore()
+  const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem, deleteItem } = useSprintStore()
   const { accepted, fetchFamily } = useFamilyStore()
 
   useEffect(() => {
@@ -721,10 +721,24 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               />
             </div>
 
-            {/* ── Close button ── */}
-            <button type="button" className={styles.closeBottomBtn} onClick={onClose}>
-              Закрити
-            </button>
+            {/* ── Footer ── */}
+            <div className={styles.footerRow}>
+              {recurring && (
+                <button
+                  type="button"
+                  className={styles.deleteRoutineBtn}
+                  onClick={() => { deleteItem(task.id); onClose() }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                  </svg>
+                  Видалити рутину
+                </button>
+              )}
+              <button type="button" className={styles.closeBottomBtn} onClick={onClose}>
+                Закрити
+              </button>
+            </div>
 
           </div>
         </div>

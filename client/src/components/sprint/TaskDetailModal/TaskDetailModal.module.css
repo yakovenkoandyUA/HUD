@@ -140,10 +140,16 @@
   padding-bottom: 16px;
 }
 
+.footerRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px 24px;
+}
+
 .closeBottomBtn {
   display: block;
-  width: calc(100% - 32px);
-  margin: 8px 16px 24px;
+  width: 100%;
   padding: 14px;
   border-radius: 12px;
   border: none;
@@ -157,6 +163,26 @@
   transition: background 0.15s, color 0.15s;
 }
 .closeBottomBtn:active { background: var(--border2); color: var(--text); }
+
+.deleteRoutineBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--negative) 40%, transparent);
+  background: color-mix(in srgb, var(--negative) 8%, transparent);
+  color: var(--negative);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.deleteRoutineBtn:active { background: color-mix(in srgb, var(--negative) 18%, transparent); }
 
 /* ── Section ── */
 .section {
