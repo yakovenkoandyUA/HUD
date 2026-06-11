@@ -27,7 +27,7 @@ export const useUiStore = create<UiState>()(
     (set) => ({
       toasts: [],
       activeModal: null,
-      theme: 'warm',
+      theme: 'castle',
       updateAvailable: false,
 
       showToast: (message, type = 'info') =>
