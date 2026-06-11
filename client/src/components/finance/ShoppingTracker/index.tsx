@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import type { Transaction } from '../../../types'
+import { useCategoryStore } from '../../../store/categoryStore'
 import { fmt } from '../../../utils/finance'
 import styles from './ShoppingTracker.module.css'
 
@@ -31,9 +32,29 @@ const CATEGORY_COLORS: Record<string, string> = {
   таксі:            '#E67E22',
   метро:            '#3498DB',
   транспорт:        '#E67E22',
-  фібі:             '#9B59B6',
-  інше:             '#6c757d',
   'транспорт-інше': '#E67E22',
+  фібі:             '#9B59B6',
+  житло:            '#5B8DB8',
+  підписки:         '#2980B9',
+  розваги:          '#E74C3C',
+  одяг:             '#1ABC9C',
+  здоров:           '#27AE60',
+  'здоров\'я':      '#27AE60',
+  ресторани:        '#C0392B',
+  їжа:              '#C0392B',
+  спорт:            '#16A085',
+  освіта:           '#8E44AD',
+  техніка:          '#2C3E50',
+  інше:             '#6c757d',
+}
+
+const FALLBACK_PALETTE = [
+  '#E74C3C', '#9B59B6', '#2980B9', '#1ABC9C',
+  '#F39C12', '#D35400', '#27AE60', '#8E44AD',
+]
+
+function getCategoryColor(cat: string, index: number): string {
+  return CATEGORY_COLORS[cat] ?? FALLBACK_PALETTE[index % FALLBACK_PALETTE.length]
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -42,20 +63,43 @@ const CATEGORY_LABEL: Record<string, string> = {
   таксі:            'Таксі',
   метро:            'Метро',
   транспорт:        'Транспорт',
-  фібі:             'Фібі',
-  інше:             'Інше',
   'транспорт-інше': 'Транспорт',
+  фібі:             'Фібі',
+  житло:            'Житло',
+  підписки:         'Підписки',
+  розваги:          'Розваги',
+  одяг:             'Одяг',
+  здоров:           'Здоров\'я',
+  'здоров\'я':      'Здоров\'я',
+  ресторани:        'Ресторани',
+  їжа:              'Їжа',
+  спорт:            'Спорт',
+  освіта:           'Освіта',
+  техніка:          'Техніка',
+  інше:             'Інше',
+}
+
+function getCategoryLabel(cat: string): string {
+  return CATEGORY_LABEL[cat] ?? cat.charAt(0).toUpperCase() + cat.slice(1)
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function getPeriodPrefix(period: Period): string {
+function localIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+interface PeriodRange { start: string; end?: string }
+
+function getPeriodRange(period: Period): PeriodRange {
   const d = new Date()
-  if (period === 'month') return d.toISOString().slice(0, 7)
+  if (period === 'month') {
+    return { start: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` }
+  }
+  // Monday of current week (local date, no UTC shift)
   const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  const mon = new Date(d)
-  mon.setDate(diff)
-  return mon.toISOString().slice(0, 10)
+  const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - (day === 0 ? 6 : day - 1))
+  const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6)
+  return { start: localIso(mon), end: localIso(sun) }
 }
 
 interface CatStat { category: string; total: number; count: number }
@@ -67,7 +111,10 @@ interface Segment extends CatStat {
   delay: number        // stagger delay ms
 }
 
-function buildSegments(stats: CatStat[], grandTotal: number): Segment[] {
+// categories with savings semantics — excluded from spending chart
+const SAVINGS_KEYS = ['заощадження', 'накопичення', 'savings', 'заощадження/накопичення']
+
+function buildSegments(stats: CatStat[], grandTotal: number, colorFn: (cat: string, i: number) => string): Segment[] {
   const hasMany = stats.length > 1
   let cumAngle = 0
   return stats.map((s, i) => {
@@ -79,7 +126,7 @@ function buildSegments(stats: CatStat[], grandTotal: number): Segment[] {
     cumAngle += angle
     return {
       ...s,
-      color: CATEGORY_COLORS[s.category] ?? '#6c757d',
+      color: colorFn(s.category, i),
       startAngle,
       visLen,
       delay: i * 75,
@@ -93,28 +140,61 @@ const ShoppingTracker: React.FC<ShoppingTrackerProps> = ({ transactions }) => {
   const [animated, setAnimated] = useState(false)
   const [exiting, setExiting] = useState(false)
 
+  const { categories } = useCategoryStore()
+  const [showAll, setShowAll] = useState(false)
+
+  // Resolve color: categoryStore first, then hardcoded map, then fallback palette
+  const resolveColor = (cat: string, i: number): string => {
+    const stored = categories.find(c => c.name.toLowerCase() === cat)
+    if (stored?.color) return stored.color
+    return getCategoryColor(cat, i)
+  }
+
+  // Resolve label: categoryStore first, then hardcoded map
+  const resolveLabel = (cat: string): string => {
+    const stored = categories.find(c => c.name.toLowerCase() === cat)
+    if (stored?.name) return stored.name
+    return getCategoryLabel(cat)
+  }
+
   // Compute stats from current period
-  const prefix = getPeriodPrefix(period)
-  const expenses = transactions.filter(
-    (t) => t.type === 'expense' && t.date.startsWith(prefix)
-  )
+  const { start, end } = getPeriodRange(period)
+  const expenses = transactions.filter(t => {
+    if (t.type !== 'expense') return false
+    if (end) return t.date >= start && t.date <= end
+    return t.date.startsWith(start)
+  })
   const grouped: Record<string, CatStat> = {}
   for (const t of expenses) {
-    const cat = t.category ?? 'інше'
+    const cat = (t.category ?? 'інше').toLowerCase().trim()
+    // exclude savings categories from the spending chart
+    if (SAVINGS_KEYS.includes(cat)) continue
     if (!grouped[cat]) grouped[cat] = { category: cat, total: 0, count: 0 }
     grouped[cat].total += t.amount
     grouped[cat].count += 1
   }
   const allStats = Object.values(grouped).sort((a, b) => b.total - a.total)
-  const TOP = 5
-  const stats = allStats.length > TOP
-    ? [
-        ...allStats.slice(0, TOP),
-        { category: 'інше (решта)', total: allStats.slice(TOP).reduce((s, c) => s + c.total, 0), count: allStats.slice(TOP).reduce((s, c) => s + c.count, 0) },
-      ]
+  // donut cap: merge categories beyond 7 into 'інше'
+  const DONUT_MAX = 7
+  const LEGEND_DEFAULT = 4
+  const stats: CatStat[] = allStats.length > DONUT_MAX
+    ? (() => {
+        const top = allStats.slice(0, DONUT_MAX)
+        const rest = allStats.slice(DONUT_MAX)
+        const restTotal = rest.reduce((s, c) => s + c.total, 0)
+        const restCount = rest.reduce((s, c) => s + c.count, 0)
+        const existingInше = top.find(c => c.category === 'інше')
+        if (existingInше) {
+          existingInше.total += restTotal
+          existingInше.count += restCount
+          return top
+        }
+        return [...top, { category: 'інше', total: restTotal, count: restCount }]
+      })()
     : allStats
+  const hiddenCount = stats.length - LEGEND_DEFAULT
   const grandTotal = stats.reduce((s, c) => s + c.total, 0)
-  const segments = grandTotal > 0 ? buildSegments(stats, grandTotal) : []
+  const segments = grandTotal > 0 ? buildSegments(stats, grandTotal, resolveColor) : []
 
   // Initial mount animation
   useEffect(() => {
@@ -281,20 +361,25 @@ const ShoppingTracker: React.FC<ShoppingTrackerProps> = ({ transactions }) => {
           </div>
 
           {/* ── Legend ── */}
-          <ul className={styles.legend}>
-            {segments.map((seg) => (
-              <li key={seg.category} className={styles.legendRow}>
-                <span
-                  className={styles.legendDot}
-                  style={{ background: seg.color }}
-                />
-                <span className={styles.legendName}>
-                  {CATEGORY_LABEL[seg.category] ?? seg.category}
-                </span>
-                <span className={styles.legendAmt}>{fmt(seg.total)} ₴</span>
-              </li>
-            ))}
-          </ul>
+          <div className={styles.legendWrap}>
+            <ul className={styles.legend}>
+              {(showAll ? segments : segments.slice(0, LEGEND_DEFAULT)).map((seg) => (
+                <li key={seg.category} className={styles.legendRow}>
+                  <span className={styles.legendDot} style={{ background: seg.color }} />
+                  <span className={styles.legendName}>{resolveLabel(seg.category)}</span>
+                  <span className={styles.legendAmt}>{fmt(seg.total)} ₴</span>
+                </li>
+              ))}
+            </ul>
+            {hiddenCount > 0 && (
+              <button type="button" className={styles.showMoreBtn} onClick={() => setShowAll(v => !v)}>
+                {showAll ? 'сховати' : `ще ${hiddenCount}`}
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: showAll ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s' }}>
+                  <path d="M2 3.5L5 6.5l3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

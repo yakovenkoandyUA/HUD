@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { authFetch } from '../../../services/api'
 import { fmt } from '../../../utils/finance'
+import { getServiceLogoUrl, getServiceEmoji } from '../../../utils/serviceLogos'
 import Modal from '../../ui/Modal'
 import styles from './RecurringPayments.module.css'
 
@@ -69,51 +70,9 @@ function hiddenLabel(n: number): string {
   return `Ще ${n} платежів`
 }
 
-const KNOWN_SERVICES: Record<string, string> = {
-	netflix: 'netflix.com',
-	spotify: 'spotify.com',
-	youtube: 'youtube.com',
-	'youtube premium': 'youtube.com',
-	'apple music': 'music.apple.com',
-	'apple tv': 'tv.apple.com',
-	icloud: 'icloud.com',
-	'google one': 'one.google.com',
-	amazon: 'amazon.com',
-	'amazon prime': 'amazon.com',
-	disney: 'disneyplus.com',
-	'disney+': 'disneyplus.com',
-	hbo: 'hbomax.com',
-	twitch: 'twitch.tv',
-	discord: 'discord.com',
-	notion: 'notion.so',
-	figma: 'figma.com',
-	github: 'github.com',
-	chatgpt: 'openai.com',
-	claude: 'anthropic.com',
-	midjourney: 'midjourney.com',
-	playstation: 'playstation.com',
-	xbox: 'xbox.com',
-	nintendo: 'nintendo.com',
-	київстар: 'kyivstar.ua',
-	vodafone: 'vodafone.ua',
-	lifecell: 'lifecell.ua',
-	patreon: 'patreon.com',
-}
-
-function getCategoryEmoji(name: string): string {
-  const n = name.toLowerCase()
-  if (n.includes('музик') || n.includes('music')) return '🎵'
-  if (n.includes('відео') || n.includes('video') || n.includes('tv')) return '🎬'
-  if (n.includes('гр') || n.includes('game')) return '🎮'
-  if (n.includes('хмар') || n.includes('cloud') || n.includes('storage')) return '☁️'
-  if (n.includes("зв'яз") || n.includes('мобіл')) return '📱'
-  return '💳'
-}
-
 const ServiceLogo: React.FC<{ name: string }> = ({ name }) => {
   const [imgError, setImgError] = useState(false)
-  const domain = KNOWN_SERVICES[name.toLowerCase().trim()]
-  const logoUrl = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : null
+  const logoUrl = getServiceLogoUrl(name)
 
   if (logoUrl && !imgError) {
     return (
@@ -125,7 +84,7 @@ const ServiceLogo: React.FC<{ name: string }> = ({ name }) => {
       />
     )
   }
-  return <span className={styles.serviceEmoji}>{getCategoryEmoji(name)}</span>
+  return <span className={styles.serviceEmoji}>{getServiceEmoji(name)}</span>
 }
 
 function dayLabel(day: number): string {

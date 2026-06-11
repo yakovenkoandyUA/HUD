@@ -350,6 +350,7 @@ Body: { ingredients: string, restrictions?: string }
 | Всі AI виклики через backend (не з frontend) | 🟡 Важливо |
 | Видалити хардкод профілів/ролей | 🟡 До launch |
 | ShoppingTracker — вирішити долю компонента | 🟢 Cleanup |
+| Email верифікація через Resend (купити домен mimir.app, верифікувати DNS, відновити sendVerificationEmail в register + isVerified=false при реєстрації) | 🟡 До launch |
 | MongoDB M10+ (зараз M0 = 512MB) | 🟢 Перед 100+ юзерів |
 
 ---

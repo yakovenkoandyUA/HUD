@@ -31,6 +31,7 @@ export interface Transaction {
   date: string
   category?: string
   createdAt?: string
+  recurringId?: string | null
 }
 
 export interface SprintTask {

@@ -79,6 +79,19 @@ const ProfilePage: React.FC = () => {
   const [familySearch, setFamilySearch] = useState('')
   const [familyLoading, setFamilyLoading] = useState(false)
 
+  // Admin users
+  interface AdminUser {
+    id: string
+    name: string
+    username: string
+    email: string | null
+    role: 'admin' | 'user'
+    avatarUrl: string | null
+    createdAt: string
+  }
+  const [adminUsers, setAdminUsers]     = useState<AdminUser[]>([])
+  const [adminLoading, setAdminLoading] = useState(false)
+
   const [addingCat, setAddingCat]     = useState(false)
   const [newCatValue, setNewCatValue] = useState('')
   const [savingCat, setSavingCat]     = useState(false)
@@ -98,6 +111,25 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
   useEffect(() => { fetchFamily() }, [fetchFamily])
+
+  useEffect(() => {
+    if (activeProfile?.role !== 'admin') return
+    let cancelled = false
+    const load = async () => {
+      setAdminLoading(true)
+      try {
+        const res = await authFetch('/api/auth/admin/users')
+        if (!cancelled && res.ok) {
+          const data = await res.json()
+          if (!cancelled) setAdminUsers(data)
+        }
+      } finally {
+        if (!cancelled) setAdminLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [activeProfile?.role])
 
   useEffect(() => {
     if (editingName) nameRef.current?.focus()
@@ -680,6 +712,44 @@ const ProfilePage: React.FC = () => {
         <div className={styles.totalActive}>
           <span>{activeCount} активних категорій</span>
         </div>
+
+        {/* ── Admin: all users ── */}
+        {activeProfile.role === 'admin' && (
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionTitle}>КОРИСТУВАЧІ</span>
+              {!adminLoading && <span className={styles.sectionCount}>{adminUsers.length}</span>}
+            </div>
+            {adminLoading ? (
+              <p className={styles.adminEmpty}>Завантаження...</p>
+            ) : adminUsers.length === 0 ? (
+              <p className={styles.adminEmpty}>Немає користувачів</p>
+            ) : (
+              <div className={styles.adminList}>
+                {adminUsers.map(u => (
+                  <div key={u.id} className={styles.adminUserRow}>
+                    <div className={styles.familyAvatar}>
+                      {u.avatarUrl
+                        ? <img src={u.avatarUrl} alt={u.name} className={styles.familyAvatarImg} />
+                        : <span className={styles.familyAvatarInitial}>{u.name[0].toUpperCase()}</span>
+                      }
+                    </div>
+                    <div className={styles.adminUserInfo}>
+                      <div className={styles.adminUserTop}>
+                        <span className={styles.adminUserName}>{u.name}</span>
+                        {u.role === 'admin' && <span className={styles.adminBadge}>admin</span>}
+                      </div>
+                      <span className={styles.adminUserSub}>@{u.username}{u.email ? ` · ${u.email}` : ''}</span>
+                      <span className={styles.adminUserDate}>
+                        {new Date(u.createdAt).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
 
       {/* ── SubCategory modal ── */}

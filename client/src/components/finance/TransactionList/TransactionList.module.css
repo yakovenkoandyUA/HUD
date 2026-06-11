@@ -439,3 +439,21 @@
   width: 100%;
   outline: none;
 }
+
+/* Recurring payment service logo in transaction row */
+.txCatIconRecurring {
+  background: var(--surface2);
+  overflow: hidden;
+}
+
+.recurringLogo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.recurringEmoji {
+  font-size: 18px;
+  line-height: 1;
+}

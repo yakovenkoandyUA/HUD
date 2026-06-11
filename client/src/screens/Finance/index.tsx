@@ -57,7 +57,6 @@ const Finance: React.FC = () => {
     .filter((t) => t.type === 'expense' && t.date >= periodStart)
     .reduce((s, t) => s + t.amount, 0)
 
-  const progressPct = totalTopup > 0 ? Math.round((totalExpense / totalTopup) * 100) : 0
   const avgPerDay = daysElapsed > 0 ? Math.round(totalExpense / daysElapsed) : 0
   const delta = dailyBudget - todaySpent
 
@@ -83,21 +82,9 @@ const Finance: React.FC = () => {
 			<AppHeader />
 			<div className={styles.content}>
 				{/* 1. Баланс */}
-				<BalanceHero balance={balance} dailyBudget={dailyBudget} monthSpent={totalExpense} daysLeft={daysLeft} progressPct={progressPct} todaySpent={todaySpent} />
+				<BalanceHero balance={balance} dailyBudget={dailyBudget} monthSpent={totalExpense} daysLeft={daysLeft} todaySpent={todaySpent} />
 
-				{/* 2. Швидкі дії */}
-				<div className={styles.actions}>
-					<button className={styles.btnExpense} onClick={() => setShowExpense(true)}>
-						<IconExpense />
-						Витрата
-					</button>
-					<button className={styles.btnTopup} onClick={() => setShowTopup(true)}>
-						<IconTopup />
-						Поповнення
-					</button>
-				</div>
-
-				{/* 3. Статистика дня */}
+				{/* 2. Статистика дня */}
 				<div className={styles.statsCard}>
 					<div className={styles.statsToday}>
 						<span className={styles.statsTodayLabel}>Сьогодні</span>
@@ -128,6 +115,18 @@ const Finance: React.FC = () => {
 							<span className={`${styles.statsTileValue} ${avgPerDay <= dailyBudget ? styles.accent : styles.neg}`}>{fmt(avgPerDay)} ₴</span>
 						</div>
 					</div>
+				</div>
+
+				{/* 3. Швидкі дії */}
+				<div className={styles.actions}>
+					<button className={styles.btnExpense} onClick={() => setShowExpense(true)}>
+						<IconExpense />
+						Витрата
+					</button>
+					<button className={styles.btnTopup} onClick={() => setShowTopup(true)}>
+						<IconTopup />
+						Поповнення
+					</button>
 				</div>
 
 				{/* 4. Місячна аналітика + AI */}

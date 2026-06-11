@@ -4,8 +4,10 @@ import {
   verify, me, getProfiles, selectProfile, updateMe,
   setPin, removePin, verifyPin,
   verifyEmail, resendVerification,
+  getAllUsers,
 } from '../controllers/authController'
 import { requireAuth } from '../middleware/auth'
+import { requireAdmin } from '../middleware/requireAdmin'
 
 const router = Router()
 
@@ -27,6 +29,9 @@ router.post('/resend-verification', requireAuth, resendVerification)
 router.post('/verify', verify)
 router.get('/me', requireAuth, me)
 router.patch('/me', requireAuth, updateMe)
+
+// Admin
+router.get('/admin/users', requireAuth, requireAdmin, getAllUsers)
 
 // Multi-profile legacy
 router.get('/profiles', getProfiles)

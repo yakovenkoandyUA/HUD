@@ -70,7 +70,6 @@ export async function register(req: Request, res: Response): Promise<void> {
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
-    const verificationToken = crypto.randomBytes(32).toString('hex')
     let user = await User.findOne({ username: username.trim() })
 
     if (user) {
@@ -81,8 +80,8 @@ export async function register(req: Request, res: Response): Promise<void> {
       // Claim existing account (migration)
       user.email = normalEmail
       user.passwordHash = passwordHash
-      user.isVerified = false
-      user.verificationToken = verificationToken
+      user.isVerified = true
+      user.verificationToken = null
       if (!user.name || user.name === user.username) user.name = name.trim()
       await user.save()
     } else {
@@ -93,16 +92,11 @@ export async function register(req: Request, res: Response): Promise<void> {
         passwordHash,
         role: 'user',
         f1Enabled: false,
-        isVerified: false,
-        verificationToken,
+        isVerified: true,
+        verificationToken: null,
       })
       const userId = (user._id as { toString(): string }).toString()
       await seedCategoriesForUser(userId)
-    }
-
-    // Send verification email (fire-and-forget — don't block registration)
-    if (process.env.RESEND_API_KEY) {
-      sendVerificationEmail(normalEmail, verificationToken, name.trim()).catch(() => {})
     }
 
     const userId = (user._id as { toString(): string }).toString()
@@ -342,6 +336,24 @@ export async function getProfiles(req: Request, res: Response): Promise<void> {
     })))
   } catch {
     res.status(500).json({ error: 'Failed to fetch profiles' })
+  }
+}
+
+/** GET /auth/admin/users — admin-only list of all registered users */
+export async function getAllUsers(req: Request, res: Response): Promise<void> {
+  try {
+    const users = await User.find({}, { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1 }).sort({ createdAt: -1 })
+    res.json(users.map(u => ({
+      id: (u._id as { toString(): string }).toString(),
+      name: u.name,
+      username: u.username,
+      email: u.email ?? null,
+      role: u.role,
+      avatarUrl: u.avatarUrl ?? null,
+      createdAt: u.createdAt,
+    })))
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch users' })
   }
 }
 

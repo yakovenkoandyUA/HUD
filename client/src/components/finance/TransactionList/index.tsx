@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import type { Transaction, Category } from '../../../types'
 import { fmt } from '../../../utils/finance'
+import { getServiceLogoUrl, getServiceEmoji } from '../../../utils/serviceLogos'
 import { authFetch } from '../../../services/api'
 import { useFinanceStore } from '../../../store/financeStore'
 import { useCategoryStore } from '../../../store/categoryStore'
@@ -120,6 +121,24 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({ value, options, onChang
       )}
     </div>
   )
+}
+
+// ── Recurring service icon ────────────────────────────────────────────────────
+
+const RecurringIcon: React.FC<{ name: string }> = ({ name }) => {
+  const [imgError, setImgError] = useState(false)
+  const logoUrl = getServiceLogoUrl(name)
+  if (logoUrl && !imgError) {
+    return (
+      <img
+        src={logoUrl}
+        alt={name}
+        className={styles.recurringLogo}
+        onError={() => setImgError(true)}
+      />
+    )
+  }
+  return <span className={styles.recurringEmoji}>{getServiceEmoji(name)}</span>
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -325,6 +344,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                       onClick={receipt ? () => setSelectedReceiptTx(t) : undefined}
                     >
                       {t.type === 'expense' ? (() => {
+                        const isRecurring = !!(t.recurringId || t.description === 'Регулярний платіж')
+                        if (isRecurring && t.title) {
+                          return (
+                            <div className={`${styles.txCatIcon} ${styles.txCatIconRecurring}`}>
+                              <RecurringIcon name={t.title} />
+                            </div>
+                          )
+                        }
                         const cat = getCategoryForTx(t, categories)
                         return (
                           <div

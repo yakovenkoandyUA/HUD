@@ -8,23 +8,20 @@ import styles from './BalanceHero.module.css'
  * BalanceHero
  * ----------
  * Головна картка балансу на екрані фінансів.
- * При mount перевіряє streak і обчислює прогноз до кінця місяця.
+ * Прогресбар показує денний прогрес: скільки від денного бюджету вже витрачено.
  *
  * Props:
- * @prop {number}  balance        — поточний баланс на картці (грн)
- * @prop {number}  dailyBudget    — розрахований денний бюджет
- * @prop {number}  monthSpent     — витрачено за поточний бюджетний період
- * @prop {number}  daysLeft       — кількість днів до наступного поповнення
- * @prop {number}  progressPct    — відсоток витрат від поповнень (0–100)
- * @prop {number}  todaySpent     — витрачено сьогодні (для streak)
- * @prop {number}  daysElapsed    — днів минуло з початку бюджетного періоду
+ * @prop {number}  balance      — поточний баланс на картці (грн)
+ * @prop {number}  dailyBudget  — розрахований денний бюджет
+ * @prop {number}  monthSpent   — витрачено за поточний бюджетний період
+ * @prop {number}  daysLeft     — кількість днів до наступного поповнення
+ * @prop {number}  todaySpent   — витрачено сьогодні
  */
 interface BalanceHeroProps {
   balance: number
   dailyBudget: number
   monthSpent: number
   daysLeft: number
-  progressPct: number
   todaySpent: number
 }
 
@@ -33,9 +30,7 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   dailyBudget,
   monthSpent,
   daysLeft,
-  progressPct,
   todaySpent,
-  
 }) => {
   const { currentStreak, checkToday } = useStreakStore()
 
@@ -43,8 +38,9 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
     checkToday(todaySpent, dailyBudget)
   }, [todaySpent, dailyBudget, checkToday])
 
+  const progressPct = dailyBudget > 0 ? Math.min(100, Math.round((todaySpent / dailyBudget) * 100)) : 0
+  const progressColor: 'red' | 'green' = todaySpent > dailyBudget ? 'red' : 'green'
   const projectedBalance = balance - dailyBudget * daysLeft
-  const showForecast = daysLeft > 0
 
   return (
     <div className={styles.hero}>
@@ -57,14 +53,14 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
         <span className={styles.streak}>🔥 {currentStreak} {currentStreak === 1 ? 'день' : currentStreak < 5 ? 'дні' : 'днів'} в рамках бюджету</span>
       )}
 
-      <ProgressBar value={progressPct} max={100} color={progressPct > 80 ? 'red' : 'green'} showLabel />
+      <ProgressBar value={progressPct} max={100} color={progressColor} showLabel />
 
       <div className={styles.meta}>
         <span>Витрачено: <b>{fmt(monthSpent)} ₴</b></span>
         <span>{daysLeft} днів · <b>{dailyBudget} ₴/день</b></span>
       </div>
 
-      {showForecast && (
+      {daysLeft > 0 && (
         <div className={styles.forecast}>
           {projectedBalance > 0 ? (
             <>За нормою залишиться{' '}

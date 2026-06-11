@@ -66,13 +66,14 @@ router.post('/:id/confirm', async (req: Request, res: Response): Promise<void> =
 
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const transaction = await Transaction.create({
-    userId:   req.userId,
-    type:     'expense',
-    amount:   item.amount,
-    category: item.category || item.name,
-    title:    item.name,
-    desc:     'Регулярний платіж',
-    date:     dateStr,
+    userId:      req.userId,
+    type:        'expense',
+    amount:      item.amount,
+    category:    item.category || 'Підписки',
+    title:       item.name,
+    desc:        'Регулярний платіж',
+    date:        dateStr,
+    recurringId: (item._id as { toString(): string }).toString(),
   })
 
   item.lastConfirmedMonth = currentMonth
