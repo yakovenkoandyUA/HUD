@@ -52,42 +52,6 @@
   margin: 0 -16px;
 }
 
-/* ── Today Strip ────────────────────────────────────────────── */
-
-.todayStrip {
-  display: flex;
-  gap: 7px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.todayStrip::-webkit-scrollbar { display: none; }
-
-.stripChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text2);
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-.stripChip:active { background: var(--border); }
-
-.stripFlag {
-  font-size: 13px;
-  line-height: 1;
-}
-
 /* ── Routine chips ──────────────────────────────────────────── */
 
 .routineChips {
