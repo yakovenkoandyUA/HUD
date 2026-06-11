@@ -26,7 +26,8 @@ const Dashboard: React.FC = () => {
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const { items: sprintItems, addItem, toggleItem } = useSprintStore()
   const { showToast, theme } = useUiStore()
-  const f1Enabled = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
+  const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
+  const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
 
   const [showExpense, setShowExpense] = useState(false)
   const [fabOpen, setFabOpen]         = useState(false)
@@ -67,7 +68,7 @@ const Dashboard: React.FC = () => {
   const nextRace      = f1Enabled ? getNextRace(F1_SEASON_2026) : null
   const raceThisWeek  = f1Enabled ? getRaceThisWeek(F1_SEASON_2026) : null
   const weekStart     = getCurrentWeekStart()
-  const dailyBudget   = calcDailyBudget(balance)
+  const dailyBudget   = calcDailyBudget(balance, salaryDay)
   const today         = new Date().toISOString().split('T')[0]
   const todaySpent    = transactions
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))

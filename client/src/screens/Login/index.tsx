@@ -38,7 +38,7 @@ const LoginScreen: React.FC = () => {
         const data = await res.json() as { error?: string }
         throw new Error(data.error ?? 'Google auth failed')
       }
-      const { token, user } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; hasPIN: boolean; isVerified: boolean } }
+      const { token, user } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; salaryDay: number; hasPIN: boolean; isVerified: boolean } }
       useProfileStore.setState({ token, activeProfile: user, pinLocked: false })
       navigate('/', { replace: true })
     } catch (err) {

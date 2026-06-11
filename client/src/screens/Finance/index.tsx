@@ -12,6 +12,7 @@ import ShoppingTracker from '../../components/finance/ShoppingTracker'
 import Modal from '../../components/ui/Modal'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
+import { useProfileStore } from '../../store/profileStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart, fmt } from '../../utils/finance'
 import { getToken } from '../../services/api'
 import styles from './Finance.module.css'
@@ -31,6 +32,7 @@ const IconTopup: React.FC = () => (
 const Finance: React.FC = () => {
   const { balance, transactions, addTopup, addExpense, deleteTransaction, fetchTransactions } = useFinanceStore()
   const { showToast } = useUiStore()
+  const salaryDay = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const [showTopup, setShowTopup] = useState(false)
   const [showExpense, setShowExpense] = useState(false)
 
@@ -40,16 +42,16 @@ const Finance: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const daysLeft = getDaysLeftInMonth()
-  const daysElapsed = getDaysElapsed()
-  const dailyBudget = calcDailyBudget(balance)
+  const daysLeft = getDaysLeftInMonth(salaryDay)
+  const daysElapsed = getDaysElapsed(salaryDay)
+  const dailyBudget = calcDailyBudget(balance, salaryDay)
 
   const today = new Date().toISOString().slice(0, 10)
   const todaySpent = transactions
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))
     .reduce((s, t) => s + t.amount, 0)
 
-  const periodStart = getPeriodStart()
+  const periodStart = getPeriodStart(salaryDay)
   const totalTopup = transactions
     .filter((t) => t.type === 'topup' && t.date >= periodStart)
     .reduce((s, t) => s + t.amount, 0)

@@ -12,7 +12,7 @@ import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
-import { getCurrentWeekStart, isRecurring } from '../../utils/sprint'
+import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
 import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
@@ -52,6 +52,7 @@ const QUICK_REPEAT_OPTIONS: { key: Exclude<RepeatType, 'none' | 'custom'>; label
 	{ key: 'monthly', label: 'Щомісяця' },
 	{ key: 'yearly',  label: 'Щороку' },
 ]
+
 
 function repeatToUnit(r: Exclude<RepeatType, 'none' | 'custom'>): RepeatConfig['unit'] {
 	if (r === 'daily')   return 'day'
@@ -168,6 +169,10 @@ const Sprint: React.FC = () => {
 	}
 	const routineItems = items.filter(t => isRecurring(t))
 
+	const [selY, selM, selD] = selectedDay.split('-').map(Number)
+	const selectedDate = new Date(selY, selM - 1, selD)
+	const selectedDayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, selectedDate))
+
 	// Tasks assigned to me by others (always show, separate section)
 	const assignedFromOthers = items.filter(t => t.ownerName)
 
@@ -184,7 +189,13 @@ const Sprint: React.FC = () => {
 	const isDayToday = selectedDay === todayStr
 	const rawDayQuests = isDayToday
 		? filteredItems
-		: filteredItems.filter(t => t.type !== 'shopping' && t.dueDate === selectedDay)
+		: items.filter(t => {
+			if (isRecurring(t)) return false
+			if (t.ownerName) return false
+			if (filterType === 'task'     && t.type === 'shopping') return false
+			if (filterType === 'shopping' && t.type !== 'shopping') return false
+			return t.type !== 'shopping' && t.dueDate === selectedDay
+		})
 	const dayQuests = [...rawDayQuests].sort((a, b) => {
 		if (a.isPinned && !b.isPinned) return -1
 		if (!a.isPinned && b.isPinned) return 1
@@ -295,33 +306,65 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 							</React.Fragment>
 						))}
 					</div>
-					<div className={styles.statusFilter}>
-						{(['active', 'done'] as const).map((status, i) => (
-							<React.Fragment key={status}>
-								{i > 0 && <span className={styles.typeSep}>·</span>}
-								<button
-									className={`${styles.typeBtn} ${filterStatus === status ? styles.typeBtnActive : ''}`}
-									onClick={() => setFilterStatus(status)}
-								>
-									{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
-								</button>
-							</React.Fragment>
-						))}
-					</div>
+					{isDayToday && (
+						<div className={styles.statusFilter}>
+							{(['active', 'done'] as const).map((status, i) => (
+								<React.Fragment key={status}>
+									{i > 0 && <span className={styles.typeSep}>·</span>}
+									<button
+										className={`${styles.typeBtn} ${filterStatus === status ? styles.typeBtnActive : ''}`}
+										onClick={() => setFilterStatus(status)}
+									>
+										{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
+									</button>
+								</React.Fragment>
+							))}
+						</div>
+					)}
 				</div>
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
 					{loading && items.length === 0 ? (
 						<p className={styles.dayEmptyText}>Завантаження...</p>
-					) : dayQuests.length === 0 ? (
+					) : dayQuests.length === 0 && selectedDayRoutines.length === 0 ? (
 						<p className={styles.dayEmptyText}>Немає задач на цей день</p>
 					) : (
-						<ul className={styles.list}>
-							{dayQuests.map(t => (
-								<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
-							))}
-						</ul>
+						<>
+							{dayQuests.length > 0 && (
+								<ul className={styles.list}>
+									{dayQuests.map(t => (
+										<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
+									))}
+								</ul>
+							)}
+							{selectedDayRoutines.length > 0 && (
+								<div className={styles.dayRoutinesSection}>
+									<div className={styles.dayRoutinesSectionHeader}>
+										<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
+											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+										</svg>
+										РУТИНИ
+									</div>
+									<ul className={styles.dayRoutineList}>
+										{selectedDayRoutines.map(t => {
+											const doneOnDay = !!(t.completionLog?.includes(selectedDay))
+											return (
+												<li key={t.id} className={`${styles.dayRoutineItem} ${doneOnDay ? styles.dayRoutineItemDone : ''}`}>
+													<button type="button" className={styles.routineCheck} onClick={() => toggleItem(t.id)} aria-label="Виконати">
+														<span className={`${styles.routineCheckBox} ${doneOnDay ? styles.routineCheckBoxDone : ''}`}>{doneOnDay ? '✓' : ''}</span>
+													</button>
+													<button type="button" className={styles.routineBody} onClick={() => setDetailTaskId(t.id)}>
+														<span className={styles.routineTitle}>{t.title}</span>
+													</button>
+												</li>
+											)
+										})}
+									</ul>
+								</div>
+							)}
+						</>
 					)}
 				</div>
 

@@ -967,6 +967,341 @@
   text-align: center;
 }
 
+/* ── Tab content wrapper ── */
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Logout button ── */
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text3);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.logoutBtn:hover { color: var(--negative); background: var(--negative-soft); }
+
+/* ── Section hint / action ── */
+.sectionHint {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.sectionAction {
+  background: none;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 2px 0;
+  transition: opacity 0.15s;
+}
+.sectionAction:hover { opacity: 0.7; }
+
+.sectionTag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+/* ── Username editable ── */
+.usernameEditRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.usernameAt {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.usernameInput {
+  background: var(--bg3);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  width: 160px;
+  text-align: center;
+}
+
+.usernameBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+.usernameBtn:hover { color: var(--accent); }
+.usernameBtn:hover .namePencil { opacity: 1; }
+
+.emailLabel {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text3);
+  opacity: 0.7;
+}
+
+/* ── Password form (accordion) ── */
+.accordionBody {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 280ms ease-in-out, opacity 200ms ease-in-out;
+}
+.accordionBodyOpen {
+  max-height: 320px;
+  opacity: 1;
+}
+
+.pwForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.pwInput {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.pwInput:focus { border-color: var(--accent); }
+.pwInput::placeholder { color: var(--text3); }
+
+.fieldError {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--negative);
+  margin: 0;
+}
+
+.pwSaveBtn {
+  padding: 10px 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: 4px;
+}
+.pwSaveBtn:hover:not(:disabled) { opacity: 0.85; }
+.pwSaveBtn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Salary day stepper ── */
+.salaryRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+
+.salaryStepBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+.salaryStepBtn:hover:not(:disabled) { background: var(--surface); color: var(--accent); }
+.salaryStepBtn:disabled { opacity: 0.3; cursor: default; }
+
+.salaryValue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 80px;
+}
+
+.salaryNum {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.salaryUnit {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+/* ── Theme grid ── */
+.themeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.themeSwatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.themeSwatch:hover { border-color: var(--accent); }
+.themeSwatchActive {
+  border-color: var(--swatch-accent) !important;
+  background: color-mix(in srgb, var(--swatch-accent) 8%, var(--surface));
+}
+.themeSwatch:active { transform: scale(0.96); }
+
+.swatchPreview {
+  width: 48px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--swatch-bg);
+  border: 1px solid var(--swatch-border);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.swatchCard {
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  width: 24px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--swatch-surface);
+}
+
+.swatchAccent {
+  position: absolute;
+  right: 5px;
+  top: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--swatch-accent);
+}
+
+.swatchName {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+.themeSwatchActive .swatchName {
+  color: var(--swatch-accent);
+}
+
+/* ── Push notification toggle ── */
+.pushRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.pushInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pushLabel {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pushSub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
+.toggle {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--border2);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.toggleOn { background: var(--accent); }
+.toggle:disabled { opacity: 0.4; cursor: default; }
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  display: block;
+}
+.toggleOn .toggleThumb { transform: translateX(18px); }
+
 /* ── Admin users section ── */
 .adminEmpty {
   font-family: var(--font-body);

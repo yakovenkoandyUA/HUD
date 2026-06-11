@@ -9,6 +9,7 @@ export interface IUser extends Document {
   avatarUrl: string | null
   role: 'admin' | 'user'
   f1Enabled: boolean
+  salaryDay: number
   isVerified: boolean
   verificationToken: string | null
   createdAt: Date
@@ -23,6 +24,7 @@ const schema = new Schema<IUser>({
   avatarUrl:         { type: String, default: null },
   role:              { type: String, enum: ['admin', 'user'], default: 'user' },
   f1Enabled:         { type: Boolean, default: false },
+  salaryDay:         { type: Number, default: 1, min: 1, max: 31 },
   isVerified:        { type: Boolean, default: false },
   verificationToken: { type: String, default: null },
   createdAt:         { type: Date, default: Date.now },

@@ -22,6 +22,7 @@ export interface Profile {
   avatarUrl: string | null
   role: 'admin' | 'user'
   f1Enabled: boolean
+  salaryDay: number
   hasPIN: boolean
   isVerified: boolean
 }
@@ -38,7 +39,8 @@ interface ProfileState {
   selectProfile: (username: string) => Promise<void>
   logout: () => void
   uploadAvatar: (file: File) => Promise<void>
-  updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean }) => Promise<void>
+  updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string }) => Promise<void>
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   setPIN: (pin: string) => Promise<void>
   removePIN: () => Promise<void>
   verifyPIN: (pin: string) => Promise<boolean>
@@ -147,13 +149,16 @@ export const useProfileStore = create<ProfileState>()(
         await get().updateProfile({ avatarUrl: url })
       },
 
-      updateProfile: async (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean }) => {
+      updateProfile: async (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string }) => {
         const { token, activeProfile } = get()
         if (!activeProfile) return
 
         if (BASE_URL && token) {
           const res = await apiPatch('/api/auth/me', patch, token)
-          if (!res.ok) throw new Error('Failed to update profile')
+          if (!res.ok) {
+            const data = await res.json() as { error?: string }
+            throw new Error(data.error ?? 'Failed to update profile')
+          }
         }
 
         const updated = { ...activeProfile, ...patch }
@@ -163,6 +168,16 @@ export const useProfileStore = create<ProfileState>()(
             p.username === activeProfile.username ? { ...p, ...patch } : p
           ),
         })
+      },
+
+      changePassword: async (currentPassword: string, newPassword: string) => {
+        const { token } = get()
+        if (!token) throw new Error('Not authenticated')
+        const res = await apiPost('/api/auth/change-password', { currentPassword, newPassword }, token)
+        if (!res.ok) {
+          const data = await res.json() as { error?: string }
+          throw new Error(data.error ?? 'Failed to change password')
+        }
       },
 
       setPIN: async (pin: string) => {

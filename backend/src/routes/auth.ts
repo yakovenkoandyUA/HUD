@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import {
   register, loginEmail, googleAuth,
-  verify, me, getProfiles, selectProfile, updateMe,
+  verify, me, getProfiles, selectProfile, updateMe, changePassword,
   setPin, removePin, verifyPin,
   verifyEmail, resendVerification,
   getAllUsers,
@@ -29,6 +29,7 @@ router.post('/resend-verification', requireAuth, resendVerification)
 router.post('/verify', verify)
 router.get('/me', requireAuth, me)
 router.patch('/me', requireAuth, updateMe)
+router.post('/change-password', requireAuth, changePassword)
 
 // Admin
 router.get('/admin/users', requireAuth, requireAdmin, getAllUsers)

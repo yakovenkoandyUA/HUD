@@ -33,6 +33,7 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   avatarUrl: user.avatarUrl,
   role: user.role,
   f1Enabled: user.f1Enabled ?? false,
+  salaryDay: user.salaryDay ?? 1,
   hasPIN: !!user.pinHash,
   isVerified: user.isVerified ?? false,
 })
@@ -381,11 +382,13 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
   }
 }
 
-/** PATCH /auth/me — update name, avatar, f1Enabled for active user */
+/** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl, name, f1Enabled } = req.body as { avatarUrl?: string; name?: string; f1Enabled?: boolean }
-  if (!avatarUrl && !name && f1Enabled === undefined) {
-    res.status(400).json({ error: 'avatarUrl, name, or f1Enabled required' })
+  const { avatarUrl, name, f1Enabled, salaryDay, username } = req.body as {
+    avatarUrl?: string; name?: string; f1Enabled?: boolean; salaryDay?: number; username?: string
+  }
+  if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && !username) {
+    res.status(400).json({ error: 'At least one field required' })
     return
   }
 
@@ -394,9 +397,47 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
     if (avatarUrl) update.avatarUrl = avatarUrl
     if (name?.trim()) update.name = name.trim()
     if (f1Enabled !== undefined) update.f1Enabled = f1Enabled
+    if (salaryDay !== undefined) {
+      const day = Math.round(salaryDay)
+      if (day < 1 || day > 31) { res.status(400).json({ error: 'salaryDay must be 1–31' }); return }
+      update.salaryDay = day
+    }
+    if (username?.trim()) {
+      const slug = username.trim().toLowerCase()
+      const exists = await User.findOne({ username: slug, _id: { $ne: req.userId } })
+      if (exists) { res.status(409).json({ error: 'Username already taken' }); return }
+      update.username = slug
+    }
     await User.findByIdAndUpdate(req.userId, update)
     res.json({ ok: true })
   } catch {
     res.status(500).json({ error: 'Failed to update profile' })
+  }
+}
+
+/** POST /auth/change-password — { currentPassword, newPassword } */
+export async function changePassword(req: Request, res: Response): Promise<void> {
+  const { currentPassword, newPassword } = req.body as { currentPassword?: string; newPassword?: string }
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: 'currentPassword and newPassword required' })
+    return
+  }
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: 'New password must be at least 6 characters' })
+    return
+  }
+  try {
+    const user = await User.findById(req.userId)
+    if (!user || !user.passwordHash) {
+      res.status(400).json({ error: 'Password auth not available for this account' })
+      return
+    }
+    const match = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!match) { res.status(401).json({ error: 'Current password is incorrect' }); return }
+    user.passwordHash = await bcrypt.hash(newPassword, 10)
+    await user.save()
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Failed to change password' })
   }
 }

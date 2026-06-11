@@ -25,6 +25,8 @@ import LoginScreen from './screens/Login'
 import RegisterScreen from './screens/Register'
 import ProfilePage from './screens/ProfilePage'
 import VerifyEmail from './screens/VerifyEmail'
+import NotFound from './screens/NotFound'
+import ErrorBoundary from './components/ui/ErrorBoundary'
 import './App.css'
 
 const PIN_TIMEOUT_MS = 5 * 60 * 1000 // 5 хв
@@ -88,7 +90,7 @@ const AnimatedRoutes: React.FC = () => {
         </Route>
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   )
@@ -104,7 +106,6 @@ const NavGuard: React.FC = () => {
   if (pathname === '/login') return null
   if (pathname === '/register') return null
   if (pathname === '/profile-select') return null
-  if (pathname === '/profile') return null
   return <BottomNav />
 }
 
@@ -178,6 +179,7 @@ const App: React.FC = () => {
   const showBanner = !isDismissed && (isInstallable || isIOS)
 
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <AnimatedRoutes />
       {showBanner && (
@@ -192,6 +194,7 @@ const App: React.FC = () => {
       <ToastContainer />
       {!splashDone && <CitySplash onDone={() => setSplashDone(true)} />}
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 
