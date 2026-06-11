@@ -303,19 +303,6 @@
 
 /* ── Theme atmosphere effects ───────────────────────────────────────────────── */
 
-/* Gothic window vignette: арочні тіні з 4 кутів як вигляд крізь вікно фортеці */
-[data-theme="castle"] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9997;
-  background:
-    radial-gradient(ellipse 60% 80% at 0% 0%,   rgba(0,0,0,0.55) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 80% at 100% 0%,  rgba(0,0,0,0.55) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 60% at 0% 100%,  rgba(0,0,0,0.45) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 60% at 100% 100%, rgba(0,0,0,0.45) 0%, transparent 60%);
-}
 
 [data-theme="castle"] body::after {
   content: '';

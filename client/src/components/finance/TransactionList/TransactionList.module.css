@@ -137,6 +137,11 @@
   list-style: none;
   display: flex;
   flex-direction: column;
+  filter: grayscale(0);
+}
+
+:global([data-theme="noir"]) .list {
+  filter: grayscale(1);
 }
 
 .item {

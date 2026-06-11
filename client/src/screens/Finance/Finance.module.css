@@ -35,10 +35,9 @@
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	cursor: pointer;
-	transition:
-		opacity 0.15s,
-		transform 0.1s;
-	border: none;
+	background: transparent;
+	border: 1.5px solid;
+	transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 .btnExpense:active,
 .btnTopup:active {
@@ -46,26 +45,23 @@
 }
 
 .btnExpense {
-	background: var(--accent);
-	color: #fff;
+	border-color: var(--accent);
+	color: var(--accent);
+	box-shadow: 0 0 10px var(--accent-glow);
 }
 .btnExpense:hover {
-	opacity: 0.88;
-}
-
-:global([data-theme="heroes"]) .btnExpense {
-	background: #d4174b;
+	background: var(--accent-soft);
+	box-shadow: 0 0 16px var(--accent-glow);
 }
 
 .btnTopup {
-	background: var(--positive);
-	color: #fff;
-	border: 1px solid var(--border2);
+	border-color: var(--positive);
+	color: var(--positive);
+	box-shadow: 0 0 10px var(--positive-soft);
 }
 .btnTopup:hover {
-	color: var(--text);
-	border-color: var(--border2);
-	background: var(--surface);
+	background: var(--positive-soft);
+	box-shadow: 0 0 16px var(--positive-soft);
 }
 
 .section {

@@ -69,17 +69,6 @@ const PALETTES: ThemePalette[] = [
     text: '#1a1a1a',
   },
   {
-    id: 'heroes',
-    name: 'HEROES',
-    bg: '#050302',
-    surface: '#2a1a0a',
-    border: '#6a4818',
-    accent: '#d4a030',
-    second: '#8050e0',
-    gold: '#d4a030',
-    text: '#f0d890',
-  },
-  {
     id: 'cyber',
     name: 'CYBER',
     bg: '#06080e',

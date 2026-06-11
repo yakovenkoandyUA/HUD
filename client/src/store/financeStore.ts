@@ -13,6 +13,27 @@ interface ApiTransaction {
   category: string
   date: string
   createdAt?: string
+  recurringId?: string | null
+}
+
+const CACHE_KEY = 'hud-finance-v1'
+
+interface FinanceCache {
+  transactions: Transaction[]
+  balance: number
+}
+
+function readCache(): FinanceCache | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY)
+    return raw ? (JSON.parse(raw) as FinanceCache) : null
+  } catch { return null }
+}
+
+function writeCache(transactions: Transaction[], balance: number): void {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ transactions, balance }))
+  } catch {}
 }
 
 function toApiBody(tx: Transaction): object {
@@ -35,6 +56,7 @@ function fromApi(raw: ApiTransaction): Transaction {
     category: raw.category || undefined,
     date: raw.date,
     createdAt: raw.createdAt,
+    recurringId: raw.recurringId ?? null,
   }
 }
 
@@ -56,9 +78,11 @@ interface FinanceState {
   setSyncStatus: (s: SyncStatus) => void
 }
 
+const cached = readCache()
+
 export const useFinanceStore = create<FinanceState>()((set, get) => ({
-  balance: 0,
-  transactions: [],
+  balance: cached?.balance ?? 0,
+  transactions: cached?.transactions ?? [],
   syncStatus: 'local' as SyncStatus,
 
   setSyncStatus: (syncStatus) => set({ syncStatus }),
@@ -72,7 +96,10 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       if (!res.ok) throw new Error()
       const data: ApiTransaction[] = await res.json()
       const transactions = data.map(fromApi)
-      set({ transactions, balance: calcBalance(transactions), syncStatus: 'synced' })
+      const balance = calcBalance(transactions)
+      set({ transactions, balance, syncStatus: 'synced' })
+      // кешуємо тільки дефолтний запит (не фільтрований по місяцю)
+      if (!month) writeCache(transactions, balance)
     } catch {
       set({ syncStatus: 'error' })
     }
@@ -86,18 +113,20 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       description,
       date: new Date().toISOString(),
     }
-    set(s => ({
-      balance: s.balance + amount,
-      transactions: [tx, ...s.transactions].slice(0, 200),
-      syncStatus: 'syncing',
-    }))
+    set(s => {
+      const transactions = [tx, ...s.transactions].slice(0, 200)
+      const balance = s.balance + amount
+      writeCache(transactions, balance)
+      return { balance, transactions, syncStatus: 'syncing' }
+    })
     authFetch('/api/transactions', { method: 'POST', body: JSON.stringify(toApiBody(tx)) })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then((created: ApiTransaction) => {
-        set(s => ({
-          syncStatus: 'synced',
-          transactions: s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t),
-        }))
+        set(s => {
+          const transactions = s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t)
+          writeCache(transactions, s.balance)
+          return { syncStatus: 'synced', transactions }
+        })
       })
       .catch(() => set({ syncStatus: 'error' }))
   },
@@ -111,26 +140,30 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       category,
       date: new Date().toISOString(),
     }
-    set(s => ({
-      balance: s.balance - amount,
-      transactions: [tx, ...s.transactions].slice(0, 200),
-      syncStatus: 'syncing',
-    }))
+    set(s => {
+      const transactions = [tx, ...s.transactions].slice(0, 200)
+      const balance = s.balance - amount
+      writeCache(transactions, balance)
+      return { balance, transactions, syncStatus: 'syncing' }
+    })
     authFetch('/api/transactions', { method: 'POST', body: JSON.stringify(toApiBody(tx)) })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then((created: ApiTransaction) => {
-        set(s => ({
-          syncStatus: 'synced',
-          transactions: s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t),
-        }))
+        set(s => {
+          const transactions = s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t)
+          writeCache(transactions, s.balance)
+          return { syncStatus: 'synced', transactions }
+        })
       })
       .catch(() => set({ syncStatus: 'error' }))
   },
 
   renameTransaction: (id, title) =>
-    set(s => ({
-      transactions: s.transactions.map(t => t.id === id ? { ...t, title } : t),
-    })),
+    set(s => {
+      const transactions = s.transactions.map(t => t.id === id ? { ...t, title } : t)
+      writeCache(transactions, s.balance)
+      return { transactions }
+    }),
 
   patchTransaction: (id, patch) => {
     const s = get()
@@ -141,10 +174,12 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     const delta = tx.type === 'topup'
       ? nextAmount - prevAmount
       : prevAmount - nextAmount
-    set(s2 => ({
-      balance: s2.balance + delta,
-      transactions: s2.transactions.map(t => t.id === id ? { ...t, ...patch } : t),
-    }))
+    set(s2 => {
+      const transactions = s2.transactions.map(t => t.id === id ? { ...t, ...patch } : t)
+      const balance = s2.balance + delta
+      writeCache(transactions, balance)
+      return { balance, transactions }
+    })
   },
 
   deleteTransaction: (id) => {
@@ -152,11 +187,10 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     const tx = s.transactions.find(t => t.id === id)
     if (!tx) return
     const delta = tx.type === 'topup' ? -tx.amount : tx.amount
-    set({
-      balance: s.balance + delta,
-      transactions: s.transactions.filter(t => t.id !== id),
-      syncStatus: 'syncing',
-    })
+    const transactions = s.transactions.filter(t => t.id !== id)
+    const balance = s.balance + delta
+    writeCache(transactions, balance)
+    set({ balance, transactions, syncStatus: 'syncing' })
     authFetch(`/api/transactions/${id}`, { method: 'DELETE' })
       .then(() => set({ syncStatus: 'synced' }))
       .catch(() => set({ syncStatus: 'error' }))

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { authFetch } from '../../../services/api'
 import { fmt } from '../../../utils/finance'
 import { getServiceLogoUrl, getServiceEmoji } from '../../../utils/serviceLogos'
+import { useFinanceStore } from '../../../store/financeStore'
 import Modal from '../../ui/Modal'
 import styles from './RecurringPayments.module.css'
 
@@ -109,6 +110,7 @@ function writeCache(data: RecurringPayment[]) {
 }
 
 const RecurringPayments: React.FC = () => {
+  const fetchTransactions = useFinanceStore(s => s.fetchTransactions)
   const cached = readCache()
   const [payments, setPayments]         = useState<RecurringPayment[]>(cached ?? [])
   const [loading, setLoading]           = useState(!cached)
@@ -269,6 +271,7 @@ const RecurringPayments: React.FC = () => {
       writeCache(updated)
       return updated
     })
+    fetchTransactions()
   }
 
   const setField = (field: keyof FormErrors, value: string) => {

@@ -64,6 +64,29 @@
 }
 .expandBtn:hover { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-dim); }
 
+.routinesBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-dim);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.routinesBadge:hover { background: var(--accent-dim); }
+.routinesBadgeDone {
+  background: var(--second-soft);
+  border-color: transparent;
+  color: var(--second);
+}
+
 /* ── Week grid ─────────────────────────────────────────────────── */
 
 .weekRow {

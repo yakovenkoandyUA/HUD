@@ -86,7 +86,7 @@ const BottomNav: React.FC = () => {
             key={tab.id}
             type="button"
             className={`${styles.item} ${styles.profileItem} ${activeTab === tab.id ? styles.active : ''}`}
-            onClick={() => navigate(`/profile?tab=${tab.id}`)}
+            onClick={() => navigate(`/profile?tab=${tab.id}`, { replace: true })}
           >
             <span className={styles.icon}>{tab.icon}</span>
             <span className={styles.tabLabel}>{tab.label}</span>

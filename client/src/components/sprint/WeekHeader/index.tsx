@@ -125,6 +125,11 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
     else onPrevWeek?.()
   }
 
+  const todayIso = toIso(today)
+  const todayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, today))
+  const todayDone = todayRoutines.filter(t => t.completionLog?.includes(todayIso)).length
+  const todayTotal = todayRoutines.length
+
   return (
     <div
       className={styles.header}
@@ -141,6 +146,20 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
           </div>
           <div className={styles.topRight}>
             <span className={styles.range}>{fmt(mon)} — {fmt(sun)}</span>
+            {onExpand && todayTotal > 0 && (
+              <button
+                type="button"
+                className={`${styles.routinesBadge} ${todayDone === todayTotal ? styles.routinesBadgeDone : ''}`}
+                onClick={onExpand}
+                aria-label="Рутини"
+              >
+                <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
+                  <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                </svg>
+                {todayDone}/{todayTotal}
+              </button>
+            )}
             {onExpand && (
               <button
                 type="button"

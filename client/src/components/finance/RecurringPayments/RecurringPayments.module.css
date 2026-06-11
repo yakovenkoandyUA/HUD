@@ -56,6 +56,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  filter: grayscale(0);
+}
+:global([data-theme="noir"]) .list {
+  filter: grayscale(1);
 }
 
 .row {

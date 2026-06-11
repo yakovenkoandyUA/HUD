@@ -1,0 +1,221 @@
+.root {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  overflow: hidden;
+  padding: 24px;
+}
+
+/* ── CRT scanlines overlay ── */
+.scanlines {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.18) 3px,
+    rgba(0, 0, 0, 0.18) 4px
+  );
+  animation: scanMove 8s linear infinite;
+}
+
+@keyframes scanMove {
+  from { background-position: 0 0; }
+  to   { background-position: 0 100px; }
+}
+
+/* ── Background rune grid ── */
+.runeGrid {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  padding: 32px;
+  gap: 8px;
+  opacity: 0.07;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--accent);
+  user-select: none;
+}
+
+.runeGrid span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.1s;
+}
+
+.runeFlash {
+  opacity: 1 !important;
+  color: var(--accent) !important;
+  text-shadow: 0 0 12px var(--accent);
+}
+
+/* ── Main content ── */
+.content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  max-width: 420px;
+}
+
+/* ── Glitch 404 ── */
+.heroWrap {
+  line-height: 1;
+}
+
+.glitchText {
+  font-family: var(--font-display);
+  font-size: clamp(96px, 22vw, 160px);
+  color: var(--accent);
+  letter-spacing: -4px;
+  position: relative;
+  display: inline-block;
+  animation: glitchMain 4s infinite;
+}
+
+.glitchText::before,
+.glitchText::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+
+.glitchText::before {
+  color: rgba(0, 200, 255, 0.7);
+  animation: glitchTop 4s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 38%, 0 38%);
+}
+
+.glitchText::after {
+  color: rgba(255, 50, 50, 0.7);
+  animation: glitchBot 4s infinite;
+  clip-path: polygon(0 58%, 100% 58%, 100% 100%, 0 100%);
+}
+
+@keyframes glitchMain {
+  0%, 90%, 100% { transform: none; text-shadow: 0 0 20px var(--accent-glow); }
+  91%            { transform: skewX(-3deg) translateX(2px); }
+  93%            { transform: skewX(3deg) translateX(-3px); }
+  95%            { transform: skewX(-1deg) translateX(1px); }
+}
+
+@keyframes glitchTop {
+  0%, 90%, 100% { transform: none; opacity: 0; }
+  91%            { transform: translateX(-4px); opacity: 0.9; }
+  93%            { transform: translateX(4px); opacity: 0.9; }
+  95%            { transform: none; opacity: 0; }
+}
+
+@keyframes glitchBot {
+  0%, 90%, 100% { transform: none; opacity: 0; }
+  92%            { transform: translateX(5px); opacity: 0.8; }
+  94%            { transform: translateX(-3px); opacity: 0.8; }
+  96%            { transform: none; opacity: 0; }
+}
+
+/* ── Rune divider ── */
+.divider {
+  display: flex;
+  gap: 10px;
+  color: var(--accent-dim);
+  font-size: 18px;
+  letter-spacing: 4px;
+  animation: runesPulse 3s ease-in-out infinite;
+}
+
+@keyframes runesPulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; color: var(--accent); }
+}
+
+/* ── Labels ── */
+.realm {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 6px;
+  color: var(--text3);
+  margin: 0;
+}
+
+.message {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.sub {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text3);
+  margin: 0;
+  font-style: italic;
+}
+
+/* ── Button ── */
+.btn {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px var(--accent-glow);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* ── Bottom rune ticker ── */
+.bottomRunes {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 8px;
+  color: var(--text3);
+  opacity: 0.4;
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
