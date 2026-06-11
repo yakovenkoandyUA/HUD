@@ -105,43 +105,6 @@
   --font-display: 'Cinzel', 'Bebas Neue', serif;
 }
 
-/* ── DARK ⬛ ────────────────────────────────────────────────────────────────── */
-[data-theme="dark"] {
-  --bg:         #0a0a0a;
-  --bg2:        #111111;
-  --bg3:        #1a1a1a;
-  --surface:    #1e1e1e;
-  --surface2:   #252525;
-  --border:     #2a2a2a;
-  --border2:    #333333;
-
-  --accent:      #c8102e;
-  --accent-dim:  #8b0b1f;
-  --accent-glow: rgba(200, 16, 46, 0.25);
-  --accent-soft: rgba(200, 16, 46, 0.12);
-
-  --second:      #2ecc71;
-  --second-soft: rgba(46, 204, 113, 0.12);
-
-  --gold:        #d4a017;
-  --gold-dim:    rgba(212, 160, 23, 0.15);
-
-  --task-quest:    var(--accent);
-  --task-shopping: var(--gold);
-
-  --text:   #f0ece8;
-  --text2:  #9a9490;
-  --text3:  #5a5652;
-
-  --learning:      #5b8af0;
-  --learning-soft: rgba(91, 138, 240, 0.13);
-
-  --positive:      #2ecc71;
-  --positive-soft: rgba(46, 204, 113, 0.12);
-  --negative:      #c8102e;
-  --negative-soft: rgba(200, 16, 46, 0.12);
-}
-
 /* ── JAPAN 🎌 ──────────────────────────────────────────────────────────────── */
 [data-theme="japan"] {
   /* Більше контрасту між шарами — картки тепер помітно виділяються на фоні */
@@ -185,49 +148,10 @@
   --font-display: 'Cormorant Garamond', 'Bebas Neue', serif;
 }
 
-/* ── HEROES ⚔️ (HoMM3 — темна шкіра, золоті рамки портретів) ───────────────── */
-/* Ізюмінка: --surface тепло-коричневий (шкіра/дерево як UI панелі HoMM3) +
-   --border золотий → кожна картка має вигляд портретної рамки героя. */
-[data-theme="heroes"] {
-  --bg:         #050302;
-  --bg2:        #0d0804;
-  --bg3:        #151008;
-  --surface:    #2a1a0a;
-  --surface2:   #341e0c;
-  --border:     #6a4818;
-  --border2:    #8a6020;
-
-  --accent:      #d4a030;
-  --accent-dim:  #9a7018;
-  --accent-glow: rgba(212, 160, 48, 0.50);
-  --accent-soft: rgba(212, 160, 48, 0.14);
-
-  --second:      #8050e0;
-  --second-soft: rgba(128, 80, 224, 0.22);
-
-  --gold:        #d4a030;
-  --gold-dim:    rgba(212, 160, 48, 0.18);
-
-  --task-quest:    var(--accent);
-  --task-shopping: var(--second);
-
-  --text:   #f0d890;
-  --text2:  #b09050;
-  --text3:  #786030;
-
-  --f1-back: #050302;
-
-  --learning:      #a080e8;
-  --learning-soft: rgba(160, 128, 232, 0.15);
-
-  --positive:      #58a858;
-  --positive-soft: rgba(88, 168, 88, 0.15);
-  --negative:      #d83030;
-  --negative-soft: rgba(216, 48, 48, 0.12);
-
-  --font-display: 'Cinzel', 'Bebas Neue', serif;
-}
-
+/* Castle texture off on pages with their own bg */
+[data-theme="castle"][data-page="f1"] body::after,
+[data-theme="castle"][data-page="memories"] body::after,
+[data-theme="castle"][data-page="watchlist"] body::after { display: none; }
 
 /* ── CYBER 🤖 (Blade Runner / Ghost in the Shell — neon magenta + cyan) ──────── */
 [data-theme="cyber"] {
@@ -375,6 +299,77 @@
     rgba(0, 0, 0, 0.018) 3px,
     rgba(0, 0, 0, 0.018) 4px
   );
+}
+
+/* ── Theme atmosphere effects ───────────────────────────────────────────────── */
+
+/* Gothic window vignette: арочні тіні з 4 кутів як вигляд крізь вікно фортеці */
+[data-theme="castle"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997;
+  background:
+    radial-gradient(ellipse 60% 80% at 0% 0%,   rgba(0,0,0,0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 80% at 100% 0%,  rgba(0,0,0,0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 60% at 0% 100%,  rgba(0,0,0,0.45) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 100% 100%, rgba(0,0,0,0.45) 0%, transparent 60%);
+}
+
+[data-theme="castle"] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.016) 3px,
+    rgba(0, 0, 0, 0.016) 4px
+  );
+}
+
+
+/* CYBER — circuit grid + scanning line */
+@keyframes cyberscan {
+  0%   { top: -200px; }
+  100% { top: 100vh;  }
+}
+
+/* Circuit grid: тонка cyan сітка як плата */
+[data-theme="cyber"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997;
+  background-image:
+    linear-gradient(rgba(0, 200, 240, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 200, 240, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Scan line: повільно рухається вниз по екрану */
+[data-theme="cyber"] body::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: -200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: 9998;
+  background: linear-gradient(transparent, rgba(0, 200, 240, 0.05), transparent);
+  animation: cyberscan 9s linear infinite;
+}
+
+/* PIXEL: CRT scanline animation (used by component-level ::after pseudo-elements) */
+@keyframes pixelCrt {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 4px; }
 }
 
 /* ── Base reset ─────────────────────────────────────────────────────────────── */

@@ -31,48 +31,94 @@
   gap: 14px;
 }
 
-:global([data-theme="warm"]) .screen,
-:global([data-theme="dark"]) .screen,
-:global([data-theme="heroes"]) .screen,
-:global([data-theme="berry"]) .screen {
-  background-image: url('/root-bg.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+/* ── Staggered card entrance ────────────────────────────────── */
+
+@keyframes dashSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+
+.content > * {
+  animation: dashSlideUp 0.32s ease both;
+}
+.content > *:nth-child(1) { animation-delay: 0.04s; }
+.content > *:nth-child(2) { animation-delay: 0.09s; }
+.content > *:nth-child(3) { animation-delay: 0.14s; }
+.content > *:nth-child(4) { animation-delay: 0.19s; }
+.content > *:nth-child(5) { animation-delay: 0.24s; }
+.content > *:nth-child(6) { animation-delay: 0.28s; }
 
 .heroWrap {
   margin: 0 -16px;
 }
 
-/* ── Today Routines ─────────────────────────────────────────── */
+/* ── Today Strip ────────────────────────────────────────────── */
 
-.todayRoutines {
+.todayStrip {
   display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.todayStrip::-webkit-scrollbar { display: none; }
+
+.stripChip {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 0;
-}
-
-.routinesIcon {
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-.routinesLabel {
-  color: var(--text3);
-  font-size: 12px;
-  font-family: var(--font-ui);
-  flex-shrink: 0;
-}
-
-.routinesNames {
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
   color: var(--text2);
-  font-size: 12px;
   font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.stripChip:active { background: var(--border); }
+
+.stripFlag {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── Routine chips ──────────────────────────────────────────── */
+
+.routineChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.routineChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.routineChip:active { opacity: 0.7; }
+
+.routineChipDone {
+  border-color: var(--positive);
+  color: var(--positive);
+  background: var(--positive-soft);
 }
 
 /* ── FAB ────────────────────────────────────────────────────── */
@@ -147,9 +193,6 @@
   transform: rotate(45deg);
 }
 
-:global([data-theme="heroes"]) .fab {
-  background: #d4174b;
-}
 
 /* ── Quick-add form ─────────────────────────────────────────── */
 

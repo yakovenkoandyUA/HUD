@@ -53,33 +53,6 @@ const QUICK_REPEAT_OPTIONS: { key: Exclude<RepeatType, 'none' | 'custom'>; label
 	{ key: 'yearly',  label: 'Щороку' },
 ]
 
-const REPEAT_BADGE: Record<string, string> = {
-	daily:   'ЩОДНЯ',
-	weekly:  'ЩОТИЖНЯ',
-	monthly: 'ЩОМІСЯЦЯ',
-	yearly:  'ЩОРОКУ',
-}
-
-const WEEK_DAY_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
-
-function getRoutineBadge(t: UnifiedTodo): string {
-	if (t.repeat !== 'custom') return REPEAT_BADGE[t.repeat ?? ''] ?? ''
-	if (!t.repeatConfig) return 'CUSTOM'
-	const { interval, unit, weekDays } = t.repeatConfig
-	const UNITS: Record<RepeatConfig['unit'], [string, string]> = {
-		day:   ['ДЕНЬ', 'ДНІ'],
-		week:  ['ТИЖ', 'ТИЖ'],
-		month: ['МІС', 'МІС'],
-		year:  ['РІК', 'Р'],
-	}
-	const [sing, plur] = UNITS[unit]
-	let label = interval === 1 ? `КОЖ. ${sing}` : `КОЖ. ${interval} ${plur}`
-	if (unit === 'week' && weekDays && weekDays.length > 0) {
-		label = [...weekDays].sort((a, b) => a - b).map(d => WEEK_DAY_SHORT[d]).join(', ')
-	}
-	return label
-}
-
 function repeatToUnit(r: Exclude<RepeatType, 'none' | 'custom'>): RepeatConfig['unit'] {
 	if (r === 'daily')   return 'day'
 	if (r === 'weekly')  return 'week'
@@ -125,18 +98,6 @@ function nextWeekDayFrom(from: Date, weekDays: number[]): string {
 	return `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`
 }
 
-function formatRoutineDue(dateStr: string): string {
-	const today  = new Date(); today.setHours(0, 0, 0, 0)
-	const [ry, rm, rd] = dateStr.split('-').map(Number)
-	const target = new Date(ry, rm - 1, rd)
-	const diff   = Math.round((target.getTime() - today.getTime()) / 86400000)
-	if (diff < 0)  return 'Прострочено'
-	if (diff === 0) return 'Сьогодні'
-	if (diff === 1) return 'Завтра'
-	const DAYS   = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-	const MONTHS = ['січ.', 'лют.', 'бер.', 'квіт.', 'трав.', 'черв.', 'лип.', 'серп.', 'вер.', 'жовт.', 'лист.', 'груд.']
-	return `${DAYS[target.getDay()]} ${target.getDate()} ${MONTHS[target.getMonth()]}`
-}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -167,8 +128,6 @@ const Sprint: React.FC = () => {
 	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
 	const [selectedDay, setSelectedDay] = useState(todayStr)
 	const [quickAddDate, setQuickAddDate] = useState<string | null>(null)
-	const [routinesOpen, setRoutinesOpen]     = useState(false)
-	const [completingRoutines, setCompletingRoutines] = useState<Set<string>>(new Set())
 	const [detailTaskId, setDetailTaskId]     = useState<string | null>(null)
 	const [weekExpanded, setWeekExpanded]     = useState(false)
 	const [binHidden, setBinHidden]           = useState(true)
@@ -208,12 +167,6 @@ const Sprint: React.FC = () => {
 		setSelectedDay(next === currentWeekStart ? todayStr : next)
 	}
 	const routineItems = items.filter(t => isRecurring(t))
-
-	// const [selY, selM, selD] = selectedDay.split('-').map(Number)
-	// const selectedDate = new Date(selY, selM - 1, selD)
-
-	// const dayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, selectedDate))
-	const dayRoutines = routineItems
 
 	// Tasks assigned to me by others (always show, separate section)
 	const assignedFromOthers = items.filter(t => t.ownerName)
@@ -292,9 +245,10 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 				...(newReminder ? { reminder: newReminder } : {}),
 			} : {}),
 		})
+		const isRoutine = newType === 'todo' && newRepeat !== 'none'
 		resetForm()
 		setShowAdd(false)
-		showToast('Справу додано', 'success')
+		showToast(isRoutine ? `Рутину «${newTitle.trim()}» додано` : 'Справу додано', 'success')
 	}
 
 	const handleDayLongPress = (day: Date) => {
@@ -304,17 +258,6 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 		setShowAdd(true)
 	}
 
-	const handleRoutineToggle = (id: string) => {
-		const isUndo = items.find(i => i.id === id)?.completionLog?.includes(todayStr) ?? false
-		if (!isUndo) {
-			setCompletingRoutines(prev => new Set(prev).add(id))
-			setTimeout(() => {
-				setCompletingRoutines(prev => { const s = new Set(prev); s.delete(id); return s })
-			}, 600)
-		}
-		toggleItem(id)
-	}
-	
 	return (
 		<div className={styles.screen}>
 			<AppHeader />
@@ -331,59 +274,6 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					onPrevWeek={goToPrevWeek}
 					onNextWeek={!isCurrentWeek ? goToNextWeek : undefined}
 				/>
-
-				{/* ── Рутини accordion ── */}
-				{dayRoutines.length > 0 && (
-					<div className={styles.routinesSection}>
-						<button type="button" className={styles.routineHeader} onClick={() => setRoutinesOpen(v => !v)} aria-expanded={routinesOpen}>
-							<span className={styles.sectionTitle}>Рутини</span>
-							<div className={styles.sectionActions}>
-								{(() => {
-									const done  = dayRoutines.filter(t => t.completionLog?.includes(selectedDay)).length
-									const total = dayRoutines.length
-									return (
-										<span className={`${styles.routineCount} ${done === total ? styles.routineCountDone : done > 0 ? styles.routineCountPartial : ''}`}>
-											{done}/{total}
-										</span>
-									)
-								})()}
-								<svg className={`${styles.routineArrow} ${routinesOpen ? styles.routineArrowOpen : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
-									<path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-								</svg>
-							</div>
-						</button>
-
-						<ul className={`${styles.routineList} ${routinesOpen ? styles.routineListOpen : ''}`}>
-							{dayRoutines.map(t => {
-								const doneOnDay    = !!(t.completionLog?.includes(selectedDay))
-								const isCompleting = completingRoutines.has(t.id)
-								return (
-									<li key={t.id} className={`${styles.routineItem} ${isCompleting ? styles.routineItemCompleting : ''} ${doneOnDay && !isCompleting ? styles.routineItemDone : ''}`}>
-										<button type="button" className={styles.routineCheck} onClick={() => handleRoutineToggle(t.id)} aria-label="Виконати">
-											<span className={`${styles.routineCheckBox} ${isCompleting || doneOnDay ? styles.routineCheckBoxDone : ''}`}>{isCompleting || doneOnDay ? '✓' : ''}</span>
-										</button>
-										<button type="button" className={styles.routineBody} onClick={() => setDetailTaskId(t.id)}>
-											<span className={styles.routineTitle}>{t.title}</span>
-											<div className={styles.routineMeta}>
-												<span className={styles.repeatBadge}>{getRoutineBadge(t)}</span>
-												{t.nextDue && <span className={styles.routineDue}>{formatRoutineDue(t.nextDue)}</span>}
-												{t.reminder && (
-													<svg className={styles.bellIcon} width="12" height="12" viewBox="0 0 16 18" fill="none">
-														<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-														<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-													</svg>
-												)}
-											</div>
-										</button>
-										<button type="button" className={styles.del} onClick={() => deleteItem(t.id)} aria-label="Видалити">
-											✕
-										</button>
-									</li>
-								)
-							})}
-						</ul>
-					</div>
-				)}
 
 				{/* ── Quest header ── */}
 				<div className={styles.questHeader}>
@@ -569,6 +459,17 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 									<button type="button" className={styles.dateDisplayBtn} onClick={() => setShowStartDatePicker(true)}>
 										{formatStartDate(repeatStartDate)}
 									</button>
+								</div>
+							)}
+
+							{/* Routine hint */}
+							{newRepeat !== 'none' && !showRepeatList && (
+								<div className={styles.routineHint}>
+									<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+										<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
+										<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+									</svg>
+									Ця справа стане рутиною — видно у тижневому вигляді
 								</div>
 							)}
 

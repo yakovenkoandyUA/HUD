@@ -82,6 +82,26 @@
   color: var(--text);
 }
 
+:global([data-theme="pixel"]) .num {
+  position: relative;
+  isolation: isolate;
+}
+:global([data-theme="pixel"]) .num::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.10) 2px,
+    rgba(0, 0, 0, 0.10) 4px
+  );
+  animation: pixelCrt 0.2s steps(1, end) infinite;
+}
+
 .numAccent {
   color: var(--accent);
 }

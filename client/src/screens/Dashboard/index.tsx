@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader'
+import GreetingBlock from '../../components/dashboard/GreetingBlock'
 import HeroCard from '../../components/dashboard/HeroCard'
 import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
 import TasksAccordion from '../../components/dashboard/TasksAccordion'
@@ -9,11 +10,13 @@ import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import { useFinanceStore } from '../../store/financeStore'
 import { useSprintStore } from '../../store/sprintStore'
+import { fmt } from '../../utils/finance'
 import { useUiStore } from '../../store/uiStore'
 import { useProfileStore } from '../../store/profileStore'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getRaceThisWeek } from '../../utils/f1'
 import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
+import { usePullToRefresh } from '../../hooks/usePullToRefresh'
 import { calcDailyBudget } from './helpers'
 import type { ExpenseCategory } from '../../types'
 import styles from './Dashboard.module.css'
@@ -21,7 +24,7 @@ import styles from './Dashboard.module.css'
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
-  const { items: sprintItems, addItem } = useSprintStore()
+  const { items: sprintItems, addItem, toggleItem } = useSprintStore()
   const { showToast, theme } = useUiStore()
   const f1Enabled = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
 
@@ -37,6 +40,7 @@ const Dashboard: React.FC = () => {
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { fetchTransactions() }, [])
+  usePullToRefresh(contentRef, { onRefresh: fetchTransactions })
 
   useEffect(() => {
     if (!fabOpen) return
@@ -76,7 +80,21 @@ const Dashboard: React.FC = () => {
     isRecurring(t) ? !!(t.completionLog?.some(d => d >= todayIso)) : t.done
 
   const routineItems = sprintItems.filter(t => isRecurring(t) && isRoutineDueOnDay(t, todayDate))
-  const unfinishedRoutines = routineItems.filter(t => !isDoneToday(t))
+
+  const activeTaskCount = sprintItems.filter(t => !isRecurring(t) && !t.done).length
+
+  const sparklineData = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(todayDate)
+    d.setDate(todayDate.getDate() - (6 - i))
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return transactions
+      .filter(t => t.type === 'expense' && t.date.startsWith(iso))
+      .reduce((sum, t) => sum + t.amount, 0)
+  })
+
+  const raceInDays = nextRace
+    ? Math.ceil((new Date(nextRace.date + 'T14:00:00Z').getTime() - Date.now()) / 86400000)
+    : null
 
   const handleExpense = (amount: number, description: string, category?: string) => {
     addExpense(amount, description, category as ExpenseCategory | undefined)
@@ -107,19 +125,60 @@ const Dashboard: React.FC = () => {
       {isRetro && <div ref={bgRef} className={styles.bg} />}
       <AppHeader />
       <div ref={contentRef} className={styles.content}>
+        <GreetingBlock />
+
+        {/* ── Today Strip ── */}
+        <div className={styles.todayStrip}>
+          <button type="button" className={styles.stripChip} onClick={() => navigate('/finance')}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <rect x="1" y="3" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+              <path d="M1 5h10" stroke="currentColor" strokeWidth="1.2"/>
+              <circle cx="8.5" cy="7.5" r="0.8" fill="currentColor"/>
+            </svg>
+            <span>{fmt(balance)} ₴</span>
+          </button>
+          {activeTaskCount > 0 && (
+            <button type="button" className={styles.stripChip} onClick={() => navigate('/sprint')}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 3h8M2 6h6M2 9h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+              <span>{activeTaskCount} задач</span>
+            </button>
+          )}
+          {f1Enabled && nextRace && raceInDays !== null && raceInDays > 0 && raceInDays < 30 && (
+            <button type="button" className={styles.stripChip} onClick={() => navigate('/f1')}>
+              <span className={styles.stripFlag}>{nextRace.flag}</span>
+              <span>{nextRace.name.replace(' GP', '')} · {raceInDays}д</span>
+            </button>
+          )}
+        </div>
+
         {raceThisWeek ? (
           <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
         ) : (
           <WeekHeader weekStart={weekStart} hideTitle routineItems={routineItems} />
         )}
 
-        {unfinishedRoutines.length > 0 && (
-          <div className={styles.todayRoutines}>
-            {/* <span className={styles.routinesIcon}>🔄</span> */}
-            <span className={styles.routinesLabel}>Сьогодні:</span>
-            <span className={styles.routinesNames}>
-              {unfinishedRoutines.map(r => r.title).join(' · ')}
-            </span>
+        {routineItems.length > 0 && (
+          <div className={styles.routineChips}>
+            {routineItems.map(r => {
+              const done = isDoneToday(r)
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  className={`${styles.routineChip} ${done ? styles.routineChipDone : ''}`}
+                  onClick={() => toggleItem(r.id)}
+                >
+                  {done && (
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                      <path d="M1.5 4.5l2 2 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                  {r.title}
+                </button>
+              )
+            })}
           </div>
         )}
 
@@ -130,6 +189,7 @@ const Dashboard: React.FC = () => {
           todaySpent={todaySpent}
           race={nextRace}
           compact={!!raceThisWeek}
+          sparklineData={sparklineData}
         />
       </div>
 

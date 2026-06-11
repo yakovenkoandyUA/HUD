@@ -43,8 +43,19 @@ const F1Route: React.FC = () => {
   return <Outlet />
 }
 
+function pageSlug(pathname: string): string {
+  if (pathname.startsWith('/f1')) return 'f1'
+  if (pathname.startsWith('/memories')) return 'memories'
+  const seg = pathname.split('/')[1]
+  return seg || 'home'
+}
+
 const AnimatedRoutes: React.FC = () => {
   const location = useLocation()
+
+  useEffect(() => {
+    document.documentElement.dataset.page = pageSlug(location.pathname)
+  }, [location.pathname])
 
   return (
     <div key={location.pathname} className="pageWrapper">
