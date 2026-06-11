@@ -4,36 +4,47 @@
 
 ---
 
-## Статус (2026-06-10) — Що реалізовано
+## Статус (2026-06-12) — Що реалізовано
+
+### Dashboard
+- GreetingBlock (привітання + дата), HeroCard (баланс + F1 countdown)
+- ✅ Interactive sparkline — 7 днів витрат, tap/hover tooltip з сумою і днем, auto-dismiss
+- TasksAccordion (квести + покупки), WeekHeader з routines badge (X/Y)
+- FAB (Витрата / Квест / Покупка), CarHero (Three.js McLaren)
+- Pull-to-refresh, pixel CRT scanlines (pixel тема)
+- ~~Nav chips (finance/sprint/f1)~~ — видалено як дублікат BottomNav
 
 ### Finance
 - BalanceHero, TodayCard (delta/streak), StatsGrid (бонус/середнє/прогрес)
 - TopupForm, ExpenseForm (кастомні категорії + субкатегорії, сканування чеків)
 - TransactionList — фільтри з анімацією, inline редагування назви, сортування по createdAt
-- ExpenseChart — donut (Recharts), **вже виключає "Накопичення"**
+- ExpenseChart — donut (Recharts), виключає "Накопичення"
 - GoalsList + GoalDetail — savings goals з deposits[]
 - RecurringPayments — іконки сервісів, UAH/USD/EUR конвертація, sessionStorage кеш
-  - ✅ Push-нагадування (1/2/7 днів, cron 09:00 UTC)
-  - ✅ Підтвердження списання в день платежу → Transaction
-- Streak економії (persist local), бюджетний цикл від 10-го числа
-- ✅ ShoppingTracker — додано на Finance екран після RecurringPayments
+  - Push-нагадування (1/2/7 днів, cron 09:00 UTC)
+  - Підтвердження списання в день платежу → Transaction
+- ShoppingTracker — на Finance екрані після RecurringPayments
+- Streak економії (persist local)
+- ✅ salaryDay — конфігурований день зарплати (1-31), зберігається в профілі; бюджетний цикл рахується від нього
+- financeStore: sessionStorage кеш при mount (миттєве відображення без мерехтіння)
+- ⬜ Місячна аналітика (MonthlyReport) — не реалізовано
 
 ### Sprint / Quests
 - Тижневий список задач: sprint / shopping / todo / уроки
 - TaskDetailModal: МІТКИ, ДЕДЛАЙН, ЧЕК-ЛІСТ, ОПИС, LabelPicker
 - Фільтр (bottom sheet): тип + статус (default: тільки активні)
-- Рутини з repeat/nextDue/completionHistory, індикатор badge
+- Рутини з repeat/nextDue/completionHistory, індикатор badge; WeekHeader показує X/Y рутин дня
 - RepeatConfigScreen — гнучке налаштування повторень (weekly/monthly/custom)
 - TrashBin — soft-delete (TTL 24h MongoDB), відновлення або purge
 - useSwipeToDismiss + useModalHistory хуки
 - Spring-анімація відкриття TaskDetailModal (0.46s cubic-bezier)
-- ✅ assignedTo — TaskDetailModal секція ВИКОНАВЦІ, "Від {name}" блок на Sprint екрані
+- assignedTo — TaskDetailModal секція ВИКОНАВЦІ, "Від {name}" блок на Sprint екрані
 
 ### Watchlist
 - Категорії: movie / series / anime / book
 - Пошук: TMDB + Google Books (через backend proxy)
 - WatchlistCard, WatchlistDetail, EpisodesList, StarRating
-- watchedEpisodes[] (прогрес по сезонах), watchTogether тогл
+- watchedEpisodes[] (прогрес по сезонах), watchedWith (family members)
 - Коментарі між профілями (/api/watchlist/:id/comments)
 - Push-нотифікації: нові епізоди (13:00) + нові сезони
 - Схожі рекомендації, decade фільтр, жанровий фільтр
@@ -50,7 +61,6 @@
 - RaceDetail: CircuitStatsSection, SessionScheduleSection, RaceWeatherSection, RacePodiumSection
 - McLarenViewer (Three.js), аналоговий годинник (easter egg)
 - ⬜ F1 Live Race Dashboard — не реалізовано
-- ⬜ F1 екран редизайн — не завершено
 
 ### Memories
 - Таймлайн по місяцях + сітка 3 колонки
@@ -62,13 +72,25 @@
 ### Push-нотифікації
 - VAPID підключено, підписка в БД
 - Тригери: F1 гонка за 1г, нові епізоди, нові сезони, рутини 09:00 UTC
-- ✅ Нагадування по регулярних платежах (1/2/7 днів)
+- Нагадування по регулярних платежах (1/2/7 днів)
+
+### Auth / Профілі
+- ✅ Email + password (bcrypt) + Google OAuth (GIS) — повноцінний auth
+- JWT 30 днів, profileStore + localStorage
+- PIN-lock (4-цифри, bcrypt, 5хв неактивності)
+- FamilyLink (запит/прийняти/відхилити), ізоляція даних (спогади + watchlist)
+- ✅ ProfilePage — повністю реворкнуто: 4 таби через BottomNav адаптацію
+  - **Я** — аватар, ім'я, username (inline edit + uniqueness check), зміна пароля (accordion)
+  - **Гаманець** — salaryDay stepper (debounce 800ms) + категорії витрат
+  - **Сім'я** — FamilyLink management
+  - **Вигляд** — 6 тем (swatches grid) + Web Push toggle
+- ✅ BottomNav адаптується на `/profile` → 4 профільні таби замість nav
 
 ### Глобально
-- JWT auth (multi-profile, без пароля)
 - Кастомні категорії транзакцій з субкатегоріями
-- Теми (ThemePicker)
+- Теми: retro / castle / japan / cyber / noir / pixel (6 штук; `dark` і `heroes` видалено)
 - PWA: service worker, Web Push, іконки
+- ErrorBoundary компонент, NotFound екран
 
 ---
 
@@ -113,24 +135,7 @@ Body: { ingredients: string, restrictions?: string }
 
 ---
 
-### 3. Sprint: assignedTo профілів
-
-**Мета:** Котька і Коська бачать спільні задачі.
-
-**Backend:**
-- `User`: додати `linkedProfiles: ObjectId[]`
-- `SprintTask`: додати `assignedTo: string[]` (userId array)
-- `POST /api/profiles/link { targetUsername }` — взаємне зв'язування
-- `GET /api/sprint/tasks` — повертати також задачі де `assignedTo includes req.userId`
-
-**Frontend:**
-- TaskDetailModal секція "ВИКОНАВЦІ": аватари linked profiles + toggle assign/unassign
-- Sprint екран: задачі від іншого профілю — окремий блок "Від {name}" (collapsed за замовч.)
-- ProfilePage: кнопка "Зв'язати профіль" → ввести username
-
----
-
-### 4. Книги: прогрес читання
+### 3. Книги: прогрес читання
 
 **Мінімально:**
 - `WatchlistItem` додати `currentPage: number` (totalPages/pageCount вже є)
@@ -215,13 +220,6 @@ Body: { ingredients: string, restrictions?: string }
 
 ---
 
-### 🟢 P3 — Виправлення ShoppingTracker
-
-- Компонент `ShoppingTracker` існує але не рендериться на `/finance`
-- Вирішити: або додати назад на Finance екран, або видалити компонент
-- Якщо лишити — в окремій секції після RecurringPayments
-
----
 
 ## F1 Live Race Dashboard — ТЗ
 
@@ -275,19 +273,20 @@ Body: { ingredients: string, restrictions?: string }
 - ✅ Watchlist редизайн
 - ✅ Memories редизайн
 - ✅ Push-нотифікації
-- ✅ Sprint: trash, анімації, хуки
-- ✅ Finance: recurring payments reminders + confirm
-- ⬜ Finance: місячна аналітика
+- ✅ Sprint: trash, анімації, хуки, assignedTo
+- ✅ Finance: recurring payments reminders + confirm, ShoppingTracker
+- ✅ Dashboard: interactive sparkline, прибрано зайві nav chips
+- ✅ ProfilePage: повний реворк (4 таби, BottomNav адаптація, salaryDay)
+- ⬜ Finance: місячна аналітика (MonthlyReport)
 - ⬜ F1 Live Dashboard
-- ⬜ Закрити ShoppingTracker / виправити
 
 ### Фаза 1 — Фундамент (перед публічним launch)
 
 **Auth:**
-- Замінити профільну систему на email + password + Google OAuth
-- JWT: access token 15хв + refresh 30д
-- Верифікація email (Resend або Nodemailer)
-- Міграція існуючих даних (Котька/Коська → нові акаунти)
+- ✅ Email + password + Google OAuth — реалізовано
+- ✅ JWT 30 днів, PIN-lock
+- ⬜ Верифікація email (Resend: купити домен, верифікувати DNS, відновити sendVerificationEmail)
+- ⬜ Міграція на access 15хв + refresh 30д (зараз JWT 30д без refresh)
 
 **Multi-tenancy cleanup:**
 - Аудит всіх ендпоінтів — фільтрація по `userId`
@@ -341,7 +340,8 @@ Body: { ingredients: string, restrictions?: string }
 
 | Задача | Критичність |
 |--------|-------------|
-| Повноцінний auth (email+password) | 🔴 Блокер |
+| ~~Повноцінний auth (email+password)~~ | ✅ Зроблено |
+| Верифікація email (Resend + домен) | 🔴 До launch |
 | Видалити console.log з ai.ts і деінде | 🔴 Безпека |
 | helmet.js на бекенд | 🔴 Безпека |
 | CORS whitelist тільки prod | 🔴 Безпека |
