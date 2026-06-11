@@ -7,7 +7,7 @@ interface Toast {
   type: 'success' | 'error' | 'info'
 }
 
-export type Theme = 'retro' | 'warm' | 'dark' | 'japan' | 'heroes' | 'berry'
+export type Theme = 'retro' | 'castle' | 'dark' | 'japan' | 'heroes' | 'cyber' | 'noir' | 'pixel'
 
 interface UiState {
   toasts: Toast[]

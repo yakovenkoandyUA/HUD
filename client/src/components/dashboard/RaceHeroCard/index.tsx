@@ -101,22 +101,22 @@ const RaceHeroCard: React.FC<RaceHeroCardProps> = ({ race, onClick }) => {
         <div className={styles.countdownRow}>
           <div className={styles.unit}>
             <span className={`${styles.num} ${cd.d === 0 ? styles.numAccent : ''}`}>{cd.d}</span>
-            <span className={styles.sub}>д</span>
+            {/* <span className={styles.sub}>д</span> */}
           </div>
           <span className={styles.sep}>:</span>
           <div className={styles.unit}>
             <span className={styles.num}>{pad(cd.h)}</span>
-            <span className={styles.sub}>г</span>
+            {/* <span className={styles.sub}>г</span> */}
           </div>
           <span className={styles.sep}>:</span>
           <div className={styles.unit}>
             <span className={styles.num}>{pad(cd.m)}</span>
-            <span className={styles.sub}>хв</span>
+            {/* <span className={styles.sub}>хв</span> */}
           </div>
           <span className={styles.sep}>:</span>
           <div className={styles.unit}>
             <span className={styles.num}>{pad(cd.s)}</span>
-            <span className={styles.sub}>с</span>
+            {/* <span className={styles.sub}>с</span> */}
           </div>
         </div>
       ) : (

@@ -10,6 +10,10 @@
 
 }
 
+:global([data-theme="pixel"]) .bg {
+  display: none;
+}
+
 /* Parallax background layer — 80% taller than container to have room to move */
 .bg {
   position: absolute;

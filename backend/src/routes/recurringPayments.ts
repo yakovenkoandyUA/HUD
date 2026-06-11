@@ -69,7 +69,7 @@ router.post('/:id/confirm', async (req: Request, res: Response): Promise<void> =
     userId:      req.userId,
     type:        'expense',
     amount:      item.amount,
-    category:    item.category || 'Підписки',
+    category:    (item.category && item.category !== 'Інше') ? item.category : 'Підписки',
     title:       item.name,
     desc:        'Регулярний платіж',
     date:        dateStr,

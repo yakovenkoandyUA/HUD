@@ -64,43 +64,45 @@
   --negative-soft: rgba(184, 58, 45, 0.12);
 }
 
-/* ── WARM 🌅 ───────────────────────────────────────────────────────────────── */
-[data-theme="warm"] {
-  --bg:         #1a2328;
-  --bg2:        #1f2c33;
-  --bg3:        #24343c;
-  --surface:    #264653;
-  --surface2:   #2d5060;
-  --border:     #2f5a69;
-  --border2:    #386070;
+/* ── CASTLE 🏰 ─────────────────────────────────────────────────────────────── */
+[data-theme="castle"] {
+  --bg:         #0d0f1a;
+  --bg2:        #121520;
+  --bg3:        #181c28;
+  --surface:    #1e2235;
+  --surface2:   #252a40;
+  --border:     #2e3450;
+  --border2:    #3a4260;
 
-  --accent:      #E76F51;
-  --accent-dim:  #a84e38;
-  --accent-glow: rgba(231, 111, 81, 0.25);
-  --accent-soft: rgba(231, 111, 81, 0.12);
+  --accent:      #d4a017;
+  --accent-dim:  #9a7010;
+  --accent-glow: rgba(212, 160, 23, 0.30);
+  --accent-soft: rgba(212, 160, 23, 0.12);
 
-  --second:      #2A9D8F;
-  --second-soft: rgba(42, 157, 143, 0.15);
+  --second:      #6a4fc8;
+  --second-soft: rgba(106, 79, 200, 0.20);
 
-  --gold:        #E9C46A;
-  --gold-dim:    rgba(233, 196, 106, 0.15);
+  --gold:        #d4a017;
+  --gold-dim:    rgba(212, 160, 23, 0.15);
 
   --task-quest:    var(--accent);
-  --task-shopping: var(--gold);
+  --task-shopping: var(--second);
 
-  --text:   #f0ece8;
-  --text2:  #9ab0b8;
-  --text3:  #8ea7ad;
+  --text:   #e8d5a0;
+  --text2:  #a89060;
+  --text3:  #6a5830;
 
   --f1-back: #000;
 
-  --learning:      #6a9fd4;
-  --learning-soft: rgba(106, 159, 212, 0.13);
+  --learning:      #9975e0;
+  --learning-soft: rgba(153, 117, 224, 0.15);
 
-  --positive:      #2A9D8F;
-  --positive-soft: rgba(42, 157, 143, 0.15);
-  --negative:      #E76F51;
-  --negative-soft: rgba(231, 111, 81, 0.12);
+  --positive:      #4a9a4a;
+  --positive-soft: rgba(74, 154, 74, 0.15);
+  --negative:      #c83030;
+  --negative-soft: rgba(200, 48, 48, 0.12);
+
+  --font-display: 'Cinzel', 'Bebas Neue', serif;
 }
 
 /* ── DARK ⬛ ────────────────────────────────────────────────────────────────── */
@@ -142,21 +144,23 @@
 
 /* ── JAPAN 🎌 ──────────────────────────────────────────────────────────────── */
 [data-theme="japan"] {
+  /* Більше контрасту між шарами — картки тепер помітно виділяються на фоні */
   --bg:         #F5F0EB;
-  --bg2:        #EDE8E2;
-  --bg3:        #E5DED6;
-  --surface:    #EDE8E2;
-  --surface2:   #E0D9D0;
-  --border:     #D5CEC5;
-  --border2:    #C8C0B6;
+  --bg2:        #EDE7DF;
+  --bg3:        #E4DDD3;
+  --surface:    #D8D0C4;
+  --surface2:   #CEC6BA;
+  --border:     #BDB5A8;
+  --border2:    #AFA79A;
 
   --accent:      #C8102E;
   --accent-dim:  #8b0b1f;
   --accent-glow: rgba(200, 16, 46, 0.20);
   --accent-soft: rgba(200, 16, 46, 0.08);
 
-  --second:      #1a1a1a;
-  --second-soft: rgba(26, 26, 26, 0.08);
+  /* Kon (紺) — традиційний японський індиго замість чорного */
+  --second:      #1F3A5F;
+  --second-soft: rgba(31, 58, 95, 0.10);
 
   --gold:        #8B7355;
   --gold-dim:    rgba(139, 115, 85, 0.15);
@@ -165,13 +169,13 @@
   --task-shopping: var(--gold);
 
   --text:   #1a1a1a;
-  --text2:  #6b6560;
-  --text3:  #a09890;
+  --text2:  #5a5450;
+  --text3:  #8a8480;
 
   --f1-back: #F5F0EB;
 
-  --learning:      #3d6ea8;
-  --learning-soft: rgba(61, 110, 168, 0.10);
+  --learning:      #1F3A5F;
+  --learning-soft: rgba(31, 58, 95, 0.10);
 
   --positive:      #2d6a4f;
   --positive-soft: rgba(45, 106, 79, 0.12);
@@ -181,85 +185,196 @@
   --font-display: 'Cormorant Garamond', 'Bebas Neue', serif;
 }
 
-/* ── HEROES 🏰 ─────────────────────────────────────────────────────────────── */
+/* ── HEROES ⚔️ (HoMM3 — темна шкіра, золоті рамки портретів) ───────────────── */
+/* Ізюмінка: --surface тепло-коричневий (шкіра/дерево як UI панелі HoMM3) +
+   --border золотий → кожна картка має вигляд портретної рамки героя. */
 [data-theme="heroes"] {
-  --bg:         #0d0f1a;
-  --bg2:        #121520;
-  --bg3:        #181c28;
-  --surface:    #1e2235;
-  --surface2:   #252a40;
-  --border:     #2e3450;
-  --border2:    #3a4260;
+  --bg:         #050302;
+  --bg2:        #0d0804;
+  --bg3:        #151008;
+  --surface:    #2a1a0a;
+  --surface2:   #341e0c;
+  --border:     #6a4818;
+  --border2:    #8a6020;
 
-  --accent:      #d4a017;
-  --accent-dim:  #9a7010;
-  --accent-glow: rgba(212, 160, 23, 0.30);
-  --accent-soft: rgba(212, 160, 23, 0.12);
+  --accent:      #d4a030;
+  --accent-dim:  #9a7018;
+  --accent-glow: rgba(212, 160, 48, 0.50);
+  --accent-soft: rgba(212, 160, 48, 0.14);
 
-  --second:      #6a4fc8;
-  --second-soft: rgba(106, 79, 200, 0.20);
+  --second:      #8050e0;
+  --second-soft: rgba(128, 80, 224, 0.22);
 
-  --gold:        #d4a017;
-  --gold-dim:    rgba(212, 160, 23, 0.15);
+  --gold:        #d4a030;
+  --gold-dim:    rgba(212, 160, 48, 0.18);
 
   --task-quest:    var(--accent);
-  --task-shopping: var(--second);   /* accent === gold in heroes, so use second (purple) */
+  --task-shopping: var(--second);
 
-  --text:   #e8d5a0;
-  --text2:  #a89060;
-  --text3:  #6a5830;
+  --text:   #f0d890;
+  --text2:  #b09050;
+  --text3:  #786030;
 
-  --f1-back: #000;
+  --f1-back: #050302;
 
-  --learning:      #9975e0;
-  --learning-soft: rgba(153, 117, 224, 0.15);
+  --learning:      #a080e8;
+  --learning-soft: rgba(160, 128, 232, 0.15);
 
-  --positive:      #4a9a4a;
-  --positive-soft: rgba(74, 154, 74, 0.15);
-  --negative:      #c83030;
-  --negative-soft: rgba(200, 48, 48, 0.12);
+  --positive:      #58a858;
+  --positive-soft: rgba(88, 168, 88, 0.15);
+  --negative:      #d83030;
+  --negative-soft: rgba(216, 48, 48, 0.12);
 
   --font-display: 'Cinzel', 'Bebas Neue', serif;
 }
 
 
-/* ── BERRY 🍓 ──────────────────────────────────────────────────────────────── */
-[data-theme="berry"] {
-  --bg:         #0f1a24;
-  --bg2:        #142030;
-  --bg3:        #1a2838;
-  --surface:    #1E3442;
-  --surface2:   #24404f;
-  --border:     #2a4d5e;
-  --border2:    #34596c;
+/* ── CYBER 🤖 (Blade Runner / Ghost in the Shell — neon magenta + cyan) ──────── */
+[data-theme="cyber"] {
+  --bg:         #06080e;
+  --bg2:        #0a0e18;
+  --bg3:        #0f1422;
+  --surface:    #131a2c;
+  --surface2:   #182036;
+  --border:     #202c48;
+  --border2:    #2a3a5e;
 
-  --accent:      #FF5C8D;
-  --accent-dim:  #cc3a6a;
-  --accent-glow: rgba(255, 92, 141, 0.28);
-  --accent-soft: rgba(255, 92, 141, 0.12);
+  --accent:      #ff2060;
+  --accent-dim:  #c01848;
+  --accent-glow: rgba(255, 32, 96, 0.40);
+  --accent-soft: rgba(255, 32, 96, 0.12);
 
-  --second:      #732553;
-  --second-soft: rgba(115, 37, 83, 0.22);
+  --second:      #00d4ff;
+  --second-soft: rgba(0, 212, 255, 0.18);
 
-  --gold:        #85A3B2;
-  --gold-dim:    rgba(133, 163, 178, 0.15);
+  --gold:        #f0a020;
+  --gold-dim:    rgba(240, 160, 32, 0.18);
+
+  --task-quest:    var(--accent);
+  --task-shopping: var(--second);
+
+  --text:   #d8eaf8;
+  --text2:  #5888a8;
+  --text3:  #304858;
+
+  --f1-back: #06080e;
+
+  --learning:      #00d4ff;
+  --learning-soft: rgba(0, 212, 255, 0.15);
+
+  --positive:      #00e898;
+  --positive-soft: rgba(0, 232, 152, 0.15);
+  --negative:      #ff2060;
+  --negative-soft: rgba(255, 32, 96, 0.12);
+}
+
+/* ── NOIR 🕵️ ───────────────────────────────────────────────────────────────── */
+/* Всі CSS змінні — сірі. Donuts/category icons використовують inline hex з categoryStore
+   (не CSS змінні) → вони автоматично залишаються кольоровими як єдиний акцент на сторінці. */
+[data-theme="noir"] {
+  --bg:         #080808;
+  --bg2:        #0e0e0e;
+  --bg3:        #151515;
+  --surface:    #1a1a1a;
+  --surface2:   #212121;
+  --border:     #2a2a2a;
+  --border2:    #383838;
+
+  --accent:      #d0d0d0;
+  --accent-dim:  #888888;
+  --accent-glow: rgba(208, 208, 208, 0.18);
+  --accent-soft: rgba(208, 208, 208, 0.08);
+
+  --second:      #606060;
+  --second-soft: rgba(96, 96, 96, 0.20);
+
+  --gold:        #c8c8c8;
+  --gold-dim:    rgba(200, 200, 200, 0.15);
 
   --task-quest:    var(--accent);
   --task-shopping: var(--gold);
 
-  --text:   #E9D8C8;
-  --text2:  #85A3B2;
-  --text3:  #4a6878;
+  --text:   #ebebeb;
+  --text2:  #909090;
+  --text3:  #565656;
 
-  --f1-back: #0f1a24;
+  --f1-back: #000;
 
-  --learning:      #6090c0;
-  --learning-soft: rgba(96, 144, 192, 0.13);
+  --learning:      #808080;
+  --learning-soft: rgba(128, 128, 128, 0.13);
 
-  --positive:      #4a9a70;
-  --positive-soft: rgba(74, 154, 112, 0.15);
-  --negative:      #FF5C8D;
-  --negative-soft: rgba(255, 92, 141, 0.12);
+  --positive:      #909090;
+  --positive-soft: rgba(144, 144, 144, 0.15);
+  --negative:      #c0c0c0;
+  --negative-soft: rgba(192, 192, 192, 0.10);
+}
+
+/* ── PIXEL 👾 (NES / 8-bit) ─────────────────────────────────────────────────── */
+[data-theme="pixel"] {
+  --radius:    2px;
+  --radius-lg: 4px;
+
+  /* Пергаментний кремовий фон — ігрова картриджна коробка */
+  --bg:         #f4efe0;
+  --bg2:        #ece6d4;
+  --bg3:        #e4ddc8;
+  --surface:    #faf6ea;
+  --surface2:   #f0ead8;
+  --border:     #c8bc94;
+  --border2:    #b8ac84;
+
+  /* NES червоний — основний акцент */
+  --accent:      #d42020;
+  --accent-dim:  #a01818;
+  --accent-glow: rgba(212, 32, 32, 0.25);
+  --accent-soft: rgba(212, 32, 32, 0.10);
+
+  /* NES синій */
+  --second:      #1848c8;
+  --second-soft: rgba(24, 72, 200, 0.12);
+
+  /* NES жовтий/золотий */
+  --gold:        #e8a020;
+  --gold-dim:    rgba(232, 160, 32, 0.18);
+
+  --task-quest:    var(--accent);
+  --task-shopping: var(--second);
+
+  /* Темно-індиго текст — як на старому екрані */
+  --text:   #181028;
+  --text2:  #504060;
+  --text3:  #907898;
+
+  --f1-back: #f4efe0;
+
+  /* NES синій для learning */
+  --learning:      #1848c8;
+  --learning-soft: rgba(24, 72, 200, 0.12);
+
+  /* NES зелений */
+  --positive:      #208040;
+  --positive-soft: rgba(32, 128, 64, 0.14);
+  /* NES червоний */
+  --negative:      #d42020;
+  --negative-soft: rgba(212, 32, 32, 0.10);
+
+  --font-display: 'Press Start 2P', monospace;
+}
+
+/* Тонкий dither-border ефект на картках */
+[data-theme="pixel"] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.018) 3px,
+    rgba(0, 0, 0, 0.018) 4px
+  );
 }
 
 /* ── Base reset ─────────────────────────────────────────────────────────────── */

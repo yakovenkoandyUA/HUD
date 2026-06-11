@@ -321,8 +321,9 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
       ) : (
         <ul className={styles.list}>
           {displayedList.map((t) => {
-            const isPending = pendingDelete === t.id
-            const receipt   = parseReceipt(t.description)
+            const isPending  = pendingDelete === t.id
+            const receipt    = parseReceipt(t.description)
+            const isRecurring = !!(t.recurringId || t.description === 'Регулярний платіж')
             return (
               <li key={t.id} className={`${styles.item} ${isPending ? styles.itemPending : ''}`}>
                 {isPending ? (
@@ -344,7 +345,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                       onClick={receipt ? () => setSelectedReceiptTx(t) : undefined}
                     >
                       {t.type === 'expense' ? (() => {
-                        const isRecurring = !!(t.recurringId || t.description === 'Регулярний платіж')
                         if (isRecurring && t.title) {
                           return (
                             <div className={`${styles.txCatIcon} ${styles.txCatIconRecurring}`}>
@@ -397,7 +397,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                               >
                                 {t.title ?? (receipt ? receipt.store : t.description)}
                               </span>
-                              {receipt && t.category && (
+                              {(receipt || isRecurring) && t.category && (
                                 <span className={styles.txCategory}> · {t.category}</span>
                               )}
                             </>
