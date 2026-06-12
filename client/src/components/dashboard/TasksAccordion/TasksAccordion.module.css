@@ -269,6 +269,14 @@
   text-transform: uppercase;
 }
 
+/* ── Note date ── */
+.noteDate {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
 /* ── Divider between sections ── */
 .divider {
   height: 1px;
