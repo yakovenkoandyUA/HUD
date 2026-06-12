@@ -186,7 +186,6 @@
 .tagsFilter {
   display: flex;
   gap: 6px;
-  overflow-x: auto;
   padding-bottom: 2px;
   scrollbar-width: none;
   margin: -4px -16px;
@@ -229,8 +228,8 @@
 
 .recipeGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 /* ── Ghost empty state ────────────────────────────────────────── */
@@ -239,7 +238,7 @@
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
   pointer-events: none;
 }
 

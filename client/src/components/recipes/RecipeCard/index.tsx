@@ -6,7 +6,7 @@ import styles from './RecipeCard.module.css'
 /**
  * RecipeCard
  * ----------
- * Grid-картка рецепту: фото на весь квадрат, серце top-right, meta overlay внизу.
+ * 4/5 portrait фото, Furore назва + мета в overlay знизу.
  *
  * Props:
  * @prop {Recipe}     recipe  — дані рецепту
@@ -25,8 +25,9 @@ function formatCookTime(minutes: number): string {
 }
 
 const HeartIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
-  <svg width="15" height="15" viewBox="0 0 16 16" fill={filled ? 'currentColor' : 'none'} aria-hidden="true">
-    <path d="M8 14s-6-3.5-6-7.5A3.5 3.5 0 0 1 8 4a3.5 3.5 0 0 1 6 2.5C14 10.5 8 14 8 14z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="13" height="13" viewBox="0 0 16 16" fill={filled ? 'currentColor' : 'none'} aria-hidden="true">
+    <path d="M8 14s-6-3.5-6-7.5A3.5 3.5 0 0 1 8 4a3.5 3.5 0 0 1 6 2.5C14 10.5 8 14 8 14z"
+      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 )
 
@@ -35,7 +36,6 @@ const DIFFICULTY_COLOR: Record<string, string> = {
   medium: 'var(--gold)',
   hard:   'var(--negative)',
 }
-
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
   const { wishlistIds, toggleWishlist } = useRecipesStore()
@@ -50,60 +50,63 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && onClick()}
     >
-      <div className={styles.photoWrap}>
-        {recipe.imageUrl
-          ? (
-            <>
-              {!loaded && <div className={styles.shimmer} />}
-              <img
-                src={recipe.imageUrl}
-                alt={recipe.title}
-                className={`${styles.photo} ${loaded ? styles.photoLoaded : ''}`}
-                loading="lazy"
-                onLoad={() => setLoaded(true)}
-              />
-            </>
-          )
-          : (
-            <div className={styles.photoPlaceholder}>
-              <span className={styles.photoInitial}>{recipe.title[0]?.toUpperCase()}</span>
-            </div>
-          )
-        }
-
-        <div className={styles.gradient} />
-
-        <div
-          className={styles.difficultyLine}
-          style={{ background: recipe.difficulty ? (DIFFICULTY_COLOR[recipe.difficulty] ?? 'transparent') : 'transparent' }}
-        />
-
-        <button
-          type="button"
-          className={`${styles.heartBtn} ${isWishlisted ? styles.heartActive : ''}`}
-          onClick={e => { e.stopPropagation(); toggleWishlist(recipe.id) }}
-          aria-label={isWishlisted ? 'Видалити з wishlist' : 'Додати до wishlist'}
-        >
-          <HeartIcon filled={isWishlisted} />
-        </button>
-
-        {recipe.cookTime && (
-          <div className={styles.metaOverlay}>
-            <span className={styles.metaTime}>⏱ {formatCookTime(recipe.cookTime)}</span>
+      {recipe.imageUrl
+        ? (
+          <>
+            {!loaded && <div className={styles.shimmer} />}
+            <img
+              src={recipe.imageUrl}
+              alt={recipe.title}
+              className={`${styles.photo} ${loaded ? styles.photoLoaded : ''}`}
+              loading="lazy"
+              onLoad={() => setLoaded(true)}
+            />
+          </>
+        )
+        : (
+          <div className={styles.photoPlaceholder}>
+            <span className={styles.photoInitial}>{recipe.title[0]?.toUpperCase()}</span>
           </div>
-        )}
+        )
+      }
 
-        {recipe.isOwn === false && recipe.ownerName && (
-          <div className={styles.ownerBadge} title={recipe.ownerName}>
-            {recipe.ownerAvatarUrl
-              ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
-              : <span className={styles.ownerInitial}>{recipe.ownerName[0]}</span>
-            }
+      <div className={styles.gradient} />
+
+      <div className={styles.info}>
+        <h3 className={styles.title}>{recipe.title}</h3>
+        {(recipe.cookTime || recipe.difficulty) && (
+          <div className={styles.meta}>
+            {recipe.cookTime && (
+              <span className={styles.metaTime}>⏱ {formatCookTime(recipe.cookTime)}</span>
+            )}
+            {recipe.difficulty && DIFFICULTY_COLOR[recipe.difficulty] && (
+              <span
+                className={styles.diffDot}
+                style={{ background: DIFFICULTY_COLOR[recipe.difficulty] }}
+                title={recipe.difficulty}
+              />
+            )}
           </div>
         )}
       </div>
 
-      <h3 className={styles.title}>{recipe.title}</h3>
+      <button
+        type="button"
+        className={`${styles.heartBtn} ${isWishlisted ? styles.heartActive : ''}`}
+        onClick={e => { e.stopPropagation(); toggleWishlist(recipe.id) }}
+        aria-label={isWishlisted ? 'Видалити з wishlist' : 'Додати до wishlist'}
+      >
+        <HeartIcon filled={isWishlisted} />
+      </button>
+
+      {recipe.isOwn === false && recipe.ownerName && (
+        <div className={styles.ownerBadge} title={recipe.ownerName}>
+          {recipe.ownerAvatarUrl
+            ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
+            : <span className={styles.ownerInitial}>{recipe.ownerName[0]}</span>
+          }
+        </div>
+      )}
     </div>
   )
 }

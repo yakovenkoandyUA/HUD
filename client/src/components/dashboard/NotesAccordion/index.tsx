@@ -31,6 +31,7 @@ const NotesAccordion: React.FC = () => {
 
   return (
     <div className={styles.root}>
+      
       <button
         type="button"
         className={styles.header}

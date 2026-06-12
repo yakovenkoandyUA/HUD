@@ -32,7 +32,7 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   daysLeft,
   todaySpent,
 }) => {
-  const { currentStreak, checkToday } = useStreakStore()
+  const { checkToday } = useStreakStore()
 
   useEffect(() => {
     checkToday(todaySpent, dailyBudget)
@@ -49,9 +49,9 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
         {fmt(balance)}<span className={styles.currency}> ₴</span>
       </div>
 
-      {currentStreak > 0 && (
+      {/* {currentStreak > 0 && (
         <span className={styles.streak}>🔥 {currentStreak} {currentStreak === 1 ? 'день' : currentStreak < 5 ? 'дні' : 'днів'} в рамках бюджету</span>
-      )}
+      )} */}
 
       <ProgressBar value={progressPct} max={100} color={progressColor} showLabel />
 
