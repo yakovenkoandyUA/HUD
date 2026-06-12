@@ -52,22 +52,17 @@ const CastleIllustration: React.FC = () => (
 
 const JapanIllustration: React.FC = () => (
   <svg viewBox="0 0 280 100" preserveAspectRatio="xMaxYMax meet" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="124,100 200,20 276,100" opacity="0.25"/>
-    <polygon points="184,38 200,20 218,40 207,36 198,44" fill="var(--bg)" opacity="0.85"/>
-    <ellipse cx="205" cy="102" rx="86" ry="16" opacity="0.18"/>
-    <rect x="158" y="54" width="92" height="8" opacity="0.95"/>
-    <rect x="148" y="46" width="112" height="10"/>
-    <polygon points="144,46 264,46 252,38 156,38"/>
-    <rect x="166" y="58" width="10" height="42" opacity="0.9"/>
-    <rect x="232" y="58" width="10" height="42" opacity="0.9"/>
-    <rect x="174" y="72" width="60" height="7" opacity="0.85"/>
-    <rect x="178" y="80" width="52" height="20" fill="var(--bg)" opacity="0.95"/>
-    <path d="M106 45 C130 32 154 32 181 42 L178 47 C151 38 128 38 109 51Z" opacity="0.45"/>
-    <circle cx="126" cy="37" r="5" opacity="0.35"/>
-    <circle cx="144" cy="34" r="4" opacity="0.3"/>
-    <circle cx="160" cy="40" r="5" opacity="0.32"/>
-    <circle cx="118" cy="49" r="3" opacity="0.28"/>
-    <polygon points="96,100 280,100 280,90 160,88" opacity="0.22"/>
+    <polygon points="110,100 195,25 280,100" opacity="0.1"/>
+    <path d="M180,100 A60,40 0 0 1 280,100 Z" opacity="0.25"/>
+    <path d="M140,100 C160,80 190,80 210,100 Z" opacity="0.25"/>
+    <rect x="200" y="45" width="70" height="6" rx="1" opacity="0.9"/>
+    <path d="M195,43 L200,40 H270 L275,43 Z" opacity="0.9"/>
+    <rect x="215" y="45" width="8" height="55" opacity="0.9"/>
+    <rect x="247" y="45" width="8" height="55" opacity="0.9"/>
+    <rect x="210" y="60" width="50" height="3" opacity="0.9"/>
+    <circle cx="270" cy="15" r="5" opacity="0.6"/>
+    <circle cx="260" cy="22" r="4" opacity="0.6"/>
+    <circle cx="278" cy="25" r="3" opacity="0.6"/>
   </svg>
 )
 
