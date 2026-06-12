@@ -285,6 +285,58 @@
   --font-display: 'Press Start 2P', monospace;
 }
 
+/* ── COSMOS 🪐 (deep space — dark violet + coral + nebula glow) ──────────────── */
+[data-theme="cosmos"] {
+  --bg:         #09060f;
+  --bg2:        #0d0a18;
+  --bg3:        #120f20;
+  --surface:    #180e2e;
+  --surface2:   #1e1438;
+  --border:     #2e1a52;
+  --border2:    #3a2268;
+
+  --accent:      #ff7055;
+  --accent-dim:  #cc4a30;
+  --accent-glow: rgba(255, 112, 85, 0.28);
+  --accent-soft: rgba(255, 112, 85, 0.12);
+
+  --second:      #8855e0;
+  --second-soft: rgba(136, 85, 224, 0.18);
+
+  --gold:        #e89040;
+  --gold-dim:    rgba(232, 144, 64, 0.18);
+
+  --task-quest:    var(--accent);
+  --task-shopping: var(--second);
+
+  --text:   #ecdff5;
+  --text2:  #9070b8;
+  --text3:  #5a3880;
+
+  --f1-back: #000;
+
+  --learning:      #8855e0;
+  --learning-soft: rgba(136, 85, 224, 0.15);
+
+  --positive:      #4aad7a;
+  --positive-soft: rgba(74, 173, 122, 0.15);
+  --negative:      #ff5555;
+  --negative-soft: rgba(255, 85, 85, 0.12);
+}
+
+/* Nebula glow — градієнт зверху як пурпурова туманність */
+[data-theme="cosmos"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 280px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse 80% 180px at 30% 0%, rgba(136, 55, 200, 0.18) 0%, transparent 70%);
+}
+
 /* Тонкий dither-border ефект на картках */
 [data-theme="pixel"] body::after {
   content: '';

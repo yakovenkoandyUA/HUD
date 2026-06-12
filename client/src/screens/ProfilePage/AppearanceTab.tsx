@@ -21,6 +21,7 @@ const PALETTES: ThemePalette[] = [
   { id: 'cyber',   name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', text: '#d8eaf8' },
   { id: 'noir',    name: 'NOIR',   bg: '#080808', surface: '#1a1a1a', border: '#2a2a2a', accent: '#d0d0d0', text: '#ebebeb' },
   { id: 'pixel',   name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', text: '#181028' },
+  { id: 'cosmos',  name: 'COSMOS', bg: '#09060f', surface: '#180e2e', border: '#2e1a52', accent: '#ff7055', text: '#ecdff5' },
 ]
 
 /**

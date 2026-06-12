@@ -38,10 +38,16 @@
 	background: linear-gradient(to right, var(--surface) 28%, color-mix(in srgb, var(--surface) 65%, transparent) 52%, transparent 72%);
 }
 :global([data-theme='pixel']) .cardPhoto {
-	background-position: 150px -50px;
+	background-position: 60px -80px;
 }
 :global([data-theme='pixel']) .cardPhoto::before {
 	background: linear-gradient(to right, var(--surface) 28%, color-mix(in srgb, var(--surface) 95%, transparent) 42%, transparent 82%);
+}
+:global([data-theme='cosmos']) .cardPhoto {
+	background-position: right center;
+}
+:global([data-theme='cosmos']) .cardPhoto::before {
+	background: linear-gradient(to right, var(--surface) 32%, color-mix(in srgb, var(--surface) 75%, transparent) 55%, transparent 75%);
 }
 
 /* ── Illustration (theme SVG, right side) ── */
