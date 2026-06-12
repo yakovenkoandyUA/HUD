@@ -27,11 +27,11 @@ function formatDate(d: Date): string {
 /* ── Component ───────────────────────────────────────────────────── */
 
 const THEME_PHOTOS: Partial<Record<string, string>> = {
-  velvet: '/theme/lunar.png',
-  cyber:  '/theme/cyber.jpg',
-  noir:   '/theme/noir.jpg',
-  japan:  '/theme/japan.png',
-  pixel:  '/theme/pixel.png',
+  velvet: '/theme/lunar.webp',
+  cyber:  '/theme/cyber.webp',
+  noir:   '/theme/noir.webp',
+  japan:  '/theme/japan.webp',
+  pixel:  '/theme/pixel.webp',
 }
 
 const GreetingBlock: React.FC = () => {
