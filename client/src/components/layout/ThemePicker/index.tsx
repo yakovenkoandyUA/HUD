@@ -101,17 +101,6 @@ const PALETTES: ThemePalette[] = [
     gold: '#e8a020',
     text: '#181028',
   },
-  {
-    id: 'cosmos',
-    name: 'COSMOS',
-    bg: '#09060f',
-    surface: '#180e2e',
-    border: '#2e1a52',
-    accent: '#ff7055',
-    second: '#8855e0',
-    gold: '#e89040',
-    text: '#ecdff5',
-  },
 ]
 
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
