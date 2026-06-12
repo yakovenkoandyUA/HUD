@@ -7,7 +7,7 @@ import { useFamilyStore } from '../../../store/familyStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
-import { isRecurring } from '../../../utils/sprint'
+import { isRecurring, calcStreak, calcRecord, calcMonthRate, buildHeatMap } from '../../../utils/sprint'
 import type { RepeatConfig, UnifiedTodo } from '../../../types'
 import styles from './TaskDetailModal.module.css'
 
@@ -707,6 +707,49 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                 </div>
               </div>
             )}
+
+            {/* ── ЗВИЧКА: статистика + heat map ── */}
+            {recurring && (() => {
+              const streak   = calcStreak(task)
+              const record   = calcRecord(task)
+              const rate     = calcMonthRate(task)
+              const heatMap  = buildHeatMap(task, 16)
+              return (
+                <div className={styles.section}>
+                  <p className={styles.sectionLabel}>Звичка</p>
+
+                  <div className={styles.habitStats}>
+                    <div className={styles.habitStat}>
+                      <span className={styles.habitStatVal}>{streak}</span>
+                      <span className={styles.habitStatLabel}>стрік</span>
+                    </div>
+                    <div className={styles.habitStatDivider} />
+                    <div className={styles.habitStat}>
+                      <span className={styles.habitStatVal}>{record}</span>
+                      <span className={styles.habitStatLabel}>рекорд</span>
+                    </div>
+                    <div className={styles.habitStatDivider} />
+                    <div className={styles.habitStat}>
+                      <span className={styles.habitStatVal}>{rate}%</span>
+                      <span className={styles.habitStatLabel}>за місяць</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.heatMap}>
+                    {heatMap.map((week, wi) => (
+                      <div key={wi} className={styles.heatWeek}>
+                        {week.map(cell => (
+                          <div
+                            key={cell.iso}
+                            className={`${styles.heatCell} ${cell.future ? styles.heatFuture : cell.due && cell.done ? styles.heatDone : cell.due ? styles.heatMissed : styles.heatEmpty}`}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* ── ОПИС ── */}
             <div className={`${styles.section} ${styles.sectionLast}`}>

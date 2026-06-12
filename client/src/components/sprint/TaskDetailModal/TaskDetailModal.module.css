@@ -1280,3 +1280,81 @@
   color: var(--accent);
   flex-shrink: 0;
 }
+
+/* ── Habit stats ── */
+.habitStats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 14px;
+}
+
+.habitStat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.habitStatVal {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.habitStatLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+}
+
+.habitStatDivider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ── Heat map ── */
+.heatMap {
+  display: flex;
+  gap: 3px;
+}
+
+.heatWeek {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.heatCell {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.heatDone {
+  background: var(--accent);
+  opacity: 0.9;
+}
+
+.heatMissed {
+  background: transparent;
+  border: 1px solid var(--border2, var(--border));
+}
+
+.heatEmpty {
+  background: transparent;
+}
+
+.heatFuture {
+  background: transparent;
+  opacity: 0.2;
+}

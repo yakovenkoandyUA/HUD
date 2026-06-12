@@ -49,6 +49,78 @@ export function calcStreak(task: UnifiedTodo): number {
   return streak
 }
 
+export function calcRecord(task: UnifiedTodo): number {
+  if (!isRecurring(task)) return 0
+  const log = new Set(task.completionLog ?? [])
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let record = 0
+  let current = 0
+  for (let i = 365 * 2; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    if (isRoutineDueOnDay(task, d)) {
+      if (log.has(toIso(d))) {
+        current++
+        if (current > record) record = current
+      } else {
+        current = 0
+      }
+    }
+  }
+  return record
+}
+
+export function calcMonthRate(task: UnifiedTodo): number {
+  if (!isRecurring(task)) return 0
+  const log = new Set(task.completionLog ?? [])
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let due = 0
+  let done = 0
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    if (isRoutineDueOnDay(task, d)) {
+      due++
+      if (log.has(toIso(d))) done++
+    }
+  }
+  return due === 0 ? 0 : Math.round((done / due) * 100)
+}
+
+export type HeatCell = { iso: string; due: boolean; done: boolean; future: boolean }
+
+export function buildHeatMap(task: UnifiedTodo, weeks = 16): HeatCell[][] {
+  const log = new Set(task.completionLog ?? [])
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  // Start from Monday of (today - weeks + 1) weeks ago
+  const mondayOffset = (today.getDay() + 6) % 7
+  const start = new Date(today)
+  start.setDate(today.getDate() - mondayOffset - (weeks - 1) * 7)
+
+  const grid: HeatCell[][] = []
+  for (let w = 0; w < weeks; w++) {
+    const week: HeatCell[] = []
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(start)
+      day.setDate(start.getDate() + w * 7 + d)
+      const iso = toIso(day)
+      const future = day > today
+      week.push({
+        iso,
+        due: !future && isRoutineDueOnDay(task, day),
+        done: log.has(iso),
+        future,
+      })
+    }
+    grid.push(week)
+  }
+  return grid
+}
+
 export function isRoutineDueOnDay(task: UnifiedTodo, day: Date): boolean {
   if (isRegular(task)) return false
   if (task.repeat === 'daily') return true
