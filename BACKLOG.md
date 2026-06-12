@@ -9,7 +9,7 @@
 ### Dashboard
 - GreetingBlock (привітання + дата), HeroCard (баланс + F1 countdown)
 - ✅ Interactive sparkline — 7 днів витрат, tap/hover tooltip з сумою і днем, auto-dismiss
-- TasksAccordion (квести + покупки), WeekHeader з routines badge (X/Y)
+- TasksAccordion (квести + покупки + нотатки), WeekHeader з routines badge (X/Y)
 - FAB (Витрата / Квест / Покупка), CarHero (Three.js McLaren)
 - Pull-to-refresh, pixel CRT scanlines (pixel тема)
 - ~~Nav chips (finance/sprint/f1)~~ — видалено як дублікат BottomNav
@@ -37,7 +37,7 @@
 - TrashBin — soft-delete (TTL 24h MongoDB), відновлення або purge
 - useSwipeToDismiss + useModalHistory хуки
 - Spring-анімація відкриття TaskDetailModal (0.46s cubic-bezier)
-- assignedTo — TaskDetailModal секція ВИКОНАВЦІ, "Від {name}" блок на Sprint екрані
+- assignedTo — TaskDetailModal секція ВИКОНАВЦІ, "Від {name}" блок на Sprint екрані; assignee може оновлювати/закривати задачу
 
 ### Watchlist
 - Категорії: movie / series / anime / book
@@ -86,7 +86,7 @@
 
 ### Глобально
 - Кастомні категорії транзакцій з субкатегоріями
-- Теми: retro / castle / japan / cyber / noir / pixel (6 штук; `dark` і `heroes` видалено)
+- Теми: retro / velvet / japan / cyber / noir / pixel (6 штук; `dark`, `heroes`, `castle` видалено/перейменовано)
 - PWA: service worker, Web Push, іконки
 - ErrorBoundary компонент, NotFound екран
 
@@ -95,7 +95,7 @@
 
 ## Беклог — по пріоритетах
 
-### 🔴 P1 — Quicknotes
+### ✅ P1 — Quicknotes — ЗРОБЛЕНО
 
 **Мета:** швидко записати думку/ідею/нагадування прямо з дашборду.
 
@@ -269,6 +269,7 @@
 - ✅ Finance: recurring payments reminders + confirm, ShoppingTracker
 - ✅ Dashboard: interactive sparkline, прибрано зайві nav chips
 - ✅ ProfilePage: повний реворк (4 таби, BottomNav адаптація, salaryDay)
+- ✅ Quicknotes (Notes screen + notesStore + FAB + TasksAccordion секція НОТАТКИ)
 - ⬜ Finance: місячна аналітика (MonthlyReport)
 - ⬜ F1 Live Dashboard
 

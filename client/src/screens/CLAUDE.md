@@ -4,10 +4,10 @@
 - ClockBlock — годинник (Furore) + дата зліва, ThemePicker справа
 - HeroCard — компактний hero-блок: баланс (Furore, gold border-left), dailyBudget bar, nextRace, sprint-прогрес
 - TodayRoutines — inline рядок "Сьогодні: назва · назва" для рутин без `isDoneToday`
-- TasksAccordion — акордеон з двома секціями: **Задачі** (sprint, expand за замовчуванням) та **Покупки** (shopping/todo, закрито за замовчуванням)
+- TasksAccordion — акордеон з трьома секціями: **Квести** (sprint/todo, expand за замовчуванням), **Покупки** (shopping, закрито), **Нотатки** (останні 3, тап → /notes, закрито)
   - Анімація закреслення + fade-out при відмітці покупки виконаною
 - CarHero — 3D McLaren MP4/5 (Three.js, 260px, OrbitControls + particles)
-- FAB — розкривний (rotate 45° при відкритті), 3 опції: **Витрата** / **Квест** / **Покупка**; закривається кліком поза меню
+- FAB — розкривний (rotate 45° при відкритті), 4 опції: **Витрата** / **Квест** / **Покупка** / **Нотатка**; закривається кліком поза меню
 - `fetchTransactions()` викликається при mount (баланс завантажується одразу)
 
 ## 2. Finance (`/finance`)
@@ -107,7 +107,16 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - MemoryDetail — фотографії, підписи, обкладинка (setCover)
 - Cloudinary upload для фото
 
-## 11. ProfileSelect (`/profile-select`) — публічний маршрут
+## 11. Notes (`/notes`)
+- `notesStore` (Zustand, без persist) — `fetchNotes`, `addNote`, `updateNote`, `deleteNote`
+- Список нотаток: найновіша зверху, кожна картка — текст (до 3 рядків) + дата (font-mono)
+- Пошук: `input` з іконкою — фільтрує локально по `text.includes(query)`, тільки якщо є нотатки
+- Тап на картку → inline редагування: `textarea` на місці, `onBlur` + `Enter` зберігають, `Escape` скасовує
+- Видалення: кнопка × з'являється при tap/hover
+- `autoFocus` flow: при `location.state?.autoFocus === true` одразу відкривається textarea нової нотатки вгорі
+- Доступ: FAB "Нотатка" → `/notes?autoFocus=true`, або з TasksAccordion секції НОТАТКИ
+
+## 12. ProfileSelect (`/profile-select`) — публічний маршрут
 - Сітка профілів (Котька + Коська)
 - Аватар 96px, fallback — перша літера імені
 - Тап → `selectProfile(username)` → JWT → redirect `/`

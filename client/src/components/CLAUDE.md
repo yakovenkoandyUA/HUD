@@ -95,8 +95,8 @@ components/
     │                          border-left gold accent, Furore для числа балансу
     ├── RaceHeroCard        ← F1 блок в Dashboard (тільки для admin, f1Enabled)
     ├── ClockBlock          ← годинник Furore + дата
-    ├── TasksAccordion      ← акордеон Задачі / Покупки (expand/collapse секції)
-    │                          анімація strike+fadeout при відмітці покупки
+    ├── TasksAccordion      ← акордеон КВЕСТИ / ПОКУПКИ / НОТАТКИ (expand/collapse секції)
+    │                          анімація strike+fadeout при відмітці покупки; нотатки → /notes
     └── SprintMini, LessonsMini, TodosMini
 ```
 
