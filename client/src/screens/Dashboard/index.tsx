@@ -195,6 +195,17 @@ const Dashboard: React.FC = () => {
               </svg>
               Покупка
             </button>
+            <button
+              type="button"
+              className={styles.fabMenuBtn}
+              onClick={() => { setFabOpen(false); navigate('/notes', { state: { autoFocus: true } }) }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M2 12.5V14h1.5l8.87-8.87-1.5-1.5L2 12.5z" fill="currentColor"/>
+                <path d="M13.71 3.29a1 1 0 0 0-1.42 0l-1 1 1.42 1.42 1-1a1 1 0 0 0 0-1.42z" fill="currentColor"/>
+              </svg>
+              Нотатка
+            </button>
           </div>
         )}
         <button
