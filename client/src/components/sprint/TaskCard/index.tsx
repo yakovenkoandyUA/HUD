@@ -320,6 +320,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                   </svg>
                 )}
                 <span className={styles.title}>{item.title}</span>
+                {item.ownerName && (
+                  <span className={styles.ownerBadge}>{item.ownerName}</span>
+                )}
               </div>
               <div className={styles.meta}>
                 {checkTotal > 0 && !item.done && (

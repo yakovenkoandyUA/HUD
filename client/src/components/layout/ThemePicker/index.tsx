@@ -47,8 +47,8 @@ const PALETTES: ThemePalette[] = [
     text: '#EDE0CC',
   },
   {
-    id: 'castle',
-    name: 'CASTLE',
+    id: 'velvet',
+    name: 'VELVET',
     bg: '#0d0f1a',
     surface: '#1e2235',
     border: '#2e3450',

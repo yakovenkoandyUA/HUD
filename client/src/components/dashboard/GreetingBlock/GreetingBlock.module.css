@@ -1,64 +1,115 @@
 .card {
-  position: relative;
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px 16px;
-  min-height: 88px;
+	position: relative;
+	overflow: hidden;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 14px 16px 16px;
+	min-height: 88px;
+}
+
+.cardPhoto {
+	background-size: cover;
+	background-position: center right;
+}
+
+.cardPhoto::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to right, var(--surface) 28%, color-mix(in srgb, var(--surface) 85%, transparent) 52%, transparent 72%);
+	z-index: 0;
+}
+
+:global([data-theme='noir']) .cardPhoto {
+	background-position-y: 120px;
+	filter: grayscale(1);
+}
+:global([data-theme='cyber']) .cardPhoto {
+	background-position-y: 100px;
+}
+:global([data-theme='japan']) .cardPhoto {
+	background-position-y: 200px;
+}
+:global([data-theme='velvet']) .cardPhoto {
+	background-position: 168px -20px;
+}
+:global([data-theme='velvet']) .cardPhoto::before {
+	background: linear-gradient(to right, var(--surface) 28%, color-mix(in srgb, var(--surface) 65%, transparent) 52%, transparent 72%);
+}
+:global([data-theme='pixel']) .cardPhoto {
+	background-position: 150px -50px;
+}
+:global([data-theme='pixel']) .cardPhoto::before {
+	background: linear-gradient(to right, var(--surface) 28%, color-mix(in srgb, var(--surface) 95%, transparent) 42%, transparent 82%);
 }
 
 /* ── Illustration (theme SVG, right side) ── */
 
 .illustration {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 62%;
-  height: 100%;
-  pointer-events: none;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 62%;
+	height: 100%;
+	pointer-events: none;
 }
 
-:global([data-theme="castle"]) .illustration { color: var(--gold);   opacity: 0.24; }
-:global([data-theme="japan"])  .illustration { color: var(--accent); opacity: 0.20; }
-:global([data-theme="cyber"])  .illustration { color: var(--second); opacity: 0.26; }
-:global([data-theme="noir"])   .illustration { color: var(--text2);  opacity: 0.18; }
-:global([data-theme="pixel"])  .illustration { color: var(--second); opacity: 0.22; }
+:global([data-theme='velvet']) .illustration {
+	color: var(--gold);
+	opacity: 0.24;
+}
+:global([data-theme='japan']) .illustration {
+	color: var(--accent);
+	opacity: 0.2;
+}
+:global([data-theme='cyber']) .illustration {
+	color: var(--second);
+	opacity: 0.26;
+}
+:global([data-theme='noir']) .illustration {
+	color: var(--text2);
+	opacity: 0.18;
+}
+:global([data-theme='pixel']) .illustration {
+	color: var(--second);
+	opacity: 0.22;
+}
 
 /* ── Text content (left side) ── */
 
 .content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  max-width: 58%;
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	max-width: 58%;
 }
 
 .greetText {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text3);
+	font-family: var(--font-ui);
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--text3);
 }
 
 .name {
-  font-family: var(--font-display);
-  font-size: 26px;
-  line-height: 1.1;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+	font-family: var(--font-display);
+	font-size: 26px;
+	line-height: 1.1;
+	color: var(--text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .date {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text2);
-  margin-top: 3px;
-  letter-spacing: 0.02em;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text2);
+	margin-top: 3px;
+	letter-spacing: 0.02em;
 }

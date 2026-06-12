@@ -173,12 +173,8 @@ const Sprint: React.FC = () => {
 	const selectedDate = new Date(selY, selM - 1, selD)
 	const selectedDayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, selectedDate))
 
-	// Tasks assigned to me by others (always show, separate section)
-	const assignedFromOthers = items.filter(t => t.ownerName)
-
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
-		if (t.ownerName) return false  // excluded — shown in separate section
 		if (filterType === 'task'     && t.type === 'shopping') return false
 		if (filterType === 'shopping' && t.type !== 'shopping') return false
 		if (filterStatus === 'active') return !t.done
@@ -327,7 +323,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
 					{loading && items.length === 0 ? (
 						<p className={styles.dayEmptyText}>Завантаження...</p>
-					) : dayQuests.length === 0 && selectedDayRoutines.length === 0 ? (
+					) : dayQuests.length === 0 ? (
 						<p className={styles.dayEmptyText}>Немає задач на цей день</p>
 					) : (
 						<>
@@ -338,57 +334,10 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 									))}
 								</ul>
 							)}
-							{selectedDayRoutines.length > 0 && (
-								<div className={styles.dayRoutinesSection}>
-									<div className={styles.dayRoutinesSectionHeader}>
-										<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
-											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-										</svg>
-										РУТИНИ
-									</div>
-									<ul className={styles.dayRoutineList}>
-										{selectedDayRoutines.map(t => {
-											const doneOnDay = !!(t.completionLog?.includes(selectedDay))
-											return (
-												<li key={t.id} className={`${styles.dayRoutineItem} ${doneOnDay ? styles.dayRoutineItemDone : ''}`}>
-													<button type="button" className={styles.routineCheck} onClick={() => toggleItem(t.id)} aria-label="Виконати">
-														<span className={`${styles.routineCheckBox} ${doneOnDay ? styles.routineCheckBoxDone : ''}`}>{doneOnDay ? '✓' : ''}</span>
-													</button>
-													<button type="button" className={styles.routineBody} onClick={() => setDetailTaskId(t.id)}>
-														<span className={styles.routineTitle}>{t.title}</span>
-													</button>
-												</li>
-											)
-										})}
-									</ul>
-								</div>
-							)}
-						</>
+							</>
 					)}
 				</div>
 
-				{/* ── Від інших — задачі, де мене призначили ── */}
-				{assignedFromOthers.length > 0 && (
-					<div className={styles.assignedSection}>
-						{Object.entries(
-							assignedFromOthers.reduce<Record<string, typeof assignedFromOthers>>((acc, t) => {
-								const key = t.ownerName!
-								;(acc[key] ??= []).push(t)
-								return acc
-							}, {})
-						).map(([ownerName, tasks]) => (
-							<div key={ownerName}>
-								<p className={styles.assignedSectionLabel}>Від {ownerName}</p>
-								<ul className={styles.list}>
-									{tasks.map(t => (
-										<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
-									))}
-								</ul>
-							</div>
-						))}
-					</div>
-				)}
 
 				{/* ── Trash accordion ── */}
 				<TrashBin />

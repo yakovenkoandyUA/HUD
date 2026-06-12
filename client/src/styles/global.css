@@ -65,7 +65,7 @@
 }
 
 /* ── CASTLE 🏰 ─────────────────────────────────────────────────────────────── */
-[data-theme="castle"] {
+[data-theme="velvet"] {
   --bg:         #0d0f1a;
   --bg2:        #121520;
   --bg3:        #181c28;
@@ -149,9 +149,9 @@
 }
 
 /* Castle texture off on pages with their own bg */
-[data-theme="castle"][data-page="f1"] body::after,
-[data-theme="castle"][data-page="memories"] body::after,
-[data-theme="castle"][data-page="watchlist"] body::after { display: none; }
+[data-theme="velvet"][data-page="f1"] body::after,
+[data-theme="velvet"][data-page="memories"] body::after,
+[data-theme="velvet"][data-page="watchlist"] body::after { display: none; }
 
 /* ── CYBER 🤖 (Blade Runner / Ghost in the Shell — neon magenta + cyan) ──────── */
 [data-theme="cyber"] {
@@ -304,7 +304,7 @@
 /* ── Theme atmosphere effects ───────────────────────────────────────────────── */
 
 
-[data-theme="castle"] body::after {
+[data-theme="velvet"] body::after {
   content: '';
   position: fixed;
   inset: 0;

@@ -7,7 +7,7 @@ interface Toast {
   type: 'success' | 'error' | 'info'
 }
 
-export type Theme = 'retro' | 'castle' | 'japan' | 'cyber' | 'noir' | 'pixel'
+export type Theme = 'retro' | 'velvet' | 'japan' | 'cyber' | 'noir' | 'pixel'
 
 interface UiState {
   toasts: Toast[]
@@ -27,7 +27,7 @@ export const useUiStore = create<UiState>()(
     (set) => ({
       toasts: [],
       activeModal: null,
-      theme: 'castle',
+      theme: 'velvet',
       updateAvailable: false,
 
       showToast: (message, type = 'info') =>

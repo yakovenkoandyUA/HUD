@@ -16,11 +16,14 @@ const TrashBin: React.FC = () => {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    if (open && !loaded) {
-      fetchTrash()
-      setLoaded(true)
+    let cancelled = false
+    const load = async () => {
+      await fetchTrash()
+      if (!cancelled) setLoaded(true)
     }
-  }, [open, loaded, fetchTrash])
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <div className={styles.wrap}>
