@@ -259,7 +259,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
   const handleDescBlur = useCallback(() => {
     if (!task) return
-    if (descDraft !== (task.description ?? '')) updateTask(task.id, { description: descDraft })
+    if (descDraft === (task.description ?? '')) return
+    updateTask(task.id, { description: descDraft })
+    const endpoint = task.type === 'sprint' ? `/api/sprint/tasks/${task.id}` : `/api/sprint/todos/${task.id}`
+    authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ description: descDraft }) }).catch(console.error)
   }, [task, descDraft, updateTask])
 
   const handleCheckboxClick = () => {
