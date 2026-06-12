@@ -5,15 +5,14 @@ import { useFamilyStore } from '../../store/familyStore'
 import MeTab from './MeTab'
 import WalletTab from './WalletTab'
 import FamilyTab from './FamilyTab'
-import AppearanceTab from './AppearanceTab'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'family' | 'appearance'
+type ProfileTab = 'me' | 'wallet' | 'family'
 
 /**
  * ProfilePage
  * -----------
- * Сторінка налаштувань профілю з 4 вкладками через ?tab= query param.
+ * Сторінка налаштувань профілю з 3 вкладками через ?tab= query param.
  * BottomNav на /profile перемикається в профільний режим і drive-ить вкладки.
  *
  * Props: none
@@ -55,10 +54,9 @@ const ProfilePage: React.FC = () => {
 
       {/* ── Tab content (with bottom nav padding) ── */}
       <div className={styles.content}>
-        {activeTab === 'me'         && <MeTab />}
-        {activeTab === 'wallet'     && <WalletTab />}
-        {activeTab === 'family'     && <FamilyTab />}
-        {activeTab === 'appearance' && <AppearanceTab />}
+        {activeTab === 'me'     && <MeTab />}
+        {activeTab === 'wallet' && <WalletTab />}
+        {activeTab === 'family' && <FamilyTab />}
       </div>
     </div>
   )

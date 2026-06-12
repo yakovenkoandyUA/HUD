@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
+import { usePushSubscription } from '../../hooks/usePushSubscription'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import styles from './ProfilePage.module.css'
 
@@ -56,9 +57,40 @@ const MeTab: React.FC = () => {
   const [pinConfirm, setPinConfirm] = useState('')
   const [pinError, setPinError]   = useState<string | null>(null)
   const [savingPin, setSavingPin] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
+  const [permissionDenied, setPermissionDenied] = useState(false)
+  const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushSubscription()
 
   useEffect(() => { if (editingName) nameRef.current?.focus() }, [editingName])
   useEffect(() => { if (editingUsername) usernameRef.current?.focus() }, [editingUsername])
+
+  useEffect(() => {
+    let cancelled = false
+    const check = async () => {
+      if (!isSupported) return
+      if (!cancelled) setPermissionDenied(Notification.permission === 'denied')
+    }
+    check()
+    return () => { cancelled = true }
+  }, [isSupported])
+
+  const handlePushToggle = async () => {
+    if (pushLoading) return
+    setPushLoading(true)
+    try {
+      if (isSubscribed) {
+        await unsubscribe()
+      } else {
+        const granted = Notification.permission === 'granted'
+          ? true
+          : await Notification.requestPermission().then(p => p === 'granted')
+        if (!granted) { setPermissionDenied(true); return }
+        await subscribe()
+      }
+    } finally {
+      setPushLoading(false)
+    }
+  }
 
   const handleAvatarChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -303,6 +335,34 @@ const MeTab: React.FC = () => {
               </button>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* ── Push notifications ── */}
+      {isSupported && (
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>СПОВІЩЕННЯ</span>
+          </div>
+          {permissionDenied ? (
+            <p className={styles.sectionHint}>Дозвіл відхилено — увімкни в налаштуваннях браузера.</p>
+          ) : (
+            <div className={styles.pushRow}>
+              <div className={styles.pushInfo}>
+                <span className={styles.pushLabel}>Push-сповіщення</span>
+                <span className={styles.pushSub}>Гонки, задачі, оновлення</span>
+              </div>
+              <button
+                type="button"
+                className={`${styles.toggle} ${isSubscribed ? styles.toggleOn : ''}`}
+                onClick={handlePushToggle}
+                disabled={pushLoading}
+                aria-pressed={isSubscribed}
+              >
+                <span className={styles.toggleThumb} />
+              </button>
+            </div>
+          )}
         </section>
       )}
 
