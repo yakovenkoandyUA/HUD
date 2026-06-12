@@ -95,16 +95,13 @@ Service Worker підключений до Web Push (VAPID) — підписка
 
 ## Наступний спринт
 
-### Finance: місячна аналітика
-- Звіт: топ витрат, порівняння з попереднім місяцем
-- Найдешевший/найдорожчий тиждень місяця
-- Рекомендації де можна зекономити
-
-### Recipes: генерація рецепту через AI
-- Кнопка "Згенерувати рецепт" на сторінці рецептів
-- Модалка: textarea "Що є в холодильнику? Які обмеження?"
-- `POST /api/recipes/generate` → Anthropic API
-- Claude повертає JSON рецепту → форма з заповненими полями
+### Habits — Трекер звичок
+- Новий роут `/habits`
+- Model: `Habit { name, icon?, color?, userId }` + `HabitLog { habitId, date, userId }`
+- Backend: CRUD habits + `POST /api/habits/:id/log { date }` + `DELETE /api/habits/:id/log/:date`
+- Frontend: GitHub-style heat map (52 тижні × 7 днів), поточний стрік + рекорд
+- Тап на сьогоднішній день → відмітити виконано
+- Не інтегрувати з Sprint рутинами (різна логіка)
 
 ---
 

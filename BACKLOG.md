@@ -270,7 +270,7 @@
 - ✅ Dashboard: interactive sparkline, прибрано зайві nav chips
 - ✅ ProfilePage: повний реворк (4 таби, BottomNav адаптація, salaryDay)
 - ✅ Quicknotes (Notes screen + notesStore + FAB + TasksAccordion секція НОТАТКИ)
-- ⬜ Finance: місячна аналітика (MonthlyReport)
+- ⬜ Habits: трекер звичок
 - ⬜ F1 Live Dashboard
 
 ### Фаза 1 — Фундамент (перед публічним launch)
