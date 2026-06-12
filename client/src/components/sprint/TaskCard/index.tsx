@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react'
 import PriorityBadge from '../../ui/PriorityBadge'
 import type { UnifiedTodo, SprintTag } from '../../../types'
-import { isRecurring, isRoutineDueOnDay } from '../../../utils/sprint'
+import { isRecurring, isRoutineDueOnDay, calcStreak } from '../../../utils/sprint'
 import styles from './TaskCard.module.css'
 
 /**
@@ -99,6 +99,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
 
   const missedDays   = getMissedDays(item)
   const hasMissed    = missedDays > 0
+  const streak       = isRecurring(item) ? calcStreak(item) : 0
   const hasLabels    = (item.labels ?? []).length > 0
   const hasDueDate   = !!item.dueDate
   const hasExtras    = hasLabels || hasDueDate || hasMissed
@@ -325,6 +326,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                 )}
               </div>
               <div className={styles.meta}>
+                {streak > 0 && (
+                  <span className={styles.streakBadge}>
+                    <svg width="9" height="10" viewBox="0 0 9 10" fill="none" aria-hidden="true">
+                      <path d="M5.5 1C5.5 1 6.5 3 5.5 4.5C6.5 4 7 3 7 3C7 3 8 5 6.5 6.5C7.5 6.5 8 6 8 6C8 6 7.5 9 4.5 9C2 9 1 7.5 1 6C1 4 3 3.5 3 3.5C3 3.5 2.5 5 3.5 5.5C3.5 4 4.5 2.5 5.5 1Z" fill="currentColor"/>
+                    </svg>
+                    {streak}
+                  </span>
+                )}
                 {checkTotal > 0 && !item.done && (
                   <span className={styles.checklistBadge}>{checkDone}/{checkTotal}</span>
                 )}
