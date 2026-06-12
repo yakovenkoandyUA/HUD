@@ -5,6 +5,7 @@ import GreetingBlock from '../../components/dashboard/GreetingBlock'
 import HeroCard from '../../components/dashboard/HeroCard'
 import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
 import TasksAccordion from '../../components/dashboard/TasksAccordion'
+import NotesAccordion from '../../components/dashboard/NotesAccordion'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
@@ -151,6 +152,7 @@ const Dashboard: React.FC = () => {
         )}
 
         <TasksAccordion />
+        <NotesAccordion />
         <HeroCard
           balance={balance}
           dailyBudget={dailyBudget}
