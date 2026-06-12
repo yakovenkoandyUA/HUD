@@ -12,7 +12,7 @@ import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
-import { getCurrentWeekStart, isRecurring } from '../../utils/sprint'
+import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
 import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
@@ -179,18 +179,25 @@ const Sprint: React.FC = () => {
 	})
 
 	const isDayToday = selectedDay === todayStr
+	const [selY, selM, selD] = selectedDay.split('-').map(Number)
+	const selectedDate = new Date(selY, selM - 1, selD)
+
 	const rawDayQuests = isDayToday
 		? filteredItems
-		: items.filter(t => {
-			if (isRecurring(t)) return false
-			if (t.ownerName) return false
-			if (filterType === 'task'     && t.type === 'shopping') return false
-			if (filterType === 'shopping' && t.type !== 'shopping') return false
-			return t.type !== 'shopping' && t.dueDate === selectedDay
-		})
+		: [
+			...routineItems.filter(t => isRoutineDueOnDay(t, selectedDate)),
+			...items.filter(t => {
+				if (isRecurring(t)) return false
+				if (filterType === 'task'     && t.type === 'shopping') return false
+				if (filterType === 'shopping' && t.type !== 'shopping') return false
+				return t.dueDate === selectedDay
+			}),
+		]
 	const dayQuests = [...rawDayQuests].sort((a, b) => {
 		if (a.isPinned && !b.isPinned) return -1
 		if (!a.isPinned && b.isPinned) return 1
+		if (a.ownerName && !b.ownerName) return -1
+		if (!a.ownerName && b.ownerName) return 1
 		return 0
 	})
 
