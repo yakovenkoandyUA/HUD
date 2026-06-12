@@ -12,7 +12,7 @@ import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
-import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
+import { getCurrentWeekStart, isRecurring } from '../../utils/sprint'
 import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
@@ -169,8 +169,6 @@ const Sprint: React.FC = () => {
 	}
 	const routineItems = items.filter(t => isRecurring(t))
 
-	const [selY, selM, selD] = selectedDay.split('-').map(Number)
-	const selectedDate = new Date(selY, selM - 1, selD)
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
 		if (filterType === 'task'     && t.type === 'shopping') return false
