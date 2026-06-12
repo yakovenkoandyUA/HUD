@@ -55,8 +55,12 @@ export async function createTask(req: Request, res: Response): Promise<void> {
 }
 
 export async function updateTask(req: Request, res: Response): Promise<void> {
-  // Try SprintTask first (findOne+save for proper Mongoose middleware/strict handling)
-  const task = await SprintTask.findOne({ _id: req.params.id, userId: req.userId })
+  // Try SprintTask first — owner OR assignee can update
+  const task = await SprintTask.findOne({
+    _id: req.params.id,
+    $or: [{ userId: req.userId }, { assignedTo: req.userId }],
+    deletedAt: null,
+  })
   if (task) {
     const prevAssigned: string[] = task.assignedTo ?? []
     TASK_ALLOWED.forEach(key => {
