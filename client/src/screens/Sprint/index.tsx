@@ -171,8 +171,6 @@ const Sprint: React.FC = () => {
 
 	const [selY, selM, selD] = selectedDay.split('-').map(Number)
 	const selectedDate = new Date(selY, selM - 1, selD)
-	const selectedDayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, selectedDate))
-
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
 		if (filterType === 'task'     && t.type === 'shopping') return false
