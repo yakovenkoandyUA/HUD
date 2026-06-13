@@ -1,0 +1,10 @@
+# Playwright MCP
+.playwright-mcp/
+
+# MCP config (local only)
+.mcp.json
+
+# Root-level package.json (not part of monorepo)
+/package.json
+/package-lock.json
+/node_modules/

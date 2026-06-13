@@ -1,6 +1,8 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import { connectDB } from './config/db'
 import { initWebPush } from './services/webpush'
 import { startF1Scheduler } from './services/f1Scheduler'
@@ -37,10 +39,23 @@ import moodRouter from './routes/mood'
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
 
-// CORS fix v2
-app.use(cors())
+app.use(helmet())
 
-// app.options('*', cors())
+const allowedOrigins = ['https://hud-murex.vercel.app', 'http://localhost:5173']
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) cb(null, true)
+    else cb(new Error('Not allowed by CORS'))
+  },
+  credentials: true,
+}))
+
+const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true, legacyHeaders: false })
+const authLimiter    = rateLimit({ windowMs: 15 * 60 * 1000, max: 10,  standardHeaders: true, legacyHeaders: false })
+
+app.use('/api/auth', authLimiter)
+app.use('/api', generalLimiter)
+
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
 

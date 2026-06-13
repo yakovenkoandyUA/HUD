@@ -16,8 +16,6 @@ router.post('/generate-poster-image', async (req: Request, res: Response): Promi
   try {
     const seed = Math.floor(Math.random() * 999999)
     const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=768&seed=${seed}&nologo=true`
-    console.log('[poster-image] Fetching from Pollinations:', pollinationsUrl.slice(0, 140))
-
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 30000)
     const imageResponse = await fetch(pollinationsUrl, { signal: controller.signal })
@@ -25,7 +23,6 @@ router.post('/generate-poster-image', async (req: Request, res: Response): Promi
 
     if (!imageResponse.ok) throw new Error(`Pollinations error: ${imageResponse.status}`)
     const contentType = imageResponse.headers.get('content-type') ?? 'image/jpeg'
-    console.log('[poster-image] Pollinations OK, content-type:', contentType)
 
     const buffer = await imageResponse.arrayBuffer()
     const base64  = Buffer.from(buffer).toString('base64')
@@ -39,7 +36,6 @@ router.post('/generate-poster-image', async (req: Request, res: Response): Promi
     form.append('upload_preset', uploadPreset)
     form.append('folder', 'mimir/posters')
 
-    console.log('[poster-image] Uploading to Cloudinary, cloud:', cloudName)
     const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: 'POST',
       body: form,
@@ -52,7 +48,6 @@ router.post('/generate-poster-image', async (req: Request, res: Response): Promi
     }
 
     const { secure_url } = await cloudRes.json() as { secure_url: string }
-    console.log('[poster-image] Uploaded to Cloudinary:', secure_url)
     res.json({ imageUrl: secure_url })
   } catch (err) {
     console.error('[poster-image] Failed:', err)
