@@ -24,15 +24,68 @@ export function isTokenValid(token: string): boolean {
   }
 }
 
+let refreshPromise: Promise<string | null> | null = null
+
+async function tryRefresh(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (!res.ok) {
+        // Refresh token invalid/expired → force logout
+        const { useProfileStore } = await import('../store/profileStore')
+        useProfileStore.getState().logout()
+        return null
+      }
+      const { token } = await res.json() as { token: string }
+      const { useProfileStore } = await import('../store/profileStore')
+      useProfileStore.setState(s => ({ ...s, token }))
+      return token
+    } catch {
+      return null
+    } finally {
+      refreshPromise = null
+    }
+  })()
+  return refreshPromise
+}
+
 export async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
   if (!BASE_URL) throw new Error('VITE_API_URL is not configured')
-  const token = getToken()
-  return fetch(`${BASE_URL}${url}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers as Record<string, string> | undefined),
-    },
-  })
+
+  let token = getToken()
+
+  // Proactively refresh if access token is about to expire (< 60s left)
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1])) as { exp: number }
+      if (payload.exp * 1000 - Date.now() < 60_000) {
+        token = await tryRefresh()
+      }
+    } catch { /* malformed token, proceed */ }
+  }
+
+  const makeRequest = (t: string | null) =>
+    fetch(`${BASE_URL}${url}`, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+        ...(options.headers as Record<string, string> | undefined),
+      },
+    })
+
+  const res = await makeRequest(token)
+
+  // On 401: try refresh once, then retry
+  if (res.status === 401 && token) {
+    const newToken = await tryRefresh()
+    if (newToken) return makeRequest(newToken)
+  }
+
+  return res
 }

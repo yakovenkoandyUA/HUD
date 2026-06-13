@@ -1,9 +1,15 @@
 import 'dotenv/config'
+import * as Sentry from '@sentry/node'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
+import cookieParser from 'cookie-parser'
 import { connectDB } from './config/db'
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({ dsn: process.env.SENTRY_DSN, environment: process.env.NODE_ENV ?? 'production', tracesSampleRate: 0.2 })
+}
 import { initWebPush } from './services/webpush'
 import { startF1Scheduler } from './services/f1Scheduler'
 import './jobs/pushJobs'
@@ -56,6 +62,7 @@ const authLimiter    = rateLimit({ windowMs: 15 * 60 * 1000, max: 10,  standardH
 app.use('/api/auth', authLimiter)
 app.use('/api', generalLimiter)
 
+app.use(cookieParser())
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
 
@@ -85,6 +92,9 @@ app.use('/api/mood', moodRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
+if (process.env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app)
+}
 app.use(errorHandler)
 
 async function start() {

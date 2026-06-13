@@ -145,6 +145,14 @@ export const useProfileStore = create<ProfileState>()(
       },
 
       logout: () => {
+        const { token } = get()
+        if (BASE_URL) {
+          fetch(`${BASE_URL}/api/auth/logout`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }).catch(() => {})
+        }
         set({ token: null, activeProfile: null, pinLocked: false })
       },
 

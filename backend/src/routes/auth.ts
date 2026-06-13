@@ -4,32 +4,38 @@ import {
   verify, me, getProfiles, selectProfile, updateMe, changePassword,
   setPin, removePin, verifyPin,
   verifyEmail, resendVerification,
-  getAllUsers,
+  getAllUsers, refresh, logout,
 } from '../controllers/authController'
 import { requireAuth } from '../middleware/auth'
 import { requireAdmin } from '../middleware/requireAdmin'
+import { validate } from '../middleware/validate'
+import { registerSchema, loginSchema, googleAuthSchema, pinSchema, changePasswordSchema, updateMeSchema } from '../validation/schemas'
 
 const router = Router()
 
 // Email auth
-router.post('/register', register)
-router.post('/login', loginEmail)
-router.post('/google', googleAuth)
+router.post('/register', validate(registerSchema), register)
+router.post('/login',    validate(loginSchema),    loginEmail)
+router.post('/google',   validate(googleAuthSchema), googleAuth)
 
 // PIN
-router.patch('/pin', requireAuth, setPin)
-router.delete('/pin', requireAuth, removePin)
-router.post('/pin/verify', requireAuth, verifyPin)
+router.patch('/pin',       requireAuth, validate(pinSchema), setPin)
+router.delete('/pin',      requireAuth, removePin)
+router.post('/pin/verify', requireAuth, validate(pinSchema), verifyPin)
 
 // Email verification
 router.post('/verify-email', verifyEmail)
 router.post('/resend-verification', requireAuth, resendVerification)
 
+// Token refresh + logout (no requireAuth — refresh token in cookie)
+router.post('/refresh', refresh)
+router.post('/logout',  logout)
+
 // Session
 router.post('/verify', verify)
 router.get('/me', requireAuth, me)
-router.patch('/me', requireAuth, updateMe)
-router.post('/change-password', requireAuth, changePassword)
+router.patch('/me', requireAuth, validate(updateMeSchema), updateMe)
+router.post('/change-password', requireAuth, validate(changePasswordSchema), changePassword)
 
 // Admin
 router.get('/admin/users', requireAuth, requireAdmin, getAllUsers)

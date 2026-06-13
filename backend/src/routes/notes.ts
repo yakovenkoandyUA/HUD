@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import Note from '../models/Note'
 import { requireAuth } from '../middleware/auth'
+import { validate } from '../middleware/validate'
+import { createNoteSchema, updateNoteSchema } from '../validation/schemas'
 
 const router = Router()
 
@@ -15,10 +17,9 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', validate(createNoteSchema), async (req, res) => {
   try {
-    const { text } = req.body as { text?: string }
-    if (!text?.trim()) return res.status(400).json({ error: 'text required' })
+    const { text } = req.body as { text: string }
     const note = await Note.create({ text: text.trim(), userId: req.userId })
     res.status(201).json(note)
   } catch {
@@ -26,10 +27,9 @@ router.post('/', async (req, res) => {
   }
 })
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', validate(updateNoteSchema), async (req, res) => {
   try {
-    const { text } = req.body as { text?: string }
-    if (!text?.trim()) return res.status(400).json({ error: 'text required' })
+    const { text } = req.body as { text: string }
     const note = await Note.findOne({ _id: req.params.id, userId: req.userId })
     if (!note) return res.status(404).json({ error: 'Not found' })
     note.text = text.trim()

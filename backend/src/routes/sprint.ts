@@ -4,6 +4,8 @@ import {
   getTodos, createTodo, updateTodo, removeTodo,
 } from '../controllers/sprintController'
 import { requireAuth } from '../middleware/auth'
+import { validate } from '../middleware/validate'
+import { createTaskSchema, updateTaskSchema } from '../validation/schemas'
 
 const router = Router()
 
@@ -11,8 +13,8 @@ router.use(requireAuth)
 
 router.get('/tasks', getTasks)
 router.get('/tasks/trash', getTrash)
-router.post('/tasks', createTask)
-router.patch('/tasks/:id', updateTask)
+router.post('/tasks', validate(createTaskSchema), createTask)
+router.patch('/tasks/:id', validate(updateTaskSchema), updateTask)
 router.delete('/tasks/:id', removeTask)
 router.post('/tasks/:id/restore', restoreTask)
 router.delete('/tasks/:id/purge', purgeTask)

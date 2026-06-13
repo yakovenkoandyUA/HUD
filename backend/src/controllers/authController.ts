@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
 import { Resend } from 'resend'
 import { User } from '../models/User'
+import { RefreshToken } from '../models/RefreshToken'
 import { seedCategoriesForUser } from '../scripts/seedCategories'
 
 const CLIENT_URL = process.env.CLIENT_URL ?? 'https://hud-murex.vercel.app'
@@ -42,8 +43,37 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   isVerified: user.isVerified ?? false,
 })
 
-function signToken(userId: string, role: string): string {
-  return jwt.sign({ userId, role }, process.env.JWT_SECRET!, { expiresIn: '30d' })
+const COOKIE_NAME = 'rt'
+const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000
+
+function signAccessToken(userId: string, role: string): string {
+  return jwt.sign({ userId, role }, process.env.JWT_SECRET!, { expiresIn: '15m' })
+}
+
+async function issueRefreshToken(userId: string): Promise<string> {
+  const raw = crypto.randomBytes(40).toString('hex')
+  const tokenHash = crypto.createHash('sha256').update(raw).digest('hex')
+  await RefreshToken.create({ userId, tokenHash, expiresAt: new Date(Date.now() + REFRESH_TTL_MS) })
+  return raw
+}
+
+function setRefreshCookie(res: Response, raw: string): void {
+  res.cookie(COOKIE_NAME, raw, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: REFRESH_TTL_MS,
+    path: '/',
+  })
+}
+
+async function sendAuthResponse(res: Response, userId: string, role: string, user: ReturnType<typeof USER_PUBLIC_FIELDS>, status = 200): Promise<void> {
+  const [accessToken, refreshRaw] = await Promise.all([
+    Promise.resolve(signAccessToken(userId, role)),
+    issueRefreshToken(userId),
+  ])
+  setRefreshCookie(res, refreshRaw)
+  res.status(status).json({ token: accessToken, user })
 }
 
 // ── Email auth ────────────────────────────────────────────────────────────────
@@ -105,7 +135,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     }
 
     const userId = (user._id as { toString(): string }).toString()
-    res.status(201).json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
+    await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user), 201)
   } catch {
     res.status(500).json({ error: 'Помилка реєстрації' })
   }
@@ -133,7 +163,7 @@ export async function loginEmail(req: Request, res: Response): Promise<void> {
     }
 
     const userId = (user._id as { toString(): string }).toString()
-    res.json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
+    await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user))
   } catch {
     res.status(500).json({ error: 'Помилка входу' })
   }
@@ -247,7 +277,7 @@ export async function googleAuth(req: Request, res: Response): Promise<void> {
     }
 
     const userId = (user._id as { toString(): string }).toString()
-    res.json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
+    await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user))
   } catch {
     res.status(401).json({ error: 'Invalid Google token' })
   }
@@ -380,7 +410,7 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
     const userId = (user._id as { toString(): string }).toString()
     await seedCategoriesForUser(userId)
 
-    res.json({ token: signToken(userId, user.role), user: USER_PUBLIC_FIELDS(user) })
+    await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user))
   } catch {
     res.status(500).json({ error: 'Failed to select profile' })
   }
@@ -423,6 +453,44 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
   } catch {
     res.status(500).json({ error: 'Failed to update profile' })
   }
+}
+
+/** POST /auth/refresh — reads httpOnly cookie, issues new access token */
+export async function refresh(req: Request, res: Response): Promise<void> {
+  const raw = req.cookies?.[COOKIE_NAME] as string | undefined
+  if (!raw) { res.status(401).json({ error: 'No refresh token' }); return }
+
+  try {
+    const tokenHash = crypto.createHash('sha256').update(raw).digest('hex')
+    const stored = await RefreshToken.findOne({ tokenHash, expiresAt: { $gt: new Date() } })
+    if (!stored) { res.status(401).json({ error: 'Invalid or expired refresh token' }); return }
+
+    const user = await User.findById(stored.userId)
+    if (!user) { res.status(401).json({ error: 'User not found' }); return }
+
+    // Rotate: delete old, issue new
+    await stored.deleteOne()
+    const userId = (user._id as { toString(): string }).toString()
+    const [accessToken, refreshRaw] = await Promise.all([
+      Promise.resolve(signAccessToken(userId, user.role)),
+      issueRefreshToken(userId),
+    ])
+    setRefreshCookie(res, refreshRaw)
+    res.json({ token: accessToken, user: USER_PUBLIC_FIELDS(user) })
+  } catch {
+    res.status(500).json({ error: 'Refresh failed' })
+  }
+}
+
+/** POST /auth/logout — clears refresh token cookie + DB record */
+export async function logout(req: Request, res: Response): Promise<void> {
+  const raw = req.cookies?.[COOKIE_NAME] as string | undefined
+  if (raw) {
+    const tokenHash = crypto.createHash('sha256').update(raw).digest('hex')
+    await RefreshToken.deleteOne({ tokenHash }).catch(() => {})
+  }
+  res.clearCookie(COOKIE_NAME, { httpOnly: true, secure: true, sameSite: 'none', path: '/' })
+  res.json({ ok: true })
 }
 
 /** POST /auth/change-password — { currentPassword, newPassword } */

@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
+import { validate } from '../middleware/validate'
+import { moodSchema } from '../validation/schemas'
 import MoodLog from '../models/MoodLog'
 
 const router = Router()
@@ -20,13 +22,9 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 })
 
 // PUT /api/mood/:date  { score: 1-5 }  — upsert
-router.put('/:date', async (req: Request, res: Response): Promise<void> => {
+router.put('/:date', validate(moodSchema), async (req: Request, res: Response): Promise<void> => {
   const { date } = req.params
   const { score } = req.body as { score: number }
-  if (!score || score < 1 || score > 5) {
-    res.status(400).json({ error: 'score must be 1–5' })
-    return
-  }
   const log = await MoodLog.findOneAndUpdate(
     { userId: req.userId, date },
     { userId: req.userId, date, score },

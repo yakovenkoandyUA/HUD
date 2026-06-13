@@ -2,9 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import svgr from 'vite-plugin-svgr'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 
 export default defineConfig({
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -16,6 +18,7 @@ export default defineConfig({
   plugins: [
     react(),
     svgr(),
+    ...(process.env.SENTRY_AUTH_TOKEN ? [sentryVitePlugin({ org: 'mimir-hud', project: 'mimir-client' })] : []),
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
