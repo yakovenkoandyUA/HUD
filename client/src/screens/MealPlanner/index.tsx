@@ -125,7 +125,7 @@ const RecipePicker: React.FC<RecipePickerProps> = ({ recipes, dayLabel, assigned
 
 const MealPlannerScreen: React.FC = () => {
   const navigate = useNavigate()
-  const { plan, addToDay, removeFromDay, clearWeek } = useMealPlanStore()
+  const { plan, fetchPlan, addToDay, removeFromDay, clearWeek } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
   const { addFromRecipe } = useShoppingListStore()
   const { showToast } = useUiStore()
@@ -138,11 +138,14 @@ const MealPlannerScreen: React.FC = () => {
   React.useEffect(() => {
     let cancelled = false
     const load = async () => {
-      await fetchRecipes()
+      await Promise.all([
+        fetchPlan(),
+        recipes.length === 0 ? fetchRecipes() : Promise.resolve(),
+      ])
     }
-    if (recipes.length === 0 && !cancelled) load()
+    if (!cancelled) load()
     return () => { cancelled = true }
-  }, [fetchRecipes, recipes.length])
+  }, [fetchPlan, fetchRecipes, recipes.length])
 
   const totalPlanned = weekKeys.reduce((acc, k) => acc + (plan[k]?.length ?? 0), 0)
 

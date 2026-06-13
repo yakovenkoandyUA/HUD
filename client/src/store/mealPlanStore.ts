@@ -1,45 +1,63 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { authFetch, getToken } from '../services/api'
 
-// Key format: YYYY-MM-DD
 export type DayKey = string
 
 interface MealPlanState {
-  plan: Record<DayKey, string[]> // recipeId[]
-  addToDay: (day: DayKey, recipeId: string) => void
-  removeFromDay: (day: DayKey, recipeId: string) => void
-  clearDay: (day: DayKey) => void
-  clearWeek: (days: DayKey[]) => void
+  plan: Record<DayKey, string[]>
+  loading: boolean
+  fetchPlan: () => Promise<void>
+  addToDay: (day: DayKey, recipeId: string) => Promise<void>
+  removeFromDay: (day: DayKey, recipeId: string) => Promise<void>
+  clearWeek: (days: DayKey[]) => Promise<void>
 }
 
-export const useMealPlanStore = create<MealPlanState>()(
-  persist(
-    (set) => ({
-      plan: {},
+async function persistPlan(plan: Record<DayKey, string[]>) {
+  await authFetch('/api/meal-plan', {
+    method: 'PUT',
+    body: JSON.stringify({ plan }),
+  })
+}
 
-      addToDay: (day, recipeId) => set(s => ({
-        plan: {
-          ...s.plan,
-          [day]: [...(s.plan[day] ?? []).filter(id => id !== recipeId), recipeId],
-        },
-      })),
+export const useMealPlanStore = create<MealPlanState>((set, get) => ({
+  plan: {},
+  loading: false,
 
-      removeFromDay: (day, recipeId) => set(s => ({
-        plan: { ...s.plan, [day]: (s.plan[day] ?? []).filter(id => id !== recipeId) },
-      })),
+  fetchPlan: async () => {
+    if (!getToken()) return
+    set({ loading: true })
+    try {
+      const res = await authFetch('/api/meal-plan')
+      if (res.ok) {
+        const data = await res.json() as { plan: Record<DayKey, string[]> }
+        set({ plan: data.plan })
+      }
+    } finally {
+      set({ loading: false })
+    }
+  },
 
-      clearDay: (day) => set(s => {
-        const next = { ...s.plan }
-        delete next[day]
-        return { plan: next }
-      }),
+  addToDay: async (day, recipeId) => {
+    const prev = get().plan
+    const dayIds = prev[day] ?? []
+    if (dayIds.includes(recipeId)) return
+    const next = { ...prev, [day]: [...dayIds, recipeId] }
+    set({ plan: next })
+    await persistPlan(next)
+  },
 
-      clearWeek: (days) => set(s => {
-        const next = { ...s.plan }
-        days.forEach(d => delete next[d])
-        return { plan: next }
-      }),
-    }),
-    { name: 'hud-meal-plan' }
-  )
-)
+  removeFromDay: async (day, recipeId) => {
+    const prev = get().plan
+    const next = { ...prev, [day]: (prev[day] ?? []).filter(id => id !== recipeId) }
+    set({ plan: next })
+    await persistPlan(next)
+  },
+
+  clearWeek: async (days) => {
+    const prev = get().plan
+    const next = { ...prev }
+    days.forEach(d => delete next[d])
+    set({ plan: next })
+    await persistPlan(next)
+  },
+}))

@@ -214,7 +214,6 @@ const Recipes: React.FC = () => {
                 recipe={r}
                 onClick={() => navigate(`/recipes/${r.id}`)}
                 hideCategory={selectedCategory !== null}
-                hero={i === 0 && visibleRecipes.length > 1}
               />
             ))}
           </div>
