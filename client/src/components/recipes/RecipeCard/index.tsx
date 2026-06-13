@@ -37,6 +37,12 @@ const DIFFICULTY_COLOR: Record<string, string> = {
   hard:   'var(--negative)',
 }
 
+const DIFFICULTY_LABEL: Record<string, string> = {
+  easy:   'легко',
+  medium: 'середньо',
+  hard:   'складно',
+}
+
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
   const { wishlistIds, toggleWishlist } = useRecipesStore()
   const isWishlisted = wishlistIds.includes(recipe.id)
@@ -50,8 +56,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && onClick()}
     >
-      {recipe.imageUrl
-        ? (
+      {/* ── Photo section ── */}
+      <div className={styles.photoWrap}>
+        {recipe.imageUrl ? (
           <>
             {!loaded && <div className={styles.shimmer} />}
             <img
@@ -62,51 +69,51 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
               onLoad={() => setLoaded(true)}
             />
           </>
-        )
-        : (
+        ) : (
           <div className={styles.photoPlaceholder}>
             <span className={styles.photoInitial}>{recipe.title[0]?.toUpperCase()}</span>
           </div>
-        )
-      }
+        )}
 
-      <div className={styles.gradient} />
+        <button
+          type="button"
+          className={`${styles.heartBtn} ${isWishlisted ? styles.heartActive : ''}`}
+          onClick={e => { e.stopPropagation(); toggleWishlist(recipe.id) }}
+          aria-label={isWishlisted ? 'Видалити з wishlist' : 'Додати до wishlist'}
+        >
+          <HeartIcon filled={isWishlisted} />
+        </button>
 
-      <div className={styles.info}>
-        <h3 className={styles.title}>{recipe.title}</h3>
-        {(recipe.cookTime || recipe.difficulty) && (
-          <div className={styles.meta}>
-            {recipe.cookTime && (
-              <span className={styles.metaTime}>⏱ {formatCookTime(recipe.cookTime)}</span>
-            )}
-            {recipe.difficulty && DIFFICULTY_COLOR[recipe.difficulty] && (
-              <span
-                className={styles.diffDot}
-                style={{ background: DIFFICULTY_COLOR[recipe.difficulty] }}
-                title={recipe.difficulty}
-              />
-            )}
+        {recipe.isOwn === false && recipe.ownerName && (
+          <div className={styles.ownerBadge} title={recipe.ownerName}>
+            {recipe.ownerAvatarUrl
+              ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
+              : <span className={styles.ownerInitial}>{recipe.ownerName[0]}</span>
+            }
           </div>
         )}
       </div>
 
-      <button
-        type="button"
-        className={`${styles.heartBtn} ${isWishlisted ? styles.heartActive : ''}`}
-        onClick={e => { e.stopPropagation(); toggleWishlist(recipe.id) }}
-        aria-label={isWishlisted ? 'Видалити з wishlist' : 'Додати до wishlist'}
-      >
-        <HeartIcon filled={isWishlisted} />
-      </button>
-
-      {recipe.isOwn === false && recipe.ownerName && (
-        <div className={styles.ownerBadge} title={recipe.ownerName}>
-          {recipe.ownerAvatarUrl
-            ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
-            : <span className={styles.ownerInitial}>{recipe.ownerName[0]}</span>
-          }
+      {/* ── Info block ── */}
+      <div className={styles.info}>
+        <h3 className={styles.title}>{recipe.title}</h3>
+        <div className={styles.meta}>
+          {recipe.category && (
+            <span className={styles.categoryPill}>{recipe.category}</span>
+          )}
+          {recipe.difficulty && DIFFICULTY_LABEL[recipe.difficulty] && (
+            <span
+              className={styles.diffLabel}
+              style={{ color: DIFFICULTY_COLOR[recipe.difficulty] }}
+            >
+              {DIFFICULTY_LABEL[recipe.difficulty]}
+            </span>
+          )}
         </div>
-      )}
+        {recipe.cookTime ? (
+          <span className={styles.cookTime}>{formatCookTime(recipe.cookTime)}</span>
+        ) : null}
+      </div>
     </div>
   )
 }
