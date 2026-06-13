@@ -1,0 +1,46 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 10:21
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - button "МОЄ" [ref=e20] [cursor=pointer]
+          - button "СІМ'Я" [ref=e21] [cursor=pointer]
+          - button "СПІЛЬНОТА" [ref=e22] [cursor=pointer]
+        - button "Збережені" [ref=e23] [cursor=pointer]:
+          - img [ref=e24]
+      - generic [ref=e27]: Додай свій перший рецепт
+    - generic [ref=e28]:
+      - button "Згенерувати рецепт" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+      - button "Додати рецепт" [ref=e33] [cursor=pointer]:
+        - img [ref=e34]
+  - navigation [ref=e36]:
+    - link [ref=e37] [cursor=pointer]:
+      - /url: /
+      - img [ref=e38]
+    - link [ref=e40] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e41]
+    - link [ref=e44] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e45]
+    - link [ref=e49] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e50]
+    - link [ref=e75] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e76]
+    - link [ref=e88] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e89]
+    - link [ref=e91] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e92]
+  - generic [ref=e98]:
+    - img [ref=e99]
+    - generic [ref=e101]: MIMIR

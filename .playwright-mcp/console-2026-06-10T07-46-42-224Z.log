@@ -1,0 +1,4 @@
+[     290ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[     368ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781077593188:352
+[     368ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781077593188:359
+[     368ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36

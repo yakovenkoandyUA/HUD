@@ -1,0 +1,2 @@
+[    4581ms] [INFO] Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner. @ https://hud-murex.vercel.app/login:0
+[    8129ms] [LOG] [push] existing subscription: none @ https://hud-murex.vercel.app/assets/index-CAByr4QA.js:10

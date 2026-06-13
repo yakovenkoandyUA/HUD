@@ -95,13 +95,12 @@ Service Worker підключений до Web Push (VAPID) — підписка
 
 ## Наступний спринт
 
-### Habits — Трекер звичок
-- Новий роут `/habits`
-- Model: `Habit { name, icon?, color?, userId }` + `HabitLog { habitId, date, userId }`
-- Backend: CRUD habits + `POST /api/habits/:id/log { date }` + `DELETE /api/habits/:id/log/:date`
-- Frontend: GitHub-style heat map (52 тижні × 7 днів), поточний стрік + рекорд
-- Тап на сьогоднішній день → відмітити виконано
-- Не інтегрувати з Sprint рутинами (різна логіка)
+### "Мій день" — `/day`
+- Overlay або окремий роут
+- Секції: Ранок / День / Вечір
+- Рутини на сьогодні, заплановані задачі, погода
+- Трекер настрою (5 позицій)
+- Підсумок дня (push о 21:00)
 
 ---
 

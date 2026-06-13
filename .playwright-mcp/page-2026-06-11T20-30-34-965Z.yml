@@ -1,0 +1,81 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 23:30
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic:
+          - img
+        - generic [ref=e19]:
+          - generic [ref=e20]: Добрий вечір
+          - generic [ref=e21]: Котька
+          - generic [ref=e22]: Четвер · 11 червня
+      - generic [ref=e23]:
+        - button "334 ₴" [ref=e24] [cursor=pointer]:
+          - img [ref=e25]
+          - generic [ref=e28]: 334 ₴
+        - button "🇪🇸 Spanish · 3д" [ref=e29] [cursor=pointer]:
+          - generic [ref=e30]: 🇪🇸
+          - generic [ref=e31]: Spanish · 3д
+      - 'button "🇪🇸 SPANISH Circuit de Barcelona 2 : 17 : 29 : 25 ☀️ 22°C" [ref=e32] [cursor=pointer]':
+        - img
+        - generic [ref=e33]:
+          - generic [ref=e34]: 🇪🇸
+          - generic [ref=e35]: SPANISH
+        - generic [ref=e36]: Circuit de Barcelona
+        - generic [ref=e37]:
+          - generic [ref=e39]: "2"
+          - generic [ref=e40]: ":"
+          - generic [ref=e42]: "17"
+          - generic [ref=e43]: ":"
+          - generic [ref=e45]: "29"
+          - generic [ref=e46]: ":"
+          - generic [ref=e48]: "25"
+        - generic [ref=e50]:
+          - generic [ref=e51]: ☀️
+          - generic [ref=e52]: 22°C
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - button "Квести" [ref=e55] [cursor=pointer]:
+            - generic [ref=e56]: Квести
+            - img [ref=e58]
+          - paragraph [ref=e61]: Квестів немає
+        - generic [ref=e63]:
+          - button "Покупки" [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]: Покупки
+            - img [ref=e67]
+          - paragraph [ref=e70]: Список порожній
+      - generic [ref=e73]:
+        - generic [ref=e74]: 334 ₴
+        - img [ref=e75]
+        - generic [ref=e77]: "Сьогодні: 428 / 11 ₴"
+    - button "Меню дій" [ref=e81] [cursor=pointer]:
+      - img [ref=e82]
+  - navigation [ref=e84]:
+    - link [ref=e85] [cursor=pointer]:
+      - /url: /
+      - img [ref=e86]
+    - link [ref=e88] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e89]
+    - link [ref=e92] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e93]
+    - link [ref=e97] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e98]
+    - link [ref=e123] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e124]
+    - link [ref=e136] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e137]
+    - link [ref=e139] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e140]
+  - generic [ref=e146]:
+    - img [ref=e147]
+    - generic [ref=e149]: MIMIR

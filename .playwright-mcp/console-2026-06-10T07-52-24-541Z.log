@@ -1,0 +1,21 @@
+[     284ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[     374ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781077926836:352
+[     374ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781077926836:359
+[     374ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36
+[ 1903054ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/finance/ExpenseForm/index.tsx?t=1781079847590:0
+[ 1903055ms] [ERROR] [vite] Failed to reload /src/components/finance/ExpenseForm/index.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:904
+[ 3707559ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:968
+[ 3708309ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[ 3708394ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781080687731:352
+[ 3708395ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781080687731:359
+[ 3708395ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36
+[ 5372177ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:968
+[ 5372882ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[ 5372969ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781082921092:352
+[ 5372970ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781082921092:359
+[ 5372970ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36
+[ 6376167ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:968
+[11156069ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[11156175ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx:352
+[11156175ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx:359
+[11156176ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36

@@ -32,8 +32,12 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   email: user.email,
   avatarUrl: user.avatarUrl,
   role: user.role,
-  f1Enabled: user.f1Enabled ?? false,
-  salaryDay: user.salaryDay ?? 1,
+  f1Enabled:      user.f1Enabled ?? false,
+  salaryDay:      user.salaryDay ?? 1,
+  city:           user.city ?? '',
+  morningStart:   user.morningStart   ?? 6,
+  afternoonStart: user.afternoonStart ?? 12,
+  eveningStart:   user.eveningStart   ?? 18,
   hasPIN: !!user.pinHash,
   isVerified: user.isVerified ?? false,
 })
@@ -384,10 +388,12 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
 
 /** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl, name, f1Enabled, salaryDay, username } = req.body as {
+  const { avatarUrl, name, f1Enabled, salaryDay, username, city, morningStart, afternoonStart, eveningStart } = req.body as {
     avatarUrl?: string; name?: string; f1Enabled?: boolean; salaryDay?: number; username?: string
+    city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number
   }
-  if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && !username) {
+  if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && !username &&
+      city === undefined && morningStart === undefined && afternoonStart === undefined && eveningStart === undefined) {
     res.status(400).json({ error: 'At least one field required' })
     return
   }
@@ -408,6 +414,10 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
       if (exists) { res.status(409).json({ error: 'Username already taken' }); return }
       update.username = slug
     }
+    if (city !== undefined) update.city = city.trim()
+    if (morningStart !== undefined)   update.morningStart   = Math.max(0, Math.min(23, Math.round(morningStart)))
+    if (afternoonStart !== undefined) update.afternoonStart = Math.max(0, Math.min(23, Math.round(afternoonStart)))
+    if (eveningStart !== undefined)   update.eveningStart   = Math.max(0, Math.min(23, Math.round(eveningStart)))
     await User.findByIdAndUpdate(req.userId, update)
     res.json({ ok: true })
   } catch {

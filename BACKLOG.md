@@ -58,7 +58,7 @@
 - DriverStatsCard + ConstructorStatsCard (sessionStorage кеш, PixelCar анімація)
 - RaceDetail: CircuitStatsSection, SessionScheduleSection, RaceWeatherSection, RacePodiumSection
 - McLarenViewer (Three.js), аналоговий годинник (easter egg)
-- ⬜ F1 Live Race Dashboard — не реалізовано
+- ✅ F1 Live Race Dashboard — реалізовано (backend proxy + useOpenF1 hook + F1Live screen)
 
 ### Memories
 - Таймлайн по місяцях + сітка 3 колонки
@@ -276,7 +276,8 @@
 - ✅ Dashboard: interactive sparkline, прибрано зайві nav chips
 - ✅ ProfilePage: повний реворк (4 таби, BottomNav адаптація, salaryDay)
 - ✅ Quicknotes (Notes screen + notesStore + FAB + TasksAccordion секція НОТАТКИ)
-- ⬜ Habits: трекер звичок
+- ✅ Habits: стрік + heatmap + місячний % вбудовано в рутини Sprint (TaskDetailModal + TaskCard flame badge)
+- ✅ Memories: карта планів (Leaflet, Voyager tiles) + експорт спогаду (Canvas API + Web Share)
 - ⬜ F1 Live Dashboard
 
 ### Фаза 1 — Фундамент (перед публічним launch)

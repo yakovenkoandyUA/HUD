@@ -1,0 +1,71 @@
+[     276ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[     357ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781076747734:352
+[     357ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781076747734:359
+[     357ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36
+[  276046ms] ReferenceError: checklistOpen is not defined
+    at Sprint (http://localhost:5173/src/screens/Sprint/index.tsx?t=1781077036162:1236:51)
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:12867:12)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:4212:19)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:5568:16)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:6139:20)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:850:66)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8428:92)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8324:37)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8308:6)
+    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:7993:27)
+[  276043ms] [WARNING] %s
+
+%s
+ An error occurred in the <Sprint> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:5256
+[  285187ms] ReferenceError: checklistOpen is not defined
+    at Sprint (http://localhost:5173/src/screens/Sprint/index.tsx?t=1781077045345:1233:51)
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:12867:12)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:4212:19)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:5568:16)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:6139:20)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:850:66)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8428:92)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8324:37)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8308:6)
+    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:7993:27)
+[  285187ms] [WARNING] %s
+
+%s
+ An error occurred in the <Sprint> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:5256
+[  293658ms] ReferenceError: checklistOpen is not defined
+    at Sprint (http://localhost:5173/src/screens/Sprint/index.tsx?t=1781077053811:1221:51)
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:12867:12)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:4212:19)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:5568:16)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:6139:20)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:850:66)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8428:92)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8324:37)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8308:6)
+    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:7993:27)
+[  293658ms] [WARNING] %s
+
+%s
+ An error occurred in the <Sprint> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:5256
+[  304805ms] ReferenceError: checklistOpen is not defined
+    at Sprint (http://localhost:5173/src/screens/Sprint/index.tsx?t=1781077064968:1216:51)
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:12867:12)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:4212:19)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:5568:16)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:6139:20)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:850:66)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8428:92)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8324:37)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:8308:6)
+    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:7993:27)
+[  304805ms] [WARNING] %s
+
+%s
+ An error occurred in the <Sprint> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:5256
+[  322676ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781076747734:352
+[  322676ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781076747734:359
+[  322677ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36

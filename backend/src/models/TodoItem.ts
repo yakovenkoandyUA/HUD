@@ -15,6 +15,7 @@ export interface ITodoItem extends Document {
   reminder?: { amount: number; unit: string }
   description?: string
   checklist?: Array<{ id: string; title: string; done: boolean }>
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | null
   userId: string
 }
 
@@ -32,8 +33,9 @@ const schema = new Schema<ITodoItem>({
   completionHistory: { type: [String], default: [] },
   reminder:  { type: Schema.Types.Mixed, default: null },
   description: { type: String, default: '' },
-  checklist: { type: Schema.Types.Mixed, default: [] },
-  userId:    { type: String, required: true, index: true },
+  checklist:  { type: Schema.Types.Mixed, default: [] },
+  timeOfDay:  { type: String, enum: ['morning', 'afternoon', 'evening', null], default: null },
+  userId:     { type: String, required: true, index: true },
 }, { timestamps: true })
 
 export default model<ITodoItem>('TodoItem', schema)

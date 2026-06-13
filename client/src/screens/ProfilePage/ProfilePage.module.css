@@ -1374,3 +1374,78 @@
   color: var(--text3);
   opacity: 0.7;
 }
+
+/* ── My Day settings ── */
+.fieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.fieldLabel {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.fieldInput {
+  flex: 1;
+  max-width: 180px;
+  padding: 7px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+}
+.fieldInput::placeholder { color: var(--text3); }
+.fieldInput:focus { outline: none; border-color: var(--accent); }
+
+.slotRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.slotRow:last-of-type { border-bottom: none; }
+
+.slotLabel {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.slotStepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepperBtn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  font-size: 16px;
+  color: var(--text2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+.stepperBtn:hover { background: var(--surface); }
+
+.stepperVal {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+  min-width: 44px;
+  text-align: center;
+}

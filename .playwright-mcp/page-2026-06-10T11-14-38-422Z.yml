@@ -1,0 +1,38 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 14:14
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - button "СПОГАДИ" [ref=e18] [cursor=pointer]
+      - button "ПЛАНИ" [ref=e19] [cursor=pointer]
+    - generic [ref=e20]:
+      - generic [ref=e21]: 📷
+      - paragraph [ref=e22]: Ще немає спогадів
+      - paragraph [ref=e23]: Додай перший!
+    - button "Додати спогад" [ref=e24] [cursor=pointer]:
+      - img [ref=e25]
+  - navigation [ref=e27]:
+    - link [ref=e28] [cursor=pointer]:
+      - /url: /
+      - img [ref=e29]
+    - link [ref=e31] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e32]
+    - link [ref=e35] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e36]
+    - link [ref=e40] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e41]
+    - link [ref=e66] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e67]
+    - link [ref=e79] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e80]
+    - link [ref=e82] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e83]

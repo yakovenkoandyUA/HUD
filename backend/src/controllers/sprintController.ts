@@ -8,7 +8,7 @@ const TASK_ALLOWED = [
   'title', 'done', 'priority', 'category', 'labels', 'dueDate', 'description',
   'checklist', 'order', 'tag', 'weekStart', 'weekNumber', 'year',
   'repeat', 'nextDue', 'repeatDay', 'repeatConfig', 'repeatStartDate',
-  'completionHistory', 'reminder', 'isPinned', 'assignedTo',
+  'completionHistory', 'reminder', 'isPinned', 'assignedTo', 'timeOfDay',
 ]
 
 export async function getTasks(req: Request, res: Response): Promise<void> {

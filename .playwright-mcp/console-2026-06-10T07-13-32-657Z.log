@@ -1,0 +1,11 @@
+[     260ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[     313ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781075595095:352
+[     313ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781075595095:359
+[     313ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36
+[   23188ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781075595095:352
+[   23188ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781075595095:359
+[   23188ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36
+[   42502ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[   42572ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781075595095:352
+[   42572ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781075595095:359
+[   42572ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36

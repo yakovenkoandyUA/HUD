@@ -10,6 +10,10 @@ export interface IUser extends Document {
   role: 'admin' | 'user'
   f1Enabled: boolean
   salaryDay: number
+  city: string
+  morningStart: number
+  afternoonStart: number
+  eveningStart: number
   isVerified: boolean
   verificationToken: string | null
   createdAt: Date
@@ -25,6 +29,10 @@ const schema = new Schema<IUser>({
   role:              { type: String, enum: ['admin', 'user'], default: 'user' },
   f1Enabled:         { type: Boolean, default: false },
   salaryDay:         { type: Number, default: 1, min: 1, max: 31 },
+  city:              { type: String, default: '' },
+  morningStart:      { type: Number, default: 6,  min: 0, max: 23 },
+  afternoonStart:    { type: Number, default: 12, min: 0, max: 23 },
+  eveningStart:      { type: Number, default: 18, min: 0, max: 23 },
   isVerified:        { type: Boolean, default: false },
   verificationToken: { type: String, default: null },
   createdAt:         { type: Date, default: Date.now },

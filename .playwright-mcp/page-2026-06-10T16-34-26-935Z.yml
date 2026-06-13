@@ -1,0 +1,55 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 19:34
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - button "0 Переглянув" [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: "0"
+        - generic [ref=e20]: Переглянув
+      - button "0 Дивлюсь" [ref=e22] [cursor=pointer]:
+        - generic [ref=e23]: "0"
+        - generic [ref=e24]: Дивлюсь
+      - button "0 Хочу" [ref=e26] [cursor=pointer]:
+        - generic [ref=e27]: "0"
+        - generic [ref=e28]: Хочу
+    - generic [ref=e30]:
+      - button "Фільми" [ref=e31] [cursor=pointer]
+      - button "Серіали" [ref=e32] [cursor=pointer]
+      - button "Аніме" [ref=e33] [cursor=pointer]
+      - button "Книги" [ref=e34] [cursor=pointer]
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - generic [ref=e39]:
+          - img [ref=e40]
+          - textbox "Пошук фільму..." [ref=e43]
+        - button "Сортування" [ref=e45] [cursor=pointer]:
+          - img [ref=e46]
+      - generic [ref=e49]:
+        - generic [ref=e50]: 🎬
+        - paragraph [ref=e51]: Список порожній
+        - paragraph [ref=e52]: Знайди щось цікаве через пошук вище
+  - navigation [ref=e53]:
+    - link [ref=e54] [cursor=pointer]:
+      - /url: /
+      - img [ref=e55]
+    - link [ref=e57] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e58]
+    - link [ref=e61] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e62]
+    - link [ref=e66] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e67]
+    - link [ref=e92] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e93]
+    - link [ref=e105] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e106]
+    - link [ref=e108] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e109]

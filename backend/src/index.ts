@@ -7,6 +7,7 @@ import { startF1Scheduler } from './services/f1Scheduler'
 import './jobs/pushJobs'
 import './jobs/routineReminders'
 import './jobs/recurringReminders'
+import './jobs/dayReminder'
 import { errorHandler } from './middleware/errorHandler'
 
 import authRoutes from './routes/auth'
@@ -31,6 +32,7 @@ import aiRouter from './routes/ai'
 import familyRouter from './routes/family'
 import financeRouter from './routes/finance'
 import notesRouter from './routes/notes'
+import moodRouter from './routes/mood'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -64,6 +66,7 @@ app.use('/api/ai', aiRouter)
 app.use('/api/family', familyRouter)
 app.use('/api/finance', financeRouter)
 app.use('/api/notes', notesRouter)
+app.use('/api/mood', moodRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

@@ -87,6 +87,7 @@ interface ApiTask {
   isPinned?: boolean
   assignedTo?: string[]
   ownerName?: string
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | null
 }
 
 // ── Repeat helpers ────────────────────────────────────────────────────────────
@@ -201,6 +202,7 @@ function taskBody(item: Partial<UnifiedTodo> & { type?: string }): Record<string
     ...(item.reminder !== undefined && { reminder:    item.reminder ?? null }),
     ...(item.isPinned   !== undefined && { isPinned:   item.isPinned }),
     ...(item.assignedTo !== undefined && { assignedTo: item.assignedTo }),
+    ...(item.timeOfDay  !== undefined && { timeOfDay:  item.timeOfDay }),
     ...(item.repeat && item.repeat !== 'none' && {
       repeat:          item.repeat,
       nextDue:         item.nextDue,
@@ -292,6 +294,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           ...(t.isPinned    && { isPinned:    t.isPinned }),
           ...(t.assignedTo?.length && { assignedTo: t.assignedTo }),
           ...(t.ownerName   && { ownerName:   t.ownerName }),
+          ...(t.timeOfDay !== undefined && { timeOfDay: t.timeOfDay }),
         }
       })
 

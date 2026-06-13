@@ -1,0 +1,23 @@
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - generic [ref=e10]:
+      - heading "MIMIR" [level=1] [ref=e11]
+      - paragraph [ref=e12]: HEADS UP DISPLAY
+    - generic [ref=e13]:
+      - textbox "EMAIL" [active] [ref=e15]
+      - textbox "ПАРОЛЬ" [ref=e17]
+      - button "УВІЙТИ" [disabled] [ref=e18]
+    - generic [ref=e20]: або
+    - generic [ref=e23]:
+      - button "Вхід через Google. Відкриється в новій вкладці" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]:
+          - img [ref=e30]
+          - generic [ref=e37]: Вхід через Google
+      - iframe
+    - paragraph [ref=e38]:
+      - text: Ще немає акаунту?
+      - link "Зареєструватись" [ref=e39] [cursor=pointer]:
+        - /url: /register
+  - generic [ref=e41]:
+    - img [ref=e42]
+    - generic [ref=e44]: MIMIR

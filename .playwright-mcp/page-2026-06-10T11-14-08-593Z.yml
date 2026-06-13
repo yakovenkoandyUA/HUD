@@ -1,0 +1,68 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 14:14
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - 'button "🇪🇸 SPANISH Circuit de Barcelona 4 д : 02 г : 45 хв : 51 с" [ref=e18] [cursor=pointer]':
+        - img
+        - generic [ref=e19]:
+          - generic [ref=e20]: 🇪🇸
+          - generic [ref=e21]: SPANISH
+        - generic [ref=e22]: Circuit de Barcelona
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]: "4"
+            - generic [ref=e26]: д
+          - generic [ref=e27]: ":"
+          - generic [ref=e28]:
+            - generic [ref=e29]: "02"
+            - generic [ref=e30]: г
+          - generic [ref=e31]: ":"
+          - generic [ref=e32]:
+            - generic [ref=e33]: "45"
+            - generic [ref=e34]: хв
+          - generic [ref=e35]: ":"
+          - generic [ref=e36]:
+            - generic [ref=e37]: "51"
+            - generic [ref=e38]: с
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - button "Квести" [ref=e41] [cursor=pointer]:
+            - generic [ref=e42]: Квести
+            - img [ref=e44]
+          - paragraph [ref=e47]: Квестів немає
+        - generic [ref=e49]:
+          - button "Покупки" [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: Покупки
+            - img [ref=e53]
+          - paragraph [ref=e56]: Список порожній
+      - generic [ref=e59]:
+        - generic [ref=e60]: 0 ₴
+        - generic [ref=e61]: "Сьогодні: 0 / 0 ₴"
+    - button "Меню дій" [ref=e64] [cursor=pointer]:
+      - img [ref=e65]
+  - navigation [ref=e67]:
+    - link [ref=e68] [cursor=pointer]:
+      - /url: /
+      - img [ref=e69]
+    - link [ref=e71] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e72]
+    - link [ref=e75] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e76]
+    - link [ref=e80] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e81]
+    - link [ref=e106] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e107]
+    - link [ref=e119] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e120]
+    - link [ref=e122] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e123]

@@ -1,0 +1,8 @@
+[     299ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cda22d0f:14336
+[     383ms] [LOG] [push] trySubscribe — permission: granted @ http://localhost:5173/src/App.tsx?t=1781077189823:352
+[     384ms] [LOG] [push] calling subscribe… @ http://localhost:5173/src/App.tsx?t=1781077189823:359
+[     384ms] [LOG] [push] awaiting service worker ready… @ http://localhost:5173/src/hooks/usePushSubscription.ts:36
+[  176676ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/sprint/TaskDetailModal/index.tsx?t=1781077380957:0
+[  176676ms] [ERROR] [vite] Failed to reload /src/components/sprint/TaskDetailModal/index.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:904
+[  178968ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/sprint/TaskDetailModal/index.tsx?t=1781077383255:0
+[  178968ms] [ERROR] [vite] Failed to reload /src/components/sprint/TaskDetailModal/index.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:904

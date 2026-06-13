@@ -708,6 +708,29 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               </div>
             )}
 
+            {/* ── ЧАС ДОБИ (тільки для рутин) ── */}
+            {recurring && (
+              <div className={styles.section}>
+                <p className={styles.sectionLabel}>Час доби</p>
+                <div className={styles.timeOfDayRow}>
+                  {(['morning', 'afternoon', 'evening'] as const).map(slot => {
+                    const labels = { morning: '🌅 Ранок', afternoon: '☀️ День', evening: '🌙 Вечір' }
+                    const active = task.timeOfDay === slot
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={`${styles.timeOfDayBtn} ${active ? styles.timeOfDayBtnActive : ''}`}
+                        onClick={() => updateTask(task.id, { timeOfDay: active ? null : slot })}
+                      >
+                        {labels[slot]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* ── ЗВИЧКА: статистика + heat map ── */}
             {recurring && (() => {
               const streak   = calcStreak(task)

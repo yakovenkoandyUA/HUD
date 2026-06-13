@@ -1,0 +1,8 @@
+{
+  "name": "HUD",
+  "scripts": {
+    "dev": "npm run dev --prefix backend & npm run dev --prefix client",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:client": "npm run dev --prefix client"
+  }
+}

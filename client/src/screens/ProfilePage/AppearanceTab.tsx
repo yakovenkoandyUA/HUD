@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useUiStore } from '../../store/uiStore'
 import { usePushSubscription } from '../../hooks/usePushSubscription'
+import { useProfileStore } from '../../store/profileStore'
 import type { Theme } from '../../store/uiStore'
 import styles from './ProfilePage.module.css'
 
@@ -31,8 +32,11 @@ const PALETTES: ThemePalette[] = [
 const AppearanceTab: React.FC = () => {
   const { theme, setTheme } = useUiStore()
   const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushSubscription()
+  const { activeProfile, updateProfile } = useProfileStore()
   const [pushLoading, setPushLoading] = useState(false)
   const [permissionDenied, setPermissionDenied] = useState(false)
+  const [city, setCity] = useState(activeProfile?.city ?? '')
+  const cityDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -44,6 +48,18 @@ const AppearanceTab: React.FC = () => {
     check()
     return () => { cancelled = true }
   }, [isSupported])
+
+  const handleCityChange = (value: string) => {
+    setCity(value)
+    if (cityDebounceRef.current) clearTimeout(cityDebounceRef.current)
+    cityDebounceRef.current = setTimeout(() => {
+      updateProfile({ city: value.trim() })
+    }, 800)
+  }
+
+  const handleTimeSlot = (field: 'morningStart' | 'afternoonStart' | 'eveningStart', value: number) => {
+    updateProfile({ [field]: value })
+  }
 
   const handlePushToggle = async () => {
     if (pushLoading) return
@@ -128,6 +144,48 @@ const AppearanceTab: React.FC = () => {
           )}
         </section>
       )}
+      {/* ── My Day settings ── */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>МІЙ ДЕНЬ</span>
+        </div>
+
+        <div className={styles.fieldRow}>
+          <label className={styles.fieldLabel}>Місто (погода)</label>
+          <input
+            className={styles.fieldInput}
+            value={city}
+            onChange={e => handleCityChange(e.target.value)}
+            placeholder="Київ"
+          />
+        </div>
+
+        <p className={styles.sectionHint} style={{ marginTop: 12 }}>Часові межі секцій</p>
+        {([
+          { key: 'morningStart',   label: 'Ранок починається о' },
+          { key: 'afternoonStart', label: 'День починається о' },
+          { key: 'eveningStart',   label: 'Вечір починається о' },
+        ] as const).map(({ key, label }) => (
+          <div key={key} className={styles.slotRow}>
+            <span className={styles.slotLabel}>{label}</span>
+            <div className={styles.slotStepper}>
+              <button
+                type="button"
+                className={styles.stepperBtn}
+                onClick={() => handleTimeSlot(key, Math.max(0, (activeProfile?.[key] ?? 6) - 1))}
+              >−</button>
+              <span className={styles.stepperVal}>
+                {String(activeProfile?.[key] ?? 0).padStart(2, '0')}:00
+              </span>
+              <button
+                type="button"
+                className={styles.stepperBtn}
+                onClick={() => handleTimeSlot(key, Math.min(23, (activeProfile?.[key] ?? 6) + 1))}
+              >+</button>
+            </div>
+          </div>
+        ))}
+      </section>
     </div>
   )
 }

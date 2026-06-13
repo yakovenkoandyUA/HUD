@@ -18,6 +18,7 @@ import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils
 import { usePullToRefresh } from '../../hooks/usePullToRefresh'
 import { calcDailyBudget } from './helpers'
 import type { ExpenseCategory } from '../../types'
+import DayOverlay from '../../components/dashboard/DayOverlay'
 import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
@@ -28,6 +29,7 @@ const Dashboard: React.FC = () => {
   const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
 
+  const [showDay, setShowDay]         = useState(false)
   const [showExpense, setShowExpense] = useState(false)
   const [fabOpen, setFabOpen]         = useState(false)
   const [questTitle, setQuestTitle]   = useState('')
@@ -120,6 +122,17 @@ const Dashboard: React.FC = () => {
       <AppHeader />
       <div ref={contentRef} className={styles.content}>
         <GreetingBlock />
+
+        <button
+          type="button"
+          className={styles.dayBtn}
+          onClick={() => setShowDay(true)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+          МІЙ ДЕНЬ
+        </button>
 
 {raceThisWeek ? (
           <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
@@ -219,6 +232,8 @@ const Dashboard: React.FC = () => {
           </svg>
         </button>
       </div>
+
+      {showDay && <DayOverlay onClose={() => setShowDay(false)} />}
 
       <Modal isOpen={showExpense} onClose={() => setShowExpense(false)} title="Додати витрату" draggable>
         <ExpenseForm onExpense={handleExpense} />

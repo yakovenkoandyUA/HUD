@@ -1,0 +1,106 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 10:22
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - button "МОЄ" [ref=e131] [cursor=pointer]
+          - button "СІМ'Я" [ref=e21] [cursor=pointer]
+          - button "СПІЛЬНОТА 4" [active] [ref=e132] [cursor=pointer]:
+            - text: СПІЛЬНОТА
+            - generic [ref=e133]: "4"
+        - button "Збережені" [ref=e23] [cursor=pointer]:
+          - img [ref=e24]
+      - generic [ref=e109]:
+        - button "Всі рецепти 4 рецепти" [ref=e134] [cursor=pointer]:
+          - paragraph [ref=e113]: Всі рецепти
+          - paragraph [ref=e114]: 4 рецепти
+        - button "Гарніри Гарніри 2 рецепти" [ref=e136] [cursor=pointer]:
+          - img "Гарніри" [ref=e138]
+          - paragraph [ref=e139]: Гарніри
+          - paragraph [ref=e140]: 2 рецепти
+        - button "Супи Супи 1 рецепт" [ref=e115] [cursor=pointer]:
+          - img "Супи" [ref=e117]
+          - paragraph [ref=e118]: Супи
+          - paragraph [ref=e119]: 1 рецепт
+        - button "Основні страви Основні страви 1 рецепт" [ref=e141] [cursor=pointer]:
+          - img "Основні страви" [ref=e143]
+          - paragraph [ref=e144]: Основні страви
+          - paragraph [ref=e145]: 1 рецепт
+      - generic [ref=e146]:
+        - button "для вечері" [ref=e147] [cursor=pointer]
+        - button "для обіду" [ref=e148] [cursor=pointer]
+        - button "швидко" [ref=e149] [cursor=pointer]
+      - paragraph [ref=e120]: СПІЛЬНОТА
+      - generic [ref=e121]:
+        - button "борщ борщ medium Додати до wishlist" [ref=e122] [cursor=pointer]:
+          - img "борщ" [ref=e123]
+          - generic [ref=e124]:
+            - heading "борщ" [level=3] [ref=e125]
+            - generic "medium" [ref=e127]
+          - button "Додати до wishlist" [ref=e128]:
+            - img [ref=e129]
+        - button "К Картопляний гарнір з укропом ⏱ 25 хв easy Додати до wishlist В" [ref=e150] [cursor=pointer]:
+          - generic [ref=e152]: К
+          - generic [ref=e153]:
+            - heading "Картопляний гарнір з укропом" [level=3] [ref=e154]
+            - generic [ref=e155]:
+              - generic [ref=e156]: ⏱ 25 хв
+              - generic "easy" [ref=e157]
+          - button "Додати до wishlist" [ref=e158]:
+            - img [ref=e159]
+          - generic "Вєрамон" [ref=e161]:
+            - generic [ref=e162]: В
+        - button "Курочка теріякі Курочка теріякі ⏱ 15 хв easy Додати до wishlist Коська" [ref=e163] [cursor=pointer]:
+          - img "Курочка теріякі" [ref=e164]
+          - generic [ref=e165]:
+            - heading "Курочка теріякі" [level=3] [ref=e166]
+            - generic [ref=e167]:
+              - generic [ref=e168]: ⏱ 15 хв
+              - generic "easy" [ref=e169]
+          - button "Додати до wishlist" [ref=e170]:
+            - img [ref=e171]
+          - generic "Коська" [ref=e173]:
+            - img "Коська" [ref=e174]
+        - button "Картопля з грибами Картопля з грибами ⏱ 30 хв easy Додати до wishlist Коська" [ref=e175] [cursor=pointer]:
+          - img "Картопля з грибами" [ref=e176]
+          - generic [ref=e177]:
+            - heading "Картопля з грибами" [level=3] [ref=e178]
+            - generic [ref=e179]:
+              - generic [ref=e180]: ⏱ 30 хв
+              - generic "easy" [ref=e181]
+          - button "Додати до wishlist" [ref=e182]:
+            - img [ref=e183]
+          - generic "Коська" [ref=e185]:
+            - img "Коська" [ref=e186]
+    - generic [ref=e28]:
+      - button "Згенерувати рецепт" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+      - button "Додати рецепт" [ref=e33] [cursor=pointer]:
+        - img [ref=e34]
+  - navigation [ref=e36]:
+    - link [ref=e37] [cursor=pointer]:
+      - /url: /
+      - img [ref=e38]
+    - link [ref=e40] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e41]
+    - link [ref=e44] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e45]
+    - link [ref=e49] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e50]
+    - link [ref=e75] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e76]
+    - link [ref=e88] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e89]
+    - link [ref=e91] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e92]

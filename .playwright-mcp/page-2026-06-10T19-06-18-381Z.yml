@@ -1,0 +1,109 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 22:06
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: Баланс
+        - generic [ref=e20]: 0 ₴
+        - generic [ref=e21]: 🔥 1 день в рамках бюджету
+        - generic [ref=e24]: 0%
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - text: "Витрачено:"
+            - generic [ref=e27]: 0 ₴
+          - generic [ref=e28]:
+            - text: 30 днів ·
+            - generic [ref=e29]: 0 ₴/день
+        - generic [ref=e30]:
+          - text: За нормою не вистачить
+          - generic [ref=e31]: ~0 ₴
+      - generic [ref=e33]:
+        - generic [ref=e34]: Цілі накопичення
+        - button "Нова ціль" [ref=e35] [cursor=pointer]:
+          - img [ref=e36]
+          - text: Нова ціль
+      - generic [ref=e51]: Регулярні платежі
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - generic [ref=e67]: Сьогодні
+          - generic [ref=e68]: 0 ₴
+          - generic [ref=e69]: +0 ₴ від бюджету
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - generic [ref=e73]: Поповнення
+            - generic [ref=e74]: 0 ₴
+          - generic [ref=e75]:
+            - generic [ref=e76]: Витрати
+            - generic [ref=e77]: 0 ₴
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - generic [ref=e80]: Днів залишилось
+            - generic [ref=e81]: "30"
+          - generic [ref=e82]:
+            - generic [ref=e83]: Середнє/день
+            - generic [ref=e84]: 0 ₴
+      - generic [ref=e85]:
+        - button "Витрата" [ref=e86] [cursor=pointer]:
+          - img [ref=e87]
+          - text: Витрата
+        - button "Поповнення" [ref=e89] [cursor=pointer]:
+          - img [ref=e90]
+          - text: Поповнення
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94]: Витрати по категоріях
+          - generic [ref=e95]:
+            - button "Місяць" [ref=e96] [cursor=pointer]
+            - button "Тиждень" [ref=e97] [cursor=pointer]
+        - paragraph [ref=e98]: Витрат за цей період немає
+      - generic [ref=e99]:
+        - button "МІСЯЧНА АНАЛІТИКА" [ref=e100] [cursor=pointer]:
+          - generic [ref=e101]: МІСЯЧНА АНАЛІТИКА
+          - img [ref=e102]
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - button [ref=e106] [cursor=pointer]:
+              - img [ref=e107]
+            - generic [ref=e109]:
+              - text: Червень 2026
+              - generic [ref=e110]: поточний
+            - button [disabled] [ref=e111]:
+              - img [ref=e112]
+          - paragraph [ref=e114]: Немає витрат за цей місяць
+      - generic [ref=e116]:
+        - generic [ref=e117]:
+          - generic [ref=e118]: Останні транзакції
+          - generic [ref=e119]:
+            - button "Всі" [ref=e121] [cursor=pointer]:
+              - text: Всі
+              - img [ref=e123]
+            - button "Категорія" [ref=e126] [cursor=pointer]:
+              - text: Категорія
+              - img [ref=e128]
+        - paragraph [ref=e131]: Транзакцій немає
+  - navigation [ref=e132]:
+    - link [ref=e133] [cursor=pointer]:
+      - /url: /
+      - img [ref=e134]
+    - link [ref=e136] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e137]
+    - link [ref=e140] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e141]
+    - link [ref=e145] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e146]
+    - link [ref=e171] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e172]
+    - link [ref=e184] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e185]
+    - link [ref=e187] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e188]

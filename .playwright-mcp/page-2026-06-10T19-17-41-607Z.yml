@@ -1,0 +1,160 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 22:17
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: Баланс
+        - generic [ref=e20]: 0 ₴
+        - generic [ref=e21]: 🔥 1 день в рамках бюджету
+        - generic [ref=e24]: 0%
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - text: "Витрачено:"
+            - generic [ref=e27]: 0 ₴
+          - generic [ref=e28]:
+            - text: 30 днів ·
+            - generic [ref=e29]: 0 ₴/день
+        - generic [ref=e30]:
+          - text: За нормою не вистачить
+          - generic [ref=e31]: ~0 ₴
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]: Цілі накопичення
+          - button "Нова ціль" [ref=e35] [cursor=pointer]:
+            - img [ref=e36]
+            - text: Нова ціль
+        - generic [ref=e38]:
+          - button "Одеса 0 / 10 000 ₴ Поповнити" [ref=e40] [cursor=pointer]:
+            - img [ref=e41]:
+              - generic [ref=e44]: 0%
+            - generic [ref=e46]:
+              - generic [ref=e47]: Одеса
+              - generic [ref=e48]: 0 / 10 000 ₴
+            - button "Поповнити" [ref=e50]:
+              - img [ref=e51]
+          - button "страпон 0 / 4 820 ₴ Поповнити" [ref=e54] [cursor=pointer]:
+            - img [ref=e55]:
+              - generic [ref=e58]: 0%
+            - generic [ref=e60]:
+              - generic [ref=e61]: страпон
+              - generic [ref=e62]: 0 / 4 820 ₴
+            - button "Поповнити" [ref=e64]:
+              - img [ref=e65]
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e70]: Регулярні платежі
+            - generic [ref=e71]: 1 982 ₴/міс
+          - button "Додати" [ref=e72] [cursor=pointer]:
+            - img [ref=e73]
+            - text: Додати
+        - generic [ref=e75]:
+          - button "Spotify Spotify 11-го 189 ₴" [ref=e76] [cursor=pointer]:
+            - img "Spotify" [ref=e77]
+            - generic [ref=e78]: Spotify
+            - generic [ref=e79]: 11-го
+            - generic [ref=e80]: 189 ₴
+          - button "Playstation Playstation 11-го 209 ₴" [ref=e81] [cursor=pointer]:
+            - img "Playstation" [ref=e82]
+            - generic [ref=e83]: Playstation
+            - generic [ref=e84]: 11-го
+            - generic [ref=e85]: 209 ₴
+          - button "LifeCell LifeCell 17-го 400 ₴" [ref=e86] [cursor=pointer]:
+            - img "LifeCell" [ref=e87]
+            - generic [ref=e88]: LifeCell
+            - generic [ref=e89]: 17-го
+            - generic [ref=e90]: 400 ₴
+          - button "💳 Lanet 18-го 399 ₴" [ref=e91] [cursor=pointer]:
+            - generic [ref=e92]: 💳
+            - generic [ref=e93]: Lanet
+            - generic [ref=e94]: 18-го
+            - generic [ref=e95]: 399 ₴
+        - button "Ще 2 платежі" [ref=e96] [cursor=pointer]:
+          - text: Ще 2 платежі
+          - generic [ref=e97]: 
+      - generic [ref=e98]:
+        - generic [ref=e99]:
+          - generic [ref=e100]: Сьогодні
+          - generic [ref=e101]: 0 ₴
+          - generic [ref=e102]: +0 ₴ від бюджету
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - generic [ref=e106]: Поповнення
+            - generic [ref=e107]: 0 ₴
+          - generic [ref=e108]:
+            - generic [ref=e109]: Витрати
+            - generic [ref=e110]: 0 ₴
+        - generic [ref=e111]:
+          - generic [ref=e112]:
+            - generic [ref=e113]: Днів залишилось
+            - generic [ref=e114]: "30"
+          - generic [ref=e115]:
+            - generic [ref=e116]: Середнє/день
+            - generic [ref=e117]: 0 ₴
+      - generic [ref=e118]:
+        - button "Витрата" [ref=e119] [cursor=pointer]:
+          - img [ref=e120]
+          - text: Витрата
+        - button "Поповнення" [ref=e122] [cursor=pointer]:
+          - img [ref=e123]
+          - text: Поповнення
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - generic [ref=e127]: Витрати по категоріях
+          - generic [ref=e128]:
+            - button "Місяць" [ref=e129] [cursor=pointer]
+            - button "Тиждень" [ref=e130] [cursor=pointer]
+        - paragraph [ref=e131]: Витрат за цей період немає
+      - generic [ref=e132]:
+        - button "МІСЯЧНА АНАЛІТИКА" [ref=e133] [cursor=pointer]:
+          - generic [ref=e134]:
+            - img [ref=e136]
+            - generic [ref=e139]: МІСЯЧНА АНАЛІТИКА
+          - img [ref=e140]
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - button [ref=e144] [cursor=pointer]:
+              - img [ref=e145]
+            - generic [ref=e147]:
+              - text: Червень 2026
+              - generic [ref=e148]: поточний
+            - button [disabled] [ref=e149]:
+              - img [ref=e150]
+          - paragraph [ref=e152]: Немає витрат за цей місяць
+      - generic [ref=e154]:
+        - generic [ref=e155]:
+          - generic [ref=e156]: Останні транзакції
+          - generic [ref=e157]:
+            - button "Всі" [ref=e159] [cursor=pointer]:
+              - text: Всі
+              - img [ref=e161]
+            - button "Категорія" [ref=e164] [cursor=pointer]:
+              - text: Категорія
+              - img [ref=e166]
+        - paragraph [ref=e169]: Транзакцій немає
+  - navigation [ref=e170]:
+    - link [ref=e171] [cursor=pointer]:
+      - /url: /
+      - img [ref=e172]
+    - link [ref=e174] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e175]
+    - link [ref=e178] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e179]
+    - link [ref=e183] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e184]
+    - link [ref=e209] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e210]
+    - link [ref=e222] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e223]
+    - link [ref=e225] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e226]

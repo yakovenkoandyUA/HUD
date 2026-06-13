@@ -1,0 +1,60 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 22:59
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - 'button "🇪🇸 SPANISH Circuit de Barcelona 2 : 18 : 00 : 21" [ref=e18] [cursor=pointer]':
+        - img
+        - generic [ref=e19]:
+          - generic [ref=e20]: 🇪🇸
+          - generic [ref=e21]: SPANISH
+        - generic [ref=e22]: Circuit de Barcelona
+        - generic [ref=e23]:
+          - generic [ref=e25]: "2"
+          - generic [ref=e26]: ":"
+          - generic [ref=e28]: "18"
+          - generic [ref=e29]: ":"
+          - generic [ref=e31]: "00"
+          - generic [ref=e32]: ":"
+          - generic [ref=e34]: "21"
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - button "Квести" [ref=e37] [cursor=pointer]:
+            - generic [ref=e38]: Квести
+            - img [ref=e40]
+          - paragraph [ref=e43]: Квестів немає
+        - generic [ref=e45]:
+          - button "Покупки" [ref=e46] [cursor=pointer]:
+            - generic [ref=e47]: Покупки
+            - img [ref=e49]
+          - paragraph [ref=e52]: Список порожній
+      - generic [ref=e55]:
+        - generic [ref=e56]: 334 ₴
+        - generic [ref=e57]: "Сьогодні: 428 / 11 ₴"
+    - button "Меню дій" [ref=e61] [cursor=pointer]:
+      - img [ref=e62]
+  - navigation [ref=e64]:
+    - link [ref=e65] [cursor=pointer]:
+      - /url: /
+      - img [ref=e66]
+    - link [ref=e68] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e69]
+    - link [ref=e72] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e73]
+    - link [ref=e77] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e78]
+    - link [ref=e103] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e104]
+    - link [ref=e116] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e117]
+    - link [ref=e119] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e120]

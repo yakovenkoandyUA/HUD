@@ -1,0 +1,15 @@
+[     419ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=980dc884:14336
+[  666622ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:968
+[  667379ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=980dc884:14336
+[ 6329661ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:968
+[25654356ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=980dc884:14336
+[27344265ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/finance/RecurringPayments/RecurringPayments.module.css?t=1781205593117:0
+[27344265ms] [ERROR] [vite] Failed to reload /src/components/finance/RecurringPayments/index.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:904
+[27345734ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/finance/RecurringPayments/RecurringPayments.module.css?t=1781205594606:0
+[27345734ms] [ERROR] [vite] Failed to reload /src/components/finance/RecurringPayments/index.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:904
+[27386114ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/finance/TransactionList/TransactionList.module.css?t=1781205634993:0
+[27386114ms] [ERROR] [vite] Failed to reload /src/components/finance/TransactionList/index.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:904
+[27387824ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/finance/TransactionList/TransactionList.module.css?t=1781205636689:0
+[27387825ms] [ERROR] [vite] Failed to reload /src/components/finance/TransactionList/index.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:904
+[27520428ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/finance/TransactionList/TransactionList.module.css?t=1781205769290:0
+[27520429ms] [ERROR] [vite] Failed to reload /src/components/finance/TransactionList/index.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:904

@@ -1,0 +1,78 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic:
+      - generic: ᛃ
+      - generic: ᛏ
+      - generic: ᛗ
+      - generic: ᛖ
+      - generic: ᛏ
+      - generic: ᚠ
+      - generic: ᚠ
+      - generic: ᚱ
+      - generic: ᚠ
+      - generic: ᛊ
+      - generic: ᛉ
+      - generic: ᛁ
+      - generic: ᚢ
+      - generic: ᛖ
+      - generic: ᚨ
+      - generic: ᚺ
+      - generic: ᛞ
+      - generic: ᚲ
+      - generic: ᚱ
+      - generic: ᚹ
+      - generic: ᚹ
+      - generic: ᚾ
+      - generic: ᚲ
+      - generic: ᛃ
+      - generic: ᚹ
+      - generic: ᛚ
+      - generic: ᛒ
+      - generic: ᚹ
+      - generic: ᚷ
+      - generic: ᚢ
+      - generic: ᛊ
+      - generic: ᚲ
+      - generic: ᛒ
+      - generic: ᛇ
+      - generic: ᚾ
+    - generic [ref=e5]:
+      - generic [ref=e7]: 404 404 404
+      - generic [ref=e8]:
+        - generic [ref=e9]: ᛟ
+        - generic [ref=e10]: ᚷ
+        - generic [ref=e11]: ᛞ
+        - generic [ref=e12]: ᚱ
+        - generic [ref=e13]: ᛟ
+      - paragraph [ref=e14]: NINE REALMS
+      - paragraph [ref=e15]: Ця сторінка не існує в жодному з дев'яти світів.
+      - paragraph [ref=e16]: Навіть Один не зміг би її знайти.
+      - button "ПОВЕРНУТИСЬ ДО КРИНИЦІ" [ref=e17] [cursor=pointer]:
+        - img [ref=e18]
+        - text: ПОВЕРНУТИСЬ ДО КРИНИЦІ
+    - generic [ref=e20]: ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ
+  - navigation [ref=e21]:
+    - link [ref=e22] [cursor=pointer]:
+      - /url: /
+      - img [ref=e23]
+    - link [ref=e25] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e26]
+    - link [ref=e29] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e30]
+    - link [ref=e34] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e35]
+    - link [ref=e60] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e61]
+    - link [ref=e73] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e74]
+    - link [ref=e76] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e77]
+  - generic [ref=e83]:
+    - img [ref=e84]
+    - generic [ref=e86]: MIMIR

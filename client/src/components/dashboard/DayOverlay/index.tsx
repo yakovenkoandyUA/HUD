@@ -1,0 +1,268 @@
+import React, { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import MoodIcon from './MoodIcon'
+import { useMoodStore } from '../../../store/moodStore'
+import { useSprintStore } from '../../../store/sprintStore'
+import { useProfileStore } from '../../../store/profileStore'
+import { authFetch } from '../../../services/api'
+import { isRecurring } from '../../../utils/sprint'
+import type { UnifiedTodo } from '../../../types'
+import styles from './DayOverlay.module.css'
+
+const MOOD_LABELS: Record<number, string> = {
+  1: 'Важко',
+  2: 'Так собі',
+  3: 'Нормально',
+  4: 'Добре',
+  5: 'Чудово',
+}
+
+function toIso(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function getCurrentSlot(profile: { morningStart?: number; afternoonStart?: number; eveningStart?: number } | null): 'morning' | 'afternoon' | 'evening' {
+  const h = new Date().getHours()
+  const morning   = profile?.morningStart   ?? 6
+  const afternoon = profile?.afternoonStart ?? 12
+  const evening   = profile?.eveningStart   ?? 18
+  if (h >= evening)   return 'evening'
+  if (h >= afternoon) return 'afternoon'
+  return 'morning'
+}
+
+interface WeatherData {
+  temp: string
+  desc: string
+  icon: string
+}
+
+/**
+ * DayOverlay
+ * ----------
+ * Full-screen overlay "Мій день" — 3 секції рутин (Ранок/День/Вечір),
+ * погода, трекер настрою з SVG іконками.
+ *
+ * Props:
+ * @prop {() => void} onClose — закрити overlay
+ */
+interface DayOverlayProps {
+  onClose: () => void
+}
+
+const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
+  const navigate    = useNavigate()
+  const { logs, fetchLogs, setMood, todayScore } = useMoodStore()
+  const { items, fetchItems } = useSprintStore()
+  const { activeProfile } = useProfileStore()
+
+  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [weatherErr, setWeatherErr] = useState(false)
+
+  const today = toIso(new Date())
+  const currentSlot = getCurrentSlot(activeProfile)
+  const currentMood = todayScore()
+
+  // Load mood for last 30 days + sprint items
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const from = toIso(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+      await fetchLogs(from, today)
+      if (!cancelled) fetchItems()
+    }
+    load()
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Weather via wttr.in
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const city = activeProfile?.city?.trim()
+      let url = ''
+      if (city) {
+        url = `https://wttr.in/${encodeURIComponent(city)}?format=j1`
+      } else if (navigator.geolocation) {
+        await new Promise<void>(resolve => {
+          navigator.geolocation.getCurrentPosition(
+            pos => { url = `https://wttr.in/${pos.coords.latitude},${pos.coords.longitude}?format=j1`; resolve() },
+            () => resolve(),
+            { timeout: 5000 }
+          )
+        })
+      }
+      if (!url || cancelled) return
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(6000) })
+        if (!res.ok || cancelled) return
+        const data = await res.json() as {
+          current_condition: Array<{ temp_C: string; weatherDesc: Array<{ value: string }>; weatherIconUrl?: unknown }>
+        }
+        const cc = data.current_condition?.[0]
+        if (cc && !cancelled) {
+          setWeather({
+            temp: cc.temp_C,
+            desc: cc.weatherDesc?.[0]?.value ?? '',
+            icon: getWeatherEmoji(cc.weatherDesc?.[0]?.value ?? ''),
+          })
+        }
+      } catch {
+        if (!cancelled) setWeatherErr(true)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [activeProfile?.city]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function getWeatherEmoji(desc: string): string {
+    const d = desc.toLowerCase()
+    if (d.includes('thunder')) return '⛈'
+    if (d.includes('snow'))    return '❄️'
+    if (d.includes('rain') || d.includes('drizzle')) return '🌧'
+    if (d.includes('cloud') || d.includes('overcast')) return '☁️'
+    if (d.includes('fog') || d.includes('mist'))       return '🌫'
+    if (d.includes('sunny') || d.includes('clear'))    return '☀️'
+    return '🌤'
+  }
+
+  // Routines split by timeOfDay
+  const routines = items.filter(i => isRecurring(i))
+  const todayStr = toIso(new Date())
+  const isDoneToday = (item: UnifiedTodo) => item.completionLog?.includes(todayStr) ?? false
+
+  const slots = {
+    morning:   routines.filter(r => r.timeOfDay === 'morning'),
+    afternoon: routines.filter(r => r.timeOfDay === 'afternoon'),
+    evening:   routines.filter(r => r.timeOfDay === 'evening'),
+    unset:     routines.filter(r => !r.timeOfDay),
+  }
+
+  const slotConfig = [
+    { key: 'morning'   as const, label: 'Ранок',  emoji: '🌅' },
+    { key: 'afternoon' as const, label: 'День',   emoji: '☀️' },
+    { key: 'evening'   as const, label: 'Вечір',  emoji: '🌙' },
+  ]
+
+  const handleMoodClick = useCallback((score: 1 | 2 | 3 | 4 | 5) => {
+    if (currentMood === score) return
+    setMood(today, score)
+  }, [currentMood, today, setMood])
+
+  const handleRoutineClick = (item: UnifiedTodo) => {
+    navigate('/sprint')
+    onClose()
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+        {/* ── Header ── */}
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <span className={styles.title}>МІЙ ДЕНЬ</span>
+            <span className={styles.date}>{new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          </div>
+          {weather && (
+            <div className={styles.weather}>
+              <span className={styles.weatherIcon}>{weather.icon}</span>
+              <span className={styles.weatherTemp}>{weather.temp}°</span>
+            </div>
+          )}
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M2 2l14 14M16 2L2 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.body}>
+          {/* ── Mood tracker ── */}
+          <section className={styles.section}>
+            <p className={styles.sectionLabel}>НАСТРІЙ</p>
+            <div className={styles.moodRow}>
+              {([1, 2, 3, 4, 5] as const).map(score => (
+                <button
+                  key={score}
+                  type="button"
+                  className={`${styles.moodBtn} ${currentMood === score ? styles.moodBtnActive : ''}`}
+                  onClick={() => handleMoodClick(score)}
+                  title={MOOD_LABELS[score]}
+                >
+                  <MoodIcon score={score} active={currentMood === score} size={38} />
+                  <span className={styles.moodLabel}>{MOOD_LABELS[score]}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* ── Routines by slot ── */}
+          {slotConfig.map(({ key, label, emoji }) => {
+            const list = slots[key]
+            const isCurrent = key === currentSlot
+            if (list.length === 0) return null
+            return (
+              <section key={key} className={`${styles.section} ${isCurrent ? styles.sectionCurrent : ''}`}>
+                <p className={styles.sectionLabel}>
+                  {emoji} {label.toUpperCase()}
+                  {isCurrent && <span className={styles.nowBadge}>зараз</span>}
+                </p>
+                <div className={styles.routineList}>
+                  {list.map(item => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`${styles.routineRow} ${isDoneToday(item) ? styles.routineDone : ''}`}
+                      onClick={() => handleRoutineClick(item)}
+                    >
+                      <span className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}>
+                        {isDoneToday(item) ? (
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        ) : null}
+                      </span>
+                      <span className={styles.routineTitle}>{item.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )
+          })}
+
+          {/* Unset routines */}
+          {slots.unset.length > 0 && (
+            <section className={styles.section}>
+              <p className={styles.sectionLabel}>РЕШТА РУТИН</p>
+              <div className={styles.routineList}>
+                {slots.unset.map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`${styles.routineRow} ${isDoneToday(item) ? styles.routineDone : ''}`}
+                    onClick={() => handleRoutineClick(item)}
+                  >
+                    <span className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}>
+                      {isDoneToday(item) && (
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </span>
+                    <span className={styles.routineTitle}>{item.title}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {routines.length === 0 && (
+            <p className={styles.emptyHint}>Немає рутин. Додай в Sprint → задача з повторенням.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default DayOverlay

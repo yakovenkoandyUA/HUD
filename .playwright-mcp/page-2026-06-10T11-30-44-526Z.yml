@@ -1,0 +1,80 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e7]: 14:30
+      - img [ref=e9]
+      - button "Профіль і налаштування" [ref=e15] [cursor=pointer]:
+        - img "Котька" [ref=e16]
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic [ref=e20]: Тиждень
+          - generic [ref=e21]:
+            - generic [ref=e22]: 8 черв. — 14 черв.
+            - button "Розгорнути тиждень" [ref=e23] [cursor=pointer]:
+              - img [ref=e24]
+        - generic [ref=e26]:
+          - generic [ref=e27] [cursor=pointer]:
+            - generic [ref=e28]: Пн
+            - generic [ref=e29]: "8"
+          - generic [ref=e30] [cursor=pointer]:
+            - generic [ref=e31]: Вт
+            - generic [ref=e32]: "9"
+          - generic [ref=e33] [cursor=pointer]:
+            - generic [ref=e34]: Ср
+            - generic [ref=e35]: "10"
+          - generic [ref=e36] [cursor=pointer]:
+            - generic [ref=e37]: Чт
+            - generic [ref=e38]: "11"
+          - generic [ref=e39] [cursor=pointer]:
+            - generic [ref=e40]: Пт
+            - generic [ref=e41]: "12"
+          - generic [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]: Сб
+            - generic [ref=e44]: "13"
+          - generic [ref=e45] [cursor=pointer]:
+            - generic [ref=e46]: Нд
+            - generic [ref=e47]: "14"
+      - generic [ref=e48]: КВЕСТИ
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - button "ВСІ" [ref=e51] [cursor=pointer]
+          - generic: ·
+          - button "КВЕСТИ" [ref=e52] [cursor=pointer]
+          - generic: ·
+          - button "ПОКУПКИ" [ref=e53] [cursor=pointer]
+        - generic [ref=e54]:
+          - button "АКТИВНІ" [ref=e55] [cursor=pointer]
+          - generic: ·
+          - button "ЗАВЕРШЕНІ" [ref=e56] [cursor=pointer]
+      - paragraph [ref=e58]: Завантаження...
+      - generic [ref=e59]:
+        - button "Кошик" [ref=e60] [cursor=pointer]:
+          - generic [ref=e61]: Кошик
+          - img [ref=e62]
+        - generic:
+          - list
+    - button "Додати квест" [ref=e64] [cursor=pointer]:
+      - img [ref=e65]
+  - navigation [ref=e66]:
+    - link [ref=e67] [cursor=pointer]:
+      - /url: /
+      - img [ref=e68]
+    - link [ref=e70] [cursor=pointer]:
+      - /url: /finance
+      - img [ref=e71]
+    - link [ref=e74] [cursor=pointer]:
+      - /url: /f1
+      - img [ref=e75]
+    - link [ref=e79] [cursor=pointer]:
+      - /url: /sprint
+      - img [ref=e80]
+    - link [ref=e105] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e106]
+    - link [ref=e118] [cursor=pointer]:
+      - /url: /watchlist
+      - img [ref=e119]
+    - link [ref=e121] [cursor=pointer]:
+      - /url: /memories
+      - img [ref=e122]
