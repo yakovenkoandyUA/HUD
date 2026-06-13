@@ -79,20 +79,34 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - Елементи з рецепту додаються через RecipeDetail → "Додати до списку"
 
 ## 7. Recipes (`/recipes`)
-- MealBanner — блюдо тижня з TheMealDB (кеш по тижню в store)
-- MealDetail — повний рецепт у модалці
-- CategoriesSlider — горизонтальний фільтр по категоріях
-- Instagram-grid рецептів (RecipeCard), фільтр по категорії
-- RecipeForm з кастомними пікерами (chip-grid категорій, 3-кнопки складності)
-- Тап на картку → RecipeDetail
+- CategoriesSlider — горизонтальний фільтр по категоріях; категорія ховається на картці при активному фільтрі
+- Tags фільтр — pill-chips під слайдером
+- Instagram 2-column grid рецептів (RecipeCard: фото 4/3 + info блок)
+- RecipeCard: category pill, difficulty pill (color-mix: green/gold/red), owner badge, cookTime
+- «Що приготувати?» — dice кнопка в scopeActions, рандомний navigate серед видимих
+- Scope таби: МОЄ / СІМ'Я / СПІЛЬНОТА + wishlist toggle
+- RecipeForm з кастомними chip-пікерами (категорія, складність)
+- FAB-група: 📅 Планер / 🔍 Інгредієнти / 🤖 AI-генератор / ➕ Новий рецепт
+- `IngredientSearchSheet` — bottom sheet, multi-chip вибір інгредієнтів, swipe-to-dismiss
+- body::after прибрано для velvet/pixel/cyber тем (`[data-theme][data-page="recipes"] body::after { display:none }`)
 
 ## 8. RecipeDetail (`/recipes/:id`)
-- Hero-фото рецепту (або placeholder)
-- Мета: час готування, порції (stepper +/−), калорії, складність, категорія
+- Hero-фото (або noHero header з кнопками)
+- Мета: час готування, порції (stepper +/−), калорії, складність
+- Кнопки дій: Wishlist heart / Покупки (→ sprintStore shopping) / «Приготував» (flame)
+- «Приготував» → `logCook(id)` — POST /api/recipes/:id/cook → CookLog MongoDB; оптимістичне оновлення `cookStats`; показує "Готував N×" + дату останнього разу
 - Інгредієнти з перерахунком під кількість порцій
-- Кнопка "Додати до списку покупок" → `shoppingListStore.addFromRecipe(recipe, servings)`
-- Wishlist heart (toggle)
-- Edit / Delete (тільки свої рецепти або admin)
+- Edit / Delete (тільки свої рецепти)
+
+## 8a. MealPlanner (`/recipes/planner`)
+- Тижневий вид Пн–Нд поточного тижня, сьогодні підсвічено акцентом
+- Тап «Додати» → RecipePicker (bottom sheet з пошуком + swipe-to-dismiss)
+- Рецепти по днях зберігаються на бекенді: `GET/PUT /api/meal-plan` (MealPlan модель: userId + plan Map<dayKey, recipeId[]>)
+- `useMealPlanStore` — без localStorage persist, authFetch + optimistic local update
+- `fetchPlan()` при mount разом з `fetchRecipes()`
+- Кнопка «Список покупок (N страв)» → `addFromRecipe` для кожного рецепту → navigate('/shopping')
+- Кнопка «Очистити» — очищає всі дні поточного тижня
+- BottomNav прихований на `/recipes/planner`
 
 ## 9. Watchlist (`/watchlist`)
 - Категорії: movie / series / anime / book

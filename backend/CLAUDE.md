@@ -44,7 +44,10 @@
 | `/api/watchlist/:id` | PATCH, DELETE |
 | `/api/watchlist/:id/comments` | GET, POST |
 | `/api/recipes` | GET, POST |
+| `/api/recipes/cook-stats` | GET — `{ [recipeId]: { count, lastCooked } }` (MUST be before /:id route) |
 | `/api/recipes/:id` | PUT, DELETE |
+| `/api/recipes/:id/cook` | POST — створює CookLog запис |
+| `/api/meal-plan` | GET, PUT — `{ plan: { [YYYY-MM-DD]: recipeId[] } }` |
 | `/api/memories` | GET, POST |
 | `/api/memories/:id` | PATCH, DELETE |
 | `/api/memories/:id/photos` | POST |

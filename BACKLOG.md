@@ -88,6 +88,16 @@
   - **Вигляд** — 6 тем (swatches grid) + Web Push toggle
 - ✅ BottomNav адаптується на `/profile` → 4 профільні таби замість nav
 
+### Recipes
+- RecipeCard редизайн: фото 4/3 зверху, solid info блок знизу, category + difficulty pills (color-mix)
+- Owner badge в info блоці (для сімейних рецептів)
+- Категорія ховається на картці якщо активний фільтр по категорії
+- «Що приготувати?» — dice кнопка, рандомний рецепт з видимих
+- «Що є вдома?» — bottom sheet з пошуком по інгредієнтах, swipe-to-dismiss, multi-chip фільтр
+- «Я приготував» — кнопка в RecipeDetail: CookLog модель (MongoDB), logCook/getCookStats API, optimistic update в store, лічильник "Готував N×"
+- Meal Planner (`/recipes/planner`) — тижневий планер Пн–Нд, рецепти по дням, бекенд (MealPlan модель, GET/PUT /api/meal-plan), генерація списку покупок
+- body::after прибрано на `/recipes` для velvet/pixel/cyber тем
+
 ### Глобально
 - Кастомні категорії транзакцій з субкатегоріями
 - Теми: retro / velvet / japan / cyber / noir / pixel (6 штук; `dark`, `heroes`, `castle` видалено/перейменовано)

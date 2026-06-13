@@ -18,8 +18,14 @@ store/
 │                            migrateFromLocalStorage() — одноразова міграція з hud-sprint-v2
 ├── lessonStore.ts         — уроки
 │                            БЕЗ persist (backend-only, /api/lessons)
-├── recipesStore.ts        — рецепти (backend-only) + mealOfWeek
-│                            persist тільки mealOfWeek+mealWeekKey (ключ: hud-recipes)
+├── recipesStore.ts        — рецепти (backend-only) + wishlistIds + cookStats
+│                            persist тільки wishlistIds (ключ: hud-recipes)
+│                            cookStats: Record<recipeId, { count, lastCooked }> — з /api/recipes/cook-stats
+│                            logCook(id) — optimistic update + POST /api/recipes/:id/cook
+├── mealPlanStore.ts       — тижневий планер страв
+│                            БЕЗ persist (backend /api/meal-plan, MealPlan модель)
+│                            fetchPlan() при mount MealPlannerScreen
+│                            addToDay/removeFromDay/clearWeek — optimistic + PUT /api/meal-plan
 ├── shoppingListStore.ts   — список покупок
 │                            БЕЗ persist (backend-only, /api/shopping)
 ├── watchlistStore.ts      — watchlist items
