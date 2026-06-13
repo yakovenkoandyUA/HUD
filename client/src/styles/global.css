@@ -148,10 +148,14 @@
   --font-display: 'Cormorant Garamond', 'Bebas Neue', serif;
 }
 
-/* Castle texture off on pages with their own bg */
+/* Texture/atmosphere effects off on pages with their own bg */
 [data-theme="velvet"][data-page="f1"] body::after,
 [data-theme="velvet"][data-page="memories"] body::after,
-[data-theme="velvet"][data-page="watchlist"] body::after { display: none; }
+[data-theme="velvet"][data-page="watchlist"] body::after,
+[data-theme="velvet"][data-page="recipes"] body::after { display: none; }
+
+[data-theme="pixel"][data-page="recipes"] body::after { display: none; }
+[data-theme="cyber"][data-page="recipes"] body::after { display: none; }
 
 /* ── CYBER 🤖 (Blade Runner / Ghost in the Shell — neon magenta + cyan) ──────── */
 [data-theme="cyber"] {
@@ -315,7 +319,7 @@
     -45deg,
     transparent 0px,
     transparent 3px,
-    rgba(0, 0, 0, 0.016) 3px,
+    rgba(0, 0, 0, 0.30) 3px,
     rgba(0, 0, 0, 0.016) 4px
   );
 }
