@@ -71,12 +71,19 @@ VITE_GOOGLE_CLIENT_ID=1067623625292-c8jdgeea4q3ub1nf0bp0jgg5vf1nmigi.apps.google
 
 ---
 
-## PWA
+## PWA / Offline
 
 `vite-plugin-pwa` + `injectManifest` + custom `src/sw.ts`.
 `vercel.json` — rewrite all → `index.html` (обов'язково для SPA).
 Service Worker підключений до Web Push (VAPID) — підписка, відправка та тригери реалізовані.
 Іконки PWA згенеровані з `mimir-logo.svg` через `scripts/generate-icons.mjs` (sharp).
+
+**Workbox стратегії (sw.ts):**
+- `precacheAndRoute(__WB_MANIFEST)` — CacheFirst для всіх статичних assets (JS/CSS/іконки)
+- `NetworkFirst` для API GET (`hud-production.up.railway.app`) — 8с timeout, кеш 5хв, max 100 записів
+- `NetworkOnly + BackgroundSyncPlugin` для write (POST/PATCH/PUT/DELETE) — черга 24г
+- `CacheFirst` для зображень — 7 днів, max 200 записів
+- Офлайн-індикатор в `AppHeader` — пульсуючий бейдж при `navigator.onLine === false`
 
 ---
 
@@ -95,12 +102,14 @@ Service Worker підключений до Web Push (VAPID) — підписка
 
 ## Наступний спринт
 
-### "Мій день" — `/day`
-- Overlay або окремий роут
-- Секції: Ранок / День / Вечір
-- Рутини на сьогодні, заплановані задачі, погода
-- Трекер настрою (5 позицій)
-- Підсумок дня (push о 21:00)
+### F1 Live Dashboard — `/f1/live`
+- Активний тільки під час гонки (перевірка сесії через OpenF1)
+- Live Standings, Circuit Map з крапками пілотів, Sector Times
+- Backend proxy `/api/f1/live/*`
+
+### Верифікація email
+- Потребує домену mimir.app + DNS верифікація в Resend
+- `sendVerificationEmail` вже реалізована в authController, але закоментована
 
 ---
 

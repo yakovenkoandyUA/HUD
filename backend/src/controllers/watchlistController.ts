@@ -42,7 +42,7 @@ export async function create(req: Request, res: Response): Promise<void> {
 
 export async function update(req: Request, res: Response): Promise<void> {
   const item = await WatchlistItem.findOneAndUpdate(
-    { _id: req.params.id },
+    { _id: req.params.id, userId: req.userId },
     req.body,
     { new: true }
   )
@@ -51,6 +51,7 @@ export async function update(req: Request, res: Response): Promise<void> {
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
-  await WatchlistItem.findOneAndDelete({ _id: req.params.id })
+  const item = await WatchlistItem.findOneAndDelete({ _id: req.params.id, userId: req.userId })
+  if (!item) { res.status(404).json({ error: 'Not found' }); return }
   res.status(204).end()
 }

@@ -26,6 +26,7 @@ function formatTime(d: Date): string {
 const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const [now, setNow] = useState(new Date())
   const [showPicker, setShowPicker] = useState(false)
+  const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
 
   useEffect(() => {
@@ -33,11 +34,20 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
     return () => clearInterval(id)
   }, [])
 
+  useEffect(() => {
+    const on  = () => setOffline(false)
+    const off = () => setOffline(true)
+    window.addEventListener('online',  on)
+    window.addEventListener('offline', off)
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) }
+  }, [])
+
   return (
     <>
       <header className={styles.bar}>
         <div className={styles.left}>
           <span className={styles.clock}>{formatTime(now)}</span>
+          {offline && <span className={styles.offlineBadge}>офлайн</span>}
         </div>
 
         <div className={styles.center}>

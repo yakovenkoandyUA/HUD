@@ -4,7 +4,7 @@
 
 ---
 
-## Статус (2026-06-12) — Що реалізовано
+## Статус (2026-06-13) — Що реалізовано
 
 ### Dashboard
 - GreetingBlock (привітання + дата), HeroCard (баланс + F1 countdown)
@@ -278,35 +278,36 @@
 - ✅ Quicknotes (Notes screen + notesStore + FAB + TasksAccordion секція НОТАТКИ)
 - ✅ Habits: стрік + heatmap + місячний % вбудовано в рутини Sprint (TaskDetailModal + TaskCard flame badge)
 - ✅ Memories: карта планів (Leaflet, Voyager tiles) + експорт спогаду (Canvas API + Web Share)
+- ✅ МІЙ ДЕНЬ — DayOverlay (mood tracker SVG, рутини по слотах, погода wttr.in, swipe-dismiss)
 - ⬜ F1 Live Dashboard
 
 ### Фаза 1 — Фундамент (перед публічним launch)
 
 **Auth:**
 - ✅ Email + password + Google OAuth — реалізовано
-- ✅ JWT 30 днів, PIN-lock
-- ⬜ Верифікація email (Resend: купити домен, верифікувати DNS, відновити sendVerificationEmail)
-- ⬜ Міграція на access 15хв + refresh 30д (зараз JWT 30д без refresh)
+- ✅ JWT access 15хв + refresh 30д (httpOnly cookie, rotation, logout)
+- ✅ PIN-lock
+- ⬜ Верифікація email (Resend: купити домен, верифікувати DNS)
 
 **Multi-tenancy cleanup:**
-- Аудит всіх ендпоінтів — фільтрація по `userId`
-- Видалити хардкод Котька/Коська, `role: 'admin'` → `features` в підписці
+- ✅ Аудит всіх ендпоінтів — Memory і WatchlistItem update/remove тепер фільтруються по userId
+- ⬜ Видалити хардкод Котька/Коська, `role: 'admin'` → `features` в підписці
 - `f1Enabled` залишити як user feature flag
 
 **Інфраструктура:**
-- `helmet.js` на бекенд
-- Rate limiting (`express-rate-limit`) — всі API
-- Zod валідація на всіх POST/PATCH
-- Sentry для error tracking
-- Видалити `console.log` з продакшн (є в `/api/ai/poster-prompt`)
-- CORS whitelist: тільки `hud-murex.vercel.app`
-- MongoDB Atlas M10+ (поточний M0 = 512MB free tier)
+- ✅ `helmet.js` на бекенд
+- ✅ Rate limiting (`express-rate-limit`) — 100 req/15хв загальний, 10 для /auth
+- ✅ Zod валідація на POST/PATCH (auth, sprint, transactions, notes, mood)
+- ✅ Sentry (mimir-client + mimir-backend проекти, DSN вшитий)
+- ✅ Видалено `console.log` з routes/ai.ts і routes/memories.ts
+- ✅ CORS whitelist: тільки `hud-murex.vercel.app` + localhost:5173
+- ⬜ MongoDB Atlas M10+ (поточний M0 = 512MB free tier)
 
 ### Фаза 1.5 — Offline / PWA (Workbox)
-- Cache First для статики (JS/CSS/іконки)
-- Network First з fallback для API відповідей
-- Background Sync — офлайн дії (додавання транзакцій, задач)
-- Офлайн-індикатор в AppHeader
+- ✅ NetworkFirst для API GET з 8с timeout + кеш 5хв (workbox-routing + workbox-strategies)
+- ✅ CacheFirst для зображень (7 днів, max 200 записів)
+- ✅ Background Sync для write операцій (POST/PATCH/PUT/DELETE) — черга 24г
+- ✅ Офлайн-індикатор в AppHeader (пульсуючий бейдж "офлайн")
 
 ### Фаза 2 — Білінг (Stripe)
 - Підписка: Free / Pro ~$4.99/міс / Family ~$7.99/міс
@@ -341,16 +342,16 @@
 | Задача | Критичність |
 |--------|-------------|
 | ~~Повноцінний auth (email+password)~~ | ✅ Зроблено |
-| Верифікація email (Resend + домен) | 🔴 До launch |
-| Видалити console.log з ai.ts і деінде | 🔴 Безпека |
-| helmet.js на бекенд | 🔴 Безпека |
-| CORS whitelist тільки prod | 🔴 Безпека |
-| Rate limiting на всі API | 🟡 Важливо |
-| Zod валідація POST/PATCH | 🟡 Важливо |
+| ~~helmet.js, CORS whitelist, rate-limit~~ | ✅ Зроблено |
+| ~~Zod валідація POST/PATCH~~ | ✅ Зроблено |
+| ~~Sentry error tracking~~ | ✅ Зроблено |
+| ~~Видалити console.log з ai.ts і деінде~~ | ✅ Зроблено |
+| ~~JWT refresh token rotation~~ | ✅ Зроблено |
+| ~~Multi-tenancy audit (Memory, Watchlist)~~ | ✅ Зроблено |
+| ~~PWA: NetworkFirst + CacheFirst + BackgroundSync + офлайн-індикатор~~ | ✅ Зроблено |
+| Верифікація email (Resend + домен mimir.app) | 🔴 До launch |
+| Видалити хардкод ролей, `role: 'admin'` → feature flags | 🟡 До launch |
 | Всі AI виклики через backend (не з frontend) | 🟡 Важливо |
-| Видалити хардкод профілів/ролей | 🟡 До launch |
-| ShoppingTracker — вирішити долю компонента | 🟢 Cleanup |
-| Email верифікація через Resend (купити домен mimir.app, верифікувати DNS, відновити sendVerificationEmail в register + isVerified=false при реєстрації) | 🟡 До launch |
 | MongoDB M10+ (зараз M0 = 512MB) | 🟢 Перед 100+ юзерів |
 
 ---
