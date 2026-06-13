@@ -123,17 +123,6 @@ const Dashboard: React.FC = () => {
       <div ref={contentRef} className={styles.content}>
         <GreetingBlock />
 
-        <button
-          type="button"
-          className={styles.dayBtn}
-          onClick={() => setShowDay(true)}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-          </svg>
-          МІЙ ДЕНЬ
-        </button>
-
 {raceThisWeek ? (
           <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
         ) : (
@@ -172,6 +161,20 @@ const Dashboard: React.FC = () => {
           compact={!!raceThisWeek}
           sparklineData={sparklineData}
         />
+
+        <button
+          type="button"
+          className={styles.dayBtn}
+          onClick={() => setShowDay(true)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+          МІЙ ДЕНЬ
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', opacity: 0.4 }}>
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
       </div>
 
       {/* ── Expandable FAB ── */}

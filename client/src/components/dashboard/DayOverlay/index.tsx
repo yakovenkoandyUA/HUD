@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MoodIcon from './MoodIcon'
 import { useMoodStore } from '../../../store/moodStore'
 import { useSprintStore } from '../../../store/sprintStore'
 import { useProfileStore } from '../../../store/profileStore'
-import { authFetch } from '../../../services/api'
+import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import { isRecurring } from '../../../utils/sprint'
 import type { UnifiedTodo } from '../../../types'
 import styles from './DayOverlay.module.css'
@@ -55,6 +56,11 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const { logs, fetchLogs, setMood, todayScore } = useMoodStore()
   const { items, fetchItems } = useSprintStore()
   const { activeProfile } = useProfileStore()
+
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const bodyRef    = useRef<HTMLDivElement>(null)
+  const sheetRef   = useSwipeToDismiss(onClose, { overlayRef, bodyRef })
+  useModalHistory(onClose, true)
 
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [weatherErr, setWeatherErr] = useState(false)
@@ -155,8 +161,8 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   }
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+    <div ref={overlayRef} className={styles.overlay} onClick={onClose}>
+      <div ref={sheetRef} className={styles.sheet} onClick={e => e.stopPropagation()}>
         {/* ── Header ── */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
@@ -176,7 +182,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
           </button>
         </div>
 
-        <div className={styles.body}>
+        <div ref={bodyRef} className={styles.body}>
           {/* ── Mood tracker ── */}
           <section className={styles.section}>
             <p className={styles.sectionLabel}>НАСТРІЙ</p>
