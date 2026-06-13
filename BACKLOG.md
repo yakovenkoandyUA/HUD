@@ -6,6 +6,10 @@
 
 ## Статус (2026-06-13) — Що реалізовано
 
+> Технічний борг: Sentry ✅, Zod ✅, JWT refresh rotation ✅, helmet+CORS+rate-limit ✅, multi-tenancy audit ✅, PWA offline ✅, AI via backend ✅, feature flags замість ролей ✅
+
+
+
 ### Dashboard
 - GreetingBlock (привітання + дата), HeroCard (баланс + F1 countdown)
 - ✅ Interactive sparkline — 7 днів витрат, tap/hover tooltip з сумою і днем, auto-dismiss
@@ -279,7 +283,7 @@
 - ✅ Habits: стрік + heatmap + місячний % вбудовано в рутини Sprint (TaskDetailModal + TaskCard flame badge)
 - ✅ Memories: карта планів (Leaflet, Voyager tiles) + експорт спогаду (Canvas API + Web Share)
 - ✅ МІЙ ДЕНЬ — DayOverlay (mood tracker SVG, рутини по слотах, погода wttr.in, swipe-dismiss)
-- ⬜ F1 Live Dashboard
+- ✅ F1 Live Dashboard — реалізовано, не протестовано в умовах живої гонки
 
 ### Фаза 1 — Фундамент (перед публічним launch)
 
@@ -291,8 +295,7 @@
 
 **Multi-tenancy cleanup:**
 - ✅ Аудит всіх ендпоінтів — Memory і WatchlistItem update/remove тепер фільтруються по userId
-- ⬜ Видалити хардкод Котька/Коська, `role: 'admin'` → `features` в підписці
-- `f1Enabled` залишити як user feature flag
+- ✅ Feature flags замість hardcoded ролей — `f1Enabled` boolean гейтує F1 у frontend; `role: 'admin'` залишився тільки для backend `/admin/users` endpoint; видалено Котька/Коська references з docs
 
 **Інфраструктура:**
 - ✅ `helmet.js` на бекенд
@@ -350,8 +353,8 @@
 | ~~Multi-tenancy audit (Memory, Watchlist)~~ | ✅ Зроблено |
 | ~~PWA: NetworkFirst + CacheFirst + BackgroundSync + офлайн-індикатор~~ | ✅ Зроблено |
 | Верифікація email (Resend + домен mimir.app) | 🔴 До launch |
-| Видалити хардкод ролей, `role: 'admin'` → feature flags | 🟡 До launch |
-| Всі AI виклики через backend (не з frontend) | 🟡 Важливо |
+| ~~Видалити хардкод ролей, `role: 'admin'` → feature flags~~ | ✅ Зроблено |
+| ~~Всі AI виклики через backend (не з frontend)~~ | ✅ Зроблено (receipt + poster через /api/receipt/scan і /api/ai/poster-prompt) |
 | MongoDB M10+ (зараз M0 = 512MB) | 🟢 Перед 100+ юзерів |
 
 ---

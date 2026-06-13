@@ -28,18 +28,20 @@
 
 ## Автентифікація
 
-Email + password (bcrypt) + Google OAuth (GIS). JWT 30 днів → `profileStore` → `localStorage` (`profile-storage`).
+Email + password (bcrypt) + Google OAuth (GIS). JWT access 15хв + refresh 30д (httpOnly cookie, rotation) → `profileStore` → `localStorage` (`profile-storage`).
 
-- **Котька** — `role: 'admin'` (F1 екран, повний доступ)
-- **Коська** — `role: 'user'` (без F1)
+Ролі: `role: 'admin' | 'user'` — зберігається в User моделі і JWT. **Доступ до фіч визначається boolean флагами в профілі**, не роллю:
+- `f1Enabled: boolean` — F1 екран (BottomNav іконка, `/f1/live`, HeroCard блок)
+- Backend `requireAdmin` middleware — тільки для `/api/auth/admin/users` (список всіх юзерів)
 
-Flow: `/login` → `POST /api/auth/login { email, password }` або Google → JWT → `profileStore`.
+Flow: `/login` → `POST /api/auth/login { email, password }` або Google → access JWT + refresh cookie → `profileStore`.
 Реєстрація: `POST /api/auth/register { email, password, name, username }` — якщо username вже існує без email, прикріплює credentials до існуючого профілю.
 Google OAuth: GIS `renderButton` → callback → `POST /api/auth/google { credential }` → JWT.
+Refresh: `POST /api/auth/refresh` — читає `rt` cookie, rotate → новий access token. `POST /api/auth/logout` — очищає cookie і DB запис.
 
 **PIN-lock:** 4-цифровий PIN опціонально (bcrypt). Після 5 хв неактивності — `PinLock` overlay поверх усього app. `pinLocked` в store НЕ персистується.
 
-Всі запити через `authFetch` з Bearer токеном. Маршрути захищені `ProtectedRoute` / `AdminRoute`.
+Всі запити через `authFetch` з Bearer токеном (проактивний refresh < 60с до expiry, singleton refresh race prevention). Маршрути захищені `ProtectedRoute`.
 
 **Env:**
 ```

@@ -40,7 +40,7 @@ components/
 │   └── PwaInstallBanner    ← банер встановлення PWA
 ├── layout/
 │   ├── TopBar
-│   ├── BottomNav           ← F1 іконка тільки для admin
+│   ├── BottomNav           ← F1 іконка тільки якщо f1Enabled (boolean feature flag)
 │   └── ThemePicker         ← теми + профіль + install PWA + кеш
 ├── finance/
 │   ├── BalanceHero, TodayCard, StatsGrid
