@@ -3,18 +3,94 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Map ── */
+.mapWrap {
+  flex: 0 0 70%;
+  position: relative;
+  min-height: 0;
 }
 
 .map {
-  flex: 1;
-  min-height: 0;
   width: 100%;
   height: 100%;
-  border-radius: var(--radius);
   z-index: 0;
 }
 
-/* Leaflet popup overrides */
+/* ── Plan list ── */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  padding: 4px 0 80px;
+}
+
+.planRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--border);
+}
+.planRow:last-child { border-bottom: none; }
+.planRow:active,
+.planRow:hover { background: var(--surface); }
+.planRowActive { background: var(--surface2); }
+
+.dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.planInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.planTitle {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planAddr {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planStatus {
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+/* ── Leaflet popup overrides ── */
 .popup :global(.leaflet-popup-content-wrapper) {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -62,7 +138,7 @@
   color: var(--text3);
 }
 
-/* Empty state */
+/* ── Empty state ── */
 .empty {
   flex: 1;
   display: flex;
