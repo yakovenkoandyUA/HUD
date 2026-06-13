@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 /// <reference lib="es2015" />
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
-import { registerRoute, NavigationRoute, Route } from 'workbox-routing'
+import { registerRoute } from 'workbox-routing'
 import { NetworkFirst, CacheFirst, NetworkOnly } from 'workbox-strategies'
 import { BackgroundSyncPlugin } from 'workbox-background-sync'
 import { ExpirationPlugin } from 'workbox-expiration'
