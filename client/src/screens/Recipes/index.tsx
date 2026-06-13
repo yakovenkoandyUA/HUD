@@ -181,7 +181,12 @@ const Recipes: React.FC = () => {
         ) : (
           <div className={styles.recipeGrid}>
             {visibleRecipes.map(r => (
-              <RecipeCard key={r.id} recipe={r} onClick={() => navigate(`/recipes/${r.id}`)} />
+              <RecipeCard
+                key={r.id}
+                recipe={r}
+                onClick={() => navigate(`/recipes/${r.id}`)}
+                hideCategory={selectedCategory !== null}
+              />
             ))}
           </div>
         )}

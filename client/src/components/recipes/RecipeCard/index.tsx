@@ -15,6 +15,7 @@ import styles from './RecipeCard.module.css'
 interface RecipeCardProps {
   recipe: Recipe
   onClick: () => void
+  hideCategory?: boolean
 }
 
 function formatCookTime(minutes: number): string {
@@ -43,7 +44,7 @@ const DIFFICULTY_LABEL: Record<string, string> = {
   hard:   'складно',
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory = false }) => {
   const { wishlistIds, toggleWishlist } = useRecipesStore()
   const isWishlisted = wishlistIds.includes(recipe.id)
   const [loaded, setLoaded] = useState(false)
@@ -98,7 +99,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
       <div className={styles.info}>
         <h3 className={styles.title}>{recipe.title}</h3>
         <div className={styles.meta}>
-          {recipe.category && (
+          {!hideCategory && recipe.category && (
             <span className={styles.categoryPill}>{recipe.category}</span>
           )}
           {recipe.difficulty && DIFFICULTY_LABEL[recipe.difficulty] && (
