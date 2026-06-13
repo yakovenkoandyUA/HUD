@@ -7,9 +7,11 @@ import rateLimit from 'express-rate-limit'
 import cookieParser from 'cookie-parser'
 import { connectDB } from './config/db'
 
-if (process.env.SENTRY_DSN) {
-  Sentry.init({ dsn: process.env.SENTRY_DSN, environment: process.env.NODE_ENV ?? 'production', tracesSampleRate: 0.2 })
-}
+Sentry.init({
+  dsn: 'https://262d5ea5ffab2f393452c3d823f24226@o4511556414603264.ingest.de.sentry.io/4511556439441488',
+  environment: process.env.NODE_ENV ?? 'production',
+  tracesSampleRate: 0.2,
+})
 import { initWebPush } from './services/webpush'
 import { startF1Scheduler } from './services/f1Scheduler'
 import './jobs/pushJobs'
@@ -92,9 +94,7 @@ app.use('/api/mood', moodRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
-if (process.env.SENTRY_DSN) {
-  Sentry.setupExpressErrorHandler(app)
-}
+Sentry.setupExpressErrorHandler(app)
 app.use(errorHandler)
 
 async function start() {
