@@ -24,7 +24,6 @@ function toIso(d: Date): string {
 
 function getCurrentSlot(profile: { morningStart?: number; afternoonStart?: number; eveningStart?: number } | null): 'morning' | 'afternoon' | 'evening' {
   const h = new Date().getHours()
-  const morning   = profile?.morningStart   ?? 6
   const afternoon = profile?.afternoonStart ?? 12
   const evening   = profile?.eveningStart   ?? 18
   if (h >= evening)   return 'evening'
@@ -53,7 +52,7 @@ interface DayOverlayProps {
 
 const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const navigate    = useNavigate()
-  const { logs, fetchLogs, setMood, todayScore } = useMoodStore()
+  const { fetchLogs, setMood, todayScore } = useMoodStore()
   const { items, fetchItems } = useSprintStore()
   const { activeProfile } = useProfileStore()
 
@@ -63,7 +62,6 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   useModalHistory(onClose, true)
 
   const [weather, setWeather] = useState<WeatherData | null>(null)
-  const [weatherErr, setWeatherErr] = useState(false)
 
   const today = toIso(new Date())
   const currentSlot = getCurrentSlot(activeProfile)
@@ -114,7 +112,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
           })
         }
       } catch {
-        if (!cancelled) setWeatherErr(true)
+        // silent fail — no weather displayed
       }
     }
     load()
@@ -155,7 +153,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
     setMood(today, score)
   }, [currentMood, today, setMood])
 
-  const handleRoutineClick = (item: UnifiedTodo) => {
+  const handleRoutineClick = (_item: UnifiedTodo) => {
     navigate('/sprint')
     onClose()
   }
