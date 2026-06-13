@@ -17,6 +17,7 @@ interface RecipeCardProps {
   recipe: Recipe
   onClick: () => void
   hideCategory?: boolean
+  hero?: boolean
 }
 
 function formatCookTime(minutes: number): string {
@@ -39,7 +40,7 @@ const DIFFICULTY_LABEL: Record<string, string> = {
   hard:   'складно',
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory = false }) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory = false, hero = false }) => {
   const { wishlistIds, toggleWishlist } = useRecipesStore()
   const isWishlisted = wishlistIds.includes(recipe.id)
   const [loaded, setLoaded] = useState(false)
@@ -48,14 +49,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
 
   return (
     <div
-      className={styles.card}
+      className={`${styles.card} ${hero ? styles.heroCard : ''}`}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && onClick()}
     >
       {/* ── Photo section ── */}
-      <div className={styles.photoWrap}>
+      <div className={`${styles.photoWrap} ${hero ? styles.heroPhotoWrap : ''}`}>
         {recipe.imageUrl ? (
           <>
             {!loaded && <div className={styles.shimmer} />}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useRecipesStore } from '../../store/recipesStore'
 import { useProfileStore } from '../../store/profileStore'
@@ -75,7 +75,7 @@ function scaleIngredientStr(str: string, factor: number): { amount: string; name
 const RecipeDetailScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { recipes, wishlistIds, toggleWishlist, updateRecipe, deleteRecipe } = useRecipesStore()
+  const { recipes, wishlistIds, cookStats, toggleWishlist, updateRecipe, deleteRecipe, logCook, fetchCookStats } = useRecipesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const { addItem: addSprintItem, items: sprintItems } = useSprintStore()
@@ -86,6 +86,18 @@ const RecipeDetailScreen: React.FC = () => {
   const [showEdit, setShowEdit] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showAddConfirm, setShowAddConfirm] = useState(false)
+  const [cookLogged, setCookLogged] = useState(false)
+
+  const stat = id ? cookStats[id] : undefined
+
+  useEffect(() => { fetchCookStats() }, [fetchCookStats])
+
+  const handleLogCook = async () => {
+    if (!id) return
+    await logCook(id)
+    setCookLogged(true)
+    showToast('Записано! Смачного 🍽', 'success')
+  }
 
   const handleEdit = (data: Omit<Recipe, 'id'>) => {
     if (!id) return
@@ -270,15 +282,28 @@ const RecipeDetailScreen: React.FC = () => {
             <ShoppingIcon />
             {alreadyInList ? 'У списку' : 'Покупки'}
           </button>
-          {/* <button
+          <button
             type="button"
-            className={styles.actionBtn}
-            onClick={() => showToast('Поділитись — незабаром', 'info')}
+            className={`${styles.actionBtn} ${cookLogged ? styles.actionBtnActive : ''}`}
+            onClick={handleLogCook}
+            disabled={cookLogged}
           >
-            <ShareIcon />
-            Поділитись
-          </button> */}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C8 2 5 5.5 5 9c0 2.5 1 4.5 2.5 6L12 22l4.5-7C18 13.5 19 11.5 19 9c0-3.5-3-7-7-7z"
+                stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"
+                fill={cookLogged ? 'currentColor' : 'none'}/>
+            </svg>
+            {cookLogged ? 'Записано!' : stat ? `Готував ${stat.count}×` : 'Приготував'}
+          </button>
         </div>
+
+        {/* Cook stats */}
+        {stat && !cookLogged && (
+          <p className={styles.cookStatLine}>
+            Готував {stat.count} раз{stat.count === 1 ? '' : 'и'} · востаннє{' '}
+            {new Date(stat.lastCooked).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })}
+          </p>
+        )}
 
         {/* Equipment */}
         {recipe.equipment && recipe.equipment.length > 0 && (

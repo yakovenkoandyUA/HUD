@@ -113,6 +113,28 @@
   flex-wrap: wrap;
 }
 
+.scopeActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.randomBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.randomBtn:hover { color: var(--accent); border-color: var(--accent-dim); }
+.randomBtn:active { transform: scale(0.92); }
+
 .savedBtn {
   display: flex;
   align-items: center;

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import Recipe from '../models/Recipe'
+import CookLog from '../models/CookLog'
 import { User } from '../models/User'
 import { getAcceptedFamilyIds } from './familyController'
 
@@ -132,5 +133,32 @@ category — одне з: Сніданки, Супи, Салати, Основн
     res.json(recipe)
   } catch {
     res.status(500).json({ error: 'Помилка генерації рецепту' })
+  }
+}
+
+export async function logCook(req: Request, res: Response): Promise<void> {
+  try {
+    const log = await CookLog.create({ recipeId: req.params.id, userId: req.userId })
+    res.status(201).json(log)
+  } catch {
+    res.status(500).json({ error: 'Failed to log cook' })
+  }
+}
+
+export async function getCookStats(req: Request, res: Response): Promise<void> {
+  try {
+    const logs = await CookLog.find({ userId: req.userId })
+    const stats: Record<string, { count: number; lastCooked: string }> = {}
+    for (const log of logs) {
+      const id = log.recipeId
+      if (!stats[id]) stats[id] = { count: 0, lastCooked: log.date.toISOString() }
+      stats[id].count++
+      if (log.date > new Date(stats[id].lastCooked)) {
+        stats[id].lastCooked = log.date.toISOString()
+      }
+    }
+    res.json(stats)
+  } catch {
+    res.status(500).json({ error: 'Failed to get cook stats' })
   }
 }

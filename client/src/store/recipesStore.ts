@@ -24,11 +24,16 @@ function toRecipe(d: Record<string, any>): Recipe {
   }
 }
 
+export interface CookStat { count: number; lastCooked: string }
+
 interface RecipesState {
   recipes: Recipe[]
   scope: RecipeScope
   wishlistIds: string[]
+  cookStats: Record<string, CookStat>
   fetchRecipes: (scope?: RecipeScope) => Promise<void>
+  fetchCookStats: () => Promise<void>
+  logCook: (id: string) => Promise<void>
   setScope: (scope: RecipeScope) => void
   addRecipe: (data: Omit<Recipe, 'id'>) => Promise<void>
   updateRecipe: (id: string, data: Partial<Omit<Recipe, 'id'>>) => Promise<void>
@@ -42,6 +47,7 @@ export const useRecipesStore = create<RecipesState>()(
       recipes: [],
       scope: 'mine',
       wishlistIds: [],
+      cookStats: {},
 
       setScope: (scope) => {
         set({ scope })
@@ -91,6 +97,25 @@ export const useRecipesStore = create<RecipesState>()(
           wishlistIds: s.wishlistIds.filter(wid => wid !== id),
         }))
         await authFetch(`/api/recipes/${id}`, { method: 'DELETE' })
+      },
+
+      fetchCookStats: async () => {
+        if (!getToken()) return
+        const res = await authFetch('/api/recipes/cook-stats')
+        if (!res.ok) return
+        const stats = await res.json() as Record<string, CookStat>
+        set({ cookStats: stats })
+      },
+
+      logCook: async (id) => {
+        const now = new Date().toISOString()
+        set(s => ({
+          cookStats: {
+            ...s.cookStats,
+            [id]: { count: (s.cookStats[id]?.count ?? 0) + 1, lastCooked: now },
+          },
+        }))
+        await authFetch(`/api/recipes/${id}/cook`, { method: 'POST' })
       },
 
       toggleWishlist: (id) => {

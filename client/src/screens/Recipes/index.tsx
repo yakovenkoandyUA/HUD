@@ -4,6 +4,7 @@ import RecipeCard from '../../components/recipes/RecipeCard'
 import RecipeForm from '../../components/recipes/RecipeForm'
 import RecipeGeneratorModal from '../../components/recipes/RecipeGeneratorModal'
 import CategoriesSlider from '../../components/recipes/CategoriesSlider'
+import IngredientSearchSheet from '../../components/recipes/IngredientSearchSheet'
 import Modal from '../../components/ui/Modal'
 import AppHeader from '../../components/AppHeader'
 import MimirIcon from '../../components/ui/MimirIcon'
@@ -37,7 +38,8 @@ const Recipes: React.FC = () => {
   const [prefillData, setPrefillData]     = useState<Partial<Omit<Recipe, 'id'>> | null>(null)
   const [savedOnly, setSavedOnly]         = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [activeTag, setActiveTag]     = useState<string | null>(null)
+  const [activeTag, setActiveTag]         = useState<string | null>(null)
+  const [showIngredientSearch, setShowIngredientSearch] = useState(false)
 
   useEffect(() => { fetchRecipes() }, [fetchRecipes])
 
@@ -63,6 +65,12 @@ const Recipes: React.FC = () => {
   const visibleRecipes = baseRecipes
     .filter(r => selectedCategory === null || (r.category ?? 'Інше') === selectedCategory)
     .filter(r => activeTag === null || (r.tags ?? []).includes(activeTag))
+
+  const handleRandom = () => {
+    if (visibleRecipes.length === 0) return
+    const r = visibleRecipes[Math.floor(Math.random() * visibleRecipes.length)]
+    navigate(`/recipes/${r.id}`)
+  }
 
   const handleSave = (data: Omit<Recipe, 'id'>) => {
     if (editingRecipe) {
@@ -114,20 +122,40 @@ const Recipes: React.FC = () => {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            className={`${styles.savedBtn} ${savedOnly ? styles.savedBtnActive : ''}`}
-            onClick={handleSavedToggle}
-            aria-label="Збережені"
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M8 13.5S2 9.5 2 5.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 14 5.5c0 4-6 8-6 8Z"
-                stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
-                fill={savedOnly ? 'currentColor' : 'none'}
-              />
-            </svg>
-            {wishlistIds.length > 0 && <span className={styles.savedCount}>{wishlistIds.length}</span>}
-          </button>
+          <div className={styles.scopeActions}>
+            {visibleRecipes.length > 1 && (
+              <button
+                type="button"
+                className={styles.randomBtn}
+                onClick={handleRandom}
+                aria-label="Що приготувати?"
+                title="Що приготувати?"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" strokeWidth="1.8"/>
+                  <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                  <circle cx="16" cy="8" r="1.5" fill="currentColor"/>
+                  <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
+                  <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                </svg>
+              </button>
+            )}
+            <button
+              type="button"
+              className={`${styles.savedBtn} ${savedOnly ? styles.savedBtnActive : ''}`}
+              onClick={handleSavedToggle}
+              aria-label="Збережені"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M8 13.5S2 9.5 2 5.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 14 5.5c0 4-6 8-6 8Z"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
+                  fill={savedOnly ? 'currentColor' : 'none'}
+                />
+              </svg>
+              {wishlistIds.length > 0 && <span className={styles.savedCount}>{wishlistIds.length}</span>}
+            </button>
+          </div>
         </div>
 
         {/* ── Categories slider ── */}
@@ -180,12 +208,13 @@ const Recipes: React.FC = () => {
           </div>
         ) : (
           <div className={styles.recipeGrid}>
-            {visibleRecipes.map(r => (
+            {visibleRecipes.map((r, i) => (
               <RecipeCard
                 key={r.id}
                 recipe={r}
                 onClick={() => navigate(`/recipes/${r.id}`)}
                 hideCategory={selectedCategory !== null}
+                hero={i === 0 && visibleRecipes.length > 1}
               />
             ))}
           </div>
@@ -194,6 +223,32 @@ const Recipes: React.FC = () => {
 
       {/* ── FABs ── */}
       <div className={styles.fabGroup}>
+        <button
+          type="button"
+          className={styles.fabAi}
+          onClick={() => navigate('/recipes/planner')}
+          aria-label="Планер страв"
+          title="Планер страв"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.7"/>
+            <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+            <path d="M8 15h2M11 15h2M14 15h2M8 18h2M11 18h2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          className={styles.fabAi}
+          onClick={() => setShowIngredientSearch(true)}
+          aria-label="Що є вдома?"
+          title="Що є вдома?"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <path d="M3 6h18M3 12h12M3 18h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <circle cx="19" cy="17" r="3.5" stroke="currentColor" strokeWidth="1.6"/>
+            <path d="M21.5 19.5L23 21" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+          </svg>
+        </button>
         <button
           type="button"
           className={styles.fabAi}
@@ -213,6 +268,13 @@ const Recipes: React.FC = () => {
           </svg>
         </button>
       </div>
+
+      <IngredientSearchSheet
+        recipes={recipes}
+        isOpen={showIngredientSearch}
+        onClose={() => setShowIngredientSearch(false)}
+        onSelect={id => navigate(`/recipes/${id}`)}
+      />
 
       <Modal
         isOpen={showForm}

@@ -338,6 +338,13 @@
   transform: scale(1.25);
 }
 
+.cookStatLine {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin: -4px 0 0;
+}
+
 /* ── Sections ── */
 .section {
   display: flex;
