@@ -4,6 +4,7 @@ import AppHeader from '../../components/AppHeader'
 import AddMemoryModal from '../../components/memories/AddMemoryModal'
 import PlanCard from '../../components/memories/PlanCard'
 import PlanForm from '../../components/memories/PlanForm'
+import MemoryMap from '../../components/memories/MemoryMap'
 import type { AddMemoryData } from '../../components/memories/AddMemoryModal'
 import type { Memory } from '../../types/memory'
 import { useMemoriesStore } from '../../store/memoriesStore'
@@ -11,9 +12,10 @@ import { usePlansStore, type Plan } from '../../store/plansStore'
 import { useUiStore } from '../../store/uiStore'
 import { authFetch } from '../../services/api'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
+import 'leaflet/dist/leaflet.css'
 import styles from './Memories.module.css'
 
-type ActiveTab = 'memories' | 'plans'
+type ActiveTab = 'memories' | 'plans' | 'map'
 
 function groupByMonth(memories: Memory[]): [string, Memory[]][] {
   const groups: Record<string, Memory[]> = {}
@@ -170,6 +172,13 @@ const MemoriesScreen: React.FC = () => {
           onClick={() => setActiveTab('plans')}
         >
           ПЛАНИ
+        </button>
+        <button
+          type="button"
+          className={`${styles.tab} ${activeTab === 'map' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('map')}
+        >
+          КАРТА
         </button>
       </div>
 
@@ -450,6 +459,13 @@ const MemoriesScreen: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Map tab ── */}
+      {activeTab === 'map' && (
+        <div className={styles.mapTab}>
+          <MemoryMap plans={plans} />
         </div>
       )}
     </div>

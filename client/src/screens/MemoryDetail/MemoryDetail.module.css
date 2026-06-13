@@ -150,6 +150,27 @@
 .btnPoster:active { opacity: 0.75; }
 .btnPoster:disabled { opacity: 0.35; cursor: default; pointer-events: none; }
 
+.btnShare {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.btnShare:hover:not(:disabled) { background: var(--surface); }
+.btnShare:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ── Notes ── */
 .notesSection {
   padding: 14px 16px;
