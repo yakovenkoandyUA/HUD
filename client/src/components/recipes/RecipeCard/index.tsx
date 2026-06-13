@@ -6,11 +6,12 @@ import styles from './RecipeCard.module.css'
 /**
  * RecipeCard
  * ----------
- * 4/5 portrait фото, Furore назва + мета в overlay знизу.
+ * Фото зверху (4/3), info блок знизу: назва + owner, category pill, difficulty pill, час.
  *
  * Props:
- * @prop {Recipe}     recipe  — дані рецепту
- * @prop {() => void} onClick — перейти на деталь
+ * @prop {Recipe}     recipe       — дані рецепту
+ * @prop {() => void} onClick      — перейти на деталь
+ * @prop {boolean}    hideCategory — приховати category pill (коли фільтр активний)
  */
 interface RecipeCardProps {
   recipe: Recipe
@@ -32,12 +33,6 @@ const HeartIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   </svg>
 )
 
-const DIFFICULTY_COLOR: Record<string, string> = {
-  easy:   'var(--positive)',
-  medium: 'var(--gold)',
-  hard:   'var(--negative)',
-}
-
 const DIFFICULTY_LABEL: Record<string, string> = {
   easy:   'легко',
   medium: 'середньо',
@@ -48,6 +43,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
   const { wishlistIds, toggleWishlist } = useRecipesStore()
   const isWishlisted = wishlistIds.includes(recipe.id)
   const [loaded, setLoaded] = useState(false)
+
+  const hasOwner = recipe.isOwn === false && !!recipe.ownerName
 
   return (
     <div
@@ -84,29 +81,27 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
         >
           <HeartIcon filled={isWishlisted} />
         </button>
-
-        {recipe.isOwn === false && recipe.ownerName && (
-          <div className={styles.ownerBadge} title={recipe.ownerName}>
-            {recipe.ownerAvatarUrl
-              ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
-              : <span className={styles.ownerInitial}>{recipe.ownerName[0]}</span>
-            }
-          </div>
-        )}
       </div>
 
       {/* ── Info block ── */}
       <div className={styles.info}>
-        <h3 className={styles.title}>{recipe.title}</h3>
+        <div className={styles.titleRow}>
+          <h3 className={styles.title}>{recipe.title}</h3>
+          {hasOwner && (
+            <div className={styles.ownerBadge} title={recipe.ownerName}>
+              {recipe.ownerAvatarUrl
+                ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
+                : <span className={styles.ownerInitial}>{recipe.ownerName![0]}</span>
+              }
+            </div>
+          )}
+        </div>
         <div className={styles.meta}>
           {!hideCategory && recipe.category && (
             <span className={styles.categoryPill}>{recipe.category}</span>
           )}
           {recipe.difficulty && DIFFICULTY_LABEL[recipe.difficulty] && (
-            <span
-              className={styles.diffLabel}
-              style={{ color: DIFFICULTY_COLOR[recipe.difficulty] }}
-            >
+            <span className={`${styles.diffPill} ${styles[`diff_${recipe.difficulty}`]}`}>
               {DIFFICULTY_LABEL[recipe.difficulty]}
             </span>
           )}
