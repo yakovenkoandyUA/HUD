@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader'
+import { authFetch } from '../../services/api'
 import NextRaceCard from '../../components/f1/NextRaceCard'
 import RaceCalendarList from '../../components/f1/RaceCalendarList'
 import ChampionshipTable from '../../components/f1/ChampionshipTable'
@@ -31,6 +32,29 @@ const F1Screen: React.FC = () => {
   const correctPicks  = completed.filter(p =>
     [p.result!.p1Match, p.result!.p2Match, p.result!.p3Match].some(m => m !== 'miss')
   ).length
+  const [liveActive, setLiveActive] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const check = async () => {
+      try {
+        const res = await authFetch('/api/f1/live/sessions?meeting_key=latest')
+        if (!res.ok) return
+        const sessions: { date_start: string; date_end: string }[] = await res.json()
+        const now = Date.now()
+        const active = sessions.some(s => {
+          const start = new Date(s.date_start).getTime() - 4 * 60 * 60 * 1000
+          const end   = new Date(s.date_end).getTime()   + 60 * 60 * 1000
+          return now >= start && now <= end
+        })
+        if (!cancelled) setLiveActive(active)
+      } catch { /* silent */ }
+    }
+    check()
+    const timer = setInterval(check, 60_000)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [])
+
   const nextRace = getNextRace(F1_SEASON_2026)
   const nextRound = getNextRound(F1_SEASON_2026)
   const bgRef = useRef<HTMLDivElement>(null)
@@ -61,6 +85,13 @@ const F1Screen: React.FC = () => {
           <NextRaceCard race={nextRace} />
         ) : (
           <p className={styles.done}>Сезон 2026 завершено</p>
+        )}
+
+        {liveActive && (
+          <button className={styles.liveBtn} onClick={() => navigate('/f1/live')}>
+            <span className={styles.liveDot} />
+            LIVE
+          </button>
         )}
 
         <LastRaceCard />

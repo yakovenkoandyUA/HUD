@@ -12,6 +12,7 @@ import { usePushSubscription } from './hooks/usePushSubscription'
 import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
 import F1Screen from './screens/F1'
+import F1Live from './screens/F1Live'
 import RaceDetailPage from './screens/RaceDetail'
 import MySeasonPage from './screens/MySeasonPage'
 import Sprint from './screens/Sprint'
@@ -86,6 +87,7 @@ const AnimatedRoutes: React.FC = () => {
           {/* F1 module — f1Enabled only */}
           <Route element={<F1Route />}>
             <Route path="/f1" element={<F1Screen />} />
+            <Route path="/f1/live" element={<F1Live />} />
             <Route path="/f1/my-season" element={<MySeasonPage />} />
             <Route path="/f1/:round" element={<RaceDetailPage />} />
           </Route>
