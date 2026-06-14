@@ -41,15 +41,6 @@ export const updateMeSchema = z.object({
 
 // ── Sprint ────────────────────────────────────────────────────────────────────
 
-export const createTaskSchema = z.object({
-  title:     z.string().min(1, 'Назва обов\'язкова').max(200),
-  type:      z.enum(['task', 'routine', 'todo', 'shopping']).optional(),
-  priority:  z.enum(['urgent', 'normal', 'low']).optional(),
-  repeat:    z.string().max(100).optional(),
-  dueDate:   z.string().optional(),
-  timeOfDay: z.enum(['morning', 'afternoon', 'evening']).nullable().optional(),
-})
-
 export const updateTaskSchema = z.object({
   title:             z.string().min(1).max(200).optional(),
   done:              z.boolean().optional(),
@@ -74,6 +65,11 @@ export const updateTaskSchema = z.object({
   repeatStartDate:   z.string().optional(),
   repeatConfig:      z.record(z.string(), z.unknown()).optional(),
   reminder:          z.object({ amount: z.number(), unit: z.string() }).nullable().optional(),
+})
+
+export const createTaskSchema = updateTaskSchema.extend({
+  title: z.string().min(1, 'Назва обов\'язкова').max(200),
+  type:  z.enum(['task', 'routine', 'todo', 'shopping']).optional(),
 })
 
 // ── Transactions ──────────────────────────────────────────────────────────────
