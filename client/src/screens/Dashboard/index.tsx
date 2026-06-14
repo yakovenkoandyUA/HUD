@@ -168,22 +168,24 @@ const Dashboard: React.FC = () => {
         <TasksAccordion />
 
         {todayMeals.length > 0 && (
-          <button
-            type="button"
-            className={styles.todayMealsRow}
-            onClick={() => navigate('/recipes/planner')}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <div className={styles.todayMealsRow}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.todayMealsIcon}>
               <path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2M5 11v11M21 2v20M21 2a5 5 0 0 0-5 5v4h5"/>
             </svg>
             <span className={styles.todayMealsLabel}>СЬОГОДНІ:</span>
-            <span className={styles.todayMealsText}>
-              {todayMeals.map(r => r.title).join(' · ')}
-            </span>
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={styles.todayMealsChevron}>
-              <path d="M6 4l4 4-4 4"/>
-            </svg>
-          </button>
+            <div className={styles.todayMealsChips}>
+              {todayMeals.map(r => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className={styles.todayMealChip}
+                  onClick={() => navigate(`/recipes/${r.id}`)}
+                >
+                  {r.title}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         <HeroCard

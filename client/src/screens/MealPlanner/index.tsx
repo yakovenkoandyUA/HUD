@@ -278,7 +278,7 @@ const MealPlannerScreen: React.FC = () => {
           <div className={styles.statsRow}>
             <div className={styles.statItem}>
               <span className={styles.statValue}>{totalPlanned}</span>
-              <span className={styles.statLabel}>страв</span>
+              <span className={styles.statLabel}>страв на тиждень</span>
             </div>
             {weekStats.countWithKcal > 0 && (
               <>
