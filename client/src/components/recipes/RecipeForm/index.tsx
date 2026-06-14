@@ -22,17 +22,6 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Інше':           '📦',
 }
 
-const PRESET_TAGS = [
-  'швидко',
-  "без м'яса",
-  'для сніданку',
-  'для обіду',
-  'для вечері',
-  'десерт',
-  'здорово',
-  'бюджетно',
-]
-
 const DIFFICULTY_OPTIONS = [
   { value: 'easy'   as RecipeDifficulty, label: 'Легкий',   diff: 'easy'   },
   { value: 'medium' as RecipeDifficulty, label: 'Середній', diff: 'medium' },
@@ -85,8 +74,6 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   const [difficulty, setDifficulty]         = useState<RecipeDifficulty | ''>(initial?.difficulty ?? '')
   const [equipmentText, setEquipmentText]   = useState(initial?.equipment?.join('\n') ?? '')
   const [category, setCategory]             = useState(initial?.category ?? '')
-  const [tags, setTags]                     = useState<string[]>(initial?.tags ?? [])
-  const [customTag, setCustomTag]           = useState('')
   const [errors, setErrors]                 = useState<FormErrors>({})
 
   useEffect(() => {
@@ -106,8 +93,6 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
     setDifficulty(initial?.difficulty ?? '')
     setEquipmentText(initial?.equipment?.join('\n') ?? '')
     setCategory(initial?.category ?? '')
-    setTags(initial?.tags ?? [])
-    setCustomTag('')
     setErrors({})
   }, [initial])
 
@@ -142,14 +127,8 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
       difficulty:   difficulty || undefined,
       equipment:    equipment.length ? equipment : undefined,
       category:     category.trim() || undefined,
-      tags:         tags.length ? tags : undefined,
+      tags:         initial?.tags?.length ? initial.tags : undefined,
     })
-  }
-
-  const addCustomTag = () => {
-    const t = customTag.trim().toLowerCase()
-    if (t && !tags.includes(t)) setTags(prev => [...prev, t])
-    setCustomTag('')
   }
 
   return (
@@ -157,9 +136,13 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
       {/* ── Step indicator ── */}
       <div className={styles.stepIndicator}>
-        <div className={`${styles.stepDot} ${step >= 1 ? styles.stepDotActive : ''}`} />
-        <div className={styles.stepLine} />
+        <span className={`${styles.stepLabel} ${step === 1 ? styles.stepLabelActive : ''}`}>ОСНОВНЕ</span>
+        <div className={styles.stepDot} />
+        <div className={styles.stepLine}>
+          <div className={`${styles.stepLineFill} ${step === 2 ? styles.stepLineFillActive : ''}`} />
+        </div>
         <div className={`${styles.stepDot} ${step >= 2 ? styles.stepDotActive : ''}`} />
+        <span className={`${styles.stepLabel} ${step === 2 ? styles.stepLabelActive : ''}`}>ДЕТАЛІ</span>
       </div>
 
       {/* ── Step 1 — Основне ── */}
@@ -182,13 +165,20 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
           <div className={styles.field}>
             <label className={styles.label}>Фото <span className={styles.hint}>(необов'язково)</span></label>
-            <ImageUploadButton
-              currentUrl={imageUrl || undefined}
-              folder="mimir/recipes"
-              onUpload={setImageUrl}
-              variant="wide"
-              placeholder="Додати фото рецепту"
-            />
+            <div className={styles.photoRow}>
+              <div className={styles.photoThumb}>
+                <ImageUploadButton
+                  currentUrl={imageUrl || undefined}
+                  folder="mimir/recipes"
+                  onUpload={setImageUrl}
+                  variant="square"
+                  placeholder=""
+                />
+              </div>
+              {!imageUrl && (
+                <span className={styles.photoHint}>Натисни щоб додати фото рецепту</span>
+              )}
+            </div>
           </div>
 
           <div className={styles.field}>
@@ -212,65 +202,6 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
             {errors.category && <span className="errorMsg">{errors.category}</span>}
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label}>Складність</label>
-            <div className={styles.diffPicker}>
-              {DIFFICULTY_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  data-active={difficulty === opt.value ? 'true' : undefined}
-                  data-diff={opt.diff}
-                  className={styles.diffBtn}
-                  onClick={() => setDifficulty(difficulty === opt.value ? '' : opt.value)}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Теги <span className={styles.hint}>(необов'язково)</span></label>
-            <div className={styles.catGrid}>
-              {PRESET_TAGS.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  className={`${styles.catBtn} ${tags.includes(tag) ? styles.catBtnActive : ''}`}
-                  onClick={() => setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            <div className={styles.tagInputRow}>
-              <input
-                className={styles.input}
-                value={customTag}
-                onChange={e => setCustomTag(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomTag() } }}
-                placeholder="Свій тег..."
-              />
-              {customTag.trim() && (
-                <button type="button" className={styles.tagAddBtn} onClick={addCustomTag}>+</button>
-              )}
-            </div>
-            {tags.filter(t => !PRESET_TAGS.includes(t)).length > 0 && (
-              <div className={styles.catGrid}>
-                {tags.filter(t => !PRESET_TAGS.includes(t)).map(tag => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className={`${styles.catBtn} ${styles.catBtnActive}`}
-                    onClick={() => setTags(prev => prev.filter(t => t !== tag))}
-                  >
-                    {tag} ×
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
 
           <div className={styles.stepFooter}>
             <button type="button" className={styles.cancelBtn} onClick={onCancel}>Скасувати</button>
@@ -316,6 +247,24 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                 placeholder="350"
               />
               {errors.calories && <span className="errorMsg">{errors.calories}</span>}
+            </div>
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label}>Складність</label>
+            <div className={styles.diffPicker}>
+              {DIFFICULTY_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  data-active={difficulty === opt.value ? 'true' : undefined}
+                  data-diff={opt.diff}
+                  className={styles.diffBtn}
+                  onClick={() => setDifficulty(difficulty === opt.value ? '' : opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 

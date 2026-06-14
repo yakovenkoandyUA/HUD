@@ -65,15 +65,29 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+
+.stepLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  transition: color 0.2s;
+}
+
+.stepLabelActive {
+  color: var(--gold);
 }
 
 .stepDot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--border2);
-  transition: background 0.2s;
+  background: var(--gold);
+  flex-shrink: 0;
 }
 
 .stepDotActive {
@@ -81,9 +95,23 @@
 }
 
 .stepLine {
-  width: 40px;
+  width: 32px;
   height: 2px;
   background: var(--border2);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.stepLineFill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: var(--gold);
+  transition: width 0.3s ease;
+}
+
+.stepLineFillActive {
+  width: 100%;
 }
 
 /* ── Step footer (nav buttons) ── */
@@ -188,27 +216,26 @@
   color: var(--negative);
 }
 
-/* ── Tag custom input ── */
-.tagInputRow {
+/* ── Compact photo row ── */
+.photoRow {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 12px;
 }
 
-.tagAddBtn {
+.photoThumb {
+  width: 72px;
+  height: 72px;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
   border-radius: var(--radius);
-  border: 1px solid var(--accent-dim);
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 18px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  overflow: hidden;
+}
+
+.photoHint {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.4;
 }
 
 .actions {
