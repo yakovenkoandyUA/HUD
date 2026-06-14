@@ -256,7 +256,6 @@ const Recipes: React.FC = () => {
       <Modal
         isOpen={showForm}
         onClose={() => { setShowForm(false); setEditingRecipe(null); setPrefillData(null) }}
-        title={editingRecipe ? 'Редагувати рецепт' : prefillData ? 'МІМІР: рецепт' : 'Новий рецепт'}
         draggable
       >
         <RecipeForm

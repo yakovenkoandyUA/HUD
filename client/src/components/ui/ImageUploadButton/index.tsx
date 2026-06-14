@@ -22,7 +22,7 @@ interface ImageUploadButtonProps {
   folder: string
   onUpload: (url: string) => void
   placeholder?: string
-  variant?: 'square' | 'wide'
+  variant?: 'square' | 'wide' | 'compact'
 }
 
 const ImageUploadButton: React.FC<ImageUploadButtonProps> = ({

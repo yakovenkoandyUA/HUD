@@ -134,15 +134,22 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   return (
     <div className={styles.form}>
 
-      {/* ── Step indicator ── */}
-      <div className={styles.stepIndicator}>
-        <span className={`${styles.stepLabel} ${step === 1 ? styles.stepLabelActive : ''}`}>ОСНОВНЕ</span>
-        <div className={styles.stepDot} />
-        <div className={styles.stepLine}>
-          <div className={`${styles.stepLineFill} ${step === 2 ? styles.stepLineFillActive : ''}`} />
+      {/* ── Step indicator + close ── */}
+      <div className={styles.stepIndicatorRow}>
+        <div className={styles.stepIndicator}>
+          <span className={`${styles.stepLabel} ${step === 1 ? styles.stepLabelActive : ''}`}>ОСНОВНЕ</span>
+          <div className={styles.stepDot} />
+          <div className={styles.stepLine}>
+            <div className={`${styles.stepLineFill} ${step === 2 ? styles.stepLineFillActive : ''}`} />
+          </div>
+          <div className={`${styles.stepDot} ${step >= 2 ? styles.stepDotActive : ''}`} />
+          <span className={`${styles.stepLabel} ${step === 2 ? styles.stepLabelActive : ''}`}>ДЕТАЛІ</span>
         </div>
-        <div className={`${styles.stepDot} ${step >= 2 ? styles.stepDotActive : ''}`} />
-        <span className={`${styles.stepLabel} ${step === 2 ? styles.stepLabelActive : ''}`}>ДЕТАЛІ</span>
+        <button type="button" className={styles.closeBtn} onClick={onCancel} aria-label="Закрити">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        </button>
       </div>
 
       {/* ── Step 1 — Основне ── */}
@@ -165,20 +172,13 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
           <div className={styles.field}>
             <label className={styles.label}>Фото <span className={styles.hint}>(необов'язково)</span></label>
-            <div className={styles.photoRow}>
-              <div className={styles.photoThumb}>
-                <ImageUploadButton
-                  currentUrl={imageUrl || undefined}
-                  folder="mimir/recipes"
-                  onUpload={setImageUrl}
-                  variant="square"
-                  placeholder=""
-                />
-              </div>
-              {!imageUrl && (
-                <span className={styles.photoHint}>Натисни щоб додати фото рецепту</span>
-              )}
-            </div>
+            <ImageUploadButton
+              currentUrl={imageUrl || undefined}
+              folder="mimir/recipes"
+              onUpload={setImageUrl}
+              variant="compact"
+              placeholder="Додати фото рецепту"
+            />
           </div>
 
           <div className={styles.field}>
