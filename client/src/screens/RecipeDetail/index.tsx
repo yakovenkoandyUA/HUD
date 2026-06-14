@@ -83,7 +83,7 @@ const RecipeDetailScreen: React.FC = () => {
 
   const recipe = recipes.find(r => r.id === id)
   const defaultServings = recipe?.servings ?? 2
-  const [servings, setServings] = useState(defaultServings)
+  const servings = defaultServings
   const [showEdit, setShowEdit] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showAddConfirm, setShowAddConfirm] = useState(false)
@@ -350,24 +350,7 @@ const RecipeDetailScreen: React.FC = () => {
             {/* Ingredients tab */}
             {activeTab === 'ingredients' && recipe.ingredients.length > 0 && (
               <div className={styles.section}>
-                <div className={styles.servingsRow}>
-                  <p className={styles.sectionTitle}>Складові</p>
-                  <div className={styles.stepper}>
-                    <button
-                      type="button"
-                      className={styles.stepperBtn}
-                      onClick={() => setServings(s => Math.max(1, s - 1))}
-                      aria-label="Менше порцій"
-                    >−</button>
-                    <span className={styles.stepperValue}>{servings}</span>
-                    <button
-                      type="button"
-                      className={styles.stepperBtn}
-                      onClick={() => setServings(s => s + 1)}
-                      aria-label="Більше порцій"
-                    >+</button>
-                  </div>
-                </div>
+                <p className={styles.sectionTitle}>Складові</p>
                 <ul className={styles.ingredientList}>
                   {recipe.ingredients.map((ing, i) => {
                     const { amount, name } = factor === 1
