@@ -125,7 +125,7 @@ const RecipePicker: React.FC<RecipePickerProps> = ({ recipes, dayLabel, assigned
 
 const MealPlannerScreen: React.FC = () => {
   const navigate = useNavigate()
-  const { plan, fetchPlan, addToDay, removeFromDay, clearWeek } = useMealPlanStore()
+  const { plan, fetchPlan, addToDay, removeFromDay, clearWeek, copyWeekToNext } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
   const { addItems } = useSprintStore()
   const { showToast } = useUiStore()
@@ -148,6 +148,23 @@ const MealPlannerScreen: React.FC = () => {
   }, [fetchPlan, fetchRecipes, recipes.length])
 
   const totalPlanned = weekKeys.reduce((acc, k) => acc + (plan[k]?.length ?? 0), 0)
+
+  const weekStats = (() => {
+    let totalKcal = 0
+    let countWithKcal = 0
+    for (const key of weekKeys) {
+      for (const id of (plan[key] ?? [])) {
+        const r = recipes.find(rec => rec.id === id)
+        if (r?.calories) { totalKcal += r.calories; countWithKcal++ }
+      }
+    }
+    return { totalKcal, countWithKcal }
+  })()
+
+  const handleCopyWeek = async () => {
+    await copyWeekToNext(weekKeys)
+    showToast('План скопійовано на наступний тиждень', 'success')
+  }
 
   const handleGenerateShopping = () => {
     const tasks: Parameters<typeof addItems>[0] = []
@@ -254,17 +271,53 @@ const MealPlannerScreen: React.FC = () => {
         })}
       </div>
 
-      {/* ── Generate button ── */}
+      {/* ── Weekly stats + actions ── */}
       {totalPlanned > 0 && (
         <div className={styles.generateWrap}>
-          <button
-            type="button"
-            className={styles.generateBtn}
-            onClick={handleGenerateShopping}
-          >
-            <CartIcon />
-            Список покупок ({totalPlanned} страв)
-          </button>
+          {/* Stats row */}
+          <div className={styles.statsRow}>
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>{totalPlanned}</span>
+              <span className={styles.statLabel}>страв</span>
+            </div>
+            {weekStats.countWithKcal > 0 && (
+              <>
+                <div className={styles.statDivider} />
+                <div className={styles.statItem}>
+                  <span className={styles.statValue}>{weekStats.totalKcal.toLocaleString()}</span>
+                  <span className={styles.statLabel}>ккал / тиждень</span>
+                </div>
+                <div className={styles.statDivider} />
+                <div className={styles.statItem}>
+                  <span className={styles.statValue}>{Math.round(weekStats.totalKcal / 7).toLocaleString()}</span>
+                  <span className={styles.statLabel}>ккал / день</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div className={styles.actionRow}>
+            <button
+              type="button"
+              className={styles.copyBtn}
+              onClick={handleCopyWeek}
+              title="Повторити цей тиждень наступного"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/>
+              </svg>
+              Наступний тиждень
+            </button>
+            <button
+              type="button"
+              className={styles.generateBtn}
+              onClick={handleGenerateShopping}
+            >
+              <CartIcon />
+              Покупки ({totalPlanned})
+            </button>
+          </div>
         </div>
       )}
 

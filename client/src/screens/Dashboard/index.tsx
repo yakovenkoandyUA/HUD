@@ -12,6 +12,8 @@ import { useFinanceStore } from '../../store/financeStore'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
 import { useProfileStore } from '../../store/profileStore'
+import { useMealPlanStore } from '../../store/mealPlanStore'
+import { useRecipesStore } from '../../store/recipesStore'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getRaceThisWeek } from '../../utils/f1'
 import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
@@ -28,6 +30,8 @@ const Dashboard: React.FC = () => {
   const { showToast, theme } = useUiStore()
   const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
+  const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
+  const { recipes, fetchRecipes } = useRecipesStore()
 
   const [showDay, setShowDay]         = useState(false)
   const [showExpense, setShowExpense] = useState(false)
@@ -41,7 +45,12 @@ const Dashboard: React.FC = () => {
   const bgRef   = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { fetchTransactions() }, [])
+  useEffect(() => {
+    fetchTransactions()
+    fetchMealPlan()
+    if (recipes.length === 0) fetchRecipes()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   usePullToRefresh(contentRef, { onRefresh: fetchTransactions })
 
   useEffect(() => {
@@ -82,6 +91,10 @@ const Dashboard: React.FC = () => {
     isRecurring(t) ? !!(t.completionLog?.some(d => d >= todayIso)) : t.done
 
   const routineItems = sprintItems.filter(t => isRecurring(t) && isRoutineDueOnDay(t, todayDate))
+
+  const todayMeals = (mealPlan[today] ?? [])
+    .map(id => recipes.find(r => r.id === id))
+    .filter(Boolean) as typeof recipes
 
   const sparklineData = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(todayDate)
@@ -153,6 +166,26 @@ const Dashboard: React.FC = () => {
         )}
 
         <TasksAccordion />
+
+        {todayMeals.length > 0 && (
+          <button
+            type="button"
+            className={styles.todayMealsRow}
+            onClick={() => navigate('/recipes/planner')}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+            </svg>
+            <span className={styles.todayMealsLabel}>СЬОГОДНІ:</span>
+            <span className={styles.todayMealsText}>
+              {todayMeals.map(r => r.title).join(' · ')}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={styles.todayMealsChevron}>
+              <path d="M6 4l4 4-4 4"/>
+            </svg>
+          </button>
+        )}
+
         <HeroCard
           balance={balance}
           dailyBudget={dailyBudget}

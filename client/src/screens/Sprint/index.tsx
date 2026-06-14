@@ -287,11 +287,31 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					onExpand={() => setWeekExpanded(true)}
 					routineItems={routineItems}
 					selectedDay={selectedDay}
-					onDaySelect={(iso) => { if (iso !== selectedDay) setSelectedDay(iso) }}
+					onDaySelect={iso => {
+						if (iso !== selectedDay) setSelectedDay(iso)
+					}}
 					onLongPress={handleDayLongPress}
 					onPrevWeek={goToPrevWeek}
 					onNextWeek={!isCurrentWeek ? goToNextWeek : undefined}
 				/>
+
+				{/* ── Meal plan strip ── */}
+				{(() => {
+					const dayMeals = (mealPlan[selectedDay] ?? []).map(id => recipes.find(r => r.id === id)).filter(Boolean) as typeof recipes
+					if (dayMeals.length === 0) return null
+					return (
+						<div className={styles.mealStrip}>
+							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.mealStripIcon}>
+								<path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" />
+							</svg>
+							{dayMeals.map(r => (
+								<span key={r.id} className={styles.mealChip}>
+									{r.title}
+								</span>
+							))}
+						</div>
+					)
+				})()}
 
 				{/* ── Quest header ── */}
 				<div className={styles.questHeader}>
@@ -304,10 +324,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 						{(['all', 'task', 'shopping'] as const).map((type, i) => (
 							<React.Fragment key={type}>
 								{i > 0 && <span className={styles.typeSep}>·</span>}
-								<button
-									className={`${styles.typeBtn} ${filterType === type ? styles.typeBtnActive : ''}`}
-									onClick={() => setFilterType(type)}
-								>
+								<button className={`${styles.typeBtn} ${filterType === type ? styles.typeBtnActive : ''}`} onClick={() => setFilterType(type)}>
 									{type === 'all' ? 'ВСІ' : type === 'task' ? 'КВЕСТИ' : 'ПОКУПКИ'}
 								</button>
 							</React.Fragment>
@@ -318,10 +335,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 							{(['active', 'done'] as const).map((status, i) => (
 								<React.Fragment key={status}>
 									{i > 0 && <span className={styles.typeSep}>·</span>}
-									<button
-										className={`${styles.typeBtn} ${filterStatus === status ? styles.typeBtnActive : ''}`}
-										onClick={() => setFilterStatus(status)}
-									>
+									<button className={`${styles.typeBtn} ${filterStatus === status ? styles.typeBtnActive : ''}`} onClick={() => setFilterStatus(status)}>
 										{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
 									</button>
 								</React.Fragment>
@@ -329,24 +343,6 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 						</div>
 					)}
 				</div>
-
-				{/* ── Meal plan strip ── */}
-				{(() => {
-					const dayMeals = (mealPlan[selectedDay] ?? [])
-						.map(id => recipes.find(r => r.id === id))
-						.filter(Boolean) as typeof recipes
-					if (dayMeals.length === 0) return null
-					return (
-						<div className={styles.mealStrip}>
-							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.mealStripIcon}>
-								<path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
-							</svg>
-							{dayMeals.map(r => (
-								<span key={r.id} className={styles.mealChip}>{r.title}</span>
-							))}
-						</div>
-					)
-				})()}
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
@@ -366,10 +362,9 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 									))}
 								</ul>
 							)}
-							</>
+						</>
 					)}
 				</div>
-
 
 				{/* ── Trash accordion ── */}
 				<TrashBin />
@@ -379,8 +374,8 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 			{items.length === 0 && <FabHint storageKey="sprint" text="Додай першу задачу" />}
 			<button className={styles.fab} onClick={() => setShowAdd(true)} aria-label="Додати квест">
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-					<line x1="12" y1="5" x2="12" y2="19"/>
-					<line x1="5" y1="12" x2="19" y2="12"/>
+					<line x1="12" y1="5" x2="12" y2="19" />
+					<line x1="5" y1="12" x2="19" y2="12" />
 				</svg>
 			</button>
 
@@ -401,7 +396,9 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 								<path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
 							</svg>
 							<span>{formatStartDate(quickAddDate)}</span>
-							<button type="button" className={styles.quickAddDateClear} onClick={() => setQuickAddDate(null)} aria-label="Прибрати дату">×</button>
+							<button type="button" className={styles.quickAddDateClear} onClick={() => setQuickAddDate(null)} aria-label="Прибрати дату">
+								×
+							</button>
 						</div>
 					)}
 					<div className={styles.typeRow}>
@@ -468,7 +465,19 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
 										</svg>
 										{formatRepeatActiveLabel(newRepeat, newRepeatConfig)}
-										<button type="button" className={styles.repeatActiveClose} onClick={e => { e.stopPropagation(); setNewRepeat('none'); setNewRepeatConfig(null); setShowRepeatList(false); setShowRepeatConfigScreen(false) }}>✕</button>
+										<button
+											type="button"
+											className={styles.repeatActiveClose}
+											onClick={e => {
+												e.stopPropagation()
+												setNewRepeat('none')
+												setNewRepeatConfig(null)
+												setShowRepeatList(false)
+												setShowRepeatConfigScreen(false)
+											}}
+										>
+											✕
+										</button>
 									</span>
 								)}
 							</div>
@@ -491,8 +500,8 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 							{newRepeat !== 'none' && !showRepeatList && (
 								<div className={styles.routineHint}>
 									<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-										<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
-										<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+										<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
+										<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
 									</svg>
 									Ця справа стане рутиною — видно у тижневому вигляді
 								</div>
@@ -504,17 +513,27 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 									{newReminder ? (
 										<div className={styles.formReminderActive}>
 											<svg width="11" height="11" viewBox="0 0 16 18" fill="none">
-												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
 											</svg>
 											<span>За {formatReminderShort(newReminder.amount, newReminder.unit)}</span>
-											<button type="button" className={styles.formReminderClear} onClick={() => setNewReminder(null)} aria-label="Видалити">×</button>
+											<button type="button" className={styles.formReminderClear} onClick={() => setNewReminder(null)} aria-label="Видалити">
+												×
+											</button>
 										</div>
 									) : (
-										<button type="button" className={styles.formReminderBtn} onClick={() => { setNewReminderAmount(1); setNewReminderUnit('days'); setShowFormReminderPicker(true) }}>
+										<button
+											type="button"
+											className={styles.formReminderBtn}
+											onClick={() => {
+												setNewReminderAmount(1)
+												setNewReminderUnit('days')
+												setShowFormReminderPicker(true)
+											}}
+										>
 											<svg width="11" height="11" viewBox="0 0 16 18" fill="none">
-												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
 											</svg>
 											Сповіщення
 										</button>
@@ -522,28 +541,58 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 								</div>
 							)}
 
-
 							{/* Repeat option list */}
 							{showRepeatList && (
 								<div className={styles.repeatList}>
-									<button type="button" className={`${styles.repeatListItem} ${newRepeat === 'none' ? styles.repeatListItemActive : ''}`}
-										onClick={() => { setNewRepeat('none'); setNewRepeatConfig(null); setShowRepeatList(false) }}>
+									<button
+										type="button"
+										className={`${styles.repeatListItem} ${newRepeat === 'none' ? styles.repeatListItemActive : ''}`}
+										onClick={() => {
+											setNewRepeat('none')
+											setNewRepeatConfig(null)
+											setShowRepeatList(false)
+										}}
+									>
 										<span>Не повторюється</span>
-										{newRepeat === 'none' && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+										{newRepeat === 'none' && (
+											<svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+												<path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+											</svg>
+										)}
 									</button>
 									{QUICK_REPEAT_OPTIONS.map(opt => (
-										<button type="button" key={opt.key}
+										<button
+											type="button"
+											key={opt.key}
 											className={`${styles.repeatListItem} ${newRepeat === opt.key ? styles.repeatListItemActive : ''}`}
-											onClick={() => { setNewRepeat(opt.key); setNewRepeatConfig(null); setShowRepeatList(false) }}>
+											onClick={() => {
+												setNewRepeat(opt.key)
+												setNewRepeatConfig(null)
+												setShowRepeatList(false)
+											}}
+										>
 											<span>{opt.label}</span>
-											{newRepeat === opt.key && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+											{newRepeat === opt.key && (
+												<svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+													<path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+												</svg>
+											)}
 										</button>
 									))}
-									<button type="button"
+									<button
+										type="button"
 										className={`${styles.repeatListItem} ${styles.repeatListCustom} ${newRepeat === 'custom' ? styles.repeatListItemActive : ''}`}
-										onClick={() => { setShowRepeatList(false); setShowRepeatConfigScreen(true) }}>
+										onClick={() => {
+											setShowRepeatList(false)
+											setShowRepeatConfigScreen(true)
+										}}
+									>
 										<span>Налаштувати...</span>
-										{newRepeat === 'custom' && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+										{newRepeat === 'custom' && (
+											<svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+												<path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+											</svg>
+										)}
 									</button>
 								</div>
 							)}
@@ -562,7 +611,9 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 						<div className={styles.formReminderHandle} />
 						<div className={styles.formReminderSheetHeader}>
 							<span className={styles.formReminderSheetTitle}>Сповіщення</span>
-							<button type="button" className={styles.formReminderSheetClose} onClick={() => setShowFormReminderPicker(false)} aria-label="Закрити">✕</button>
+							<button type="button" className={styles.formReminderSheetClose} onClick={() => setShowFormReminderPicker(false)} aria-label="Закрити">
+								✕
+							</button>
 						</div>
 						<div className={styles.formReminderSheetBody}>
 							<div className={styles.formReminderAmountRow}>
@@ -605,7 +656,11 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 			{showRepeatConfigScreen && (
 				<RepeatConfigScreen
 					initial={newRepeatConfig ?? undefined}
-					onSave={config => { setNewRepeat('custom'); setNewRepeatConfig(config); setShowRepeatConfigScreen(false) }}
+					onSave={config => {
+						setNewRepeat('custom')
+						setNewRepeatConfig(config)
+						setShowRepeatConfigScreen(false)
+					}}
 					onClose={() => setShowRepeatConfigScreen(false)}
 				/>
 			)}
@@ -613,25 +668,33 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 			{showStartDatePicker && (
 				<CustomDatePicker
 					value={repeatStartDate}
-					onChange={date => { setRepeatStartDate(date); setShowStartDatePicker(false) }}
+					onChange={date => {
+						setRepeatStartDate(date)
+						setShowStartDatePicker(false)
+					}}
 					onClose={() => setShowStartDatePicker(false)}
 				/>
 			)}
 
 			{/* Trash bin — fixed, fly-to-bin target for TaskCard swipe-delete */}
-			<div
-				className={`${styles.trashBin} ${filteredItems.length === 0 ? styles.trashBinEmpty : ''}`}
-				id="sprint-trash-bin"
-				aria-hidden="true"
-				style={binHidden ? { display: 'none' } : undefined}
-			>
+			<div className={`${styles.trashBin} ${filteredItems.length === 0 ? styles.trashBinEmpty : ''}`} id="sprint-trash-bin" aria-hidden="true" style={binHidden ? { display: 'none' } : undefined}>
 				<svg width="20" height="22" viewBox="0 0 18 20" fill="none">
-					<path d="M1 4h16M6 4V2h6v2M3 4l1 14a1 1 0 001 1h8a1 1 0 001-1L15 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-					<path d="M7 8v6M11 8v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+					<path d="M1 4h16M6 4V2h6v2M3 4l1 14a1 1 0 001 1h8a1 1 0 001-1L15 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+					<path d="M7 8v6M11 8v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
 				</svg>
 			</div>
 
-			{weekExpanded && <WeekExpandedView weekStart={weekStart} routineItems={routineItems} allItems={items} onToggle={toggleItem} onOpenDetail={setDetailTaskId} onClose={() => setWeekExpanded(false)} initialDay={selectedDay} />}
+			{weekExpanded && (
+				<WeekExpandedView
+					weekStart={weekStart}
+					routineItems={routineItems}
+					allItems={items}
+					onToggle={toggleItem}
+					onOpenDetail={setDetailTaskId}
+					onClose={() => setWeekExpanded(false)}
+					initialDay={selectedDay}
+				/>
+			)}
 
 			{showLabelPicker && (
 				<LabelPicker

@@ -235,3 +235,45 @@
   cursor: pointer;
   letter-spacing: 0.04em;
 }
+/* ── Today's meals row ── */
+.todayMealsRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 16px 12px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text2);
+  transition: border-color 0.15s;
+  width: calc(100% - 32px);
+}
+.todayMealsRow:hover { border-color: var(--accent); }
+
+.todayMealsLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.todayMealsText {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text2);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.todayMealsChevron {
+  flex-shrink: 0;
+  opacity: 0.4;
+}
