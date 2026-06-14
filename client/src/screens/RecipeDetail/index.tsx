@@ -6,6 +6,7 @@ import { useUiStore } from '../../store/uiStore'
 import { useSprintStore } from '../../store/sprintStore'
 import RecipeForm from '../../components/recipes/RecipeForm'
 import Modal from '../../components/ui/Modal'
+import IngredientIcon from '../../components/ui/IngredientIcon'
 import type { Recipe } from '../../types'
 import styles from './RecipeDetail.module.css'
 
@@ -374,6 +375,7 @@ const RecipeDetailScreen: React.FC = () => {
                       : scaleIngredientStr(ing, factor)
                     return (
                       <li key={i} className={styles.ingredientItem}>
+                        <IngredientIcon ingredient={name || ing} size={38} />
                         <span className={styles.ingredientName}>{name || ing}</span>
                         {amount && <span className={styles.ingredientAmount}>{amount}</span>}
                       </li>

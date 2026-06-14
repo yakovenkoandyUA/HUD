@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import type { Recipe, RecipeDifficulty } from '../../../types'
 import ImageUploadButton from '../../ui/ImageUploadButton'
+import IngredientIcon from '../../ui/IngredientIcon'
 import styles from './RecipeForm.module.css'
 
 const DEFAULT_CATEGORIES = [
@@ -69,7 +70,9 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   const [step, setStep] = useState<1 | 2>(1)
 
   const [title, setTitle]                   = useState(initial?.title ?? '')
-  const [ingredientsText, setIngredientsText] = useState(initial?.ingredients.join('\n') ?? '')
+  const [ingredientRows, setIngredientRows] = useState<string[]>(
+    initial?.ingredients.length ? initial.ingredients : ['']
+  )
   const initInstructions = (): string[] => {
     if (initial?.instructions?.length) return initial.instructions
     if (initial?.steps?.trim()) return initial.steps.split('\n').map(l => l.trim()).filter(Boolean)
@@ -89,7 +92,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   useEffect(() => {
     setStep(1)
     setTitle(initial?.title ?? '')
-    setIngredientsText(initial?.ingredients.join('\n') ?? '')
+    setIngredientRows(initial?.ingredients.length ? initial.ingredients : [''])
     setInstructions(
       initial?.instructions?.length
         ? initial.instructions
@@ -119,13 +122,13 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
   const handleSubmit = () => {
     const errs: FormErrors = {}
-    if (!ingredientsText.trim()) errs.ingredientsText = 'Введіть інгредієнти'
+    if (!ingredientRows.some(r => r.trim())) errs.ingredientsText = 'Введіть інгредієнти'
     if (!instructions.some(s => s.trim())) errs.instructions = 'Додайте хоча б один крок'
     if (cookTime && (isNaN(parseInt(cookTime)) || parseInt(cookTime) < 1)) errs.cookTime = 'Введіть ціле число > 0'
     if (calories && (isNaN(parseInt(calories)) || parseInt(calories) < 0)) errs.calories = 'Введіть ціле число ≥ 0'
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
-    const ingredients = ingredientsText.split('\n').map(l => l.trim()).filter(Boolean)
+    const ingredients = ingredientRows.map(r => r.trim()).filter(Boolean)
     const equipment = equipmentText.split('\n').map(l => l.trim()).filter(Boolean)
     const cleanInstructions = instructions.map(s => s.trim()).filter(Boolean)
     onSave({
@@ -317,17 +320,57 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>Інгредієнти * <span className={styles.hint}>(кожен з нового рядка)</span></label>
-            <textarea
-              className={`${styles.textarea} ${errors.ingredientsText ? 'inputError' : ''}`}
-              value={ingredientsText}
-              onChange={e => {
-                setIngredientsText(e.target.value)
-                if (errors.ingredientsText && e.target.value.trim()) setErrors(prev => ({ ...prev, ingredientsText: undefined }))
-              }}
-              placeholder={'200г борошна\n2 яйця\n100мл молока'}
-              rows={5}
-            />
+            <label className={styles.label}>Інгредієнти *</label>
+            <div className={styles.stepsList}>
+              {ingredientRows.map((row, i) => (
+                <div key={i} className={styles.ingredientRow}>
+                  <IngredientIcon ingredient={row} size={32} />
+                  <input
+                    className={`${styles.ingredientInput} ${errors.ingredientsText && !row.trim() ? 'inputError' : ''}`}
+                    value={row}
+                    placeholder="200г борошна"
+                    onChange={e => {
+                      const next = [...ingredientRows]
+                      next[i] = e.target.value
+                      setIngredientRows(next)
+                      if (errors.ingredientsText) setErrors(prev => ({ ...prev, ingredientsText: undefined }))
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        setIngredientRows(prev => {
+                          const next = [...prev]
+                          next.splice(i + 1, 0, '')
+                          return next
+                        })
+                      }
+                    }}
+                  />
+                  {ingredientRows.length > 1 && (
+                    <button
+                      type="button"
+                      className={styles.stepRemoveBtn}
+                      onClick={() => setIngredientRows(prev => prev.filter((_, j) => j !== i))}
+                      aria-label="Видалити інгредієнт"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={styles.addStepBtn}
+              onClick={() => setIngredientRows(prev => [...prev, ''])}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              Додати інгредієнт
+            </button>
             {errors.ingredientsText && <span className="errorMsg">{errors.ingredientsText}</span>}
           </div>
 

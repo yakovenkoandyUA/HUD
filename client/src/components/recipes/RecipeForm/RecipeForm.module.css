@@ -328,3 +328,23 @@
   transition: border-color 0.15s, color 0.15s;
 }
 .addStepBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Ingredient rows with icons ── */
+.ingredientRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ingredientInput {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+.ingredientInput:focus { outline: none; border-color: var(--accent); }

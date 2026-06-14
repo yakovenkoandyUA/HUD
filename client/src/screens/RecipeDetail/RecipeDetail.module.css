@@ -453,10 +453,9 @@
 
 .ingredientItem {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
-  padding: 9px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border);
 }
 .ingredientItem:last-child { border-bottom: none; }
