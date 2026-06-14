@@ -45,6 +45,7 @@ const RecipeGeneratorModal: React.FC<RecipeGeneratorModalProps> = ({ onGenerated
         title: string
         ingredients: string[]
         steps: string
+        instructions?: string[]
         cookTime: number
         servings: number
         calories: number
@@ -53,14 +54,15 @@ const RecipeGeneratorModal: React.FC<RecipeGeneratorModalProps> = ({ onGenerated
       }
 
       onGenerated({
-        title: data.title,
-        ingredients: data.ingredients,
-        steps: data.steps,
-        cookTime: data.cookTime,
-        servings: data.servings,
-        calories: data.calories,
-        difficulty: data.difficulty as Recipe['difficulty'],
-        category: data.category,
+        title:        data.title,
+        ingredients:  data.ingredients,
+        steps:        data.steps,
+        instructions: data.instructions,
+        cookTime:     data.cookTime,
+        servings:     data.servings,
+        calories:     data.calories,
+        difficulty:   data.difficulty as Recipe['difficulty'],
+        category:     data.category,
       })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не вдалося згенерувати, спробуй ще раз')

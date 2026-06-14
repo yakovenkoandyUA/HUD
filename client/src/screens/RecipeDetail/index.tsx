@@ -89,8 +89,17 @@ const RecipeDetailScreen: React.FC = () => {
   const [cookLogged, setCookLogged] = useState(false)
 
   const stat = id ? cookStats[id] : undefined
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions'>('ingredients')
+  const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set())
 
   useEffect(() => { fetchCookStats() }, [fetchCookStats])
+
+  const toggleStep = (i: number) =>
+    setCheckedSteps(prev => {
+      const next = new Set(prev)
+      next.has(i) ? next.delete(i) : next.add(i)
+      return next
+    })
 
   const handleLogCook = async () => {
     if (!id) return
@@ -317,49 +326,117 @@ const RecipeDetailScreen: React.FC = () => {
           </div>
         )}
 
-        {/* Description / steps */}
-        {recipe.steps && (
-          <div className={styles.section}>
-            <p className={styles.sectionTitle}>Опис рецепту</p>
-            <p className={styles.description}>{recipe.steps}</p>
-          </div>
-        )}
-
-        {/* Ingredients */}
-        {recipe.ingredients.length > 0 && (
-          <div className={styles.section}>
-            <div className={styles.servingsRow}>
-              <p className={styles.sectionTitle}>Складові</p>
-              <div className={styles.stepper}>
-                <button
-                  type="button"
-                  className={styles.stepperBtn}
-                  onClick={() => setServings(s => Math.max(1, s - 1))}
-                  aria-label="Менше порцій"
-                >−</button>
-                <span className={styles.stepperValue}>{servings}</span>
-                <button
-                  type="button"
-                  className={styles.stepperBtn}
-                  onClick={() => setServings(s => s + 1)}
-                  aria-label="Більше порцій"
-                >+</button>
-              </div>
+        {/* ── Tabs ── */}
+        {(recipe.ingredients.length > 0 || recipe.instructions?.length || recipe.steps) && (
+          <>
+            <div className={styles.tabBar}>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'ingredients' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('ingredients')}
+              >
+                Складові
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'instructions' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('instructions')}
+              >
+                Приготування
+              </button>
             </div>
-            <ul className={styles.ingredientList}>
-              {recipe.ingredients.map((ing, i) => {
-                const { amount, name } = factor === 1
-                  ? parseIngredientStr(ing)
-                  : scaleIngredientStr(ing, factor)
-                return (
-                  <li key={i} className={styles.ingredientItem}>
-                    <span className={styles.ingredientName}>{name || ing}</span>
-                    {amount && <span className={styles.ingredientAmount}>{amount}</span>}
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
+
+            {/* Ingredients tab */}
+            {activeTab === 'ingredients' && recipe.ingredients.length > 0 && (
+              <div className={styles.section}>
+                <div className={styles.servingsRow}>
+                  <p className={styles.sectionTitle}>Складові</p>
+                  <div className={styles.stepper}>
+                    <button
+                      type="button"
+                      className={styles.stepperBtn}
+                      onClick={() => setServings(s => Math.max(1, s - 1))}
+                      aria-label="Менше порцій"
+                    >−</button>
+                    <span className={styles.stepperValue}>{servings}</span>
+                    <button
+                      type="button"
+                      className={styles.stepperBtn}
+                      onClick={() => setServings(s => s + 1)}
+                      aria-label="Більше порцій"
+                    >+</button>
+                  </div>
+                </div>
+                <ul className={styles.ingredientList}>
+                  {recipe.ingredients.map((ing, i) => {
+                    const { amount, name } = factor === 1
+                      ? parseIngredientStr(ing)
+                      : scaleIngredientStr(ing, factor)
+                    return (
+                      <li key={i} className={styles.ingredientItem}>
+                        <span className={styles.ingredientName}>{name || ing}</span>
+                        {amount && <span className={styles.ingredientAmount}>{amount}</span>}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {/* Instructions tab */}
+            {activeTab === 'instructions' && (() => {
+              const steps = recipe.instructions?.length
+                ? recipe.instructions
+                : recipe.steps?.trim()
+                  ? recipe.steps.split('\n').filter(Boolean)
+                  : []
+              if (!steps.length) return (
+                <div className={styles.section}>
+                  <p className={styles.description}>Кроки не вказані</p>
+                </div>
+              )
+              return (
+                <div className={styles.section}>
+                  <div className={styles.stepChecklist}>
+                    {steps.map((step, i) => (
+                      <div
+                        key={i}
+                        className={`${styles.stepItem} ${checkedSteps.has(i) ? styles.stepItemDone : ''}`}
+                        onClick={() => toggleStep(i)}
+                        role="checkbox"
+                        aria-checked={checkedSteps.has(i)}
+                        tabIndex={0}
+                        onKeyDown={e => e.key === ' ' && toggleStep(i)}
+                      >
+                        {/* Vertical line */}
+                        {i < steps.length - 1 && <div className={styles.stepLine} />}
+                        {/* Number / check circle */}
+                        <div className={`${styles.stepCircle} ${checkedSteps.has(i) ? styles.stepCircleDone : ''}`}>
+                          {checkedSteps.has(i) ? (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          ) : (
+                            <span>{i + 1}</span>
+                          )}
+                        </div>
+                        <p className={styles.stepText}>{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {checkedSteps.size > 0 && (
+                    <button
+                      type="button"
+                      className={styles.resetStepsBtn}
+                      onClick={() => setCheckedSteps(new Set())}
+                    >
+                      Скинути прогрес
+                    </button>
+                  )}
+                </div>
+              )
+            })()}
+          </>
         )}
 
         <div className={styles.bottomPad} />

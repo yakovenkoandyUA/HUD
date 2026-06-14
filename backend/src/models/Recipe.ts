@@ -4,6 +4,7 @@ export interface IRecipe extends Document {
   title: string
   ingredients: string[]
   steps: string
+  instructions: string[]
   imageUrl: string
   isPersonal: boolean
   userId: string
@@ -17,9 +18,10 @@ export interface IRecipe extends Document {
 }
 
 const schema = new Schema<IRecipe>({
-  title:       { type: String, required: true },
-  ingredients: { type: [String], default: [] },
-  steps:       { type: String, default: '' },
+  title:        { type: String, required: true },
+  ingredients:  { type: [String], default: [] },
+  steps:        { type: String, default: '' },
+  instructions: { type: [String], default: [] },
   imageUrl:    { type: String, default: '' },
   isPersonal:  { type: Boolean, default: true },
   userId:      { type: String, required: true, index: true },

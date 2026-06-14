@@ -42,7 +42,7 @@ type FormErrors = {
   title?: string
   category?: string
   ingredientsText?: string
-  steps?: string
+  instructions?: string
   cookTime?: string
   calories?: string
 }
@@ -70,7 +70,12 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
   const [title, setTitle]                   = useState(initial?.title ?? '')
   const [ingredientsText, setIngredientsText] = useState(initial?.ingredients.join('\n') ?? '')
-  const [steps, setSteps]                   = useState(initial?.steps ?? '')
+  const initInstructions = (): string[] => {
+    if (initial?.instructions?.length) return initial.instructions
+    if (initial?.steps?.trim()) return initial.steps.split('\n').map(l => l.trim()).filter(Boolean)
+    return ['']
+  }
+  const [instructions, setInstructions] = useState<string[]>(initInstructions)
   const [imageUrl, setImageUrl]             = useState(initial?.imageUrl ?? '')
   const [cookTime, setCookTime]             = useState(initial?.cookTime?.toString() ?? '')
   const [calories, setCalories]             = useState(initial?.calories?.toString() ?? '')
@@ -85,7 +90,13 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
     setStep(1)
     setTitle(initial?.title ?? '')
     setIngredientsText(initial?.ingredients.join('\n') ?? '')
-    setSteps(initial?.steps ?? '')
+    setInstructions(
+      initial?.instructions?.length
+        ? initial.instructions
+        : initial?.steps?.trim()
+          ? initial.steps.split('\n').map(l => l.trim()).filter(Boolean)
+          : ['']
+    )
     setImageUrl(initial?.imageUrl ?? '')
     setCookTime(initial?.cookTime?.toString() ?? '')
     setCalories(initial?.calories?.toString() ?? '')
@@ -109,24 +120,26 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   const handleSubmit = () => {
     const errs: FormErrors = {}
     if (!ingredientsText.trim()) errs.ingredientsText = 'Введіть інгредієнти'
-    if (!steps.trim()) errs.steps = 'Опишіть спосіб приготування'
+    if (!instructions.some(s => s.trim())) errs.instructions = 'Додайте хоча б один крок'
     if (cookTime && (isNaN(parseInt(cookTime)) || parseInt(cookTime) < 1)) errs.cookTime = 'Введіть ціле число > 0'
     if (calories && (isNaN(parseInt(calories)) || parseInt(calories) < 0)) errs.calories = 'Введіть ціле число ≥ 0'
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
     const ingredients = ingredientsText.split('\n').map(l => l.trim()).filter(Boolean)
     const equipment = equipmentText.split('\n').map(l => l.trim()).filter(Boolean)
+    const cleanInstructions = instructions.map(s => s.trim()).filter(Boolean)
     onSave({
-      title:      title.trim(),
+      title:        title.trim(),
       ingredients,
-      steps:      steps.trim(),
-      imageUrl:   imageUrl.trim() || undefined,
-      cookTime:   cookTime ? parseInt(cookTime) : undefined,
-      calories:   calories ? parseInt(calories) : undefined,
-      difficulty: difficulty || undefined,
-      equipment:  equipment.length ? equipment : undefined,
-      category:   category.trim() || undefined,
-      tags:       tags.length ? tags : undefined,
+      steps:        cleanInstructions.join('\n'),
+      instructions: cleanInstructions,
+      imageUrl:     imageUrl.trim() || undefined,
+      cookTime:     cookTime ? parseInt(cookTime) : undefined,
+      calories:     calories ? parseInt(calories) : undefined,
+      difficulty:   difficulty || undefined,
+      equipment:    equipment.length ? equipment : undefined,
+      category:     category.trim() || undefined,
+      tags:         tags.length ? tags : undefined,
     })
   }
 
@@ -319,18 +332,49 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>Спосіб приготування *</label>
-            <textarea
-              className={`${styles.textarea} ${errors.steps ? 'inputError' : ''}`}
-              value={steps}
-              onChange={e => {
-                setSteps(e.target.value)
-                if (errors.steps && e.target.value.trim()) setErrors(prev => ({ ...prev, steps: undefined }))
-              }}
-              placeholder="Опишіть кроки приготування..."
-              rows={5}
-            />
-            {errors.steps && <span className="errorMsg">{errors.steps}</span>}
+            <label className={styles.label}>Кроки приготування *</label>
+            <div className={styles.stepsList}>
+              {instructions.map((inst, i) => (
+                <div key={i} className={styles.stepRow}>
+                  <span className={styles.stepNum}>{i + 1}</span>
+                  <textarea
+                    className={`${styles.stepInput} ${errors.instructions && !inst.trim() ? 'inputError' : ''}`}
+                    value={inst}
+                    rows={2}
+                    placeholder={`Крок ${i + 1}...`}
+                    onChange={e => {
+                      const next = [...instructions]
+                      next[i] = e.target.value
+                      setInstructions(next)
+                      if (errors.instructions) setErrors(prev => ({ ...prev, instructions: undefined }))
+                    }}
+                  />
+                  {instructions.length > 1 && (
+                    <button
+                      type="button"
+                      className={styles.stepRemoveBtn}
+                      onClick={() => setInstructions(prev => prev.filter((_, j) => j !== i))}
+                      aria-label="Видалити крок"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={styles.addStepBtn}
+              onClick={() => setInstructions(prev => [...prev, ''])}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              Додати крок
+            </button>
+            {errors.instructions && <span className="errorMsg">{errors.instructions}</span>}
           </div>
 
           <div className={styles.field}>

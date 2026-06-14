@@ -504,3 +504,120 @@
 .bottomPad {
   height: 32px;
 }
+
+/* ── Content tabs ── */
+.tabBar {
+  display: flex;
+  gap: 6px;
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 9px 0;
+  background: var(--surface2);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.tabBtnActive {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── Step checklist ── */
+.stepChecklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stepItem {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0 0 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.stepItem:last-child { padding-bottom: 4px; }
+
+/* Vertical connecting line */
+.stepLine {
+  position: absolute;
+  left: 13px;
+  top: 28px;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--border);
+  pointer-events: none;
+}
+
+.stepCircle {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  z-index: 1;
+}
+
+.stepCircleDone {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.stepText {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text);
+  padding-top: 4px;
+  transition: color 0.2s, opacity 0.2s;
+}
+
+.stepItemDone .stepText {
+  color: var(--text3);
+  opacity: 0.55;
+  text-decoration: line-through;
+  text-decoration-color: var(--text3);
+}
+
+.resetStepsBtn {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 5px 10px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.resetStepsBtn:hover { border-color: var(--accent); color: var(--accent); }

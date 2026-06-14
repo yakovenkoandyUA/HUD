@@ -152,6 +152,7 @@ export interface Recipe {
   title: string
   ingredients: string[]
   steps: string
+  instructions?: string[]
   imageUrl?: string
   category?: string
   calories?: number

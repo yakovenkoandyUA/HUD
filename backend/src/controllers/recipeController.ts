@@ -81,7 +81,7 @@ ${restrictions?.trim() ? `Обмеження: ${restrictions.trim()}` : ''}
 {
   "title": "Назва страви",
   "ingredients": ["200г курки", "2 яйця", ...],
-  "steps": "1. Крок перший.\\n2. Крок другий.",
+  "instructions": ["Підготуй інгредієнти.", "Обсмаж цибулю до золотистого.", "..."],
   "cookTime": 30,
   "servings": 2,
   "calories": 350,
@@ -89,7 +89,8 @@ ${restrictions?.trim() ? `Обмеження: ${restrictions.trim()}` : ''}
   "category": "Основні страви"
 }
 difficulty — одне з: easy, medium, hard
-category — одне з: Сніданки, Супи, Салати, Основні страви, Гарніри, Десерти, Випічка, Напої, Закуски, Інше`
+category — одне з: Сніданки, Супи, Салати, Основні страви, Гарніри, Десерти, Випічка, Напої, Закуски, Інше
+instructions — масив рядків, кожен елемент один крок без нумерації`
 
   try {
     const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -122,7 +123,7 @@ category — одне з: Сніданки, Супи, Салати, Основн
     const recipe = JSON.parse(jsonMatch[0]) as {
       title: string
       ingredients: string[]
-      steps: string
+      instructions: string[]
       cookTime: number
       servings: number
       calories: number
@@ -130,7 +131,7 @@ category — одне з: Сніданки, Супи, Салати, Основн
       category: string
     }
 
-    res.json(recipe)
+    res.json({ ...recipe, steps: recipe.instructions?.join('\n') ?? '' })
   } catch {
     res.status(500).json({ error: 'Помилка генерації рецепту' })
   }
