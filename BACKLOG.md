@@ -4,7 +4,7 @@
 
 ---
 
-## Статус (2026-06-13) — Що реалізовано
+## Статус (2026-06-14) — Що реалізовано
 
 > Технічний борг: Sentry ✅, Zod ✅, JWT refresh rotation ✅, helmet+CORS+rate-limit ✅, multi-tenancy audit ✅, PWA offline ✅, AI via backend ✅, feature flags замість ролей ✅
 
@@ -97,6 +97,25 @@
 - «Я приготував» — кнопка в RecipeDetail: CookLog модель (MongoDB), logCook/getCookStats API, optimistic update в store, лічильник "Готував N×"
 - Meal Planner (`/recipes/planner`) — тижневий планер Пн–Нд, рецепти по дням, бекенд (MealPlan модель, GET/PUT /api/meal-plan), генерація списку покупок
 - body::after прибрано на `/recipes` для velvet/pixel/cyber тем
+- ✅ **Default tab: СПІЛЬНОТА** — `recipesStore` ініціалізує `scope: 'all'` замість `'mine'`
+- ✅ **DoodleIllustration** — inline SVG компонент, 6 варіантів (recipes/memories/watchlist/sprint/shopping/finance), `opacity: 0.18`, на empty state замість тексту
+- ✅ **FabHint** — одноразова підказка (localStorage dismiss per storageKey), curved arrow SVG, показується після 600мс коли список порожній
+- ✅ **RecipeDetail redesign** — Ingredients/Instructions таби + step-by-step checklist з вертикальною timeline-лінією між кроками; крок → checkmark на тап; «Скинути» кнопка
+- ✅ **instructions[] field** — backend `Recipe` модель додає `instructions: [String]`; RecipeForm ініціалізує з `instructions[]` або fallback split по `steps`; backward compat
+- ✅ **IngredientIcon** — Fluent Emoji 3D через CDN (jsdelivr fluentui-emoji); `ingredientIcons.ts` 100+ українських ключів → folder/filename mapping; 38px `<img>` з onError fallback; відображається в RecipeForm (рядки інгредієнтів) та RecipeDetail (Складові таб)
+- ✅ **RecipeForm redesign** — textarea інгредієнтів → individual rows з live IngredientIcon; steps textarea → numbered rows; Enter додає новий рядок, × видаляє
+- ✅ **MemoryCard star decorator** — позиція варіюється по `title.charCodeAt(0) % 3`, SVG star
+
+### Watchlist
+- Категорії: movie / series / anime / book
+- Пошук: TMDB + Google Books (через backend proxy)
+- WatchlistCard, WatchlistDetail, EpisodesList, StarRating
+- watchedEpisodes[] (прогрес по сезонах), watchedWith (family members)
+- Коментарі між профілями (/api/watchlist/:id/comments)
+- Push-нотифікації: нові епізоди (13:00) + нові сезони
+- Схожі рекомендації, decade фільтр, жанровий фільтр
+- Swipe-to-dismiss, fullscreen search preview
+- ✅ **OpenMoji category tab icons** — `openmojiUrl.ts` utility (jsdelivr openmoji@15.0.0/color/svg); таби стали flex-column icon+label: 🎬 Фільми / 📺 Серіали / 🌸 Аніме / 📚 Книги
 
 ### Глобально
 - Кастомні категорії транзакцій з субкатегоріями

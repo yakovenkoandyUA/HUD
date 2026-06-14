@@ -95,7 +95,10 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - Мета: час готування, порції (stepper +/−), калорії, складність
 - Кнопки дій: Wishlist heart / Покупки (→ sprintStore shopping) / «Приготував» (flame)
 - «Приготував» → `logCook(id)` — POST /api/recipes/:id/cook → CookLog MongoDB; оптимістичне оновлення `cookStats`; показує "Готував N×" + дату останнього разу
-- Інгредієнти з перерахунком під кількість порцій
+- **Таби «Складові» / «Приготування»** — `activeTab: 'ingredients' | 'instructions'` state
+  - Складові: `<IngredientIcon ingredient={name} size={38} />` + назва + кількість з перерахунком
+  - Приготування: `recipe.instructions[]` або fallback split `recipe.steps` по `\n`
+  - Step checklist: `.stepCircle` (number → ✓ на тап), `.stepLine` (vertical connector), `.stepText` (strikethrough when done), «Скинути» кнопка
 - Edit / Delete (тільки свої рецепти)
 
 ## 8a. MealPlanner (`/recipes/planner`)
@@ -110,6 +113,7 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 
 ## 9. Watchlist (`/watchlist`)
 - Категорії: movie / series / anime / book
+- **Tab icons (OpenMoji)**: 🎬 1F3AC / 📺 1F4FA / 🌸 1F338 / 📚 1F4DA — flex-column icon+label; `openmojiUrl(unicode)` → CDN SVG
 - Пошук: TMDB API (фільми/серіали/аніме) або backend proxy `/api/books/search` (книги, Google Books з кешем)
 - Search overlay: fullscreen backdrop, fixed search bar під AppHeader (`--header-height: 56px`), "Скасувати"
 - WatchlistCard — pill-бейдж статусу на постері, book-aware лейбли (ЧИТАЮ / ПРОЧИТАВ)
