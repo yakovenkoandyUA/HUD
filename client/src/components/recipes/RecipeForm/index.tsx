@@ -15,7 +15,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Супи':           openmojiUrl('1F372'), // 🍲
   'Салати':         openmojiUrl('1F957'), // 🥗
   'Основні страви': openmojiUrl('1F958'), // 🥘
-  'Гарніри':        openmojiUrl('1F966'), // 🥦
+  'Гарніри':        openmojiUrl('1F35A'), // 🍚
   'Паста':          openmojiUrl('1F35D'), // 🍝
   'М\'ясо':         openmojiUrl('1F969'), // 🥩
   'Риба':           openmojiUrl('1F41F'), // 🐟
