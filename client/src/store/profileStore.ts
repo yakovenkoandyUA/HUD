@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { uploadToCloudinary } from '../utils/uploadToCloudinary'
 import { useSprintStore } from './sprintStore'
+import { saveRefreshToken, clearRefreshToken } from '../services/api'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
 
@@ -115,7 +116,8 @@ export const useProfileStore = create<ProfileState>()(
           const data = await res.json() as { error?: string }
           throw new Error(data.error ?? 'Помилка входу')
         }
-        const { token, user } = await res.json() as { token: string; user: Profile }
+        const { token, user, refreshToken } = await res.json() as { token: string; user: Profile; refreshToken?: string }
+        if (refreshToken) saveRefreshToken(refreshToken)
         useSprintStore.getState().clearItems()
         set({ token, activeProfile: user, pinLocked: false })
       },
@@ -126,7 +128,8 @@ export const useProfileStore = create<ProfileState>()(
           const data = await res.json() as { error?: string }
           throw new Error(data.error ?? 'Помилка реєстрації')
         }
-        const { token, user } = await res.json() as { token: string; user: Profile }
+        const { token, user, refreshToken } = await res.json() as { token: string; user: Profile; refreshToken?: string }
+        if (refreshToken) saveRefreshToken(refreshToken)
         useSprintStore.getState().clearItems()
         set({ token, activeProfile: user, pinLocked: false })
       },
@@ -139,13 +142,15 @@ export const useProfileStore = create<ProfileState>()(
           body: JSON.stringify({ username }),
         })
         if (!res.ok) throw new Error('Failed to select profile')
-        const { token, user } = await res.json() as { token: string; user: Profile }
+        const { token, user, refreshToken } = await res.json() as { token: string; user: Profile; refreshToken?: string }
+        if (refreshToken) saveRefreshToken(refreshToken)
         useSprintStore.getState().clearItems()
         set({ token, activeProfile: user, pinLocked: false })
       },
 
       logout: () => {
         const { token } = get()
+        clearRefreshToken()
         if (BASE_URL) {
           fetch(`${BASE_URL}/api/auth/logout`, {
             method: 'POST',

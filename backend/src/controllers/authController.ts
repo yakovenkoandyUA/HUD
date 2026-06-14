@@ -73,7 +73,8 @@ async function sendAuthResponse(res: Response, userId: string, role: string, use
     issueRefreshToken(userId),
   ])
   setRefreshCookie(res, refreshRaw)
-  res.status(status).json({ token: accessToken, user })
+  // Include refreshToken in body so clients behind SW (cross-origin cookie issue) can store it
+  res.status(status).json({ token: accessToken, user, refreshToken: refreshRaw })
 }
 
 // ── Email auth ────────────────────────────────────────────────────────────────
@@ -455,9 +456,9 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** POST /auth/refresh — reads httpOnly cookie, issues new access token */
+/** POST /auth/refresh — reads httpOnly cookie OR body.refreshToken (SW cross-origin fallback) */
 export async function refresh(req: Request, res: Response): Promise<void> {
-  const raw = req.cookies?.[COOKIE_NAME] as string | undefined
+  const raw = req.cookies?.[COOKIE_NAME] ?? (req.body as { refreshToken?: string })?.refreshToken
   if (!raw) { res.status(401).json({ error: 'No refresh token' }); return }
 
   try {
@@ -476,7 +477,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
       issueRefreshToken(userId),
     ])
     setRefreshCookie(res, refreshRaw)
-    res.json({ token: accessToken, user: USER_PUBLIC_FIELDS(user) })
+    res.json({ token: accessToken, user: USER_PUBLIC_FIELDS(user), refreshToken: refreshRaw })
   } catch {
     res.status(500).json({ error: 'Refresh failed' })
   }
@@ -484,7 +485,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 
 /** POST /auth/logout — clears refresh token cookie + DB record */
 export async function logout(req: Request, res: Response): Promise<void> {
-  const raw = req.cookies?.[COOKIE_NAME] as string | undefined
+  const raw = req.cookies?.[COOKIE_NAME] ?? (req.body as { refreshToken?: string })?.refreshToken
   if (raw) {
     const tokenHash = crypto.createHash('sha256').update(raw).digest('hex')
     await RefreshToken.deleteOne({ tokenHash }).catch(() => {})

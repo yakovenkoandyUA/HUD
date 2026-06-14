@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
+import { saveRefreshToken } from '../../services/api'
 import styles from './Login.module.css'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
@@ -38,7 +39,8 @@ const LoginScreen: React.FC = () => {
         const data = await res.json() as { error?: string }
         throw new Error(data.error ?? 'Google auth failed')
       }
-      const { token, user } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; salaryDay: number; hasPIN: boolean; isVerified: boolean; city: string; morningStart: number; afternoonStart: number; eveningStart: number } }
+      const { token, user, refreshToken } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; salaryDay: number; hasPIN: boolean; isVerified: boolean; city: string; morningStart: number; afternoonStart: number; eveningStart: number }; refreshToken?: string }
+      if (refreshToken) saveRefreshToken(refreshToken)
       useProfileStore.setState({ token, activeProfile: user, pinLocked: false })
       navigate('/', { replace: true })
     } catch (err) {
