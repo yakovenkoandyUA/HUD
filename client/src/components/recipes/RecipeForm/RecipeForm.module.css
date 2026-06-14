@@ -166,7 +166,7 @@
 /* ── Category icon grid ── */
 .catGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
 
@@ -201,8 +201,11 @@
 }
 
 .catIcon {
-  font-size: 22px;
-  line-height: 1;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
 }
 
 /* ── Difficulty picker ── */

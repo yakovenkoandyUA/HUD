@@ -1,25 +1,29 @@
 import React, { useState, useEffect } from 'react'
 import type { Recipe, RecipeDifficulty } from '../../../types'
+import { openmojiUrl } from '../../../utils/openmojiUrl'
 import ImageUploadButton from '../../ui/ImageUploadButton'
 import IngredientIcon from '../../ui/IngredientIcon'
 import styles from './RecipeForm.module.css'
 
 const DEFAULT_CATEGORIES = [
-  'Сніданки', 'Супи', 'Салати', 'Основні страви', 'Гарніри',
-  'Десерти', 'Випічка', 'Напої', 'Закуски', 'Інше',
+  'Супи', 'Салати', 'Основні страви', 'Гарніри',
+  'Паста', 'М\'ясо', 'Риба', 'Закуски',
+  'Десерти', 'Випічка', 'Напої', 'Інше',
 ]
 
 const CATEGORY_ICONS: Record<string, string> = {
-  'Сніданки':       '🌅',
-  'Супи':           '🍲',
-  'Салати':         '🥗',
-  'Основні страви': '🍽',
-  'Гарніри':        '🥦',
-  'Десерти':        '🍰',
-  'Випічка':        '🥐',
-  'Напої':          '🥤',
-  'Закуски':        '🫙',
-  'Інше':           '📦',
+  'Супи':           openmojiUrl('1F372'), // 🍲
+  'Салати':         openmojiUrl('1F957'), // 🥗
+  'Основні страви': openmojiUrl('1F958'), // 🥘
+  'Гарніри':        openmojiUrl('1F966'), // 🥦
+  'Паста':          openmojiUrl('1F35D'), // 🍝
+  'М\'ясо':         openmojiUrl('1F969'), // 🥩
+  'Риба':           openmojiUrl('1F41F'), // 🐟
+  'Закуски':        openmojiUrl('1F968'), // 🥨
+  'Десерти':        openmojiUrl('1F370'), // 🍰
+  'Випічка':        openmojiUrl('1F950'), // 🥐
+  'Напої':          openmojiUrl('1F964'), // 🥤
+  'Інше':           openmojiUrl('1F4E6'), // 📦
 }
 
 const DIFFICULTY_OPTIONS = [
@@ -194,7 +198,15 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                     if (errors.category) setErrors(prev => ({ ...prev, category: undefined }))
                   }}
                 >
-                  <span className={styles.catIcon}>{CATEGORY_ICONS[c]}</span>
+                  <img
+                    src={CATEGORY_ICONS[c]}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className={styles.catIcon}
+                    loading="lazy"
+                    draggable={false}
+                  />
                   {c}
                 </button>
               ))}
