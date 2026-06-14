@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMealPlanStore } from '../../store/mealPlanStore'
 import { useRecipesStore } from '../../store/recipesStore'
-import { useShoppingListStore } from '../../store/shoppingListStore'
+import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
 import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss'
 import type { Recipe } from '../../types'
@@ -127,7 +127,7 @@ const MealPlannerScreen: React.FC = () => {
   const navigate = useNavigate()
   const { plan, fetchPlan, addToDay, removeFromDay, clearWeek } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
-  const { addFromRecipe } = useShoppingListStore()
+  const { addItems } = useSprintStore()
   const { showToast } = useUiStore()
 
   const [pickerDay, setPickerDay] = useState<{ key: string; label: string } | null>(null)
@@ -150,23 +150,28 @@ const MealPlannerScreen: React.FC = () => {
   const totalPlanned = weekKeys.reduce((acc, k) => acc + (plan[k]?.length ?? 0), 0)
 
   const handleGenerateShopping = () => {
-    let added = 0
+    const tasks: Parameters<typeof addItems>[0] = []
     for (const key of weekKeys) {
       const ids = plan[key] ?? []
       for (const id of ids) {
         const r = recipes.find(rec => rec.id === id)
-        if (r && r.ingredients.length > 0) {
-          addFromRecipe(r, r.servings ?? 2)
-          added++
+        if (r) {
+          tasks.push({
+            type:     'shopping',
+            title:    r.title,
+            priority: 'normal',
+            dueDate:  key,
+          })
         }
       }
     }
-    if (added === 0) {
+    if (tasks.length === 0) {
       showToast('Немає рецептів для генерації', 'error')
       return
     }
-    showToast(`Додано інгредієнти з ${added} рецептів`, 'success')
-    navigate('/shopping')
+    addItems(tasks)
+    showToast(`${tasks.length} рецептів додано до покупок`, 'success')
+    navigate('/sprint')
   }
 
   const pickerAssignedIds = pickerDay ? (plan[pickerDay.key] ?? []) : []

@@ -14,6 +14,8 @@ import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
+import { useMealPlanStore } from '../../store/mealPlanStore'
+import { useRecipesStore } from '../../store/recipesStore'
 import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
 import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
@@ -107,6 +109,8 @@ function nextWeekDayFrom(from: Date, weekDays: number[]): string {
 const Sprint: React.FC = () => {
 	const { items, loading, addItem, toggleItem, deleteItem, fetchItems, migrateFromLocalStorage } = useSprintStore()
 	const { showToast } = useUiStore()
+	const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
+	const { recipes, fetchRecipes } = useRecipesStore()
 	const [filterType, setFilterType]     = useState<FilterType>('all')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
 
@@ -148,6 +152,8 @@ const Sprint: React.FC = () => {
 		const run = async () => {
 			await migrateFromLocalStorage()
 			fetchItems()
+			fetchMealPlan()
+			if (recipes.length === 0) fetchRecipes()
 		}
 		run()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -323,6 +329,24 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 						</div>
 					)}
 				</div>
+
+				{/* ── Meal plan strip ── */}
+				{(() => {
+					const dayMeals = (mealPlan[selectedDay] ?? [])
+						.map(id => recipes.find(r => r.id === id))
+						.filter(Boolean) as typeof recipes
+					if (dayMeals.length === 0) return null
+					return (
+						<div className={styles.mealStrip}>
+							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.mealStripIcon}>
+								<path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+							</svg>
+							{dayMeals.map(r => (
+								<span key={r.id} className={styles.mealChip}>{r.title}</span>
+							))}
+						</div>
+					)
+				})()}
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
