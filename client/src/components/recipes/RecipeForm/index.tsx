@@ -4,6 +4,7 @@ import { openmojiUrl } from '../../../utils/openmojiUrl'
 import { normalizeIngredient } from '../../../utils/normalizeIngredient'
 import ImageUploadButton from '../../ui/ImageUploadButton'
 import IngredientIcon from '../../ui/IngredientIcon'
+import UnitPicker from '../../ui/UnitPicker'
 import styles from './RecipeForm.module.css'
 
 const UNITS = ['г', 'кг', 'мл', 'л', 'шт', 'ч.л.', 'ст.л.']
@@ -328,17 +329,15 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                       setIngredientRows(next)
                     }}
                   />
-                  <select
-                    className={styles.ingredientUnitSelect}
+                  <UnitPicker
                     value={row.unit}
-                    onChange={e => {
+                    units={UNITS}
+                    onChange={unit => {
                       const next = [...ingredientRows]
-                      next[i] = { ...next[i], unit: e.target.value }
+                      next[i] = { ...next[i], unit }
                       setIngredientRows(next)
                     }}
-                  >
-                    {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
+                  />
                   {ingredientRows.length > 1 && (
                     <button
                       type="button"

@@ -130,7 +130,15 @@ const MealPlannerScreen: React.FC = () => {
   const { addItems } = useSprintStore()
   const { showToast } = useUiStore()
 
-  const [pickerDay, setPickerDay] = useState<{ key: string; label: string } | null>(null)
+  const [pickerDay, setPickerDay]       = useState<{ key: string; label: string } | null>(null)
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
+
+  const toggleExpanded = (key: string) =>
+    setExpandedDays(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
 
   const weekDays = getWeekDays()
   const weekKeys = weekDays.map(toDayKey)
@@ -235,7 +243,7 @@ const MealPlannerScreen: React.FC = () => {
               </div>
 
               <div className={styles.daySlots}>
-                {dayRecipes.map(r => (
+                {(expandedDays.has(key) ? dayRecipes : dayRecipes.slice(0, 2)).map(r => (
                   <div key={r.id} className={styles.slot}>
                     {r.imageUrl ? (
                       <img src={r.imageUrl} alt={r.title} className={styles.slotThumb} />
@@ -253,6 +261,17 @@ const MealPlannerScreen: React.FC = () => {
                     </button>
                   </div>
                 ))}
+                {dayRecipes.length > 2 && (
+                  <button
+                    type="button"
+                    className={styles.showMoreBtn}
+                    onClick={() => toggleExpanded(key)}
+                  >
+                    {expandedDays.has(key)
+                      ? 'Сховати'
+                      : `+${dayRecipes.length - 2} ще`}
+                  </button>
+                )}
 
                 <button
                   type="button"
