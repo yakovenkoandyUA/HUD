@@ -1,13 +1,7 @@
-.wrap {
-  position: relative;
-  flex-shrink: 0;
-}
-
 .trigger {
   width: 52px;
-  height: 100%;
-  min-height: 36px;
-  padding: 0 4px;
+  flex-shrink: 0;
+  padding: 8px 4px;
   background: var(--surface2);
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
@@ -21,39 +15,69 @@
   transition: border-color 0.15s, color 0.15s;
 }
 .trigger:hover { border-color: var(--accent-dim); color: var(--text); }
-.triggerOpen { border-color: var(--accent); color: var(--accent); }
 
-.popover {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+/* ── Bottom sheet ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  padding: 12px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border2);
+}
+
+.sheetTitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  align-self: flex-start;
+}
+
+.chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  padding: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-  z-index: 200;
-  min-width: 160px;
+  gap: 8px;
+  width: 100%;
 }
 
 .chip {
-  padding: 5px 10px;
-  border-radius: 20px;
-  border: 1px solid var(--border2);
+  flex: 1;
+  min-width: 60px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border2);
   background: var(--bg3);
   font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   color: var(--text2);
   cursor: pointer;
+  text-align: center;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
-  white-space: nowrap;
 }
-.chip:hover { border-color: var(--accent-dim); color: var(--text); }
+.chip:hover { border-color: var(--accent-dim); }
 
 .chipActive {
   background: var(--accent-soft);

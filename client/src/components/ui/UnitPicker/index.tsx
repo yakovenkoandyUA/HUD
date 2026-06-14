@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react'
 import styles from './UnitPicker.module.css'
 
 /**
  * UnitPicker
  * ----------
- * Компактна кнопка вибору одиниці виміру.
- * Натискання відкриває мінімальний поповер з чіпами над полем.
+ * Кнопка вибору одиниці виміру. Відкриває bottom sheet з чіпами.
  *
  * Props:
  * @prop {string}   value    — поточна одиниця
@@ -20,16 +19,6 @@ interface UnitPickerProps {
 
 const UnitPicker: React.FC<UnitPickerProps> = ({ value, units, onChange }) => {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
 
   const handlePick = (unit: string) => {
     onChange(unit)
@@ -37,34 +26,39 @@ const UnitPicker: React.FC<UnitPickerProps> = ({ value, units, onChange }) => {
   }
 
   return (
-    <div className={styles.wrap} ref={ref}>
+    <>
       <button
         type="button"
-        className={`${styles.trigger} ${open ? styles.triggerOpen : ''}`}
-        onClick={() => setOpen(v => !v)}
+        className={styles.trigger}
+        onClick={() => setOpen(true)}
         aria-haspopup="listbox"
-        aria-expanded={open}
       >
         {value || '—'}
       </button>
 
       {open && (
-        <div className={styles.popover} role="listbox">
-          {units.map(u => (
-            <button
-              key={u}
-              type="button"
-              role="option"
-              aria-selected={u === value}
-              className={`${styles.chip} ${u === value ? styles.chipActive : ''}`}
-              onClick={() => handlePick(u)}
-            >
-              {u}
-            </button>
-          ))}
+        <div className={styles.overlay} onClick={() => setOpen(false)}>
+          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.handle} />
+            <p className={styles.sheetTitle}>Одиниця виміру</p>
+            <div className={styles.chips} role="listbox">
+              {units.map(u => (
+                <button
+                  key={u}
+                  type="button"
+                  role="option"
+                  aria-selected={u === value}
+                  className={`${styles.chip} ${u === value ? styles.chipActive : ''}`}
+                  onClick={() => handlePick(u)}
+                >
+                  {u}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
