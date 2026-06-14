@@ -5,12 +5,15 @@ function icon(folder: string, file: string): string {
 }
 
 // [keyword (uk lowercase partial), folder, filename]
+// Folder names must match Unicode emoji names exactly as used in Fluent Emoji repo
 const ICON_MAP: Array<[string, string, string]> = [
   // ── Vegetables ──
   ['морков',    'Carrot',         'carrot'],
   ['цибул',     'Onion',          'onion'],
+  ['цибуля',    'Onion',          'onion'],
   ['часник',    'Garlic',         'garlic'],
   ['помідор',   'Tomato',         'tomato'],
+  ['томат',     'Tomato',         'tomato'],
   ['огірок',    'Cucumber',       'cucumber'],
   ['огірк',     'Cucumber',       'cucumber'],
   ['картопл',   'Potato',         'potato'],
@@ -25,12 +28,17 @@ const ICON_MAP: Array<[string, string, string]> = [
   ['перець',    'Bell pepper',    'bell_pepper'],
   ['чилі',      'Hot pepper',     'hot_pepper'],
   ['гострий',   'Hot pepper',     'hot_pepper'],
-  ['буряк',     'Beet',          'beet'],
+  ['буряк',     'Beet',           'beet'],
   ['гарбуз',    'Pumpkin',        'pumpkin'],
   ['кабачок',   'Cucumber',       'cucumber'],
+  ['горошок',   'Pea pod',        'pea_pod'],
+  ['квасол',    'Pea pod',        'pea_pod'],
+  ['цвітна',    'Broccoli',       'broccoli'],
 
   // ── Fruits ──
   ['яблук',     'Red apple',      'red_apple'],
+  ['яблочн',    'Red apple',      'red_apple'],
+  ['яблучн',    'Red apple',      'red_apple'],
   ['груш',      'Pear',           'pear'],
   ['банан',     'Banana',         'banana'],
   ['лимон',     'Lemon',          'lemon'],
@@ -55,6 +63,8 @@ const ICON_MAP: Array<[string, string, string]> = [
   ['яйц',       'Egg',            'egg'],
   ['курк',      'Poultry leg',    'poultry_leg'],
   ['курятин',   'Poultry leg',    'poultry_leg'],
+  ['стегн',     'Poultry leg',    'poultry_leg'],
+  ['філе',      'Poultry leg',    'poultry_leg'],
   ['риб',       'Fish',           'fish'],
   ['лосос',     'Fish',           'fish'],
   ['тунец',     'Fish',           'fish'],
@@ -67,18 +77,24 @@ const ICON_MAP: Array<[string, string, string]> = [
   ['бекон',     'Bacon',          'bacon'],
   ['сосис',     'Hot dog',        'hot_dog'],
   ['ковбас',    'Meat on bone',   'meat_on_bone'],
+  ['індич',     'Poultry leg',    'poultry_leg'],
+  ['кролик',    'Meat on bone',   'meat_on_bone'],
 
   // ── Dairy ──
-  ['молок',     'Milk glass',     'milk_glass'],
-  ['вершк',     'Milk glass',     'milk_glass'],
-  ['сметан',    'Milk glass',     'milk_glass'],
-  ['кефір',     'Milk glass',     'milk_glass'],
-  ['йогурт',    'Milk glass',     'milk_glass'],
+  ['молок',     'Glass of milk',  'glass_of_milk'],
+  ['вершк',     'Glass of milk',  'glass_of_milk'],
+  ['сметан',    'Glass of milk',  'glass_of_milk'],
+  ['кефір',     'Glass of milk',  'glass_of_milk'],
+  ['йогурт',    'Glass of milk',  'glass_of_milk'],
   ['масл',      'Butter',         'butter'],
   ['сир',       'Cheese wedge',   'cheese_wedge'],
+  ['пармезан',  'Cheese wedge',   'cheese_wedge'],
+  ['моцарел',   'Cheese wedge',   'cheese_wedge'],
+  ['рікота',    'Cheese wedge',   'cheese_wedge'],
 
-  // ── Grains & Carbs ──
+  // ── Grains, Carbs & Starch ──
   ['борошн',    'Sheaf of rice',  'sheaf_of_rice'],
+  ['крохмал',   'Sheaf of rice',  'sheaf_of_rice'],
   ['рис',       'Cooked rice',    'cooked_rice'],
   ['вівсян',    'Sheaf of rice',  'sheaf_of_rice'],
   ['гречк',     'Cooked rice',    'cooked_rice'],
@@ -86,6 +102,7 @@ const ICON_MAP: Array<[string, string, string]> = [
   ['спагет',    'Spaghetti',      'spaghetti'],
   ['паст',      'Spaghetti',      'spaghetti'],
   ['хліб',      'Bread',          'bread'],
+  ['тісто',     'Bread',          'bread'],
   ['батон',     'Baguette bread', 'baguette_bread'],
   ['багет',     'Baguette bread', 'baguette_bread'],
   ['круасан',   'Croissant',      'croissant'],
@@ -94,19 +111,24 @@ const ICON_MAP: Array<[string, string, string]> = [
 
   // ── Condiments & Liquids ──
   ['мед',       'Honey pot',      'honey_pot'],
-  ['олія',      'Olive oil',      'olive_oil'],
+  ['олія',      'Olive',          'olive'],
   ['олив',      'Olive',          'olive'],
-  ['кетчуп',    'Ketchup',        'ketchup'],
+  ['кетчуп',    'Tomato',         'tomato'],
   ['сіл',       'Salt',           'salt'],
-  ['соус',      'Bottle',         'bottle'],
-  ['оцет',      'Bottle',         'bottle'],
-  ['соя',       'Soy sauce',      'soy_sauce'],
+  ['соєвий',    'Jar',            'jar'],
+  ['соя',       'Jar',            'jar'],
+  ['соус',      'Pot of food',    'pot_of_food'],
+  ['оцет',      'Lemon',          'lemon'],
+  ['майонез',   'Jar',            'jar'],
+  ['гірчиц',    'Jar',            'jar'],
+  ['перець мел','Salt',           'salt'],
 
   // ── Nuts ──
   ['горіх',     'Chestnut',       'chestnut'],
   ['мигдал',    'Chestnut',       'chestnut'],
   ['арахіс',    'Peanuts',        'peanuts'],
   ['фісташк',   'Peanuts',        'peanuts'],
+  ['кешью',     'Peanuts',        'peanuts'],
 
   // ── Sweet ──
   ['шоколад',   'Chocolate bar',  'chocolate_bar'],
@@ -119,6 +141,8 @@ const ICON_MAP: Array<[string, string, string]> = [
   ['цукор',     'Honey pot',      'honey_pot'],
   ['цукерк',    'Candy',          'candy'],
   ['мармелад',  'Candy',          'candy'],
+  ['варення',   'Honey pot',      'honey_pot'],
+  ['джем',      'Honey pot',      'honey_pot'],
 
   // ── Herbs & Spices ──
   ['петрушк',   'Herb',           'herb'],
@@ -129,6 +153,9 @@ const ICON_MAP: Array<[string, string, string]> = [
   ['коріандр',  'Herb',           'herb'],
   ['м\'ят',     'Herb',           'herb'],
   ['кориц',     'Herb',           'herb'],
+  ['куркум',    'Herb',           'herb'],
+  ['паприк',    'Hot pepper',     'hot_pepper'],
+  ['лавров',    'Herb',           'herb'],
 
   // ── Drinks ──
   ['чай',       'Teacup without handle', 'teacup_without_handle'],
@@ -139,14 +166,29 @@ const ICON_MAP: Array<[string, string, string]> = [
   ['сік',       'Beverage box',   'beverage_box'],
   ['лимонад',   'Tropical drink', 'tropical_drink'],
   ['вода',      'Water wave',     'water_wave'],
+  ['бульйон',   'Pot of food',    'pot_of_food'],
 ]
+
+// Splits compound ingredient names like "олія або масло вершкове" into parts
+const COMPOUND_RE = /\s+або\s+|\s+та\s+|\s+чи\s+|\s*\/\s*/
+
+function searchMap(str: string): string | null {
+  for (const [keyword, folder, file] of ICON_MAP) {
+    if (str.includes(keyword)) return icon(folder, file)
+  }
+  return null
+}
 
 export function getIngredientIconUrl(ingredient: string): string | null {
   const lower = ingredient.toLowerCase()
-  for (const [keyword, folder, file] of ICON_MAP) {
-    if (lower.includes(keyword)) {
-      return icon(folder, file)
+
+  // For compound ingredients, try each part in order — first match wins
+  if (COMPOUND_RE.test(lower)) {
+    for (const part of lower.split(COMPOUND_RE)) {
+      const result = searchMap(part.trim())
+      if (result) return result
     }
   }
-  return null
+
+  return searchMap(lower)
 }

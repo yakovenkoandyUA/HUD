@@ -24,8 +24,7 @@ const IngredientIcon: React.FC<IngredientIconProps> = ({ ingredient, size = 36 }
   if (!url || failed) {
     return (
       <span
-        className={styles.placeholder}
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, display: 'block', flexShrink: 0 }}
         aria-hidden="true"
       />
     )
