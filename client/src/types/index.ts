@@ -131,6 +131,7 @@ export interface UnifiedTodo {
   deletedAt?: string
   assignedTo?: string[]
   ownerName?: string
+  assigneeNames?: string[]
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | null
 }
 

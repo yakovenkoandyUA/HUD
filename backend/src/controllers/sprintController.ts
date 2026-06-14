@@ -41,12 +41,26 @@ export async function getTasks(req: Request, res: Response): Promise<void> {
     })
   }
 
+  // Enrich owned tasks that have assignees — attach assigneeNames
+  const allAssigneeIds = [...new Set(myTasks.flatMap(t => t.assignedTo ?? []))]
+  let assigneeMap = new Map<string, string>()
+  if (allAssigneeIds.length > 0) {
+    const assigneeUsers = await User.find({ _id: { $in: allAssigneeIds } }, 'name username')
+    assigneeMap = new Map(assigneeUsers.map(u => [u._id.toString(), u.name ?? u.username]))
+  }
+  const enrichedMyTasks = myTasks.map(t => {
+    if (!t.assignedTo?.length) return t.toObject()
+    const obj = t.toObject() as ReturnType<typeof t.toObject> & { assigneeNames?: string[] }
+    obj.assigneeNames = t.assignedTo.map(id => assigneeMap.get(id)).filter((n): n is string => !!n)
+    return obj
+  })
+
   // Unified fetch (no week filter) — also include legacy TodoItem records
   const todos = (!week && !year)
     ? await TodoItem.find({ userId: myId }).sort({ createdAt: 1 })
     : []
 
-  res.json([...myTasks, ...enrichedAssigned, ...todos])
+  res.json([...enrichedMyTasks, ...enrichedAssigned, ...todos])
 }
 
 export async function createTask(req: Request, res: Response): Promise<void> {

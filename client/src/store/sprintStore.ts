@@ -294,6 +294,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           ...(t.isPinned    && { isPinned:    t.isPinned }),
           ...(t.assignedTo?.length && { assignedTo: t.assignedTo }),
           ...(t.ownerName   && { ownerName:   t.ownerName }),
+          ...((t as { assigneeNames?: string[] }).assigneeNames?.length && { assigneeNames: (t as { assigneeNames?: string[] }).assigneeNames }),
           ...(t.timeOfDay !== undefined && { timeOfDay: t.timeOfDay }),
         }
       })

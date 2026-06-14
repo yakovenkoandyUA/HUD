@@ -324,6 +324,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                 {item.ownerName && (
                   <span className={styles.ownerBadge}>{item.ownerName}</span>
                 )}
+                {!item.ownerName && item.assigneeNames?.length ? (
+                  <span className={styles.assigneeBadge}>{item.assigneeNames[0]}</span>
+                ) : null}
               </div>
               <div className={styles.meta}>
                 {streak > 0 && (
