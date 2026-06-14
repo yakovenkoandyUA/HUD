@@ -46,8 +46,13 @@ export async function getAll(req: Request, res: Response): Promise<void> {
 }
 
 export async function create(req: Request, res: Response): Promise<void> {
-  const item = await Recipe.create({ ...req.body, userId: req.userId })
-  res.status(201).json(item)
+  try {
+    const item = await Recipe.create({ ...req.body, userId: req.userId })
+    res.status(201).json(item)
+  } catch (err) {
+    console.error('Recipe create error:', err)
+    res.status(500).json({ error: 'Failed to create recipe' })
+  }
 }
 
 export async function update(req: Request, res: Response): Promise<void> {

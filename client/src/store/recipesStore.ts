@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authFetch, getToken } from '../services/api'
 import type { Recipe, RecipeScope } from '../types'
+import { useUiStore } from './uiStore'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRecipe(d: Record<string, any>): Recipe {
@@ -76,6 +77,7 @@ export const useRecipesStore = create<RecipesState>()(
         })
         if (!res.ok) {
           set(s => ({ recipes: s.recipes.filter(r => r.id !== tempId) }))
+          useUiStore.getState().showToast('Помилка збереження рецепту', 'error')
           return
         }
         const item = await res.json()
