@@ -157,19 +157,7 @@ const MealPlannerScreen: React.FC = () => {
 
   const totalPlanned = weekKeys.reduce((acc, k) => acc + (plan[k]?.length ?? 0), 0)
 
-  const weekStats = (() => {
-    let totalKcal = 0
-    let countWithKcal = 0
-    for (const key of weekKeys) {
-      for (const id of (plan[key] ?? [])) {
-        const r = recipes.find(rec => rec.id === id)
-        if (r?.calories) { totalKcal += r.calories; countWithKcal++ }
-      }
-    }
-    return { totalKcal, countWithKcal }
-  })()
-
-  const handleCopyWeek = async () => {
+const handleCopyWeek = async () => {
     await copyWeekToNext(weekKeys)
     showToast('План скопійовано на наступний тиждень', 'success')
   }
@@ -290,31 +278,9 @@ const MealPlannerScreen: React.FC = () => {
         })}
       </div>
 
-      {/* ── Weekly stats + actions ── */}
+      {/* ── Actions ── */}
       {totalPlanned > 0 && (
         <div className={styles.generateWrap}>
-          {/* Stats row */}
-          <div className={styles.statsRow}>
-            <div className={styles.statItem}>
-              <span className={styles.statValue}>{totalPlanned}</span>
-              <span className={styles.statLabel}>страв на тиждень</span>
-            </div>
-            {weekStats.countWithKcal > 0 && (
-              <>
-                <div className={styles.statDivider} />
-                <div className={styles.statItem}>
-                  <span className={styles.statValue}>{weekStats.totalKcal.toLocaleString()}</span>
-                  <span className={styles.statLabel}>ккал / тиждень</span>
-                </div>
-                <div className={styles.statDivider} />
-                <div className={styles.statItem}>
-                  <span className={styles.statValue}>{Math.round(weekStats.totalKcal / 7).toLocaleString()}</span>
-                  <span className={styles.statLabel}>ккал / день</span>
-                </div>
-              </>
-            )}
-          </div>
-
           {/* Buttons */}
           <div className={styles.actionRow}>
             <button

@@ -1,6 +1,6 @@
 .root {
   border-radius: var(--radius);
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 /* ── Header ── */
