@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import DoodleIllustration from '../../ui/DoodleIllustration'
 import type { Memory } from '../../../types/memory'
 import styles from './MemoryCard.module.css'
 
@@ -27,8 +28,16 @@ function formatMemoryDate(iso: string): string {
   return `${MONTHS_UA_SHORT[m - 1]} ${y}`
 }
 
+/* Small hand-drawn star positions vary by card to avoid repetition */
+const STAR_CONFIGS = [
+  { top: '10%', right: '8%', size: 14, rotate: 12 },
+  { top: '16%', right: '22%', size: 8, rotate: -8 },
+  { top: '6%', right: '32%', size: 10, rotate: 20 },
+]
+
 const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onClick }) => {
   const [loaded, setLoaded] = useState(false)
+  const starIdx = (memory.title.charCodeAt(0) ?? 0) % STAR_CONFIGS.length
 
   return (
     <div className={styles.card} onClick={onClick}>
@@ -45,9 +54,33 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onClick }) => {
         </>
       ) : (
         <div className={styles.coverPlaceholder}>
-          <span className={styles.placeholderIcon}>📷</span>
+          <DoodleIllustration variant="memories" size={48} />
         </div>
       )}
+
+      {/* Doodle star decorator */}
+      <div
+        className={styles.doodleStar}
+        style={{
+          top: STAR_CONFIGS[starIdx].top,
+          right: STAR_CONFIGS[starIdx].right,
+          transform: `rotate(${STAR_CONFIGS[starIdx].rotate}deg)`,
+        }}
+        aria-hidden="true"
+      >
+        <svg
+          width={STAR_CONFIGS[starIdx].size}
+          height={STAR_CONFIGS[starIdx].size}
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="white"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M10 2 L11.5 8 L18 10 L11.5 12 L10 18 L8.5 12 L2 10 L8.5 8 Z"/>
+        </svg>
+      </div>
 
       <div className={styles.overlay}>
         <div className={styles.meta}>

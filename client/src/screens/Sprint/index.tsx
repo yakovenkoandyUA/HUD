@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
+import DoodleIllustration from '../../components/ui/DoodleIllustration'
+import FabHint from '../../components/ui/FabHint'
 import AppHeader from '../../components/AppHeader'
 import TrashBin from '../../components/sprint/TrashBin'
 import WeekHeader, { addWeeks } from '../../components/sprint/WeekHeader'
@@ -327,7 +329,10 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					{loading && items.length === 0 ? (
 						<p className={styles.dayEmptyText}>Завантаження...</p>
 					) : dayQuests.length === 0 ? (
-						<p className={styles.dayEmptyText}>Немає задач на цей день</p>
+						<div className={styles.dayEmpty}>
+							<DoodleIllustration variant="sprint" size={72} />
+							<p className={styles.dayEmptyText}>Немає задач на цей день</p>
+						</div>
 					) : (
 						<>
 							{dayQuests.length > 0 && (
@@ -347,6 +352,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 			</div>
 
 			{/* ── FAB ── */}
+			{items.length === 0 && <FabHint storageKey="sprint" text="Додай першу задачу" />}
 			<button className={styles.fab} onClick={() => setShowAdd(true)} aria-label="Додати квест">
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
 					<line x1="12" y1="5" x2="12" y2="19"/>

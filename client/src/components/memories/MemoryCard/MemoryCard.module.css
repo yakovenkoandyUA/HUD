@@ -54,6 +54,13 @@
   opacity: 0.4;
 }
 
+.doodleStar {
+  position: absolute;
+  z-index: 2;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 .overlay {
   position: absolute;
   inset: 0;

@@ -12,6 +12,8 @@ import { usePlansStore, type Plan } from '../../store/plansStore'
 import { useUiStore } from '../../store/uiStore'
 import { authFetch } from '../../services/api'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
+import DoodleIllustration from '../../components/ui/DoodleIllustration'
+import FabHint from '../../components/ui/FabHint'
 import 'leaflet/dist/leaflet.css'
 import styles from './Memories.module.css'
 
@@ -187,7 +189,7 @@ const MemoriesScreen: React.FC = () => {
         <>
           {memories.length === 0 ? (
             <div className={styles.empty}>
-              <span className={styles.emptyIcon}>📷</span>
+              <DoodleIllustration variant="memories" size={88} />
               <p className={styles.emptyTitle}>Ще немає спогадів</p>
               <p className={styles.emptyHint}>Додай перший!</p>
             </div>
@@ -317,6 +319,7 @@ const MemoriesScreen: React.FC = () => {
             </div>
           )}
 
+          {memories.length === 0 && <FabHint storageKey="memories" text="Додай спогад" />}
           <button
             type="button"
             className={styles.fab}

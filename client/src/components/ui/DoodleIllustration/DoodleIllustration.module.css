@@ -1,0 +1,5 @@
+.illustration {
+  opacity: 0.18;
+  display: block;
+  flex-shrink: 0;
+}

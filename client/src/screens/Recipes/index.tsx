@@ -8,6 +8,8 @@ import IngredientSearchSheet from '../../components/recipes/IngredientSearchShee
 import Modal from '../../components/ui/Modal'
 import AppHeader from '../../components/AppHeader'
 import MimirIcon from '../../components/ui/MimirIcon'
+import DoodleIllustration from '../../components/ui/DoodleIllustration'
+import FabHint from '../../components/ui/FabHint'
 import { useRecipesStore } from '../../store/recipesStore'
 import { useUiStore } from '../../store/uiStore'
 import type { Recipe, RecipeScope } from '../../types'
@@ -16,9 +18,9 @@ import styles from './Recipes.module.css'
 const GHOST_COUNT = 6
 
 const SCOPE_TABS: { value: RecipeScope; label: string }[] = [
-  { value: 'mine',   label: 'МОЄ'        },
-  { value: 'family', label: "СІМ'Я"      },
   { value: 'all',    label: 'СПІЛЬНОТА'  },
+  { value: 'family', label: "СІМ'Я"      },
+  { value: 'mine',   label: 'МОЄ'        },
 ]
 
 /**
@@ -203,6 +205,7 @@ const Recipes: React.FC = () => {
               </div>
             ))}
             <div className={styles.ghostOverlay}>
+              <DoodleIllustration variant="recipes" size={88} />
               <span className={styles.ghostMsg}>{emptyMsg}</span>
             </div>
           </div>
@@ -221,6 +224,7 @@ const Recipes: React.FC = () => {
       </div>
 
       {/* ── FABs ── */}
+      {recipes.length === 0 && <FabHint storageKey="recipes" text="Додай перший рецепт" />}
       <div className={styles.fabGroup}>
         <button
           type="button"
