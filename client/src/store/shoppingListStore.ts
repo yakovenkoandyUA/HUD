@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Recipe } from '../types'
+import { normalizeIngredient } from '../utils/normalizeIngredient'
 import { authFetch, isBackendConfigured, getToken } from '../services/api'
 
 export interface ShoppingItem {
@@ -84,7 +85,15 @@ export const useShoppingListStore = create<ShoppingListState>()((set, get) => ({
 
   addFromRecipe: (recipe, servings) => {
     const factor = recipe.servings ? servings / recipe.servings : 1
-    const parsed = recipe.ingredients.map(s => parseIngredient(s, factor))
+    const parsed = recipe.ingredients.map(raw => {
+      const ing = normalizeIngredient(raw)
+      if (ing.name && ing.amount) {
+        const rawNum = parseFloat(ing.amount.replace(',', '.'))
+        const scaled = isNaN(rawNum) ? 1 : Math.round(rawNum * factor * 10) / 10
+        return { name: ing.name, amount: scaled, unit: ing.unit || 'шт' }
+      }
+      return parseIngredient(typeof raw === 'string' ? raw : ing.name, factor)
+    })
 
     const toCreate: ShoppingItem[] = []
     const toUpdate: ShoppingItem[] = []

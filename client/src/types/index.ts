@@ -148,10 +148,16 @@ export type RecipeDifficulty = 'easy' | 'medium' | 'hard'
 
 export type RecipeScope = 'mine' | 'family' | 'all'
 
+export interface IngredientItem {
+  name: string
+  amount: string
+  unit: string
+}
+
 export interface Recipe {
   id: string
   title: string
-  ingredients: string[]
+  ingredients: (string | IngredientItem)[]
   steps: string
   instructions?: string[]
   imageUrl?: string

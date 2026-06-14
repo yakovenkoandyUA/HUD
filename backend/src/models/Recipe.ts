@@ -2,7 +2,7 @@ import { Schema, model, Document } from 'mongoose'
 
 export interface IRecipe extends Document {
   title: string
-  ingredients: string[]
+  ingredients: (string | { name: string; amount: string; unit: string })[]
   steps: string
   instructions: string[]
   imageUrl: string
@@ -19,7 +19,7 @@ export interface IRecipe extends Document {
 
 const schema = new Schema<IRecipe>({
   title:        { type: String, required: true },
-  ingredients:  { type: [String], default: [] },
+  ingredients:  { type: [Schema.Types.Mixed], default: [] },
   steps:        { type: String, default: '' },
   instructions: { type: [String], default: [] },
   imageUrl:    { type: String, default: '' },

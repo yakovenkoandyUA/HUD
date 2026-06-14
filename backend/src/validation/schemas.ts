@@ -122,7 +122,12 @@ export const createRecipeSchema = z.object({
   cookTime:   z.number().int().min(0).optional(),
   servings:   z.number().int().min(1).optional(),
   calories:   z.number().int().min(0).optional(),
-  ingredients: z.array(z.object({ name: z.string(), amount: z.string() })).optional(),
+  ingredients: z.array(
+    z.union([
+      z.string(),
+      z.object({ name: z.string(), amount: z.string(), unit: z.string() }),
+    ])
+  ).optional(),
   steps:      z.array(z.string()).optional(),
   imageUrl:   z.string().url().optional(),
   wishlist:   z.boolean().optional(),

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import type { Recipe, RecipeDifficulty } from '../../../types'
+import type { Recipe, RecipeDifficulty, IngredientItem } from '../../../types'
 import { openmojiUrl } from '../../../utils/openmojiUrl'
+import { normalizeIngredient } from '../../../utils/normalizeIngredient'
 import ImageUploadButton from '../../ui/ImageUploadButton'
 import IngredientIcon from '../../ui/IngredientIcon'
 import styles from './RecipeForm.module.css'
+
+const UNITS = ['г', 'кг', 'мл', 'л', 'шт', 'ч.л.', 'ст.л.']
+
+const emptyIngredient = (): IngredientItem => ({ name: '', amount: '', unit: 'г' })
 
 const DEFAULT_CATEGORIES = [
   'Супи', 'Салати', 'Основні страви', 'Гарніри',
@@ -63,8 +68,10 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   const [step, setStep] = useState<1 | 2>(1)
 
   const [title, setTitle]                   = useState(initial?.title ?? '')
-  const [ingredientRows, setIngredientRows] = useState<string[]>(
-    initial?.ingredients.length ? initial.ingredients : ['']
+  const [ingredientRows, setIngredientRows] = useState<IngredientItem[]>(
+    initial?.ingredients.length
+      ? initial.ingredients.map(normalizeIngredient)
+      : [emptyIngredient()]
   )
   const initInstructions = (): string[] => {
     if (initial?.instructions?.length) return initial.instructions
@@ -83,7 +90,11 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   useEffect(() => {
     setStep(1)
     setTitle(initial?.title ?? '')
-    setIngredientRows(initial?.ingredients.length ? initial.ingredients : [''])
+    setIngredientRows(
+      initial?.ingredients.length
+        ? initial.ingredients.map(normalizeIngredient)
+        : [emptyIngredient()]
+    )
     setInstructions(
       initial?.instructions?.length
         ? initial.instructions
@@ -111,13 +122,13 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
   const handleSubmit = () => {
     const errs: FormErrors = {}
-    if (!ingredientRows.some(r => r.trim())) errs.ingredientsText = 'Введіть інгредієнти'
+    if (!ingredientRows.some(r => r.name.trim())) errs.ingredientsText = 'Введіть інгредієнти'
     if (!instructions.some(s => s.trim())) errs.instructions = 'Додайте хоча б один крок'
     if (cookTime && (isNaN(parseInt(cookTime)) || parseInt(cookTime) < 1)) errs.cookTime = 'Введіть ціле число > 0'
     if (calories && (isNaN(parseInt(calories)) || parseInt(calories) < 0)) errs.calories = 'Введіть ціле число ≥ 0'
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
-    const ingredients = ingredientRows.map(r => r.trim()).filter(Boolean)
+    const ingredients = ingredientRows.filter(r => r.name.trim())
     const equipment = equipmentText.split('\n').map(l => l.trim()).filter(Boolean)
     const cleanInstructions = instructions.map(s => s.trim()).filter(Boolean)
     onSave({
@@ -285,14 +296,14 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
             <div className={styles.stepsList}>
               {ingredientRows.map((row, i) => (
                 <div key={i} className={styles.ingredientRow}>
-                  <IngredientIcon ingredient={row} size={32} />
+                  <IngredientIcon ingredient={row.name} size={32} />
                   <input
-                    className={`${styles.ingredientInput} ${errors.ingredientsText && !row.trim() ? 'inputError' : ''}`}
-                    value={row}
-                    placeholder="200г борошна"
+                    className={`${styles.ingredientInput} ${errors.ingredientsText && !row.name.trim() ? 'inputError' : ''}`}
+                    value={row.name}
+                    placeholder="Назва"
                     onChange={e => {
                       const next = [...ingredientRows]
-                      next[i] = e.target.value
+                      next[i] = { ...next[i], name: e.target.value }
                       setIngredientRows(next)
                       if (errors.ingredientsText) setErrors(prev => ({ ...prev, ingredientsText: undefined }))
                     }}
@@ -301,12 +312,33 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                         e.preventDefault()
                         setIngredientRows(prev => {
                           const next = [...prev]
-                          next.splice(i + 1, 0, '')
+                          next.splice(i + 1, 0, emptyIngredient())
                           return next
                         })
                       }
                     }}
                   />
+                  <input
+                    className={styles.ingredientAmountInput}
+                    value={row.amount}
+                    placeholder="100"
+                    onChange={e => {
+                      const next = [...ingredientRows]
+                      next[i] = { ...next[i], amount: e.target.value }
+                      setIngredientRows(next)
+                    }}
+                  />
+                  <select
+                    className={styles.ingredientUnitSelect}
+                    value={row.unit}
+                    onChange={e => {
+                      const next = [...ingredientRows]
+                      next[i] = { ...next[i], unit: e.target.value }
+                      setIngredientRows(next)
+                    }}
+                  >
+                    {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
                   {ingredientRows.length > 1 && (
                     <button
                       type="button"
@@ -325,7 +357,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
             <button
               type="button"
               className={styles.addStepBtn}
-              onClick={() => setIngredientRows(prev => [...prev, ''])}
+              onClick={() => setIngredientRows(prev => [...prev, emptyIngredient()])}
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>

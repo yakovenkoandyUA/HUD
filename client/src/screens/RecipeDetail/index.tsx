@@ -8,6 +8,7 @@ import RecipeForm from '../../components/recipes/RecipeForm'
 import Modal from '../../components/ui/Modal'
 import IngredientIcon from '../../components/ui/IngredientIcon'
 import type { Recipe } from '../../types'
+import { normalizeIngredient } from '../../utils/normalizeIngredient'
 import styles from './RecipeDetail.module.css'
 
 /**
@@ -59,18 +60,12 @@ const ShoppingIcon: React.FC = () => (
 
 
 
-function parseIngredientStr(str: string): { amount: string; name: string } {
-  const m = str.match(/^(\d+(?:[.,]\d+)?\s*(?:[а-яА-Яa-zA-Z]+\.?)?\s*)(.+)$/)
-  if (!m) return { amount: '', name: str }
-  return { amount: m[1].trim(), name: m[2].trim() }
-}
-
-function scaleIngredientStr(str: string, factor: number): { amount: string; name: string } {
-  const m = str.match(/^(\d+(?:[.,]\d+)?)(\s*[а-яА-Яa-zA-Z]*\.?\s*)(.+)$/)
-  if (!m) return { amount: '', name: str }
-  const scaled = parseFloat(m[1].replace(',', '.')) * factor
-  const formatted = scaled % 1 === 0 ? String(Math.round(scaled)) : scaled.toFixed(1)
-  return { amount: formatted + m[2].trim(), name: m[3].trim() }
+function scaleAmount(amount: string, factor: number): string {
+  if (!amount) return ''
+  const n = parseFloat(amount.replace(',', '.'))
+  if (isNaN(n)) return amount
+  const scaled = n * factor
+  return scaled % 1 === 0 ? String(Math.round(scaled)) : scaled.toFixed(1)
 }
 
 const RecipeDetailScreen: React.FC = () => {
@@ -136,11 +131,11 @@ const RecipeDetailScreen: React.FC = () => {
       title:         recipe.title,
       recipeId:      recipe.id,
       recipeImageUrl: recipe.imageUrl,
-      checklist:     recipe.ingredients.map(ing => ({
-        id:    crypto.randomUUID(),
-        title: ing,
-        done:  false,
-      })),
+      checklist:     recipe.ingredients.map(raw => {
+        const ing = normalizeIngredient(raw)
+        const label = [ing.amount, ing.unit, ing.name].filter(Boolean).join(' ')
+        return { id: crypto.randomUUID(), title: label || String(raw), done: false }
+      }),
     })
     showToast(`«${recipe.title}» додано до квестів`, 'success')
     navigate('/sprint')
@@ -352,15 +347,18 @@ const RecipeDetailScreen: React.FC = () => {
               <div className={styles.section}>
                 <p className={styles.sectionTitle}>Складові</p>
                 <ul className={styles.ingredientList}>
-                  {recipe.ingredients.map((ing, i) => {
-                    const { amount, name } = factor === 1
-                      ? parseIngredientStr(ing)
-                      : scaleIngredientStr(ing, factor)
+                  {recipe.ingredients.map((raw, i) => {
+                    const ing = normalizeIngredient(raw)
+                    const scaledAmount = factor === 1 ? ing.amount : scaleAmount(ing.amount, factor)
                     return (
                       <li key={i} className={styles.ingredientItem}>
-                        <IngredientIcon ingredient={name || ing} size={38} />
-                        <span className={styles.ingredientName}>{name || ing}</span>
-                        {amount && <span className={styles.ingredientAmount}>{amount}</span>}
+                        <IngredientIcon ingredient={ing.name} size={38} />
+                        <span className={styles.ingredientName}>{ing.name}</span>
+                        {(scaledAmount || ing.unit) && (
+                          <span className={styles.ingredientAmount}>
+                            {scaledAmount}{ing.unit ? ' ' + ing.unit : ''}
+                          </span>
+                        )}
                       </li>
                     )
                   })}

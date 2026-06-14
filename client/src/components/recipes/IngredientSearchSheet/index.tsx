@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react'
 import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import type { Recipe } from '../../../types'
+import { normalizeIngredient } from '../../../utils/normalizeIngredient'
 import styles from './IngredientSearchSheet.module.css'
 
 /**
@@ -37,7 +38,10 @@ const IngredientSearchSheet: React.FC<IngredientSearchSheetProps> = ({
   // All unique ingredients from all recipes
   const allIngredients = useMemo(() => {
     const set = new Set<string>()
-    recipes.forEach(r => (r.ingredients ?? []).forEach(ing => set.add(ing.toLowerCase().trim())))
+    recipes.forEach(r => (r.ingredients ?? []).forEach(raw => {
+      const name = normalizeIngredient(raw).name
+      if (name) set.add(name.toLowerCase().trim())
+    }))
     return [...set].sort()
   }, [recipes])
 
@@ -58,7 +62,7 @@ const IngredientSearchSheet: React.FC<IngredientSearchSheetProps> = ({
     ? []
     : recipes.filter(r =>
         selected.every(sel =>
-          (r.ingredients ?? []).some(i => i.toLowerCase().includes(sel))
+          (r.ingredients ?? []).some(raw => normalizeIngredient(raw).name.toLowerCase().includes(sel))
         )
       )
 

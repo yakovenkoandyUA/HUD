@@ -69,7 +69,7 @@ const NotFound: React.FC = () => {
         </p>
 
         <p className={styles.sub}>
-          Навіть Один не зміг би її знайти.
+          Навіть Одін не зміг би її знайти.
         </p>
 
         <button className={styles.btn} onClick={() => navigate('/')}>
