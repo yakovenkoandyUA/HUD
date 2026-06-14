@@ -110,7 +110,7 @@ router.get('/report/:month', async (req: Request, res: Response): Promise<void> 
   if (!/^\d{4}-\d{2}$/.test(month)) { res.status(400).json({ error: 'Invalid month format' }); return }
 
   const report = await FinancialReport.findOne({ userId: req.userId, month })
-  if (!report) { res.status(404).json({ error: 'No report yet' }); return }
+  if (!report) { res.json({ content: null }); return }
   res.json({ content: report.content, generatedAt: report.generatedAt })
 })
 

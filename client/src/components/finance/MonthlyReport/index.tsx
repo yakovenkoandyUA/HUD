@@ -98,9 +98,11 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
         const res = await authFetch(`/api/finance/report/${ym}`)
         if (!cancelled) {
           if (res.ok) {
-            const data = await res.json() as { content: string; generatedAt: string }
-            setAiContent(data.content)
-            setAiGeneratedAt(new Date(data.generatedAt))
+            const data = await res.json() as { content: string | null; generatedAt?: string }
+            if (data.content) {
+              setAiContent(data.content)
+              if (data.generatedAt) setAiGeneratedAt(new Date(data.generatedAt))
+            }
           }
         }
       } catch {
