@@ -81,10 +81,12 @@ export const updateTaskSchema = z.object({
 export const createTransactionSchema = z.object({
   amount:      z.number().positive('Сума має бути більше 0'),
   type:        z.enum(['income', 'expense']),
-  description: z.string().min(1, 'Опис обов\'язковий').max(200),
+  desc:        z.string().max(200).optional(),
   date:        z.string().min(1, 'Дата обов\'язкова'),
   category:    z.string().optional(),
   categoryId:  z.string().optional(),
+  title:       z.string().max(200).optional(),
+  recurringId: z.string().optional(),
 })
 
 // ── Notes ─────────────────────────────────────────────────────────────────────
