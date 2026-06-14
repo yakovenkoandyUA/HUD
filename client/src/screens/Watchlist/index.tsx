@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react'
-import { openmojiUrl } from '../../utils/openmojiUrl'
 import AppHeader from '../../components/AppHeader'
 import WatchlistHero from '../../components/watchlist/WatchlistHero'
 import WatchlistSearch from '../../components/watchlist/WatchlistSearch'
@@ -30,11 +29,11 @@ const STATUS_ORDER: Record<string, number> = {
 }
 
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'movie',  label: 'Фільми',   icon: '1F3AC' },
-  { id: 'series', label: 'Серіали',  icon: '1F4FA' },
-  { id: 'anime',  label: 'Аніме',    icon: '1F338' },
-  { id: 'book',   label: 'Книги',    icon: '1F4DA' },
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'movie',  label: 'Фільми' },
+  { id: 'series', label: 'Серіали' },
+  { id: 'anime',  label: 'Аніме' },
+  { id: 'book',   label: 'Книги' },
 ]
 
 const Watchlist: React.FC = () => {
@@ -212,15 +211,6 @@ const Watchlist: React.FC = () => {
               className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
               onClick={() => { setTab(t.id); setActiveStatus(null); setActiveGenres(new Set()) }}
             >
-              <img
-                src={openmojiUrl(t.icon)}
-                alt=""
-                width={22}
-                height={22}
-                className={styles.tabIcon}
-                aria-hidden="true"
-                draggable={false}
-              />
               {t.label}
             </button>
           ))}
