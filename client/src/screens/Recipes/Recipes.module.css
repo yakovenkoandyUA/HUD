@@ -303,6 +303,7 @@
   align-items: center;
   justify-content: center;
   pointer-events: auto;
+  flex-direction: column;
 }
 
 .ghostMsg {

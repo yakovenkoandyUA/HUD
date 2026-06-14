@@ -1,7 +1,8 @@
 .hint {
   position: fixed;
   bottom: calc(var(--nav-height, 64px) + 76px);
-  right: 20px;
+      right: 60px;
+    bottom: 100px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -10,7 +11,7 @@
   opacity: 0;
   animation: fadeIn 0.4s ease 0.1s forwards;
   cursor: pointer;
-  z-index: 10;
+  z-index: 110;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
