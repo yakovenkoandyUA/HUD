@@ -40,7 +40,6 @@ const Recipes: React.FC = () => {
   const [prefillData, setPrefillData]     = useState<Partial<Omit<Recipe, 'id'>> | null>(null)
   const [savedOnly, setSavedOnly]         = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [activeTag, setActiveTag]         = useState<string | null>(null)
   const [showIngredientSearch, setShowIngredientSearch] = useState(false)
 
   useEffect(() => { fetchRecipes() }, [fetchRecipes])
@@ -48,25 +47,20 @@ const Recipes: React.FC = () => {
   const handleScopeChange = (next: RecipeScope) => {
     setSavedOnly(false)
     setSelectedCategory(null)
-    setActiveTag(null)
     setScope(next)
   }
 
   const handleSavedToggle = () => {
     setSavedOnly(v => !v)
     setSelectedCategory(null)
-    setActiveTag(null)
   }
 
   const baseRecipes = savedOnly
     ? recipes.filter(r => wishlistIds.includes(r.id))
     : recipes
 
-  const availableTags = [...new Set(baseRecipes.flatMap(r => r.tags ?? []))].sort()
-
   const visibleRecipes = baseRecipes
     .filter(r => selectedCategory === null || (r.category ?? 'Інше') === selectedCategory)
-    .filter(r => activeTag === null || (r.tags ?? []).includes(activeTag))
 
   const handleRandom = () => {
     if (visibleRecipes.length === 0) return
@@ -133,13 +127,8 @@ const Recipes: React.FC = () => {
                 aria-label="Що приготувати?"
                 title="Що приготувати?"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" strokeWidth="1.8"/>
-                  <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
-                  <circle cx="16" cy="8" r="1.5" fill="currentColor"/>
-                  <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
-                  <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
-                  <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
                 </svg>
               </button>
             )}
@@ -171,21 +160,6 @@ const Recipes: React.FC = () => {
           </div>
         )}
 
-        {/* ── Tags filter ── */}
-        {availableTags.length > 0 && (
-          <div className={styles.tagsFilter}>
-            {availableTags.map(tag => (
-              <button
-                key={tag}
-                type="button"
-                className={`${styles.tagChip} ${activeTag === tag ? styles.tagChipActive : ''}`}
-                onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* ── Section label ── */}
         {baseRecipes.length > 0 && (

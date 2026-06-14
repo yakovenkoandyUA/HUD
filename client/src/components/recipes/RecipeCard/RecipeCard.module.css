@@ -149,13 +149,51 @@
   text-transform: uppercase;
 }
 
+/* ── Difficulty badge — overlay on photo (top-left) ── */
+
+.diffBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.diff_easy {
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 22%, rgba(0,0,0,0.4));
+  border-color: color-mix(in srgb, var(--positive) 40%, transparent);
+}
+
+.diff_medium {
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 22%, rgba(0,0,0,0.4));
+  border-color: color-mix(in srgb, var(--gold) 40%, transparent);
+}
+
+.diff_hard {
+  color: var(--negative);
+  background: color-mix(in srgb, var(--negative) 22%, rgba(0,0,0,0.4));
+  border-color: color-mix(in srgb, var(--negative) 40%, transparent);
+}
+
 /* ── Meta row ── */
 
 .meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 5px;
-  flex-wrap: wrap;
 }
 
 .categoryPill {
@@ -172,39 +210,9 @@
   white-space: nowrap;
 }
 
-/* Difficulty pill — styled like watchlist status chips */
-.diffPill {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 999px;
-  border: 1px solid;
-  white-space: nowrap;
-}
-
-.diff_easy {
-  color: var(--positive);
-  background: color-mix(in srgb, var(--positive) 12%, transparent);
-  border-color: color-mix(in srgb, var(--positive) 30%, transparent);
-}
-
-.diff_medium {
-  color: var(--gold);
-  background: color-mix(in srgb, var(--gold) 12%, transparent);
-  border-color: color-mix(in srgb, var(--gold) 30%, transparent);
-}
-
-.diff_hard {
-  color: var(--negative);
-  background: color-mix(in srgb, var(--negative) 12%, transparent);
-  border-color: color-mix(in srgb, var(--negative) 30%, transparent);
-}
-
 .cookTime {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text3);
+  white-space: nowrap;
 }

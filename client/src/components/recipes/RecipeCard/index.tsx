@@ -73,6 +73,12 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
           </div>
         )}
 
+        {recipe.difficulty && DIFFICULTY_LABEL[recipe.difficulty] && (
+          <span className={`${styles.diffBadge} ${styles[`diff_${recipe.difficulty}`]}`}>
+            {DIFFICULTY_LABEL[recipe.difficulty]}
+          </span>
+        )}
+
         <button
           type="button"
           className={`${styles.heartBtn} ${isWishlisted ? styles.heartActive : ''}`}
@@ -100,15 +106,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
           {!hideCategory && recipe.category && (
             <span className={styles.categoryPill}>{recipe.category}</span>
           )}
-          {recipe.difficulty && DIFFICULTY_LABEL[recipe.difficulty] && (
-            <span className={`${styles.diffPill} ${styles[`diff_${recipe.difficulty}`]}`}>
-              {DIFFICULTY_LABEL[recipe.difficulty]}
-            </span>
-          )}
+          {recipe.cookTime ? (
+            <span className={styles.cookTime}>{formatCookTime(recipe.cookTime)}</span>
+          ) : null}
         </div>
-        {recipe.cookTime ? (
-          <span className={styles.cookTime}>{formatCookTime(recipe.cookTime)}</span>
-        ) : null}
       </div>
     </div>
   )
