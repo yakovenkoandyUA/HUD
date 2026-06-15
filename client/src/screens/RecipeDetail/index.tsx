@@ -21,13 +21,6 @@ import styles from './RecipeDetail.module.css'
 
 const DIFFICULTY_LABELS = { easy: 'Легкий', medium: 'Середній', hard: 'Важкий' }
 
-const EQUIPMENT_EMOJI: Record<string, string> = {
-  'Сковорода': '🍳', 'Каструля': '🫕', 'Миска': '🥣', 'Ніж': '🔪',
-  'Духовка': '🔥', 'Форма для запікання': '🫙', 'Блендер': '🌀',
-  'Пароварка': '💨', 'Дошка': '🪵', 'Мірна склянка': '🧪',
-  'Тертка': '🧀', 'Лопатка': '🥄',
-}
-
 const METHOD_EMOJI: Record<string, string> = {
   'Смаження': '🍳', 'Варіння': '🫧', 'Тушкування': '🫕', 'Запікання': '🔥',
   'Гриль': '🥩', 'На парі': '💨', 'Без термообробки': '🥗', 'Заморожування': '🧊',
@@ -337,19 +330,6 @@ const RecipeDetailScreen: React.FC = () => {
           </div>
         )}
 
-        {/* Equipment */}
-        {recipe.equipment && recipe.equipment.length > 0 && (
-          <div className={styles.toolsSection}>
-            <p className={styles.sectionTitle}>Техніка та інструменти</p>
-            <div className={styles.toolsList}>
-              {recipe.equipment.map((eq, i) => (
-                <span key={i} className={styles.toolChip}>
-                  {EQUIPMENT_EMOJI[eq] ? `${EQUIPMENT_EMOJI[eq]} ` : ''}{eq}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* ── Tabs ── */}
         {(recipe.ingredients.length > 0 || recipe.instructions?.length || recipe.steps) && (
