@@ -24,7 +24,6 @@ interface CategoryCardProps {
 const CategoryCard: React.FC<CategoryCardProps> = ({ name, recipes, isActive, onClick }) => {
   const withPhoto = recipes.filter(r => r.imageUrl)
   const photos = withPhoto.slice(0, 4)
-
   const slots = Array.from({ length: 4 }, (_, i) => photos[i] ?? null)
 
   return (

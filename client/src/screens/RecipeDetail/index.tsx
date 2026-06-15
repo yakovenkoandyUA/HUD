@@ -57,6 +57,17 @@ const ShoppingIcon: React.FC = () => (
   </svg>
 )
 
+const UtensilsIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M5 2v3.5" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round"/>
+    <path d="M7 2v3.5" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round"/>
+    <path d="M5 5.5c0 .8.45 1.4 1 1.4s1-.6 1-1.4" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round"/>
+    <path d="M6 6.9V14" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round"/>
+    <path d="M11 2c0 0 2 1.5 2 3.8V7h-2" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M11 7V14" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round"/>
+  </svg>
+)
+
 // const ShareIcon: React.FC = () => (
 //   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
 //     <path d="M10 2l4 4-4 4M14 6H6a4 4 0 0 0-4 4v1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -187,18 +198,32 @@ const RecipeDetailScreen: React.FC = () => {
             </div>
           )}
           <div className={styles.authorRow}>
-            {recipe.isOwn === false && recipe.ownerAvatarUrl ? (
-              <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.authorAvatar} />
-            ) : recipe.isOwn === false ? (
-              <span className={styles.authorInitial}>{recipe.ownerName?.[0]?.toUpperCase() ?? '?'}</span>
-            ) : activeProfile?.avatarUrl ? (
-              <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.authorAvatar} />
-            ) : (
-              <span className={styles.authorInitial}>{activeProfile?.name?.[0]?.toUpperCase() ?? 'A'}</span>
-            )}
-            <span className={styles.authorName}>
-              {recipe.isOwn === false ? (recipe.ownerName ?? 'Автор') : (activeProfile?.name ?? 'Автор')}
-            </span>
+            <div className={styles.authorInfo}>
+              {recipe.isOwn === false && recipe.ownerAvatarUrl ? (
+                <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.authorAvatar} />
+              ) : recipe.isOwn === false ? (
+                <span className={styles.authorInitial}>{recipe.ownerName?.[0]?.toUpperCase() ?? '?'}</span>
+              ) : activeProfile?.avatarUrl ? (
+                <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.authorAvatar} />
+              ) : (
+                <span className={styles.authorInitial}>{activeProfile?.name?.[0]?.toUpperCase() ?? 'A'}</span>
+              )}
+              <span className={styles.authorName}>
+                {recipe.isOwn === false ? (recipe.ownerName ?? 'Автор') : (activeProfile?.name ?? 'Автор')}
+              </span>
+            </div>
+            <div className={styles.heroMeta}>
+              {recipe.cookTime && (
+                <span className={styles.heroMetaChip}>⏱ {recipe.cookTime} хв</span>
+              )}
+              {recipe.difficulty && (
+                <span className={`${styles.heroMetaChip} ${
+                  recipe.difficulty === 'easy'   ? styles.heroMetaChipEasy :
+                  recipe.difficulty === 'medium' ? styles.heroMetaChipMedium :
+                  styles.heroMetaChipHard
+                }`}>{DIFFICULTY_LABELS[recipe.difficulty]}</span>
+              )}
+            </div>
           </div>
         </div>
       ) : (
@@ -255,21 +280,23 @@ const RecipeDetailScreen: React.FC = () => {
               <span className={styles.authorNameDark}>{activeProfile.name}</span>
             </div>
           )}
-          <div className={styles.metaRow}>
-            {recipe.cookTime && (
-              <>
-                <span className={styles.metaItem}>{recipe.cookTime} хв</span>
-                {(recipe.calories || recipe.difficulty) && <span className={styles.metaDot} />}
-              </>
-            )}
-            {recipe.calories && (
-              <span className={styles.metaItem}>{recipe.calories} ккал/100г</span>
-            )}
-            {recipe.calories && recipe.difficulty && <span className={styles.metaDot} />}
-            {recipe.difficulty && (
-              <span className={styles.metaItem}>{DIFFICULTY_LABELS[recipe.difficulty]}</span>
-            )}
-          </div>
+          {(!recipe.imageUrl || recipe.calories) && (
+            <div className={styles.metaRow}>
+              {!recipe.imageUrl && recipe.cookTime && (
+                <span className={styles.metaItem}>⏱ {recipe.cookTime} хв</span>
+              )}
+              {recipe.calories && (
+                <span className={styles.metaItem}>🔥 {recipe.calories} ккал</span>
+              )}
+              {!recipe.imageUrl && recipe.difficulty && (
+                <span className={`${styles.metaItem} ${
+                  recipe.difficulty === 'easy'   ? styles.metaItemEasy :
+                  recipe.difficulty === 'medium' ? styles.metaItemMedium :
+                  styles.metaItemHard
+                }`}>{DIFFICULTY_LABELS[recipe.difficulty]}</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Action bar */}
@@ -288,10 +315,10 @@ const RecipeDetailScreen: React.FC = () => {
             type="button"
             className={`${styles.actionBtn} ${styles.actionBtnSplit} ${alreadyInList ? styles.actionBtnActive : ''}`}
             onClick={handleAddToShopping}
-            aria-label={alreadyInList ? 'Вже у списку' : 'Додати до покупок'}
+            aria-label={alreadyInList ? 'Вже у покупках' : 'Додати до покупок'}
           >
             <ShoppingIcon />
-            {alreadyInList ? 'У списку' : 'До списку'}
+            {alreadyInList ? 'У покупках' : 'До покупок'}
           </button>
           <button
             type="button"
@@ -299,11 +326,7 @@ const RecipeDetailScreen: React.FC = () => {
             onClick={handleLogCook}
             disabled={cookLogged}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C8 2 5 5.5 5 9c0 2.5 1 4.5 2.5 6L12 22l4.5-7C18 13.5 19 11.5 19 9c0-3.5-3-7-7-7z"
-                stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"
-                fill={cookLogged ? 'currentColor' : 'none'}/>
-            </svg>
+            <UtensilsIcon />
             {cookLogged ? 'Записано!' : stat ? `Готував ${stat.count}×` : 'Приготував'}
           </button>
         </div>
@@ -354,7 +377,6 @@ const RecipeDetailScreen: React.FC = () => {
             {/* Ingredients tab */}
             {activeTab === 'ingredients' && recipe.ingredients.length > 0 && (
               <div className={styles.section}>
-                <p className={styles.sectionTitle}>Складові</p>
                 <ul className={styles.ingredientList}>
                   {recipe.ingredients.map((raw, i) => {
                     const ing = normalizeIngredient(raw)
@@ -428,7 +450,9 @@ const RecipeDetailScreen: React.FC = () => {
                                 <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
                             ) : (
-                              <span>{i + 1}</span>
+                              <svg className={styles.stepCircleGhost} width="14" height="14" viewBox="0 0 12 12" fill="none">
+                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
                             )}
                           </div>
                           <p className={styles.stepText}>{step}</p>

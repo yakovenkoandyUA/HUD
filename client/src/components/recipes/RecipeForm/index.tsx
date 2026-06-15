@@ -268,7 +268,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                     if (!e.target.value || v >= 1) setErrors(prev => ({ ...prev, cookTime: undefined }))
                   }
                 }}
-                placeholder="30"
+                placeholder="напр. 30"
               />
               {errors.cookTime && <span className="errorMsg">{errors.cookTime}</span>}
             </div>
@@ -285,7 +285,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                     if (!e.target.value || v >= 0) setErrors(prev => ({ ...prev, calories: undefined }))
                   }
                 }}
-                placeholder="350"
+                placeholder="напр. 350"
               />
               {errors.calories && <span className="errorMsg">{errors.calories}</span>}
             </div>

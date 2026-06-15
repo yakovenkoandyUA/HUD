@@ -88,22 +88,57 @@
   position: absolute;
   bottom: 14px;
   left: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
+.authorInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.heroMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.heroMetaChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: rgba(0,0,0,0.50);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
+  white-space: nowrap;
+}
+
+.heroMetaChipEasy   { color: #7ecf8e; }
+.heroMetaChipMedium { color: #e8c87a; }
+.heroMetaChipHard   { color: #e8887a; }
+
 .authorAvatar {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
   border: 1.5px solid rgba(255,255,255,0.55);
 }
 
 .authorInitial {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
@@ -111,7 +146,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   border: 1.5px solid rgba(255,255,255,0.55);
   flex-shrink: 0;
@@ -119,9 +154,9 @@
 
 .authorName {
   font-family: var(--font-ui);
-  font-size: 12px;
-  color: rgba(255,255,255,0.9);
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.95);
 }
 
 /* No hero fallback */
@@ -234,11 +269,11 @@
 }
 
 .title {
-  font-family: var(--font-display);
-  font-size: 30px;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 32px;
   color: var(--text);
   line-height: 1.05;
-  letter-spacing: 0.03em;
 }
 
 .authorRowInline {
@@ -279,22 +314,40 @@
 .metaRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text3);
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
 }
 
-.metaDot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--border2);
-  flex-shrink: 0;
+.metaItemEasy {
+  background: color-mix(in srgb, var(--positive) 15%, transparent);
+  border-color: var(--positive);
+  color: var(--positive);
+}
+
+.metaItemMedium {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.metaItemHard {
+  background: var(--negative-soft);
+  border-color: var(--negative);
+  color: var(--negative);
 }
 
 /* ── Action bar ── */
@@ -535,30 +588,30 @@
 /* ── Content tabs ── */
 .tabBar {
   display: flex;
-  gap: 6px;
-  padding: 0;
-  margin-bottom: 4px;
+  border-bottom: 1.5px solid var(--border);
+  margin-bottom: 8px;
 }
 
 .tabBtn {
   flex: 1;
-  padding: 9px 0;
-  background: var(--surface2);
+  padding: 8px 0;
+  background: none;
   border: none;
-  border-radius: var(--radius);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1.5px;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text3);
   cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+  transition: color 0.18s, border-color 0.18s;
 }
 
 .tabBtnActive {
-  background: var(--accent);
-  color: #fff;
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 /* ── Step checklist ── */
@@ -638,12 +691,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 700;
   color: var(--text3);
   transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.15s;
   z-index: 1;
+}
+
+.stepCircleGhost {
+  position: absolute;
+  opacity: 0.3;
+  pointer-events: none;
 }
 .stepItem:active .stepCircle { transform: scale(0.9); }
 
