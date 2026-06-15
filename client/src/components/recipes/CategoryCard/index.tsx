@@ -21,19 +21,11 @@ interface CategoryCardProps {
   onClick: () => void
 }
 
-function recipesWord(n: number): string {
-  const last = n % 10
-  const tens = Math.floor(n / 10) % 10
-  if (tens === 1) return 'рецептів'
-  if (last === 1) return 'рецепт'
-  if (last >= 2 && last <= 4) return 'рецепти'
-  return 'рецептів'
-}
-
 const CategoryCard: React.FC<CategoryCardProps> = ({ name, recipes, isActive, onClick }) => {
   const withPhoto = recipes.filter(r => r.imageUrl)
   const photos = withPhoto.slice(0, 4)
-  const count = recipes.length
+
+  const slots = Array.from({ length: 4 }, (_, i) => photos[i] ?? null)
 
   return (
     <div
@@ -56,9 +48,13 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ name, recipes, isActive, on
 
         {photos.length >= 2 && (
           <div className={styles.collage}>
-            {photos.map((r, i) => (
-              <img key={i} src={r.imageUrl} alt="" className={styles.collagePhoto} loading="lazy" />
-            ))}
+            {slots.map((r, i) =>
+              r ? (
+                <img key={i} src={r.imageUrl} alt="" className={styles.collagePhoto} loading="lazy" />
+              ) : (
+                <div key={i} className={styles.collageEmpty} />
+              )
+            )}
           </div>
         )}
 
@@ -66,7 +62,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ name, recipes, isActive, on
       </div>
 
       <p className={styles.name}>{name}</p>
-      <p className={styles.count}>{count} {recipesWord(count)}</p>
     </div>
   )
 }

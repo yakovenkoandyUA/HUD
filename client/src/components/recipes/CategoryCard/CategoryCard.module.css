@@ -76,6 +76,10 @@
   pointer-events: none;
 }
 
+.collageEmpty {
+  background: var(--surface2);
+}
+
 /* ── Labels ── */
 .name {
   font-family: var(--font-ui);
@@ -87,11 +91,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 96px;
-}
-
-.count {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text3);
-  text-align: center;
 }
