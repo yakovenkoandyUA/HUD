@@ -21,6 +21,18 @@ import styles from './RecipeDetail.module.css'
 
 const DIFFICULTY_LABELS = { easy: 'Легкий', medium: 'Середній', hard: 'Важкий' }
 
+const EQUIPMENT_EMOJI: Record<string, string> = {
+  'Сковорода': '🍳', 'Каструля': '🫕', 'Миска': '🥣', 'Ніж': '🔪',
+  'Духовка': '🔥', 'Форма для запікання': '🫙', 'Блендер': '🌀',
+  'Пароварка': '💨', 'Дошка': '🪵', 'Мірна склянка': '🧪',
+  'Тертка': '🧀', 'Лопатка': '🥄',
+}
+
+const METHOD_EMOJI: Record<string, string> = {
+  'Смаження': '🍳', 'Варіння': '🫧', 'Тушкування': '🫕', 'Запікання': '🔥',
+  'Гриль': '🥩', 'На парі': '💨', 'Без термообробки': '🥗', 'Заморожування': '🧊',
+}
+
 const BackIcon: React.FC = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
     <path d="M11 14L6 9l5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -281,15 +293,16 @@ const RecipeDetailScreen: React.FC = () => {
           </button>
           <button
             type="button"
-            className={`${styles.actionBtn} ${alreadyInList ? styles.actionBtnActive : ''}`}
+            className={`${styles.actionBtn} ${styles.actionBtnSplit} ${alreadyInList ? styles.actionBtnActive : ''}`}
             onClick={handleAddToShopping}
             aria-label={alreadyInList ? 'Вже у списку' : 'Додати до покупок'}
           >
             <ShoppingIcon />
+            {alreadyInList ? 'У списку' : 'До списку'}
           </button>
           <button
             type="button"
-            className={`${styles.actionBtnPrimary} ${styles.actionBtn} ${cookLogged ? styles.actionBtnPrimaryDone : ''}`}
+            className={`${styles.actionBtnPrimary} ${styles.actionBtn} ${styles.actionBtnSplit} ${cookLogged ? styles.actionBtnPrimaryDone : ''}`}
             onClick={handleLogCook}
             disabled={cookLogged}
           >
@@ -310,13 +323,29 @@ const RecipeDetailScreen: React.FC = () => {
           </p>
         )}
 
+        {/* Cooking method */}
+        {recipe.cookingMethod && recipe.cookingMethod.length > 0 && (
+          <div className={styles.toolsSection}>
+            <p className={styles.sectionTitle}>Спосіб готування</p>
+            <div className={styles.toolsList}>
+              {recipe.cookingMethod.map((m, i) => (
+                <span key={i} className={`${styles.toolChip} ${styles.methodChip}`}>
+                  {METHOD_EMOJI[m] ? `${METHOD_EMOJI[m]} ` : ''}{m}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Equipment */}
         {recipe.equipment && recipe.equipment.length > 0 && (
           <div className={styles.toolsSection}>
             <p className={styles.sectionTitle}>Техніка та інструменти</p>
             <div className={styles.toolsList}>
               {recipe.equipment.map((eq, i) => (
-                <span key={i} className={styles.toolChip}>{eq}</span>
+                <span key={i} className={styles.toolChip}>
+                  {EQUIPMENT_EMOJI[eq] ? `${EQUIPMENT_EMOJI[eq]} ` : ''}{eq}
+                </span>
               ))}
             </div>
           </div>

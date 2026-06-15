@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import styles from './UnitPicker.module.css'
 
 /**
  * UnitPicker
  * ----------
  * Кнопка вибору одиниці виміру. Відкриває bottom sheet з чіпами.
+ * Overlay рендериться через portal щоб уникнути кліпінгу від parent overflow.
  *
  * Props:
  * @prop {string}   value    — поточна одиниця
@@ -25,6 +27,29 @@ const UnitPicker: React.FC<UnitPickerProps> = ({ value, units, onChange }) => {
     setOpen(false)
   }
 
+  const overlay = (
+    <div className={styles.overlay} onClick={() => setOpen(false)}>
+      <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+        <div className={styles.handle} />
+        <p className={styles.sheetTitle}>Одиниця виміру</p>
+        <div className={styles.chips} role="listbox">
+          {units.map(u => (
+            <button
+              key={u}
+              type="button"
+              role="option"
+              aria-selected={u === value}
+              className={`${styles.chip} ${u === value ? styles.chipActive : ''}`}
+              onClick={() => handlePick(u)}
+            >
+              {u}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <>
       <button
@@ -36,28 +61,7 @@ const UnitPicker: React.FC<UnitPickerProps> = ({ value, units, onChange }) => {
         {value || '—'}
       </button>
 
-      {open && (
-        <div className={styles.overlay} onClick={() => setOpen(false)}>
-          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
-            <div className={styles.handle} />
-            <p className={styles.sheetTitle}>Одиниця виміру</p>
-            <div className={styles.chips} role="listbox">
-              {units.map(u => (
-                <button
-                  key={u}
-                  type="button"
-                  role="option"
-                  aria-selected={u === value}
-                  className={`${styles.chip} ${u === value ? styles.chipActive : ''}`}
-                  onClick={() => handlePick(u)}
-                >
-                  {u}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {open && createPortal(overlay, document.body)}
     </>
   )
 }

@@ -331,9 +331,13 @@
   background: var(--accent-soft);
 }
 
+/* Shopping + Primary — split 50/50 */
+.actionBtnSplit {
+  flex: 1;
+}
+
 /* "Приготував" — primary action */
 .actionBtnPrimary {
-  flex: 1;
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
@@ -403,6 +407,12 @@
   font-size: 12px;
   color: var(--text2);
   white-space: nowrap;
+}
+
+.methodChip {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+  color: var(--accent);
 }
 
 /* ── Description ── */

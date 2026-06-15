@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import type { Recipe, RecipeDifficulty, IngredientItem } from '../../../types'
-import { openmojiUrl } from '../../../utils/openmojiUrl'
 import { normalizeIngredient } from '../../../utils/normalizeIngredient'
 import ImageUploadButton from '../../ui/ImageUploadButton'
 import IngredientIcon from '../../ui/IngredientIcon'
@@ -8,6 +7,34 @@ import UnitPicker from '../../ui/UnitPicker'
 import styles from './RecipeForm.module.css'
 
 const UNITS = ['г', 'кг', 'мл', 'л', 'шт', 'ч.л.', 'ст.л.']
+
+const EQUIPMENT_OPTIONS: { id: string; icon: string }[] = [
+  { id: 'Сковорода',           icon: '🍳' },
+  { id: 'Каструля',            icon: '🫕' },
+  { id: 'Миска',               icon: '🥣' },
+  { id: 'Ніж',                 icon: '🔪' },
+  { id: 'Духовка',             icon: '🔥' },
+  { id: 'Форма для запікання', icon: '🫙' },
+  { id: 'Блендер',             icon: '🌀' },
+  { id: 'Пароварка',           icon: '💨' },
+  { id: 'Дошка',               icon: '🪵' },
+  { id: 'Мірна склянка',       icon: '🧪' },
+  { id: 'Тертка',              icon: '🧀' },
+  { id: 'Лопатка',             icon: '🥄' },
+]
+
+const METHOD_OPTIONS: { id: string; icon: string }[] = [
+  { id: 'Смаження',           icon: '🍳' },
+  { id: 'Варіння',            icon: '🫧' },
+  { id: 'Тушкування',         icon: '🫕' },
+  { id: 'Запікання',          icon: '🔥' },
+  { id: 'Гриль',              icon: '🥩' },
+  { id: 'На парі',            icon: '💨' },
+  { id: 'Без термообробки',   icon: '🥗' },
+  { id: 'Заморожування',      icon: '🧊' },
+]
+
+const PREDEFINED_EQUIPMENT_IDS = new Set(EQUIPMENT_OPTIONS.map(e => e.id))
 
 const emptyIngredient = (): IngredientItem => ({ name: '', amount: '', unit: 'г' })
 
@@ -17,19 +44,21 @@ const DEFAULT_CATEGORIES = [
   'Десерти', 'Випічка', 'Напої', 'Інше',
 ]
 
+const NOTO = 'https://fonts.gstatic.com/s/e/notoemoji/latest'
+
 const CATEGORY_ICONS: Record<string, string> = {
-  'Супи':           openmojiUrl('1F372'), // 🍲
-  'Салати':         openmojiUrl('1F957'), // 🥗
-  'Основні страви': openmojiUrl('1F958'), // 🥘
-  'Гарніри':        openmojiUrl('1F35A'), // 🍚
-  'Паста':          openmojiUrl('1F35D'), // 🍝
-  'М\'ясо':         openmojiUrl('1F969'), // 🥩
-  'Риба':           openmojiUrl('1F41F'), // 🐟
-  'Закуски':        openmojiUrl('1F968'), // 🥨
-  'Десерти':        openmojiUrl('1F370'), // 🍰
-  'Випічка':        openmojiUrl('1F950'), // 🥐
-  'Напої':          openmojiUrl('1F964'), // 🥤
-  'Інше':           openmojiUrl('1F4E6'), // 📦
+  'Супи':           `${NOTO}/1f372/emoji.svg`, // 🍲
+  'Салати':         `${NOTO}/1f957/emoji.svg`, // 🥗
+  'Основні страви': `${NOTO}/1f958/emoji.svg`, // 🥘
+  'Гарніри':        `${NOTO}/1f35a/emoji.svg`, // 🍚
+  'Паста':          `${NOTO}/1f35d/emoji.svg`, // 🍝
+  'М\'ясо':         `${NOTO}/1f969/emoji.svg`, // 🥩
+  'Риба':           `${NOTO}/1f41f/emoji.svg`, // 🐟
+  'Закуски':        `${NOTO}/1fad4/emoji.svg`, // 🫔 тамале
+  'Десерти':        `${NOTO}/1f370/emoji.svg`, // 🍰
+  'Випічка':        `${NOTO}/1f950/emoji.svg`, // 🥐
+  'Напої':          `${NOTO}/1f964/emoji.svg`, // 🥤
+  'Інше':           `${NOTO}/1f4e6/emoji.svg`, // 📦
 }
 
 const DIFFICULTY_OPTIONS = [
@@ -84,7 +113,9 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   const [cookTime, setCookTime]             = useState(initial?.cookTime?.toString() ?? '')
   const [calories, setCalories]             = useState(initial?.calories?.toString() ?? '')
   const [difficulty, setDifficulty]         = useState<RecipeDifficulty | ''>(initial?.difficulty ?? '')
-  const [equipmentText, setEquipmentText]   = useState(initial?.equipment?.join('\n') ?? '')
+  const [equipment, setEquipment]           = useState<string[]>(initial?.equipment ?? [])
+  const [cookingMethod, setCookingMethod]   = useState<string[]>(initial?.cookingMethod ?? [])
+  const [customEquipment, setCustomEquipment] = useState('')
   const [category, setCategory]             = useState(initial?.category ?? '')
   const [errors, setErrors]                 = useState<FormErrors>({})
 
@@ -107,7 +138,9 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
     setCookTime(initial?.cookTime?.toString() ?? '')
     setCalories(initial?.calories?.toString() ?? '')
     setDifficulty(initial?.difficulty ?? '')
-    setEquipmentText(initial?.equipment?.join('\n') ?? '')
+    setEquipment(initial?.equipment ?? [])
+    setCookingMethod(initial?.cookingMethod ?? [])
+    setCustomEquipment('')
     setCategory(initial?.category ?? '')
     setErrors({})
   }, [initial])
@@ -130,20 +163,22 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
     const ingredients = ingredientRows.filter(r => r.name.trim())
-    const equipment = equipmentText.split('\n').map(l => l.trim()).filter(Boolean)
     const cleanInstructions = instructions.map(s => s.trim()).filter(Boolean)
+    const allEquipment = [...equipment]
+    if (customEquipment.trim()) allEquipment.push(...customEquipment.split('\n').map(s => s.trim()).filter(Boolean))
     onSave({
-      title:        title.trim(),
+      title:         title.trim(),
       ingredients,
-      steps:        cleanInstructions.join('\n'),
-      instructions: cleanInstructions,
-      imageUrl:     imageUrl.trim() || undefined,
-      cookTime:     cookTime ? parseInt(cookTime) : undefined,
-      calories:     calories ? parseInt(calories) : undefined,
-      difficulty:   difficulty || undefined,
-      equipment:    equipment.length ? equipment : undefined,
-      category:     category.trim() || undefined,
-      tags:         initial?.tags?.length ? initial.tags : undefined,
+      steps:         cleanInstructions.join('\n'),
+      instructions:  cleanInstructions,
+      imageUrl:      imageUrl.trim() || undefined,
+      cookTime:      cookTime ? parseInt(cookTime) : undefined,
+      calories:      calories ? parseInt(calories) : undefined,
+      difficulty:    difficulty || undefined,
+      equipment:     allEquipment.length ? allEquipment : undefined,
+      cookingMethod: cookingMethod.length ? cookingMethod : undefined,
+      category:      category.trim() || undefined,
+      tags:          initial?.tags?.length ? initial.tags : undefined,
     })
   }
 
@@ -321,6 +356,9 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                   />
                   <input
                     className={styles.ingredientAmountInput}
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
                     value={row.amount}
                     placeholder="100"
                     onChange={e => {
@@ -413,13 +451,75 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
           </div>
 
           <div className={styles.field}>
+            <label className={styles.label}>Спосіб готування <span className={styles.hint}>(необов'язково)</span></label>
+            <div className={styles.iconChipGrid}>
+              {METHOD_OPTIONS.map(opt => {
+                const active = cookingMethod.includes(opt.id)
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`${styles.iconChip} ${active ? styles.iconChipActive : ''}`}
+                    onClick={() => setCookingMethod(prev =>
+                      active ? prev.filter(m => m !== opt.id) : [...prev, opt.id]
+                    )}
+                  >
+                    <span className={styles.iconChipEmoji}>{opt.icon}</span>
+                    <span className={styles.iconChipLabel}>{opt.id}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className={styles.field}>
             <label className={styles.label}>Інструменти <span className={styles.hint}>(необов'язково)</span></label>
-            <textarea
-              className={styles.textarea}
-              value={equipmentText}
-              onChange={e => setEquipmentText(e.target.value)}
-              placeholder={"🍳 Сковорода\n🥣 Миска\n🔪 Ніж (необов'язково)"}
-              rows={3}
+            <div className={styles.iconChipGrid}>
+              {EQUIPMENT_OPTIONS.map(opt => {
+                const active = equipment.includes(opt.id)
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`${styles.iconChip} ${active ? styles.iconChipActive : ''}`}
+                    onClick={() => setEquipment(prev =>
+                      active ? prev.filter(e => e !== opt.id) : [...prev, opt.id]
+                    )}
+                  >
+                    <span className={styles.iconChipEmoji}>{opt.icon}</span>
+                    <span className={styles.iconChipLabel}>{opt.id}</span>
+                  </button>
+                )
+              })}
+            </div>
+            {/* custom items not in predefined list (from old data or manual entry) */}
+            {equipment.filter(e => !PREDEFINED_EQUIPMENT_IDS.has(e)).map(custom => (
+              <div key={custom} className={styles.customChipRow}>
+                <span className={styles.customChip}>{custom}</span>
+                <button
+                  type="button"
+                  className={styles.stepRemoveBtn}
+                  onClick={() => setEquipment(prev => prev.filter(e => e !== custom))}
+                  aria-label="Видалити"
+                >
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            ))}
+            <input
+              className={styles.customEquipmentInput}
+              value={customEquipment}
+              onChange={e => setCustomEquipment(e.target.value)}
+              placeholder="Інше (через Enter)..."
+              onKeyDown={e => {
+                if (e.key === 'Enter' && customEquipment.trim()) {
+                  e.preventDefault()
+                  setEquipment(prev => [...prev, customEquipment.trim()])
+                  setCustomEquipment('')
+                }
+              }}
             />
           </div>
 

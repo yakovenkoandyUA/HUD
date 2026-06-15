@@ -167,6 +167,7 @@ export interface Recipe {
   cookTime?: number
   servings?: number
   equipment?: string[]
+  cookingMethod?: string[]
   tags?: string[]
   ownerName?: string
   ownerAvatarUrl?: string | null
