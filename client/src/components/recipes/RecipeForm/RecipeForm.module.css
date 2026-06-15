@@ -401,12 +401,30 @@
 .ingredientAmountInput:focus { outline: none; border-color: var(--accent); }
 .ingredientAmountInput::placeholder { color: var(--text3); }
 
+/* ── Ingredient row error state ── */
+.ingredientRowError .ingredientInput,
+.ingredientAmountError {
+  border-color: var(--negative) !important;
+}
+
 /* ── Icon chip grid (equipment / method) ── */
 .iconChipGrid {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
+
+/* Horizontal scroll row (method / equipment) */
+.chipScrollRow {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 6px;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.chipScrollRow::-webkit-scrollbar { display: none; }
 
 .iconChip {
   display: flex;
@@ -415,6 +433,7 @@
   gap: 3px;
   padding: 8px 6px 6px;
   min-width: 60px;
+  flex-shrink: 0;
   border-radius: 10px;
   border: 1.5px solid var(--border2);
   background: var(--bg3);

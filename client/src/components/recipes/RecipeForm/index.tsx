@@ -71,6 +71,7 @@ type FormErrors = {
   title?: string
   category?: string
   ingredientsText?: string
+  ingredientRows?: Record<number, string>
   instructions?: string
   cookTime?: string
   calories?: string
@@ -157,6 +158,11 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
   const handleSubmit = () => {
     const errs: FormErrors = {}
     if (!ingredientRows.some(r => r.name.trim())) errs.ingredientsText = 'Введіть інгредієнти'
+    const rowErrs: Record<number, string> = {}
+    ingredientRows.forEach((r, i) => {
+      if (r.name.trim() && !r.amount.trim()) rowErrs[i] = 'Вкажи кількість'
+    })
+    if (Object.keys(rowErrs).length) errs.ingredientRows = rowErrs
     if (!instructions.some(s => s.trim())) errs.instructions = 'Додайте хоча б один крок'
     if (cookTime && (isNaN(parseInt(cookTime)) || parseInt(cookTime) < 1)) errs.cookTime = 'Введіть ціле число > 0'
     if (calories && (isNaN(parseInt(calories)) || parseInt(calories) < 0)) errs.calories = 'Введіть ціле число ≥ 0'
@@ -331,7 +337,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
             <label className={styles.label}>Інгредієнти *</label>
             <div className={styles.stepsList}>
               {ingredientRows.map((row, i) => (
-                <div key={i} className={styles.ingredientRow}>
+                <div key={i} className={`${styles.ingredientRow} ${errors.ingredientRows?.[i] ? styles.ingredientRowError : ''}`}>
                   <IngredientIcon ingredient={row.name} size={32} />
                   <input
                     className={`${styles.ingredientInput} ${errors.ingredientsText && !row.name.trim() ? 'inputError' : ''}`}
@@ -342,6 +348,10 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                       next[i] = { ...next[i], name: e.target.value }
                       setIngredientRows(next)
                       if (errors.ingredientsText) setErrors(prev => ({ ...prev, ingredientsText: undefined }))
+                      if (errors.ingredientRows?.[i]) setErrors(prev => {
+                        const rows = { ...prev.ingredientRows }; delete rows[i]
+                        return { ...prev, ingredientRows: Object.keys(rows).length ? rows : undefined }
+                      })
                     }}
                     onKeyDown={e => {
                       if (e.key === 'Enter') {
@@ -355,7 +365,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                     }}
                   />
                   <input
-                    className={styles.ingredientAmountInput}
+                    className={`${styles.ingredientAmountInput} ${errors.ingredientRows?.[i] ? styles.ingredientAmountError : ''}`}
                     type="number"
                     inputMode="decimal"
                     min="0"
@@ -365,6 +375,10 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
                       const next = [...ingredientRows]
                       next[i] = { ...next[i], amount: e.target.value }
                       setIngredientRows(next)
+                      if (errors.ingredientRows?.[i] && e.target.value.trim()) setErrors(prev => {
+                        const rows = { ...prev.ingredientRows }; delete rows[i]
+                        return { ...prev, ingredientRows: Object.keys(rows).length ? rows : undefined }
+                      })
                     }}
                   />
                   <UnitPicker
@@ -452,7 +466,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
           <div className={styles.field}>
             <label className={styles.label}>Спосіб готування <span className={styles.hint}>(необов'язково)</span></label>
-            <div className={styles.iconChipGrid}>
+            <div className={styles.chipScrollRow}>
               {METHOD_OPTIONS.map(opt => {
                 const active = cookingMethod.includes(opt.id)
                 return (
@@ -474,7 +488,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ initial, onSave, onCancel }) =>
 
           <div className={styles.field}>
             <label className={styles.label}>Інструменти <span className={styles.hint}>(необов'язково)</span></label>
-            <div className={styles.iconChipGrid}>
+            <div className={styles.chipScrollRow}>
               {EQUIPMENT_OPTIONS.map(opt => {
                 const active = equipment.includes(opt.id)
                 return (
