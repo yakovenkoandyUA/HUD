@@ -273,23 +273,23 @@ const RecipeDetailScreen: React.FC = () => {
             type="button"
             className={`${styles.actionBtn} ${isWishlisted ? styles.actionBtnActive : ''}`}
             onClick={() => { if (id) toggleWishlist(id); }}
+            aria-label={isWishlisted ? 'Видалити з wishlist' : 'Додати до wishlist'}
           >
             <span className={`${styles.heartWrap} ${isWishlisted ? styles.heartActive : ''}`}>
               <HeartIcon filled={isWishlisted} />
             </span>
-            Wishlist
           </button>
           <button
             type="button"
             className={`${styles.actionBtn} ${alreadyInList ? styles.actionBtnActive : ''}`}
             onClick={handleAddToShopping}
+            aria-label={alreadyInList ? 'Вже у списку' : 'Додати до покупок'}
           >
             <ShoppingIcon />
-            {alreadyInList ? 'У списку' : 'Покупки'}
           </button>
           <button
             type="button"
-            className={`${styles.actionBtn} ${cookLogged ? styles.actionBtnActive : ''}`}
+            className={`${styles.actionBtnPrimary} ${styles.actionBtn} ${cookLogged ? styles.actionBtnPrimaryDone : ''}`}
             onClick={handleLogCook}
             disabled={cookLogged}
           >
@@ -378,44 +378,55 @@ const RecipeDetailScreen: React.FC = () => {
                   <p className={styles.description}>Кроки не вказані</p>
                 </div>
               )
+              const firstUnchecked = steps.findIndex((_, i) => !checkedSteps.has(i))
+              const allDone = checkedSteps.size === steps.length
               return (
                 <div className={styles.section}>
-                  <div className={styles.stepChecklist}>
-                    {steps.map((step, i) => (
-                      <div
-                        key={i}
-                        className={`${styles.stepItem} ${checkedSteps.has(i) ? styles.stepItemDone : ''}`}
-                        onClick={() => toggleStep(i)}
-                        role="checkbox"
-                        aria-checked={checkedSteps.has(i)}
-                        tabIndex={0}
-                        onKeyDown={e => e.key === ' ' && toggleStep(i)}
-                      >
-                        {/* Vertical line */}
-                        {i < steps.length - 1 && <div className={styles.stepLine} />}
-                        {/* Number / check circle */}
-                        <div className={`${styles.stepCircle} ${checkedSteps.has(i) ? styles.stepCircleDone : ''}`}>
-                          {checkedSteps.has(i) ? (
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          ) : (
-                            <span>{i + 1}</span>
-                          )}
-                        </div>
-                        <p className={styles.stepText}>{step}</p>
-                      </div>
-                    ))}
+                  {/* Progress */}
+                  <div className={styles.stepsHeader}>
+                    <span className={`${styles.stepsCounter} ${allDone ? styles.stepsCounterDone : ''}`}>
+                      {allDone ? '✓ Всі кроки виконано' : `${checkedSteps.size} / ${steps.length} кроків`}
+                    </span>
+                    {checkedSteps.size > 0 && (
+                      <button type="button" className={styles.resetStepsBtn} onClick={() => setCheckedSteps(new Set())}>
+                        Скинути
+                      </button>
+                    )}
                   </div>
-                  {checkedSteps.size > 0 && (
-                    <button
-                      type="button"
-                      className={styles.resetStepsBtn}
-                      onClick={() => setCheckedSteps(new Set())}
-                    >
-                      Скинути прогрес
-                    </button>
-                  )}
+                  <div className={styles.stepsProgressBar}>
+                    <div className={styles.stepsProgressFill} style={{ width: `${(checkedSteps.size / steps.length) * 100}%` }} />
+                  </div>
+                  <div className={styles.stepChecklist}>
+                    {steps.map((step, i) => {
+                      const isDone = checkedSteps.has(i)
+                      const isNext = i === firstUnchecked
+                      return (
+                        <div
+                          key={i}
+                          className={`${styles.stepItem} ${isDone ? styles.stepItemDone : ''}`}
+                          onClick={() => toggleStep(i)}
+                          role="checkbox"
+                          aria-checked={isDone}
+                          tabIndex={0}
+                          onKeyDown={e => e.key === ' ' && toggleStep(i)}
+                        >
+                          {i < steps.length - 1 && (
+                            <div className={`${styles.stepLine} ${isDone ? styles.stepLineDone : ''}`} />
+                          )}
+                          <div className={`${styles.stepCircle} ${isDone ? styles.stepCircleDone : isNext ? styles.stepCircleNext : ''}`}>
+                            {isDone ? (
+                              <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            ) : (
+                              <span>{i + 1}</span>
+                            )}
+                          </div>
+                          <p className={styles.stepText}>{step}</p>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               )
             })()}

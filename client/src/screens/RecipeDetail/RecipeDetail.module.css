@@ -11,7 +11,7 @@
 .hero {
   position: relative;
   width: 100%;
-  aspect-ratio: 4/3;
+  height: 280px;
   background: var(--bg3);
   flex-shrink: 0;
 }
@@ -301,26 +301,27 @@
 .actionBar {
   display: flex;
   gap: 8px;
+  align-items: stretch;
 }
 
 .actionBtn {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 9px 12px;
+  border-radius: 10px;
   background: var(--surface);
   border: 1px solid var(--border);
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text2);
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 .actionBtn:active { background: var(--surface2); }
 
@@ -328,6 +329,23 @@
   color: var(--accent);
   border-color: var(--accent-dim);
   background: var(--accent-soft);
+}
+
+/* "Приготував" — primary action */
+.actionBtnPrimary {
+  flex: 1;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  padding: 10px 16px;
+}
+.actionBtnPrimary:active { opacity: 0.85; background: var(--accent); }
+
+.actionBtnPrimaryDone {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+  color: var(--accent);
 }
 
 .heartWrap {
@@ -534,6 +552,39 @@
 }
 
 /* ── Step checklist ── */
+
+.stepsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.stepsCounter {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.stepsCounterDone {
+  color: var(--accent);
+}
+
+.stepsProgressBar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.stepsProgressFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
 .stepChecklist {
   display: flex;
   flex-direction: column;
@@ -555,30 +606,42 @@
 /* Vertical connecting line */
 .stepLine {
   position: absolute;
-  left: 13px;
-  top: 28px;
+  left: 16px;
+  top: 34px;
   bottom: 0;
   width: 1.5px;
   background: var(--border);
   pointer-events: none;
 }
 
+.stepLineDone {
+  background: var(--accent-dim);
+}
+
 .stepCircle {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 2px solid var(--border2);
   background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text3);
-  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.15s;
   z-index: 1;
+}
+.stepItem:active .stepCircle { transform: scale(0.9); }
+
+/* First unchecked step — accent border hint */
+.stepCircleNext {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .stepCircleDone {
@@ -593,15 +656,15 @@
   font-size: 13.5px;
   line-height: 1.5;
   color: var(--text);
-  padding-top: 4px;
+  padding-top: 6px;
   transition: color 0.2s, opacity 0.2s;
 }
 
 .stepItemDone .stepText {
   color: var(--text3);
-  opacity: 0.55;
+  opacity: 0.5;
   text-decoration: line-through;
-  text-decoration-color: var(--text3);
+  text-decoration-color: var(--border2);
 }
 
 .resetStepsBtn {

@@ -14,7 +14,7 @@
 
 .photoWrap {
   position: relative;
-  aspect-ratio: 4/3;
+  aspect-ratio: 3/2;
   background: var(--surface2);
   overflow: hidden;
   flex-shrink: 0;
@@ -149,42 +149,39 @@
   text-transform: uppercase;
 }
 
-/* ── Difficulty badge — overlay on photo (top-left) ── */
+/* ── Difficulty badge — left-edge tab (like WatchlistCard status) ── */
 
 .diffBadge {
   position: absolute;
   top: 8px;
-  left: 8px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.78);
+  border-left: 3px solid;
+  padding: 4px 8px 4px 6px;
+  border-radius: 0 4px 4px 0;
   font-family: var(--font-ui);
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  line-height: 1;
   text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 999px;
-  border: 1px solid transparent;
   white-space: nowrap;
   z-index: 2;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 .diff_easy {
-  color: var(--positive);
-  background: color-mix(in srgb, var(--positive) 22%, rgba(0,0,0,0.4));
-  border-color: color-mix(in srgb, var(--positive) 40%, transparent);
+  border-color: var(--positive);
+  color: #fff;
 }
 
 .diff_medium {
-  color: var(--gold);
-  background: color-mix(in srgb, var(--gold) 22%, rgba(0,0,0,0.4));
-  border-color: color-mix(in srgb, var(--gold) 40%, transparent);
+  border-color: var(--gold);
+  color: #f0d49a;
 }
 
 .diff_hard {
-  color: var(--negative);
-  background: color-mix(in srgb, var(--negative) 22%, rgba(0,0,0,0.4));
-  border-color: color-mix(in srgb, var(--negative) 40%, transparent);
+  border-color: var(--negative);
+  color: #ffb3b3;
 }
 
 /* ── Meta row ── */
