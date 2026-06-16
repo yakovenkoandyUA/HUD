@@ -323,7 +323,7 @@ const Dashboard: React.FC = () => {
                 value={questDueDate ?? undefined}
                 onChange={(iso) => { setQuestDueDate(iso); setShowQuestDate(false) }}
                 onClose={() => setShowQuestDate(false)}
-                minDate={new Date().toISOString().split('T')[0]}
+                minDate={new Date()}
               />
             </div>
           )}
