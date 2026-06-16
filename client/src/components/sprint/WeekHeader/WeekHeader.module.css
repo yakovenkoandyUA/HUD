@@ -187,6 +187,25 @@
 .slideFromRight { animation: slideFromRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 .slideFromLeft  { animation: slideFromLeft  0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 
+/* ── Calendar area transition ── */
+
+@keyframes calSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.calendarArea {
+  overflow: hidden;
+  transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calAreaWeek  { max-height: 90px; }
+.calAreaMonth { max-height: 300px; }
+
+.calSlideContent {
+  animation: calSlideIn 0.22s ease-out 0.06s both;
+}
+
 /* ── Calendar mode toggle button ── */
 
 .calModeBtn {

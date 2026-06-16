@@ -277,6 +277,9 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
         </div>
       )}
 
+      <div className={`${styles.calendarArea} ${calendarMode === 'month' ? styles.calAreaMonth : styles.calAreaWeek}`}>
+      <div key={calendarMode} className={styles.calSlideContent}>
+
       {calendarMode === 'month' && (() => {
         const grid       = getMonthGrid(vmYear, vmMonth)
         const prevMonth  = () => { if (vmMonth === 0) { setVmYear(y => y - 1); setVmMonth(11) } else setVmMonth(m => m - 1) }
@@ -325,61 +328,66 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
         )
       })()}
 
-      {calendarMode === 'week' && <div className={styles.weekRowWrap}>
-      <div ref={weekRowRef} key={weekStart} className={`${styles.weekRow} ${slideDirRef.current}`}>
-        {days.map((day, i) => {
-          const dayTime = new Date(day)
-          dayTime.setHours(0, 0, 0, 0)
+      {calendarMode === 'week' && (
+        <div className={styles.weekRowWrap}>
+          <div ref={weekRowRef} key={weekStart} className={`${styles.weekRow} ${slideDirRef.current}`}>
+            {days.map((day, i) => {
+              const dayTime = new Date(day)
+              dayTime.setHours(0, 0, 0, 0)
 
-          const isToday    = dayTime.getTime() === today.getTime()
-          const isPast     = dayTime.getTime() < today.getTime()
-          const isOverflow = day.getMonth() !== weekMonth
-          const isDim      = (isPast || isOverflow) && !isToday
-          const dayIso     = toIso(dayTime)
+              const isToday    = dayTime.getTime() === today.getTime()
+              const isPast     = dayTime.getTime() < today.getTime()
+              const isOverflow = day.getMonth() !== weekMonth
+              const isDim      = (isPast || isOverflow) && !isToday
+              const dayIso     = toIso(dayTime)
 
-          const isSelected = dayIso === selectedDay && !isToday
-          const dotStatus  = getRoutineDotStatus(dayTime, routineItems, today)
+              const isSelected = dayIso === selectedDay && !isToday
+              const dotStatus  = getRoutineDotStatus(dayTime, routineItems, today)
 
-          const captured = dayTime
-          const lpStart = (e?: React.TouchEvent) => {
-            if (!onLongPress) return
-            if (e) e.preventDefault()
-            clearTimeout(longPressTimer.current)
-            longPressTimer.current = setTimeout(() => onLongPress(captured), 500)
-          }
-          const lpStop = () => clearTimeout(longPressTimer.current)
+              const captured = dayTime
+              const lpStart = (e?: React.TouchEvent) => {
+                if (!onLongPress) return
+                if (e) e.preventDefault()
+                clearTimeout(longPressTimer.current)
+                longPressTimer.current = setTimeout(() => onLongPress(captured), 500)
+              }
+              const lpStop = () => clearTimeout(longPressTimer.current)
 
-          return (
-            <div
-              key={i}
-              className={`${styles.dayCell} ${isSelected ? styles.dayCellSelected : ''} ${(onDaySelect || onLongPress) ? styles.dayCellClickable : ''}`}
-              onClick={() => onDaySelect?.(dayIso)}
-              onMouseDown={() => lpStart()}
-              onMouseUp={lpStop}
-              onMouseLeave={lpStop}
-              onTouchStart={lpStart}
-              onTouchEnd={lpStop}
-            >
-              <span className={`${styles.dayName} ${isToday ? styles.dayNameToday : isSelected ? styles.dayNameSelected : isDim ? styles.dayNameDim : ''}`}>
-                {DAY_LABELS[i]}
-              </span>
-              <span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isDim ? styles.dayNumberDim : ''}`}>
-                {day.getDate()}
-              </span>
-              <div className={styles.dotWrap}>
-                {dotStatus !== 'none' && (
-                  <span className={`${styles.dot} ${
-                    dotStatus === 'done'    ? styles.dotDone    :
-                    dotStatus === 'overdue' ? styles.dotOverdue :
-                    styles.dotPending
-                  }`} />
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      </div>}
+              return (
+                <div
+                  key={i}
+                  className={`${styles.dayCell} ${isSelected ? styles.dayCellSelected : ''} ${(onDaySelect || onLongPress) ? styles.dayCellClickable : ''}`}
+                  onClick={() => onDaySelect?.(dayIso)}
+                  onMouseDown={() => lpStart()}
+                  onMouseUp={lpStop}
+                  onMouseLeave={lpStop}
+                  onTouchStart={lpStart}
+                  onTouchEnd={lpStop}
+                >
+                  <span className={`${styles.dayName} ${isToday ? styles.dayNameToday : isSelected ? styles.dayNameSelected : isDim ? styles.dayNameDim : ''}`}>
+                    {DAY_LABELS[i]}
+                  </span>
+                  <span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isDim ? styles.dayNumberDim : ''}`}>
+                    {day.getDate()}
+                  </span>
+                  <div className={styles.dotWrap}>
+                    {dotStatus !== 'none' && (
+                      <span className={`${styles.dot} ${
+                        dotStatus === 'done'    ? styles.dotDone    :
+                        dotStatus === 'overdue' ? styles.dotOverdue :
+                        styles.dotPending
+                      }`} />
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      </div>{/* calSlideContent */}
+      </div>{/* calendarArea */}
     </div>
   )
 }
