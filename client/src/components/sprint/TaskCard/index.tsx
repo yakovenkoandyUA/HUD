@@ -320,6 +320,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
                 )}
+                {item.type === 'shopping' && item.priority && <PriorityBadge priority={item.priority} compact />}
                 <span className={styles.title}>{item.title}</span>
                 {item.ownerName && (
                   <span className={styles.ownerBadge}>{item.ownerName}</span>
@@ -334,7 +335,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                     {streak}
                   </span>
                 )}
-                {checkTotal > 0 && !item.done && item.type !== 'shopping' && (
+                {checkTotal > 0 && !item.done && (
                   <span className={styles.checklistBadge}>{checkDone}/{checkTotal}</span>
                 )}
                 {item.type === 'sprint' && item.tag && (
@@ -342,7 +343,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                     {TAG_LABEL[item.tag]}
                   </span>
                 )}
-                {item.type === 'shopping' && item.priority && <PriorityBadge priority={item.priority} compact />}
                 {item.type === 'shopping' && item.quantity && <span className={styles.quantity}>{item.quantity}</span>}
               </div>
             </div>

@@ -24,7 +24,7 @@ import styles from './Sprint.module.css'
 type FilterType = 'all' | 'task' | 'shopping'
 type StatusFilter = 'active' | 'done'
 
-const PRIORITIES: TodoPriority[] = ['urgent', 'normal', 'low']
+const PRIORITIES: TodoPriority[] = ['urgent', 'low']
 
 const PRI_ICON_URGENT = (
   <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true">
@@ -134,7 +134,7 @@ const Sprint: React.FC = () => {
 	const [showAdd, setShowAdd]       = useState(false)
 	const [newType, setNewType]       = useState<UnifiedTodo['type']>('todo')
 	const [newTitle, setNewTitle]     = useState('')
-	const [newPriority, setNewPriority] = useState<TodoPriority>('normal')
+	const [newPriority, setNewPriority] = useState<TodoPriority | null>(null)
 	const [newQuantity, setNewQuantity]       = useState('')
 	const [newLabels, setNewLabels]           = useState<SprintLabel[]>([])
 	const [showLabelPicker, setShowLabelPicker] = useState(false)
@@ -245,7 +245,7 @@ const Sprint: React.FC = () => {
 	const resetForm = () => {
 		setNewTitle('')
 		setNewType('todo')
-		setNewPriority('normal')
+		setNewPriority(null)
 		setNewQuantity('')
 		setNewLabels([])
 		setShowLabelPicker(false)
@@ -276,7 +276,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 		addItem({
 			type:     newType,
 			title:    newTitle.trim(),
-			priority: newType === 'shopping' ? newPriority : undefined,
+			priority: newType === 'shopping' ? (newPriority ?? undefined) : undefined,
 			...(quickAddDate && newRepeat === 'none' ? { dueDate: quickAddDate } : {}),
 			...(quickAddDate && newRepeat === 'none' && newReminder ? { reminder: newReminder } : {}),
 			...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
@@ -457,7 +457,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 								{PRIORITIES.map(p => {
 									const { icon, label, activeClass } = PRIORITY_CONFIG[p]
 									return (
-										<button key={p} type="button" className={`${styles.priBtn} ${newPriority === p ? activeClass : ''}`} onClick={() => setNewPriority(p)}>
+										<button key={p} type="button" className={`${styles.priBtn} ${newPriority === p ? activeClass : ''}`} onClick={() => setNewPriority(newPriority === p ? null : p)}>
 											<span className={styles.priSymbol}>{icon}</span>
 											<span className={styles.priLabel}>{label}</span>
 										</button>
