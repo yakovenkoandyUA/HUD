@@ -104,8 +104,8 @@
 .routineChip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
   border-radius: 20px;
   border: 1px solid var(--border);
   background: transparent;
@@ -117,6 +117,7 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
 .routineChip:active { opacity: 0.7; }
 
@@ -124,6 +125,23 @@
   border-color: var(--positive);
   color: var(--positive);
   background: var(--positive-soft);
+}
+
+.chipBox {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  background: none;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.routineChipDone .chipBox {
+  border-color: var(--positive);
+  background: var(--positive);
 }
 
 /* ── FAB ────────────────────────────────────────────────────── */

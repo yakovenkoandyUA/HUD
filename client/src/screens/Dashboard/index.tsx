@@ -168,11 +168,13 @@ const Dashboard: React.FC = () => {
                   className={`${styles.routineChip} ${done ? styles.routineChipDone : ''}`}
                   onClick={() => toggleItem(r.id)}
                 >
-                  {done && (
-                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                      <path d="M1.5 4.5l2 2 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
+                  <span className={styles.chipBox}>
+                    {done && (
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                        <path d="M1.5 4.5l2 2 3.5-3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </span>
                   {r.title}
                 </button>
               )
@@ -184,7 +186,10 @@ const Dashboard: React.FC = () => {
           activeQuests={activeQuests}
           shoppingCount={shoppingCount}
           meals={todayMeals.map(r => r.title)}
-          onClick={() => setShowDay(true)}
+          onOpenDay={() => setShowDay(true)}
+          onQuestsClick={() => navigate('/sprint')}
+          onShoppingClick={() => navigate('/sprint', { state: { filterType: 'shopping' } })}
+          onMealsClick={() => navigate('/recipes/planner')}
         />
 
         <HeroCard
