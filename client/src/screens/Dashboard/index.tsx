@@ -5,7 +5,7 @@ import GreetingBlock from '../../components/dashboard/GreetingBlock'
 import HeroCard from '../../components/dashboard/HeroCard'
 import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
 import RaceCountdownStrip from '../../components/dashboard/RaceCountdownStrip'
-import TasksAccordion from '../../components/dashboard/TasksAccordion'
+import DaySummaryCard from '../../components/dashboard/DaySummaryCard'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
@@ -94,6 +94,9 @@ const Dashboard: React.FC = () => {
   const allRoutines  = sprintItems.filter(t => isRecurring(t))
   const routineItems = allRoutines.filter(t => isRoutineDueOnDay(t, todayDate))
 
+  const activeQuests  = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping' && !t.done).length
+  const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
+
   const todayMeals = (mealPlan[today] ?? [])
     .map(id => recipes.find(r => r.id === id))
     .filter(Boolean) as typeof recipes
@@ -176,28 +179,12 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        <TasksAccordion />
-
-        {todayMeals.length > 0 && (
-          <div className={styles.todayMealsRow}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.todayMealsIcon}>
-              <path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2M5 11v11M21 2v20M21 2a5 5 0 0 0-5 5v4h5"/>
-            </svg>
-            <span className={styles.todayMealsLabel}>СЬОГОДНІ:</span>
-            <div className={styles.todayMealsChips}>
-              {todayMeals.map(r => (
-                <button
-                  key={r.id}
-                  type="button"
-                  className={styles.todayMealChip}
-                  onClick={() => navigate(`/recipes/${r.id}`)}
-                >
-                  {r.title}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <DaySummaryCard
+          activeQuests={activeQuests}
+          shoppingCount={shoppingCount}
+          meals={todayMeals.map(r => r.title)}
+          onClick={() => setShowDay(true)}
+        />
 
         <HeroCard
           balance={balance}
@@ -206,19 +193,6 @@ const Dashboard: React.FC = () => {
           sparklineData={sparklineData}
         />
 
-        <button
-          type="button"
-          className={styles.dayBtn}
-          onClick={() => setShowDay(true)}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-          </svg>
-          МІЙ ДЕНЬ
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', opacity: 0.4 }}>
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
       </div>
 
       {/* ── Expandable FAB ── */}
