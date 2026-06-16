@@ -29,7 +29,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const { items: sprintItems, addItem, toggleItem, fetchItems } = useSprintStore()
-  const { showToast, theme } = useUiStore()
+  const { showToast } = useUiStore()
   const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
@@ -45,7 +45,6 @@ const Dashboard: React.FC = () => {
   const [showShop, setShowShop]       = useState(false)
 
   const fabRef  = useRef<HTMLDivElement>(null)
-  const bgRef   = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -67,18 +66,6 @@ const Dashboard: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler)
   }, [fabOpen])
 
-  const isRetro = theme === 'retro'
-
-  useEffect(() => {
-    const content = contentRef.current
-    const bg = bgRef.current
-    if (!content || !bg) return
-    const onScroll = () => {
-      bg.style.transform = `translateY(${-content.scrollTop * 0.3}px)`
-    }
-    content.addEventListener('scroll', onScroll, { passive: true })
-    return () => content.removeEventListener('scroll', onScroll)
-  }, [isRetro])
 
   const nextRace      = f1Enabled ? getNextRace(F1_SEASON_2026) : null
   const raceThisWeek  = f1Enabled ? getRaceThisWeek(F1_SEASON_2026) : null
@@ -141,7 +128,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      {isRetro && <div ref={bgRef} className={styles.bg} />}
       <AppHeader />
       <div ref={contentRef} className={styles.content}>
         <GreetingBlock />

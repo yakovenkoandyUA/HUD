@@ -5,7 +5,7 @@
 }
 
 :global([data-theme="velvet"]) .root {
-  background: color-mix(in srgb, var(--accent) 90%, var(--bg));
+  background: color-mix(in srgb, var(--accent) 32%, var(--bg));
 }
 
 :global([data-theme="cyber"]) .root {

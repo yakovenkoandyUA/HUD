@@ -16,7 +16,6 @@ interface ThemePalette {
 }
 
 const PALETTES: ThemePalette[] = [
-  { id: 'retro',   name: 'RETRO',  bg: '#0d0d0d', surface: '#201e1b', border: '#2e2b27', accent: '#B83A2D', text: '#EDE0CC' },
   { id: 'velvet',  name: 'VELVET', bg: '#0d0f1a', surface: '#1e2235', border: '#2e3450', accent: '#d4a017', text: '#e8d5a0' },
   { id: 'japan',   name: 'JAPAN',  bg: '#F5F0EB', surface: '#EDE8E2', border: '#D5CEC5', accent: '#C8102E', text: '#1a1a1a' },
   { id: 'cyber',   name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', text: '#d8eaf8' },

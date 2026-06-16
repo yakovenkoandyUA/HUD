@@ -36,17 +36,6 @@ interface ThemePalette {
 
 const PALETTES: ThemePalette[] = [
   {
-    id: 'retro',
-    name: 'RETRO',
-    bg: '#0d0d0d',
-    surface: '#201e1b',
-    border: '#2e2b27',
-    accent: '#B83A2D',
-    second: '#4E6851',
-    gold: '#DCC9A9',
-    text: '#EDE0CC',
-  },
-  {
     id: 'velvet',
     name: 'VELVET',
     bg: '#0d0f1a',

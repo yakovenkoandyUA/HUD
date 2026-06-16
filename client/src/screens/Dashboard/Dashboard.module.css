@@ -8,19 +8,6 @@
   /* isolation: isolate; */
 }
 
-.bg {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-image: url('/bg-hero4.jpg');
-  background-size: cover;
-  background-position: center;
-  will-change: transform;
-  pointer-events: none;
-  z-index: -1;
-}
 
 .content {
   flex: 1;

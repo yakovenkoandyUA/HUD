@@ -16,10 +16,10 @@ runCacheMigration()
 // Apply stored theme before React mounts to prevent flash
 try {
   const stored = JSON.parse(localStorage.getItem('hud-ui') || '{}')
-  const theme = stored?.state?.theme ?? 'warm'
+  const theme = stored?.state?.theme ?? 'velvet'
   document.documentElement.setAttribute('data-theme', theme)
 } catch {
-  document.documentElement.setAttribute('data-theme', 'warm')
+  document.documentElement.setAttribute('data-theme', 'velvet')
 }
 
 createRoot(document.getElementById('root')!).render(

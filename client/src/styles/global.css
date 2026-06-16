@@ -24,45 +24,6 @@
   --orange-s: rgba(230, 126, 34, 0.12);
 }
 
-/* ── RETRO 🎮 (default) ────────────────────────────────────────────────────── */
-:root,
-[data-theme="retro"] {
-  --bg:         #0d0d0d;
-  --bg2:        #141414;
-  --bg3:        #1c1a18;
-  --surface:    #201e1b;
-  --surface2:   #272421;
-  --border:     #2e2b27;
-  --border2:    #3a3630;
-
-  --accent:      #B83A2D;
-  --accent-dim:  #7a2720;
-  --accent-glow: rgba(184, 58, 45, 0.25);
-  --accent-soft: rgba(184, 58, 45, 0.12);
-
-  --second:      #4E6851;
-  --second-soft: rgba(78, 104, 81, 0.15);
-
-  --gold:        #DCC9A9;
-  --gold-dim:    rgba(220, 201, 169, 0.15);
-
-  --task-quest:    var(--accent);
-  --task-shopping: var(--gold);
-
-  --text:   #EDE0CC;
-  --text2:  #9a8f82;
-  --text3:  #5c5248;
-
-  --f1-back: #000;
-
-  --learning:      #5580b8;
-  --learning-soft: rgba(85, 128, 184, 0.13);
-
-  --positive:      #4E6851;
-  --positive-soft: rgba(78, 104, 81, 0.15);
-  --negative:      #B83A2D;
-  --negative-soft: rgba(184, 58, 45, 0.12);
-}
 
 /* ── CASTLE 🏰 ─────────────────────────────────────────────────────────────── */
 [data-theme="velvet"] {
