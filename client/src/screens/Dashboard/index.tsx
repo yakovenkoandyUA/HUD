@@ -91,7 +91,8 @@ const Dashboard: React.FC = () => {
   const isDoneToday = (t: (typeof sprintItems)[number]) =>
     isRecurring(t) ? !!(t.completionLog?.some(d => d >= todayIso)) : t.done
 
-  const routineItems = sprintItems.filter(t => isRecurring(t) && isRoutineDueOnDay(t, todayDate))
+  const allRoutines  = sprintItems.filter(t => isRecurring(t))
+  const routineItems = allRoutines.filter(t => isRoutineDueOnDay(t, todayDate))
 
   const todayMeals = (mealPlan[today] ?? [])
     .map(id => recipes.find(r => r.id === id))
@@ -143,7 +144,7 @@ const Dashboard: React.FC = () => {
           <WeekHeader
             weekStart={weekStart}
             hideTitle
-            routineItems={routineItems}
+            routineItems={allRoutines}
             onDaySelect={(iso) => navigate('/sprint', { state: { selectedDay: iso } })}
           />
         )}

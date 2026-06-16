@@ -208,7 +208,7 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
   return (
     <div
       ref={headerRef}
-      className={styles.header}
+      className={`${styles.header} ${hideTitle ? styles.headerCompact : ''}`}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
@@ -370,15 +370,17 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
                   <span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isDim ? styles.dayNumberDim : ''}`}>
                     {day.getDate()}
                   </span>
-                  <div className={styles.dotWrap}>
-                    {dotStatus !== 'none' && (
-                      <span className={`${styles.dot} ${
-                        dotStatus === 'done'    ? styles.dotDone    :
-                        dotStatus === 'overdue' ? styles.dotOverdue :
-                        styles.dotPending
-                      }`} />
-                    )}
-                  </div>
+                  {routineItems.length > 0 && (
+                    <div className={styles.dotWrap}>
+                      {dotStatus !== 'none' && (
+                        <span className={`${styles.dot} ${
+                          dotStatus === 'done'    ? styles.dotDone    :
+                          dotStatus === 'overdue' ? styles.dotOverdue :
+                          styles.dotPending
+                        }`} />
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}

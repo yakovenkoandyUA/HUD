@@ -5,6 +5,11 @@
   padding: 4px 0;
 }
 
+.headerCompact {
+  padding: 0;
+  gap: 0;
+}
+
 .weekRowWrap {
   overflow: hidden;
 }
