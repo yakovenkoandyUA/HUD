@@ -15,6 +15,7 @@ import { useUiStore } from '../../store/uiStore'
 import { useProfileStore } from '../../store/profileStore'
 import { useMealPlanStore } from '../../store/mealPlanStore'
 import { useRecipesStore } from '../../store/recipesStore'
+import { useNotesStore } from '../../store/notesStore'
 import { F1_SEASON_2026 } from '../../data/f1Season2026'
 import { getNextRace, getRaceThisWeek } from '../../utils/f1'
 import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
@@ -33,6 +34,7 @@ const Dashboard: React.FC = () => {
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
+  const { notes, fetchNotes } = useNotesStore()
 
   const [showDay, setShowDay]         = useState(false)
   const [showExpense, setShowExpense] = useState(false)
@@ -50,6 +52,7 @@ const Dashboard: React.FC = () => {
     fetchTransactions()
     fetchMealPlan()
     fetchItems()
+    fetchNotes()
     if (recipes.length === 0) fetchRecipes()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -97,6 +100,7 @@ const Dashboard: React.FC = () => {
 
   const activeQuests  = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping' && !t.done).length
   const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
+  const latestNote    = notes[0]?.text.split('\n')[0] ?? ''
 
   const todayMeals = (mealPlan[today] ?? [])
     .map(id => recipes.find(r => r.id === id))
@@ -186,10 +190,13 @@ const Dashboard: React.FC = () => {
           activeQuests={activeQuests}
           shoppingCount={shoppingCount}
           meals={todayMeals.map(r => r.title)}
+          notesCount={notes.length}
+          latestNote={latestNote}
           onOpenDay={() => setShowDay(true)}
           onQuestsClick={() => navigate('/sprint')}
           onShoppingClick={() => navigate('/sprint', { state: { filterType: 'shopping' } })}
           onMealsClick={() => navigate('/recipes/planner')}
+          onNotesClick={() => navigate('/notes')}
         />
 
         <HeroCard
