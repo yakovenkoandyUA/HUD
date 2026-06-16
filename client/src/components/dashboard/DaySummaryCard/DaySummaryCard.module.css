@@ -1,7 +1,7 @@
 .root {
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  background: var(--accent);
+  border-top: 1px solid var(--accent);
+  border-bottom: 1px solid var(--accent);
 }
 
 /* ── Header ──────────────────────────────────────────────────── */
@@ -18,7 +18,8 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: color-mix(in srgb, var(--accent) 10%, black);
+  opacity: 0.7;
 }
 
 .openBtn {
@@ -28,15 +29,16 @@
   gap: 2px;
   font-family: var(--font-ui);
   font-size: 10px;
-  color: var(--text3);
+  color: color-mix(in srgb, var(--accent) 10%, black);
+  opacity: 0.75;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: color 0.15s;
+  transition: opacity 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.openBtn:hover { color: var(--accent); }
+.openBtn:hover { opacity: 1; }
 
 /* ── Routine chips ───────────────────────────────────────────── */
 
@@ -47,7 +49,6 @@
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  border-bottom: 1px solid var(--border);
 }
 .chipsRow::-webkit-scrollbar { display: none; }
 
@@ -57,8 +58,8 @@
   gap: 5px;
   padding: 4px 10px 4px 5px;
   border-radius: 20px;
-  border: 1px solid var(--border);
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  background: var(--bg);
   color: var(--text2);
   font-family: var(--font-ui);
   font-size: 11px;
@@ -75,7 +76,7 @@
 .chipDone {
   border-color: var(--positive);
   color: var(--positive);
-  background: var(--positive-soft);
+  background: var(--bg);
 }
 
 .chipBox {
