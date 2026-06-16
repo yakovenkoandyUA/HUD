@@ -334,18 +334,23 @@
 }
 
 .dateDisplayBtn {
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-dim);
+  background: none;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 4px 10px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--accent);
+  color: var(--text3);
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
-.dateDisplayBtn:hover { opacity: 0.75; }
+.dateDisplayBtn:hover { color: var(--accent); border-color: var(--accent-dim); }
+.dateDisplayBtnActive {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
 
 /* ── Repeat toggle ───────────────────────────────────────────────────────── */
 

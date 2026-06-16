@@ -148,6 +148,7 @@ const Sprint: React.FC = () => {
 	const [newReminderUnit, setNewReminderUnit]     = useState<ReminderUnit>('days')
 	const [newReminder, setNewReminder]             = useState<{ amount: number; unit: ReminderUnit } | null>(null)
 	const [showFormReminderPicker, setShowFormReminderPicker] = useState(false)
+	const [showQuestDueDatePicker, setShowQuestDueDatePicker] = useState(false)
 	const _td = new Date()
 	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
 	const [selectedDay, setSelectedDay] = useState(todayStr)
@@ -258,7 +259,8 @@ const Sprint: React.FC = () => {
 		setNewReminderUnit('days')
 		setNewReminder(null)
 		setShowFormReminderPicker(false)
-setQuickAddDate(null)
+		setShowQuestDueDatePicker(false)
+		setQuickAddDate(null)
 	}
 
 const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
@@ -276,6 +278,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 			title:    newTitle.trim(),
 			priority: newType === 'shopping' ? newPriority : undefined,
 			...(quickAddDate && newRepeat === 'none' ? { dueDate: quickAddDate } : {}),
+			...(quickAddDate && newRepeat === 'none' && newReminder ? { reminder: newReminder } : {}),
 			...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
 			...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
 ...(newType === 'todo' && newRepeat !== 'none' ? {
@@ -412,7 +415,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					setShowAdd(false)
 					resetForm()
 				}}
-				title="Нова справа"
+				title="Новий квест"
 			>
 				<form onSubmit={handleAdd} className={styles.taskForm}>
 					{quickAddDate && (
@@ -518,6 +521,25 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 								)}
 							</div>
 
+							{/* Due date: shown for non-routine quests */}
+							{newRepeat === 'none' && !showRepeatList && (
+								<div className={styles.startDateRow}>
+									<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+										<rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+										<path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+									</svg>
+									<span className={styles.startDateLabel}>Дедлайн:</span>
+									<button type="button" className={`${styles.dateDisplayBtn} ${quickAddDate ? styles.dateDisplayBtnActive : ''}`} onClick={() => setShowQuestDueDatePicker(v => !v)}>
+										{quickAddDate
+											? new Date(quickAddDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
+											: 'Не вказано'}
+									</button>
+									{quickAddDate && (
+										<button type="button" className={styles.quickAddDateClear} onClick={() => { setQuickAddDate(null); setNewReminder(null) }} aria-label="Прибрати дату">×</button>
+									)}
+								</div>
+							)}
+
 							{/* Start date: shown for weekly / monthly / yearly */}
 							{(newRepeat === 'weekly' || newRepeat === 'monthly' || newRepeat === 'yearly') && !showRepeatList && (
 								<div className={styles.startDateRow}>
@@ -543,8 +565,8 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 								</div>
 							)}
 
-							{/* Reminder: shown when repeat is set */}
-							{newRepeat !== 'none' && !showRepeatList && (
+							{/* Reminder: shown when repeat is set OR when non-routine has a deadline */}
+							{(newRepeat !== 'none' || (newRepeat === 'none' && !!quickAddDate)) && !showRepeatList && (
 								<div className={styles.formReminderRow}>
 									{newReminder ? (
 										<div className={styles.formReminderActive}>
@@ -709,6 +731,18 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 						setShowStartDatePicker(false)
 					}}
 					onClose={() => setShowStartDatePicker(false)}
+				/>
+			)}
+
+			{showQuestDueDatePicker && (
+				<CustomDatePicker
+					value={quickAddDate ?? undefined}
+					onChange={date => {
+						setQuickAddDate(date)
+						setShowQuestDueDatePicker(false)
+					}}
+					onClose={() => setShowQuestDueDatePicker(false)}
+					minDate={new Date()}
 				/>
 			)}
 
