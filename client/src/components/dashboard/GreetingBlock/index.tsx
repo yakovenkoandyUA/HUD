@@ -32,6 +32,7 @@ const THEME_PHOTOS: Partial<Record<string, string>> = {
   noir:   '/theme/noir.webp',
   japan:  '/theme/japan.webp',
   pixel:  '/theme/pixel.webp',
+  arctic: '/theme/arctic.webp',
 }
 
 const GreetingBlock: React.FC = () => {

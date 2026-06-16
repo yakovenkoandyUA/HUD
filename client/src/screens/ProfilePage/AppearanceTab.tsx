@@ -21,7 +21,8 @@ const PALETTES: ThemePalette[] = [
   { id: 'japan',   name: 'JAPAN',  bg: '#F5F0EB', surface: '#EDE8E2', border: '#D5CEC5', accent: '#C8102E', text: '#1a1a1a' },
   { id: 'cyber',   name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', text: '#d8eaf8' },
   { id: 'noir',    name: 'NOIR',   bg: '#080808', surface: '#1a1a1a', border: '#2a2a2a', accent: '#d0d0d0', text: '#ebebeb' },
-  { id: 'pixel',   name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', text: '#181028' },
+  { id: 'pixel',  name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', text: '#181028' },
+  { id: 'arctic', name: 'ARCTIC', bg: '#1e2330', surface: '#313a4e', border: '#4a5570', accent: '#88c0d0', text: '#eceff4' },
 ]
 
 /**

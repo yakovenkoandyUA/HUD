@@ -3,7 +3,6 @@
 	overflow: hidden;
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: var(--radius);
 	padding: 14px 16px 16px;
 	min-height: 88px;
 }
@@ -30,6 +29,9 @@
 }
 :global([data-theme='japan']) .cardPhoto {
 	background-position-y: 200px;
+}
+:global([data-theme='arctic']) .cardPhoto {
+	background-position: 30px -5px;;
 }
 :global([data-theme='velvet']) .cardPhoto {
 	background-position: 168px -20px;

@@ -101,6 +101,17 @@ const PALETTES: ThemePalette[] = [
     gold: '#e8a020',
     text: '#181028',
   },
+  {
+    id: 'arctic',
+    name: 'ARCTIC',
+    bg: '#1e2330',
+    surface: '#313a4e',
+    border: '#4a5570',
+    accent: '#88c0d0',
+    second: '#b48ead',
+    gold: '#ebcb8b',
+    text: '#eceff4',
+  },
 ]
 
 const ThemePicker: React.FC<ThemePickerProps> = ({ onClose }) => {
