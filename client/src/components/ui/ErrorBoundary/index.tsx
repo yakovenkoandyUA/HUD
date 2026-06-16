@@ -1,5 +1,6 @@
 import React from 'react'
 import styles from './ErrorBoundary.module.css'
+import YggdrasilSvg from './YggdrasilSvg'
 
 interface Props {
   children: React.ReactNode
@@ -56,10 +57,7 @@ class ErrorBoundary extends React.Component<Props, State> {
           </div>
 
           <div className={styles.treeLine} aria-hidden>
-            <svg width="180" height="40" viewBox="0 0 180 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M90 2 L50 18 L65 18 L30 35 L75 35 L90 38 L105 35 L150 35 L115 18 L130 18 Z"
-                stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.6" />
-            </svg>
+            <YggdrasilSvg />
           </div>
 
           <p className={styles.message}>

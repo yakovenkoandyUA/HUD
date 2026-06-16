@@ -135,14 +135,19 @@
 
 /* ── Yggdrasil tree ── */
 .treeLine {
-  color: var(--accent-dim, #7a2720);
-  opacity: 0.6;
+  color: #c9a84c;
   animation: treePulse 4s ease-in-out infinite;
 }
 
+.treeLine svg {
+  width: 200px;
+  height: 200px;
+  display: block;
+}
+
 @keyframes treePulse {
-  0%, 100% { opacity: 0.3; }
-  50%       { opacity: 0.7; color: var(--accent, #c8102e); }
+  0%, 100% { opacity: 0.65; }
+  50%       { opacity: 1; }
 }
 
 /* ── Text ── */
