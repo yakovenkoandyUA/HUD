@@ -122,9 +122,10 @@
 .genreStrip {
   display: flex;
   gap: 6px;
-  overflow-x: auto;
   padding: 6px 16px;
   scrollbar-width: none;
+  overflow-x: auto;
+  flex-shrink: 0;
 }
 .genreStrip::-webkit-scrollbar { display: none; }
 
@@ -145,7 +146,6 @@
   border-radius: 4px;
   -webkit-tap-highlight-color: transparent;
 }
-.genreTag:hover { color: var(--text2); }
 .genreTag:focus-visible { outline: none; }
 
 .genreTagActive {
