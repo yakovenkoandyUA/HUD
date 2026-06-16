@@ -1,8 +1,7 @@
 .root {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 /* ── Header ──────────────────────────────────────────────────── */
