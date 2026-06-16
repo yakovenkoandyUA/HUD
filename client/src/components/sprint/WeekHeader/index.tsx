@@ -216,7 +216,7 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
         <div className={styles.top}>
           <div className={styles.topLeft}>
             <span className={styles.label}>Тиждень</span>
-            {isCurrentWeek === false && (
+            {isCurrentWeek === false && weekStart < new Date().toISOString().slice(0, 10) && (
               <span className={styles.pastBadge}>архів</span>
             )}
           </div>

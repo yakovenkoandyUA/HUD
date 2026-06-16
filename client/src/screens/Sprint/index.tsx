@@ -194,9 +194,7 @@ const Sprint: React.FC = () => {
 		setSelectedDay(prev)
 	}
 	const goToNextWeek = () => {
-		if (isCurrentWeek) return
 		const next = addWeeks(weekStart, 1)
-		if (next > currentWeekStart) return
 		setWeekStart(next)
 		setSelectedDay(next === currentWeekStart ? todayStr : next)
 	}
@@ -318,7 +316,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					}}
 					onLongPress={handleDayLongPress}
 					onPrevWeek={goToPrevWeek}
-					onNextWeek={!isCurrentWeek ? goToNextWeek : undefined}
+					onNextWeek={goToNextWeek}
 					calendarMode={calendarMode}
 					onToggleCalendarMode={toggleCalendarMode}
 				/>
