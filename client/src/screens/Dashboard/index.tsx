@@ -146,16 +146,18 @@ const Dashboard: React.FC = () => {
       <div ref={contentRef} className={styles.content}>
         <GreetingBlock />
 
-{raceThisWeek ? (
-          <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
-        ) : (
-          <WeekHeader
-            weekStart={weekStart}
-            hideTitle
-            routineItems={allRoutines}
-            onDaySelect={(iso) => navigate('/sprint', { state: { selectedDay: iso } })}
-          />
-        )}
+        <div className={styles.calendarWrap}>
+          {raceThisWeek ? (
+            <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
+          ) : (
+            <WeekHeader
+              weekStart={weekStart}
+              hideTitle
+              routineItems={allRoutines}
+              onDaySelect={(iso) => navigate('/sprint', { state: { selectedDay: iso } })}
+            />
+          )}
+        </div>
 
         {f1Enabled && nextRace && !raceThisWeek && (
           <RaceCountdownStrip race={nextRace} />
@@ -177,12 +179,14 @@ const Dashboard: React.FC = () => {
           onNotesClick={() => navigate('/notes')}
         />
 
-        <HeroCard
-          balance={balance}
-          dailyBudget={dailyBudget}
-          todaySpent={todaySpent}
-          sparklineData={sparklineData}
-        />
+        <div style={{ marginTop: 12 }}>
+          <HeroCard
+            balance={balance}
+            dailyBudget={dailyBudget}
+            todaySpent={todaySpent}
+            sparklineData={sparklineData}
+          />
+        </div>
 
       </div>
 

@@ -28,7 +28,11 @@
   padding: 16px 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
+}
+
+.calendarWrap {
+  margin-top: 10px;
 }
 
 /* ── Staggered card entrance ────────────────────────────────── */
