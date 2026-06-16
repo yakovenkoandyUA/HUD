@@ -470,8 +470,8 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 
 					{newType === 'todo' && (
 						<div className={styles.todoExtras}>
-							{/* Row 1: labels + repeat toggle inline */}
-							<div className={styles.extrasInlineRow}>
+							{/* Selected labels */}
+							{newLabels.length > 0 && (
 								<div className={styles.extrasLabels}>
 									{newLabels.map(l => (
 										<button key={l.id} type="button" className={styles.selectedLabel} style={{ background: l.color }} onClick={() => setNewLabels(prev => prev.filter(x => x.id !== l.id))}>
@@ -481,66 +481,83 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 											</svg>
 										</button>
 									))}
-									<button type="button" className={styles.addExtrasBtn} onClick={() => setShowLabelPicker(true)}>
-										<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-											<path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-										</svg>
-										Мітка
-									</button>
 								</div>
+							)}
 
+							{/* Meta chips row */}
+							<div className={styles.metaRow}>
+								{/* Label */}
+								<button type="button" className={styles.metaChip} onClick={() => setShowLabelPicker(true)}>
+									<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+										<path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+									</svg>
+									Мітка
+								</button>
+
+								{/* Repeat */}
 								{newRepeat === 'none' ? (
-									<button type="button" className={styles.repeatToggleBtn} onClick={() => setShowRepeatList(v => !v)}>
-										<svg width="11" height="11" viewBox="0 0 10 10" fill="none">
-											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
-											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+									<button type="button" className={styles.metaChip} onClick={() => setShowRepeatList(v => !v)}>
+										<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+											<path d="M1.5 5a3.5 3.5 0 1 0 .7-2.1M1.5 2v1.5h1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
 										</svg>
 										Повторити
 									</button>
 								) : (
-									<span className={styles.repeatActiveLabel} style={{ cursor: 'pointer' }} onClick={() => setShowRepeatList(v => !v)}>
-										<svg width="11" height="11" viewBox="0 0 10 10" fill="none">
-											<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
-											<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+									<button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowRepeatList(v => !v)}>
+										<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+											<path d="M1.5 5a3.5 3.5 0 1 0 .7-2.1M1.5 2v1.5h1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
 										</svg>
 										{formatRepeatActiveLabel(newRepeat, newRepeatConfig)}
-										<button
-											type="button"
-											className={styles.repeatActiveClose}
-											onClick={e => {
-												e.stopPropagation()
-												setNewRepeat('none')
-												setNewRepeatConfig(null)
-												setShowRepeatList(false)
-												setShowRepeatConfigScreen(false)
-											}}
-										>
-											✕
+										<span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setNewRepeat('none'); setNewRepeatConfig(null); setShowRepeatList(false); setShowRepeatConfigScreen(false) }}>✕</span>
+									</button>
+								)}
+
+								{/* Deadline — non-routine only */}
+								{newRepeat === 'none' && !showRepeatList && (
+									quickAddDate ? (
+										<button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowQuestDueDatePicker(v => !v)}>
+											<svg width="10" height="10" viewBox="0 0 11 11" fill="none">
+												<rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+												<path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+											</svg>
+											{new Date(quickAddDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
+											<span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setQuickAddDate(null); setNewReminder(null); setShowQuestDueDatePicker(false) }}>✕</span>
 										</button>
-									</span>
+									) : (
+										<button type="button" className={styles.metaChip} onClick={() => setShowQuestDueDatePicker(v => !v)}>
+											<svg width="10" height="10" viewBox="0 0 11 11" fill="none">
+												<rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+												<path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+											</svg>
+											Дедлайн
+										</button>
+									)
+								)}
+
+								{/* Reminder */}
+								{(newRepeat !== 'none' || !!quickAddDate) && !showRepeatList && (
+									newReminder ? (
+										<button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowFormReminderPicker(true)}>
+											<svg width="10" height="10" viewBox="0 0 16 18" fill="none">
+												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+											</svg>
+											{formatReminderShort(newReminder.amount, newReminder.unit)}
+											<span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setNewReminder(null) }}>✕</span>
+										</button>
+									) : (
+										<button type="button" className={styles.metaChip} onClick={() => { setNewReminderAmount(1); setNewReminderUnit('days'); setShowFormReminderPicker(true) }}>
+											<svg width="10" height="10" viewBox="0 0 16 18" fill="none">
+												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+											</svg>
+											Нагадати
+										</button>
+									)
 								)}
 							</div>
 
-							{/* Due date: shown for non-routine quests */}
-							{newRepeat === 'none' && !showRepeatList && (
-								<div className={styles.startDateRow}>
-									<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-										<rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-										<path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-									</svg>
-									<span className={styles.startDateLabel}>Дедлайн:</span>
-									<button type="button" className={`${styles.dateDisplayBtn} ${quickAddDate ? styles.dateDisplayBtnActive : ''}`} onClick={() => setShowQuestDueDatePicker(v => !v)}>
-										{quickAddDate
-											? new Date(quickAddDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
-											: 'Не вказано'}
-									</button>
-									{quickAddDate && (
-										<button type="button" className={styles.quickAddDateClear} onClick={() => { setQuickAddDate(null); setNewReminder(null) }} aria-label="Прибрати дату">×</button>
-									)}
-								</div>
-							)}
-
-							{/* Start date: shown for weekly / monthly / yearly */}
+							{/* Start date row — routines with weekly/monthly/yearly repeat */}
 							{(newRepeat === 'weekly' || newRepeat === 'monthly' || newRepeat === 'yearly') && !showRepeatList && (
 								<div className={styles.startDateRow}>
 									<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
@@ -561,41 +578,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 										<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
 										<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
 									</svg>
-									Ця справа стане рутиною — видно у тижневому вигляді
-								</div>
-							)}
-
-							{/* Reminder: shown when repeat is set OR when non-routine has a deadline */}
-							{(newRepeat !== 'none' || (newRepeat === 'none' && !!quickAddDate)) && !showRepeatList && (
-								<div className={styles.formReminderRow}>
-									{newReminder ? (
-										<div className={styles.formReminderActive}>
-											<svg width="11" height="11" viewBox="0 0 16 18" fill="none">
-												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-											</svg>
-											<span>За {formatReminderShort(newReminder.amount, newReminder.unit)}</span>
-											<button type="button" className={styles.formReminderClear} onClick={() => setNewReminder(null)} aria-label="Видалити">
-												×
-											</button>
-										</div>
-									) : (
-										<button
-											type="button"
-											className={styles.formReminderBtn}
-											onClick={() => {
-												setNewReminderAmount(1)
-												setNewReminderUnit('days')
-												setShowFormReminderPicker(true)
-											}}
-										>
-											<svg width="11" height="11" viewBox="0 0 16 18" fill="none">
-												<path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-												<path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-											</svg>
-											Сповіщення
-										</button>
-									)}
+									Ця задача стане рутиною — видно у тижневому вигляді
 								</div>
 							)}
 
