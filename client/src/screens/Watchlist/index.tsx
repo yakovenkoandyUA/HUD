@@ -174,149 +174,154 @@ const Watchlist: React.FC = () => {
   }
 
   return (
-    <div className={styles.screen}>
-      <AppHeader />
+		<div className={styles.screen}>
+			<AppHeader />
 
-      {/* ── "Дивлюсь зараз" hero strip ── */}
-      {watchingItems.length > 0 && (
-        <WatchlistHero items={watchingItems} onTap={setSelected} />
-      )}
+			{/* ── Tabs — sticky ── */}
+			<div className={styles.tabBar}>
+				{TABS.map(t => (
+					<button
+						key={t.id}
+						className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
+						onClick={() => {
+							setTab(t.id)
+							setActiveStatus(null)
+							setActiveGenres(new Set())
+						}}
+					>
+						<img src={openmojiUrl(t.icon)} alt="" className={styles.tabIcon} aria-hidden="true" />
+						{t.label}
+					</button>
+				))}
+			</div>
 
-      {/* ── Stats row ── */}
-      <div className={styles.statsRow}>
-        {(['watched', 'watching', 'want'] as const).map((status, i) => {
-          const count    = stats[status === 'watched' ? 'watched' : status === 'watching' ? 'watching' : 'want']
-          const isActive = activeStatus === status
-          return (
-            <React.Fragment key={status}>
-              {i > 0 && <span className={styles.statSep}>·</span>}
-              <button
-                type="button"
-                className={`${styles.stat} ${isActive ? styles.statActive : ''}`}
-                onClick={() => setActiveStatus(isActive ? null : status)}
-              >
-                <span className={styles.statNum}>{count}</span>
-                <span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
-                {isActive && <span className={styles.statClear}>×</span>}
-              </button>
-            </React.Fragment>
-          )
-        })}
-      </div>
+			{/* ── Content (scrollable) ── */}
+			<div className={styles.content}>
 
-      {/* ── Tabs ── */}
-      <div className={styles.tabBar}>
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
-            onClick={() => { setTab(t.id); setActiveStatus(null); setActiveGenres(new Set()) }}
-          >
-            <img src={openmojiUrl(t.icon)} alt="" className={styles.tabIcon} aria-hidden="true" />
-            {t.label}
-          </button>
-        ))}
-      </div>
+				{/* hero scrolls away */}
+				{watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
 
-      {/* ── Genre strip ── */}
-      {availableGenres.length > 0 && (
-        <div className={styles.genreStrip}>
-          {availableGenres.map((g) => (
-            <button
-              key={g}
-              type="button"
-              className={`${styles.genreTag} ${activeGenres.has(g) ? styles.genreTagActive : ''}`}
-              onClick={() => setActiveGenres(prev => {
-                const next = new Set(prev)
-                next.has(g) ? next.delete(g) : next.add(g)
-                return next
-              })}
-            >
-              {g}
-            </button>
-          ))}
-        </div>
-      )}
+				{/* ── Stats row ── */}
+				<div className={styles.statsRow}>
+					{(['want', 'watching', 'watched'] as const).map((status, i) => {
+						const isActive = activeStatus === status
+						return (
+							<React.Fragment key={status}>
+								{i > 0 && <span className={styles.statSep}>·</span>}
+								<button type="button" className={`${styles.stat} ${isActive ? styles.statActive : ''}`} onClick={() => setActiveStatus(isActive ? null : status)}>
+									<span className={styles.statNum}>{stats[status]}</span>
+									<span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
+									{isActive && <span className={styles.statClear}>×</span>}
+								</button>
+							</React.Fragment>
+						)
+					})}
+				</div>
 
+				{/* ── Genre strip ── */}
+				{availableGenres.length > 0 && (
+					<div className={styles.genreStrip}>
+						{availableGenres.map(g => (
+							<button
+								key={g}
+								type="button"
+								className={`${styles.genreTag} ${activeGenres.has(g) ? styles.genreTagActive : ''}`}
+								onClick={() => setActiveGenres(prev => {
+									const next = new Set(prev)
+									next.has(g) ? next.delete(g) : next.add(g)
+									return next
+								})}
+							>
+								{g}
+							</button>
+						))}
+					</div>
+				)}
 
-      {/* ── Content ── */}
-      <div className={styles.content}>
-        <div className={styles.searchWrap}>
-          <WatchlistSearch category={tab} onAdd={handleAdd} />
-          <div className={styles.sortWrap} ref={sortRef}>
-            <button
-              type="button"
-              className={`${styles.sortBtn} ${sortBy !== 'newest' || watchScope !== 'all' ? styles.sortBtnActive : ''}`}
-              onClick={() => setSortOpen((v) => !v)}
-              aria-label="Сортування"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
-            {sortOpen && (
-              <div className={styles.sortDropdown}>
-                {accepted.length > 0 && (
-                  <>
-                    <p className={styles.dropdownSection}>ПОКАЗАТИ</p>
-                    {WATCH_SCOPE_OPTIONS.map(o => (
-                      <button
-                        key={o.key}
-                        type="button"
-                        className={`${styles.sortOption} ${watchScope === o.key ? styles.sortOptionActive : ''}`}
-                        onClick={() => { setWatchScope(o.key); setSortOpen(false) }}
-                      >
-                        {watchScope === o.key && <span className={styles.sortOptionDot} />}
-                        {o.label}
-                      </button>
-                    ))}
-                    <div className={styles.dropdownDivider} />
-                  </>
-                )}
-                <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
-                {([
-                  { key: 'newest',    label: 'Нові спочатку'  },
-                  { key: 'oldest',    label: 'Старі спочатку' },
-                  { key: 'year_desc', label: 'Рік: новіші'    },
-                  { key: 'year_asc',  label: 'Рік: старіші'   },
-                  { key: 'rating',    label: 'Рейтинг'        },
-                ] as { key: SortBy; label: string }[]).map((o) => (
-                  <button
-                    key={o.key}
-                    type="button"
-                    className={`${styles.sortOption} ${sortBy === o.key ? styles.sortOptionActive : ''}`}
-                    onClick={() => { setSortBy(o.key); setSortOpen(false) }}
-                  >
-                    {sortBy === o.key && <span className={styles.sortOptionDot} />}
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+				<div className={styles.searchWrap}>
+					<WatchlistSearch category={tab} onAdd={handleAdd} />
+					<div className={styles.sortWrap} ref={sortRef}>
+						<button
+							type="button"
+							className={`${styles.sortBtn} ${sortBy !== 'newest' || watchScope !== 'all' ? styles.sortBtnActive : ''}`}
+							onClick={() => setSortOpen(v => !v)}
+							aria-label="Сортування"
+						>
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+								<path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+							</svg>
+						</button>
+						{sortOpen && (
+							<div className={styles.sortDropdown}>
+								{accepted.length > 0 && (
+									<>
+										<p className={styles.dropdownSection}>ПОКАЗАТИ</p>
+										{WATCH_SCOPE_OPTIONS.map(o => (
+											<button
+												key={o.key}
+												type="button"
+												className={`${styles.sortOption} ${watchScope === o.key ? styles.sortOptionActive : ''}`}
+												onClick={() => {
+													setWatchScope(o.key)
+													setSortOpen(false)
+												}}
+											>
+												{watchScope === o.key && <span className={styles.sortOptionDot} />}
+												{o.label}
+											</button>
+										))}
+										<div className={styles.dropdownDivider} />
+									</>
+								)}
+								<p className={styles.dropdownSection}>СОРТУВАННЯ</p>
+								{(
+									[
+										{ key: 'newest', label: 'Нові спочатку' },
+										{ key: 'oldest', label: 'Старі спочатку' },
+										{ key: 'year_desc', label: 'Рік: новіші' },
+										{ key: 'year_asc', label: 'Рік: старіші' },
+										{ key: 'rating', label: 'Рейтинг' },
+									] as { key: SortBy; label: string }[]
+								).map(o => (
+									<button
+										key={o.key}
+										type="button"
+										className={`${styles.sortOption} ${sortBy === o.key ? styles.sortOptionActive : ''}`}
+										onClick={() => {
+											setSortBy(o.key)
+											setSortOpen(false)
+										}}
+									>
+										{sortBy === o.key && <span className={styles.sortOptionDot} />}
+										{o.label}
+									</button>
+								))}
+							</div>
+						)}
+					</div>
+				</div>
 
-        <div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}-${sortBy}-${watchScope}`} className={styles.contentAnimated}>
-          <WatchlistGrid items={tabItems} onTap={setSelected} />
-        </div>
-      </div>
+				<div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}-${sortBy}-${watchScope}`} className={styles.contentAnimated}>
+					<WatchlistGrid items={tabItems} onTap={setSelected} />
+				</div>
+			</div>
 
-      {/* ── Detail modal ── */}
-      {displayItem && (
-        <WatchlistDetail
-          item={displayItem}
-          isOpen={!!selected}
-          onClose={() => setSelected(null)}
-          onStatusChange={handleStatusChange}
-          onRatingChange={handleRatingChange}
-          onImageChange={handleImageChange}
-          onNotifyChange={handleNotifyChange}
-          onSimilarAdd={addItem}
-          onDelete={handleDelete}
-        />
-      )}
-    </div>
-  )
+			{/* ── Detail modal ── */}
+			{displayItem && (
+				<WatchlistDetail
+					item={displayItem}
+					isOpen={!!selected}
+					onClose={() => setSelected(null)}
+					onStatusChange={handleStatusChange}
+					onRatingChange={handleRatingChange}
+					onImageChange={handleImageChange}
+					onNotifyChange={handleNotifyChange}
+					onSimilarAdd={addItem}
+					onDelete={handleDelete}
+				/>
+			)}
+		</div>
+	)
 }
 
 export default Watchlist

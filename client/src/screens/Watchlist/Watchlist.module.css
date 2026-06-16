@@ -9,6 +9,7 @@
 .statsRow {
   display: flex;
   align-items: center;
+  justify-content: space-evenly;
   gap: 0;
   padding: 4px 12px;
   border-bottom: 1px solid var(--border);
@@ -76,6 +77,10 @@
   padding: 0 8px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
 }
 
 .tab {
@@ -118,10 +123,8 @@
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 8px 16px;
+  padding: 6px 16px;
   scrollbar-width: none;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
 }
 .genreStrip::-webkit-scrollbar { display: none; }
 
@@ -130,6 +133,7 @@
   padding: 4px 8px;
   border: none;
   background: none;
+  outline: none;
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 600;
@@ -139,12 +143,15 @@
   transition: color 0.15s;
   white-space: nowrap;
   border-radius: 4px;
+  -webkit-tap-highlight-color: transparent;
 }
 .genreTag:hover { color: var(--text2); }
+.genreTag:focus-visible { outline: none; }
 
 .genreTagActive {
   color: var(--accent);
 }
+.genreTagActive:hover { color: var(--accent); }
 
 /* ── Content ── */
 .content {
@@ -152,6 +159,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .contentAnimated { /* wrapper, no animation here */ }
