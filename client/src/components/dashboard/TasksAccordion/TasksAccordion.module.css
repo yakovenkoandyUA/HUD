@@ -1,285 +1,140 @@
-/* ── Root block ── */
 .root {
-  /* background: var(--surface);
-  border: 1px solid var(--border); */
-  border-radius: 12px;
-  overflow: hidden;
+  padding: 4px 0 8px;
 }
 
-/* ── Section ── */
-.section {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Header ── */
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  width: 100%;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s;
-}
-
-.header:active {
-  background: var(--surface2);
+  gap: 8px;
+  padding: 8px 16px 6px;
 }
 
 .headerLabel {
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
   color: var(--text3);
 }
 
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.count {
+.badge {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text3);
-  background: var(--bg3);
-  padding: 2px 7px;
-  border-radius: 10px;
-  line-height: 1;
-}
-
-.countDone {
-  color: var(--second);
-  background: var(--second-soft);
-}
-
-.arrow {
-  color: var(--text3);
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
-  transform: rotate(-90deg);
-}
-
-.arrowOpen {
-  transform: rotate(0deg);
-}
-
-/* ── Progress bar (sprint section) ── */
-.progressWrap {
-  padding: 0 16px;
-  height: 0;
-  overflow: hidden;
-  transition: height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.progressVisible {
-  height: 10px;
-}
-
-.progressTrack {
-  height: 4px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
   border-radius: 999px;
-  /* background: var(--border2); */
-  overflow: hidden;
-  margin-bottom: 8px;
+  padding: 1px 7px;
+  line-height: 1.6;
 }
 
-.progressFill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--accent);
-  transition: width 0.4s ease;
+.allBtn {
+  margin-left: auto;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.allBtn:hover { color: var(--accent); }
+
+.empty {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text3);
+  padding: 6px 16px 10px;
 }
 
-/* ── Accordion content ── */
-.content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.contentOpen {
-  max-height: 400px;
-}
-
-.contentInner {
-  padding: 0 16px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* ── Task / Shopping list ── */
 .list {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--border);
-  min-width: 0;
+  gap: 8px;
+  padding: 7px 16px;
+  transition: background 0.1s;
 }
+.item:active { background: var(--surface); }
 
-.item:last-child {
-  border-bottom: none;
-}
-
-/* ── Checkbox — quest/todo ── */
 .checkbox {
-  flex-shrink: 0;
   width: 18px;
   height: 18px;
-  border-radius: 4px;
-  background: none;
-  cursor: pointer;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
-  color: #fff;
-  padding: 0;
-  border: 1.5px solid var(--task-quest);
+  -webkit-tap-highlight-color: transparent;
 }
-
 .checkboxUndone {
-  border-color: var(--task-quest);
+  border: 1.5px solid var(--border2);
+  background: none;
+  color: transparent;
 }
-
+.checkboxUndone:hover { border-color: var(--accent); }
 .checkboxDone {
-  background: var(--task-quest);
-  border-color: var(--task-quest);
+  border: 1.5px solid var(--second);
+  background: var(--second-soft);
+  color: var(--second);
 }
 
-/* ── Checkbox — shopping ── */
-.checkboxShop {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1.5px solid var(--task-shopping);
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--bg);
-  padding: 0;
-  transition: background 0.15s, border-color 0.15s;
-}
-.checkboxShop:hover { background: color-mix(in srgb, var(--task-shopping) 14%, transparent); }
-
-.checkboxShopDone {
-  background: var(--task-shopping);
-  border-color: var(--task-shopping);
-}
-
-/* ── Item title ── */
-.itemTitle {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--text);
+.title {
   flex: 1;
-  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.15s;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.4;
-  transition: color 0.15s;
-  cursor: pointer;
 }
-
-.itemTitle:hover {
-  color: var(--accent);
-}
-
-.itemDone {
+.title:hover { color: var(--accent); }
+.titleDone {
   color: var(--text3);
   text-decoration: line-through;
 }
 
-/* ── Label dots ── */
 .labelDot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-/* ── Checklist badge ── */
 .checklistBadge {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text3);
+  background: var(--surface2);
+  border-radius: 4px;
+  padding: 1px 5px;
   flex-shrink: 0;
-  white-space: nowrap;
 }
 
-/* ── Empty ── */
-.emptyText {
+.moreBtn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 16px;
   font-family: var(--font-ui);
   font-size: 12px;
   color: var(--text3);
-  text-align: center;
-  padding: 4px 0 2px;
-}
-
-/* ── Shopping item completing animation ── */
-@keyframes shopComplete {
-  0%   { opacity: 1; transform: translateX(0); }
-  25%  { opacity: 1; transform: translateX(0); }
-  100% { opacity: 0; transform: translateX(12px); }
-}
-
-.itemCompleting {
-  animation: shopComplete 0.38s ease forwards;
-  pointer-events: none;
-}
-
-.itemCompleting .itemTitle {
-  text-decoration: line-through;
-  color: var(--text3);
-}
-
-/* ── More button ── */
-.moreBtn {
-  align-self: flex-end;
   background: none;
   border: none;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
   cursor: pointer;
-  padding: 8px 0 0;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  transition: color 0.15s;
 }
-
-/* ── Note date ── */
-.noteDate {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text3);
-  flex-shrink: 0;
-}
-
-/* ── Divider between sections ── */
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 0;
-}
+.moreBtn:hover { color: var(--accent); }

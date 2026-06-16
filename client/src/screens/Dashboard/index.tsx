@@ -4,6 +4,7 @@ import AppHeader from '../../components/AppHeader'
 import GreetingBlock from '../../components/dashboard/GreetingBlock'
 import HeroCard from '../../components/dashboard/HeroCard'
 import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
+import RaceCountdownStrip from '../../components/dashboard/RaceCountdownStrip'
 import TasksAccordion from '../../components/dashboard/TasksAccordion'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import Modal from '../../components/ui/Modal'
@@ -139,7 +140,16 @@ const Dashboard: React.FC = () => {
 {raceThisWeek ? (
           <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
         ) : (
-          <WeekHeader weekStart={weekStart} hideTitle routineItems={routineItems} />
+          <WeekHeader
+            weekStart={weekStart}
+            hideTitle
+            routineItems={routineItems}
+            onDaySelect={(iso) => navigate('/sprint', { state: { selectedDay: iso } })}
+          />
+        )}
+
+        {f1Enabled && nextRace && !raceThisWeek && (
+          <RaceCountdownStrip race={nextRace} />
         )}
 
         {routineItems.length > 0 && (
@@ -192,8 +202,6 @@ const Dashboard: React.FC = () => {
           balance={balance}
           dailyBudget={dailyBudget}
           todaySpent={todaySpent}
-          race={nextRace}
-          compact={!!raceThisWeek}
           sparklineData={sparklineData}
         />
 

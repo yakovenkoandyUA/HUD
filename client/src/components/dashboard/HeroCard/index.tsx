@@ -1,54 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { fmt } from '../../../utils/finance'
-import type { F1Race } from '../../../data/f1Season2026'
 import styles from './HeroCard.module.css'
 
 /**
  * HeroCard
  * --------
- * Компактна баланс-картка Dashboard з опціональним F1-таймером праворуч.
- * Анімований лічильник балансу при першому завантаженні.
- * Інтерактивна sparkline останніх 7 днів — тап на точку показує суму дня.
+ * Баланс-картка Dashboard з анімованим лічильником та sparkline витрат.
  *
  * Props:
- * @prop {number}       balance       — поточний баланс (грн)
- * @prop {number}       dailyBudget   — денний бюджет (грн)
- * @prop {number}       todaySpent    — витрачено сьогодні (грн)
- * @prop {F1Race|null}  race          — наступна гонка або null
- * @prop {boolean}      compact       — true коли RaceHeroCard вже показано зверху
- * @prop {number[]}     sparklineData — масив витрат за 7 днів (oldest→newest)
+ * @prop {number}   balance       — поточний баланс (грн)
+ * @prop {number}   dailyBudget   — денний бюджет (грн)
+ * @prop {number}   todaySpent    — витрачено сьогодні (грн)
+ * @prop {number[]} sparklineData — масив витрат за 7 днів (oldest→newest)
  */
 interface HeroCardProps {
   balance: number
   dailyBudget: number
   todaySpent: number
-  race: F1Race | null
-  compact?: boolean
   sparklineData?: number[]
-}
-
-interface Countdown {
-  d: number
-  h: number
-  m: number
-  s: number
-}
-
-function getCountdown(raceDate: string): Countdown | null {
-  const target = new Date(raceDate + 'T14:00:00Z').getTime()
-  const diff = target - Date.now()
-  if (diff <= 0) return null
-  const s = Math.floor(diff / 1000)
-  return {
-    d: Math.floor(s / 86400),
-    h: Math.floor((s % 86400) / 3600),
-    m: Math.floor((s % 3600) / 60),
-    s: s % 60,
-  }
-}
-
-function pad(n: number) {
-  return String(n).padStart(2, '0')
 }
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
@@ -220,19 +189,10 @@ const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
 
 // ── HeroCard ─────────────────────────────────────────────────────────────────
 
-const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, race, compact, sparklineData }) => {
-  const [countdown, setCountdown] = useState<Countdown | null>(
-    race ? getCountdown(race.date) : null
-  )
+const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, sparklineData }) => {
   const [displayed, setDisplayed] = useState(0)
   const hasAnimated = useRef(false)
   const rafRef = useRef<number | undefined>(undefined)
-
-  useEffect(() => {
-    if (!race) return
-    const id = setInterval(() => setCountdown(getCountdown(race.date)), 1000)
-    return () => clearInterval(id)
-  }, [race])
 
   /* Animate balance counter once on first non-zero value */
   useEffect(() => {
@@ -270,7 +230,6 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
     ? Math.min(100, Math.round((todaySpent / dailyBudget) * 100))
     : 0
   const overBudget = todaySpent > dailyBudget
-  const showRace = !compact && !!race
 
   const hasSparkline = sparklineData && sparklineData.length === 7 && sparklineData.some(v => v > 0)
   const sparkDays = hasSparkline ? getSparkDays() : []
@@ -286,40 +245,6 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
             Сьогодні: {fmt(todaySpent)} / {fmt(dailyBudget)} ₴
           </span>
         </div>
-
-        {showRace && (
-          <>
-            <div className={styles.divider} />
-            <div className={styles.right}>
-              <div className={styles.raceLabel}>
-                <span className={styles.flag}>{race!.flag}</span>
-                <span className={styles.raceName}>{race!.name.replace(' GP', '')}</span>
-              </div>
-              {countdown ? (
-                <div className={styles.countdownGrid}>
-                  <div className={styles.countdownUnit}>
-                    <span className={styles.countdownNum}>{countdown.d}</span>
-                    {/* <span className={styles.countdownSub}>д</span> */}
-                  </div>
-                  <div className={styles.countdownUnit}>
-                    <span className={styles.countdownNum}>{pad(countdown.h)}</span>
-                    {/* <span className={styles.countdownSub}>г</span> */}
-                  </div>
-                  <div className={styles.countdownUnit}>
-                    <span className={styles.countdownNum}>{pad(countdown.m)}</span>
-                    {/* <span className={styles.countdownSub}>хв</span> */}
-                  </div>
-                  <div className={styles.countdownUnit}>
-                    <span className={styles.countdownNum}>{pad(countdown.s)}</span>
-                    {/* <span className={styles.countdownSub}>с</span> */}
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.raceDay}>RACE DAY! 🏁</div>
-              )}
-            </div>
-          </>
-        )}
       </div>
 
       {hasSparkline && (
