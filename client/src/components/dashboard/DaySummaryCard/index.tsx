@@ -4,8 +4,8 @@ import styles from './DaySummaryCard.module.css'
 /**
  * DaySummaryCard
  * --------------
- * Секція "МІЙ ДЕНЬ" — компактний 2×2 грід.
- * Числа як герої (18px mono), без тінтів, округла картка.
+ * Секція "МІЙ ДЕНЬ" — 2×2 грід у rounded card.
+ * Іконка + лейбл зверху, значення знизу. Без тінтів і великих чисел.
  *
  * Props:
  * @prop {number}   activeQuests      — кількість активних квестів
@@ -48,60 +48,52 @@ const DaySummaryCard: React.FC<DaySummaryCardProps> = ({
     </div>
 
     <div className={styles.grid}>
-      {/* Quests */}
       <button type="button" className={styles.cell} onClick={onQuestsClick}>
         <div className={styles.cellTop}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.cellIcon}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.cellIcon}>
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
           <span className={styles.cellLabel}>Квести</span>
         </div>
-        {activeQuests > 0
-          ? <><span className={`${styles.cellVal} ${styles.gold}`}>{activeQuests}</span><span className={styles.cellSub}>активних</span></>
-          : <span className={`${styles.cellVal} ${styles.dim}`}>✓ все</span>
-        }
+        <span className={`${styles.cellVal} ${activeQuests > 0 ? styles.cellValGold : styles.cellValDim}`}>
+          {activeQuests > 0 ? `${activeQuests} активних` : 'все виконано'}
+        </span>
       </button>
 
-      {/* Shopping */}
       <button type="button" className={styles.cell} onClick={onShoppingClick}>
         <div className={styles.cellTop}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.cellIcon}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.cellIcon}>
             <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
           </svg>
           <span className={styles.cellLabel}>Покупки</span>
         </div>
-        {shoppingCount > 0
-          ? <><span className={`${styles.cellVal} ${styles.accent}`}>{shoppingCount}</span><span className={styles.cellSub}>пунктів</span></>
-          : <span className={`${styles.cellVal} ${styles.dim}`}>—</span>
-        }
+        <span className={`${styles.cellVal} ${shoppingCount > 0 ? styles.cellValAccent : styles.cellValDim}`}>
+          {shoppingCount > 0 ? `${shoppingCount} пунктів` : 'порожньо'}
+        </span>
       </button>
 
-      {/* Meals */}
       <button type="button" className={styles.cell} onClick={onMealsClick}>
         <div className={styles.cellTop}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.cellIcon}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.cellIcon}>
             <path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2M5 11v11M21 2v20M21 2a5 5 0 0 0-5 5v4h5"/>
           </svg>
           <span className={styles.cellLabel}>Страва</span>
         </div>
-        {meals.length > 0
-          ? <span className={`${styles.cellText} ${styles.second}`}>{meals.join(' · ')}</span>
-          : <span className={`${styles.cellText} ${styles.cellTextDim}`}>не заплановано</span>
-        }
+        <span className={`${styles.cellVal} ${meals.length > 0 ? styles.cellValSecond : styles.cellValDim}`}>
+          {meals.length > 0 ? meals.join(' · ') : 'не заплановано'}
+        </span>
       </button>
 
-      {/* Notes */}
       <button type="button" className={styles.cell} onClick={onNotesClick}>
         <div className={styles.cellTop}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.cellIcon}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.cellIcon}>
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
           <span className={styles.cellLabel}>Нотатки</span>
         </div>
-        {notesCount > 0
-          ? <span className={styles.cellText}>{latestNote || `${notesCount} записів`}</span>
-          : <span className={`${styles.cellText} ${styles.cellTextDim}`}>немає</span>
-        }
+        <span className={`${styles.cellVal} ${notesCount > 0 ? '' : styles.cellValDim}`}>
+          {notesCount > 0 ? latestNote || `${notesCount} записів` : 'немає'}
+        </span>
       </button>
     </div>
   </div>
