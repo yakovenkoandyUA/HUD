@@ -4,7 +4,7 @@
   background: linear-gradient(135deg, rgb(224 16 46 / 0%) 0%, var(--surface) 80%);
   border: 1px solid var(--border);
   border-left: 3px solid var(--gold);
-  border-radius: 8px;
+  border-radius: 14px;
   padding: 12px 14px;
 }
 

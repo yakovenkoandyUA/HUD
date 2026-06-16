@@ -161,32 +161,10 @@ const Dashboard: React.FC = () => {
           <RaceCountdownStrip race={nextRace} />
         )}
 
-        {routineItems.length > 0 && (
-          <div className={styles.routineChips}>
-            {routineItems.map(r => {
-              const done = isDoneToday(r)
-              return (
-                <button
-                  key={r.id}
-                  type="button"
-                  className={`${styles.routineChip} ${done ? styles.routineChipDone : ''}`}
-                  onClick={() => toggleItem(r.id)}
-                >
-                  <span className={styles.chipBox}>
-                    {done && (
-                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                        <path d="M1.5 4.5l2 2 3.5-3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </span>
-                  {r.title}
-                </button>
-              )
-            })}
-          </div>
-        )}
-
         <DaySummaryCard
+          routineItems={routineItems}
+          isDoneToday={isDoneToday}
+          onToggle={toggleItem}
           activeQuests={activeQuests}
           shoppingCount={shoppingCount}
           meals={todayMeals.map(r => r.title)}
