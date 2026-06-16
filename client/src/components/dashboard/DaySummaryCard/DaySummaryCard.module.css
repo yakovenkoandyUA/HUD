@@ -1,6 +1,8 @@
 .root {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 /* ── Header ──────────────────────────────────────────────────── */
@@ -8,7 +10,7 @@
 .header {
   display: flex;
   align-items: center;
-  padding: 8px 16px 6px;
+  padding: 10px 14px 8px;
 }
 
 .headerLabel {
@@ -45,14 +47,13 @@
   gap: 1px;
   background: var(--border);
   border-top: 1px solid var(--border);
-  margin-bottom: 0;
 }
 
 .cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px 14px 10px;
+  gap: 2px;
+  padding: 12px 14px 14px;
   background: var(--bg);
   border: none;
   text-align: left;
@@ -63,41 +64,80 @@
 }
 .cell:active { background: var(--surface); }
 
+.cellQuests  { background: color-mix(in srgb, var(--gold)   8%, var(--bg)); }
+.cellShopping{ background: color-mix(in srgb, var(--accent) 6%, var(--bg)); }
+.cellMeals   { background: color-mix(in srgb, var(--second) 6%, var(--bg)); }
+.cellNotes   { background: var(--bg); }
+
+.cellQuests:active  { background: color-mix(in srgb, var(--gold)   14%, var(--bg)); }
+.cellShopping:active{ background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+.cellMeals:active   { background: color-mix(in srgb, var(--second) 12%, var(--bg)); }
+.cellNotes:active   { background: var(--surface); }
+
+/* ── Cell top row: icon + label ──────────────────────────────── */
+
 .cellTop {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  margin-bottom: 6px;
 }
 
 .cellIcon {
-  color: var(--text3);
   flex-shrink: 0;
 }
 
+.cellIconQuests  { color: var(--gold); }
+.cellIconShopping{ color: var(--accent); }
+.cellIconMeals   { color: var(--second); }
+.cellIconNotes   { color: var(--text3); }
+
 .cellLabel {
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text3);
 }
 
-.cellVal {
-  font-family: var(--font-ui);
-  font-size: 12px;
+/* ── Hero value ──────────────────────────────────────────────── */
+
+.cellNum {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 700;
   color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding-left: 20px;
 }
 
-.cellValDim {
+.cellNumQuests   { color: var(--gold); }
+.cellNumShopping { color: var(--accent); }
+.cellNumDim      { color: var(--text3); font-size: 22px; }
+
+.cellSub {
+  font-family: var(--font-ui);
+  font-size: 11px;
   color: var(--text3);
-  opacity: 0.6;
+  margin-top: 2px;
 }
 
-.cellValAccent {
-  color: var(--second);
+/* ── Text value (meals, notes) ───────────────────────────────── */
+
+.cellText {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cellTextDim {
+  color: var(--text3);
+  font-weight: 400;
+  font-size: 12px;
 }
