@@ -433,7 +433,7 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 								<rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" strokeWidth="1.3"/>
 								<path d="M4 7l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
 							</svg>
-							Справа
+							Квест
 						</button>
 						<button type="button" className={`${styles.typeSegmentBtn} ${styles.typeSegmentBtnShopping} ${newType === 'shopping' ? styles.typeSegmentBtnActive : ''}`} onClick={() => setNewType('shopping')}>
 							<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
