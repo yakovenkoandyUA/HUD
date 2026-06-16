@@ -9,6 +9,7 @@ import { useUiStore } from '../../store/uiStore'
 import { useFamilyStore } from '../../store/familyStore'
 import { getToken } from '../../services/api'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../types'
+import { openmojiUrl } from '../../utils/openmojiUrl'
 import styles from './Watchlist.module.css'
 
 type Tab = WatchlistCategory
@@ -29,12 +30,18 @@ const STATUS_ORDER: Record<string, number> = {
 }
 
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'movie',  label: 'Фільми' },
-  { id: 'series', label: 'Серіали' },
-  { id: 'anime',  label: 'Аніме' },
-  { id: 'book',   label: 'Книги' },
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: 'movie',  label: 'Фільми',  icon: '1F3AC' },
+  { id: 'series', label: 'Серіали', icon: '1F4FA' },
+  { id: 'anime',  label: 'Аніме',   icon: '1F338' },
+  { id: 'book',   label: 'Книги',   icon: '1F4DA' },
 ]
+
+const STAT_LABELS: Record<string, { short: string }> = {
+  watched:  { short: 'переглянуто' },
+  watching: { short: 'дивлюся'     },
+  want:     { short: 'хочу'        },
+}
 
 const Watchlist: React.FC = () => {
   const { items, addItem, setStatus, setRating, updateItem, deleteItem, fetchWatchlist } = useWatchlistStore()
@@ -177,25 +184,20 @@ const Watchlist: React.FC = () => {
 
       {/* ── Stats row ── */}
       <div className={styles.statsRow}>
-        {([
-          { status: 'watched',  count: stats.watched,  label: 'Переглянув' },
-          { status: 'watching', count: stats.watching, label: 'Дивлюсь'    },
-          { status: 'want',     count: stats.want,     label: 'Хочу'       },
-        ] as const).map(({ status, count, label }, i) => {
+        {(['watched', 'watching', 'want'] as const).map((status, i) => {
+          const count    = stats[status === 'watched' ? 'watched' : status === 'watching' ? 'watching' : 'want']
           const isActive = activeStatus === status
           return (
             <React.Fragment key={status}>
-              {i > 0 && <div className={styles.statDivider} />}
+              {i > 0 && <span className={styles.statSep}>·</span>}
               <button
                 type="button"
                 className={`${styles.stat} ${isActive ? styles.statActive : ''}`}
                 onClick={() => setActiveStatus(isActive ? null : status)}
               >
-                <span className={styles.statVal}>
-                  {count}
-                  {isActive && <span className={styles.statClear}>×</span>}
-                </span>
-                <span className={styles.statLabel}>{label}</span>
+                <span className={styles.statNum}>{count}</span>
+                <span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
+                {isActive && <span className={styles.statClear}>×</span>}
               </button>
             </React.Fragment>
           )
@@ -204,17 +206,16 @@ const Watchlist: React.FC = () => {
 
       {/* ── Tabs ── */}
       <div className={styles.tabBar}>
-        <div className={styles.tabs}>
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
-              onClick={() => { setTab(t.id); setActiveStatus(null); setActiveGenres(new Set()) }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
+            onClick={() => { setTab(t.id); setActiveStatus(null); setActiveGenres(new Set()) }}
+          >
+            <img src={openmojiUrl(t.icon)} alt="" className={styles.tabIcon} aria-hidden="true" />
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {/* ── Genre strip ── */}
