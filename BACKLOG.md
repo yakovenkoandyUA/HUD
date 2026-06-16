@@ -11,10 +11,16 @@
 
 
 ### Dashboard
-- GreetingBlock (привітання + дата), HeroCard (баланс + F1 countdown)
+- GreetingBlock (привітання + дата), HeroCard (баланс + sparkline 7 днів + dailyBudget bar)
 - ✅ Interactive sparkline — 7 днів витрат, tap/hover tooltip з сумою і днем, auto-dismiss
-- TasksAccordion (квести + покупки + нотатки), WeekHeader з routines badge (X/Y)
-- FAB (Витрата / Квест / Покупка), CarHero (Three.js McLaren)
+- ✅ **DaySummaryCard** — уніфікований блок "СЬОГОДНІ" (замінив TasksAccordion + meal chips):
+  - Рутин-чіпи: горизонтальний scroll, без фону і border-radius, `□ назва`, роздільник `·`
+  - 2×2 грід: Квести / Покупки / Страва / Нотатки — кожен з окремою навігацією
+  - Фон: `color-mix(in srgb, var(--accent) 22%, var(--bg))` + per-theme overrides
+  - Плаский стиль без border-radius; HeroCard теж отримав плаский стиль
+  - Dashboard `.content` gap: 0, точкові margin-top замість однакового gap
+- WeekHeader з routines badge (X/Y), RaceCountdownStrip, RaceHeroCard (якщо гонка тижня)
+- FAB (Витрата / Квест / Покупка / Нотатка), CarHero (Three.js McLaren)
 - Pull-to-refresh, pixel CRT scanlines (pixel тема)
 - ~~Nav chips (finance/sprint/f1)~~ — видалено як дублікат BottomNav
 
@@ -134,7 +140,8 @@
 
 ### Глобально
 - Кастомні категорії транзакцій з субкатегоріями
-- Теми: retro / velvet / japan / cyber / noir / pixel (6 штук; `dark`, `heroes`, `castle` видалено/перейменовано)
+- Теми: retro / velvet / japan / cyber / noir / pixel / **arctic** (7 штук; `dark`, `heroes`, `castle` видалено/перейменовано)
+  - **Arctic** — Nord color palette (polar blues + aurora borealis); фон: `radial-gradient` + gradient overlay; watermark: Elder Futhark рунічні символи (SVG data URI, opacity 0.07); aurora shimmer анімація вгорі екрану; шрифт: Uncial Antiqua / Philosopher
 - PWA: service worker, Web Push, іконки
 - ErrorBoundary компонент, NotFound екран
 

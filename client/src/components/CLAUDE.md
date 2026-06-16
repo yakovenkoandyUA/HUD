@@ -97,12 +97,16 @@ components/
 │   └── MemoryCard, MemoryForm, PhotoGrid
 └── dashboard/
     ├── CarHero             ← Three.js McLaren, 260px canvas, 80 частинок, OrbitControls
-    ├── HeroCard            ← компактний hero-блок: баланс + nextRace + спринт-прогрес
-    │                          border-left gold accent, Furore для числа балансу
-    ├── RaceHeroCard        ← F1 блок в Dashboard (тільки для admin, f1Enabled)
-    ├── ClockBlock          ← годинник Furore + дата
-    ├── TasksAccordion      ← акордеон КВЕСТИ / ПОКУПКИ / НОТАТКИ (expand/collapse секції)
-    │                          анімація strike+fadeout при відмітці покупки; нотатки → /notes
+    ├── HeroCard            ← баланс (Furore) + sparkline 7 днів + dailyBudget bar
+    │                          плаский стиль: border-top/bottom + border-left gold, без radius
+    ├── DaySummaryCard      ← уніфікований блок "СЬОГОДНІ": рутин-чіпи + 2×2 навігаційний грід
+    │                          Чіпи: без фону/radius, □ checkbox, роздільник · через CSS ::before
+    │                          2×2: Квести(gold)/Покупки(accent)/Страва(second)/Нотатки(text)
+    │                          Фон: color-mix accent+bg з per-theme overrides (:global([data-theme]))
+    ├── RaceHeroCard        ← F1 блок в Dashboard (тільки якщо f1Enabled)
+    ├── RaceCountdownStrip  ← стрічка відліку до наступної гонки
+    ├── GreetingBlock       ← привітання + дата
+    ├── DayOverlay          ← fullscreen "МІЙ ДЕНЬ" (mood, рутини по слотах, погода)
     └── SprintMini, LessonsMini, TodosMini
 ```
 

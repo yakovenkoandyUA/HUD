@@ -1,14 +1,20 @@
 # Екрани HUD
 
 ## 1. Dashboard (`/`)
-- ClockBlock — годинник (Furore) + дата зліва, ThemePicker справа
-- HeroCard — компактний hero-блок: баланс (Furore, gold border-left), dailyBudget bar, nextRace, sprint-прогрес
-- TodayRoutines — inline рядок "Сьогодні: назва · назва" для рутин без `isDoneToday`
-- TasksAccordion — акордеон з трьома секціями: **Квести** (sprint/todo, expand за замовчуванням), **Покупки** (shopping, закрито), **Нотатки** (останні 3, тап → /notes, закрито)
-  - Анімація закреслення + fade-out при відмітці покупки виконаною
-- CarHero — 3D McLaren MP4/5 (Three.js, 260px, OrbitControls + particles)
+- GreetingBlock — привітання + дата
+- WeekHeader (7-денний стрип) або RaceHeroCard (якщо гонка цього тижня) — в `.calendarWrap` з `margin-top: 10px`
+- RaceCountdownStrip — стрічка відліку до наступної гонки (тільки якщо `f1Enabled && nextRace && !raceThisWeek`)
+- **DaySummaryCard** — уніфікований блок "СЬОГОДНІ" (замінив TasksAccordion + окремі meal-chips):
+  - Header "СЬОГОДНІ" + кнопка "детальніше ›" → відкриває DayOverlay
+  - Горизонтально прокручуваний рядок рутин-чіпів (без фону, без border-radius, лише `□ назва`, роздільник `·` через CSS `+::before`)
+  - 2×2 грід: **Квести** (gold) / **Покупки** (accent) / **Страва** (second) / **Нотатки** (text); кожна комірка — самостійна кнопка навігації
+  - Фон: `color-mix(in srgb, var(--accent) 22%, var(--bg))`; per-theme overrides: velvet 90%, cyber 10%, japan/pixel 8%, noir → `var(--surface2)`
+  - Плаский стиль: `border-top/bottom: 1px solid var(--border)`, без `border-radius`
+- **HeroCard** — баланс + sparkline 7 днів + dailyBudget bar; `marginTop: 12` від DaySummaryCard
+  - Плаский стиль: `border-top/bottom: 1px solid var(--border)`, `border-left: 3px solid var(--gold)`, без `border-radius`
 - FAB — розкривний (rotate 45° при відкритті), 4 опції: **Витрата** / **Квест** / **Покупка** / **Нотатка**; закривається кліком поза меню
-- `fetchTransactions()` викликається при mount (баланс завантажується одразу)
+- `fetchTransactions()`, `fetchMealPlan()`, `fetchItems()`, `fetchNotes()` — всі викликаються при mount
+- `.content` — `gap: 0`, тільки точкові відступи через `margin-top` на `.calendarWrap` (10px) і style на HeroCard (12px)
 
 ## 2. Finance (`/finance`)
 - BalanceHero, TodayCard, StatsGrid
