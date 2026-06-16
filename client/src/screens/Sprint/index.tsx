@@ -26,10 +26,27 @@ type StatusFilter = 'active' | 'done'
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'normal', 'low']
 
-const PRIORITY_CONFIG: Record<TodoPriority, { symbol: string; label: string; activeClass: string }> = {
-	urgent: { symbol: '▲', label: 'ТЕРМІНОВО', activeClass: styles.priBtnActiveUrgent },
-	normal: { symbol: '◆', label: 'НОРМ',      activeClass: styles.priBtnActiveNormal },
-	low:    { symbol: '▽', label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow },
+const PRI_ICON_URGENT = (
+  <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true">
+    <path d="M6.5 1L1.5 6.5h3.5L2.5 11l7-6H6L6.5 1z"/>
+  </svg>
+)
+const PRI_ICON_NORMAL = (
+  <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
+    <line x1="1" y1="2" x2="9" y2="2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    <line x1="1" y1="6" x2="9" y2="6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+  </svg>
+)
+const PRI_ICON_LOW = (
+  <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+    <path d="M1 4c.8-2 1.7-2 2.5 0s1.7 2 2.5 0 1.7-2 2.5 0 1.7 2 2.5 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+)
+
+const PRIORITY_CONFIG: Record<TodoPriority, { icon: React.ReactNode; label: string; activeClass: string }> = {
+	urgent: { icon: PRI_ICON_URGENT, label: 'ТЕРМІНОВО', activeClass: styles.priBtnActiveUrgent },
+	normal: { icon: PRI_ICON_NORMAL, label: 'НОРМ',      activeClass: styles.priBtnActiveNormal },
+	low:    { icon: PRI_ICON_LOW,    label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow },
 }
 
 type RepeatType    = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
@@ -134,6 +151,14 @@ const Sprint: React.FC = () => {
 	const _td = new Date()
 	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
 	const [selectedDay, setSelectedDay] = useState(todayStr)
+	const [calendarMode, setCalendarMode] = useState<'week' | 'month'>(() =>
+		(localStorage.getItem('sprint-calendar-mode') as 'week' | 'month') || 'week'
+	)
+	const toggleCalendarMode = () => {
+		const next = calendarMode === 'week' ? 'month' : 'week'
+		setCalendarMode(next)
+		localStorage.setItem('sprint-calendar-mode', next)
+	}
 	const [quickAddDate, setQuickAddDate] = useState<string | null>(null)
 	const [detailTaskId, setDetailTaskId]     = useState<string | null>(null)
 	const [weekExpanded, setWeekExpanded]     = useState(false)
@@ -288,11 +313,14 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					routineItems={routineItems}
 					selectedDay={selectedDay}
 					onDaySelect={iso => {
-						if (iso !== selectedDay) setSelectedDay(iso)
+						if (iso === selectedDay && iso !== todayStr) setSelectedDay(todayStr)
+						else setSelectedDay(iso)
 					}}
 					onLongPress={handleDayLongPress}
 					onPrevWeek={goToPrevWeek}
 					onNextWeek={!isCurrentWeek ? goToNextWeek : undefined}
+					calendarMode={calendarMode}
+					onToggleCalendarMode={toggleCalendarMode}
 				/>
 
 				{/* ── Meal plan strip ── */}
@@ -401,12 +429,22 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 							</button>
 						</div>
 					)}
-					<div className={styles.typeRow}>
-						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipTodo}     ${newType === 'todo' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('todo')}>
-							✓ Справа
+					<div className={styles.typeSegment}>
+						<button type="button" className={`${styles.typeSegmentBtn} ${styles.typeSegmentBtnTodo} ${newType === 'todo' ? styles.typeSegmentBtnActive : ''}`} onClick={() => setNewType('todo')}>
+							<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+								<rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" strokeWidth="1.3"/>
+								<path d="M4 7l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+							</svg>
+							Справа
 						</button>
-						<button type="button" className={`${styles.formTypeChip} ${styles.formTypeChipShopping} ${newType === 'shopping' ? styles.formTypeChipActive : ''}`} onClick={() => setNewType('shopping')}>
-							🛒 Покупка
+						<button type="button" className={`${styles.typeSegmentBtn} ${styles.typeSegmentBtnShopping} ${newType === 'shopping' ? styles.typeSegmentBtnActive : ''}`} onClick={() => setNewType('shopping')}>
+							<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+								<path d="M2 3h10l-1.2 6H3.2L2 3z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+								<path d="M4.5 3V2a2 2 0 0 1 4 0v1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+								<circle cx="5" cy="11" r=".8" fill="currentColor"/>
+								<circle cx="9" cy="11" r=".8" fill="currentColor"/>
+							</svg>
+							Покупка
 						</button>
 					</div>
 
@@ -416,10 +454,10 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 						<>
 							<div className={styles.priorityRow}>
 								{PRIORITIES.map(p => {
-									const { symbol, label, activeClass } = PRIORITY_CONFIG[p]
+									const { icon, label, activeClass } = PRIORITY_CONFIG[p]
 									return (
 										<button key={p} type="button" className={`${styles.priBtn} ${newPriority === p ? activeClass : ''}`} onClick={() => setNewPriority(p)}>
-											<span className={styles.priSymbol}>{symbol}</span>
+											<span className={styles.priSymbol}>{icon}</span>
 											<span className={styles.priLabel}>{label}</span>
 										</button>
 									)
@@ -693,6 +731,11 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					onOpenDetail={setDetailTaskId}
 					onClose={() => setWeekExpanded(false)}
 					initialDay={selectedDay}
+					onAddForDay={iso => {
+						setWeekExpanded(false)
+						setQuickAddDate(iso)
+						setShowAdd(true)
+					}}
 				/>
 			)}
 

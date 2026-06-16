@@ -37,13 +37,13 @@
 }
 
 .normal {
-  color: var(--second);
-  background: var(--second-soft);
-  border-color: var(--second);
+  color: var(--gold);
+  background: var(--gold-dim);
+  border-color: var(--gold);
 }
 
 .low {
-  color: var(--text3);
-  background: var(--gold-dim);
-  border-color: var(--text3);
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 15%, transparent);
+  border-color: var(--positive);
 }

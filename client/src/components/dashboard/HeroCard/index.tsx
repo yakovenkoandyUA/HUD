@@ -299,19 +299,19 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, r
                 <div className={styles.countdownGrid}>
                   <div className={styles.countdownUnit}>
                     <span className={styles.countdownNum}>{countdown.d}</span>
-                    <span className={styles.countdownSub}>д</span>
+                    {/* <span className={styles.countdownSub}>д</span> */}
                   </div>
                   <div className={styles.countdownUnit}>
                     <span className={styles.countdownNum}>{pad(countdown.h)}</span>
-                    <span className={styles.countdownSub}>г</span>
+                    {/* <span className={styles.countdownSub}>г</span> */}
                   </div>
                   <div className={styles.countdownUnit}>
                     <span className={styles.countdownNum}>{pad(countdown.m)}</span>
-                    <span className={styles.countdownSub}>хв</span>
+                    {/* <span className={styles.countdownSub}>хв</span> */}
                   </div>
                   <div className={styles.countdownUnit}>
                     <span className={styles.countdownNum}>{pad(countdown.s)}</span>
-                    <span className={styles.countdownSub}>с</span>
+                    {/* <span className={styles.countdownSub}>с</span> */}
                   </div>
                 </div>
               ) : (

@@ -71,7 +71,13 @@ components/
 ├── sprint/
 │   ├── TaskCard            ← прогрес-бар чек-листа, лічильник ☑ X/Y
 │   ├── TaskDetailModal     ← МІТКИ/ДЕДЛАЙН/ЧЕК-ЛІСТ/ОПИС + LabelPicker
-│   └── SprintProgress, WeekHeader
+│   ├── WeekHeader          ← 7-денний стрип або компактна місячна сітка (toggle `calendarMode`)
+│   │                          Props: calendarMode 'week'|'month', onToggleCalendarMode
+│   │                          Month mode: getMonthGrid, internal vmYear/vmMonth state, < > nav
+│   ├── WeekExpandedView    ← повноекранний overlay; МІСЯЦЬ/ТИЖДЕНЬ/ДЕНЬ таби
+│   │                          Тиждень: viewWeekStart state, slide анімація, «Повернутись на сьогодні»
+│   │                          Місяць: inline день-деталь панель, onAddForDay callback
+│   └── SprintProgress
 ├── lessons/
 │   └── LessonItem, LessonForm
 ├── recipes/

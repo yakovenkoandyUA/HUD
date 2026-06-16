@@ -20,6 +20,7 @@ import styles from './WeekExpandedView.module.css'
  * @prop {(id: string) => void} [onOpenDetail] — відкрити модальне редагування
  * @prop {() => void}           onClose        — закрити overlay
  * @prop {string}               [initialDay]   — початково вибраний день
+ * @prop {(iso: string) => void} [onAddForDay] — відкрити форму додавання для конкретної дати
  */
 interface WeekExpandedViewProps {
   weekStart: string
@@ -29,6 +30,7 @@ interface WeekExpandedViewProps {
   onOpenDetail?: (id: string) => void
   onClose: () => void
   initialDay?: string
+  onAddForDay?: (iso: string) => void
 }
 
 interface ConfirmItem {
@@ -43,6 +45,13 @@ const DAY_LABELS   = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
 const DAY_SHORT    = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 const MONTHS_SHORT = ['січ.', 'лют.', 'бер.', 'квіт.', 'трав.', 'черв.', 'лип.', 'серп.', 'вер.', 'жовт.', 'лист.', 'груд.']
 const MONTHS_FULL  = ['Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень', 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень']
+
+function addWeeks(iso: string, n: number): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  date.setDate(date.getDate() + n * 7)
+  return toIso(date)
+}
 
 function parseLocalDate(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number)
@@ -113,20 +122,20 @@ function getRepeatLabel(task: UnifiedTodo): string {
   return ''
 }
 
-interface WeekStat { done: number; total: number }
+interface WeekStat { done: number; total: number; mondayIso: string; isCurrent: boolean }
 
 function calcWeekStats(routineItems: UnifiedTodo[]): WeekStat[] {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const currentMonday = new Date(today)
   currentMonday.setDate(today.getDate() - (today.getDay() + 6) % 7)
   currentMonday.setHours(0, 0, 0, 0)
-  const lastMonday = new Date(currentMonday)
-  lastMonday.setDate(currentMonday.getDate() - 7)
 
   return Array.from({ length: 4 }, (_, wi) => {
-    const mon = new Date(lastMonday)
-    mon.setDate(lastMonday.getDate() - (3 - wi) * 7)
+    const mon = new Date(currentMonday)
+    mon.setDate(currentMonday.getDate() - (3 - wi) * 7)
     mon.setHours(0, 0, 0, 0)
+    const mondayIso = toIso(mon)
+    const isCurrent = wi === 3
     let total = 0, done = 0
     for (let di = 0; di < 7; di++) {
       const day = new Date(mon); day.setDate(mon.getDate() + di); day.setHours(0, 0, 0, 0)
@@ -138,12 +147,12 @@ function calcWeekStats(routineItems: UnifiedTodo[]): WeekStat[] {
         if (t.completionLog?.includes(dayIso)) done++
       })
     }
-    return { done, total }
+    return { done, total, mondayIso, isCurrent }
   })
 }
 
 const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
-  weekStart, routineItems, allItems = [], onToggle, onOpenDetail, onClose, initialDay,
+  weekStart, routineItems, allItems = [], onToggle, onOpenDetail, onClose, initialDay, onAddForDay,
 }) => {
   useModalHistory(onClose, true)
 
@@ -157,9 +166,12 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
   const [closing, setClosing]     = useState(false)
   const [completing, setCompleting] = useState<Map<string, string>>(new Map())
   const [confirmItem, setConfirmItem] = useState<ConfirmItem | null>(null)
+  const [panelDay, setPanelDay]       = useState<string>(initialDay ?? todayStr)
+  const [viewWeekStart, setViewWeekStart] = useState(weekStart)
 
   const swipeX = useRef<number | null>(null)
   const swipeY = useRef<number | null>(null)
+  const weekSlideDirRef = useRef<'fromRight' | 'fromLeft'>('fromRight')
 
   const handleClose = () => { setClosing(true); setTimeout(onClose, 210) }
 
@@ -223,9 +235,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
     const dayTasks = allItems.filter(t => {
       if (isRecurring(t)) return false
       if (t.done) return false
-      if (t.dueDate === selectedDay) return true
-      if (isToday && !t.dueDate) return true
-      return false
+      return t.dueDate === selectedDay
     })
 
     const isEmpty = dayRoutines.length === 0 && dayTasks.length === 0
@@ -295,15 +305,65 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
     )
   }
 
-  // ── Week view (existing timeline) ─────────────────────────────────────────────
+  // ── Week view ─────────────────────────────────────────────────────────────────
+
+  const goToPrevWeek = () => {
+    weekSlideDirRef.current = 'fromLeft'
+    setViewWeekStart(prev => addWeeks(prev, -1))
+  }
+  const goToNextWeek = () => {
+    weekSlideDirRef.current = 'fromRight'
+    setViewWeekStart(prev => addWeeks(prev, 1))
+  }
+  const goToCurrentWeek = () => {
+    weekSlideDirRef.current = viewWeekStart > weekStart ? 'fromLeft' : 'fromRight'
+    setViewWeekStart(weekStart)
+  }
+
+  const onWeekTouchStart = (e: React.TouchEvent) => {
+    swipeX.current = e.touches[0].clientX
+    swipeY.current = e.touches[0].clientY
+  }
+  const onWeekTouchEnd = (e: React.TouchEvent) => {
+    if (swipeX.current === null || swipeY.current === null) return
+    const dx = e.changedTouches[0].clientX - swipeX.current
+    const dy = e.changedTouches[0].clientY - swipeY.current
+    swipeX.current = null; swipeY.current = null
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.8) return
+    if (dx < 0) goToNextWeek(); else goToPrevWeek()
+  }
 
   const renderWeek = () => {
-    const weekStats = calcWeekStats(routineItems)
-    const totalDone = weekStats.reduce((s, w) => s + w.done, 0)
+    const viewDays   = getWeekDays(viewWeekStart)
+    const weekStats  = calcWeekStats(routineItems)
+    const isThisWeek = viewWeekStart === weekStart
 
     return (
-      <div className={styles.timeline}>
-        {days.map((day, i) => {
+      <div
+        className={styles.timeline}
+        onTouchStart={onWeekTouchStart}
+        onTouchEnd={onWeekTouchEnd}
+      >
+        {/* Week navigation */}
+        <div className={styles.weekNav}>
+          <button type="button" className={styles.weekNavBtn} onClick={goToPrevWeek} aria-label="Попередній тиждень">
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+              <path d="M6 1.5L3 4.5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <span className={styles.weekNavRange}>
+            {fmt(viewDays[0])} — {fmt(viewDays[6])}
+          </span>
+          <button type="button" className={styles.weekNavBtn} onClick={goToNextWeek} aria-label="Наступний тиждень">
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+              <path d="M3 1.5L6 4.5l-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.weekDaysWrap}>
+          <div key={viewWeekStart} className={`${styles.weekDaysSlide} ${weekSlideDirRef.current === 'fromRight' ? styles.weekSlideFromRight : styles.weekSlideFromLeft}`}>
+        {viewDays.map((day, i) => {
           const dt          = new Date(day); dt.setHours(0, 0, 0, 0)
           const isToday     = dt.getTime() === today.getTime()
           const dayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, dt))
@@ -361,20 +421,38 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
             </div>
           )
         })}
+          </div>
+        </div>
 
-        {totalDone > 0 && (
+        {!isThisWeek && (
+          <button type="button" className={styles.weekReturnBtn} onClick={goToCurrentWeek}>
+            Повернутись на сьогодні
+          </button>
+        )}
+
+        {weekStats.some(w => w.total > 0) && (
           <div className={styles.stats}>
-            <span className={styles.statsTitle}>Статистика рутин</span>
+            <div className={styles.statsHeader}>
+              <span className={styles.statsTitle}>Статистика рутин</span>
+            </div>
             <div className={styles.statsRows}>
               {weekStats.map((w, i) => {
-                const pct = w.total > 0 ? w.done / w.total : 0
+                if (w.total === 0) return null
+                const pct = w.done / w.total
+                const [, wm, wd] = w.mondayIso.split('-').map(Number)
+                const dateLabel = `${wd} ${MONTHS_SHORT[wm - 1]}`
+                const fillClass = pct >= 0.8
+                  ? styles.statsBarFillHigh
+                  : pct >= 0.5
+                  ? styles.statsBarFillMid
+                  : styles.statsBarFillLow
                 return (
-                  <div key={i} className={styles.statsRow}>
-                    <span className={styles.statsWeekLabel}>тиж {i + 1}</span>
+                  <div key={i} className={`${styles.statsRow} ${w.isCurrent ? styles.statsRowCurrent : ''}`}>
+                    <span className={styles.statsWeekLabel}>{dateLabel}</span>
                     <div className={styles.statsBar}>
-                      <div className={styles.statsBarFill} style={{ width: `${pct * 100}%` }} />
+                      <div className={`${styles.statsBarFill} ${fillClass}`} style={{ width: `${pct * 100}%` }} />
                     </div>
-                    <span className={styles.statsCount}>{w.done} / {w.total}</span>
+                    <span className={styles.statsCount}>{w.done}/{w.total}</span>
                   </div>
                 )
               })}
@@ -389,6 +467,18 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
 
   const renderMonth = () => {
     const grid = getMonthGrid(vmYear, vmMonth)
+
+    // Inline day detail
+    const detailDate = parseLocalDate(panelDay)
+    detailDate.setHours(0, 0, 0, 0)
+    const isDetailToday = panelDay === todayStr
+    const detailRoutines = routineItems.filter(t => isRoutineDueOnDay(t, detailDate))
+    const detailTasks = allItems.filter(t => {
+      if (isRecurring(t)) return false
+      if (t.done) return false
+      return t.dueDate === panelDay
+    })
+    const detailEmpty = detailRoutines.length === 0 && detailTasks.length === 0
 
     return (
       <div className={styles.monthWrap}>
@@ -427,22 +517,28 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
             const iso        = toIso(day)
             const isCurMonth = day.getMonth() === vmMonth
             const isToday    = iso === todayStr
-            const isSel      = iso === selectedDay
+            const isSel      = iso === panelDay
             const dotStatus  = getRoutineDotStatus(day, routineItems, today)
             const hasTask    = allItems.some(t => !isRecurring(t) && t.dueDate === iso)
+
+            const numClass = !isToday && !isSel ? (
+              dotStatus === 'done'    ? styles.gridDayNumDone    :
+              dotStatus === 'pending' ? styles.gridDayNumPending :
+              dotStatus === 'overdue' ? styles.gridDayNumOverdue : ''
+            ) : ''
 
             return (
               <button
                 key={i}
                 type="button"
                 className={`${styles.gridDay} ${!isCurMonth ? styles.gridDayOther : ''} ${isToday ? styles.gridDayToday : ''} ${isSel ? styles.gridDaySelected : ''}`}
-                onClick={() => pickDay(iso)}
+                onClick={() => setPanelDay(iso)}
               >
-                <span className={styles.gridDayNum}>{day.getDate()}</span>
+                <span className={`${styles.gridDayNum} ${numClass}`}>{day.getDate()}</span>
                 <div className={styles.gridDots}>
                   {dotStatus !== 'none' && (
                     <span className={`${styles.gridDot} ${
-                      dotStatus === 'done'    ? styles.gridDotDone :
+                      dotStatus === 'done'    ? styles.gridDotDone    :
                       dotStatus === 'overdue' ? styles.gridDotOverdue :
                       styles.gridDotPending
                     }`} />
@@ -452,6 +548,81 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
               </button>
             )
           })}
+        </div>
+
+        {/* Inline day detail */}
+        <div className={styles.monthDayDetail}>
+          <div className={styles.monthDayDetailHeader}>
+            <span className={styles.monthDayDetailDate}>{formatDayHeader(panelDay)}</span>
+            {isDetailToday && <span className={styles.dayViewTodayBadge}>сьогодні</span>}
+            {onAddForDay && (
+              <button
+                type="button"
+                className={styles.dayPanelAddBtn}
+                onClick={() => onAddForDay(panelDay)}
+                aria-label="Додати задачу"
+              >
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className={styles.monthDayDetailBody}>
+            {detailEmpty && <p className={styles.dayPanelEmpty}>Нічого на цей день</p>}
+
+            {detailRoutines.length > 0 && (
+              <>
+                <p className={styles.daySectionLabel}>Рутини</p>
+                {detailRoutines.map(t => {
+                  const isDoneForDay = t.completionLog?.includes(panelDay) ?? false
+                  const isAnimating  = completing.get(t.id) === panelDay
+                  const isDone       = isAnimating || isDoneForDay
+                  const repeatLabel  = getRepeatLabel(t)
+                  return (
+                    <div key={t.id} className={`${styles.taskRow} ${isAnimating ? styles.taskRowDone : ''} ${isDoneForDay && !isAnimating ? styles.taskRowCompleted : ''}`}>
+                      <button type="button" className={styles.checkboxWrapper} onClick={() => handleCheckboxTap(t, isDoneForDay, panelDay)}>
+                        <span className={`${styles.circle} ${isDone ? styles.circleChecked : styles.circleGold}`}>
+                          {isDone && (
+                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                              <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </span>
+                      </button>
+                      <button type="button" className={styles.taskName} onClick={() => onOpenDetail?.(t.id)}>
+                        {t.title}
+                      </button>
+                      {repeatLabel && <span className={styles.repeatLabel}>{repeatLabel}</span>}
+                    </div>
+                  )
+                })}
+              </>
+            )}
+
+            {detailTasks.length > 0 && (
+              <>
+                <p className={styles.daySectionLabel}>Квести</p>
+                {detailTasks.map(t => (
+                  <div key={t.id} className={styles.taskRow}>
+                    <button type="button" className={styles.checkboxWrapper} onClick={() => onToggle(t.id)}>
+                      <span className={`${styles.circle} ${t.done ? styles.circleChecked : styles.circleGold}`}>
+                        {t.done && (
+                          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                            <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+                    <button type="button" className={styles.taskName} onClick={() => onOpenDetail?.(t.id)}>
+                      {t.title}
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -465,8 +636,9 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
     ? 'Тиждень'
     : formatDayHeader(selectedDay)
 
+  const viewDaysForSub = getWeekDays(viewWeekStart)
   const topBarSub = tab === 'week'
-    ? `${fmt(days[0])} — ${fmt(days[6])}`
+    ? `${fmt(viewDaysForSub[0])} — ${fmt(viewDaysForSub[6])}`
     : null
 
   return (

@@ -5,6 +5,10 @@
   padding: 4px 0;
 }
 
+.weekRowWrap {
+  overflow: hidden;
+}
+
 .top {
   display: flex;
   align-items: center;
@@ -171,14 +175,136 @@
 /* ── Week slide animations ── */
 
 @keyframes slideFromRight {
-  from { transform: translateX(28px); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
+  from { transform: translateX(60%); opacity: 0; }
+  to   { transform: translateX(0);   opacity: 1; }
 }
 
 @keyframes slideFromLeft {
-  from { transform: translateX(-28px); opacity: 0; }
-  to   { transform: translateX(0);     opacity: 1; }
+  from { transform: translateX(-60%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
 }
 
-.slideFromRight { animation: slideFromRight 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-.slideFromLeft  { animation: slideFromLeft  0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.slideFromRight { animation: slideFromRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.slideFromLeft  { animation: slideFromLeft  0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+
+/* ── Calendar mode toggle button ── */
+
+.calModeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.calModeBtn:hover        { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-dim); }
+.calModeBtnActive        { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-dim); }
+.calModeBtnActive:hover  { background: var(--accent-dim); }
+
+/* ── Compact month grid ── */
+
+.monthCompact {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 4px;
+}
+
+.monthCompactNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px 6px;
+}
+
+.monthCompactNavBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.monthCompactNavBtn:hover { color: var(--text); }
+
+.monthCompactNavLabel {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text2);
+}
+
+.monthCompactGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px 0;
+}
+
+.monthCompactDayLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text3);
+  text-align: center;
+  padding-bottom: 4px;
+}
+
+.monthCompactCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1px;
+  height: 34px;
+  padding-top: 4px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.monthCompactCell:hover { background: var(--surface2); }
+
+.monthCompactOther { opacity: 0.3; }
+
+.monthCompactToday {
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+}
+.monthCompactToday:hover { background: color-mix(in srgb, var(--gold) 26%, transparent); }
+
+.monthCompactSel {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-dim);
+}
+.monthCompactSel:hover { background: var(--accent-dim); }
+
+.monthCompactNum {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1;
+}
+
+.monthCompactNumDone    { color: var(--positive); }
+.monthCompactNumPending { color: var(--gold); }
+.monthCompactNumOverdue { color: var(--accent); }
+
+.monthCompactDot {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

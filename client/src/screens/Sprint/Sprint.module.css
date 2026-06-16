@@ -124,27 +124,47 @@
 
 .taskForm { display: flex; flex-direction: column; gap: 12px; }
 
-.typeRow { display: flex; gap: 6px; }
+/* ── Segmented control: Справа / Покупка ── */
+.typeSegment {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
 
-.formTypeChip {
+.typeSegmentBtn {
   flex: 1;
-  padding: 7px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 4px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  border-radius: 8px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text2);
+  color: var(--text3);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.formTypeChipSprint.formTypeChipActive   { background: var(--accent-soft);  color: var(--accent);  border-color: var(--accent-dim); }
-.formTypeChipShopping.formTypeChipActive { background: var(--second-soft);  color: var(--second);  border-color: var(--second);     }
-.formTypeChipTodo.formTypeChipActive     { background: var(--gold-dim);     color: var(--gold);    border-color: var(--gold);       }
 
+.typeSegmentBtnTodo.typeSegmentBtnActive {
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+
+.typeSegmentBtnShopping.typeSegmentBtnActive {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ── Priority buttons ── */
 .priorityRow { display: flex; gap: 6px; }
 
 .priBtn {
@@ -153,24 +173,24 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 7px 6px;
+  padding: 8px 6px;
   font-family: var(--font-ui);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid var(--border2);
   background: var(--surface);
-  color: var(--text2);
+  color: var(--text3);
   cursor: pointer;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
-.priSymbol { font-size: 8px; line-height: 1; }
-.priLabel  { font-size: 9px; }
+.priSymbol { font-size: 9px; line-height: 1; }
+.priLabel  { font-size: 10px; }
 
-.priBtnActiveUrgent { color: var(--negative); background: var(--accent-soft); border-color: var(--negative); }
-.priBtnActiveNormal { color: var(--second);   background: var(--second-soft); border-color: var(--second);   }
-.priBtnActiveLow    { color: var(--text3);    background: var(--gold-dim);    border-color: var(--text3);    }
+.priBtnActiveUrgent { color: var(--negative); background: color-mix(in srgb, var(--negative) 12%, transparent); border-color: var(--negative); }
+.priBtnActiveNormal { color: var(--gold);     background: var(--gold-dim);    border-color: var(--gold);     }
+.priBtnActiveLow    { color: var(--positive); background: color-mix(in srgb, var(--positive) 15%, transparent); border-color: var(--positive); }
 
 .todoInput {
   background: var(--bg3);

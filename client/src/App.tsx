@@ -184,7 +184,7 @@ const App: React.FC = () => {
   }, [token, isSupported, isSubscribed])
 
   const showBanner = !isDismissed && (isInstallable || isIOS)
-
+ 
   return (
     <ErrorBoundary>
     <BrowserRouter>

@@ -59,6 +59,10 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 
 ## 5. Sprint (`/sprint`)
 - WeekHeader — мінімалістичний, фільтрація по дню тапом
+- **calendarMode** `'week' | 'month'` — стан у Sprint screen, persist у `localStorage('sprint-calendar-mode')`
+  - **week** (default): звичайний 7-денний стрип
+  - **month**: компактна місячна сітка прямо в WeekHeader (34px клітинки), навігація `< Місяць Рік >`, кольорові числа + крапки; тап на день → фільтрує список квестів; повторний тап → скидає на сьогодні
+  - Toggle кнопка (calendar/lines іконка) в `topRight` WeekHeader поряд з ↗
 - Єдиний список задач: **sprint** / **shopping** / **todo** + уроки (lessonStore)
 - Рутини отримують індикатор сповіщень (badge) якщо не виконані сьогодні
 - **Фільтр** (`≡`) — панель з dropdown-select:
@@ -70,6 +74,10 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
   - Swipe-to-dismiss: imperative `addEventListener('touchmove', fn, { passive: false })`; перевірка `bodyRef.current.scrollTop > 0` перед drag
 - Форма додавання: тип + назва + пріоритет (для shopping/todo)
 - Категорії спринту (dev/mentorship/personal/learning) — тільки через TaskDetailModal
+- **WeekExpandedView** — повноекранний overlay (3 таби: МІСЯЦЬ / ТИЖДЕНЬ / ДЕНЬ):
+  - Місячна сітка: `grid-auto-rows: 62px`, кольорові числа (positive/gold/accent) + крапки, inline день-деталь панель
+  - ТИЖДЕНЬ: навігація по тижнях (`viewWeekStart` state, `<`/`>`, swipe), slide анімація (left/right), «Повернутись на сьогодні» кнопка
+  - `onAddForDay` → закриває overlay, відкриває форму з pre-filled датою
 
 ## 6. ShoppingList (`/shopping`)
 - Список покупок з `useShoppingListStore` (localStorage persist)
