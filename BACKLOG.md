@@ -39,6 +39,15 @@
 - financeStore: sessionStorage кеш при mount (миттєве відображення без мерехтіння)
 
 ### Sprint / Quests
+- ✅ **Quest form redesign:**
+  - Modal title: "Нова справа" → "Новий квест"; type label "Справа" → "Квест"
+  - Deadline chip (Дедлайн) + reminder chip (Нагадати) для не-рутинних квестів — з'являються в одному `metaRow` разом з Міткою і Повторити
+  - Unified `.metaChip` style — всі опції однакові: compact, uppercase 10px, border, active accent tint
+  - dueDate і reminder зберігаються в payload при addItem
+- ✅ **Shopping priority:** тільки ТЕРМІНОВО і АБИ БУЛО (без НОРМ); дефолт — нічого; клік на активну скидає
+- ✅ **TaskCard:** PriorityBadge переміщено з `.meta` (права сторона) до `.titleLine` (ліворуч від назви); чек-ліст тепер показується і для shopping items
+
+### Sprint / Quests
 - Тижневий список задач: sprint / shopping / todo / уроки
 - TaskDetailModal: МІТКИ, ДЕДЛАЙН, ЧЕК-ЛІСТ, ОПИС, LabelPicker
 - Фільтр (bottom sheet): тип + статус (default: тільки активні)
