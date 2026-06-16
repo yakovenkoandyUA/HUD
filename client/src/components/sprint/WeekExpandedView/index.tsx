@@ -175,8 +175,6 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
 
   const handleClose = () => { setClosing(true); setTimeout(onClose, 210) }
 
-  const pickDay = (iso: string) => { setSelectedDay(iso); setTab('day') }
-
   const prevMonth = () => {
     if (vmMonth === 0) { setVmMonth(11); setVmYear(y => y - 1) }
     else setVmMonth(m => m - 1)
@@ -222,7 +220,6 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
   }
 
   const fmt = (d: Date) => d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
-  const days = getWeekDays(weekStart)
 
   // ── Day view ──────────────────────────────────────────────────────────────────
 

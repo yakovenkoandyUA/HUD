@@ -101,6 +101,9 @@ function getWeekDays(weekStart: string): Date[] {
 }
 
 const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExpand, hideTitle, routineItems = [], selectedDay, onDaySelect, onLongPress, onPrevWeek, onNextWeek, calendarMode = 'week', onToggleCalendarMode }) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
   const [vmYear,  setVmYear]  = useState(today.getFullYear())
   const [vmMonth, setVmMonth] = useState(today.getMonth())
 
@@ -194,27 +197,8 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
   const mon  = days[0]
   const sun  = days[6]
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
   const fmt = (d: Date) => d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
   const weekMonth = mon.getMonth()
-
-  const onSwipeTouchStart = (e: React.TouchEvent) => {
-    swipeStartX.current = e.touches[0].clientX
-    swipeStartY.current = e.touches[0].clientY
-  }
-
-  const onSwipeTouchEnd = (e: React.TouchEvent) => {
-    if (swipeStartX.current === null || swipeStartY.current === null) return
-    const dx = e.changedTouches[0].clientX - swipeStartX.current
-    const dy = e.changedTouches[0].clientY - swipeStartY.current
-    swipeStartX.current = null
-    swipeStartY.current = null
-    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.8) return
-    if (dx < 0) onNextWeek?.()
-    else onPrevWeek?.()
-  }
 
   const todayIso = toIso(today)
   const todayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, today))
