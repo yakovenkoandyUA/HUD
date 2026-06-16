@@ -27,7 +27,7 @@ import styles from './Dashboard.module.css'
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
-  const { items: sprintItems, addItem, toggleItem } = useSprintStore()
+  const { items: sprintItems, addItem, toggleItem, fetchItems } = useSprintStore()
   const { showToast, theme } = useUiStore()
   const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
@@ -49,6 +49,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     fetchTransactions()
     fetchMealPlan()
+    fetchItems()
     if (recipes.length === 0) fetchRecipes()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
