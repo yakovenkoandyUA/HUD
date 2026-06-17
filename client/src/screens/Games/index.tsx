@@ -75,7 +75,7 @@ const Games: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <AppHeader title="ІГРИ" />
+      <AppHeader />
 
       {/* Stats row */}
       <div className={styles.statsRow}>

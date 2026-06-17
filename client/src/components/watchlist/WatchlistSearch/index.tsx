@@ -248,7 +248,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     if (previewDetails?.backdrop_path) return `https://image.tmdb.org/t/p/w780${previewDetails.backdrop_path}`
     if (preview.backdropPath)          return `https://image.tmdb.org/t/p/w780${preview.backdropPath}`
     if (preview.posterPath)            return `https://image.tmdb.org/t/p/w500${preview.posterPath}`
-    return preview.thumbnail ?? null
+    return null
   })()
 
   return (
@@ -305,7 +305,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
           {error && <p className={styles.err}>{error}</p>}
 
           {isOpen && results.length > 0 && results.map((r, i) => {
-            const thumb = r.thumbnail ?? (r.posterPath ? `${TMDB_IMG}${r.posterPath}` : null)
+            const thumb = r.posterPath ? `${TMDB_IMG}${r.posterPath}` : null
             return (
               <button
                 key={`${r.tmdbId}-${i}`}
