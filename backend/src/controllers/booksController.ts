@@ -1,7 +1,8 @@
 import { Request, Response } from 'express'
 
 const cache = new Map<string, { data: unknown; expires: number }>()
-const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+const SEARCH_TTL = 10 * 60 * 1000
+const DESC_TTL   = 30 * 60 * 1000
 
 export const searchBooks = async (req: Request, res: Response): Promise<void> => {
   const q = ((req.query.q as string) ?? '').trim()
@@ -10,15 +11,15 @@ export const searchBooks = async (req: Request, res: Response): Promise<void> =>
     return
   }
 
-  const cacheKey = q.toLowerCase()
+  const cacheKey = `search-${q.toLowerCase()}`
   const cached = cache.get(cacheKey)
   if (cached && cached.expires > Date.now()) {
     res.json(cached.data)
     return
   }
 
-  const key = process.env.GOOGLE_BOOKS_KEY
-  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=10${key ? `&key=${key}` : ''}`
+  const fields = 'key,title,author_name,first_publish_year,cover_i,number_of_pages_median,subject'
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=12&fields=${fields}`
 
   const apiRes = await fetch(url)
   if (!apiRes.ok) {
@@ -26,23 +27,58 @@ export const searchBooks = async (req: Request, res: Response): Promise<void> =>
     return
   }
 
-  const data = await apiRes.json() as { items?: unknown[] }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = await apiRes.json() as { docs?: any[] }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items = (data.items ?? []).map((b: any) => ({
+  const items = (data.docs ?? []).map((b: any) => ({
     tmdbId:        0,
-    title:         b.volumeInfo?.title ?? 'Невідома назва',
-    originalTitle: b.volumeInfo?.title ?? '',
+    workKey:       b.key ?? null,
+    title:         b.title ?? 'Невідома назва',
+    originalTitle: b.title ?? '',
     posterPath:    null,
     backdropPath:  null,
-    overview:      b.volumeInfo?.description ?? '',
-    year:          b.volumeInfo?.publishedDate?.slice(0, 4) ?? '',
-    genres:        b.volumeInfo?.categories ?? [],
-    authors:       b.volumeInfo?.authors ?? [],
-    pageCount:     b.volumeInfo?.pageCount ?? null,
-    thumbnail:     b.volumeInfo?.imageLinks?.thumbnail?.replace('http://', 'https://') ?? null,
+    overview:      '',
+    year:          b.first_publish_year ? String(b.first_publish_year) : '',
+    genres:        (b.subject ?? []).slice(0, 4),
+    authors:       b.author_name ?? [],
+    pageCount:     b.number_of_pages_median ?? null,
+    thumbnail:     b.cover_i
+      ? `https://covers.openlibrary.org/b/id/${b.cover_i}-M.jpg`
+      : null,
   }))
 
-  cache.set(cacheKey, { data: items, expires: Date.now() + CACHE_TTL })
+  cache.set(cacheKey, { data: items, expires: Date.now() + SEARCH_TTL })
   res.json(items)
+}
+
+export const getBookDescription = async (req: Request, res: Response): Promise<void> => {
+  const key = ((req.query.key as string) ?? '').trim()
+  if (!key || !key.startsWith('/works/')) {
+    res.status(400).json({ error: 'Invalid key' })
+    return
+  }
+
+  const cacheKey = `desc-${key}`
+  const cached = cache.get(cacheKey)
+  if (cached && cached.expires > Date.now()) {
+    res.json(cached.data)
+    return
+  }
+
+  const apiRes = await fetch(`https://openlibrary.org${key}.json`)
+  if (!apiRes.ok) {
+    res.json({ description: '' })
+    return
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = await apiRes.json() as { description?: string | { value: string } }
+  const description = typeof data.description === 'string'
+    ? data.description
+    : (data.description?.value ?? '')
+
+  const result = { description }
+  cache.set(cacheKey, { data: result, expires: Date.now() + DESC_TTL })
+  res.json(result)
 }

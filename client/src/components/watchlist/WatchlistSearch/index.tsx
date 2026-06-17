@@ -25,6 +25,7 @@ const TMDB_GENRES: Record<number, string> = {
 
 interface SearchResult {
   tmdbId: number
+  workKey?: string | null
   title: string
   originalTitle: string
   posterPath: string | null
@@ -179,10 +180,25 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     setPreviewCast([])
     setSelectedStatus('want')
 
-    if (category === 'book' || !TMDB_KEY) return
+    let cancelled = false
+
+    if (category === 'book') {
+      if (!result.workKey) return
+      setLoadingDetails(true)
+      try {
+        const descRes = await authFetch(`/api/books/description?key=${encodeURIComponent(result.workKey)}`)
+        if (!cancelled && descRes.ok) {
+          const { description } = await descRes.json() as { description: string }
+          if (description) setPreviewDetails({ overview: description })
+        }
+      } catch { /* silent */ }
+      finally { if (!cancelled) setLoadingDetails(false) }
+      return () => { cancelled = true }
+    }
+
+    if (!TMDB_KEY) return
 
     setLoadingDetails(true)
-    let cancelled = false
     try {
       const base = category === 'movie'
         ? `https://api.themoviedb.org/3/movie/${result.tmdbId}`
