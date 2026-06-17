@@ -22,7 +22,7 @@ import { getToken } from '../../services/api'
 import type { UnifiedTodo, TodoPriority, SprintLabel, RepeatConfig } from '../../types'
 import styles from './Sprint.module.css'
 
-type FilterType = 'all' | 'task' | 'shopping'
+type FilterType = 'task' | 'shopping'
 type StatusFilter = 'active' | 'done'
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'low']
@@ -131,7 +131,7 @@ const Sprint: React.FC = () => {
 	const { recipes, fetchRecipes } = useRecipesStore()
 	const location = useLocation()
 	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
-	const [filterType, setFilterType]     = useState<FilterType>(locationState?.filterType ?? 'all')
+	const [filterType, setFilterType]     = useState<FilterType>(locationState?.filterType ?? 'task')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
 
 	const [showAdd, setShowAdd]       = useState(false)
@@ -208,8 +208,10 @@ const Sprint: React.FC = () => {
 		if (isRecurring(t)) return false
 		if (filterType === 'task'     && t.type === 'shopping') return false
 		if (filterType === 'shopping' && t.type !== 'shopping') return false
-		if (filterStatus === 'active') return !t.done
-		if (filterStatus === 'done')   return t.done
+		if (filterType === 'task') {
+			if (filterStatus === 'active') return !t.done
+			if (filterStatus === 'done')   return t.done
+		}
 		return true
 	})
 
@@ -345,36 +347,35 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					)
 				})()}
 
-				{/* ── Quest header ── */}
-				<div className={styles.questHeader}>
-					<span className={styles.sectionTitle}>КВЕСТИ</span>
+				{/* ── Tab bar ── */}
+				<div className={styles.tabBar}>
+					{(['task', 'shopping'] as const).map(type => (
+						<button
+							key={type}
+							className={`${styles.tab} ${filterType === type ? styles.tabActive : ''}`}
+							onClick={() => setFilterType(type)}
+						>
+							{type === 'task' ? 'КВЕСТИ' : 'ПОКУПКИ'}
+						</button>
+					))}
 				</div>
 
-				{/* ── Filters row ── */}
-				<div className={styles.filtersRow}>
-					<div className={styles.typeFilter}>
-						{(['all', 'task', 'shopping'] as const).map((type, i) => (
-							<React.Fragment key={type}>
-								{i > 0 && <span className={styles.typeSep}>·</span>}
-								<button className={`${styles.typeBtn} ${filterType === type ? styles.typeBtnActive : ''}`} onClick={() => setFilterType(type)}>
-									{type === 'all' ? 'ВСІ' : type === 'task' ? 'КВЕСТИ' : 'ПОКУПКИ'}
+				{/* ── Status filter — only under КВЕСТИ tab ── */}
+				{filterType === 'task' && isDayToday && (
+					<div className={styles.statusRow}>
+						{(['active', 'done'] as const).map((status, i) => (
+							<React.Fragment key={status}>
+								{i > 0 && <span className={styles.statusSep}>·</span>}
+								<button
+									className={`${styles.statusBtn} ${filterStatus === status ? styles.statusBtnActive : ''}`}
+									onClick={() => setFilterStatus(status)}
+								>
+									{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
 								</button>
 							</React.Fragment>
 						))}
 					</div>
-					{isDayToday && (
-						<div className={styles.statusFilter}>
-							{(['active', 'done'] as const).map((status, i) => (
-								<React.Fragment key={status}>
-									{i > 0 && <span className={styles.typeSep}>·</span>}
-									<button className={`${styles.typeBtn} ${filterStatus === status ? styles.typeBtnActive : ''}`} onClick={() => setFilterStatus(status)}>
-										{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
-									</button>
-								</React.Fragment>
-							))}
-						</div>
-					)}
-				</div>
+				)}
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
