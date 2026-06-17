@@ -462,3 +462,17 @@
   font-size: 18px;
   line-height: 1;
 }
+
+/* ── Infinite scroll ── */
+.sentinel {
+  height: 40px;
+}
+
+.allLoaded {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+  padding: 12px 0 4px;
+  margin: 0;
+}

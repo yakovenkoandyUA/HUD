@@ -175,6 +175,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const [displayedList, setDisplayedList]         = useState<Transaction[]>([])
   const [editingId, setEditingId]                 = useState<string | null>(null)
   const [editingTitle, setEditingTitle]           = useState('')
+  const [visibleCount, setVisibleCount]           = useState(20)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   // ── Receipt item editing ──
   type ReceiptItem = { name: string; price: number; category: string }
@@ -203,14 +205,36 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
     }),
   [transactions])
 
-  const list = useMemo(() => isDefault
-    ? sorted.slice(0, 20)
+  // All matching transactions (before slicing for infinite scroll)
+  const filteredAll = useMemo(() => isDefault
+    ? sorted
     : sorted
         .filter(t => t.date.startsWith(currentMonth))
         .filter(t => typeFilter === 'all' || (typeFilter === 'income' ? t.type === 'topup' : t.type === 'expense'))
         .filter(t => categoryFilter === 'all' || t.category === categoryFilter),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [sorted, typeFilter, categoryFilter])
+  [sorted, typeFilter, categoryFilter, isDefault])
+
+  const list = useMemo(() => filteredAll.slice(0, visibleCount), [filteredAll, visibleCount])
+
+  const hasMore = visibleCount < filteredAll.length
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(20)
+  }, [typeFilter, categoryFilter])
+
+  // IntersectionObserver — load 20 more when sentinel scrolls into view
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !hasMore) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisibleCount(c => c + 20) },
+      { threshold: 0.1 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasMore, displayedList.length])
 
   // Animate on filter change
   useEffect(() => {
@@ -223,11 +247,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeFilter, categoryFilter])
 
-  // Sync without animation when transactions data changes (initial load, add, delete)
+  // Sync without animation when transactions data changes (initial load, add, delete, scroll)
   useEffect(() => {
     setDisplayedList(list)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions])
+  }, [transactions, visibleCount])
 
   const handleDeleteClick   = (id: string) => setPendingDelete(id)
   const handleConfirmDelete = (id: string) => { onDelete?.(id); setPendingDelete(null) }
@@ -321,6 +345,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
       ) : (
         <ul className={styles.list}>
           {displayedList.map((t) => {
+
             const isPending  = pendingDelete === t.id
             const receipt    = parseReceipt(t.description)
             const isRecurring = !!(t.recurringId || t.description === 'Регулярний платіж')
@@ -427,6 +452,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
             )
           })}
         </ul>
+      )}
+      {/* Infinite scroll sentinel */}
+      {hasMore && <div ref={sentinelRef} className={styles.sentinel} />}
+      {!hasMore && filteredAll.length > 20 && (
+        <p className={styles.allLoaded}>Всі {filteredAll.length} транзакцій завантажено</p>
       )}
       </div>
 
