@@ -284,7 +284,7 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
   const { csv } = req.body as { csv?: string }
   if (!csv?.trim()) { res.status(400).json({ error: 'CSV required' }); return }
 
-  // Strip UTF-8 BOM if present
+  // Strip UTF-8 BOM (U+FEFF) if present
   const csvClean = csv.replace(/^﻿/, '').trim()
   const lines = csvClean.split('\n').map(l => l.trim()).filter(Boolean)
   if (lines.length < 2) { res.status(400).json({ error: 'CSV too short' }); return }
@@ -318,11 +318,12 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
   const dateIdx   = headers.findIndex(h => h.includes('дата'))
   const descIdx   = headers.findIndex(h => h.includes('деталі') || h.includes('опис'))
   // Old: "Сума" / "Сума (UAH)"; New: "Сума у валюті картки" / "Сума в валюті картки"
+  // Use startsWith to tolerate suffixes like "(UAH)" that Monobank may append
   const amountIdx = headers.findIndex(h =>
     h === 'сума' ||
     h.startsWith('сума (') ||
-    h === 'сума у валюті картки' ||
-    h === 'сума в валюті картки',
+    h.startsWith('сума у валюті картки') ||
+    h.startsWith('сума в валюті картки'),
   )
 
   if (dateIdx === -1 || descIdx === -1 || amountIdx === -1) {
