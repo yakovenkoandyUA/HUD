@@ -679,6 +679,17 @@
   color: var(--negative);
 }
 
+.pinBtnDone {
+  color: var(--positive, #4caf50);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
 /* PIN setup inline pad */
 .pinSetup {
   display: flex;

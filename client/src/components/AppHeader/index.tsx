@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import MimirLogo from '../../assets/mimir-logo.svg?react'
-import Modal from '../ui/Modal'
-import ThemePicker from '../layout/ThemePicker'
 import VerificationBanner from '../ui/VerificationBanner'
 import AiChatSheet from '../dashboard/AiChatSheet'
 import MimirIcon from '../ui/MimirIcon'
@@ -27,10 +26,10 @@ function formatTime(d: Date): string {
 
 const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const [now, setNow] = useState(new Date())
-  const [showPicker, setShowPicker] = useState(false)
-  const [showChat, setShowChat]     = useState(false)
+  const [showChat, setShowChat] = useState(false)
   const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
@@ -70,7 +69,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
           <button
             type="button"
             className={styles.avatarBtn}
-            onClick={() => setShowPicker(true)}
+            onClick={() => navigate('/profile')}
             aria-label="Профіль і налаштування"
           >
             {activeProfile?.avatarUrl ? (
@@ -85,10 +84,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
       </header>
 
       <VerificationBanner />
-
-      <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
-        <ThemePicker onClose={() => setShowPicker(false)} />
-      </Modal>
 
       <AiChatSheet isOpen={showChat} onClose={() => setShowChat(false)} />
     </>

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import MimirLogo from '../../../assets/mimir-logo.svg?react'
-import Modal from '../../ui/Modal'
-import ThemePicker from '../ThemePicker'
 import { useProfileStore } from '../../../store/profileStore'
 import styles from './TopBar.module.css'
 
@@ -27,8 +26,8 @@ function formatTime(d: Date): string {
 
 const TopBar: React.FC<TopBarProps> = ({ showClock, right }) => {
   const [now, setNow] = useState(new Date())
-  const [showPicker, setShowPicker] = useState(false)
   const { activeProfile } = useProfileStore()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!showClock) return
@@ -54,7 +53,7 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, right }) => {
           <button
             type="button"
             className={styles.avatarBtn}
-            onClick={() => setShowPicker(true)}
+            onClick={() => navigate('/profile')}
             aria-label="Профіль і налаштування"
           >
             {activeProfile?.avatarUrl ? (
@@ -68,9 +67,6 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, right }) => {
         </div>
       </header>
 
-      <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
-        <ThemePicker onClose={() => setShowPicker(false)} />
-      </Modal>
     </>
   )
 }

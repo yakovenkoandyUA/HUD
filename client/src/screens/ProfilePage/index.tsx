@@ -3,13 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
 import { useFamilyStore } from '../../store/familyStore'
 import MeTab from './MeTab'
+import AppearanceTab from './AppearanceTab'
 import WalletTab from './WalletTab'
 import FamilyTab from './FamilyTab'
 import PlanTab from './PlanTab'
 import AdminTab from './AdminTab'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'family' | 'plan' | 'admin'
+type ProfileTab = 'me' | 'appearance' | 'wallet' | 'family' | 'plan' | 'admin'
 
 /**
  * ProfilePage
@@ -56,10 +57,11 @@ const ProfilePage: React.FC = () => {
 
       {/* ── Tab content (with bottom nav padding) ── */}
       <div className={styles.content}>
-        {activeTab === 'me'     && <MeTab />}
-        {activeTab === 'wallet' && <WalletTab />}
-        {activeTab === 'family' && <FamilyTab />}
-        {activeTab === 'plan'   && <PlanTab />}
+        {activeTab === 'me'         && <MeTab />}
+        {activeTab === 'appearance' && <AppearanceTab />}
+        {activeTab === 'wallet'     && <WalletTab />}
+        {activeTab === 'family'     && <FamilyTab />}
+        {activeTab === 'plan'       && <PlanTab />}
         {activeTab === 'admin' && activeProfile.role === 'admin' && <AdminTab />}
       </div>
     </div>

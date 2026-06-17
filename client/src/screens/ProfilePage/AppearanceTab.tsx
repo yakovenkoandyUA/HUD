@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useUiStore } from '../../store/uiStore'
 import { usePushSubscription } from '../../hooks/usePushSubscription'
 import { useProfileStore } from '../../store/profileStore'
+import { usePwaInstall } from '../../hooks/usePwaInstall'
+import { clearApiCaches } from '../../utils/appCache'
 import type { Theme } from '../../store/uiStore'
 import styles from './ProfilePage.module.css'
 
@@ -27,14 +29,18 @@ const PALETTES: ThemePalette[] = [
 /**
  * AppearanceTab
  * -------------
- * Вкладка "Вигляд" — вибір теми + Web Push нотифікації.
+ * Вкладка "Вигляд" — тема, Push, МІЙ ДЕНЬ, F1 модуль, PWA, кеш.
  */
 const AppearanceTab: React.FC = () => {
-  const { theme, setTheme } = useUiStore()
+  const { theme, setTheme, showToast, updateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushSubscription()
   const { activeProfile, updateProfile } = useProfileStore()
+  const { isInstallable, isIOS, promptInstall } = usePwaInstall()
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  const showInstall = !isStandalone && (isInstallable || isIOS)
   const [pushLoading, setPushLoading] = useState(false)
   const [permissionDenied, setPermissionDenied] = useState(false)
+  const [cacheCleared, setCacheCleared] = useState(false)
   const [city, setCity] = useState(activeProfile?.city ?? '')
   const cityDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -185,6 +191,88 @@ const AppearanceTab: React.FC = () => {
             </div>
           </div>
         ))}
+      </section>
+
+      {/* ── Modules ── */}
+      {activeProfile && (
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>МОДУЛІ</span>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.pushInfo}>
+              <span className={styles.pushLabel}>F1 модуль</span>
+              <span className={styles.pushSub}>Календар, стендінги, прогнози гонок</span>
+            </div>
+            <button
+              type="button"
+              className={`${styles.toggle} ${activeProfile.f1Enabled ? styles.toggleOn : ''}`}
+              onClick={() => updateProfile({ f1Enabled: !(activeProfile.f1Enabled ?? false) })}
+              aria-label="Увімкнути F1 модуль"
+              aria-pressed={activeProfile.f1Enabled ?? false}
+            >
+              <span className={styles.toggleThumb} />
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* ── Additional ── */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>ДОДАТКОВО</span>
+        </div>
+
+        {updateAvailable && (
+          <div className={styles.settingRow}>
+            <span className={styles.pushLabel}>Доступне оновлення</span>
+            <button
+              type="button"
+              className={styles.pinBtn}
+              onClick={() => window.location.reload()}
+            >
+              ОНОВИТИ
+            </button>
+          </div>
+        )}
+
+        {showInstall && (
+          isIOS ? (
+            <p className={styles.sectionHint}>
+              Натисніть <strong>⎙ Share</strong> → <strong>«Додати на початковий екран»</strong> щоб встановити MIMIR як додаток.
+            </p>
+          ) : (
+            <div className={styles.settingRow}>
+              <span className={styles.pushLabel}>Встановити додаток</span>
+              <button
+                type="button"
+                className={styles.pinBtn}
+                onClick={promptInstall}
+              >
+                ВСТАНОВИТИ
+              </button>
+            </div>
+          )
+        )}
+
+        <div className={styles.settingRow}>
+          <div className={styles.pushInfo}>
+            <span className={styles.pushLabel}>Очистити кеш</span>
+            <span className={styles.pushSub}>API-відповіді, дані сесії</span>
+          </div>
+          <button
+            type="button"
+            className={`${styles.pinBtn} ${cacheCleared ? styles.pinBtnDone : ''}`}
+            onClick={() => {
+              clearApiCaches()
+              setCacheCleared(true)
+              showToast('Кеш очищено', 'success')
+              setTimeout(() => setCacheCleared(false), 2000)
+            }}
+          >
+            {cacheCleared ? '✓ ГОТОВО' : 'ОЧИСТИТИ'}
+          </button>
+        </div>
       </section>
     </div>
   )
