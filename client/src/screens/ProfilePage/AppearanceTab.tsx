@@ -14,16 +14,18 @@ interface ThemePalette {
   surface: string
   border: string
   accent: string
+  second: string
+  gold: string
   text: string
 }
 
 const PALETTES: ThemePalette[] = [
-  { id: 'velvet',  name: 'VELVET', bg: '#0d0f1a', surface: '#1e2235', border: '#2e3450', accent: '#d4a017', text: '#e8d5a0' },
-  { id: 'japan',   name: 'JAPAN',  bg: '#F5F0EB', surface: '#EDE8E2', border: '#D5CEC5', accent: '#C8102E', text: '#1a1a1a' },
-  { id: 'cyber',   name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', text: '#d8eaf8' },
-  { id: 'noir',    name: 'NOIR',   bg: '#080808', surface: '#1a1a1a', border: '#2a2a2a', accent: '#d0d0d0', text: '#ebebeb' },
-  { id: 'pixel',  name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', text: '#181028' },
-  { id: 'arctic', name: 'ARCTIC', bg: '#1e2330', surface: '#313a4e', border: '#4a5570', accent: '#88c0d0', text: '#eceff4' },
+  { id: 'velvet', name: 'VELVET', bg: '#0d0f1a', surface: '#1e2235', border: '#2e3450', accent: '#d4a017', second: '#6a4fc8', gold: '#d4a017', text: '#e8d5a0' },
+  { id: 'japan',  name: 'JAPAN',  bg: '#F5F0EB', surface: '#EDE8E2', border: '#D5CEC5', accent: '#C8102E', second: '#1a1a1a', gold: '#8B7355',  text: '#1a1a1a' },
+  { id: 'cyber',  name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', second: '#00d4ff', gold: '#f0a020',  text: '#d8eaf8' },
+  { id: 'noir',   name: 'NOIR',   bg: '#080808', surface: '#1a1a1a', border: '#2a2a2a', accent: '#d0d0d0', second: '#606060', gold: '#c8c8c8',  text: '#ebebeb' },
+  { id: 'pixel',  name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', second: '#1848c8', gold: '#e8a020',  text: '#181028' },
+  { id: 'arctic', name: 'ARCTIC', bg: '#1e2330', surface: '#313a4e', border: '#4a5570', accent: '#88c0d0', second: '#b48ead', gold: '#ebcb8b',  text: '#eceff4' },
 ]
 
 /**
@@ -99,22 +101,39 @@ const AppearanceTab: React.FC = () => {
               <button
                 key={p.id}
                 type="button"
-                className={`${styles.themeSwatch} ${isActive ? styles.themeSwatchActive : ''}`}
+                className={styles.themeCard}
                 style={{
-                  '--swatch-bg': p.bg,
-                  '--swatch-surface': p.surface,
-                  '--swatch-border': p.border,
-                  '--swatch-accent': p.accent,
-                  '--swatch-text': p.text,
-                } as React.CSSProperties}
+                  background: p.bg,
+                  border: isActive ? `2px solid ${p.accent}` : `1.5px solid ${p.border}`,
+                  boxShadow: isActive ? `0 0 16px ${p.accent}44` : 'none',
+                }}
                 onClick={() => setTheme(p.id)}
                 aria-pressed={isActive}
               >
-                <div className={styles.swatchPreview}>
-                  <div className={styles.swatchCard} />
-                  <div className={styles.swatchAccent} />
+                <span className={styles.themeCardName} style={{ color: p.accent }}>
+                  {p.name}
+                </span>
+                <div className={styles.themeSwatches}>
+                  <span className={styles.themeSwatch} style={{ background: p.accent }} />
+                  <span className={styles.themeSwatch} style={{ background: p.second }} />
+                  <span className={styles.themeSwatch} style={{ background: p.gold }} />
+                  <span className={styles.themeSwatch} style={{ background: p.text, opacity: 0.7 }} />
                 </div>
-                <span className={styles.swatchName}>{p.name}</span>
+                <div className={styles.themePreview}>
+                  <div className={styles.themePreviewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div className={styles.themePreviewDot} style={{ background: p.accent }} />
+                    <div className={styles.themePreviewLine} style={{ background: p.text, opacity: 0.6 }} />
+                    <div className={styles.themePreviewLine} style={{ background: p.text, opacity: 0.3, width: '40%' }} />
+                  </div>
+                  <div className={styles.themePreviewBar} style={{ background: p.surface, border: `1px solid ${p.border}` }}>
+                    <div className={styles.themePreviewDot} style={{ background: p.second }} />
+                    <div className={styles.themePreviewLine} style={{ background: p.text, opacity: 0.6 }} />
+                    <div className={styles.themePreviewLine} style={{ background: p.text, opacity: 0.3, width: '55%' }} />
+                  </div>
+                </div>
+                {isActive && (
+                  <span className={styles.themeActiveTick} style={{ color: p.accent }}>✓</span>
+                )}
               </button>
             )
           })}
