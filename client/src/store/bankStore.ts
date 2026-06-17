@@ -24,6 +24,7 @@ interface BankState {
   disconnect:     () => Promise<void>
   sync:           () => Promise<{ imported: number }>
   importCsv:      (csv: string) => Promise<{ imported: number }>
+  recategorize:   () => Promise<{ updated: number; skipped: number }>
   initMonoAuth:   () => Promise<void>
   cancelMonoAuth: () => void
   pollMonoAuth:   (tokenRequestId: string) => Promise<boolean>
@@ -100,6 +101,15 @@ export const useBankStore = create<BankState>((set, get) => ({
     } finally {
       set({ importing: false })
     }
+  },
+
+  recategorize: async () => {
+    const res = await authFetch('/api/bank/recategorize', { method: 'POST' })
+    if (!res.ok) {
+      const { error } = await res.json() as { error: string }
+      throw new Error(error)
+    }
+    return await res.json() as { updated: number; skipped: number }
   },
 
   initMonoAuth: async () => {

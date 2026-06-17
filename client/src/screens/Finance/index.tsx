@@ -34,7 +34,7 @@ const Finance: React.FC = () => {
   const { balance, transactions, addTopup, addExpense, deleteTransaction, fetchTransactions } = useFinanceStore()
   const { showToast } = useUiStore()
   const salaryDay = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
-  const { connection, syncing, importing, fetchStatus, sync, importCsv } = useBankStore()
+  const { connection, syncing, importing, fetchStatus, sync, importCsv, recategorize } = useBankStore()
 
   const [showTopup, setShowTopup]     = useState(false)
   const [showExpense, setShowExpense] = useState(false)
@@ -44,8 +44,23 @@ const Finance: React.FC = () => {
 
   useEffect(() => {
     if (!getToken()) return
-    fetchTransactions()
-    fetchStatus()
+    let cancelled = false
+    const init = async () => {
+      fetchTransactions()
+      await fetchStatus()
+      if (cancelled) return
+      // Auto-sync if bank connected — silent background refresh
+      if (!useBankStore.getState().connection) return
+      try {
+        const { imported } = await useBankStore.getState().sync()
+        if (!cancelled && imported > 0) {
+          fetchTransactions()
+          showToast(`Monobank: +${imported} нових транзакцій`, 'success')
+        }
+      } catch { /* silent fail — user can retry manually */ }
+    }
+    init()
+    return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -122,6 +137,21 @@ const Finance: React.FC = () => {
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')
   }
+
+  const [recategorizing, setRecategorizing] = useState(false)
+
+  const handleRecategorize = useCallback(async () => {
+    setRecategorizing(true)
+    try {
+      const { updated } = await recategorize()
+      await fetchTransactions()
+      showToast(updated > 0 ? `Категоризовано ${updated} транзакцій` : 'Всі транзакції вже категоризовані', 'success')
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Помилка категоризації', 'error')
+    } finally {
+      setRecategorizing(false)
+    }
+  }, [recategorize, fetchTransactions, showToast])
 
   const handleDelete = (id: string) => {
     deleteTransaction(id)
@@ -265,6 +295,17 @@ const Finance: React.FC = () => {
 						</svg>
 						{importing ? 'Імпортую...' : 'Обрати файл'}
 					</label>
+					<button
+						className={`${styles.csvFileLabel} ${recategorizing ? styles.csvFileLabelDisabled : ''}`}
+						onClick={handleRecategorize}
+						disabled={recategorizing}
+					>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+							<path d="M4 4v5h5M20 20v-5h-5"/>
+							<path d="M4 9a8 8 0 0 1 14.93-2M20 15a8 8 0 0 1-14.93 2"/>
+						</svg>
+						{recategorizing ? 'Категоризую...' : 'Авто-категоризація'}
+					</button>
 				</div>
 			</Modal>
 		</div>
