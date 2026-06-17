@@ -180,13 +180,13 @@ const Dashboard: React.FC = () => {
           notesCount={notes.length}
           latestNote={latestNote}
           onOpenDay={() => setShowDay(true)}
-          onQuestsClick={() => navigate('/sprint')}
-          onShoppingClick={() => navigate('/sprint', { state: { filterType: 'shopping' } })}
+          onQuestsClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'task' } })}
+          onShoppingClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'shopping' } })}
           onMealsClick={() => navigate('/recipes/planner')}
           onNotesClick={() => navigate('/notes')}
         />
 
-        <div style={{ marginTop: 12 }}>
+        <div>
           <HeroCard
             balance={balance}
             dailyBudget={dailyBudget}

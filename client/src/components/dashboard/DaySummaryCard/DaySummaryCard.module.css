@@ -5,7 +5,7 @@
 }
 
 :global([data-theme="velvet"]) .root {
-  background: color-mix(in srgb, var(--accent) 32%, var(--bg));
+  background: color-mix(in srgb, var(--accent) 90%, var(--bg));
 }
 
 :global([data-theme="cyber"]) .root {
@@ -38,7 +38,11 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: var(--text2);
+}
+
+:global([data-theme="velvet"]) .headerLabel {
+  color: var(--surface);
 }
 
 .openBtn {
@@ -48,7 +52,7 @@
   gap: 2px;
   font-family: var(--font-ui);
   font-size: 10px;
-  color: var(--text3);
+  color: var(--text2);
   background: none;
   border: none;
   cursor: pointer;
@@ -57,7 +61,9 @@
   -webkit-tap-highlight-color: transparent;
 }
 .openBtn:hover { color: var(--accent); }
-
+:global([data-theme="velvet"]) .openBtn {
+  color: var(--surface);
+}
 /* ── Routine chips ───────────────────────────────────────────── */
 
 .chipsRow {
@@ -78,7 +84,7 @@
   border-radius: 0;
   border: none;
   background: none;
-  color: var(--text2);
+  color: var(--text);
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 600;
@@ -100,6 +106,10 @@
   pointer-events: none;
 }
 
+:global([data-theme="velvet"]) .chip {
+  color: var(--surface2);
+}
+
 .chipDone {
   color: var(--positive);
 }
@@ -108,7 +118,7 @@
   width: 14px;
   height: 14px;
   border-radius: 4px;
-  border: 1.5px solid var(--border2);
+  border: 1.5px solid var(--surface2);
   background: none;
   flex-shrink: 0;
   display: flex;

@@ -177,47 +177,44 @@ const Watchlist: React.FC = () => {
 		<div className={styles.screen}>
 			<AppHeader />
 
-			{/* ── Tabs — sticky ── */}
-			<div className={styles.tabBar}>
-				{TABS.map(t => (
-					<button
-						key={t.id}
-						className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
-						onClick={() => {
-							setTab(t.id)
-							setActiveStatus(null)
-							setActiveGenres(new Set())
-						}}
-					>
-						<img src={openmojiUrl(t.icon)} alt="" className={styles.tabIcon} aria-hidden="true" />
-						{t.label}
-					</button>
-				))}
+			{/* ── Stats row ── */}
+			<div className={styles.statsRow}>
+				{(['want', 'watching', 'watched'] as const).map((status, i) => {
+					const isActive = activeStatus === status
+					return (
+						<React.Fragment key={status}>
+							{i > 0 && <span className={styles.statSep}>·</span>}
+							<button type="button" className={`${styles.stat} ${isActive ? styles.statActive : ''}`} onClick={() => setActiveStatus(isActive ? null : status)}>
+								<span className={styles.statNum}>{stats[status]}</span>
+								<span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
+								{isActive && <span className={styles.statClear}>×</span>}
+							</button>
+						</React.Fragment>
+					)
+				})}
 			</div>
 
 			{/* ── Content (scrollable) ── */}
 			<div className={styles.content}>
-
 				{/* hero scrolls away */}
 				{watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
-
-				{/* ── Stats row ── */}
-				<div className={styles.statsRow}>
-					{(['want', 'watching', 'watched'] as const).map((status, i) => {
-						const isActive = activeStatus === status
-						return (
-							<React.Fragment key={status}>
-								{i > 0 && <span className={styles.statSep}>·</span>}
-								<button type="button" className={`${styles.stat} ${isActive ? styles.statActive : ''}`} onClick={() => setActiveStatus(isActive ? null : status)}>
-									<span className={styles.statNum}>{stats[status]}</span>
-									<span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
-									{isActive && <span className={styles.statClear}>×</span>}
-								</button>
-							</React.Fragment>
-						)
-					})}
+				{/* ── Tabs — sticky ── */}
+				<div className={styles.tabBar}>
+					{TABS.map(t => (
+						<button
+							key={t.id}
+							className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
+							onClick={() => {
+								setTab(t.id)
+								setActiveStatus(null)
+								setActiveGenres(new Set())
+							}}
+						>
+							<img src={openmojiUrl(t.icon)} alt="" className={styles.tabIcon} aria-hidden="true" />
+							{t.label}
+						</button>
+					))}
 				</div>
-
 				{/* ── Genre strip ── */}
 				{availableGenres.length > 0 && (
 					<div className={styles.genreStrip}>
@@ -226,11 +223,13 @@ const Watchlist: React.FC = () => {
 								key={g}
 								type="button"
 								className={`${styles.genreTag} ${activeGenres.has(g) ? styles.genreTagActive : ''}`}
-								onClick={() => setActiveGenres(prev => {
-									const next = new Set(prev)
-									next.has(g) ? next.delete(g) : next.add(g)
-									return next
-								})}
+								onClick={() =>
+									setActiveGenres(prev => {
+										const next = new Set(prev)
+										next.has(g) ? next.delete(g) : next.add(g)
+										return next
+									})
+								}
 							>
 								{g}
 							</button>

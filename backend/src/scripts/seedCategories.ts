@@ -6,14 +6,15 @@ const BASE_CATEGORIES = [
   { name: 'Транспорт',    icon: 'ti-car',               color: '#3B82F6', order: 1  },
   { name: 'Житло',        icon: 'ti-home',              color: '#A855F7', order: 2  },
   { name: "Здоров'я",     icon: 'ti-stethoscope',       color: '#EF4444', order: 3  },
-  { name: 'Одяг',         icon: 'ti-hanger',            color: '#EC4899', order: 4  },
-  { name: 'Розваги',      icon: 'ti-device-gamepad-2',  color: '#F59E0B', order: 5  },
-  { name: 'Підписки',     icon: 'ti-repeat',            color: '#14B8A6', order: 6  },
-  { name: 'Інвестиції',   icon: 'ti-trending-up',       color: '#10B981', order: 7  },
-  { name: 'Подарунки',    icon: 'ti-gift',              color: '#FB923C', order: 8  },
-  { name: 'Навчання',     icon: 'ti-book',              color: '#6366F1', order: 9  },
-  { name: 'Заощадження',  icon: 'ti-pig-money',         color: '#EAB308', order: 10 },
-  { name: 'Інше',         icon: 'ti-dots',              color: '#9CA3AF', order: 11 },
+  { name: 'Спорт',        icon: 'ti-barbell',           color: '#2DD4BF', order: 4  },
+  { name: 'Одяг',         icon: 'ti-hanger',            color: '#EC4899', order: 5  },
+  { name: 'Розваги',      icon: 'ti-device-gamepad-2',  color: '#F59E0B', order: 6  },
+  { name: 'Підписки',     icon: 'ti-repeat',            color: '#14B8A6', order: 7  },
+  { name: 'Інвестиції',   icon: 'ti-trending-up',       color: '#10B981', order: 8  },
+  { name: 'Подарунки',    icon: 'ti-gift',              color: '#FB923C', order: 9  },
+  { name: 'Навчання',     icon: 'ti-book',              color: '#6366F1', order: 10 },
+  { name: 'Заощадження',  icon: 'ti-pig-money',         color: '#EAB308', order: 11 },
+  { name: 'Інше',         icon: 'ti-dots',              color: '#9CA3AF', order: 12 },
 ]
 
 export const seedCategoriesForUser = async (userId: string): Promise<void> => {

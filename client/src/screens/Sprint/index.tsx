@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import DoodleIllustration from '../../components/ui/DoodleIllustration'
 import FabHint from '../../components/ui/FabHint'
 import AppHeader from '../../components/AppHeader'
@@ -128,7 +129,9 @@ const Sprint: React.FC = () => {
 	const { showToast } = useUiStore()
 	const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
 	const { recipes, fetchRecipes } = useRecipesStore()
-	const [filterType, setFilterType]     = useState<FilterType>('all')
+	const location = useLocation()
+	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
+	const [filterType, setFilterType]     = useState<FilterType>(locationState?.filterType ?? 'all')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
 
 	const [showAdd, setShowAdd]       = useState(false)
@@ -151,7 +154,7 @@ const Sprint: React.FC = () => {
 	const [showQuestDueDatePicker, setShowQuestDueDatePicker] = useState(false)
 	const _td = new Date()
 	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
-	const [selectedDay, setSelectedDay] = useState(todayStr)
+	const [selectedDay, setSelectedDay] = useState(locationState?.selectedDay ?? todayStr)
 	const [calendarMode, setCalendarMode] = useState<'week' | 'month'>(() =>
 		(localStorage.getItem('sprint-calendar-mode') as 'week' | 'month') || 'week'
 	)
