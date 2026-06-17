@@ -5,7 +5,8 @@ import { usePushSubscription } from '../../hooks/usePushSubscription'
 import { usePwaInstall } from '../../hooks/usePwaInstall'
 import { clearApiCaches } from '../../utils/appCache'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
-import type { Theme } from '../../store/uiStore'
+import { ALL_NAV_SECTIONS } from '../../components/layout/BottomNav'
+import type { Theme, NavStyle } from '../../store/uiStore'
 import styles from './ProfilePage.module.css'
 
 const CameraIcon: React.FC = () => (
@@ -50,7 +51,7 @@ const PALETTES: ThemePalette[] = [
  */
 const MeTab: React.FC = () => {
   const { activeProfile, updateProfile, changePassword, setPIN, removePIN } = useProfileStore()
-  const { theme, setTheme, showToast, updateAvailable } = useUiStore()
+  const { theme, setTheme, navStyle, setNavStyle, pinnedSections, setPinnedSections, showToast, updateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushSubscription()
   const { isInstallable, isIOS, promptInstall } = usePwaInstall()
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
@@ -406,6 +407,97 @@ const MeTab: React.FC = () => {
             <button type="button" className={styles.pinCancelBtn} onClick={() => { setPinStep('idle'); setPinValue(''); setPinConfirm('') }}>
               Скасувати
             </button>
+          </div>
+        )}
+      </section>
+
+      {/* ── Navigation style ── */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>НАВІГАЦІЯ</span>
+        </div>
+
+        {/* Style picker cards */}
+        <div className={styles.navStyleGrid}>
+          {([
+            { id: 'classic', label: 'Класик',  hint: 'Всі розділи в рядку' },
+            { id: 'pill',    label: 'Пілюля',  hint: 'Мінімальна плаваюча' },
+            { id: 'hub',     label: 'Хаб',     hint: 'Головне + розкладне' },
+          ] as { id: NavStyle; label: string; hint: string }[]).map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`${styles.navStyleCard} ${navStyle === opt.id ? styles.navStyleCardActive : ''}`}
+              onClick={() => setNavStyle(opt.id)}
+              aria-pressed={navStyle === opt.id}
+            >
+              {/* Mini visual preview */}
+              <div className={styles.navPreview}>
+                {opt.id === 'classic' && (
+                  <div className={styles.navPreviewClassic}>
+                    {[0,1,2,3,4].map(i => <span key={i} className={styles.navPreviewDot} />)}
+                  </div>
+                )}
+                {opt.id === 'pill' && (
+                  <div className={styles.navPreviewPill}>
+                    {[0,1,2,3].map(i => <span key={i} className={styles.navPreviewDot} />)}
+                  </div>
+                )}
+                {opt.id === 'hub' && (
+                  <div className={styles.navPreviewPill}>
+                    <span className={styles.navPreviewDot} />
+                    <span className={styles.navPreviewDot} />
+                    <span className={`${styles.navPreviewDot} ${styles.navPreviewHub}`} />
+                    <span className={styles.navPreviewDot} />
+                    <span className={styles.navPreviewDot} />
+                  </div>
+                )}
+              </div>
+              <span className={styles.navStyleLabel}>{opt.label}</span>
+              <span className={styles.navStyleHint}>{opt.hint}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Section pin toggles — only for pill/hub */}
+        {navStyle !== 'classic' && (
+          <div className={styles.navPinSection}>
+            <p className={styles.navPinTitle}>
+              ГОЛОВНЕ МЕНЮ
+              <span className={styles.navPinCount}>
+                {pinnedSections.length}/4
+              </span>
+            </p>
+            {ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || (activeProfile?.f1Enabled ?? false)).map(s => {
+              const isPinned = pinnedSections.includes(s.to)
+              const canAdd = pinnedSections.length < 4
+              return (
+                <div key={s.to} className={styles.navPinRow}>
+                  <s.Icon className={styles.navPinIcon} />
+                  <span className={styles.navPinLabel}>{s.label}</span>
+                  <button
+                    type="button"
+                    className={`${styles.toggle} ${isPinned ? styles.toggleOn : ''}`}
+                    disabled={!isPinned && !canAdd}
+                    onClick={() => {
+                      if (isPinned) {
+                        setPinnedSections(pinnedSections.filter(p => p !== s.to))
+                      } else if (canAdd) {
+                        setPinnedSections([...pinnedSections, s.to])
+                      }
+                    }}
+                    aria-pressed={isPinned}
+                  >
+                    <span className={styles.toggleThumb} />
+                  </button>
+                </div>
+              )
+            })}
+            <p className={styles.sectionHint} style={{ marginTop: 8 }}>
+              {navStyle === 'hub'
+                ? 'Незакріплені розділи відкриваються через кнопку M'
+                : 'Тільки закріплені розділи видно в меню'}
+            </p>
           </div>
         )}
       </section>

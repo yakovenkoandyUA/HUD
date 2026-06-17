@@ -9,18 +9,43 @@ import RecipeIcon    from '../../../assets/icons/nav/recipe.svg?react'
 import WatchIcon     from '../../../assets/icons/nav/watch.svg?react'
 import MemoriesIcon  from '../../../assets/icons/nav/memories.svg?react'
 import { useProfileStore } from '../../../store/profileStore'
+import { useUiStore } from '../../../store/uiStore'
 
 type ProfileTab = 'me' | 'wallet' | 'family' | 'plan' | 'admin'
 
 const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
-  { id: 'me', label: 'Я', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> },
+  { id: 'me',     label: 'Я',        icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> },
   { id: 'wallet', label: 'Гаманець', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="18" height="13" rx="2"/><path d="M2 10h18"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M6 3l10 0" strokeWidth="1.3"/></svg> },
-  { id: 'family', label: "Сім'я", icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="7" r="3"/><circle cx="15" cy="8" r="2.5"/><path d="M1 20c0-3.5 3-6 7-6s7 2.5 7 6"/><path d="M15.5 14c2.5 0 5 1.5 5 5"/></svg> },
-  { id: 'plan', label: 'План', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 15L5.5 18.5L7.5 12L2 8H8.5L11 2Z"/></svg> },
-  { id: 'admin', label: 'Адмін', adminOnly: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.93 4.93l1.41 1.41M15.66 15.66l1.41 1.41M4.93 17.07l1.41-1.41M15.66 6.34l1.41-1.41"/></svg> },
+  { id: 'family', label: "Сім'я",    icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="7" r="3"/><circle cx="15" cy="8" r="2.5"/><path d="M1 20c0-3.5 3-6 7-6s7 2.5 7 6"/><path d="M15.5 14c2.5 0 5 1.5 5 5"/></svg> },
+  { id: 'plan',   label: 'План',     icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 15L5.5 18.5L7.5 12L2 8H8.5L11 2Z"/></svg> },
+  { id: 'admin',  label: 'Адмін',   adminOnly: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.93 4.93l1.41 1.41M15.66 15.66l1.41 1.41M4.93 17.07l1.41-1.41M15.66 6.34l1.41-1.41"/></svg> },
 ]
 
-// Arc positions for secondary pills (relative to hub button center, pill is centered on each point)
+const ProfileIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/>
+  </svg>
+)
+
+export interface NavSection {
+  to: string
+  label: string
+  Icon: React.ComponentType<{ className?: string }>
+  requiresF1?: boolean
+}
+
+export const ALL_NAV_SECTIONS: NavSection[] = [
+  { to: '/',          label: 'Головна', Icon: DashboardIcon },
+  { to: '/finance',   label: 'Фінанси', Icon: WalletIcon },
+  { to: '/sprint',    label: 'Спринт',  Icon: SprintIcon },
+  { to: '/watchlist', label: 'Медіа',   Icon: WatchIcon },
+  { to: '/recipes',   label: 'Рецепти', Icon: RecipeIcon },
+  { to: '/memories',  label: 'Спогади', Icon: MemoriesIcon },
+  { to: '/f1',        label: 'F1',      Icon: F1Icon, requiresF1: true },
+  { to: '/profile',   label: 'Профіль', Icon: ProfileIcon },
+]
+
+// Arc positions for secondary pills (relative to hub button center)
 const ARC_POSITIONS_3 = [
   { x: -90, y:  -88 },
   { x:   0, y: -145 },
@@ -43,12 +68,16 @@ const ARC_POSITIONS_5 = [
 /**
  * BottomNav
  * ---------
- * Floating pill with 4 pinned icons + central MIMIR hub button.
- * Hub tap → secondary section pills radiate around the close button.
- * On /profile → full-width labeled tab bar.
+ * Supports 3 nav styles (from uiStore.navStyle):
+ * - 'classic'  — full-width bottom bar with icon + label for all sections
+ * - 'pill'     — floating pill with pinned sections as icons only
+ * - 'hub'      — floating pill + M hub button that opens radial secondary pills
+ *
+ * On /profile → full-width labeled tab bar (always, regardless of style).
  */
 const BottomNav: React.FC = () => {
   const { activeProfile } = useProfileStore()
+  const { navStyle, pinnedSections } = useUiStore()
   const f1Enabled = activeProfile?.f1Enabled ?? false
   const { pathname } = useLocation()
   const [searchParams] = useSearchParams()
@@ -60,13 +89,19 @@ const BottomNav: React.FC = () => {
     return () => { document.body.classList.remove('hub-open') }
   }, [hubOpen])
 
+  React.useEffect(() => {
+    document.body.dataset.navStyle = navStyle
+  }, [navStyle])
+
   const isProfile = pathname === '/profile'
 
-  const handleHubNav = (to: string) => {
-    setHubOpen(false)
-    navigate(to)
-  }
+  // All sections available for this user
+  const availableSections = ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || f1Enabled)
 
+  // Pinned sections (ordered by ALL_NAV_SECTIONS order, filtered to available)
+  const pinnedAvailable = availableSections.filter(s => pinnedSections.includes(s.to))
+
+  // ── Profile mode ─────────────────────────────────────────────
   if (isProfile) {
     const activeTab = (searchParams.get('tab') as ProfileTab | null) ?? 'me'
     const isAdmin = activeProfile?.role === 'admin'
@@ -88,17 +123,49 @@ const BottomNav: React.FC = () => {
     )
   }
 
-  // Secondary sections not shown in main pill
-  const secondarySections = [
-    { to: '/recipes',  label: 'Рецепти', Icon: RecipeIcon,   active: pathname === '/recipes'   },
-    { to: '/memories', label: 'Спогади', Icon: MemoriesIcon, active: pathname === '/memories'  },
-    ...(f1Enabled ? [{ to: '/f1', label: 'F1', Icon: F1Icon, active: pathname.startsWith('/f1') }] : []),
-    { to: '/profile',  label: 'Профіль', Icon: () => (
-      <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/>
-      </svg>
-    ), active: false },
-  ]
+  // ── Classic style ─────────────────────────────────────────────
+  if (navStyle === 'classic') {
+    return (
+      <nav className={`${styles.nav} ${styles.navClassic}`}>
+        {availableSections.map(s => (
+          <NavLink
+            key={s.to}
+            to={s.to}
+            end={s.to === '/'}
+            className={({ isActive }) =>
+              `${styles.classicItem} ${isActive ? styles.active : ''}`
+            }
+          >
+            <s.Icon className={styles.icon} />
+            <span className={styles.classicLabel}>{s.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+    )
+  }
+
+  // ── Pill style ────────────────────────────────────────────────
+  if (navStyle === 'pill') {
+    return (
+      <nav className={styles.nav}>
+        {pinnedAvailable.map(s => (
+          <NavLink
+            key={s.to}
+            to={s.to}
+            end={s.to === '/'}
+            className={({ isActive }) =>
+              `${styles.item} ${isActive ? styles.active : ''}`
+            }
+          >
+            <s.Icon className={styles.icon} />
+          </NavLink>
+        ))}
+      </nav>
+    )
+  }
+
+  // ── Hub style (default) ───────────────────────────────────────
+  const secondarySections = availableSections.filter(s => !pinnedSections.includes(s.to))
 
   return (
     <>
@@ -107,24 +174,25 @@ const BottomNav: React.FC = () => {
         <div className={styles.backdrop} onClick={() => setHubOpen(false)} />
       )}
 
-      {/* Radial pills — positioned relative to hub button center */}
+      {/* Radial pills */}
       <div className={styles.pillsAnchor}>
         {secondarySections.map((s, i) => {
           const arcPos = secondarySections.length <= 3 ? ARC_POSITIONS_3
                        : secondarySections.length === 4 ? ARC_POSITIONS_4
                        : ARC_POSITIONS_5
           const pos = arcPos[i] ?? arcPos[arcPos.length - 1]
+          const isActive = s.to === '/' ? pathname === '/' : pathname.startsWith(s.to)
           return (
             <button
               key={s.to}
               type="button"
-              className={`${styles.pill} ${hubOpen ? styles.pillVisible : ''} ${s.active ? styles.pillActive : ''}`}
+              className={`${styles.pill} ${hubOpen ? styles.pillVisible : ''} ${isActive ? styles.pillActive : ''}`}
               style={{
                 '--px': `${pos.x}px`,
                 '--py': `${pos.y}px`,
                 transitionDelay: hubOpen ? `${i * 35}ms` : `${(secondarySections.length - 1 - i) * 25}ms`,
               } as React.CSSProperties}
-              onClick={() => handleHubNav(s.to)}
+              onClick={() => { setHubOpen(false); navigate(s.to) }}
             >
               <span className={styles.pillIcon}><s.Icon /></span>
               <span className={styles.pillLabel}>{s.label}</span>
@@ -135,13 +203,16 @@ const BottomNav: React.FC = () => {
 
       {/* Main pill nav */}
       <nav className={styles.nav}>
-        <NavLink to="/" end className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
-          <DashboardIcon className={styles.icon} />
-        </NavLink>
-
-        <NavLink to="/finance" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
-          <WalletIcon className={styles.icon} />
-        </NavLink>
+        {pinnedAvailable.slice(0, 2).map(s => (
+          <NavLink
+            key={s.to}
+            to={s.to}
+            end={s.to === '/'}
+            className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+          >
+            <s.Icon className={styles.icon} />
+          </NavLink>
+        ))}
 
         <button
           type="button"
@@ -158,13 +229,16 @@ const BottomNav: React.FC = () => {
           )}
         </button>
 
-        <NavLink to="/sprint" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
-          <SprintIcon className={styles.icon} />
-        </NavLink>
-
-        <NavLink to="/watchlist" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
-          <WatchIcon className={styles.icon} />
-        </NavLink>
+        {pinnedAvailable.slice(2, 4).map(s => (
+          <NavLink
+            key={s.to}
+            to={s.to}
+            end={s.to === '/'}
+            className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+          >
+            <s.Icon className={styles.icon} />
+          </NavLink>
+        ))}
       </nav>
     </>
   )
