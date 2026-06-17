@@ -95,14 +95,6 @@ const WalletTab: React.FC = () => {
     }
   }, [authTokenRequestId, pollMonoAuth, showToast])
 
-  const handleInitAuth = useCallback(async () => {
-    try {
-      await initMonoAuth()
-    } catch {
-      // OAuth requires corporate Monobank registration — fall back to manual token
-      setShowManual(true)
-    }
-  }, [initMonoAuth])
 
   const handleConnect = useCallback(async () => {
     if (!tokenInput.trim() || connecting) return
