@@ -5,9 +5,10 @@ import { useFamilyStore } from '../../store/familyStore'
 import MeTab from './MeTab'
 import WalletTab from './WalletTab'
 import FamilyTab from './FamilyTab'
+import PlanTab from './PlanTab'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'family'
+type ProfileTab = 'me' | 'wallet' | 'family' | 'plan'
 
 /**
  * ProfilePage
@@ -57,6 +58,7 @@ const ProfilePage: React.FC = () => {
         {activeTab === 'me'     && <MeTab />}
         {activeTab === 'wallet' && <WalletTab />}
         {activeTab === 'family' && <FamilyTab />}
+        {activeTab === 'plan'   && <PlanTab />}
       </div>
     </div>
   )

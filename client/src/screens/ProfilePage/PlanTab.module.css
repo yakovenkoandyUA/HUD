@@ -1,0 +1,323 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 8px;
+}
+
+/* ── Early Bird ── */
+.earlyBird {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--gold) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  line-height: 1.4;
+}
+.earlyBirdIcon { flex-shrink: 0; color: var(--gold); }
+
+/* ── Billing cycle toggle ── */
+.cycleRow {
+  display: flex;
+  gap: 4px;
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.cycleBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.cycleBtnActive {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+.cycleSaveBadge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--positive);
+  background: color-mix(in srgb, var(--positive) 14%, transparent);
+  padding: 1px 5px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Cards ── */
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  position: relative;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardCurrent {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+/* per-plan accent tints */
+.cardFree   { }
+.cardPro    { border-color: color-mix(in srgb, var(--second) 60%, var(--border)); }
+.cardFamily { border-color: color-mix(in srgb, var(--gold) 60%, var(--border)); }
+
+.cardPro.cardCurrent    { border-color: var(--second); background: color-mix(in srgb, var(--second) 6%, var(--surface)); }
+.cardFamily.cardCurrent { border-color: var(--gold);   background: color-mix(in srgb, var(--gold) 6%, var(--surface)); }
+
+/* badges */
+.planBadge {
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--bg);
+  background: var(--second);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.currentBadge {
+  position: absolute;
+  top: -10px;
+  right: 16px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--bg);
+  background: var(--accent);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.planName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+}
+
+.planTagline {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  margin: 0;
+}
+
+.priceBlock {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.priceFree {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.priceAmount {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.priceCurrency {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-left: 1px;
+}
+
+.pricePer {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  margin-left: 1px;
+}
+
+.priceAnnualNote {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  color: var(--text3);
+  margin: 2px 0 0;
+}
+
+/* ── CTA button ── */
+.cta {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.cta:active { transform: scale(0.98); }
+
+.ctaCurrent {
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: default;
+}
+
+.ctaUpgrade {
+  background: var(--accent);
+  color: var(--bg);
+}
+.cardFamily .ctaUpgrade { background: var(--gold); }
+.cardPro    .ctaUpgrade { background: var(--second); }
+
+.ctaSoon {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  background: rgba(255,255,255,0.22);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── Feature table ── */
+.table {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px 60px;
+  background: var(--surface2);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tableFeatureCol { }
+
+.tableColLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  text-align: center;
+  text-transform: uppercase;
+}
+.tableColLabelActive { color: var(--accent); }
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px 60px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.tableRow:last-of-type { border-bottom: none; }
+.tableRow:nth-child(even) { background: color-mix(in srgb, var(--surface) 50%, transparent); }
+
+.tableFeature {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+  padding-right: 8px;
+}
+
+.tableCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.featureVal {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.checkIcon { color: var(--positive); }
+.dashIcon  { font-size: 12px; color: var(--text3); font-weight: 400; }
+
+.expandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.expandBtn:hover { color: var(--accent); }
+
+/* ── Footer ── */
+.footerNote {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
+  text-align: center;
+  line-height: 1.5;
+  padding: 0 8px;
+}

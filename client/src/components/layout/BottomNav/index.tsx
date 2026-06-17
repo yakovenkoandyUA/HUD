@@ -11,7 +11,7 @@ import MemoriesIcon  from '../../../assets/icons/nav/memories.svg?react'
 import { useProfileStore } from '../../../store/profileStore'
 
 /** Profile section tabs — order must match tab IDs */
-type ProfileTab = 'me' | 'wallet' | 'family'
+type ProfileTab = 'me' | 'wallet' | 'family' | 'plan'
 
 const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode }[] = [
   {
@@ -45,6 +45,15 @@ const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode }[] =
         <circle cx="15" cy="8" r="2.5"/>
         <path d="M1 20c0-3.5 3-6 7-6s7 2.5 7 6"/>
         <path d="M15.5 14c2.5 0 5 1.5 5 5"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'plan',
+    label: 'План',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 15L5.5 18.5L7.5 12L2 8H8.5L11 2Z"/>
       </svg>
     ),
   },
