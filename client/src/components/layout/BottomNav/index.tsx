@@ -11,9 +11,9 @@ import MemoriesIcon  from '../../../assets/icons/nav/memories.svg?react'
 import { useProfileStore } from '../../../store/profileStore'
 
 /** Profile section tabs — order must match tab IDs */
-type ProfileTab = 'me' | 'wallet' | 'family' | 'plan'
+type ProfileTab = 'me' | 'wallet' | 'family' | 'plan' | 'admin'
 
-const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode }[] = [
+const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   {
     id: 'me',
     label: 'Я',
@@ -57,6 +57,17 @@ const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode }[] =
       </svg>
     ),
   },
+  {
+    id: 'admin',
+    label: 'Адмін',
+    adminOnly: true,
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="3"/>
+        <path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.93 4.93l1.41 1.41M15.66 15.66l1.41 1.41M4.93 17.07l1.41-1.41M15.66 6.34l1.41-1.41"/>
+      </svg>
+    ),
+  },
 ]
 
 /**
@@ -77,9 +88,11 @@ const BottomNav: React.FC = () => {
 
   if (isProfile) {
     const activeTab = (searchParams.get('tab') as ProfileTab | null) ?? 'me'
+    const isAdmin = activeProfile?.role === 'admin'
+    const visibleTabs = PROFILE_TABS.filter(t => !t.adminOnly || isAdmin)
     return (
       <nav className={styles.nav}>
-        {PROFILE_TABS.map(tab => (
+        {visibleTabs.map(tab => (
           <button
             key={tab.id}
             type="button"
