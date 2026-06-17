@@ -4,22 +4,36 @@ import WatchlistHero from '../../components/watchlist/WatchlistHero'
 import WatchlistSearch from '../../components/watchlist/WatchlistSearch'
 import WatchlistGrid from '../../components/watchlist/WatchlistGrid'
 import WatchlistDetail from '../../components/watchlist/WatchlistDetail'
+import GameSearch from '../../components/games/GameSearch'
+import GameCard from '../../components/games/GameCard'
+import GameDetail from '../../components/games/GameDetail'
 import { useWatchlistStore } from '../../store/watchlistStore'
+import { useGamesStore } from '../../store/gamesStore'
 import { useUiStore } from '../../store/uiStore'
 import { useFamilyStore } from '../../store/familyStore'
 import { getToken } from '../../services/api'
-import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../types'
+import type { WatchlistCategory, WatchlistItem, WatchlistStatus, GameItem, GameStatus } from '../../types'
 import { openmojiUrl } from '../../utils/openmojiUrl'
 import styles from './Watchlist.module.css'
 
-type Tab = WatchlistCategory
+type Tab = WatchlistCategory | 'game'
 type SortBy = 'newest' | 'oldest' | 'year_desc' | 'year_asc' | 'rating'
 type WatchScope = 'all' | 'together' | 'solo'
+type GameStatusFilter = 'all' | GameStatus
 
 const WATCH_SCOPE_OPTIONS: { key: WatchScope; label: string }[] = [
   { key: 'all',      label: 'Всі'       },
   { key: 'together', label: 'Разом'     },
   { key: 'solo',     label: 'Особисте'  },
+]
+
+const GAME_STATUS_TABS: { id: GameStatusFilter; label: string }[] = [
+  { id: 'all',       label: 'Всі'      },
+  { id: 'playing',   label: 'Граю'     },
+  { id: 'want',      label: 'Хочу'     },
+  { id: 'completed', label: 'Пройдено' },
+  { id: 'announced', label: 'Анонси'   },
+  { id: 'dropped',   label: 'Кинув'    },
 ]
 
 const STATUS_ORDER: Record<string, number> = {
@@ -29,11 +43,11 @@ const STATUS_ORDER: Record<string, number> = {
   dropped:  3,
 }
 
-
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'movie',  label: 'Фільми',  icon: '1F3AC' },
   { id: 'series', label: 'Серіали', icon: '1F4FA' },
   { id: 'anime',  label: 'Аніме',   icon: '1F338' },
+  { id: 'game',   label: 'Ігри',    icon: '1F3AE' },
 ]
 
 const STAT_LABELS: Record<string, { short: string }> = {
@@ -44,12 +58,14 @@ const STAT_LABELS: Record<string, { short: string }> = {
 
 const Watchlist: React.FC = () => {
   const { items, addItem, setStatus, setRating, updateItem, deleteItem, fetchWatchlist } = useWatchlistStore()
+  const { items: games, fetchGames, addGame, updateGame, deleteGame } = useGamesStore()
   const { showToast } = useUiStore()
   const { accepted, fetchFamily } = useFamilyStore()
   const [tab, setTab] = useState<Tab>('movie')
   const [activeStatus, setActiveStatus] = useState<string | null>(null)
   const [activeGenres, setActiveGenres] = useState<Set<string>>(new Set())
   const [watchScope, setWatchScope] = useState<WatchScope>('all')
+  const [gameStatusFilter, setGameStatusFilter] = useState<GameStatusFilter>('all')
 
   const [sortBy, setSortBy] = useState<SortBy>('newest')
   const [sortOpen, setSortOpen] = useState(false)
@@ -58,20 +74,30 @@ const Watchlist: React.FC = () => {
   useEffect(() => {
     if (!getToken()) return
     fetchWatchlist()
+    fetchGames()
     if (accepted.length === 0) fetchFamily()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // ── Watchlist state ──
   const [selected, setSelected] = useState<WatchlistItem | null>(null)
   const lastSelectedRef = useRef<WatchlistItem | null>(null)
-
-  // Keep selected in sync with store so toggles (watchTogether, notify) reflect immediately
   const effectiveSelected = useMemo(
     () => selected ? (items.find(i => i.id === selected.id) ?? selected) : null,
     [items, selected]
   )
-  // Hold the last non-null item so WatchlistDetail stays mounted during close animation
   if (effectiveSelected) lastSelectedRef.current = effectiveSelected
   const displayItem = effectiveSelected ?? lastSelectedRef.current
+
+  // ── Games state ──
+  const [selectedGame, setSelectedGame] = useState<GameItem | null>(null)
+  const lastSelectedGameRef = useRef<GameItem | null>(null)
+  const effectiveSelectedGame = useMemo(
+    () => selectedGame ? (games.find(g => g.id === selectedGame.id) ?? selectedGame) : null,
+    [games, selectedGame]
+  )
+  if (effectiveSelectedGame) lastSelectedGameRef.current = effectiveSelectedGame
+  const displayGame = effectiveSelectedGame ?? lastSelectedGameRef.current
 
   const watchingItems = useMemo(
     () => items.filter((i) => i.status === 'watching'),
@@ -79,7 +105,7 @@ const Watchlist: React.FC = () => {
   )
 
   const byCategoryItems = useMemo(
-    () => items.filter((i) => i.category === tab),
+    () => items.filter((i) => i.category === (tab as WatchlistCategory)),
     [items, tab]
   )
 
@@ -108,6 +134,18 @@ const Watchlist: React.FC = () => {
     }
   }, [byCategoryItems, activeStatus, activeGenres, watchScope, sortBy])
 
+  const filteredGames = useMemo(() => {
+    if (gameStatusFilter === 'all') return games
+    return games.filter(g => g.status === gameStatusFilter)
+  }, [games, gameStatusFilter])
+
+  const gameStats = useMemo(() => ({
+    total:     games.length,
+    playing:   games.filter(g => g.status === 'playing').length,
+    completed: games.filter(g => g.status === 'completed').length,
+    platinum:  games.filter(g => g.platinum).length,
+  }), [games])
+
   useEffect(() => {
     if (!sortOpen) return
     const handler = (e: MouseEvent | TouchEvent) => {
@@ -133,12 +171,14 @@ const Watchlist: React.FC = () => {
     const alreadyExists = items.some(
       (i) => i.tmdbId === item.tmdbId && i.category === item.category && item.tmdbId !== 0
     )
-    if (alreadyExists) {
-      showToast('Вже є у списку', 'info')
-      return
-    }
+    if (alreadyExists) { showToast('Вже є у списку', 'info'); return }
     addItem(item)
     showToast('Додано до списку', 'success')
+  }
+
+  const handleAddGame = (game: Omit<GameItem, 'id' | 'addedAt'>) => {
+    addGame(game)
+    showToast(`${game.title} додано`, 'success')
   }
 
   const handleStatusChange = (status: WatchlistStatus) => {
@@ -172,154 +212,243 @@ const Watchlist: React.FC = () => {
     setSelected(null)
   }
 
+  const isGame = tab === 'game'
+
   return (
-		<div className={styles.screen}>
-			<AppHeader />
+    <div className={styles.screen}>
+      <AppHeader />
 
-			{/* ── Stats row ── */}
-			<div className={styles.statsRow}>
-				{(['want', 'watching', 'watched'] as const).map((status, i) => {
-					const isActive = activeStatus === status
-					return (
-						<React.Fragment key={status}>
-							{i > 0 && <span className={styles.statSep}>·</span>}
-							<button type="button" className={`${styles.stat} ${isActive ? styles.statActive : ''}`} onClick={() => setActiveStatus(isActive ? null : status)}>
-								<span className={styles.statNum}>{stats[status]}</span>
-								<span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
-								{isActive && <span className={styles.statClear}>×</span>}
-							</button>
-						</React.Fragment>
-					)
-				})}
-			</div>
+      {/* ── Stats row — hidden on games tab ── */}
+      {!isGame && (
+        <div className={styles.statsRow}>
+          {(['want', 'watching', 'watched'] as const).map((status, i) => {
+            const isActive = activeStatus === status
+            return (
+              <React.Fragment key={status}>
+                {i > 0 && <span className={styles.statSep}>·</span>}
+                <button type="button" className={`${styles.stat} ${isActive ? styles.statActive : ''}`} onClick={() => setActiveStatus(isActive ? null : status)}>
+                  <span className={styles.statNum}>{stats[status]}</span>
+                  <span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
+                  {isActive && <span className={styles.statClear}>×</span>}
+                </button>
+              </React.Fragment>
+            )
+          })}
+        </div>
+      )}
 
-			{/* ── Content (scrollable) ── */}
-			<div className={styles.content}>
-				{/* hero scrolls away */}
-				{watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
-				{/* ── Tabs — sticky ── */}
-				<div className={styles.tabBar}>
-					{TABS.map(t => (
-						<button
-							key={t.id}
-							className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
-							onClick={() => {
-								setTab(t.id)
-								setActiveStatus(null)
-								setActiveGenres(new Set())
-							}}
-						>
-							<img src={openmojiUrl(t.icon)} alt="" className={styles.tabIcon} aria-hidden="true" />
-							{t.label}
-						</button>
-					))}
-				</div>
-				{/* ── Genre strip ── */}
-				{availableGenres.length > 0 && (
-					<div className={styles.genreStrip}>
-						{availableGenres.map(g => (
-							<button
-								key={g}
-								type="button"
-								className={`${styles.genreTag} ${activeGenres.has(g) ? styles.genreTagActive : ''}`}
-								onClick={() =>
-									setActiveGenres(prev => {
-										const next = new Set(prev)
-										next.has(g) ? next.delete(g) : next.add(g)
-										return next
-									})
-								}
-							>
-								{g}
-							</button>
-						))}
-					</div>
-				)}
+      {/* ── Game stats row ── */}
+      {isGame && (
+        <div className={styles.statsRow}>
+          <div className={styles.stat}>
+            <span className={styles.statNum}>{gameStats.total}</span>
+            <span className={styles.statLabel}>всього</span>
+          </div>
+          <span className={styles.statSep}>·</span>
+          <div className={styles.stat}>
+            <span className={styles.statNum}>{gameStats.playing}</span>
+            <span className={styles.statLabel}>граю</span>
+          </div>
+          <span className={styles.statSep}>·</span>
+          <div className={styles.stat}>
+            <span className={styles.statNum}>{gameStats.completed}</span>
+            <span className={styles.statLabel}>пройдено</span>
+          </div>
+          <span className={styles.statSep}>·</span>
+          <div className={styles.stat}>
+            <span className={styles.statNum}>{gameStats.platinum}</span>
+            <span className={styles.statLabel}>platinum</span>
+          </div>
+        </div>
+      )}
 
-				<div className={styles.searchWrap}>
-					<WatchlistSearch category={tab} onAdd={handleAdd} />
-					<div className={styles.sortWrap} ref={sortRef}>
-						<button
-							type="button"
-							className={`${styles.sortBtn} ${sortBy !== 'newest' || watchScope !== 'all' ? styles.sortBtnActive : ''}`}
-							onClick={() => setSortOpen(v => !v)}
-							aria-label="Сортування"
-						>
-							<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-								<path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-							</svg>
-						</button>
-						{sortOpen && (
-							<div className={styles.sortDropdown}>
-								{accepted.length > 0 && (
-									<>
-										<p className={styles.dropdownSection}>ПОКАЗАТИ</p>
-										{WATCH_SCOPE_OPTIONS.map(o => (
-											<button
-												key={o.key}
-												type="button"
-												className={`${styles.sortOption} ${watchScope === o.key ? styles.sortOptionActive : ''}`}
-												onClick={() => {
-													setWatchScope(o.key)
-													setSortOpen(false)
-												}}
-											>
-												{watchScope === o.key && <span className={styles.sortOptionDot} />}
-												{o.label}
-											</button>
-										))}
-										<div className={styles.dropdownDivider} />
-									</>
-								)}
-								<p className={styles.dropdownSection}>СОРТУВАННЯ</p>
-								{(
-									[
-										{ key: 'newest', label: 'Нові спочатку' },
-										{ key: 'oldest', label: 'Старі спочатку' },
-										{ key: 'year_desc', label: 'Рік: новіші' },
-										{ key: 'year_asc', label: 'Рік: старіші' },
-										{ key: 'rating', label: 'Рейтинг' },
-									] as { key: SortBy; label: string }[]
-								).map(o => (
-									<button
-										key={o.key}
-										type="button"
-										className={`${styles.sortOption} ${sortBy === o.key ? styles.sortOptionActive : ''}`}
-										onClick={() => {
-											setSortBy(o.key)
-											setSortOpen(false)
-										}}
-									>
-										{sortBy === o.key && <span className={styles.sortOptionDot} />}
-										{o.label}
-									</button>
-								))}
-							</div>
-						)}
-					</div>
-				</div>
+      {/* ── Content (scrollable) ── */}
+      <div className={styles.content}>
+        {/* hero scrolls away — only for media tabs */}
+        {!isGame && watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
 
-				<div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}-${sortBy}-${watchScope}`} className={styles.contentAnimated}>
-					<WatchlistGrid items={tabItems} onTap={setSelected} />
-				</div>
-			</div>
+        {/* ── Tabs — sticky ── */}
+        <div className={styles.tabBar}>
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              className={`${styles.tab} ${tab === t.id ? styles.tabActive : ''}`}
+              onClick={() => {
+                setTab(t.id)
+                setActiveStatus(null)
+                setActiveGenres(new Set())
+              }}
+            >
+              <img src={openmojiUrl(t.icon)} alt="" className={styles.tabIcon} aria-hidden="true" />
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-			{/* ── Detail modal ── */}
-			{displayItem && (
-				<WatchlistDetail
-					item={displayItem}
-					isOpen={!!selected}
-					onClose={() => setSelected(null)}
-					onStatusChange={handleStatusChange}
-					onRatingChange={handleRatingChange}
-					onImageChange={handleImageChange}
-					onNotifyChange={handleNotifyChange}
-					onSimilarAdd={addItem}
-					onDelete={handleDelete}
-				/>
-			)}
-		</div>
-	)
+        {/* ── Media content ── */}
+        {!isGame && (
+          <>
+            {availableGenres.length > 0 && (
+              <div className={styles.genreStrip}>
+                {availableGenres.map(g => (
+                  <button
+                    key={g}
+                    type="button"
+                    className={`${styles.genreTag} ${activeGenres.has(g) ? styles.genreTagActive : ''}`}
+                    onClick={() =>
+                      setActiveGenres(prev => {
+                        const next = new Set(prev)
+                        next.has(g) ? next.delete(g) : next.add(g)
+                        return next
+                      })
+                    }
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className={styles.searchWrap}>
+              <WatchlistSearch category={tab as WatchlistCategory} onAdd={handleAdd} />
+              <div className={styles.sortWrap} ref={sortRef}>
+                <button
+                  type="button"
+                  className={`${styles.sortBtn} ${sortBy !== 'newest' || watchScope !== 'all' ? styles.sortBtnActive : ''}`}
+                  onClick={() => setSortOpen(v => !v)}
+                  aria-label="Сортування"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </button>
+                {sortOpen && (
+                  <div className={styles.sortDropdown}>
+                    {accepted.length > 0 && (
+                      <>
+                        <p className={styles.dropdownSection}>ПОКАЗАТИ</p>
+                        {WATCH_SCOPE_OPTIONS.map(o => (
+                          <button
+                            key={o.key}
+                            type="button"
+                            className={`${styles.sortOption} ${watchScope === o.key ? styles.sortOptionActive : ''}`}
+                            onClick={() => { setWatchScope(o.key); setSortOpen(false) }}
+                          >
+                            {watchScope === o.key && <span className={styles.sortOptionDot} />}
+                            {o.label}
+                          </button>
+                        ))}
+                        <div className={styles.dropdownDivider} />
+                      </>
+                    )}
+                    <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
+                    {(
+                      [
+                        { key: 'newest', label: 'Нові спочатку' },
+                        { key: 'oldest', label: 'Старі спочатку' },
+                        { key: 'year_desc', label: 'Рік: новіші' },
+                        { key: 'year_asc', label: 'Рік: старіші' },
+                        { key: 'rating', label: 'Рейтинг' },
+                      ] as { key: SortBy; label: string }[]
+                    ).map(o => (
+                      <button
+                        key={o.key}
+                        type="button"
+                        className={`${styles.sortOption} ${sortBy === o.key ? styles.sortOptionActive : ''}`}
+                        onClick={() => { setSortBy(o.key); setSortOpen(false) }}
+                      >
+                        {sortBy === o.key && <span className={styles.sortOptionDot} />}
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}-${sortBy}-${watchScope}`} className={styles.contentAnimated}>
+              <WatchlistGrid items={tabItems} onTap={setSelected} />
+            </div>
+          </>
+        )}
+
+        {/* ── Games content ── */}
+        {isGame && (
+          <>
+            <div className={styles.searchWrap}>
+              <GameSearch onAdd={handleAddGame} />
+            </div>
+
+            <div className={styles.tabsInner}>
+              {GAME_STATUS_TABS.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`${styles.innerTab} ${gameStatusFilter === t.id ? styles.innerTabActive : ''}`}
+                  onClick={() => setGameStatusFilter(t.id)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div key={`game-${gameStatusFilter}`} className={styles.contentAnimated}>
+              {filteredGames.length === 0 ? (
+                <div className={styles.emptyGames}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="6" width="20" height="12" rx="5"/>
+                    <path d="M6 12h4M8 10v4"/>
+                    <circle cx="15" cy="11.5" r="1" fill="currentColor" stroke="none"/>
+                    <circle cx="18" cy="13.5" r="1" fill="currentColor" stroke="none"/>
+                  </svg>
+                  <p className={styles.emptyText}>
+                    {gameStatusFilter === 'all' ? 'Додай першу гру через пошук' : 'Немає ігор у цій категорії'}
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.gamesGrid}>
+                  {filteredGames.map(game => (
+                    <GameCard key={game.id} item={game} onClick={() => setSelectedGame(game)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── Watchlist detail modal ── */}
+      {displayItem && !isGame && (
+        <WatchlistDetail
+          item={displayItem}
+          isOpen={!!selected}
+          onClose={() => setSelected(null)}
+          onStatusChange={handleStatusChange}
+          onRatingChange={handleRatingChange}
+          onImageChange={handleImageChange}
+          onNotifyChange={handleNotifyChange}
+          onSimilarAdd={addItem}
+          onDelete={handleDelete}
+        />
+      )}
+
+      {/* ── Game detail modal ── */}
+      {displayGame && (
+        <GameDetail
+          item={displayGame}
+          isOpen={effectiveSelectedGame !== null}
+          onClose={() => setSelectedGame(null)}
+          onUpdate={(id, updates) => updateGame(id, updates)}
+          onDelete={(id) => {
+            const g = games.find(i => i.id === id)
+            deleteGame(id)
+            setSelectedGame(null)
+            if (g) showToast(`${g.title} видалено`, 'info')
+          }}
+        />
+      )}
+    </div>
+  )
 }
 
 export default Watchlist

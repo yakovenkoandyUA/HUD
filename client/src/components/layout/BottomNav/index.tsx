@@ -8,7 +8,6 @@ import SprintIcon    from '../../../assets/icons/nav/sprint.svg?react'
 import RecipeIcon    from '../../../assets/icons/nav/recipe.svg?react'
 import WatchIcon     from '../../../assets/icons/nav/watch.svg?react'
 import MemoriesIcon  from '../../../assets/icons/nav/memories.svg?react'
-import GamesIcon     from '../../../assets/icons/nav/games.svg?react'
 import { useProfileStore } from '../../../store/profileStore'
 
 /** Profile section tabs — order must match tab IDs */
@@ -134,10 +133,6 @@ const BottomNav: React.FC = () => {
 
       <NavLink to="/watchlist" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
         <WatchIcon className={styles.icon} />
-      </NavLink>
-
-      <NavLink to="/games" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
-        <GamesIcon className={styles.icon} />
       </NavLink>
 
       <NavLink to="/memories" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>

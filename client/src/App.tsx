@@ -29,7 +29,6 @@ import ProfilePage from './screens/ProfilePage'
 import VerifyEmail from './screens/VerifyEmail'
 import NotFound from './screens/NotFound'
 import NotesScreen from './screens/Notes'
-import GamesScreen from './screens/Games'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import './App.css'
 
@@ -86,7 +85,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/memories/:id" element={<MemoryDetailScreen />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/notes" element={<NotesScreen />} />
-          <Route path="/games" element={<GamesScreen />} />
+          <Route path="/games" element={<Navigate to="/watchlist" replace />} />
 
           {/* F1 module — f1Enabled only */}
           <Route element={<F1Route />}>
