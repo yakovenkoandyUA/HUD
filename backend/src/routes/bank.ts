@@ -6,6 +6,9 @@ import Transaction from '../models/Transaction'
 
 const router = Router()
 
+// tokenRequestId → userId (in-memory, TTL 5 min)
+const pendingAuths = new Map<string, string>()
+
 // ── Encryption helpers (AES-256-GCM) ────────────────────────────────────────
 
 function getKey(): Buffer {
@@ -201,6 +204,75 @@ router.post('/sync', requireAuth, async (req: Request, res: Response) => {
   await conn.save()
 
   res.json({ imported: toInsert.length, lastSync: conn.lastSync })
+})
+
+// ── POST /api/bank/mono-auth-init ───────────────────────────────────────────
+// Step 1: initiate Monobank personal auth flow (no manual token needed)
+
+router.post('/mono-auth-init', requireAuth, async (req: Request, res: Response) => {
+  const webhookUrl = `${process.env.API_BASE_URL ?? 'https://hud-production.up.railway.app'}/api/bank/mono-auth-webhook`
+
+  let tokenRequestId: string
+  let acceptUrl: string
+  try {
+    const monoRes = await fetch(`${MONO_BASE}/personal/auth/request`, {
+      headers: { 'X-Callback': webhookUrl },
+    })
+    if (!monoRes.ok) {
+      const body = await monoRes.text()
+      res.status(502).json({ error: `Monobank: ${body}` }); return
+    }
+    const data = await monoRes.json() as { tokenRequestId: string; acceptUrl: string }
+    tokenRequestId = data.tokenRequestId
+    acceptUrl = data.acceptUrl
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Unknown'
+    res.status(502).json({ error: msg }); return
+  }
+
+  pendingAuths.set(tokenRequestId, req.userId!)
+  setTimeout(() => pendingAuths.delete(tokenRequestId), 5 * 60 * 1000)
+
+  res.json({ tokenRequestId, acceptUrl })
+})
+
+// ── POST /api/bank/mono-auth-webhook ────────────────────────────────────────
+// Step 2: Monobank calls this when user approves in their app
+
+router.post('/mono-auth-webhook', async (req: Request, res: Response) => {
+  const { tokenRequestId, token } = req.body as { tokenRequestId?: string; token?: string }
+  if (!tokenRequestId || !token) { res.status(400).json({ error: 'Invalid payload' }); return }
+
+  const userId = pendingAuths.get(tokenRequestId)
+  if (!userId) { res.status(404).json({ error: 'Unknown tokenRequestId' }); return }
+
+  let clientInfo: MonoClientInfo
+  try {
+    clientInfo = await monoFetch('/personal/client-info', token) as MonoClientInfo
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Unknown'
+    res.status(502).json({ error: msg }); return
+  }
+
+  const uahAccount = clientInfo.accounts.find(a => a.currencyCode === 980)
+  if (!uahAccount) { res.status(400).json({ error: 'No UAH account found' }); return }
+
+  await BankConnection.findOneAndUpdate(
+    { userId, bank: 'monobank' },
+    { encryptedToken: encrypt(token), accountId: uahAccount.id, accountName: clientInfo.name, enabled: true, lastSync: null },
+    { upsert: true, new: true },
+  )
+
+  pendingAuths.delete(tokenRequestId)
+  res.json({ ok: true })
+})
+
+// ── GET /api/bank/mono-auth-status/:tokenRequestId ──────────────────────────
+// Frontend polls this to know when auth completed
+
+router.get('/mono-auth-status/:tokenRequestId', requireAuth, async (req: Request, res: Response) => {
+  const pending = pendingAuths.has(req.params.tokenRequestId)
+  res.json({ pending })
 })
 
 // ── POST /api/bank/import-csv ────────────────────────────────────────────────

@@ -10,23 +10,33 @@ export interface BankConnection {
 }
 
 interface BankState {
-  connection: BankConnection | null
-  loading: boolean
-  syncing: boolean
-  importing: boolean
+  connection:   BankConnection | null
+  loading:      boolean
+  syncing:      boolean
+  importing:    boolean
+  // OAuth-like Monobank auth flow state
+  authPending:        boolean
+  authTokenRequestId: string | null
+  authAcceptUrl:      string | null
 
-  fetchStatus: () => Promise<void>
-  connect: (token: string) => Promise<void>
-  disconnect: () => Promise<void>
-  sync: () => Promise<{ imported: number }>
-  importCsv: (csv: string) => Promise<{ imported: number }>
+  fetchStatus:    () => Promise<void>
+  connect:        (token: string) => Promise<void>
+  disconnect:     () => Promise<void>
+  sync:           () => Promise<{ imported: number }>
+  importCsv:      (csv: string) => Promise<{ imported: number }>
+  initMonoAuth:   () => Promise<void>
+  cancelMonoAuth: () => void
+  pollMonoAuth:   (tokenRequestId: string) => Promise<boolean>
 }
 
-export const useBankStore = create<BankState>((set) => ({
-  connection: null,
-  loading: false,
-  syncing: false,
-  importing: false,
+export const useBankStore = create<BankState>((set, get) => ({
+  connection:         null,
+  loading:            false,
+  syncing:            false,
+  importing:          false,
+  authPending:        false,
+  authTokenRequestId: null,
+  authAcceptUrl:      null,
 
   fetchStatus: async () => {
     set({ loading: true })
@@ -90,5 +100,37 @@ export const useBankStore = create<BankState>((set) => ({
     } finally {
       set({ importing: false })
     }
+  },
+
+  initMonoAuth: async () => {
+    set({ authPending: true, authTokenRequestId: null, authAcceptUrl: null })
+    try {
+      const res = await authFetch('/api/bank/mono-auth-init', { method: 'POST' })
+      if (!res.ok) {
+        const { error } = await res.json() as { error: string }
+        throw new Error(error)
+      }
+      const { tokenRequestId, acceptUrl } = await res.json() as { tokenRequestId: string; acceptUrl: string }
+      set({ authTokenRequestId: tokenRequestId, authAcceptUrl: acceptUrl })
+    } catch {
+      set({ authPending: false })
+      throw new Error('Не вдалось ініціювати підключення до Monobank')
+    }
+  },
+
+  cancelMonoAuth: () => {
+    set({ authPending: false, authTokenRequestId: null, authAcceptUrl: null })
+  },
+
+  pollMonoAuth: async (tokenRequestId: string) => {
+    const res = await authFetch(`/api/bank/mono-auth-status/${tokenRequestId}`)
+    if (!res.ok) return false
+    const { pending } = await res.json() as { pending: boolean }
+    if (!pending) {
+      set({ authPending: false, authTokenRequestId: null, authAcceptUrl: null })
+      await get().fetchStatus()
+      return true
+    }
+    return false
   },
 }))

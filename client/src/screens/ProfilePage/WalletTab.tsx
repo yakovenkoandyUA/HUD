@@ -35,7 +35,12 @@ const WalletTab: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const { categories, fetchCategories, addCategory, removeCategory, toggleActive } = useCategoryStore()
-  const { connection, loading: bankLoading, syncing, fetchStatus, connect, disconnect, sync } = useBankStore()
+  const {
+    connection, loading: bankLoading, syncing,
+    fetchStatus, disconnect, sync,
+    authPending, authAcceptUrl, authTokenRequestId,
+    initMonoAuth, cancelMonoAuth, pollMonoAuth,
+  } = useBankStore()
 
   // Salary day
   const [salaryDay, setSalaryDay]   = useState(activeProfile?.salaryDay ?? 1)
@@ -57,14 +62,46 @@ const WalletTab: React.FC = () => {
   const [savingSub, setSavingSub]       = useState(false)
   const subAddRef = useRef<HTMLInputElement>(null)
 
-  // Bank connection state
-  const [connectOpen, setConnectOpen] = useState(false)
-  const [tokenInput, setTokenInput]   = useState('')
-  const [connecting, setConnecting]   = useState(false)
+  // Manual token fallback
+  const [showManual, setShowManual] = useState(false)
+  const [tokenInput, setTokenInput] = useState('')
+  const [connecting, setConnecting] = useState(false)
+  const { connect } = useBankStore()
+
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => { fetchStatus() }, [fetchStatus])
   useEffect(() => { fetchCategories() }, [fetchCategories])
   useEffect(() => { if (addingCat) newCatRef.current?.focus() }, [addingCat])
+
+  // Start polling when tokenRequestId is set
+  useEffect(() => {
+    if (!authTokenRequestId) {
+      if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null }
+      return
+    }
+    let cancelled = false
+    const poll = async () => {
+      if (cancelled) return
+      const done = await pollMonoAuth(authTokenRequestId)
+      if (done && !cancelled) {
+        showToast('Monobank підключено', 'success')
+      }
+    }
+    pollTimerRef.current = setInterval(poll, 2000)
+    return () => {
+      cancelled = true
+      if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null }
+    }
+  }, [authTokenRequestId, pollMonoAuth, showToast])
+
+  const handleInitAuth = useCallback(async () => {
+    try {
+      await initMonoAuth()
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Помилка підключення', 'error')
+    }
+  }, [initMonoAuth, showToast])
 
   const handleConnect = useCallback(async () => {
     if (!tokenInput.trim() || connecting) return
@@ -72,7 +109,7 @@ const WalletTab: React.FC = () => {
     try {
       await connect(tokenInput.trim())
       setTokenInput('')
-      setConnectOpen(false)
+      setShowManual(false)
       showToast('Monobank підключено', 'success')
     } catch (e: unknown) {
       showToast(e instanceof Error ? e.message : 'Помилка підключення', 'error')
@@ -257,36 +294,75 @@ const WalletTab: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : (
-          connectOpen ? (
-            <div className={styles.bankConnectForm}>
-              <p className={styles.bankConnectHint}>
-                Токен: Monobank → Налаштування → Інше → API
-              </p>
-              <div className={styles.bankConnectRow}>
-                <input
-                  type="text"
-                  className={styles.bankTokenInput}
-                  placeholder="u_xxxxxxxxxxxxxxxxxxxx"
-                  value={tokenInput}
-                  onChange={e => setTokenInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleConnect() }}
-                  disabled={connecting}
-                  autoFocus
-                />
-                <button type="button" className={styles.bankConnectBtn} onClick={handleConnect} disabled={connecting || !tokenInput.trim()}>
-                  {connecting ? '...' : <CheckIcon />}
-                </button>
-                <button type="button" className={styles.bankCancelBtn} onClick={() => { setConnectOpen(false); setTokenInput('') }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
-              </div>
+        ) : authPending && authAcceptUrl ? (
+          /* ── OAuth waiting screen ── */
+          <div className={styles.monoAuthCard}>
+            <div className={styles.monoAuthTop}>
+              <div className={styles.monoAuthSpinner} />
+              <span className={styles.monoAuthWait}>Очікую підтвердження в Monobank...</span>
             </div>
-          ) : (
-            <button type="button" className={styles.bankAddBtn} onClick={() => setConnectOpen(true)}>
-              <PlusIcon /><span>Підключити Monobank</span>
+            <a
+              href={authAcceptUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.monoAuthOpenBtn}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              Відкрити Monobank
+            </a>
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(authAcceptUrl)}`}
+              alt="QR"
+              className={styles.monoAuthQr}
+            />
+            <p className={styles.monoAuthQrHint}>або відскануйте QR у застосунку</p>
+            <button type="button" className={styles.monoAuthCancelBtn} onClick={cancelMonoAuth}>
+              Скасувати
             </button>
-          )
+          </div>
+        ) : (
+          <div className={styles.bankConnectWrap}>
+            <button type="button" className={styles.bankAddBtn} onClick={handleInitAuth}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="5" y="2" width="14" height="20" rx="2"/>
+                <line x1="12" y1="18" x2="12" y2="18" strokeWidth="3" strokeLinecap="round"/>
+              </svg>
+              <span>Підключити Monobank</span>
+            </button>
+            {/* Manual token fallback */}
+            {!showManual ? (
+              <button type="button" className={styles.bankManualLink} onClick={() => setShowManual(true)}>
+                Ввести токен вручну
+              </button>
+            ) : (
+              <div className={styles.bankConnectForm}>
+                <p className={styles.bankConnectHint}>
+                  Monobank → Налаштування → Інше → API
+                </p>
+                <div className={styles.bankConnectRow}>
+                  <input
+                    type="text"
+                    className={styles.bankTokenInput}
+                    placeholder="u_xxxxxxxxxxxxxxxxxxxx"
+                    value={tokenInput}
+                    onChange={e => setTokenInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleConnect() }}
+                    disabled={connecting}
+                    autoFocus
+                  />
+                  <button type="button" className={styles.bankConnectBtn} onClick={handleConnect} disabled={connecting || !tokenInput.trim()}>
+                    {connecting ? '...' : <CheckIcon />}
+                  </button>
+                  <button type="button" className={styles.bankCancelBtn} onClick={() => { setShowManual(false); setTokenInput('') }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </section>
 
