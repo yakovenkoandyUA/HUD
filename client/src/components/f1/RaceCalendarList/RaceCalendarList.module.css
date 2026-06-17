@@ -1,12 +1,8 @@
 /* ── Container ── */
 .calendar {
-  background-color: rgba(0, 0, 0, 0.86);
+  background-color: var(--surface);
   border-radius: 10px;
   padding: 0 8px;
-}
-
-:global([data-theme="japan"]) .calendar {
-  background-color: var(--surface);
 }
 
 /* ── Section ── */
