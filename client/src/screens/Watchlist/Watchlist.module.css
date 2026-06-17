@@ -168,7 +168,7 @@
 .searchWrap {
   padding: 12px 0 8px;
   position: relative;
-  z-index: 100;
+  z-index: 48;
   display: flex;
   align-items: center;
   gap: 4px;

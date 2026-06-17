@@ -58,7 +58,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px var(--accent-glow), 0 2px 6px rgba(0,0,0,0.4);
-  z-index: 100;
+  z-index: 48;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   border: none;
   cursor: pointer;
@@ -355,7 +355,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  z-index: 100;
+  z-index: 48;
   animation: fadeIn 0.18s ease both;
 }
 

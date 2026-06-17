@@ -8,6 +8,13 @@
   /* padding-bottom: calc(80px + env(safe-area-inset-bottom)); */
 }
 
+/* Hide all floating FABs when hub menu is open */
+body.hub-open [class*="fabContainer"] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
 @keyframes pageIn {
   from {
     opacity: 0;

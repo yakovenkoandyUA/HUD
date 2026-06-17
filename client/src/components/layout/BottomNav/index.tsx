@@ -21,20 +21,23 @@ const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; admi
 ]
 
 // Arc positions for secondary pills (relative to hub button center, pill is centered on each point)
-// 4 items (no F1): symmetric 4-point fan
-// 5 items (F1 enabled): symmetric 5-point fan
+const ARC_POSITIONS_3 = [
+  { x: -90, y:  -88 },
+  { x:   0, y: -145 },
+  { x:  90, y:  -88 },
+]
 const ARC_POSITIONS_4 = [
-  { x: -100, y: -130 },
-  { x:  -38, y: -188 },
-  { x:   38, y: -188 },
-  { x:  100, y: -130 },
+  { x: -108, y:  -82 },
+  { x:  -45, y: -138 },
+  { x:   45, y: -138 },
+  { x:  108, y:  -82 },
 ]
 const ARC_POSITIONS_5 = [
-  { x: -108, y: -110 },
-  { x:  -60, y: -175 },
-  { x:    0, y: -198 },
-  { x:   60, y: -175 },
-  { x:  108, y: -110 },
+  { x: -108, y:  -72 },
+  { x:  -62, y: -128 },
+  { x:    0, y: -148 },
+  { x:   62, y: -128 },
+  { x:  108, y:  -72 },
 ]
 
 /**
@@ -51,6 +54,11 @@ const BottomNav: React.FC = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [hubOpen, setHubOpen] = useState(false)
+
+  React.useEffect(() => {
+    document.body.classList.toggle('hub-open', hubOpen)
+    return () => { document.body.classList.remove('hub-open') }
+  }, [hubOpen])
 
   const isProfile = pathname === '/profile'
 
@@ -102,7 +110,9 @@ const BottomNav: React.FC = () => {
       {/* Radial pills — positioned relative to hub button center */}
       <div className={styles.pillsAnchor}>
         {secondarySections.map((s, i) => {
-          const arcPos = secondarySections.length <= 4 ? ARC_POSITIONS_4 : ARC_POSITIONS_5
+          const arcPos = secondarySections.length <= 3 ? ARC_POSITIONS_3
+                       : secondarySections.length === 4 ? ARC_POSITIONS_4
+                       : ARC_POSITIONS_5
           const pos = arcPos[i] ?? arcPos[arcPos.length - 1]
           return (
             <button
