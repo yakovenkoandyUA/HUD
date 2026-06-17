@@ -5,6 +5,7 @@
   min-height: 0;
   animation: pageIn 0.22s ease-out;
   overflow-y: scroll;
+  /* padding-bottom: calc(80px + env(safe-area-inset-bottom)); */
 }
 
 @keyframes pageIn {
