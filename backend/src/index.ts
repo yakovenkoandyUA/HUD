@@ -26,6 +26,7 @@ import sprintRoutes from './routes/sprint'
 import lessonRoutes from './routes/lessons'
 import recipeRoutes from './routes/recipes'
 import watchlistRoutes from './routes/watchlist'
+import gamesRouter from './routes/games'
 import goalRoutes from './routes/goals'
 import pushRoutes from './routes/push'
 import memoryRoutes from './routes/memories'
@@ -35,7 +36,6 @@ import receiptRoutes from './routes/receipt'
 import recurringRoutes from './routes/recurringPayments'
 import shoppingRoutes from './routes/shopping'
 import labelRoutes from './routes/labels'
-import booksRoutes from './routes/books'
 import watchlistCommentsRouter from './routes/watchlistComments'
 import plansRouter from './routes/plans'
 import aiRouter from './routes/ai'
@@ -76,6 +76,7 @@ app.use('/api/sprint', sprintRoutes)
 app.use('/api/lessons', lessonRoutes)
 app.use('/api/recipes', recipeRoutes)
 app.use('/api/watchlist', watchlistRoutes)
+app.use('/api/games', gamesRouter)
 app.use('/api/watchlist/:id/comments', watchlistCommentsRouter)
 app.use('/api/goals', goalRoutes)
 app.use('/api/push', pushRoutes)
@@ -86,7 +87,6 @@ app.use('/api/receipt', receiptRoutes)
 app.use('/api/recurring', recurringRoutes)
 app.use('/api/shopping', shoppingRoutes)
 app.use('/api/labels', labelRoutes)
-app.use('/api/books', booksRoutes)
 app.use('/api/plans', plansRouter)
 app.use('/api/ai', aiRouter)
 app.use('/api/family', familyRouter)

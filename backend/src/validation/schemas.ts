@@ -138,7 +138,7 @@ export const createRecipeSchema = z.object({
 
 export const createWatchlistSchema = z.object({
   title:      z.string().min(1, 'Назва обов\'язкова').max(200),
-  type:       z.enum(['movie', 'series', 'anime', 'book']),
+  type:       z.enum(['movie', 'series', 'anime']),
   status:     z.enum(['want', 'watching', 'done']).optional(),
   posterUrl:  z.string().url().nullable().optional(),
   tmdbId:     z.number().optional(),

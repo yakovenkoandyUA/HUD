@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { authFetch } from '../../../services/api'
 import styles from './WatchlistSearch.module.css'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../../types'
 
@@ -25,7 +24,6 @@ const TMDB_GENRES: Record<number, string> = {
 
 interface SearchResult {
   tmdbId: number
-  workKey?: string | null
   title: string
   originalTitle: string
   posterPath: string | null
@@ -33,9 +31,6 @@ interface SearchResult {
   overview: string
   year: string
   genres: string[]
-  authors?: string[]
-  pageCount?: number
-  thumbnail?: string
   totalEpisodes?: number | null
   totalSeasons?: number | null
   nextEpisodeDate?: string | null
@@ -57,16 +52,10 @@ interface WatchlistSearchProps {
   onAdd: (item: Omit<WatchlistItem, 'id' | 'addedAt'>) => void
 }
 
-const STATUS_PREVIEW_DEFAULT: { value: WatchlistStatus; label: string }[] = [
+const STATUS_PREVIEW_OPTIONS: { value: WatchlistStatus; label: string }[] = [
   { value: 'want',     label: 'ХОЧУ'    },
   { value: 'watching', label: 'ДИВЛЮСЬ' },
   { value: 'watched',  label: 'ГЛЯНУВ'  },
-]
-
-const STATUS_PREVIEW_BOOK: { value: WatchlistStatus; label: string }[] = [
-  { value: 'want',     label: 'ХОЧУ'      },
-  { value: 'watching', label: 'ЧИТАЮ'     },
-  { value: 'watched',  label: 'ПРОЧИТАВ'  },
 ]
 
 const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) => {
@@ -112,40 +101,33 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     setLoading(true)
     setError('')
     try {
-      if (category === 'book') {
-        const res = await authFetch(`/api/books/search?q=${encodeURIComponent(q)}`)
-        if (!res.ok) { setError('Помилка пошуку книг'); return }
-        const items: SearchResult[] = await res.json()
-        setResults(items)
-      } else {
-        const endpoint = category === 'movie' ? 'search/movie' : 'search/tv'
-        const res = await fetch(
-          `https://api.themoviedb.org/3/${endpoint}?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=uk&page=1`
-        )
-        const data = await res.json()
-        let list = data.results ?? []
+      const endpoint = category === 'movie' ? 'search/movie' : 'search/tv'
+      const res = await fetch(
+        `https://api.themoviedb.org/3/${endpoint}?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=uk&page=1`
+      )
+      const data = await res.json()
+      let list = data.results ?? []
 
-        if (category === 'anime') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          list = list.filter((r: any) =>
-            r.genre_ids?.includes(16) &&
-            (r.origin_country?.includes('JP') || r.original_language === 'ja')
-          )
-        }
-
+      if (category === 'anime') {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const items: SearchResult[] = list.slice(0, 10).map((r: any) => ({
-          tmdbId: r.id,
-          title: r.title ?? r.name ?? 'Без назви',
-          originalTitle: r.original_title ?? r.original_name ?? '',
-          posterPath: r.poster_path ?? null,
-          backdropPath: r.backdrop_path ?? null,
-          overview: r.overview ?? '',
-          year: (r.release_date ?? r.first_air_date ?? '').slice(0, 4),
-          genres: (r.genre_ids ?? []).map((id: number) => TMDB_GENRES[id]).filter(Boolean),
-        }))
-        setResults(items)
+        list = list.filter((r: any) =>
+          r.genre_ids?.includes(16) &&
+          (r.origin_country?.includes('JP') || r.original_language === 'ja')
+        )
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items: SearchResult[] = list.slice(0, 10).map((r: any) => ({
+        tmdbId: r.id,
+        title: r.title ?? r.name ?? 'Без назви',
+        originalTitle: r.original_title ?? r.original_name ?? '',
+        posterPath: r.poster_path ?? null,
+        backdropPath: r.backdrop_path ?? null,
+        overview: r.overview ?? '',
+        year: (r.release_date ?? r.first_air_date ?? '').slice(0, 4),
+        genres: (r.genre_ids ?? []).map((id: number) => TMDB_GENRES[id]).filter(Boolean),
+      }))
+      setResults(items)
       setIsOpen(true)
     } catch {
       setError('Помилка пошуку')
@@ -157,10 +139,8 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
     if (!query.trim()) { setResults([]); setIsOpen(false); return }
-    const minLen = category === 'book' ? 3 : 2
-    const delay  = category === 'book' ? 900 : 500
-    if (query.trim().length < minLen) return
-    timerRef.current = setTimeout(() => search(query), delay)
+    if (query.trim().length < 2) return
+    timerRef.current = setTimeout(() => search(query), 500)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [query, search, category])
 
@@ -181,20 +161,6 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     setSelectedStatus('want')
 
     let cancelled = false
-
-    if (category === 'book') {
-      if (!result.workKey) return
-      setLoadingDetails(true)
-      try {
-        const descRes = await authFetch(`/api/books/description?key=${encodeURIComponent(result.workKey)}`)
-        if (!cancelled && descRes.ok) {
-          const { description } = await descRes.json() as { description: string }
-          if (description) setPreviewDetails({ overview: description })
-        }
-      } catch { /* silent */ }
-      finally { if (!cancelled) setLoadingDetails(false) }
-      return () => { cancelled = true }
-    }
 
     if (!TMDB_KEY) return
 
@@ -251,9 +217,6 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
       rating:        null,
       seasonReminder: false,
       reminderDate:  null,
-      authors:       preview.authors,
-      pageCount:     preview.pageCount,
-      thumbnail:     preview.thumbnail,
       totalEpisodes:   d?.number_of_episodes   ?? null,
       totalSeasons:    d?.number_of_seasons    ?? null,
       nextEpisodeDate: d?.next_episode_to_air?.air_date ?? null,
@@ -262,11 +225,9 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
   }
 
   const hasKey = !!TMDB_KEY && TMDB_KEY !== 'your_tmdb_api_key_here'
-  const showResults = searchActive && !preview && (isOpen || !!error || (!hasKey && category !== 'book'))
-  const statusPreviewOptions = category === 'book' ? STATUS_PREVIEW_BOOK : STATUS_PREVIEW_DEFAULT
+  const showResults = searchActive && !preview && (isOpen || !!error || !hasKey)
 
   const placeholder =
-    category === 'book'   ? 'Пошук книги...'   :
     category === 'anime'  ? 'Пошук аніме...'   :
     category === 'series' ? 'Пошук серіалу...' :
                             'Пошук фільму...'
@@ -335,7 +296,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
       {/* Results panel */}
       {showResults && (
         <div className={styles.searchResults}>
-          {!hasKey && category !== 'book' && (
+          {!hasKey && (
             <p className={styles.apiWarning}>
               Додай VITE_TMDB_API_KEY у .env для пошуку
             </p>
@@ -360,10 +321,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
                 </div>
                 <div className={styles.resultInfo}>
                   <span className={styles.resultTitle}>{r.title}</span>
-                  {category === 'book' && r.authors && r.authors.length > 0 && (
-                    <span className={styles.resultAuthor}>{r.authors.join(', ')}</span>
-                  )}
-                  {category !== 'book' && r.originalTitle && r.originalTitle !== r.title && (
+                  {r.originalTitle && r.originalTitle !== r.title && (
                     <span className={styles.resultOriginal}>{r.originalTitle}</span>
                   )}
                   {r.year && <span className={styles.resultYear}>{r.year}</span>}
@@ -514,7 +472,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
             <div className={styles.previewStatusWrap}>
               <p className={styles.previewStatusLabel}>ДОДАТИ ЯК</p>
               <div className={styles.previewStatusChips}>
-                {statusPreviewOptions.map(s => (
+                {STATUS_PREVIEW_OPTIONS.map(s => (
                   <button
                     key={s.value}
                     type="button"

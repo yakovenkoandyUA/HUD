@@ -94,12 +94,6 @@ const STATUS_OPTIONS_DEFAULT: { value: WatchlistStatus; label: string; color: st
   { value: 'dropped',  label: 'Кинув',      color: 'var(--negative)' },
 ]
 
-const STATUS_OPTIONS_BOOK: { value: WatchlistStatus; label: string; color: string }[] = [
-  { value: 'want',     label: 'Хочу прочитати', color: 'var(--text2)'    },
-  { value: 'watching', label: 'Читаю',           color: 'var(--second)'   },
-  { value: 'watched',  label: 'Прочитав',        color: 'var(--gold)'     },
-  { value: 'dropped',  label: 'Кинув',           color: 'var(--negative)' },
-]
 
 const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   item,
@@ -221,7 +215,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
   // Load similar items from TMDB
   useEffect(() => {
-    if (!item.tmdbId || item.category === 'book' || !TMDB_KEY) return
+    if (!item.tmdbId || !TMDB_KEY) return
     let cancelled = false
     const load = async () => {
       try {
@@ -292,9 +286,9 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     closeSimilarPreview()
   }
 
-  const similarStatusOptions: { value: WatchlistStatus; label: string }[] = item.category === 'book'
-    ? [{ value: 'want', label: 'ХОЧУ' }, { value: 'watching', label: 'ЧИТАЮ' }, { value: 'watched', label: 'ПРОЧИТАВ' }]
-    : [{ value: 'want', label: 'ХОЧУ' }, { value: 'watching', label: 'ДИВЛЮСЬ' }, { value: 'watched', label: 'ГЛЯНУВ' }]
+  const similarStatusOptions: { value: WatchlistStatus; label: string }[] = [
+    { value: 'want', label: 'ХОЧУ' }, { value: 'watching', label: 'ДИВЛЮСЬ' }, { value: 'watched', label: 'ГЛЯНУВ' },
+  ]
 
   const simHeroSrc = similarPreview
     ? (similarDetails?.backdrop_path
@@ -365,11 +359,9 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     ? `https://image.tmdb.org/t/p/w780${item.backdropPath}`
     : item.thumbnail ?? null
 
-  const posterSrc = item.category === 'book'
-    ? item.thumbnail ?? null
-    : item.posterPath
-      ? `https://image.tmdb.org/t/p/w342${item.posterPath}`
-      : null
+  const posterSrc = item.posterPath
+    ? `https://image.tmdb.org/t/p/w342${item.posterPath}`
+    : null
 
   const canRemind = item.category === 'series' || item.category === 'anime'
 
@@ -414,12 +406,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
           {/* Meta row */}
           <div className={styles.metaRow}>
             {item.year && <span className={styles.year}>{item.year}</span>}
-            {item.pageCount != null && item.pageCount > 0 && (
-              <span className={styles.metaChip}>{item.pageCount} стор.</span>
-            )}
-            {item.authors && item.authors.length > 0 && (
-              <span className={styles.metaChip}>{item.authors[0]}</span>
-            )}
             {item.rating != null && item.rating > 0 && (
               <span className={styles.ratingInline}>★ {item.rating}</span>
             )}
@@ -459,7 +445,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
           {/* Status selector */}
           <p className={styles.sectionLabel}>Статус</p>
           <div className={styles.statusChips}>
-            {(item.category === 'book' ? STATUS_OPTIONS_BOOK : STATUS_OPTIONS_DEFAULT).map((s) => (
+            {STATUS_OPTIONS_DEFAULT.map((s) => (
               <button
                 key={s.value}
                 type="button"

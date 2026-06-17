@@ -1,0 +1,131 @@
+.card {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.25s ease;
+}
+.card:active .img { transform: scale(1.03); }
+
+.noImg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+}
+
+/* ── Status badge ── */
+.statusBadge {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.78);
+  border-left: 3px solid;
+  padding: 4px 8px 4px 6px;
+  border-radius: 0 4px 4px 0;
+  font-size: 9px;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: #fff;
+}
+
+.statusAnnounced { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, rgba(0,0,0,0.6)); }
+.statusWant      { border-color: var(--text2); }
+.statusPlaying   { border-color: #2DD4BF; background: rgba(45, 212, 191, 0.25); }
+.statusCompleted { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 20%, rgba(0,0,0,0.6)); }
+.statusDropped   { border-color: var(--negative); }
+
+/* ── Platinum badge ── */
+.platinumBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a8c4d8 0%, #6b9ab8 50%, #c8d8e8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* ── Playing bar ── */
+.playingBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #2DD4BF;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Info ── */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 2px;
+}
+
+.title {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.year {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.ratingTag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold);
+}

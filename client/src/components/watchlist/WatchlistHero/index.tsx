@@ -28,13 +28,11 @@ const WatchlistHero: React.FC<WatchlistHeroProps> = ({ items, onTap }) => {
       <p className={styles.label}>ДИВЛЮСЬ ЗАРАЗ</p>
       <div className={styles.scrollRow}>
         {items.map((item) => {
-          const heroSrc = item.category === 'book'
-            ? item.thumbnail ?? null
-            : item.backdropPath
-              ? `${TMDB_BACKDROP}${item.backdropPath}`
-              : item.posterPath
-                ? `${TMDB_POSTER}${item.posterPath}`
-                : item.thumbnail ?? null
+          const heroSrc = item.backdropPath
+            ? `${TMDB_BACKDROP}${item.backdropPath}`
+            : item.posterPath
+              ? `${TMDB_POSTER}${item.posterPath}`
+              : item.thumbnail ?? null
 
           return (
             <div

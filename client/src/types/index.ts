@@ -174,7 +174,7 @@ export interface Recipe {
   isOwn?: boolean
 }
 
-export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'
+export type WatchlistCategory = 'movie' | 'series' | 'anime'
 export type WatchlistStatus = 'want' | 'watching' | 'watched' | 'dropped'
 
 export interface WatchlistItem {
@@ -193,8 +193,6 @@ export interface WatchlistItem {
   seasonReminder: boolean
   reminderDate: string | null
   addedAt: string
-  authors?: string[]
-  pageCount?: number
   thumbnail?: string
   currentSeason?: number | null
   currentEpisode?: number | null
@@ -207,4 +205,27 @@ export interface WatchlistItem {
   watchedEpisodes?: { season: number; episode: number }[]
   watchTogether?: boolean
   watchedWith?: string[]
+}
+
+// ── Games ────────────────────────────────────────────────────────────────────
+
+export type GameStatus = 'announced' | 'want' | 'playing' | 'completed' | 'dropped'
+
+export interface GameItem {
+  id: string
+  rawgId: number
+  title: string
+  coverUrl: string
+  backgroundUrl: string
+  platforms: string[]
+  status: GameStatus
+  platinum: boolean
+  rating: number | null
+  genres: string[]
+  releaseDate: string
+  metacritic: number | null
+  notes: string
+  hoursPlayed: number | null
+  completedAt: string | null
+  addedAt: string
 }

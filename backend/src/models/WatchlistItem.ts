@@ -4,7 +4,7 @@ export interface IWatchlistItem extends Document {
   tmdbId: number
   title: string
   originalTitle: string
-  category: 'movie' | 'series' | 'anime' | 'book'
+  category: 'movie' | 'series' | 'anime'
   status: 'want' | 'watching' | 'watched' | 'dropped'
   posterPath: string
   backdropPath: string
@@ -14,8 +14,6 @@ export interface IWatchlistItem extends Document {
   rating: number | null
   seasonReminder: boolean
   reminderDate: string
-  authors: string[]
-  pageCount: number
   thumbnail: string
   currentSeason: number | null
   currentEpisode: number | null
@@ -36,7 +34,7 @@ const schema = new Schema<IWatchlistItem>({
   tmdbId:        { type: Number, default: 0 },
   title:         { type: String, required: true },
   originalTitle: { type: String, default: '' },
-  category:      { type: String, enum: ['movie', 'series', 'anime', 'book'], required: true },
+  category:      { type: String, enum: ['movie', 'series', 'anime'], required: true },
   status:        { type: String, enum: ['want', 'watching', 'watched', 'dropped'], default: 'want' },
   posterPath:    { type: String, default: '' },
   backdropPath:  { type: String, default: '' },
@@ -46,8 +44,6 @@ const schema = new Schema<IWatchlistItem>({
   rating:        { type: Number, default: null },
   seasonReminder:{ type: Boolean, default: false },
   reminderDate:  { type: String, default: '' },
-  authors:        { type: [String], default: [] },
-  pageCount:      { type: Number, default: 0 },
   thumbnail:      { type: String, default: '' },
   currentSeason:    { type: Number,  default: null  },
   currentEpisode:   { type: Number,  default: null  },

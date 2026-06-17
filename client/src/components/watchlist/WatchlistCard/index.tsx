@@ -20,20 +20,12 @@ const CATEGORY_ICON: Record<string, string> = {
 	movie: '🎬',
 	series: '📺',
 	anime: '🎌',
-	book: '📚',
 }
 
 const STATUS_LABEL: Record<string, string> = {
 	want: 'ХОЧУ',
 	watching: 'ДИВЛЮСЬ',
 	watched: 'ГЛЯНУВ',
-	dropped: 'КИНУВ',
-}
-
-const STATUS_LABEL_BOOK: Record<string, string> = {
-	want: 'ХОЧУ',
-	watching: 'ЧИТАЮ',
-	watched: 'ПРОЧИТАВ',
 	dropped: 'КИНУВ',
 }
 
@@ -44,10 +36,10 @@ const STATUS_CLASS: Record<string, string> = {
 	dropped: styles.statusDropped,
 }
 
-const getStatusLabel = (item: WatchlistItem) => (item.category === 'book' ? STATUS_LABEL_BOOK : STATUS_LABEL)[item.status] ?? null
+const getStatusLabel = (item: WatchlistItem) => STATUS_LABEL[item.status] ?? null
 
 const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
-	const imgSrc = item.category === 'book' ? (item.thumbnail ?? null) : item.posterPath ? `https://image.tmdb.org/t/p/w342${item.posterPath}` : null
+	const imgSrc = item.posterPath ? `https://image.tmdb.org/t/p/w342${item.posterPath}` : (item.thumbnail ?? null)
 
 	return (
 		<button type="button" className={styles.card} onClick={onClick}>

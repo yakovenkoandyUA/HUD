@@ -34,7 +34,6 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'movie',  label: 'Фільми',  icon: '1F3AC' },
   { id: 'series', label: 'Серіали', icon: '1F4FA' },
   { id: 'anime',  label: 'Аніме',   icon: '1F338' },
-  { id: 'book',   label: 'Книги',   icon: '1F4DA' },
 ]
 
 const STAT_LABELS: Record<string, { short: string }> = {
