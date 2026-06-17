@@ -147,7 +147,10 @@ const Dashboard: React.FC = () => {
           onOpenDay={() => setShowDay(true)}
           onQuestsClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'task' } })}
           onShoppingClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'shopping' } })}
-          onMealsClick={() => navigate('/recipes/planner')}
+          onMealsClick={() => todayMeals.length === 1
+            ? navigate(`/recipes/${todayMeals[0].id}`)
+            : navigate('/recipes/planner')
+          }
           onNotesClick={() => navigate('/notes')}
         />
 

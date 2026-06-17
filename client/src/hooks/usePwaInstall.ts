@@ -51,14 +51,21 @@ export function usePwaInstall(): UsePwaInstall {
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
-  const promptInstall = useCallback(() => {
-    promptRef.current?.prompt()
-  }, [])
-
   const dismiss = useCallback(() => {
     localStorage.setItem(DISMISS_KEY, String(Date.now()))
     setIsDismissedState(true)
   }, [])
+
+  const promptInstall = useCallback(async () => {
+    const prompt = promptRef.current
+    if (!prompt) return
+    await prompt.prompt()
+    await prompt.userChoice
+    // Close banner regardless of outcome — prompt was already shown
+    promptRef.current = null
+    setIsInstallable(false)
+    dismiss()
+  }, [dismiss])
 
   return { isInstallable, isIOS, isDismissed: isDismissedState, promptInstall, dismiss }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import DoodleIllustration from '../../components/ui/DoodleIllustration'
 import FabHint from '../../components/ui/FabHint'
 import AppHeader from '../../components/AppHeader'
@@ -40,6 +40,7 @@ const Sprint: React.FC = () => {
 	const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
 	const { recipes, fetchRecipes } = useRecipesStore()
 	const location = useLocation()
+	const navigate = useNavigate()
 	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
 	const [filterType, setFilterType]     = useState<FilterType>(locationState?.filterType ?? 'task')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
@@ -183,9 +184,9 @@ const Sprint: React.FC = () => {
 								<path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2M5 11v11M21 2v20M21 2a5 5 0 0 0-5 5v4h5" />
 							</svg>
 							{dayMeals.map(r => (
-								<span key={r.id} className={styles.mealChip}>
+								<button key={r.id} type="button" className={styles.mealChip} onClick={() => navigate(`/recipes/${r.id}`)}>
 									{r.title}
-								</span>
+								</button>
 							))}
 						</div>
 					)

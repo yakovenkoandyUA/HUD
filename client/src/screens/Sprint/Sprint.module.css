@@ -1223,4 +1223,7 @@
   letter-spacing: 0.03em;
   color: var(--accent);
   white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s;
 }
+.mealChip:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
