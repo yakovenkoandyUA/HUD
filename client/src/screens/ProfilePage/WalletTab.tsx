@@ -39,7 +39,7 @@ const WalletTab: React.FC = () => {
     connection, loading: bankLoading, syncing,
     fetchStatus, disconnect, sync,
     authPending, authAcceptUrl, authTokenRequestId,
-    initMonoAuth, cancelMonoAuth, pollMonoAuth,
+    cancelMonoAuth, pollMonoAuth,
   } = useBankStore()
 
   // Salary day
