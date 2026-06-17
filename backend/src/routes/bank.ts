@@ -3,6 +3,8 @@ import crypto from 'crypto'
 import { requireAuth } from '../middleware/auth'
 import BankConnection from '../models/BankConnection'
 import Transaction from '../models/Transaction'
+import Category from '../models/Category'
+import { categorize } from '../utils/categorizeTransaction'
 
 const router = Router()
 
@@ -182,19 +184,26 @@ router.post('/sync', requireAuth, async (req: Request, res: Response) => {
       .map(t => t.monoId as string),
   )
 
+  const userCategories = await Category.find({ userId: req.userId, isActive: true })
+
   const toInsert = statements
     .filter(s => s.currencyCode === 980 && s.amount !== 0 && !existingMonoIds.has(s.id))
-    .map(s => ({
-      userId:  req.userId,
-      type:    s.amount < 0 ? 'expense' : 'income',
-      amount:  Math.abs(s.amount) / 100,
-      desc:    s.description || s.counterName || '',
-      title:   '',
-      category: '',
-      date:    isoDate(s.time),
-      monoId:  s.id,
-      source:  'monobank' as const,
-    }))
+    .map(s => {
+      const desc = s.description || s.counterName || ''
+      const match = categorize(desc, userCategories)
+      return {
+        userId:     req.userId,
+        type:       s.amount < 0 ? 'expense' : 'income',
+        amount:     Math.abs(s.amount) / 100,
+        desc,
+        title:      '',
+        category:   match?.name ?? '',
+        categoryId: match?.id   ?? null,
+        date:       isoDate(s.time),
+        monoId:     s.id,
+        source:     'monobank' as const,
+      }
+    })
 
   if (toInsert.length > 0) {
     await Transaction.insertMany(toInsert)
@@ -357,6 +366,7 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
     return parseFloat(raw.replace(/"/g, '').replace(/\s/g, '').replace(',', '.').trim())
   }
 
+  const userCategories = await Category.find({ userId: req.userId, isActive: true })
   const toInsert: object[] = []
 
   for (const line of dataLines) {
@@ -389,16 +399,19 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
     const isoDateStr = `${year}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`
     if (isNaN(new Date(isoDateStr).getTime())) continue
 
+    const match = categorize(rawDesc, userCategories)
+
     toInsert.push({
-      userId:   req.userId,
-      type:     amount < 0 ? 'expense' : 'income',
-      amount:   Math.abs(amount),
-      desc:     rawDesc,
-      title:    '',
-      category: '',
-      date:     isoDateStr,
-      monoId:   null,
-      source:   'csv' as const,
+      userId:     req.userId,
+      type:       amount < 0 ? 'expense' : 'income',
+      amount:     Math.abs(amount),
+      desc:       rawDesc,
+      title:      '',
+      category:   match?.name ?? '',
+      categoryId: match?.id   ?? null,
+      date:       isoDateStr,
+      monoId:     null,
+      source:     'csv' as const,
     })
   }
 
@@ -407,6 +420,37 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
   }
 
   res.json({ imported: toInsert.length })
+})
+
+// ── POST /api/bank/recategorize ─────────────────────────────────────────────
+// Retroactively categorizes all bank/csv transactions with empty category.
+
+router.post('/recategorize', requireAuth, async (req: Request, res: Response) => {
+  const uncategorized = await Transaction.find({
+    userId: req.userId,
+    source: { $in: ['monobank', 'csv'] },
+    $or: [{ category: '' }, { category: { $exists: false } }, { categoryId: null }],
+  })
+
+  if (uncategorized.length === 0) {
+    res.json({ updated: 0, skipped: 0 }); return
+  }
+
+  const userCategories = await Category.find({ userId: req.userId, isActive: true })
+
+  let updated = 0
+  let skipped = 0
+
+  for (const tx of uncategorized) {
+    const match = categorize(tx.desc ?? '', userCategories)
+    if (!match) { skipped++; continue }
+    tx.category   = match.name
+    tx.categoryId = match.id
+    await tx.save()
+    updated++
+  }
+
+  res.json({ updated, skipped })
 })
 
 export default router
