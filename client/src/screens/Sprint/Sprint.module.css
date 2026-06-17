@@ -21,7 +21,6 @@
 .tabBar {
   display: flex;
   border-bottom: 1px solid var(--border);
-  background: var(--bg2);
   margin: 0 -16px;
   flex-shrink: 0;
 }
@@ -46,8 +45,16 @@
   border-bottom-color: var(--gold);
 }
 
-/* ── Status filter (АКТИВНІ / ЗАВЕРШЕНІ) — only under КВЕСТИ tab ── */
+/* ── Status + sort row ── */
 .statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+  min-height: 20px;
+}
+
+.statusLeft {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -72,6 +79,7 @@
   font-size: 10px;
   pointer-events: none;
 }
+
 
 /* FAB */
 .fab {

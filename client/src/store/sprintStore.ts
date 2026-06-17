@@ -88,6 +88,7 @@ interface ApiTask {
   assignedTo?: string[]
   ownerName?: string
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | null
+  createdAt?: string
 }
 
 // ── Repeat helpers ────────────────────────────────────────────────────────────
@@ -278,7 +279,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           tag:       (t.tag as SprintTag) || undefined,
           priority:  (t.priority as TodoPriority) || undefined,
           weekStart: t.weekStart ?? (t.weekNumber ? isoWeekToMonday(t.year ?? 0, t.weekNumber) : undefined),
-          createdAt: now,
+          createdAt: t.createdAt ?? now,
           ...(t.dueDate     && { dueDate:     t.dueDate }),
           ...(t.description && { description: t.description }),
           ...(t.category    && { category:    t.category }),
@@ -323,7 +324,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           title:     t.title,
           done:      t.done,
           type:      (t.type as UnifiedTodo['type']) || 'todo',
-          createdAt: new Date().toISOString(),
+          createdAt: t.createdAt ?? new Date().toISOString(),
           ...(labelObjs.length && { labels: labelObjs }),
           ...(t.dueDate && { dueDate: t.dueDate }),
           deletedAt: (t as unknown as { deletedAt?: string }).deletedAt,

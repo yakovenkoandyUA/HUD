@@ -24,6 +24,18 @@ import styles from './Sprint.module.css'
 
 type FilterType = 'task' | 'shopping'
 type StatusFilter = 'active' | 'done'
+function deadlineUrgency(dueDate: string, todayIso: string): number {
+  const [ty, tm, td] = todayIso.split('-').map(Number)
+  const [dy, dm, dd] = dueDate.split('-').map(Number)
+  const daysLeft = Math.round((Date.UTC(dy, dm - 1, dd) - Date.UTC(ty, tm - 1, td)) / 86400000)
+  if (daysLeft < 0)   return 10000  // overdue
+  if (daysLeft === 0) return 5000   // today
+  if (daysLeft === 1) return 2000   // tomorrow
+  if (daysLeft <= 3)  return 800    // 2–3 days
+  if (daysLeft <= 5)  return 300    // 4–5 days
+  if (daysLeft <= 7)  return 100    // 6–7 days — починає рухатись
+  return 0                          // 8+ days — як без дедлайну
+}
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'low']
 
@@ -233,9 +245,12 @@ const Sprint: React.FC = () => {
 	const dayQuests = [...rawDayQuests].sort((a, b) => {
 		if (a.isPinned && !b.isPinned) return -1
 		if (!a.isPinned && b.isPinned) return 1
+		const ua = a.dueDate ? deadlineUrgency(a.dueDate, todayStr) : 0
+		const ub = b.dueDate ? deadlineUrgency(b.dueDate, todayStr) : 0
+		if (ua !== ub) return ub - ua
 		if (a.ownerName && !b.ownerName) return -1
 		if (!a.ownerName && b.ownerName) return 1
-		return 0
+		return b.createdAt.localeCompare(a.createdAt)
 	})
 
 	useEffect(() => {
@@ -360,22 +375,24 @@ const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
 					))}
 				</div>
 
-				{/* ── Status filter — only under КВЕСТИ tab ── */}
-				{filterType === 'task' && isDayToday && (
-					<div className={styles.statusRow}>
-						{(['active', 'done'] as const).map((status, i) => (
-							<React.Fragment key={status}>
-								{i > 0 && <span className={styles.statusSep}>·</span>}
-								<button
-									className={`${styles.statusBtn} ${filterStatus === status ? styles.statusBtnActive : ''}`}
-									onClick={() => setFilterStatus(status)}
-								>
-									{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
-								</button>
-							</React.Fragment>
-						))}
-					</div>
-				)}
+				{/* ── Status + sort row ── */}
+				<div className={styles.statusRow}>
+					{filterType === 'task' && isDayToday && (
+						<div className={styles.statusLeft}>
+							{(['active', 'done'] as const).map((status, i) => (
+								<React.Fragment key={status}>
+									{i > 0 && <span className={styles.statusSep}>·</span>}
+									<button
+										className={`${styles.statusBtn} ${filterStatus === status ? styles.statusBtnActive : ''}`}
+										onClick={() => setFilterStatus(status)}
+									>
+										{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
+									</button>
+								</React.Fragment>
+							))}
+						</div>
+					)}
+				</div>
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
