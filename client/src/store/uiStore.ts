@@ -11,7 +11,7 @@ export type Theme = 'velvet' | 'japan' | 'cyber' | 'noir' | 'pixel' | 'arctic'
 export type NavStyle = 'classic' | 'pill' | 'hub'
 
 export const DEFAULT_PINNED_SECTIONS = ['/', '/finance', '/sprint', '/watchlist']
-export const NAV_STYLE_MAX_PINNED: Record<NavStyle, number> = { classic: 8, pill: 4, hub: 4 }
+export const NAV_STYLE_MAX_PINNED: Record<NavStyle, number> = { classic: 8, pill: 6, hub: 4 }
 
 interface UiState {
   toasts: Toast[]

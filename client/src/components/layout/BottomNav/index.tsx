@@ -21,12 +21,6 @@ const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; admi
   { id: 'admin',  label: 'Адмін',   adminOnly: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.93 4.93l1.41 1.41M15.66 15.66l1.41 1.41M4.93 17.07l1.41-1.41M15.66 6.34l1.41-1.41"/></svg> },
 ]
 
-const ProfileIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/>
-  </svg>
-)
-
 export interface NavSection {
   to: string
   label: string
@@ -42,7 +36,6 @@ export const ALL_NAV_SECTIONS: NavSection[] = [
   { to: '/recipes',   label: 'Рецепти', Icon: RecipeIcon },
   { to: '/memories',  label: 'Спогади', Icon: MemoriesIcon },
   { to: '/f1',        label: 'F1',      Icon: F1Icon, requiresF1: true },
-  { to: '/profile',   label: 'Профіль', Icon: ProfileIcon },
 ]
 
 // Arc positions for secondary pills (relative to hub button center)

@@ -7,6 +7,7 @@ import { clearApiCaches } from '../../utils/appCache'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { ALL_NAV_SECTIONS } from '../../components/layout/BottomNav'
 import type { Theme, NavStyle } from '../../store/uiStore'
+import { NAV_STYLE_MAX_PINNED } from '../../store/uiStore'
 import styles from './ProfilePage.module.css'
 
 const CameraIcon: React.FC = () => (
@@ -465,12 +466,13 @@ const MeTab: React.FC = () => {
             <p className={styles.navPinTitle}>
               ГОЛОВНЕ МЕНЮ
               <span className={styles.navPinCount}>
-                {pinnedSections.length}/4
+                {pinnedSections.length}/{NAV_STYLE_MAX_PINNED[navStyle]}
               </span>
             </p>
             {ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || (activeProfile?.f1Enabled ?? false)).map(s => {
               const isPinned = pinnedSections.includes(s.to)
-              const canAdd = pinnedSections.length < 4
+              const maxPinned = NAV_STYLE_MAX_PINNED[navStyle]
+              const canAdd = pinnedSections.length < maxPinned
               return (
                 <div key={s.to} className={styles.navPinRow}>
                   <s.Icon className={styles.navPinIcon} />
