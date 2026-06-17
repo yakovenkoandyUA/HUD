@@ -125,6 +125,10 @@ const Sprint: React.FC = () => {
 				return t.dueDate === selectedDay
 			}),
 		]
+	const dayHasAnyItems = isDayToday
+		|| routineItems.some(t => isRoutineDueOnDay(t, selectedDate))
+		|| items.some(t => !isRecurring(t) && t.dueDate === selectedDay)
+
 	const dayQuests = [...rawDayQuests].sort((a: UnifiedTodo, b: UnifiedTodo) => {
 		if (a.isPinned && !b.isPinned) return -1
 		if (!a.isPinned && b.isPinned) return 1
@@ -193,17 +197,19 @@ const Sprint: React.FC = () => {
 				})()}
 
 				{/* ── Tab bar ── */}
-				<div className={styles.tabBar}>
-					{(['task', 'shopping'] as const).map(type => (
-						<button
-							key={type}
-							className={`${styles.tab} ${filterType === type ? styles.tabActive : ''}`}
-							onClick={() => setFilterType(type)}
-						>
-							{type === 'task' ? 'КВЕСТИ' : 'ПОКУПКИ'}
-						</button>
-					))}
-				</div>
+				{dayHasAnyItems && (
+					<div className={styles.tabBar}>
+						{(['task', 'shopping'] as const).map(type => (
+							<button
+								key={type}
+								className={`${styles.tab} ${filterType === type ? styles.tabActive : ''}`}
+								onClick={() => setFilterType(type)}
+							>
+								{type === 'task' ? 'КВЕСТИ' : 'ПОКУПКИ'}
+							</button>
+						))}
+					</div>
+				)}
 
 				{/* ── Status row ── */}
 				<div className={styles.statusRow}>

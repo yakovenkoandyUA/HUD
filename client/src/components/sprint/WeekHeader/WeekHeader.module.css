@@ -318,6 +318,7 @@
   border: 1px solid var(--accent-dim);
 }
 .monthCompactSel:hover { background: var(--accent-dim); }
+.monthCompactSel .monthCompactNum { color: var(--surface); }
 
 .monthCompactNum {
   font-family: var(--font-mono);
