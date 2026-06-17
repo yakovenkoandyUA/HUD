@@ -99,6 +99,7 @@ export const updateNoteSchema = z.object({
 
 export const moodSchema = z.object({
   score: z.number().int().min(1).max(5),
+  note:  z.string().max(500).optional(),
 })
 
 // ── Memories ─────────────────────────────────────────────────────────────────

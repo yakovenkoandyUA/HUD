@@ -1199,8 +1199,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 16px 4px;
-  overflow-x: auto;
   scrollbar-width: none;
   flex-wrap: nowrap;
 }

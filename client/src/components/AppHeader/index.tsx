@@ -3,6 +3,8 @@ import MimirLogo from '../../assets/mimir-logo.svg?react'
 import Modal from '../ui/Modal'
 import ThemePicker from '../layout/ThemePicker'
 import VerificationBanner from '../ui/VerificationBanner'
+import AiChatSheet from '../dashboard/AiChatSheet'
+import MimirIcon from '../ui/MimirIcon'
 import { useProfileStore } from '../../store/profileStore'
 import styles from './AppHeader.module.css'
 
@@ -26,6 +28,7 @@ function formatTime(d: Date): string {
 const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const [now, setNow] = useState(new Date())
   const [showPicker, setShowPicker] = useState(false)
+  const [showChat, setShowChat]     = useState(false)
   const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
 
@@ -58,6 +61,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
           {right}
           <button
             type="button"
+            className={styles.aiBtn}
+            onClick={() => setShowChat(true)}
+            aria-label="AI асистент"
+          >
+            <MimirIcon size={16} />
+          </button>
+          <button
+            type="button"
             className={styles.avatarBtn}
             onClick={() => setShowPicker(true)}
             aria-label="Профіль і налаштування"
@@ -78,6 +89,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
       <Modal isOpen={showPicker} onClose={() => setShowPicker(false)}>
         <ThemePicker onClose={() => setShowPicker(false)} />
       </Modal>
+
+      <AiChatSheet isOpen={showChat} onClose={() => setShowChat(false)} />
     </>
   )
 }

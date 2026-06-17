@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MoodIcon from './MoodIcon'
+import MoodCalendar from '../MoodCalendar'
 import { useMoodStore } from '../../../store/moodStore'
 import { useSprintStore } from '../../../store/sprintStore'
 import { useProfileStore } from '../../../store/profileStore'
 import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import { useModalHistory } from '../../../hooks/useModalHistory'
-import { isRecurring } from '../../../utils/sprint'
+import { isRecurring, isRoutineDueOnDay } from '../../../utils/sprint'
 import type { UnifiedTodo } from '../../../types'
 import styles from './DayOverlay.module.css'
 
@@ -40,8 +41,8 @@ interface WeatherData {
 /**
  * DayOverlay
  * ----------
- * Full-screen overlay "Мій день" — 3 секції рутин (Ранок/День/Вечір),
- * погода, трекер настрою з SVG іконками.
+ * Full-screen overlay "Мій день" — рутини на сьогодні по слотах,
+ * погода, трекер настрою з нотаткою, сімейний настрій, місячний heatmap.
  *
  * Props:
  * @prop {() => void} onClose — закрити overlay
@@ -51,8 +52,8 @@ interface DayOverlayProps {
 }
 
 const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
-  const navigate    = useNavigate()
-  const { fetchLogs, setMood, todayScore } = useMoodStore()
+  const navigate = useNavigate()
+  const { fetchLogs, fetchFamilyMoods, setMood, setNote, todayScore, todayNote, logs, familyMoods } = useMoodStore()
   const { items, fetchItems } = useSprintStore()
   const { activeProfile } = useProfileStore()
 
@@ -62,18 +63,28 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   useModalHistory(onClose, true)
 
   const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [noteValue, setNoteValue] = useState('')
+  const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const today = toIso(new Date())
-  const currentSlot = getCurrentSlot(activeProfile)
-  const currentMood = todayScore()
+  const today        = toIso(new Date())
+  const currentSlot  = getCurrentSlot(activeProfile)
+  const currentMood  = todayScore()
 
-  // Load mood for last 30 days + sprint items
+  // Sync note textarea when logs load
+  useEffect(() => {
+    setNoteValue(todayNote() ?? '')
+  }, [logs]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load mood (30 days) + sprint items + family moods
   useEffect(() => {
     let cancelled = false
     const load = async () => {
       const from = toIso(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
       await fetchLogs(from, today)
-      if (!cancelled) fetchItems()
+      if (!cancelled) {
+        fetchItems()
+        fetchFamilyMoods()
+      }
     }
     load()
     return () => { cancelled = true }
@@ -101,7 +112,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
         const res = await fetch(url, { signal: AbortSignal.timeout(6000) })
         if (!res.ok || cancelled) return
         const data = await res.json() as {
-          current_condition: Array<{ temp_C: string; weatherDesc: Array<{ value: string }>; weatherIconUrl?: unknown }>
+          current_condition: Array<{ temp_C: string; weatherDesc: Array<{ value: string }> }>
         }
         const cc = data.current_condition?.[0]
         if (cc && !cancelled) {
@@ -112,7 +123,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
           })
         }
       } catch {
-        // silent fail — no weather displayed
+        // silent fail
       }
     }
     load()
@@ -130,10 +141,11 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
     return '🌤'
   }
 
-  // Routines split by timeOfDay
-  const routines = items.filter(i => isRecurring(i))
-  const todayStr = toIso(new Date())
-  const isDoneToday = (item: UnifiedTodo) => item.completionLog?.includes(todayStr) ?? false
+  // Routines due today only
+  const todayDate = new Date()
+  todayDate.setHours(0, 0, 0, 0)
+  const routines = items.filter(i => isRecurring(i) && isRoutineDueOnDay(i, todayDate))
+  const isDoneToday = (item: UnifiedTodo) => item.completionLog?.includes(today) ?? false
 
   const slots = {
     morning:   routines.filter(r => r.timeOfDay === 'morning'),
@@ -143,15 +155,22 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   }
 
   const slotConfig = [
-    { key: 'morning'   as const, label: 'Ранок',  emoji: '🌅' },
-    { key: 'afternoon' as const, label: 'День',   emoji: '☀️' },
-    { key: 'evening'   as const, label: 'Вечір',  emoji: '🌙' },
+    { key: 'morning'   as const, label: 'Ранок', emoji: '🌅' },
+    { key: 'afternoon' as const, label: 'День',  emoji: '☀️' },
+    { key: 'evening'   as const, label: 'Вечір', emoji: '🌙' },
   ]
 
   const handleMoodClick = useCallback((score: 1 | 2 | 3 | 4 | 5) => {
     if (currentMood === score) return
     setMood(today, score)
   }, [currentMood, today, setMood])
+
+  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value
+    setNoteValue(val)
+    if (noteTimer.current) clearTimeout(noteTimer.current)
+    noteTimer.current = setTimeout(() => setNote(today, val), 800)
+  }
 
   const handleRoutineClick = (_item: UnifiedTodo) => {
     navigate('/sprint')
@@ -198,7 +217,41 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
                 </button>
               ))}
             </div>
+
+            {currentMood && (
+              <textarea
+                className={styles.moodNote}
+                placeholder="Кілька слів про цей день..."
+                value={noteValue}
+                onChange={handleNoteChange}
+                rows={2}
+              />
+            )}
           </section>
+
+          {/* ── Family moods ── */}
+          {familyMoods.length > 0 && (
+            <section className={styles.section}>
+              <p className={styles.sectionLabel}>НАСТРІЙ СІМ'Ї</p>
+              <div className={styles.familyMoodList}>
+                {familyMoods.map(fm => (
+                  <div key={fm.userId} className={styles.familyMoodRow}>
+                    {fm.avatarUrl ? (
+                      <img src={fm.avatarUrl} className={styles.familyAvatar} alt={fm.name} />
+                    ) : (
+                      <span className={styles.familyAvatarInitial}>{fm.name[0]?.toUpperCase()}</span>
+                    )}
+                    <div className={styles.familyMoodInfo}>
+                      <span className={styles.familyName}>{fm.name}</span>
+                      {fm.note && <span className={styles.familyNote}>{fm.note}</span>}
+                    </div>
+                    <MoodIcon score={fm.score} active={false} size={28} />
+                    <span className={styles.familyMoodLabel}>{MOOD_LABELS[fm.score]}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* ── Routines by slot ── */}
           {slotConfig.map(({ key, label, emoji }) => {
@@ -220,11 +273,11 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
                       onClick={() => handleRoutineClick(item)}
                     >
                       <span className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}>
-                        {isDoneToday(item) ? (
+                        {isDoneToday(item) && (
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
-                        ) : null}
+                        )}
                       </span>
                       <span className={styles.routineTitle}>{item.title}</span>
                     </button>
@@ -234,10 +287,9 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
             )
           })}
 
-          {/* Unset routines */}
           {slots.unset.length > 0 && (
             <section className={styles.section}>
-              <p className={styles.sectionLabel}>РЕШТА РУТИН</p>
+              <p className={styles.sectionLabel}>РУТИНИ БЕЗ СЛОТУ</p>
               <div className={styles.routineList}>
                 {slots.unset.map(item => (
                   <button
@@ -261,8 +313,13 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
           )}
 
           {routines.length === 0 && (
-            <p className={styles.emptyHint}>Немає рутин. Додай в Sprint → задача з повторенням.</p>
+            <p className={styles.emptyHint}>Немає рутин на сьогодні.</p>
           )}
+
+          {/* ── Mood calendar ── */}
+          <section className={`${styles.section} ${styles.sectionCalendar}`}>
+            <MoodCalendar logs={logs} />
+          </section>
         </div>
       </div>
     </div>

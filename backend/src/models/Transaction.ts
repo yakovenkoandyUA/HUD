@@ -10,6 +10,8 @@ export interface ITransaction extends Document {
   recurringId?: string | null
   date: string
   userId: string
+  monoId?: string | null
+  source?: 'manual' | 'monobank' | 'csv'
 }
 
 const schema = new Schema<ITransaction>({
@@ -22,6 +24,8 @@ const schema = new Schema<ITransaction>({
   recurringId: { type: String, default: null },
   date:        { type: String, required: true },
   userId:      { type: String, required: true, index: true },
+  monoId:      { type: String, default: null },
+  source:      { type: String, enum: ['manual', 'monobank', 'csv'], default: 'manual' },
 }, { timestamps: true })
 
 schema.index({ userId: 1, date: -1 })

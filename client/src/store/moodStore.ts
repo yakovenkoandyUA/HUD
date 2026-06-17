@@ -2,18 +2,31 @@ import { create } from 'zustand'
 import { authFetch } from '../services/api'
 
 export interface MoodLog {
-  _id:    string
-  date:   string  // YYYY-MM-DD
-  score:  1 | 2 | 3 | 4 | 5
+  _id:   string
+  date:  string  // YYYY-MM-DD
+  score: 1 | 2 | 3 | 4 | 5
+  note?: string
+}
+
+export interface FamilyMoodEntry {
+  userId:    string
+  name:      string
+  avatarUrl: string | null
+  score:     1 | 2 | 3 | 4 | 5
+  note:      string | null
 }
 
 interface MoodStore {
-  logs:        MoodLog[]
-  loading:     boolean
-  fetchLogs:   (from?: string, to?: string) => Promise<void>
-  setMood:     (date: string, score: 1 | 2 | 3 | 4 | 5) => Promise<void>
-  deleteMood:  (date: string) => Promise<void>
-  todayScore:  () => (1 | 2 | 3 | 4 | 5) | null
+  logs:             MoodLog[]
+  loading:          boolean
+  familyMoods:      FamilyMoodEntry[]
+  fetchLogs:        (from?: string, to?: string) => Promise<void>
+  fetchFamilyMoods: () => Promise<void>
+  setMood:          (date: string, score: 1 | 2 | 3 | 4 | 5) => Promise<void>
+  setNote:          (date: string, note: string) => Promise<void>
+  deleteMood:       (date: string) => Promise<void>
+  todayScore:       () => (1 | 2 | 3 | 4 | 5) | null
+  todayNote:        () => string | null
 }
 
 function toIso(d: Date): string {
@@ -21,8 +34,9 @@ function toIso(d: Date): string {
 }
 
 export const useMoodStore = create<MoodStore>((set, get) => ({
-  logs:    [],
-  loading: false,
+  logs:        [],
+  loading:     false,
+  familyMoods: [],
 
   fetchLogs: async (from, to) => {
     set({ loading: true })
@@ -39,8 +53,14 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
     }
   },
 
+  fetchFamilyMoods: async () => {
+    const res = await authFetch('/api/mood/family/today')
+    if (!res.ok) return
+    const data: FamilyMoodEntry[] = await res.json()
+    set({ familyMoods: data })
+  },
+
   setMood: async (date, score) => {
-    // optimistic
     set(s => ({
       logs: s.logs.some(l => l.date === date)
         ? s.logs.map(l => l.date === date ? { ...l, score } : l)
@@ -57,8 +77,22 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
         set(s => ({ logs: s.logs.map(l => l.date === date ? updated : l) }))
       }
     } catch {
-      // rollback
       get().fetchLogs()
+    }
+  },
+
+  setNote: async (date, note) => {
+    set(s => ({
+      logs: s.logs.map(l => l.date === date ? { ...l, note } : l),
+    }))
+    try {
+      await authFetch(`/api/mood/${date}/note`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note }),
+      })
+    } catch {
+      // silent — note is non-critical
     }
   },
 
@@ -70,5 +104,10 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
   todayScore: () => {
     const today = toIso(new Date())
     return get().logs.find(l => l.date === today)?.score ?? null
+  },
+
+  todayNote: () => {
+    const today = toIso(new Date())
+    return get().logs.find(l => l.date === today)?.note ?? null
   },
 }))

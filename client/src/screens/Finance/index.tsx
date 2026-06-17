@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import AppHeader from '../../components/AppHeader'
 import BalanceHero from '../../components/finance/BalanceHero'
 import GoalsList from '../../components/finance/GoalsList'
@@ -13,6 +13,7 @@ import Modal from '../../components/ui/Modal'
 import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
 import { useProfileStore } from '../../store/profileStore'
+import { useBankStore } from '../../store/bankStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart, fmt } from '../../utils/finance'
 import { getToken } from '../../services/api'
 import styles from './Finance.module.css'
@@ -33,14 +34,57 @@ const Finance: React.FC = () => {
   const { balance, transactions, addTopup, addExpense, deleteTransaction, fetchTransactions } = useFinanceStore()
   const { showToast } = useUiStore()
   const salaryDay = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
-  const [showTopup, setShowTopup] = useState(false)
+  const { connection, syncing, importing, fetchStatus, sync, importCsv } = useBankStore()
+
+  const [showTopup, setShowTopup]     = useState(false)
   const [showExpense, setShowExpense] = useState(false)
+  const [showCsvModal, setShowCsvModal] = useState(false)
+
+  const csvInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!getToken()) return
     fetchTransactions()
+    fetchStatus()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleSync = useCallback(async () => {
+    try {
+      const { imported } = await sync()
+      if (imported > 0) {
+        fetchTransactions()
+        showToast(`Імпортовано ${imported} транзакцій`, 'success')
+      } else {
+        showToast('Нових транзакцій немає', 'info')
+      }
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Помилка синхронізації', 'error')
+    }
+  }, [sync, fetchTransactions, showToast])
+
+  const handleCsvFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const text = await file.text()
+    e.target.value = ''
+    try {
+      const { imported } = await importCsv(text)
+      fetchTransactions()
+      setShowCsvModal(false)
+      showToast(imported > 0 ? `Імпортовано ${imported} транзакцій` : 'Нових транзакцій не знайдено', imported > 0 ? 'success' : 'info')
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Помилка імпорту', 'error')
+    }
+  }, [importCsv, fetchTransactions, showToast])
+
+  const formatLastSync = (iso: string | null) => {
+    if (!iso) return null
+    const d = new Date(iso)
+    const isToday = d.toDateString() === new Date().toDateString()
+    const time = d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+    return isToday ? time : d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' }) + ' ' + time
+  }
 
   const daysLeft = getDaysLeftInMonth(salaryDay)
   const daysElapsed = getDaysElapsed(salaryDay)
@@ -144,6 +188,42 @@ const Finance: React.FC = () => {
 				<RecurringPayments />
 
 				<div className={styles.section}>
+					{connection && (
+						<div className={styles.bankSyncBar}>
+							<span className={styles.bankSyncLabel}>
+								<span className={styles.bankSyncDot} />
+								Monobank
+								{connection.lastSync && (
+									<span className={styles.bankSyncTime}> · {formatLastSync(connection.lastSync)}</span>
+								)}
+							</span>
+							<div className={styles.bankSyncActions}>
+								<button
+									type="button"
+									className={styles.bankSyncBtn}
+									onClick={handleSync}
+									disabled={syncing}
+								>
+									{syncing ? '...' : 'Sync'}
+								</button>
+								<button
+									type="button"
+									className={styles.bankCsvBtn}
+									onClick={() => setShowCsvModal(true)}
+								>
+									CSV
+								</button>
+							</div>
+						</div>
+					)}
+					{!connection && (
+						<div className={styles.bankSyncBar}>
+							<span className={styles.bankSyncLabel} style={{ color: 'var(--text3)' }}>Банк не підключено</span>
+							<button type="button" className={styles.bankCsvBtn} onClick={() => setShowCsvModal(true)}>
+								Імпорт CSV
+							</button>
+						</div>
+					)}
 					<TransactionList transactions={transactions} onDelete={handleDelete} />
 				</div>
 			</div>
@@ -154,6 +234,33 @@ const Finance: React.FC = () => {
 
 			<Modal isOpen={showExpense} onClose={() => setShowExpense(false)} title="Витрата" draggable>
 				<ExpenseForm onExpense={handleExpense} />
+			</Modal>
+
+			<Modal isOpen={showCsvModal} onClose={() => setShowCsvModal(false)} title="Імпорт виписки" draggable>
+				<div className={styles.csvModalBody}>
+					<p className={styles.csvModalHint}>
+						Завантаж CSV-виписку з Monobank (Виписка → Поділитись → CSV).
+					</p>
+					<input
+						ref={csvInputRef}
+						type="file"
+						accept=".csv,.txt"
+						className={styles.csvFileInput}
+						onChange={handleCsvFile}
+						disabled={importing}
+					/>
+					<label
+						className={`${styles.csvFileLabel} ${importing ? styles.csvFileLabelDisabled : ''}`}
+						onClick={() => csvInputRef.current?.click()}
+					>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+							<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+							<polyline points="17 8 12 3 7 8"/>
+							<line x1="12" y1="3" x2="12" y2="15"/>
+						</svg>
+						{importing ? 'Імпортую...' : 'Обрати файл'}
+					</label>
+				</div>
 			</Modal>
 		</div>
 	)

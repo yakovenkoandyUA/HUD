@@ -85,26 +85,31 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
     return () => el.removeEventListener('focusin', onFocusIn)
   }, [mounted])
 
-  // Drag-to-dismiss — imperatively on the handle bar, passive:false so we can preventDefault
+  // Drag-to-dismiss — attached to the whole modal panel (not just the handle bar)
+  // Guard: if modal is scrolled down, cancel the drag so inner scroll works normally
   useEffect(() => {
     if (!draggable || !mounted) return
-    const handle = handleRef.current
-    if (!handle) return
+    const modal = modalRef.current
+    if (!modal) return
 
     const onStart = (e: TouchEvent) => {
+      if (modal.scrollTop > 0) return
       drag.current = { startY: e.touches[0].clientY, startTime: Date.now(), active: true }
     }
 
     const onMove = (e: TouchEvent) => {
       if (!drag.current.active) return
-      const deltaY = e.touches[0].clientY - drag.current.startY
-      // Clamp to 0 — brief upward jitter should NOT cancel the drag
-      const delta = Math.max(0, deltaY)
-      if (delta > 0) e.preventDefault()
-      if (modalRef.current) {
-        modalRef.current.style.transform  = `translateY(${delta}px)`
-        modalRef.current.style.transition = 'none'
+      if (modal.scrollTop > 0) {
+        drag.current.active = false
+        modal.style.transform  = ''
+        modal.style.transition = ''
+        return
       }
+      const deltaY = e.touches[0].clientY - drag.current.startY
+      const delta  = Math.max(0, deltaY)
+      if (delta > 0) e.preventDefault()
+      modal.style.transform  = `translateY(${delta}px)`
+      modal.style.transition = 'none'
       if (overlayRef.current) {
         overlayRef.current.style.opacity    = String(Math.max(0, 1 - delta / 400))
         overlayRef.current.style.transition = 'none'
@@ -119,20 +124,16 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
 
       if (deltaY >= 80 || (deltaY > 60 && velocity > 0.5)) {
         dragClosing.current = true
-        if (modalRef.current) {
-          modalRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
-          modalRef.current.style.transform  = 'translateY(100%)'
-        }
+        modal.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
+        modal.style.transform  = 'translateY(100%)'
         if (overlayRef.current) {
           overlayRef.current.style.transition = 'opacity 0.3s ease'
           overlayRef.current.style.opacity    = '0'
         }
         setTimeout(() => onCloseRef.current(), 300)
       } else {
-        if (modalRef.current) {
-          modalRef.current.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
-          modalRef.current.style.transform  = 'translateY(0)'
-        }
+        modal.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
+        modal.style.transform  = 'translateY(0)'
         if (overlayRef.current) {
           overlayRef.current.style.transition = 'opacity 0.3s ease'
           overlayRef.current.style.opacity    = '1'
@@ -140,13 +141,13 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
       }
     }
 
-    handle.addEventListener('touchstart', onStart, { passive: true })
-    handle.addEventListener('touchmove',  onMove,  { passive: false })
-    handle.addEventListener('touchend',   onEnd,   { passive: true })
+    modal.addEventListener('touchstart', onStart, { passive: true })
+    modal.addEventListener('touchmove',  onMove,  { passive: false })
+    modal.addEventListener('touchend',   onEnd,   { passive: true })
     return () => {
-      handle.removeEventListener('touchstart', onStart)
-      handle.removeEventListener('touchmove',  onMove)
-      handle.removeEventListener('touchend',   onEnd)
+      modal.removeEventListener('touchstart', onStart)
+      modal.removeEventListener('touchmove',  onMove)
+      modal.removeEventListener('touchend',   onEnd)
     }
   }, [draggable, mounted])
 

@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
 import { useCategoryStore } from '../../store/categoryStore'
+import { useBankStore } from '../../store/bankStore'
 import { authFetch } from '../../services/api'
 import Modal from '../../components/ui/Modal'
 import type { Category } from '../../types'
@@ -28,12 +29,13 @@ const XSmallIcon: React.FC = () => (
 /**
  * WalletTab
  * ---------
- * Вкладка "Гаманець" — день зарплати та управління категоріями витрат.
+ * Вкладка "Гаманець" — рахунки банків, день зарплати, категорії витрат.
  */
 const WalletTab: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const { categories, fetchCategories, addCategory, removeCategory, toggleActive } = useCategoryStore()
+  const { connection, loading: bankLoading, syncing, fetchStatus, connect, disconnect, sync } = useBankStore()
 
   // Salary day
   const [salaryDay, setSalaryDay]   = useState(activeProfile?.salaryDay ?? 1)
@@ -55,8 +57,43 @@ const WalletTab: React.FC = () => {
   const [savingSub, setSavingSub]       = useState(false)
   const subAddRef = useRef<HTMLInputElement>(null)
 
+  // Bank connection state
+  const [connectOpen, setConnectOpen] = useState(false)
+  const [tokenInput, setTokenInput]   = useState('')
+  const [connecting, setConnecting]   = useState(false)
+
+  useEffect(() => { fetchStatus() }, [fetchStatus])
   useEffect(() => { fetchCategories() }, [fetchCategories])
   useEffect(() => { if (addingCat) newCatRef.current?.focus() }, [addingCat])
+
+  const handleConnect = useCallback(async () => {
+    if (!tokenInput.trim() || connecting) return
+    setConnecting(true)
+    try {
+      await connect(tokenInput.trim())
+      setTokenInput('')
+      setConnectOpen(false)
+      showToast('Monobank підключено', 'success')
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Помилка підключення', 'error')
+    } finally {
+      setConnecting(false)
+    }
+  }, [tokenInput, connecting, connect, showToast])
+
+  const handleDisconnect = useCallback(async () => {
+    await disconnect()
+    showToast('Рахунок відключено', 'success')
+  }, [disconnect, showToast])
+
+  const handleSync = useCallback(async () => {
+    try {
+      const { imported } = await sync()
+      showToast(imported > 0 ? `Імпортовано ${imported} транзакцій` : 'Нових транзакцій немає', 'success')
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Помилка синхронізації', 'error')
+    }
+  }, [sync, showToast])
 
   const handleSalaryDayChange = (val: number) => {
     const clamped = Math.min(31, Math.max(1, val))
@@ -167,8 +204,92 @@ const WalletTab: React.FC = () => {
   const migrationTargets = topLevelCats.filter(c => c.isActive && c._id !== migrateFrom?._id)
   const subCatsOfModal   = subModalCat ? categories.filter(c => c.parentId === subModalCat._id) : []
 
+  const formatLastSync = (iso: string | null) => {
+    if (!iso) return null
+    const d = new Date(iso)
+    const today = new Date()
+    const isToday = d.toDateString() === today.toDateString()
+    const time = d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+    return isToday ? `сьогодні ${time}` : d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' }) + ` ${time}`
+  }
+
   return (
     <div className={styles.tabContent}>
+
+      {/* ── Bank accounts ── */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>РАХУНКИ</span>
+        </div>
+
+        {bankLoading ? (
+          <p className={styles.sectionHint}>Завантаження...</p>
+        ) : connection ? (
+          <div className={styles.bankCard}>
+            <div className={styles.bankCardLeft}>
+              <div className={styles.bankCardDot} />
+              <div>
+                <span className={styles.bankCardName}>Monobank</span>
+                <span className={styles.bankCardSub}>{connection.accountName}</span>
+                {connection.lastSync && (
+                  <span className={styles.bankCardSync}>Sync: {formatLastSync(connection.lastSync)}</span>
+                )}
+              </div>
+            </div>
+            <div className={styles.bankCardActions}>
+              <button
+                type="button"
+                className={styles.bankSyncBtn}
+                onClick={handleSync}
+                disabled={syncing}
+              >
+                {syncing ? '...' : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                  </svg>
+                )}
+              </button>
+              <button type="button" className={styles.bankDisconnectBtn} onClick={handleDisconnect}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        ) : (
+          connectOpen ? (
+            <div className={styles.bankConnectForm}>
+              <p className={styles.bankConnectHint}>
+                Токен: Monobank → Налаштування → Інше → API
+              </p>
+              <div className={styles.bankConnectRow}>
+                <input
+                  type="text"
+                  className={styles.bankTokenInput}
+                  placeholder="u_xxxxxxxxxxxxxxxxxxxx"
+                  value={tokenInput}
+                  onChange={e => setTokenInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleConnect() }}
+                  disabled={connecting}
+                  autoFocus
+                />
+                <button type="button" className={styles.bankConnectBtn} onClick={handleConnect} disabled={connecting || !tokenInput.trim()}>
+                  {connecting ? '...' : <CheckIcon />}
+                </button>
+                <button type="button" className={styles.bankCancelBtn} onClick={() => { setConnectOpen(false); setTokenInput('') }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className={styles.bankAddBtn} onClick={() => setConnectOpen(true)}>
+              <PlusIcon /><span>Підключити Monobank</span>
+            </button>
+          )
+        )}
+      </section>
+
       {/* ── Salary day ── */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>

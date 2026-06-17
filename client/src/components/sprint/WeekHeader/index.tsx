@@ -206,192 +206,198 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
   const todayTotal = todayRoutines.length
 
   return (
-    <div
-      ref={headerRef}
-      className={`${styles.header} ${hideTitle ? styles.headerCompact : ''}`}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
-      {!hideTitle && (
-        <div className={styles.top}>
-          <div className={styles.topLeft}>
-            <span className={styles.label}>Тиждень</span>
-            {isCurrentWeek === false && weekStart < new Date().toISOString().slice(0, 10) && (
-              <span className={styles.pastBadge}>архів</span>
-            )}
+		<div ref={headerRef} className={`${styles.header} ${hideTitle ? styles.headerCompact : ''}`} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+			{!hideTitle && (
+				<div className={styles.top}>
+					<div className={styles.topLeft}>
+						<span className={styles.label}>Тиждень</span>
+						{isCurrentWeek === false && weekStart < new Date().toISOString().slice(0, 10) && <span className={styles.pastBadge}>архів</span>}
+					</div>
+					<div className={styles.topRight}>
+						<span className={styles.range}>
+							{fmt(mon)} — {fmt(sun)}
+						</span>
+
+						{onToggleCalendarMode && (
+							<button
+								type="button"
+								className={`${styles.calModeBtn} ${calendarMode === 'month' ? styles.calModeBtnActive : ''}`}
+								onClick={onToggleCalendarMode}
+								aria-label={calendarMode === 'month' ? 'Вигляд тижня' : 'Вигляд місяця'}
+							>
+								{calendarMode === 'month' ? (
+									<svg width="13" height="11" viewBox="0 0 13 11" fill="none">
+										<line x1="1" y1="1.5" x2="12" y2="1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+										<line x1="1" y1="5.5" x2="12" y2="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+										<line x1="1" y1="9.5" x2="12" y2="9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+									</svg>
+								) : (
+									<svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+										<rect x="1" y="3" width="11" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+										<line x1="1" y1="6" x2="12" y2="6" stroke="currentColor" strokeWidth="1.1" />
+										<line x1="4.5" y1="6" x2="4.5" y2="12" stroke="currentColor" strokeWidth="1.1" />
+										<line x1="8.5" y1="6" x2="8.5" y2="12" stroke="currentColor" strokeWidth="1.1" />
+										<line x1="4" y1="1.5" x2="4" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+										<line x1="9" y1="1.5" x2="9" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+									</svg>
+								)}
+							</button>
+						)}
+						{onExpand && (
+							<button type="button" className={styles.expandBtn} onClick={onExpand} aria-label="Розгорнути тиждень">
+								<svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+									<path d="M8 1h4v4M5 12H1V8M1.5 1.5l4 4M11.5 11.5l-4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+							</button>
+						)}
+					</div>
+				</div>
+			)}
+
+			<div className={`${styles.calendarArea} ${calendarMode === 'month' ? styles.calAreaMonth : styles.calAreaWeek}`}>
+				<div key={calendarMode} className={styles.calSlideContent}>
+					{calendarMode === 'month' &&
+						(() => {
+							const grid = getMonthGrid(vmYear, vmMonth)
+							const prevMonth = () => {
+								if (vmMonth === 0) {
+									setVmYear(y => y - 1)
+									setVmMonth(11)
+								} else setVmMonth(m => m - 1)
+							}
+							const nextMonthF = () => {
+								if (vmMonth === 11) {
+									setVmYear(y => y + 1)
+									setVmMonth(0)
+								} else setVmMonth(m => m + 1)
+							}
+							return (
+								<div className={styles.monthCompact}>
+									<div className={styles.monthCompactNav}>
+										<button type="button" className={styles.monthCompactNavBtn} onClick={prevMonth} aria-label="Попередній місяць">
+											<svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+												<path d="M5 1.5L2.5 4 5 6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+											</svg>
+										</button>
+										<span className={styles.monthCompactNavLabel}>
+											{MONTHS_SHORT[vmMonth]} {vmYear}
+										</span>
+										<button type="button" className={styles.monthCompactNavBtn} onClick={nextMonthF} aria-label="Наступний місяць">
+											<svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+												<path d="M3 1.5L5.5 4 3 6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+											</svg>
+										</button>
+									</div>
+									<div className={styles.monthCompactGrid}>
+										{DAY_LABELS.map(l => (
+											<span key={l} className={styles.monthCompactDayLabel}>
+												{l}
+											</span>
+										))}
+										{grid.map((day, i) => {
+											const dt = new Date(day)
+											dt.setHours(0, 0, 0, 0)
+											const iso = toIso(dt)
+											const isCurMonth = day.getMonth() === vmMonth
+											const isToday = toIso(dt) === toIso(today)
+											const isSel = iso === selectedDay && !isToday
+											const dotStatus = getRoutineDotStatus(dt, routineItems, today)
+											const numClass =
+												!isToday && !isSel
+													? dotStatus === 'done'
+														? styles.monthCompactNumDone
+														: dotStatus === 'pending'
+															? styles.monthCompactNumPending
+															: dotStatus === 'overdue'
+																? styles.monthCompactNumOverdue
+																: ''
+													: ''
+											return (
+												<button
+													key={i}
+													type="button"
+													className={`${styles.monthCompactCell} ${!isCurMonth ? styles.monthCompactOther : ''} ${isToday ? styles.monthCompactToday : ''} ${isSel ? styles.monthCompactSel : ''}`}
+													onClick={() => onDaySelect?.(iso)}
+												>
+													<span className={`${styles.monthCompactNum} ${numClass}`}>{day.getDate()}</span>
+													{dotStatus !== 'none' && (
+														<span className={`${styles.monthCompactDot} ${dotStatus === 'done' ? styles.dotDone : dotStatus === 'overdue' ? styles.dotOverdue : styles.dotPending}`} />
+													)}
+												</button>
+											)
+										})}
+									</div>
+								</div>
+							)
+						})()}
+
+					{calendarMode === 'week' && (
+						<div className={styles.weekRowWrap}>
+							<div ref={weekRowRef} key={weekStart} className={`${styles.weekRow} ${slideDirRef.current}`}>
+								{days.map((day, i) => {
+									const dayTime = new Date(day)
+									dayTime.setHours(0, 0, 0, 0)
+
+									const isToday = dayTime.getTime() === today.getTime()
+									const isPast = dayTime.getTime() < today.getTime()
+									const isOverflow = day.getMonth() !== weekMonth
+									const isDim = (isPast || isOverflow) && !isToday
+									const dayIso = toIso(dayTime)
+
+									const isSelected = dayIso === selectedDay && !isToday
+									const dotStatus = getRoutineDotStatus(dayTime, routineItems, today)
+
+									const captured = dayTime
+									const lpStart = (e?: React.TouchEvent) => {
+										if (!onLongPress) return
+										if (e) e.preventDefault()
+										clearTimeout(longPressTimer.current)
+										longPressTimer.current = setTimeout(() => onLongPress(captured), 500)
+									}
+									const lpStop = () => clearTimeout(longPressTimer.current)
+
+									return (
+										<div
+											key={i}
+											className={`${styles.dayCell} ${isSelected ? styles.dayCellSelected : ''} ${onDaySelect || onLongPress ? styles.dayCellClickable : ''}`}
+											onClick={() => onDaySelect?.(dayIso)}
+											onMouseDown={() => lpStart()}
+											onMouseUp={lpStop}
+											onMouseLeave={lpStop}
+											onTouchStart={lpStart}
+											onTouchEnd={lpStop}
+										>
+											<span className={`${styles.dayName} ${isToday ? styles.dayNameToday : isSelected ? styles.dayNameSelected : isDim ? styles.dayNameDim : ''}`}>{DAY_LABELS[i]}</span>
+											<span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isDim ? styles.dayNumberDim : ''}`}>{day.getDate()}</span>
+											{routineItems.length > 0 && (
+												<div className={styles.dotWrap}>
+													{dotStatus !== 'none' && <span className={`${styles.dot} ${dotStatus === 'done' ? styles.dotDone : dotStatus === 'overdue' ? styles.dotOverdue : styles.dotPending}`} />}
+												</div>
+											)}
+										</div>
+									)
+								})}
+							</div>
+						</div>
+					)}
+        <div className={styles.routinesBadgeWrap}>
+
+					{onExpand && todayTotal > 0 && (
+            <button type="button" className={`${styles.routinesBadge} ${todayDone === todayTotal ? styles.routinesBadgeDone : ''}`} onClick={onExpand} aria-label="Рутини">
+							<svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+								<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
+								<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+							</svg>
+							{todayDone}/{todayTotal}
+						</button>
+					)}
           </div>
-          <div className={styles.topRight}>
-            <span className={styles.range}>{fmt(mon)} — {fmt(sun)}</span>
-            {onExpand && todayTotal > 0 && (
-              <button
-                type="button"
-                className={`${styles.routinesBadge} ${todayDone === todayTotal ? styles.routinesBadgeDone : ''}`}
-                onClick={onExpand}
-                aria-label="Рутини"
-              >
-                <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3"/>
-                  <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                </svg>
-                {todayDone}/{todayTotal}
-              </button>
-            )}
-            {onToggleCalendarMode && (
-              <button
-                type="button"
-                className={`${styles.calModeBtn} ${calendarMode === 'month' ? styles.calModeBtnActive : ''}`}
-                onClick={onToggleCalendarMode}
-                aria-label={calendarMode === 'month' ? 'Вигляд тижня' : 'Вигляд місяця'}
-              >
-                {calendarMode === 'month' ? (
-                  <svg width="13" height="11" viewBox="0 0 13 11" fill="none">
-                    <line x1="1" y1="1.5" x2="12" y2="1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <line x1="1" y1="5.5" x2="12" y2="5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <line x1="1" y1="9.5" x2="12" y2="9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                ) : (
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <rect x="1" y="3" width="11" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
-                    <line x1="1" y1="6" x2="12" y2="6" stroke="currentColor" strokeWidth="1.1"/>
-                    <line x1="4.5" y1="6" x2="4.5" y2="12" stroke="currentColor" strokeWidth="1.1"/>
-                    <line x1="8.5" y1="6" x2="8.5" y2="12" stroke="currentColor" strokeWidth="1.1"/>
-                    <line x1="4" y1="1.5" x2="4" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                    <line x1="9" y1="1.5" x2="9" y2="4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                  </svg>
-                )}
-              </button>
-            )}
-            {onExpand && (
-              <button
-                type="button"
-                className={styles.expandBtn}
-                onClick={onExpand}
-                aria-label="Розгорнути тиждень"
-              >
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M8 1h4v4M5 12H1V8M1.5 1.5l4 4M11.5 11.5l-4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className={`${styles.calendarArea} ${calendarMode === 'month' ? styles.calAreaMonth : styles.calAreaWeek}`}>
-      <div key={calendarMode} className={styles.calSlideContent}>
-
-      {calendarMode === 'month' && (() => {
-        const grid       = getMonthGrid(vmYear, vmMonth)
-        const prevMonth  = () => { if (vmMonth === 0) { setVmYear(y => y - 1); setVmMonth(11) } else setVmMonth(m => m - 1) }
-        const nextMonthF = () => { if (vmMonth === 11) { setVmYear(y => y + 1); setVmMonth(0) } else setVmMonth(m => m + 1) }
-        return (
-          <div className={styles.monthCompact}>
-            <div className={styles.monthCompactNav}>
-              <button type="button" className={styles.monthCompactNavBtn} onClick={prevMonth} aria-label="Попередній місяць">
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M5 1.5L2.5 4 5 6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              <span className={styles.monthCompactNavLabel}>{MONTHS_SHORT[vmMonth]} {vmYear}</span>
-              <button type="button" className={styles.monthCompactNavBtn} onClick={nextMonthF} aria-label="Наступний місяць">
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M3 1.5L5.5 4 3 6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-            </div>
-            <div className={styles.monthCompactGrid}>
-              {DAY_LABELS.map(l => <span key={l} className={styles.monthCompactDayLabel}>{l}</span>)}
-              {grid.map((day, i) => {
-                const dt         = new Date(day); dt.setHours(0, 0, 0, 0)
-                const iso        = toIso(dt)
-                const isCurMonth = day.getMonth() === vmMonth
-                const isToday    = toIso(dt) === toIso(today)
-                const isSel      = iso === selectedDay && !isToday
-                const dotStatus  = getRoutineDotStatus(dt, routineItems, today)
-                const numClass   = !isToday && !isSel ? (
-                  dotStatus === 'done'    ? styles.monthCompactNumDone    :
-                  dotStatus === 'pending' ? styles.monthCompactNumPending :
-                  dotStatus === 'overdue' ? styles.monthCompactNumOverdue : ''
-                ) : ''
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`${styles.monthCompactCell} ${!isCurMonth ? styles.monthCompactOther : ''} ${isToday ? styles.monthCompactToday : ''} ${isSel ? styles.monthCompactSel : ''}`}
-                    onClick={() => onDaySelect?.(iso)}
-                  >
-                    <span className={`${styles.monthCompactNum} ${numClass}`}>{day.getDate()}</span>
-                    {dotStatus !== 'none' && (
-                      <span className={`${styles.monthCompactDot} ${dotStatus === 'done' ? styles.dotDone : dotStatus === 'overdue' ? styles.dotOverdue : styles.dotPending}`} />
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })()}
-
-      {calendarMode === 'week' && (
-        <div className={styles.weekRowWrap}>
-          <div ref={weekRowRef} key={weekStart} className={`${styles.weekRow} ${slideDirRef.current}`}>
-            {days.map((day, i) => {
-              const dayTime = new Date(day)
-              dayTime.setHours(0, 0, 0, 0)
-
-              const isToday    = dayTime.getTime() === today.getTime()
-              const isPast     = dayTime.getTime() < today.getTime()
-              const isOverflow = day.getMonth() !== weekMonth
-              const isDim      = (isPast || isOverflow) && !isToday
-              const dayIso     = toIso(dayTime)
-
-              const isSelected = dayIso === selectedDay && !isToday
-              const dotStatus  = getRoutineDotStatus(dayTime, routineItems, today)
-
-              const captured = dayTime
-              const lpStart = (e?: React.TouchEvent) => {
-                if (!onLongPress) return
-                if (e) e.preventDefault()
-                clearTimeout(longPressTimer.current)
-                longPressTimer.current = setTimeout(() => onLongPress(captured), 500)
-              }
-              const lpStop = () => clearTimeout(longPressTimer.current)
-
-              return (
-                <div
-                  key={i}
-                  className={`${styles.dayCell} ${isSelected ? styles.dayCellSelected : ''} ${(onDaySelect || onLongPress) ? styles.dayCellClickable : ''}`}
-                  onClick={() => onDaySelect?.(dayIso)}
-                  onMouseDown={() => lpStart()}
-                  onMouseUp={lpStop}
-                  onMouseLeave={lpStop}
-                  onTouchStart={lpStart}
-                  onTouchEnd={lpStop}
-                >
-                  <span className={`${styles.dayName} ${isToday ? styles.dayNameToday : isSelected ? styles.dayNameSelected : isDim ? styles.dayNameDim : ''}`}>
-                    {DAY_LABELS[i]}
-                  </span>
-                  <span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isDim ? styles.dayNumberDim : ''}`}>
-                    {day.getDate()}
-                  </span>
-                  {routineItems.length > 0 && (
-                    <div className={styles.dotWrap}>
-                      {dotStatus !== 'none' && (
-                        <span className={`${styles.dot} ${
-                          dotStatus === 'done'    ? styles.dotDone    :
-                          dotStatus === 'overdue' ? styles.dotOverdue :
-                          styles.dotPending
-                        }`} />
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      </div>{/* calSlideContent */}
-      </div>{/* calendarArea */}
-    </div>
-  )
+				</div>
+				{/* calSlideContent */}
+			</div>
+			{/* calendarArea */}
+		</div>
+	)
 }
 
 export default WeekHeader

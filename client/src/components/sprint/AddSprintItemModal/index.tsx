@@ -1,0 +1,576 @@
+import React, { useState, useEffect } from 'react'
+import Modal from '../../ui/Modal'
+import Button from '../../ui/Button'
+import CustomDatePicker from '../../ui/CustomDatePicker'
+import LabelPicker from '../LabelPicker'
+import RepeatConfigScreen from '../RepeatConfigScreen'
+import { useSprintStore } from '../../../store/sprintStore'
+import { useUiStore } from '../../../store/uiStore'
+import type { TodoPriority, SprintLabel, RepeatConfig } from '../../../types'
+import styles from './AddSprintItemModal.module.css'
+
+type ItemType     = 'todo' | 'shopping'
+type RepeatType   = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
+type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks'
+
+const PRIORITIES: TodoPriority[] = ['urgent', 'low']
+
+const PRI_ICON_URGENT = (
+  <svg width="10" height="12" viewBox="0 0 10 12" fill="currentColor" aria-hidden="true">
+    <path d="M6.5 1L1.5 6.5h3.5L2.5 11l7-6H6L6.5 1z"/>
+  </svg>
+)
+const PRI_ICON_LOW = (
+  <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+    <path d="M1 4c.8-2 1.7-2 2.5 0s1.7 2 2.5 0 1.7-2 2.5 0 1.7 2 2.5 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+)
+
+const PRIORITY_CONFIG: Record<TodoPriority, { icon: React.ReactNode; label: string; activeClass: string }> = {
+  urgent: { icon: PRI_ICON_URGENT, label: 'ТЕРМІНОВО', activeClass: styles.priBtnActiveUrgent },
+  normal: { icon: null,            label: 'НОРМ',      activeClass: styles.priBtnActiveNormal },
+  low:    { icon: PRI_ICON_LOW,    label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow    },
+}
+
+const FORM_REMINDER_UNITS: { key: ReminderUnit; label: string }[] = [
+  { key: 'minutes', label: 'Хв. до' },
+  { key: 'hours',   label: 'Годин'  },
+  { key: 'days',    label: 'Днів'   },
+  { key: 'weeks',   label: 'Тижнів' },
+]
+
+const QUICK_REPEAT_OPTIONS: { key: Exclude<RepeatType, 'none' | 'custom'>; label: string }[] = [
+  { key: 'daily',   label: 'Щодня'    },
+  { key: 'weekly',  label: 'Щотижня'  },
+  { key: 'monthly', label: 'Щомісяця' },
+  { key: 'yearly',  label: 'Щороку'   },
+]
+
+const START_DATE_MONTHS = ['січ.','лют.','бер.','квіт.','трав.','черв.','лип.','серп.','вер.','жовт.','лист.','груд.']
+
+function repeatToUnit(r: Exclude<RepeatType, 'none' | 'custom'>): RepeatConfig['unit'] {
+  if (r === 'daily')   return 'day'
+  if (r === 'weekly')  return 'week'
+  if (r === 'monthly') return 'month'
+  return 'year'
+}
+
+function formatRepeatActiveLabel(repeat: RepeatType, config: RepeatConfig | null): string {
+  if (repeat === 'daily')   return 'Щодня'
+  if (repeat === 'weekly')  return 'Щотижня'
+  if (repeat === 'monthly') return 'Щомісяця'
+  if (repeat === 'yearly')  return 'Щороку'
+  if (repeat === 'custom' && config) {
+    const n = config.interval
+    const UNITS: Record<RepeatConfig['unit'], [string, string]> = {
+      day:   ['день', 'дні'],
+      week:  ['тиждень', 'тижні'],
+      month: ['місяць', 'місяці'],
+      year:  ['рік', 'роки'],
+    }
+    const [sing, plur] = UNITS[config.unit]
+    return n === 1 ? `Кожен ${sing}` : `Кожні ${n} ${plur}`
+  }
+  return 'Повтор'
+}
+
+function formatReminderShort(amount: number, unit: ReminderUnit): string {
+  if (unit === 'minutes') return `${amount} хв.`
+  if (unit === 'hours')   return `${amount} год.`
+  if (unit === 'days')    return amount === 1 ? '1 день' : amount < 5 ? `${amount} дні` : `${amount} днів`
+  if (unit === 'weeks')   return amount === 1 ? '1 тиждень' : amount < 5 ? `${amount} тижні` : `${amount} тижнів`
+  return String(amount)
+}
+
+function formatStartDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${String(d).padStart(2, '0')} ${START_DATE_MONTHS[m - 1]} ${y}`
+}
+
+function nextWeekDayFrom(from: Date, weekDays: number[]): string {
+  const sorted = [...weekDays].sort((a, b) => a - b)
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(from)
+    d.setDate(from.getDate() + i)
+    if (sorted.includes((d.getDay() + 6) % 7)) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    }
+  }
+  return `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`
+}
+
+/** Props for AddSprintItemModal */
+interface Props {
+  isOpen: boolean
+  onClose: () => void
+  /** Pre-select quest or shopping type when opening */
+  defaultType?: ItemType
+  /** Pre-fill the deadline date (e.g., from day long-press) */
+  initialDate?: string | null
+}
+
+/**
+ * AddSprintItemModal
+ *
+ * Full-featured add form for sprint items, identical to Sprint screen.
+ * Handles todos (with labels, repeat, deadline, reminder) and shopping (with priority, quantity).
+ */
+const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, initialDate }) => {
+  const { addItem } = useSprintStore()
+  const { showToast } = useUiStore()
+
+  const [newType, setNewType]                   = useState<ItemType>(defaultType ?? 'todo')
+  const [newTitle, setNewTitle]                 = useState('')
+  const [newPriority, setNewPriority]           = useState<TodoPriority | null>(null)
+  const [newQuantity, setNewQuantity]           = useState('')
+  const [newLabels, setNewLabels]               = useState<SprintLabel[]>([])
+  const [showLabelPicker, setShowLabelPicker]   = useState(false)
+  const [newRepeat, setNewRepeat]               = useState<RepeatType>('none')
+  const [showRepeatList, setShowRepeatList]     = useState(false)
+  const [showRepeatConfigScreen, setShowRepeatConfigScreen] = useState(false)
+  const [newRepeatConfig, setNewRepeatConfig]   = useState<RepeatConfig | null>(null)
+  const [repeatStartDate, setRepeatStartDate]   = useState(() => new Date().toISOString().split('T')[0])
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false)
+  const [newReminderAmount, setNewReminderAmount] = useState<number | ''>(1)
+  const [newReminderUnit, setNewReminderUnit]   = useState<ReminderUnit>('days')
+  const [newReminder, setNewReminder]           = useState<{ amount: number; unit: ReminderUnit } | null>(null)
+  const [showFormReminderPicker, setShowFormReminderPicker] = useState(false)
+  const [showQuestDueDatePicker, setShowQuestDueDatePicker] = useState(false)
+  const [quickAddDate, setQuickAddDate]         = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setNewType(defaultType ?? 'todo')
+      setQuickAddDate(initialDate ?? null)
+    }
+  }, [isOpen, defaultType, initialDate])
+
+  const reset = () => {
+    setNewTitle('')
+    setNewType(defaultType ?? 'todo')
+    setNewPriority(null)
+    setNewQuantity('')
+    setNewLabels([])
+    setShowLabelPicker(false)
+    setNewRepeat('none')
+    setNewRepeatConfig(null)
+    setShowRepeatList(false)
+    setShowRepeatConfigScreen(false)
+    setRepeatStartDate(new Date().toISOString().split('T')[0])
+    setShowStartDatePicker(false)
+    setNewReminderAmount(1)
+    setNewReminderUnit('days')
+    setNewReminder(null)
+    setShowFormReminderPicker(false)
+    setShowQuestDueDatePicker(false)
+    setQuickAddDate(null)
+  }
+
+  const handleClose = () => {
+    reset()
+    onClose()
+  }
+
+  const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!newTitle.trim()) return
+
+    const hasStartDate = newRepeat !== 'none' && newRepeat !== 'daily' && newRepeat !== 'custom'
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0, 0, 0, 0)
+    const initialNextDue = newRepeat === 'daily'
+      ? `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+      : newRepeat === 'custom' && newRepeatConfig?.weekDays?.length
+        ? nextWeekDayFrom(tomorrow, newRepeatConfig.weekDays)
+        : hasStartDate ? repeatStartDate : new Date().toISOString().split('T')[0]
+
+    addItem({
+      type:     newType,
+      title:    newTitle.trim(),
+      priority: newType === 'shopping' ? (newPriority ?? undefined) : undefined,
+      ...(quickAddDate && newRepeat === 'none' ? { dueDate: quickAddDate } : {}),
+      ...(quickAddDate && newRepeat === 'none' && newReminder ? { reminder: newReminder } : {}),
+      ...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
+      ...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
+      ...(newType === 'todo' && newRepeat !== 'none' ? {
+        repeat:       newRepeat,
+        repeatConfig: newRepeatConfig ?? { interval: 1, unit: repeatToUnit(newRepeat as Exclude<RepeatType, 'none' | 'custom'>), endsType: 'never' as const },
+        nextDue:      initialNextDue,
+        ...(hasStartDate ? { repeatStartDate } : {}),
+        ...(newReminder ? { reminder: newReminder } : {}),
+      } : {}),
+    })
+
+    const isRoutine = newType === 'todo' && newRepeat !== 'none'
+    const msg = isRoutine ? `Рутину «${newTitle.trim()}» додано` : newType === 'shopping' ? 'Покупку додано' : 'Квест додано'
+    showToast(msg, 'success')
+    reset()
+    onClose()
+  }
+
+  const modalTitle = newType === 'shopping' ? 'Нова покупка' : 'Новий квест'
+
+  return (
+    <>
+      <Modal isOpen={isOpen} onClose={handleClose} title={modalTitle} draggable>
+        <form onSubmit={handleAdd} className={styles.taskForm}>
+          {quickAddDate && (
+            <div className={styles.quickAddDateRow}>
+              <svg width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+              <span>{formatStartDate(quickAddDate)}</span>
+              <button type="button" className={styles.quickAddDateClear} onClick={() => setQuickAddDate(null)} aria-label="Прибрати дату">
+                ×
+              </button>
+            </div>
+          )}
+
+          <div className={styles.typeSegment}>
+            <button
+              type="button"
+              className={`${styles.typeSegmentBtn} ${styles.typeSegmentBtnTodo} ${newType === 'todo' ? styles.typeSegmentBtnActive : ''}`}
+              onClick={() => setNewType('todo')}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" strokeWidth="1.3"/>
+                <path d="M4 7l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Квест
+            </button>
+            <button
+              type="button"
+              className={`${styles.typeSegmentBtn} ${styles.typeSegmentBtnShopping} ${newType === 'shopping' ? styles.typeSegmentBtnActive : ''}`}
+              onClick={() => setNewType('shopping')}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M2 3h10l-1.2 6H3.2L2 3z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+                <path d="M4.5 3V2a2 2 0 0 1 4 0v1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                <circle cx="5" cy="11" r=".8" fill="currentColor"/>
+                <circle cx="9" cy="11" r=".8" fill="currentColor"/>
+              </svg>
+              Покупка
+            </button>
+          </div>
+
+          <input
+            className={styles.todoInput}
+            value={newTitle}
+            onChange={e => setNewTitle(e.target.value)}
+            placeholder="Назва..."
+            autoFocus
+          />
+
+          {newType === 'shopping' && (
+            <>
+              <div className={styles.priorityRow}>
+                {PRIORITIES.map(p => {
+                  const { icon, label, activeClass } = PRIORITY_CONFIG[p]
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`${styles.priBtn} ${newPriority === p ? activeClass : ''}`}
+                      onClick={() => setNewPriority(newPriority === p ? null : p)}
+                    >
+                      <span className={styles.priSymbol}>{icon}</span>
+                      <span className={styles.priLabel}>{label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+              <input
+                className={styles.todoInput}
+                value={newQuantity}
+                onChange={e => setNewQuantity(e.target.value)}
+                placeholder="Кількість (необов'язково)"
+              />
+            </>
+          )}
+
+          {newType === 'todo' && (
+            <div className={styles.todoExtras}>
+              {newLabels.length > 0 && (
+                <div className={styles.extrasLabels}>
+                  {newLabels.map(l => (
+                    <button
+                      key={l.id}
+                      type="button"
+                      className={styles.selectedLabel}
+                      style={{ background: l.color }}
+                      onClick={() => setNewLabels(prev => prev.filter(x => x.id !== l.id))}
+                    >
+                      {l.title}
+                      <svg width="7" height="7" viewBox="0 0 7 7" fill="none">
+                        <path d="M1 1l5 5M6 1L1 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className={styles.metaRow}>
+                {/* Label */}
+                <button type="button" className={styles.metaChip} onClick={() => setShowLabelPicker(true)}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                  Мітка
+                </button>
+
+                {/* Repeat */}
+                {newRepeat === 'none' ? (
+                  <button type="button" className={styles.metaChip} onClick={() => setShowRepeatList(v => !v)}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5a3.5 3.5 0 1 0 .7-2.1M1.5 2v1.5h1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Повторити
+                  </button>
+                ) : (
+                  <button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowRepeatList(v => !v)}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5a3.5 3.5 0 1 0 .7-2.1M1.5 2v1.5h1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    {formatRepeatActiveLabel(newRepeat, newRepeatConfig)}
+                    <span
+                      className={styles.metaChipClear}
+                      onClick={e => {
+                        e.stopPropagation()
+                        setNewRepeat('none')
+                        setNewRepeatConfig(null)
+                        setShowRepeatList(false)
+                        setShowRepeatConfigScreen(false)
+                      }}
+                    >✕</span>
+                  </button>
+                )}
+
+                {/* Deadline — non-routine only */}
+                {newRepeat === 'none' && !showRepeatList && (
+                  quickAddDate ? (
+                    <button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowQuestDueDatePicker(v => !v)}>
+                      <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
+                        <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+                        <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                      </svg>
+                      {new Date(quickAddDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
+                      <span
+                        className={styles.metaChipClear}
+                        onClick={e => {
+                          e.stopPropagation()
+                          setQuickAddDate(null)
+                          setNewReminder(null)
+                          setShowQuestDueDatePicker(false)
+                        }}
+                      >✕</span>
+                    </button>
+                  ) : (
+                    <button type="button" className={styles.metaChip} onClick={() => setShowQuestDueDatePicker(v => !v)}>
+                      <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
+                        <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+                        <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                      </svg>
+                      Дедлайн
+                    </button>
+                  )
+                )}
+
+                {/* Reminder */}
+                {(newRepeat !== 'none' || !!quickAddDate) && !showRepeatList && (
+                  newReminder ? (
+                    <button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowFormReminderPicker(true)}>
+                      <svg width="10" height="10" viewBox="0 0 16 18" fill="none">
+                        <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                      </svg>
+                      {formatReminderShort(newReminder.amount, newReminder.unit)}
+                      <span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setNewReminder(null) }}>✕</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.metaChip}
+                      onClick={() => { setNewReminderAmount(1); setNewReminderUnit('days'); setShowFormReminderPicker(true) }}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 16 18" fill="none">
+                        <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                      </svg>
+                      Нагадати
+                    </button>
+                  )
+                )}
+              </div>
+
+              {/* Start date row — routines with weekly/monthly/yearly */}
+              {(newRepeat === 'weekly' || newRepeat === 'monthly' || newRepeat === 'yearly') && !showRepeatList && (
+                <div className={styles.startDateRow}>
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                    <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+                    <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
+                  <span className={styles.startDateLabel}>Починаючи з:</span>
+                  <button type="button" className={styles.dateDisplayBtn} onClick={() => setShowStartDatePicker(true)}>
+                    {formatStartDate(repeatStartDate)}
+                  </button>
+                </div>
+              )}
+
+              {/* Routine hint */}
+              {newRepeat !== 'none' && !showRepeatList && (
+                <div className={styles.routineHint}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
+                    <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
+                  Ця задача стане рутиною — видно у тижневому вигляді
+                </div>
+              )}
+
+              {/* Repeat option list */}
+              {showRepeatList && (
+                <div className={styles.repeatList}>
+                  <button
+                    type="button"
+                    className={`${styles.repeatListItem} ${newRepeat === 'none' ? styles.repeatListItemActive : ''}`}
+                    onClick={() => { setNewRepeat('none'); setNewRepeatConfig(null); setShowRepeatList(false) }}
+                  >
+                    <span>Не повторюється</span>
+                    {newRepeat === 'none' && (
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                        <path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </button>
+                  {QUICK_REPEAT_OPTIONS.map(opt => (
+                    <button
+                      type="button"
+                      key={opt.key}
+                      className={`${styles.repeatListItem} ${newRepeat === opt.key ? styles.repeatListItemActive : ''}`}
+                      onClick={() => { setNewRepeat(opt.key); setNewRepeatConfig(null); setShowRepeatList(false) }}
+                    >
+                      <span>{opt.label}</span>
+                      {newRepeat === opt.key && (
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                          <path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className={`${styles.repeatListItem} ${styles.repeatListCustom} ${newRepeat === 'custom' ? styles.repeatListItemActive : ''}`}
+                    onClick={() => { setShowRepeatList(false); setShowRepeatConfigScreen(true) }}
+                  >
+                    <span>Налаштувати...</span>
+                    {newRepeat === 'custom' && (
+                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                        <path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <Button type="submit" fullWidth>
+            Додати
+          </Button>
+        </form>
+      </Modal>
+
+      {/* Reminder picker sheet */}
+      {showFormReminderPicker && (
+        <div className={styles.formReminderOverlay} onClick={() => setShowFormReminderPicker(false)}>
+          <div className={styles.formReminderSheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.formReminderHandle} />
+            <div className={styles.formReminderSheetHeader}>
+              <span className={styles.formReminderSheetTitle}>Сповіщення</span>
+              <button type="button" className={styles.formReminderSheetClose} onClick={() => setShowFormReminderPicker(false)} aria-label="Закрити">
+                ✕
+              </button>
+            </div>
+            <div className={styles.formReminderSheetBody}>
+              <div className={styles.formReminderAmountRow}>
+                <input
+                  type="number"
+                  className={styles.formReminderAmountInput}
+                  value={newReminderAmount}
+                  min={1}
+                  max={999}
+                  onFocus={e => e.target.select()}
+                  onChange={e => setNewReminderAmount(e.target.value === '' ? '' : Math.min(999, Number(e.target.value)))}
+                />
+                <span className={styles.formReminderAmountLabel}>
+                  {newReminderUnit === 'minutes' ? 'хвилин' : newReminderUnit === 'hours' ? 'годин' : newReminderUnit === 'days' ? 'днів' : 'тижнів'} до
+                </span>
+              </div>
+              <div className={styles.formReminderUnitList}>
+                {FORM_REMINDER_UNITS.map(u => (
+                  <button key={u.key} type="button" className={styles.formReminderUnitRow} onClick={() => setNewReminderUnit(u.key)}>
+                    <span className={`${styles.formReminderRadio} ${newReminderUnit === u.key ? styles.formReminderRadioActive : ''}`} />
+                    <span className={`${styles.formReminderUnitLabel} ${newReminderUnit === u.key ? styles.formReminderUnitLabelActive : ''}`}>{u.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              type="button"
+              className={styles.formReminderDoneBtn}
+              onClick={() => {
+                setNewReminder({ amount: Math.max(1, Math.min(999, Number(newReminderAmount) || 1)), unit: newReminderUnit })
+                setShowFormReminderPicker(false)
+              }}
+            >
+              Готово
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Repeat config screen */}
+      {showRepeatConfigScreen && (
+        <RepeatConfigScreen
+          initial={newRepeatConfig ?? undefined}
+          onSave={config => {
+            setNewRepeat('custom')
+            setNewRepeatConfig(config)
+            setShowRepeatConfigScreen(false)
+          }}
+          onClose={() => setShowRepeatConfigScreen(false)}
+        />
+      )}
+
+      {/* Start date picker */}
+      {showStartDatePicker && (
+        <CustomDatePicker
+          value={repeatStartDate}
+          onChange={date => { setRepeatStartDate(date); setShowStartDatePicker(false) }}
+          onClose={() => setShowStartDatePicker(false)}
+        />
+      )}
+
+      {/* Deadline date picker */}
+      {showQuestDueDatePicker && (
+        <CustomDatePicker
+          value={quickAddDate ?? undefined}
+          onChange={date => { setQuickAddDate(date); setShowQuestDueDatePicker(false) }}
+          onClose={() => setShowQuestDueDatePicker(false)}
+          minDate={new Date()}
+        />
+      )}
+
+      {/* Label picker */}
+      {showLabelPicker && (
+        <LabelPicker
+          selectedLabels={newLabels}
+          onToggle={label => setNewLabels(prev => (prev.some(l => l.id === label.id) ? prev.filter(l => l.id !== label.id) : [...prev, label]))}
+          onClose={() => setShowLabelPicker(false)}
+        />
+      )}
+    </>
+  )
+}
+
+export default AddSprintItemModal

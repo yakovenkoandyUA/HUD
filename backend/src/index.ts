@@ -44,6 +44,7 @@ import financeRouter from './routes/finance'
 import notesRouter from './routes/notes'
 import moodRouter from './routes/mood'
 import mealPlanRouter from './routes/mealPlan'
+import bankRouter from './routes/bank'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -93,6 +94,7 @@ app.use('/api/finance', financeRouter)
 app.use('/api/notes', notesRouter)
 app.use('/api/mood', moodRouter)
 app.use('/api/meal-plan', mealPlanRouter)
+app.use('/api/bank', bankRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

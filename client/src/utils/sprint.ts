@@ -89,36 +89,56 @@ export function calcMonthRate(task: UnifiedTodo): number {
   return due === 0 ? 0 : Math.round((done / due) * 100)
 }
 
-export type HeatCell = { iso: string; due: boolean; done: boolean; future: boolean }
+export type MonthCell = {
+  day: number
+  iso: string
+  scheduled: boolean
+  done: boolean
+  future: boolean
+  today: boolean
+  empty: boolean
+}
 
-export function buildHeatMap(task: UnifiedTodo, weeks = 16): HeatCell[][] {
+export function buildMonthGrid(task: UnifiedTodo, year: number, month: number): MonthCell[][] {
   const log = new Set(task.completionLog ?? [])
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const todayD = new Date()
+  todayD.setHours(0, 0, 0, 0)
+  const todayIso = toIso(todayD)
 
-  // Start from Monday of (today - weeks + 1) weeks ago
-  const mondayOffset = (today.getDay() + 6) % 7
-  const start = new Date(today)
-  start.setDate(today.getDate() - mondayOffset - (weeks - 1) * 7)
+  const firstDay = new Date(year, month - 1, 1)
+  const lastDate = new Date(year, month, 0).getDate()
+  const startOffset = (firstDay.getDay() + 6) % 7 // Mon=0
 
-  const grid: HeatCell[][] = []
-  for (let w = 0; w < weeks; w++) {
-    const week: HeatCell[] = []
-    for (let d = 0; d < 7; d++) {
-      const day = new Date(start)
-      day.setDate(start.getDate() + w * 7 + d)
-      const iso = toIso(day)
-      const future = day > today
-      week.push({
-        iso,
-        due: !future && isRoutineDueOnDay(task, day),
-        done: log.has(iso),
-        future,
-      })
-    }
-    grid.push(week)
+  const cells: MonthCell[] = []
+
+  for (let i = 0; i < startOffset; i++) {
+    cells.push({ day: 0, iso: '', scheduled: false, done: false, future: false, today: false, empty: true })
   }
-  return grid
+
+  for (let d = 1; d <= lastDate; d++) {
+    const date = new Date(year, month - 1, d)
+    const iso = toIso(date)
+    const future = date > todayD
+    cells.push({
+      day: d,
+      iso,
+      scheduled: isRoutineDueOnDay(task, date),
+      done: log.has(iso),
+      future,
+      today: iso === todayIso,
+      empty: false,
+    })
+  }
+
+  while (cells.length % 7 !== 0) {
+    cells.push({ day: 0, iso: '', scheduled: false, done: false, future: false, today: false, empty: true })
+  }
+
+  const weeks: MonthCell[][] = []
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7))
+  }
+  return weeks
 }
 
 export function isRoutineDueOnDay(task: UnifiedTodo, day: Date): boolean {

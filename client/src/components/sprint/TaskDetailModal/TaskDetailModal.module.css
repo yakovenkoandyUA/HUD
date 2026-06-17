@@ -1347,40 +1347,105 @@
   flex-shrink: 0;
 }
 
-/* ── Heat map ── */
-.heatMap {
+/* ── Habit month calendar ── */
+.calNav {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.calNavLabel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text2);
+}
+
+.calNavBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--text2);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.calNavBtn:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.calNavBtnDisabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
   gap: 3px;
 }
 
-.heatWeek {
+.calDayLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  text-align: center;
+  padding-bottom: 4px;
+}
+
+.calCellEmpty {
+  height: 32px;
+}
+
+.calCell {
+  height: 32px;
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  position: relative;
 }
 
-.heatCell {
-  width: 13px;
-  height: 13px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.heatDone {
+.calCellDone {
   background: var(--accent);
-  opacity: 0.9;
+  color: var(--bg);
+  font-weight: 700;
 }
 
-.heatMissed {
-  background: transparent;
-  border: 1px solid var(--border2, var(--border));
+.calCellMissed {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: color-mix(in srgb, var(--accent) 70%, var(--text3));
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  text-decoration-thickness: 1.5px;
 }
 
-.heatEmpty {
-  background: transparent;
+.calCellUpcoming {
+  border: 1px dashed var(--border);
+  color: var(--text2);
 }
 
-.heatFuture {
-  background: transparent;
-  opacity: 0.2;
+.calCellToday::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 8px;
+  border: 2px solid var(--accent);
+  pointer-events: none;
 }

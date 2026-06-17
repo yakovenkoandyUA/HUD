@@ -178,3 +178,116 @@
 .pos    { color: var(--positive); }
 .neg    { color: var(--negative); }
 .accent { color: var(--accent); }
+
+/* ── Bank sync bar ── */
+.bankSyncBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.bankSyncLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.bankSyncDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.bankSyncTime {
+  color: var(--text3);
+  font-weight: 400;
+}
+
+.bankSyncActions {
+  display: flex;
+  gap: 6px;
+}
+
+.bankSyncBtn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bankSyncBtn:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 10%, var(--surface2)); }
+.bankSyncBtn:disabled { opacity: 0.5; cursor: default; }
+
+.bankCsvBtn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.bankCsvBtn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── CSV import modal ── */
+.csvModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0 8px;
+}
+
+.csvModalHint {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.csvFileInput {
+  display: none;
+}
+
+.csvFileLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface2);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.csvFileLabel:hover { border-color: var(--accent); color: var(--accent); }
+
+.csvFileLabelDisabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}

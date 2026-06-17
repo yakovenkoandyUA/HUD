@@ -15,10 +15,11 @@ interface MoodIconProps {
   score: 1 | 2 | 3 | 4 | 5
   active?: boolean
   size?: number
+  color?: string
 }
 
-const MoodIcon: React.FC<MoodIconProps> = ({ score, active = false, size = 36 }) => {
-  const color = active ? 'var(--accent)' : 'var(--text3)'
+const MoodIcon: React.FC<MoodIconProps> = ({ score, active = false, size = 36, color: colorProp }) => {
+  const color = colorProp ?? (active ? 'var(--accent)' : 'var(--text3)')
 
   const icons: Record<number, React.ReactNode> = {
     // 1 — broken circle (важко)

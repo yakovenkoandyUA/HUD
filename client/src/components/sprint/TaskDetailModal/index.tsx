@@ -7,7 +7,7 @@ import { useFamilyStore } from '../../../store/familyStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
-import { isRecurring, calcStreak, calcRecord, calcMonthRate, buildHeatMap } from '../../../utils/sprint'
+import { isRecurring, calcStreak, calcRecord, calcMonthRate, buildMonthGrid } from '../../../utils/sprint'
 import type { RepeatConfig, UnifiedTodo } from '../../../types'
 import styles from './TaskDetailModal.module.css'
 
@@ -170,6 +170,24 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [descDraft, setDescDraft]       = useState('')
   const [checkInput, setCheckInput]     = useState('')
   const [editingIdx, setEditingIdx]     = useState<number | null>(null)
+
+  const now = new Date()
+  const [calYear, setCalYear]   = useState(now.getFullYear())
+  const [calMonth, setCalMonth] = useState(now.getMonth() + 1)
+
+  const MONTH_NAMES = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень']
+  const DAY_LABELS  = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд']
+
+  function prevMonth() {
+    if (calMonth === 1) { setCalYear(y => y - 1); setCalMonth(12) }
+    else setCalMonth(m => m - 1)
+  }
+  function nextMonth() {
+    const isCurrentMonth = calYear === now.getFullYear() && calMonth === now.getMonth() + 1
+    if (isCurrentMonth) return
+    if (calMonth === 12) { setCalYear(y => y + 1); setCalMonth(1) }
+    else setCalMonth(m => m + 1)
+  }
 
 
   useEffect(() => {
@@ -731,12 +749,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               </div>
             )}
 
-            {/* ── ЗВИЧКА: статистика + heat map ── */}
+            {/* ── ЗВИЧКА: статистика + місячний календар ── */}
             {recurring && (() => {
-              const streak   = calcStreak(task)
-              const record   = calcRecord(task)
-              const rate     = calcMonthRate(task)
-              const heatMap  = buildHeatMap(task, 16)
+              const streak    = calcStreak(task)
+              const record    = calcRecord(task)
+              const rate      = calcMonthRate(task)
+              const monthGrid = buildMonthGrid(task, calYear, calMonth)
+              const isCurrentMonth = calYear === new Date().getFullYear() && calMonth === new Date().getMonth() + 1
               return (
                 <div className={styles.section}>
                   <p className={styles.sectionLabel}>Звичка</p>
@@ -758,17 +777,33 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                     </div>
                   </div>
 
-                  <div className={styles.heatMap}>
-                    {heatMap.map((week, wi) => (
-                      <div key={wi} className={styles.heatWeek}>
-                        {week.map(cell => (
-                          <div
-                            key={cell.iso}
-                            className={`${styles.heatCell} ${cell.future ? styles.heatFuture : cell.due && cell.done ? styles.heatDone : cell.due ? styles.heatMissed : styles.heatEmpty}`}
-                          />
-                        ))}
-                      </div>
+                  <div className={styles.calNav}>
+                    <button type="button" className={styles.calNavBtn} onClick={prevMonth}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <span className={styles.calNavLabel}>{MONTH_NAMES[calMonth - 1]} {calYear}</span>
+                    <button type="button" className={`${styles.calNavBtn} ${isCurrentMonth ? styles.calNavBtnDisabled : ''}`} onClick={nextMonth} disabled={isCurrentMonth}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                  </div>
+
+                  <div className={styles.calGrid}>
+                    {DAY_LABELS.map(d => (
+                      <div key={d} className={styles.calDayLabel}>{d}</div>
                     ))}
+                    {monthGrid.flat().map((cell, i) => {
+                      if (cell.empty) return <div key={i} className={styles.calCellEmpty} />
+                      let cellClass = styles.calCell
+                      if (cell.scheduled && !cell.future && cell.done) cellClass += ` ${styles.calCellDone}`
+                      else if (cell.scheduled && !cell.future && !cell.done) cellClass += ` ${styles.calCellMissed}`
+                      else if (cell.scheduled && cell.future) cellClass += ` ${styles.calCellUpcoming}`
+                      if (cell.today) cellClass += ` ${styles.calCellToday}`
+                      return (
+                        <div key={cell.iso} className={cellClass}>
+                          <span>{cell.day}</span>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )

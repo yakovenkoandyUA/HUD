@@ -1449,3 +1449,170 @@
   min-width: 44px;
   text-align: center;
 }
+
+/* ── Bank accounts ── */
+.bankCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.bankCardLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bankCardDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.bankCardName {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.bankCardSub {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 1px;
+}
+
+.bankCardSync {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.bankCardActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bankSyncBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 12px;
+}
+.bankSyncBtn:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.bankSyncBtn:disabled { opacity: 0.5; cursor: default; }
+
+.bankDisconnectBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text3);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.bankDisconnectBtn:hover { color: var(--accent); border-color: var(--accent); }
+
+.bankAddBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: none;
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.bankAddBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+.bankConnectForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bankConnectHint {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  margin: 0;
+}
+
+.bankConnectRow {
+  display: flex;
+  gap: 6px;
+}
+
+.bankTokenInput {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.bankTokenInput:focus { border-color: var(--accent); }
+
+.bankConnectBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.bankConnectBtn:disabled { opacity: 0.5; cursor: default; }
+
+.bankCancelBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+

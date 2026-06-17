@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader'
-import CustomDatePicker from '../../components/ui/CustomDatePicker'
 import GreetingBlock from '../../components/dashboard/GreetingBlock'
 import HeroCard from '../../components/dashboard/HeroCard'
 import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
@@ -10,6 +9,7 @@ import DaySummaryCard from '../../components/dashboard/DaySummaryCard'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
+import AddSprintItemModal from '../../components/sprint/AddSprintItemModal'
 import { useFinanceStore } from '../../store/financeStore'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
@@ -29,7 +29,7 @@ import styles from './Dashboard.module.css'
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
-  const { items: sprintItems, addItem, toggleItem, fetchItems } = useSprintStore()
+  const { items: sprintItems, toggleItem, fetchItems } = useSprintStore()
   const { showToast } = useUiStore()
   const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
@@ -37,18 +37,13 @@ const Dashboard: React.FC = () => {
   const { recipes, fetchRecipes } = useRecipesStore()
   const { notes, fetchNotes } = useNotesStore()
 
-  const [showDay, setShowDay]         = useState(false)
-  const [showExpense, setShowExpense] = useState(false)
-  const [fabOpen, setFabOpen]         = useState(false)
-  const [questTitle, setQuestTitle]       = useState('')
-  const [questDueDate, setQuestDueDate]   = useState<string | null>(null)
-  const [questReminder, setQuestReminder] = useState(false)
-  const [showQuestDate, setShowQuestDate] = useState(false)
-  const [shopTitle, setShopTitle]         = useState('')
-  const [showQuest, setShowQuest]         = useState(false)
-  const [showShop, setShowShop]           = useState(false)
+  const [showDay, setShowDay]           = useState(false)
+  const [showExpense, setShowExpense]   = useState(false)
+  const [fabOpen, setFabOpen]           = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addModalDefaultType, setAddModalDefaultType] = useState<'todo' | 'shopping'>('todo')
 
-  const fabRef  = useRef<HTMLDivElement>(null)
+  const fabRef     = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -69,7 +64,6 @@ const Dashboard: React.FC = () => {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [fabOpen])
-
 
   const nextRace      = f1Enabled ? getNextRace(F1_SEASON_2026) : null
   const raceThisWeek  = f1Enabled ? getRaceThisWeek(F1_SEASON_2026) : null
@@ -112,39 +106,10 @@ const Dashboard: React.FC = () => {
     showToast(`−${amount} ₴ витрачено`, 'info')
   }
 
-  const handleAddQuest = () => {
-    const title = questTitle.trim()
-    if (!title) return
-    addItem({
-      type: 'todo',
-      title,
-      priority: 'normal',
-      ...(questDueDate ? { dueDate: questDueDate } : {}),
-      ...(questDueDate && questReminder ? { reminder: { amount: 1, unit: 'days' as const } } : {}),
-    })
-    setQuestTitle('')
-    setQuestDueDate(null)
-    setQuestReminder(false)
-    setShowQuestDate(false)
-    setShowQuest(false)
-    showToast(questReminder ? 'Квест додано · нагадаю за день' : 'Квест додано', 'success')
-  }
-
-  const handleCloseQuest = () => {
-    setShowQuest(false)
-    setQuestTitle('')
-    setQuestDueDate(null)
-    setQuestReminder(false)
-    setShowQuestDate(false)
-  }
-
-  const handleAddShopping = () => {
-    const title = shopTitle.trim()
-    if (!title) return
-    addItem({ type: 'shopping', title, priority: 'normal' })
-    setShopTitle('')
-    setShowShop(false)
-    showToast('Покупку додано', 'success')
+  const openAddModal = (type: 'todo' | 'shopping') => {
+    setAddModalDefaultType(type)
+    setShowAddModal(true)
+    setFabOpen(false)
   }
 
   return (
@@ -214,7 +179,7 @@ const Dashboard: React.FC = () => {
             <button
               type="button"
               className={styles.fabMenuBtn}
-              onClick={() => { setShowQuest(true); setFabOpen(false) }}
+              onClick={() => openAddModal('todo')}
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -224,7 +189,7 @@ const Dashboard: React.FC = () => {
             <button
               type="button"
               className={styles.fabMenuBtn}
-              onClick={() => { setShowShop(true); setFabOpen(false) }}
+              onClick={() => openAddModal('shopping')}
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -262,90 +227,11 @@ const Dashboard: React.FC = () => {
         <ExpenseForm onExpense={handleExpense} />
       </Modal>
 
-      <Modal isOpen={showQuest} onClose={handleCloseQuest} title="Новий квест" draggable>
-        <div className={styles.questForm}>
-          <input
-            className={styles.quickAddInput}
-            placeholder="Назва квесту…"
-            value={questTitle}
-            onChange={e => setQuestTitle(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !showQuestDate && handleAddQuest()}
-            autoFocus
-          />
-          <div className={styles.questMeta}>
-            <button
-              type="button"
-              className={`${styles.questMetaBtn} ${questDueDate ? styles.questMetaBtnActive : ''}`}
-              onClick={() => setShowQuestDate(v => !v)}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-              {questDueDate
-                ? new Date(questDueDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
-                : 'Дедлайн'}
-            </button>
-
-            {questDueDate && (
-              <>
-                <button
-                  type="button"
-                  className={`${styles.questMetaBtn} ${questReminder ? styles.questMetaBtnBell : ''}`}
-                  onClick={() => setQuestReminder(v => !v)}
-                  title="Нагадати за день"
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                  </svg>
-                  {questReminder ? 'За день' : 'Нагадати'}
-                </button>
-                <button
-                  type="button"
-                  className={styles.questClearDate}
-                  onClick={() => { setQuestDueDate(null); setQuestReminder(false); setShowQuestDate(false) }}
-                  aria-label="Прибрати дату"
-                >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                </button>
-              </>
-            )}
-
-            <button type="button" className={styles.quickAddBtn} style={{ marginLeft: 'auto' }} onClick={handleAddQuest}>
-              Додати
-            </button>
-          </div>
-
-          {showQuestDate && (
-            <div className={styles.questDatePicker}>
-              <CustomDatePicker
-                value={questDueDate ?? undefined}
-                onChange={(iso) => { setQuestDueDate(iso); setShowQuestDate(false) }}
-                onClose={() => setShowQuestDate(false)}
-                minDate={new Date()}
-              />
-            </div>
-          )}
-        </div>
-      </Modal>
-
-      <Modal isOpen={showShop} onClose={() => setShowShop(false)} title="Нова покупка" draggable>
-        <div className={styles.quickAddForm}>
-          <input
-            className={styles.quickAddInput}
-            placeholder="Назва покупки…"
-            value={shopTitle}
-            onChange={e => setShopTitle(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAddShopping()}
-            autoFocus
-          />
-          <button type="button" className={styles.quickAddBtn} onClick={handleAddShopping}>
-            Додати
-          </button>
-        </div>
-      </Modal>
-
+      <AddSprintItemModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        defaultType={addModalDefaultType}
+      />
     </div>
   )
 }

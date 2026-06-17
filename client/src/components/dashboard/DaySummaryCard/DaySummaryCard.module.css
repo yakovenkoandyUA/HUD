@@ -118,13 +118,17 @@
   width: 14px;
   height: 14px;
   border-radius: 4px;
-  border: 1.5px solid var(--surface2);
+  border: 1.5px solid var(--accent);
   background: none;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: border-color 0.15s, background 0.15s;
+}
+
+:global([data-theme="velvet"]) .chipBox {
+  border: 1.5px solid var(--surface);
 }
 .chipDone .chipBox {
   border-color: var(--positive);
@@ -143,7 +147,7 @@
 .cell {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   padding: 10px 12px 12px;
   background: var(--bg);
   border: none;
@@ -155,13 +159,12 @@
 }
 .cell:active { background: var(--surface2); }
 
-.cellTop {
+.cellHeader {
   display: flex;
-  align-items: center;
-  gap: 5px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
 }
-
-.cellIcon { color: var(--text3); flex-shrink: 0; }
 
 .cellLabel {
   font-family: var(--font-ui);
@@ -170,7 +173,18 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text3);
+  padding-top: 1px;
 }
+
+.cellIcon {
+  flex-shrink: 0;
+  opacity: 0.28;
+}
+
+.cellIconGold   { color: var(--gold); }
+.cellIconAccent { color: var(--accent); }
+.cellIconSecond { color: var(--second); }
+.cellIconText   { color: var(--text2); }
 
 .cellVal {
   font-family: var(--font-ui);
