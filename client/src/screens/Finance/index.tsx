@@ -66,7 +66,12 @@ const Finance: React.FC = () => {
   const handleCsvFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const text = await file.text()
+    // Monobank exports in Windows-1251; detect by checking for Cyrillic after UTF-8 decode
+    const buf = await file.arrayBuffer()
+    let text = new TextDecoder('utf-8').decode(buf)
+    if (!/[а-яА-ЯіІїЇєЄ]/.test(text)) {
+      text = new TextDecoder('windows-1251').decode(buf)
+    }
     e.target.value = ''
     try {
       const { imported } = await importCsv(text)

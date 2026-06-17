@@ -276,9 +276,9 @@ router.get('/mono-auth-status/:tokenRequestId', requireAuth, async (req: Request
 })
 
 // ── POST /api/bank/import-csv ────────────────────────────────────────────────
-// Monobank CSV format (semicolon separated), supports both old and new exports:
-// Old: Дата і час;Деталі операції;MCC;Сума;Валюта операції;...
-// New: Дата і час операції;Деталі операції;MCC;Категорія;Сума у валюті картки;...
+// Supports multiple Monobank CSV formats (semicolon-separated, Windows-1251 decoded on client):
+//   Format A — app export:   Дата і час операції;Деталі операції;MCC;...;Сума у валюті картки;...
+//   Format B — web statement: [metadata rows]; Дата і час;Статус;Тип;Деталі;Адреса;MCC;Сума списання;Сума зарахування
 
 router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
   const { csv } = req.body as { csv?: string }
@@ -286,12 +286,11 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
 
   // Strip UTF-8 BOM (U+FEFF) if present
   const csvClean = csv.replace(/^﻿/, '').trim()
-  const lines = csvClean.split('\n').map(l => l.trim()).filter(Boolean)
-  if (lines.length < 2) { res.status(400).json({ error: 'CSV too short' }); return }
+  const allLines = csvClean.split('\n').map(l => l.trim()).filter(Boolean)
+  if (allLines.length < 2) { res.status(400).json({ error: 'CSV too short' }); return }
 
-  // Detect separator
-  const header = lines[0]
-  const sep = header.includes(';') ? ';' : ','
+  // Detect separator from first line
+  const sep = allLines[0].includes(';') ? ';' : ','
 
   function parseCsvLine(line: string): string[] {
     const result: string[] = []
@@ -312,48 +311,83 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
     return result
   }
 
-  const headers = parseCsvLine(header).map(h => h.toLowerCase().replace(/"/g, ''))
+  // Find the actual header row — skip metadata rows at the top.
+  // Format B has 5 metadata rows before the real header.
+  let headerLineIdx = -1
+  for (let i = 0; i < Math.min(allLines.length, 10); i++) {
+    const first = parseCsvLine(allLines[i])[0].toLowerCase().replace(/"/g, '')
+    if (first.includes('дата')) { headerLineIdx = i; break }
+  }
+  if (headerLineIdx === -1) {
+    res.status(400).json({ error: 'Формат CSV не розпізнано (рядок заголовка не знайдено). Очікується виписка Monobank.' })
+    return
+  }
 
-  // Find column indices — support both old and new Monobank export formats
-  const dateIdx   = headers.findIndex(h => h.includes('дата'))
-  const descIdx   = headers.findIndex(h => h.includes('деталі') || h.includes('опис'))
-  // Old: "Сума" / "Сума (UAH)"; New: "Сума у валюті картки" / "Сума в валюті картки"
-  // Use startsWith to tolerate suffixes like "(UAH)" that Monobank may append
+  const headers = parseCsvLine(allLines[headerLineIdx]).map(h => h.toLowerCase().replace(/"/g, ''))
+  const dataLines = allLines.slice(headerLineIdx + 1)
+
+  const dateIdx = headers.findIndex(h => h.includes('дата'))
+  const descIdx = headers.findIndex(h => h.includes('деталі') || h.includes('опис'))
+
+  // Format A: single amount column
   const amountIdx = headers.findIndex(h =>
     h === 'сума' ||
     h.startsWith('сума (') ||
     h.startsWith('сума у валюті картки') ||
     h.startsWith('сума в валюті картки'),
   )
+  // Format B: two separate columns. Monobank uses Latin 'C' instead of Cyrillic 'С' — handle both.
+  const debitIdx  = headers.findIndex(h => h.includes('ума списання'))
+  const creditIdx = headers.findIndex(h => h.includes('ума зарахування'))
 
-  if (dateIdx === -1 || descIdx === -1 || amountIdx === -1) {
+  const hasNewFormat = debitIdx !== -1 && creditIdx !== -1
+
+  if (dateIdx === -1 || descIdx === -1 || (!hasNewFormat && amountIdx === -1)) {
     const missing = [
       dateIdx === -1 && 'дата',
-      descIdx === -1 && 'деталі операції',
-      amountIdx === -1 && 'сума',
+      descIdx === -1 && 'деталі',
+      (!hasNewFormat && amountIdx === -1) && 'сума',
     ].filter(Boolean).join(', ')
     res.status(400).json({
       error: `Формат CSV не розпізнано (не знайдено: ${missing}). Очікується виписка Monobank.`,
     }); return
   }
 
+  function parseAmount(raw: string): number {
+    return parseFloat(raw.replace(/"/g, '').replace(/\s/g, '').replace(',', '.').trim())
+  }
+
   const toInsert: object[] = []
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = parseCsvLine(lines[i])
-    if (cols.length <= Math.max(dateIdx, descIdx, amountIdx)) continue
+  for (const line of dataLines) {
+    const cols = parseCsvLine(line)
 
-    const rawDate   = cols[dateIdx].replace(/"/g, '').trim()
-    const rawDesc   = cols[descIdx].replace(/"/g, '').trim()
-    const rawAmount = cols[amountIdx].replace(/"/g, '').replace(/\s/g, '').replace(',', '.').trim()
+    let amount: number
+    if (hasNewFormat) {
+      const debit  = parseAmount(cols[debitIdx]  ?? '')
+      const credit = parseAmount(cols[creditIdx] ?? '')
+      // One column will be NaN (empty), the other has the value
+      if (!isNaN(debit)  && debit  !== 0) amount = debit   // already negative
+      else if (!isNaN(credit) && credit !== 0) amount = credit  // positive
+      else continue
+    } else {
+      if (cols.length <= amountIdx) continue
+      amount = parseAmount(cols[amountIdx])
+      if (isNaN(amount) || amount === 0) continue
+    }
 
-    // Parse date DD.MM.YYYY HH:MM:SS or DD.MM.YYYY
+    if (cols.length <= Math.max(dateIdx, descIdx)) continue
+
+    const rawDate = cols[dateIdx].replace(/"/g, '').trim()
+    const rawDesc = cols[descIdx].replace(/"/g, '').trim()
+
+    // Parse date: DD.MM.YYYY, DD.MM.YY, or DD.MM.YYYY HH:MM:SS
     const dateParts = rawDate.split(' ')[0].split('.')
     if (dateParts.length < 3) continue
-    const isoDateStr = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`
-
-    const amount = parseFloat(rawAmount)
-    if (isNaN(amount) || amount === 0) continue
+    // Handle 2-digit year: "26" → "2026"
+    const year = dateParts[2].length === 2 ? `20${dateParts[2]}` : dateParts[2]
+    const isoDateStr = `${year}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`
+    if (isNaN(new Date(isoDateStr).getTime())) continue
 
     toInsert.push({
       userId:   req.userId,
