@@ -130,7 +130,7 @@ const MeTab: React.FC = () => {
     setSavingUsername(true)
     try {
       await updateProfile({ username: trimmed })
-      showToast('Username оновлено', 'success')
+      showToast('Нікнейм оновлено', 'success')
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Помилка збереження', 'error')
       setUsernameInput(activeProfile?.username ?? '')
