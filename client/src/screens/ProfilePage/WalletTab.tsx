@@ -98,10 +98,11 @@ const WalletTab: React.FC = () => {
   const handleInitAuth = useCallback(async () => {
     try {
       await initMonoAuth()
-    } catch (e: unknown) {
-      showToast(e instanceof Error ? e.message : 'Помилка підключення', 'error')
+    } catch {
+      // OAuth requires corporate Monobank registration — fall back to manual token
+      setShowManual(true)
     }
-  }, [initMonoAuth, showToast])
+  }, [initMonoAuth])
 
   const handleConnect = useCallback(async () => {
     if (!tokenInput.trim() || connecting) return
@@ -325,23 +326,33 @@ const WalletTab: React.FC = () => {
           </div>
         ) : (
           <div className={styles.bankConnectWrap}>
-            <button type="button" className={styles.bankAddBtn} onClick={handleInitAuth}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="5" y="2" width="14" height="20" rx="2"/>
-                <line x1="12" y1="18" x2="12" y2="18" strokeWidth="3" strokeLinecap="round"/>
-              </svg>
-              <span>Підключити Monobank</span>
-            </button>
-            {/* Manual token fallback */}
             {!showManual ? (
-              <button type="button" className={styles.bankManualLink} onClick={() => setShowManual(true)}>
-                Ввести токен вручну
+              <button type="button" className={styles.bankAddBtn} onClick={() => setShowManual(true)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="5" y="2" width="14" height="20" rx="2"/>
+                  <line x1="12" y1="18" x2="12" y2="18" strokeWidth="3" strokeLinecap="round"/>
+                </svg>
+                <span>Підключити Monobank</span>
               </button>
             ) : (
               <div className={styles.bankConnectForm}>
-                <p className={styles.bankConnectHint}>
-                  Monobank → Налаштування → Інше → API
-                </p>
+                <div className={styles.bankConnectSteps}>
+                  <span className={styles.bankConnectStep}>1. Відкрий Monobank API</span>
+                  <span className={styles.bankConnectStep}>2. Активуй токен (копіюється тільки раз!)</span>
+                  <span className={styles.bankConnectStep}>3. Встав сюди:</span>
+                </div>
+                <a
+                  href="https://api.monobank.ua"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.bankApiLink}
+                >
+                  Відкрити api.monobank.ua
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                </a>
                 <div className={styles.bankConnectRow}>
                   <input
                     type="text"

@@ -1568,6 +1568,35 @@
   margin: 0;
 }
 
+.bankConnectSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bankConnectStep {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.bankApiLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 7px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  transition: background 0.15s;
+}
+.bankApiLink:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+
 .bankConnectRow {
   display: flex;
   gap: 6px;
