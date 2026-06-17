@@ -126,7 +126,6 @@ const Sprint: React.FC = () => {
 			}),
 		]
 	const dayHasAnyItems = isDayToday
-		|| routineItems.some(t => isRoutineDueOnDay(t, selectedDate))
 		|| items.some(t => !isRecurring(t) && t.dueDate === selectedDay)
 
 	const dayQuests = [...rawDayQuests].sort((a: UnifiedTodo, b: UnifiedTodo) => {
