@@ -204,14 +204,17 @@ router.post('/sync', requireAuth, async (req: Request, res: Response) => {
 })
 
 // ── POST /api/bank/import-csv ────────────────────────────────────────────────
-// Monobank CSV format (semicolon separated):
-// Дата і час;Деталі операції;MCC;Сума;Валюта операції;Курс;Сума в валюті картки;Валюта картки;Баланс;Cashback;Комісія
+// Monobank CSV format (semicolon separated), supports both old and new exports:
+// Old: Дата і час;Деталі операції;MCC;Сума;Валюта операції;...
+// New: Дата і час операції;Деталі операції;MCC;Категорія;Сума у валюті картки;...
 
 router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
   const { csv } = req.body as { csv?: string }
   if (!csv?.trim()) { res.status(400).json({ error: 'CSV required' }); return }
 
-  const lines = csv.trim().split('\n').map(l => l.trim()).filter(Boolean)
+  // Strip UTF-8 BOM if present
+  const csvClean = csv.replace(/^﻿/, '').trim()
+  const lines = csvClean.split('\n').map(l => l.trim()).filter(Boolean)
   if (lines.length < 2) { res.status(400).json({ error: 'CSV too short' }); return }
 
   // Detect separator
@@ -239,14 +242,25 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
 
   const headers = parseCsvLine(header).map(h => h.toLowerCase().replace(/"/g, ''))
 
-  // Find column indices for Monobank format
+  // Find column indices — support both old and new Monobank export formats
   const dateIdx   = headers.findIndex(h => h.includes('дата'))
   const descIdx   = headers.findIndex(h => h.includes('деталі') || h.includes('опис'))
-  const amountIdx = headers.findIndex(h => h === 'сума' || h.startsWith('сума ('))
+  // Old: "Сума" / "Сума (UAH)"; New: "Сума у валюті картки" / "Сума в валюті картки"
+  const amountIdx = headers.findIndex(h =>
+    h === 'сума' ||
+    h.startsWith('сума (') ||
+    h === 'сума у валюті картки' ||
+    h === 'сума в валюті картки',
+  )
 
   if (dateIdx === -1 || descIdx === -1 || amountIdx === -1) {
+    const missing = [
+      dateIdx === -1 && 'дата',
+      descIdx === -1 && 'деталі операції',
+      amountIdx === -1 && 'сума',
+    ].filter(Boolean).join(', ')
     res.status(400).json({
-      error: 'Формат CSV не розпізнано. Очікується виписка Monobank.',
+      error: `Формат CSV не розпізнано (не знайдено: ${missing}). Очікується виписка Monobank.`,
     }); return
   }
 
