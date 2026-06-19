@@ -221,9 +221,13 @@ export const useProfileStore = create<ProfileState>()(
         if (!token) return false
         try {
           const res = await apiPost('/api/auth/pin/verify', { pin }, token)
-          return res.ok
-        } catch {
-          return false
+          if (res.ok) return true
+          if (res.status === 401) return false
+          // Server error or offline — throw so caller can distinguish
+          throw new Error('network')
+        } catch (err) {
+          if (err instanceof Error && err.message !== 'network') throw err
+          throw new Error('network')
         }
       },
 

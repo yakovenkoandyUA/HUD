@@ -33,6 +33,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary'
 import './App.css'
 
 const PIN_TIMEOUT_MS = 5 * 60 * 1000 // 5 хв
+const PIN_BG_KEY = 'hud-pin-bg-time'
 
 /** Redirects to /login if no token */
 const ProtectedRoute: React.FC = () => {
@@ -125,9 +126,35 @@ const PinGuard: React.FC = () => {
   useEffect(() => {
     if (!activeProfile?.hasPIN) return
 
-    const resetTimer = () => { lastActivity.current = Date.now() }
+    // On mount: check if app was in background long enough to require PIN
+    const savedBgTime = localStorage.getItem(PIN_BG_KEY)
+    if (savedBgTime) {
+      const elapsed = Date.now() - parseInt(savedBgTime, 10)
+      if (elapsed >= PIN_TIMEOUT_MS) {
+        lockWithPIN()
+      } else {
+        lastActivity.current = Date.now() - elapsed
+      }
+    }
+
+    const resetTimer = () => {
+      lastActivity.current = Date.now()
+      localStorage.setItem(PIN_BG_KEY, String(lastActivity.current))
+    }
     const events = ['mousemove', 'mousedown', 'touchstart', 'keydown', 'scroll'] as const
     events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }))
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        localStorage.setItem(PIN_BG_KEY, String(Date.now()))
+      } else {
+        const bg = localStorage.getItem(PIN_BG_KEY)
+        if (bg && Date.now() - parseInt(bg, 10) >= PIN_TIMEOUT_MS) {
+          lockWithPIN()
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
 
     const interval = setInterval(() => {
       if (Date.now() - lastActivity.current >= PIN_TIMEOUT_MS) {
@@ -137,6 +164,7 @@ const PinGuard: React.FC = () => {
 
     return () => {
       events.forEach(e => window.removeEventListener(e, resetTimer))
+      document.removeEventListener('visibilitychange', handleVisibility)
       clearInterval(interval)
     }
   }, [activeProfile?.hasPIN, lockWithPIN])

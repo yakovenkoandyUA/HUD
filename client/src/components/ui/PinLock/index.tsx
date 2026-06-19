@@ -18,14 +18,14 @@ const PinLock: React.FC = () => {
   const { activeProfile, verifyPIN, unlockPIN, logout } = useProfileStore()
 
   const [pin, setPin]       = useState('')
-  const [error, setError]   = useState(false)
+  const [error, setError]   = useState<'wrong' | 'network' | null>(null)
   const [loading, setLoading] = useState(false)
 
   const handleDigit = useCallback((digit: string) => {
     if (pin.length >= PIN_LENGTH || loading) return
     const next = pin + digit
     setPin(next)
-    setError(false)
+    setError(null)
     if (next.length === PIN_LENGTH) {
       verify(next)
     }
@@ -34,16 +34,21 @@ const PinLock: React.FC = () => {
   const handleDelete = useCallback(() => {
     if (loading) return
     setPin(p => p.slice(0, -1))
-    setError(false)
+    setError(null)
   }, [loading])
 
   const verify = async (p: string) => {
     setLoading(true)
-    const ok = await verifyPIN(p)
-    if (ok) {
-      unlockPIN()
-    } else {
-      setError(true)
+    try {
+      const ok = await verifyPIN(p)
+      if (ok) {
+        unlockPIN()
+      } else {
+        setError('wrong')
+        setPin('')
+      }
+    } catch {
+      setError('network')
       setPin('')
     }
     setLoading(false)
@@ -76,7 +81,8 @@ const PinLock: React.FC = () => {
           ))}
         </div>
 
-        {error && <p className={styles.error}>Невірний PIN</p>}
+        {error === 'wrong' && <p className={styles.error}>Невірний PIN</p>}
+        {error === 'network' && <p className={styles.error}>Немає з'єднання, спробуй ще</p>}
 
         {/* Numpad */}
         <div className={styles.pad}>
