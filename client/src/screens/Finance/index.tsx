@@ -14,7 +14,7 @@ import { useFinanceStore } from '../../store/financeStore'
 import { useUiStore } from '../../store/uiStore'
 import { useProfileStore } from '../../store/profileStore'
 import { useBankStore } from '../../store/bankStore'
-import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart, fmt } from '../../utils/finance'
+import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart } from '../../utils/finance'
 import { getToken } from '../../services/api'
 import styles from './Finance.module.css'
 
@@ -124,7 +124,6 @@ const Finance: React.FC = () => {
     .reduce((s, t) => s + t.amount, 0)
 
   const avgPerDay = daysElapsed > 0 ? Math.round(totalExpense / daysElapsed) : 0
-  const delta = dailyBudget - todaySpent
 
   const handleTopup = (amount: number, description: string, category: string) => {
     addTopup(amount, description, category)
@@ -162,43 +161,18 @@ const Finance: React.FC = () => {
 		<div className={styles.screen}>
 			<AppHeader />
 			<div className={styles.content}>
-				{/* 1. Баланс */}
-				<BalanceHero balance={balance} dailyBudget={dailyBudget} monthSpent={totalExpense} daysLeft={daysLeft} todaySpent={todaySpent} />
+				{/* 1. Баланс + статистика (єдиний hero) */}
+				<BalanceHero
+					balance={balance}
+					dailyBudget={dailyBudget}
+					monthSpent={totalExpense}
+					totalTopup={totalTopup}
+					avgPerDay={avgPerDay}
+					daysLeft={daysLeft}
+					todaySpent={todaySpent}
+				/>
 
-				{/* 2. Статистика дня */}
-				<div className={styles.statsCard}>
-					<div className={styles.statsToday}>
-						<span className={styles.statsTodayLabel}>Сьогодні</span>
-						<span className={styles.statsTodayValue}>{fmt(todaySpent)} ₴</span>
-						<span className={`${styles.statsTodayDelta} ${delta >= 0 ? styles.pos : styles.neg}`}>
-							{delta >= 0 ? '+' : ''}
-							{fmt(delta)} ₴ від бюджету
-						</span>
-					</div>
-					<div className={styles.statsCardDivider} />
-					<div className={styles.statsRow}>
-						<div className={styles.statsTile}>
-							<span className={styles.statsTileLabel}>Поповнення</span>
-							<span className={`${styles.statsTileValue} ${styles.accent}`}>{fmt(totalTopup)} ₴</span>
-						</div>
-						<div className={styles.statsTile}>
-							<span className={styles.statsTileLabel}>Витрати</span>
-							<span className={`${styles.statsTileValue} ${styles.neg}`}>{fmt(totalExpense)} ₴</span>
-						</div>
-					</div>
-					<div className={styles.statsRow}>
-						<div className={styles.statsTile}>
-							<span className={styles.statsTileLabel}>Днів залишилось</span>
-							<span className={styles.statsTileValue}>{daysLeft}</span>
-						</div>
-						<div className={styles.statsTile}>
-							<span className={styles.statsTileLabel}>Середнє/день</span>
-							<span className={`${styles.statsTileValue} ${avgPerDay <= dailyBudget ? styles.accent : styles.neg}`}>{fmt(avgPerDay)} ₴</span>
-						</div>
-					</div>
-				</div>
-
-				{/* 3. Швидкі дії */}
+				{/* 2. Швидкі дії */}
 				<div className={styles.actions}>
 					<button className={styles.btnExpense} onClick={() => setShowExpense(true)}>
 						<IconExpense />
