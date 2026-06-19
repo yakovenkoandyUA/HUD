@@ -23,7 +23,7 @@ const ICON_OPTIONS = [
   'ti-pill', 'ti-sparkles', 'ti-barbell', 'ti-shirt', 'ti-car',
   'ti-plane', 'ti-movie', 'ti-book', 'ti-heart-handshake', 'ti-dots',
   'ti-briefcase', 'ti-device-laptop', 'ti-gift', 'ti-pig-money', 'ti-music',
-  'ti-phone', 'ti-camera', 'ti-heart-pulse', 'ti-bus', 'ti-bike',
+  'ti-phone', 'ti-camera', 'ti-activity-heartbeat', 'ti-bus', 'ti-bike',
   'ti-scissors', 'ti-leaf', 'ti-paw', 'ti-tool', 'ti-ticket',
   'ti-map', 'ti-school', 'ti-star', 'ti-wallet', 'ti-tag',
 ]
@@ -487,16 +487,19 @@ const WalletTab: React.FC = () => {
                 {addingCat ? (
                   <div className={styles.addCatCard}>
                     <div className={styles.addCatRow}>
-                      <button
-                        type="button"
-                        className={styles.addCatIconBtn}
-                        style={{ '--cat-color': newCatColor } as React.CSSProperties}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => setIconPickerOpen(v => !v)}
-                        aria-label="Вибрати іконку"
-                      >
-                        <i className={`ti ${newCatIcon}`} />
-                      </button>
+                      <div className={styles.addCatIconWrap}>
+                        <button
+                          type="button"
+                          className={styles.addCatIconBtn}
+                          style={{ '--cat-color': newCatColor } as React.CSSProperties}
+                          onMouseDown={e => e.preventDefault()}
+                          onClick={() => setIconPickerOpen(v => !v)}
+                          aria-label="Вибрати іконку"
+                        >
+                          <i className={`ti ${newCatIcon}`} />
+                        </button>
+                        <span className={styles.addCatIconLabel}>іконка</span>
+                      </div>
                       <input
                         ref={newCatRef}
                         type="text"
