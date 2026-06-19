@@ -41,13 +41,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
   const drag        = useRef({ startY: 0, startTime: 0, active: false })
   const dragClosing = useRef(false)
 
-  // Body scroll lock
+  // Body scroll lock — tied to mounted, not isOpen, so it stays locked during close animation
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    }
+    if (!mounted) return
+    document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
-  }, [isOpen])
+  }, [mounted])
 
   useEffect(() => {
     if (isOpen) {
@@ -105,10 +104,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
         modal.style.transition = ''
         return
       }
-      const deltaY = e.touches[0].clientY - drag.current.startY
-      const delta  = Math.max(0, deltaY)
-      if (delta > 0) e.preventDefault()
-      modal.style.transform  = `translateY(${delta}px)`
+      const deltaY  = e.touches[0].clientY - drag.current.startY
+      const delta   = Math.max(0, deltaY)
+      const damped  = Math.min(delta * 0.4, 120)
+      if (delta > 10) e.preventDefault()
+      modal.style.transform  = `translateY(${damped}px)`
       modal.style.transition = 'none'
       if (overlayRef.current) {
         overlayRef.current.style.opacity    = String(Math.max(0, 1 - delta / 400))
