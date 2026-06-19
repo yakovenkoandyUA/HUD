@@ -498,7 +498,6 @@ const WalletTab: React.FC = () => {
                         >
                           <i className={`ti ${newCatIcon}`} />
                         </button>
-                        <span className={styles.addCatIconLabel}>іконка</span>
                       </div>
                       <input
                         ref={newCatRef}
@@ -573,9 +572,6 @@ const WalletTab: React.FC = () => {
                   >
                     <div className={styles.catCardIcon}><i className={`ti ${cat.icon}`} /></div>
                     <span className={styles.catCardName}>{cat.label}</span>
-                    <div className={styles.catCardCheck}>
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -684,7 +680,7 @@ const WalletTab: React.FC = () => {
 /**
  * CatCard
  * -------
- * Картка категорії витрат (3-колонковий грид).
+ * Pill-чіп категорії витрат. Активна — кольорова, неактивна — сіра.
  *
  * Props:
  * @prop {Category}   cat       — категорія
@@ -710,7 +706,6 @@ const CatCard: React.FC<CatCardProps> = ({ cat, onToggle, onDelete }) => (
   >
     <div className={styles.catCardIcon}><i className={`ti ${cat.icon}`} /></div>
     <span className={styles.catCardName}>{cat.name}</span>
-    <div className={styles.catCardCheck}>{cat.isActive && <CheckIcon />}</div>
     {onDelete && (
       <button type="button" className={styles.catCardDel} onClick={e => { e.stopPropagation(); onDelete() }} aria-label={`Видалити ${cat.name}`}>
         <XSmallIcon />
