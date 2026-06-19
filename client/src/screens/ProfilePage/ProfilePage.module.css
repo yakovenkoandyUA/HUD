@@ -56,31 +56,33 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 24px 16px calc(72px + env(safe-area-inset-bottom));
+  gap: 16px;
+  padding: 16px 16px calc(72px + env(safe-area-inset-bottom));
 }
 
-/* ── Avatar hero ── */
-.hero {
+/* ── Profile hero card ── */
+.heroCard {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding-bottom: 8px;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
 }
 
-.avatarWrap {
+.avatarCol {
   position: relative;
+  flex-shrink: 0;
 }
 
 .avatarBtn {
-  position: relative;
-  width: 88px;
-  height: 88px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   border: 2px solid var(--border2);
   overflow: hidden;
-  background: var(--surface);
+  background: var(--surface2);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -91,6 +93,22 @@
 .avatarBtn:hover { border-color: var(--accent); }
 .avatarBtn:disabled { cursor: default; opacity: 0.7; }
 
+.avatarBadge {
+  position: absolute;
+  bottom: 0;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  pointer-events: none;
+}
+
 .avatarImg {
   width: 100%;
   height: 100%;
@@ -99,24 +117,18 @@
 
 .avatarInitial {
   font-family: var(--font-display);
-  font-size: 36px;
+  font-size: 28px;
   color: var(--text2);
   line-height: 1;
 }
 
-.cameraOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
+.profileCol {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  opacity: 0;
-  transition: opacity 0.15s;
-  border-radius: 50%;
+  flex-direction: column;
+  gap: 3px;
 }
-.avatarBtn:hover .cameraOverlay { opacity: 1; }
 
 .fileInput {
   display: none;
@@ -140,23 +152,26 @@
   background: none;
   border: none;
   font-family: var(--font-ui);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0;
   transition: color 0.15s;
   letter-spacing: 0.02em;
+  text-align: left;
 }
 .nameBtn:hover { color: var(--accent); }
 
 .namePencil {
-  font-size: 14px;
+  display: flex;
+  align-items: center;
   color: var(--text3);
-  opacity: 0;
-  transition: opacity 0.15s;
+  opacity: 0.5;
+  flex-shrink: 0;
 }
-.nameBtn:hover .namePencil { opacity: 1; }
+.nameBtn:hover .namePencil,
+.usernameBtn:hover .namePencil { opacity: 1; color: var(--accent); }
 
 .nameEditRow {
   display: flex;
@@ -982,7 +997,68 @@
 .tabContent {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+}
+
+/* ── Settings card (grouped sections) ── */
+.settingsCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.cardTitle {
+  padding: 9px 14px 8px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+
+.cardSubTitle {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+
+.cardDivider {
+  height: 1px;
+  background: var(--border);
+}
+
+.cardRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  min-height: 48px;
+}
+
+.cardRowLabel {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+.cardRowValue {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.cardPadded {
+  padding: 14px;
+  background: var(--surface);
 }
 
 /* ── Logout button ── */
@@ -1064,14 +1140,13 @@
   background: none;
   border: none;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text3);
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0;
   transition: color 0.15s;
 }
 .usernameBtn:hover { color: var(--accent); }
-.usernameBtn:hover .namePencil { opacity: 1; }
 
 .emailLabel {
   font-family: var(--font-body);
@@ -1096,7 +1171,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-top: 4px;
+  padding: 4px 14px 14px;
 }
 
 .pwInput {
