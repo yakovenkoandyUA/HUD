@@ -30,6 +30,7 @@ export interface Transaction {
   title?: string
   date: string
   category?: string
+  incomeCategory?: string | null
   createdAt?: string
   recurringId?: string | null
 }

@@ -15,3 +15,18 @@ export const BASE_CATEGORIES: BaseCategory[] = [
   { id: 'накопичення', label: 'Накопичення',   emoji: '🏦' },
   { id: 'інше',      label: 'Інше',            emoji: '📦' },
 ]
+
+export interface IncomeCategory {
+  id: string
+  label: string
+  icon: string
+}
+
+export const INCOME_CATEGORIES: IncomeCategory[] = [
+  { id: 'зарплата',     label: 'Зарплата',     icon: 'ti-briefcase'     },
+  { id: 'фріланс',      label: 'Фріланс',       icon: 'ti-device-laptop' },
+  { id: 'інвестиції',   label: 'Інвестиції',    icon: 'ti-trending-up'   },
+  { id: 'заощадження',  label: 'Заощадження',   icon: 'ti-piggy-bank'    },
+  { id: 'подарунок',    label: 'Подарунок',     icon: 'ti-gift'          },
+  { id: 'інше',         label: 'Інше',          icon: 'ti-dots'          },
+]

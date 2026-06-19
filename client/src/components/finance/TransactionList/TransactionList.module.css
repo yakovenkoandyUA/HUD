@@ -236,6 +236,21 @@
   font-family: var(--font-ui);
 }
 
+.incomeChip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--positive) 18%, transparent);
+  color: var(--positive);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
 .amount {
   font-family: var(--font-mono);
   font-size: 14px;

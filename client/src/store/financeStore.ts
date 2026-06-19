@@ -14,6 +14,7 @@ interface ApiTransaction {
   date: string
   createdAt?: string
   recurringId?: string | null
+  incomeCategory?: string | null
 }
 
 const CACHE_KEY = 'hud-finance-v1'
@@ -43,6 +44,7 @@ function toApiBody(tx: Transaction): object {
     desc: tx.description,
     category: tx.category ?? '',
     date: tx.date.slice(0, 10),
+    ...(tx.incomeCategory !== undefined ? { incomeCategory: tx.incomeCategory } : {}),
   }
 }
 
@@ -54,6 +56,7 @@ function fromApi(raw: ApiTransaction): Transaction {
     description: raw.desc,
     title: raw.title || undefined,
     category: raw.category || undefined,
+    incomeCategory: raw.incomeCategory ?? null,
     date: raw.date,
     createdAt: raw.createdAt,
     recurringId: raw.recurringId ?? null,
@@ -70,7 +73,7 @@ interface FinanceState {
   syncStatus: SyncStatus
 
   fetchTransactions: (month?: string) => Promise<void>
-  addTopup: (amount: number, description: string) => void
+  addTopup: (amount: number, description: string, incomeCategory?: string) => void
   addExpense: (amount: number, description: string, category?: string) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
@@ -105,12 +108,13 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     }
   },
 
-  addTopup: (amount, description) => {
+  addTopup: (amount, description, incomeCategory) => {
     const tx: Transaction = {
       id: crypto.randomUUID(),
       type: 'topup',
       amount,
       description,
+      incomeCategory: incomeCategory ?? null,
       date: new Date().toISOString(),
     }
     set(s => {

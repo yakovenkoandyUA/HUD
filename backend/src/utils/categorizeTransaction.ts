@@ -37,7 +37,7 @@ const RULES: Array<{ category: string; patterns: RegExp[] }> = [
     ],
   },
   {
-    category: 'Їжа',
+    category: 'Продукти',
     patterns: [
       /атб|atb/i,
       /сільпо|silpo/i,
@@ -55,6 +55,12 @@ const RULES: Array<{ category: string; patterns: RegExp[] }> = [
       /produkt/i,
       /супермаркет|supermarket/i,
       /гастроном/i,
+      /пиріжок|пироги|bakery|хлібозавод/i,
+    ],
+  },
+  {
+    category: 'Заклади',
+    patterns: [
       /bolt\s*food/i,
       /glovo/i,
       /uber\s*eats/i,
@@ -72,7 +78,6 @@ const RULES: Array<{ category: string; patterns: RegExp[] }> = [
       /shawarma|шаурма/i,
       /їдальня|stolovaya/i,
       /ресторан|restaurant/i,
-      /пиріжок|пироги|bakery|хлібозавод/i,
     ],
   },
   {
@@ -103,7 +108,7 @@ const RULES: Array<{ category: string; patterns: RegExp[] }> = [
     ],
   },
   {
-    category: 'Здоров\'я',
+    category: 'Медицина',
     patterns: [
       /аптека|apteka|pharmacy/i,
       /бажаємо\s*здоров/i,
@@ -186,12 +191,19 @@ const RULES: Array<{ category: string; patterns: RegExp[] }> = [
     ],
   },
   {
-    category: 'Житло',
+    category: 'Комунальні',
     patterns: [
       /комунальні|communal|жкг|жек/i,
       /київенерго|kyivenergo/i,
       /киівводоканал|vodokanal/i,
       /газ\s*(збут|постачання)|naftogaz|нафтогаз/i,
+      /інтернет|internet|isp\b/i,
+      /київстар|kyivstar|vodafone|lifecell/i,
+    ],
+  },
+  {
+    category: 'Житло',
+    patterns: [
       /оренда|rent\b/i,
       /іпотека|mortgage/i,
       /leroy\s*merlin/i,
@@ -202,12 +214,36 @@ const RULES: Array<{ category: string; patterns: RegExp[] }> = [
     ],
   },
   {
-    category: 'Інвестиції',
+    category: 'Краса',
     patterns: [
-      /monobank.*депозит|депозит/i,
-      /банківський\s*рахунок|поповнення\s*рахунку/i,
-      /інвестиції|invest/i,
-      /fonds|etf\b/i,
+      /салон\s*(краси|beauty)/i,
+      /перукарн|barber|haircut/i,
+      /манікюр|педікюр|nails/i,
+      /косметик|cosmetic/i,
+      /парфум|perfume|fragrance/i,
+      /watsons|eva\b|brocard/i,
+    ],
+  },
+  {
+    category: 'Побут',
+    patterns: [
+      /господарч|household/i,
+      /прання|пральн|laundry/i,
+      /хімчистк|dry\s*clean/i,
+      /ремонт\b|repair\b/i,
+      /сантехнік|plumb/i,
+      /мийн|cleaning\s*supplies/i,
+    ],
+  },
+  {
+    category: 'Подорожі',
+    patterns: [
+      /готель|hotel\b/i,
+      /hostel/i,
+      /airbnb/i,
+      /booking\.com/i,
+      /expedia/i,
+      /туристичн|tour\b|excursion/i,
     ],
   },
   {

@@ -5,8 +5,13 @@ import { getServiceLogoUrl, getServiceEmoji } from '../../../utils/serviceLogos'
 import { authFetch } from '../../../services/api'
 import { useFinanceStore } from '../../../store/financeStore'
 import { useCategoryStore } from '../../../store/categoryStore'
+import { INCOME_CATEGORIES } from '../../../constants/categories'
 import Modal from '../../ui/Modal'
 import styles from './TransactionList.module.css'
+
+const INCOME_LABEL: Record<string, string> = Object.fromEntries(
+  INCOME_CATEGORIES.map(c => [c.id, c.label])
+)
 
 const FALLBACK_COLOR = 'var(--text3)'
 const FALLBACK_ICON  = 'ti-dots'
@@ -424,6 +429,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                               </span>
                               {(receipt || isRecurring) && t.category && (
                                 <span className={styles.txCategory}> · {t.category}</span>
+                              )}
+                              {t.type === 'topup' && t.incomeCategory && (
+                                <span className={styles.incomeChip}>
+                                  {INCOME_LABEL[t.incomeCategory] ?? t.incomeCategory}
+                                </span>
                               )}
                             </>
                           )}

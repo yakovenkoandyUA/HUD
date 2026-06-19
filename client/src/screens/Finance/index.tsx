@@ -126,8 +126,8 @@ const Finance: React.FC = () => {
   const avgPerDay = daysElapsed > 0 ? Math.round(totalExpense / daysElapsed) : 0
   const delta = dailyBudget - todaySpent
 
-  const handleTopup = (amount: number, description: string) => {
-    addTopup(amount, description)
+  const handleTopup = (amount: number, description: string, category: string) => {
+    addTopup(amount, description, category)
     setShowTopup(false)
     showToast(`+${amount} ₴ додано`, 'success')
   }
