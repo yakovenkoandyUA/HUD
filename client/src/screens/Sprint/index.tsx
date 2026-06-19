@@ -12,6 +12,7 @@ import AddSprintItemModal from '../../components/sprint/AddSprintItemModal'
 import { useSprintStore } from '../../store/sprintStore'
 import { useMealPlanStore } from '../../store/mealPlanStore'
 import { useRecipesStore } from '../../store/recipesStore'
+import { useProfileStore } from '../../store/profileStore'
 import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
 import { getToken } from '../../services/api'
 import type { UnifiedTodo } from '../../types'
@@ -20,17 +21,19 @@ import styles from './Sprint.module.css'
 type FilterType   = 'task' | 'shopping'
 type StatusFilter = 'active' | 'done'
 
+// Exponential urgency: відчуття "підйому" від низу до верху
 function deadlineUrgency(dueDate: string, todayIso: string): number {
 	const [ty, tm, td] = todayIso.split('-').map(Number)
 	const [dy, dm, dd] = dueDate.split('-').map(Number)
 	const daysLeft = Math.round((Date.UTC(dy, dm - 1, dd) - Date.UTC(ty, tm - 1, td)) / 86400000)
-	if (daysLeft < 0)   return 10000  // overdue
-	if (daysLeft === 0) return 5000   // today
-	if (daysLeft === 1) return 2000   // tomorrow
-	if (daysLeft <= 3)  return 800    // 2–3 days
-	if (daysLeft <= 5)  return 300    // 4–5 days
-	if (daysLeft <= 7)  return 100    // 6–7 days — починає рухатись
-	return 0                          // 8+ days — як без дедлайну
+	if (daysLeft < 0)   return 10000  // прострочено
+	if (daysLeft === 0) return 5000   // сьогодні
+	if (daysLeft === 1) return 2000   // завтра
+	if (daysLeft <= 3)  return 800    // 2–3 дні
+	if (daysLeft <= 5)  return 300    // 4–5 днів
+	if (daysLeft <= 7)  return 80     // 6–7 днів (було 100, зменшено)
+	if (daysLeft <= 14) return 20     // 8–14 днів
+	return 0                          // 15+ днів — як без дедлайну
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -39,6 +42,7 @@ const Sprint: React.FC = () => {
 	const { items, loading, toggleItem, deleteItem, fetchItems, migrateFromLocalStorage } = useSprintStore()
 	const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
 	const { recipes, fetchRecipes } = useRecipesStore()
+	const myUserId = useProfileStore(s => s.activeProfile?.id)
 	const location = useLocation()
 	const navigate = useNavigate()
 	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
@@ -129,13 +133,22 @@ const Sprint: React.FC = () => {
 		|| items.some(t => !isRecurring(t) && t.dueDate === selectedDay)
 
 	const dayQuests = [...rawDayQuests].sort((a: UnifiedTodo, b: UnifiedTodo) => {
+		// 1. Pinned
 		if (a.isPinned && !b.isPinned) return -1
 		if (!a.isPinned && b.isPinned) return 1
+		// 2. Assigned to current user
+		const aAssigned = myUserId ? (a.assignedTo?.includes(myUserId) ?? false) : false
+		const bAssigned = myUserId ? (b.assignedTo?.includes(myUserId) ?? false) : false
+		if (aAssigned && !bAssigned) return -1
+		if (!aAssigned && bAssigned) return 1
+		// 3. Deadline urgency (exponential)
 		const ua = a.dueDate ? deadlineUrgency(a.dueDate, todayStr) : 0
 		const ub = b.dueDate ? deadlineUrgency(b.dueDate, todayStr) : 0
 		if (ua !== ub) return ub - ua
+		// 4. Family tasks (ownerName) above solo tasks
 		if (a.ownerName && !b.ownerName) return -1
 		if (!a.ownerName && b.ownerName) return 1
+		// 5. Newest first
 		return b.createdAt.localeCompare(a.createdAt)
 	})
 
