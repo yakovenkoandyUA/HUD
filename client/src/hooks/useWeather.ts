@@ -35,6 +35,66 @@ export interface WeatherData {
 
 const DAY_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 
+const WEATHER_UA: Record<string, string> = {
+  'sunny': 'Сонячно',
+  'clear': 'Ясно',
+  'partly cloudy': 'Мінлива хмарність',
+  'cloudy': 'Хмарно',
+  'overcast': 'Похмуро',
+  'mist': 'Туман',
+  'fog': 'Туман',
+  'freezing fog': 'Крижаний туман',
+  'light drizzle': 'Легка мряка',
+  'freezing drizzle': 'Крижана мряка',
+  'heavy freezing drizzle': 'Сильна крижана мряка',
+  'patchy light drizzle': 'Місцями мряка',
+  'light rain': 'Невеликий дощ',
+  'moderate rain': 'Помірний дощ',
+  'heavy rain': 'Сильний дощ',
+  'light freezing rain': 'Невеликий крижаний дощ',
+  'moderate or heavy freezing rain': 'Крижаний дощ',
+  'light sleet': 'Невеликий мокрий сніг',
+  'moderate or heavy sleet': 'Мокрий сніг',
+  'patchy light rain': 'Місцями невеликий дощ',
+  'patchy rain possible': 'Місцями можливий дощ',
+  'patchy rain nearby': 'Дощ поблизу',
+  'light rain shower': 'Невеликий злива',
+  'moderate or heavy rain shower': 'Сильна злива',
+  'torrential rain shower': 'Зливові опади',
+  'light snow': 'Невеликий сніг',
+  'moderate snow': 'Помірний сніг',
+  'heavy snow': 'Сильний сніг',
+  'patchy snow possible': 'Місцями можливий сніг',
+  'blowing snow': 'Метіль',
+  'blizzard': 'Хуртовина',
+  'light snow showers': 'Невеликий снігопад',
+  'moderate or heavy snow showers': 'Сильний снігопад',
+  'ice pellets': 'Крижана крупа',
+  'patchy light rain with thunder': 'Гроза з невеликим дощем',
+  'moderate or heavy rain with thunder': 'Гроза з дощем',
+  'patchy light snow with thunder': 'Гроза зі снігом',
+  'moderate or heavy snow with thunder': 'Сильна гроза зі снігом',
+  'thundery outbreaks possible': 'Можлива гроза',
+  'thunderstorms': 'Гроза',
+  'thunder': 'Гроза',
+  'storm': 'Шторм',
+  'partly sunny': 'Мінлива хмарність',
+  'mostly sunny': 'Переважно сонячно',
+  'mostly cloudy': 'Переважно хмарно',
+  'night rain': 'Нічний дощ',
+  'night thunder': 'Нічна гроза',
+}
+
+export function localizeWeatherDesc(desc: string): string {
+  const key = desc.toLowerCase().trim()
+  if (WEATHER_UA[key]) return WEATHER_UA[key]
+  // partial match
+  for (const [en, ua] of Object.entries(WEATHER_UA)) {
+    if (key.includes(en)) return ua
+  }
+  return desc
+}
+
 function getWeatherIcon(desc: string, isNight = false): string {
   const d = desc.toLowerCase()
 
@@ -120,7 +180,8 @@ export function useWeather(city: string | undefined): WeatherData | null {
     let cancelled = false
     const load = async () => {
       try {
-        const url = `https://wttr.in/${encodeURIComponent(trimmed)}?format=j1`
+        const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+        const url = `${apiUrl}/api/weather?city=${encodeURIComponent(trimmed)}`
         const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
         if (!res.ok || cancelled) return
 
@@ -156,20 +217,21 @@ export function useWeather(city: string | undefined): WeatherData | null {
         const cc = raw.current_condition?.[0]
         if (!cc) return
 
-        const currentDesc = cc.weatherDesc?.[0]?.value ?? ''
+        const currentDescRaw = cc.weatherDesc?.[0]?.value ?? ''
+        const currentDesc = localizeWeatherDesc(currentDescRaw)
         const nowHour = new Date().getHours()
         const isCurrentNight = nowHour < 6 || nowHour >= 21
 
         // Hourly for today (weather[0])
         const todayHourly: WeatherHour[] = (raw.weather?.[0]?.hourly ?? []).map(h => {
           const hr = parseHour(h.time)
-          const desc = h.weatherDesc?.[0]?.value ?? ''
+          const descRaw = h.weatherDesc?.[0]?.value ?? ''
           return {
             time: formatHour(h.time),
             hour: hr,
             temp: h.tempC,
-            desc,
-            icon: getWeatherIcon(desc, hr < 6 || hr >= 21),
+            desc: localizeWeatherDesc(descRaw),
+            icon: getWeatherIcon(descRaw, hr < 6 || hr >= 21),
             humidity: h.humidity,
             windKmph: h.windspeedKmph,
           }
@@ -177,7 +239,7 @@ export function useWeather(city: string | undefined): WeatherData | null {
 
         // Forecast: tomorrow + day after
         const forecast: WeatherDay[] = (raw.weather?.slice(1, 3) ?? []).map((d, i) => {
-          const desc = d.hourly?.[4]?.weatherDesc?.[0]?.value ?? ''
+          const descRaw = d.hourly?.[4]?.weatherDesc?.[0]?.value ?? ''
           const dateObj = new Date(d.date)
           const label = i === 0 ? 'Завтра' : DAY_SHORT[dateObj.getDay()]
           return {
@@ -185,8 +247,8 @@ export function useWeather(city: string | undefined): WeatherData | null {
             label,
             maxTemp: d.maxtempC,
             minTemp: d.mintempC,
-            icon: getWeatherIcon(desc),
-            desc,
+            icon: getWeatherIcon(descRaw),
+            desc: localizeWeatherDesc(descRaw),
           }
         })
 

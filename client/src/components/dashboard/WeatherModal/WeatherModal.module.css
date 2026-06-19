@@ -9,24 +9,22 @@
 
 .current {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	align-items: center;
-	gap: 8px;
+	gap: 16px;
 	padding: 4px 0 12px;
-	text-align: center;
 }
 
 .bigIcon {
-	width: 110px;
-	height: 110px;
+	width: 96px;
+	height: 96px;
 	object-fit: contain;
-	filter: drop-shadow(0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent));
+	flex-shrink: 0;
 }
 
 .currentInfo {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
 	gap: 2px;
 }
 

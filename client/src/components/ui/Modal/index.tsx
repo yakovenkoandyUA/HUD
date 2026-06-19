@@ -25,7 +25,7 @@ interface ModalProps {
   draggable?: boolean
 }
 
-const ANIM_MS = 460
+const ANIM_MS = 360
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggable = false }) => {
   const [mounted, setMounted] = useState(isOpen)
@@ -54,8 +54,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
       if (!dragClosing.current) {
-        if (modalRef.current)   { modalRef.current.style.transform = '';   modalRef.current.style.transition = '' }
-        if (overlayRef.current) { overlayRef.current.style.opacity = '';   overlayRef.current.style.transition = '' }
+        if (modalRef.current) {
+          modalRef.current.style.transform  = ''
+          modalRef.current.style.transition = 'transform 0.32s cubic-bezier(0.4, 0, 1, 1), opacity 0.28s ease-in'
+        }
+        if (overlayRef.current) {
+          overlayRef.current.style.opacity    = ''
+          overlayRef.current.style.transition = 'opacity 0.32s ease-in'
+        }
       }
       dragClosing.current = false
       setVisible(false)
