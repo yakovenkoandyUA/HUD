@@ -7,7 +7,7 @@
   justify-content: center;
   z-index: 200;
   overflow: hidden;
-  transition: opacity 0.38s ease;
+  transition: opacity 0.18s ease;
 }
 
 .overlayVisible { opacity: 1; pointer-events: auto; }
