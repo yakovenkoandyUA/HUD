@@ -63,6 +63,7 @@
 | `/api/labels/:id` | PATCH, DELETE |
 | `/api/books/search` | GET (proxy Google Books, кеш 10хв) |
 | `/api/f1/predictions` | GET, POST, PATCH |
+| `/api/weather` | GET ?city= — проксі до wttr.in (CORS obpass, Cache-Control 30хв) |
 
 ## Env
 

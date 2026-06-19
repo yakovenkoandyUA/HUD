@@ -148,7 +148,24 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - `autoFocus` flow: при `location.state?.autoFocus === true` одразу відкривається textarea нової нотатки вгорі
 - Доступ: FAB "Нотатка" → `/notes?autoFocus=true`, або з TasksAccordion секції НОТАТКИ
 
-## 12. ProfileSelect (`/profile-select`) — публічний маршрут
+## 12. ProfilePage (`/profile`) — 3 таби (me / wallet / plan / admin)
+
+**BottomNav на `/profile`** адаптується: замість основних 5 іконок показує профільні таби.
+
+**MeTab:**
+- Аватар, ім'я, username (inline edit + uniqueness check), зміна пароля (accordion)
+- **СІМ'Я settingsCard** внизу — пошук юзерів, pending received (прийняти/відхилити), accepted members, pending sent; `useFamilyStore` читається зі store (fetchFamily() в ProfilePage при mount)
+
+**WalletTab:**
+- Три settingsCard: РАХУНКИ / ДЕНЬ ЗАРПЛАТИ / КАТЕГОРІЇ
+- Salary stepper — compact inline (28px кнопки, mono число, debounce 800ms)
+- **Категорії — таб-свічер ВИТРАТИ / ПОПОВНЕННЯ**: ВИТРАТИ = базові + кастомні (Інвестиції/Заощадження відфільтровано через `INCOME_NAMES` Set); ПОПОВНЕННЯ = статичний список `INCOME_CATEGORIES`
+- **Категорії — pill cloud**: wrapping flex, кожна категорія — pill-чіп; активна = кольоровий tint + кольорова рамка; неактивна = desaturated + opacity 0.38
+- **Нова категорія — icon picker**: кнопка-чіп (пунктирна рамка + підпис "іконка") відкриває grid 7×5 з 35 Tabler іконок; авто-вибір кольору з `CAT_PALETTE` (16 кольорів), уникає вже використаних
+- SubCategory modal (Modal draggable) — деталі категорії: увімкнути/вимкнути + список підкатегорій + додати підкатегорію
+- Migration modal — при деактивації категорії з транзакціями: перенести в іншу або залишити без категорії
+
+## 13. ProfileSelect (`/profile-select`) — публічний маршрут
 - Сітка профілів (Котька + Коська)
 - Аватар 96px, fallback — перша літера імені
 - Тап → `selectProfile(username)` → JWT → redirect `/`

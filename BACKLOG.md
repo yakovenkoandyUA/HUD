@@ -4,7 +4,7 @@
 
 ---
 
-## Статус (2026-06-16) — Що реалізовано
+## Статус (2026-06-19) — Що реалізовано
 
 > Технічний борг: Sentry ✅, Zod ✅, JWT refresh rotation ✅, helmet+CORS+rate-limit ✅, multi-tenancy audit ✅, PWA offline ✅, AI via backend ✅, feature flags замість ролей ✅
 
@@ -117,6 +117,13 @@
   - **Сім'я** — FamilyLink management
   - **Вигляд** — 6 тем (swatches grid) + Web Push toggle
 - ✅ BottomNav адаптується на `/profile` → 4 профільні таби замість nav
+- ✅ **Сім'я → Я**: вкладка Сім'я видалена з BottomNav; FamilyLink UI (пошук/запит/прийняти/видалити) перенесено в секцію СІМ'Я в кінці MeTab як `settingsCard`
+- ✅ **WalletTab redesign**: весь вміст обгорнуто в `settingsCard` блоки (РАХУНКИ / ДЕНЬ ЗАРПЛАТИ / КАТЕГОРІЇ); salary stepper — компактний inline (28px кнопки, mono число)
+- ✅ **Категорії — pill cloud**: відображення замінено з вертикального списку на wrapping pill-chips; активні — кольоровий tint + border кольору категорії; неактивні — desaturated + opacity 0.38
+- ✅ **Категорії — ВИТРАТИ / ПОПОВНЕННЯ таби**: таб-свічер у верхній частині settingsCard; витрати — кастомні + базові (Інвестиції/Заощадження виключено); поповнення — статичний список INCOME_CATEGORIES
+- ✅ **Категорії — picker іконки**: при створенні нової категорії — кнопка з пунктирною рамкою (іконка + підпис "іконка") відкриває grid 7×5 з 35 Tabler іконками; авто-вибір кольору з палітри 16 кольорів (уникає вже використаних)
+- ✅ **Категорії — нова палітра**: міграційний скрипт `updateCategoryPalette.ts` оновив усі існуючі категорії в БД — унікальні кольори по групах, логічне сортування (`order`), `ti-pill` для Медицина; `seedCategories.ts` оновлено
+- ✅ **INCOME_CATEGORIES**: додано поле `color`, `INCOME_CAT_NAMES` Set для фільтрації
 
 ### Recipes
 - RecipeCard редизайн: фото 4/3 зверху, solid info блок знизу, category + difficulty pills (color-mix)
@@ -149,6 +156,8 @@
 
 ### Глобально
 - Кастомні категорії транзакцій з субкатегоріями
+- ✅ **Modal drag-to-dismiss**: damping 0.4×, cap 120px — узгоджено з `useSwipeToDismiss` хуком; overlay fade 0.38s → 0.18s (зникає синхронно з панеллю)
+- ✅ **Weather backend proxy**: `GET /api/weather?city=` — проксі до wttr.in (уникає CORS), кеш 30хв; `useWeather` хук оновлено щоб ходити через `/api/weather`; повний словник українських перекладів погодних описів; WeatherModal layout — іконка + текст горизонтально замість вертикально; оновлені SVG іконки погоди
 - Теми: retro / velvet / japan / cyber / noir / pixel / **arctic** (7 штук; `dark`, `heroes`, `castle` видалено/перейменовано)
   - **Arctic** — Nord color palette (polar blues + aurora borealis); фон: `radial-gradient` + gradient overlay; watermark: Elder Futhark рунічні символи (SVG data URI, opacity 0.07); aurora shimmer анімація вгорі екрану; шрифт: Uncial Antiqua / Philosopher
 - PWA: service worker, Web Push, іконки
