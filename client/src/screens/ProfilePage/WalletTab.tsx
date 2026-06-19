@@ -578,14 +578,14 @@ const CatCard: React.FC<CatCardProps> = ({ cat, onToggle, onDelete }) => (
     aria-pressed={cat.isActive}
     aria-label={cat.name}
   >
+    <div className={styles.catCardIcon}><i className={`ti ${cat.icon}`} /></div>
+    <span className={styles.catCardName}>{cat.name}</span>
+    <div className={styles.catCardCheck}>{cat.isActive && <CheckIcon />}</div>
     {onDelete && (
       <button type="button" className={styles.catCardDel} onClick={e => { e.stopPropagation(); onDelete() }} aria-label={`Видалити ${cat.name}`}>
         <XSmallIcon />
       </button>
     )}
-    <div className={styles.catCardIcon}><i className={`ti ${cat.icon}`} /></div>
-    <span className={styles.catCardName}>{cat.name}</span>
-    <div className={styles.catCardCheck}>{cat.isActive && <CheckIcon />}</div>
   </div>
 )
 
