@@ -2,6 +2,7 @@
 
 ## 1. Dashboard (`/`)
 - GreetingBlock — привітання + дата
+- **AiChatSheet** — bottom sheet AI асистент (SSE streaming, Claude Haiku), domain-aware контекст, markdown rendering; відкривається кнопкою в хедері
 - WeekHeader (7-денний стрип) або RaceHeroCard (якщо гонка цього тижня) — в `.calendarWrap` з `margin-top: 10px`
 - RaceCountdownStrip — стрічка відліку до наступної гонки (тільки якщо `f1Enabled && nextRace && !raceThisWeek`)
 - **DaySummaryCard** — уніфікований блок "СЬОГОДНІ" (замінив TasksAccordion + окремі meal-chips):
@@ -21,10 +22,11 @@
 - TopupForm, ExpenseForm (модалки) — кастомні категорії з `/api/categories`
 - TransactionList — фільтри з анімацією, кожна категорія свого кольору
 - ReceiptScanner — сканування чеків через Anthropic Vision API
-- RecurringPayments — регулярні платежі з іконками сервісів
+- RecurringPayments — регулярні платежі з іконками сервісів, UAH/USD/EUR конвертація
 - ShoppingTracker — трекер магазинних покупок
-- GoalsList + GoalDetail — savings goals з горизонтальним скролом (backend), деталі у модалці
+- GoalsList + GoalDetail — savings goals з deposits[], горизонтальний скрол, деталі у модалці
 - ExpenseChart — donut chart (Recharts)
+- **MonthlyReport** — AI-аналіз витрат за місяць (Anthropic), markdown rendering, `GET /api/finance/report/:month`
 - streakStore — streak економії (persist local)
 
 **Логіка бюджету:**
@@ -135,8 +137,14 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - Кастомний постер через ImageUploadButton + Cloudinary
 
 ## 10. Memories (`/memories`, `/memories/:id`)
-- Список спогадів з обкладинками
-- MemoryDetail — фотографії, підписи, обкладинка (setCover)
+- Таймлайн по місяцях + сітка 3 колонки
+- Вкладки: СПОГАДИ / ПЛАНИ / КАРТА
+- **MemoryMap** — Leaflet карта з пінами спогадів і планів (Nominatim геокодування)
+- **Плани** — PlanCard/PlanForm, статуси (want/planned/visited), конвертація в спогад
+- "Цей день рік тому" банер
+- **PosterGenerator** — Anthropic Haiku → Pollinations.ai → Cloudinary
+- MemoryDetail — фото (PhotoViewerModal fullscreen), підписи, обкладинка (setCover)
+- **Експорт спогаду** — Canvas API → PNG (обкладинка + назва + дата + теги), Web Share API або download
 - Cloudinary upload для фото
 
 ## 11. Notes (`/notes`)
