@@ -247,22 +247,20 @@ const WalletTab: React.FC = () => {
     <div className={styles.tabContent}>
 
       {/* ── Bank accounts ── */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionTitle}>РАХУНКИ</span>
-        </div>
+      <div className={styles.settingsCard}>
+        <div className={styles.cardTitle}>РАХУНКИ</div>
 
         {bankLoading ? (
-          <p className={styles.sectionHint}>Завантаження...</p>
+          <div className={styles.cardRow}><span className={styles.pushSub}>Завантаження...</span></div>
         ) : connection ? (
-          <div className={styles.bankCard}>
+          <div className={styles.cardRow}>
             <div className={styles.bankCardLeft}>
               <div className={styles.bankCardDot} />
               <div>
-                <span className={styles.bankCardName}>Monobank</span>
-                <span className={styles.bankCardSub}>{connection.accountName}</span>
+                <span className={styles.cardRowLabel}>Monobank</span>
+                <span className={styles.pushSub}>{connection.accountName}</span>
                 {connection.lastSync && (
-                  <span className={styles.bankCardSync}>Sync: {formatLastSync(connection.lastSync)}</span>
+                  <span className={styles.pushSub}>Sync: {formatLastSync(connection.lastSync)}</span>
                 )}
               </div>
             </div>
@@ -288,36 +286,37 @@ const WalletTab: React.FC = () => {
             </div>
           </div>
         ) : authPending && authAcceptUrl ? (
-          /* ── OAuth waiting screen ── */
-          <div className={styles.monoAuthCard}>
-            <div className={styles.monoAuthTop}>
-              <div className={styles.monoAuthSpinner} />
-              <span className={styles.monoAuthWait}>Очікую підтвердження в Monobank...</span>
+          <div className={styles.cardPadded}>
+            <div className={styles.monoAuthCard}>
+              <div className={styles.monoAuthTop}>
+                <div className={styles.monoAuthSpinner} />
+                <span className={styles.monoAuthWait}>Очікую підтвердження в Monobank...</span>
+              </div>
+              <a
+                href={authAcceptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.monoAuthOpenBtn}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                Відкрити Monobank
+              </a>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(authAcceptUrl)}`}
+                alt="QR"
+                className={styles.monoAuthQr}
+              />
+              <p className={styles.monoAuthQrHint}>або відскануйте QR у застосунку</p>
+              <button type="button" className={styles.monoAuthCancelBtn} onClick={cancelMonoAuth}>
+                Скасувати
+              </button>
             </div>
-            <a
-              href={authAcceptUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.monoAuthOpenBtn}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-              Відкрити Monobank
-            </a>
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(authAcceptUrl)}`}
-              alt="QR"
-              className={styles.monoAuthQr}
-            />
-            <p className={styles.monoAuthQrHint}>або відскануйте QR у застосунку</p>
-            <button type="button" className={styles.monoAuthCancelBtn} onClick={cancelMonoAuth}>
-              Скасувати
-            </button>
           </div>
         ) : (
-          <div className={styles.bankConnectWrap}>
+          <div className={styles.cardPadded}>
             {!showManual ? (
               <button type="button" className={styles.bankAddBtn} onClick={() => setShowManual(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -367,91 +366,93 @@ const WalletTab: React.FC = () => {
             )}
           </div>
         )}
-      </section>
+      </div>
 
       {/* ── Salary day ── */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionTitle}>ДЕНЬ ЗАРПЛАТИ</span>
-          {savingSalary && <span className={styles.sectionTag}>Зберігаю...</span>}
+      <div className={styles.settingsCard}>
+        <div className={styles.cardTitle}>
+          ДЕНЬ ЗАРПЛАТИ
+          {savingSalary && <span className={styles.pushSub} style={{ marginLeft: 8, textTransform: 'none', fontFamily: 'var(--font-ui)' }}>Зберігаю...</span>}
         </div>
-        <p className={styles.sectionHint}>
-          Від цього числа рахується щоденний бюджет до наступної зарплати.
-        </p>
-        <div className={styles.salaryRow}>
-          <button
-            type="button"
-            className={styles.salaryStepBtn}
-            onClick={() => handleSalaryDayChange(salaryDay - 1)}
-            disabled={salaryDay <= 1}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
-          <div className={styles.salaryValue}>
-            <span className={styles.salaryNum}>{salaryDay}</span>
-            <span className={styles.salaryUnit}>число місяця</span>
+        <div className={styles.cardRow}>
+          <div>
+            <div className={styles.cardRowLabel}>Число місяця</div>
+            <div className={styles.pushSub}>Від цього числа рахується денний бюджет</div>
           </div>
-          <button
-            type="button"
-            className={styles.salaryStepBtn}
-            onClick={() => handleSalaryDayChange(salaryDay + 1)}
-            disabled={salaryDay >= 31}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
-        </div>
-      </section>
-
-      {/* ── Default categories ── */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionTitle}>БАЗОВІ КАТЕГОРІЇ</span>
-          <span className={styles.sectionCount}>{defaultCats.filter(c => c.isActive).length}/{defaultCats.length}</span>
-        </div>
-        <div className={styles.catGrid}>
-          {defaultCats.map(cat => (
-            <CatCard key={cat._id} cat={cat} onToggle={() => setSubModalCat(cat)} />
-          ))}
-        </div>
-      </section>
-
-      {/* ── Custom categories ── */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionTitle}>МОЇ КАТЕГОРІЇ</span>
-          <span className={styles.sectionCount}>{customCats.filter(c => c.isActive).length}/{customCats.length}</span>
-        </div>
-        <div className={styles.catGrid}>
-          {customCats.map(cat => (
-            <CatCard key={cat._id} cat={cat} onToggle={() => setSubModalCat(cat)} onDelete={() => deleteCat(cat._id)} />
-          ))}
-          {addingCat ? (
-            <div className={styles.addCatCard}>
-              <input
-                ref={newCatRef}
-                type="text"
-                value={newCatValue}
-                onChange={e => setNewCatValue(e.target.value)}
-                onBlur={() => { if (!newCatValue.trim()) setAddingCat(false) }}
-                onKeyDown={e => { if (e.key === 'Enter') saveNewCat(); if (e.key === 'Escape') { setNewCatValue(''); setAddingCat(false) } }}
-                className={styles.addCatInput}
-                placeholder="Назва"
-                maxLength={24}
-                disabled={savingCat}
-              />
-              <button type="button" className={styles.addCatSaveBtn} onClick={saveNewCat} disabled={savingCat || !newCatValue.trim()}>
-                <CheckIcon />
-              </button>
-            </div>
-          ) : (
-            <button type="button" className={styles.addCatBtn} onClick={() => setAddingCat(true)}>
-              <PlusIcon /><span>Нова</span>
+          <div className={styles.salaryStepperCompact}>
+            <button
+              type="button"
+              className={styles.salaryStepCompactBtn}
+              onClick={() => handleSalaryDayChange(salaryDay - 1)}
+              disabled={salaryDay <= 1}
+            >
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
-          )}
+            <span className={styles.salaryNumCompact}>{salaryDay}</span>
+            <button
+              type="button"
+              className={styles.salaryStepCompactBtn}
+              onClick={() => handleSalaryDayChange(salaryDay + 1)}
+              disabled={salaryDay >= 31}
+            >
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          </div>
         </div>
-      </section>
+      </div>
 
-      <div className={styles.totalActive}><span>{activeCount} активних категорій</span></div>
+      {/* ── Categories ── */}
+      <div className={styles.settingsCard}>
+        <div className={styles.cardTitle}>
+          БАЗОВІ КАТЕГОРІЇ
+          <span className={styles.navPinCount}>{defaultCats.filter(c => c.isActive).length}/{defaultCats.length}</span>
+        </div>
+        <div className={styles.cardPadded}>
+          <div className={styles.catGrid}>
+            {defaultCats.map(cat => (
+              <CatCard key={cat._id} cat={cat} onToggle={() => setSubModalCat(cat)} />
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.cardDivider} />
+
+        <div className={styles.cardTitle}>
+          МОЇ КАТЕГОРІЇ
+          <span className={styles.navPinCount}>{customCats.filter(c => c.isActive).length}/{customCats.length}</span>
+        </div>
+        <div className={styles.cardPadded}>
+          <div className={styles.catGrid}>
+            {customCats.map(cat => (
+              <CatCard key={cat._id} cat={cat} onToggle={() => setSubModalCat(cat)} onDelete={() => deleteCat(cat._id)} />
+            ))}
+            {addingCat ? (
+              <div className={styles.addCatCard}>
+                <input
+                  ref={newCatRef}
+                  type="text"
+                  value={newCatValue}
+                  onChange={e => setNewCatValue(e.target.value)}
+                  onBlur={() => { if (!newCatValue.trim()) setAddingCat(false) }}
+                  onKeyDown={e => { if (e.key === 'Enter') saveNewCat(); if (e.key === 'Escape') { setNewCatValue(''); setAddingCat(false) } }}
+                  className={styles.addCatInput}
+                  placeholder="Назва"
+                  maxLength={24}
+                  disabled={savingCat}
+                />
+                <button type="button" className={styles.addCatSaveBtn} onClick={saveNewCat} disabled={savingCat || !newCatValue.trim()}>
+                  <CheckIcon />
+                </button>
+              </div>
+            ) : (
+              <button type="button" className={styles.addCatBtn} onClick={() => setAddingCat(true)}>
+                <PlusIcon /><span>Нова</span>
+              </button>
+            )}
+          </div>
+          <div className={styles.totalActive}><span>{activeCount} активних категорій</span></div>
+        </div>
+      </div>
 
       {/* ── SubCategory modal ── */}
       <Modal isOpen={!!subModalCat} onClose={() => { setSubModalCat(null); setNewSubValue('') }} title={subModalCat?.name ?? ''} draggable>

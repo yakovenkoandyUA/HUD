@@ -1262,6 +1262,39 @@
   color: var(--text3);
 }
 
+.salaryStepperCompact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.salaryStepCompactBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+.salaryStepCompactBtn:hover:not(:disabled) { background: var(--surface); color: var(--accent); }
+.salaryStepCompactBtn:disabled { opacity: 0.3; cursor: default; }
+
+.salaryNumCompact {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--accent);
+  min-width: 28px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Nav style picker ── */
 .navStyleGrid {
   display: grid;

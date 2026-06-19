@@ -4,12 +4,11 @@ import { useProfileStore } from '../../store/profileStore'
 import { useFamilyStore } from '../../store/familyStore'
 import MeTab from './MeTab'
 import WalletTab from './WalletTab'
-import FamilyTab from './FamilyTab'
 import PlanTab from './PlanTab'
 import AdminTab from './AdminTab'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'family' | 'plan' | 'admin'
+type ProfileTab = 'me' | 'wallet' | 'plan' | 'admin'
 
 /**
  * ProfilePage
@@ -58,8 +57,7 @@ const ProfilePage: React.FC = () => {
       <div className={styles.content}>
         {activeTab === 'me'     && <MeTab />}
         {activeTab === 'wallet' && <WalletTab />}
-        {activeTab === 'family'     && <FamilyTab />}
-        {activeTab === 'plan'       && <PlanTab />}
+        {activeTab === 'plan'   && <PlanTab />}
         {activeTab === 'admin' && activeProfile.role === 'admin' && <AdminTab />}
       </div>
     </div>

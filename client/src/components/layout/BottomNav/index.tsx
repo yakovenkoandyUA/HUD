@@ -11,12 +11,11 @@ import MemoriesIcon  from '../../../assets/icons/nav/memories.svg?react'
 import { useProfileStore } from '../../../store/profileStore'
 import { useUiStore } from '../../../store/uiStore'
 
-type ProfileTab = 'me' | 'wallet' | 'family' | 'plan' | 'admin'
+type ProfileTab = 'me' | 'wallet' | 'plan' | 'admin'
 
 const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   { id: 'me',     label: 'Я',        icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> },
   { id: 'wallet', label: 'Гаманець', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="18" height="13" rx="2"/><path d="M2 10h18"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M6 3l10 0" strokeWidth="1.3"/></svg> },
-  { id: 'family', label: "Сім'я",    icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="7" r="3"/><circle cx="15" cy="8" r="2.5"/><path d="M1 20c0-3.5 3-6 7-6s7 2.5 7 6"/><path d="M15.5 14c2.5 0 5 1.5 5 5"/></svg> },
   { id: 'plan',   label: 'План',     icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 15L5.5 18.5L7.5 12L2 8H8.5L11 2Z"/></svg> },
   { id: 'admin',  label: 'Адмін',   adminOnly: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.93 4.93l1.41 1.41M15.66 15.66l1.41 1.41M4.93 17.07l1.41-1.41M15.66 6.34l1.41-1.41"/></svg> },
 ]
