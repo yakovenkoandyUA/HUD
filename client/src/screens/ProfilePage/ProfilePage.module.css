@@ -246,6 +246,35 @@
 }
 
 /* ── Category grid ── */
+/* ── Category tab switcher ── */
+.catTabBar {
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px 0;
+}
+
+.catTabBtn {
+  flex: 1;
+  padding: 7px 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.catTabBtn:hover { color: var(--text2); }
+.catTabBtnActive {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
 .catGrid {
   display: flex;
   flex-direction: column;
@@ -355,13 +384,86 @@
 
 .addCatCard {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 0;
   padding: 6px 10px;
   background: var(--surface);
   border: 1px solid var(--accent);
   border-radius: 8px;
+}
+
+.addCatRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.addCatIconBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--cat-color) 18%, var(--surface2));
+  border: 1px solid color-mix(in srgb, var(--cat-color) 35%, transparent);
+  color: var(--cat-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.addCatIconBtn:hover {
+  background: color-mix(in srgb, var(--cat-color) 28%, var(--surface2));
+}
+
+.addCatCancelBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.addCatCancelBtn:hover { color: var(--text); }
+
+.iconPicker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.iconPickerBtn {
+  aspect-ratio: 1;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  padding: 0;
+}
+.iconPickerBtn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+.iconPickerBtnActive {
+  background: color-mix(in srgb, var(--cat-color) 18%, var(--surface2));
+  border-color: color-mix(in srgb, var(--cat-color) 40%, transparent);
+  color: var(--cat-color);
 }
 
 .addCatInput {
@@ -399,7 +501,7 @@
   font-size: 11px;
   color: var(--text3);
   text-align: center;
-  padding-top: 8px;
+  margin-block: 8px;
 }
 
 /* ── Migration modal body ── */

@@ -20,13 +20,16 @@ export interface IncomeCategory {
   id: string
   label: string
   icon: string
+  color: string
 }
 
 export const INCOME_CATEGORIES: IncomeCategory[] = [
-  { id: 'зарплата',     label: 'Зарплата',     icon: 'ti-briefcase'     },
-  { id: 'фріланс',      label: 'Фріланс',       icon: 'ti-device-laptop' },
-  { id: 'інвестиції',   label: 'Інвестиції',    icon: 'ti-trending-up'   },
-  { id: 'заощадження',  label: 'Заощадження',   icon: 'ti-piggy-bank'    },
-  { id: 'подарунок',    label: 'Подарунок',     icon: 'ti-gift'          },
-  { id: 'інше',         label: 'Інше',          icon: 'ti-dots'          },
+  { id: 'зарплата',    label: 'Зарплата',    icon: 'ti-briefcase',     color: '#22C55E' },
+  { id: 'фріланс',     label: 'Фріланс',     icon: 'ti-device-laptop', color: '#8B5CF6' },
+  { id: 'інвестиції',  label: 'Інвестиції',  icon: 'ti-trending-up',   color: '#3B82F6' },
+  { id: 'заощадження', label: 'Заощадження', icon: 'ti-pig-money',     color: '#EAB308' },
+  { id: 'подарунок',   label: 'Подарунок',   icon: 'ti-gift',          color: '#FB923C' },
+  { id: 'інше',        label: 'Інше',        icon: 'ti-dots',          color: '#9CA3AF' },
 ]
+
+export const INCOME_CAT_NAMES = new Set(INCOME_CATEGORIES.map(c => c.label.toLowerCase()))
