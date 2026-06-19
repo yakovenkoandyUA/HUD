@@ -58,13 +58,33 @@ const ARC_POSITIONS_5 = [
   { x:  108, y:  -72 },
 ]
 
+/** Ansuz rune ᚨ — Odin's rune of wisdom (Mimir connection). Flips 180° when hub opens. */
+function AnsuzRune({ flipped }: { flipped: boolean }) {
+  return (
+    <svg
+      width="22" height="22" viewBox="0 0 22 22" fill="none"
+      className={`${styles.ansuzRune} ${flipped ? styles.ansuzFlipped : ''}`}
+    >
+      {/* Vertical stem */}
+      <line x1="8" y1="2.5" x2="8" y2="19.5"
+            stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+      {/* Upper branch */}
+      <line x1="8" y1="6" x2="16" y2="10.5"
+            stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+      {/* Lower branch */}
+      <line x1="8" y1="12" x2="16" y2="16.5"
+            stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 /**
  * BottomNav
  * ---------
  * Supports 3 nav styles (from uiStore.navStyle):
  * - 'classic'  — full-width bottom bar with icon + label for all sections
  * - 'pill'     — floating pill with pinned sections as icons only
- * - 'hub'      — floating pill + M hub button that opens radial secondary pills
+ * - 'hub'      — floating pill + Mimir's eye hub button that opens radial secondary pills
  *
  * On /profile → full-width labeled tab bar (always, regardless of style).
  */
@@ -130,7 +150,6 @@ const BottomNav: React.FC = () => {
             }
           >
             <s.Icon className={styles.icon} />
-            <span className={styles.classicLabel}>{s.label}</span>
           </NavLink>
         ))}
       </nav>
@@ -139,20 +158,100 @@ const BottomNav: React.FC = () => {
 
   // ── Pill style ────────────────────────────────────────────────
   if (navStyle === 'pill') {
-    return (
-      <nav className={styles.nav}>
-        {pinnedAvailable.map(s => (
+    const overflowSections = availableSections.filter(s => !pinnedSections.includes(s.to))
+    const visibleOverflow = overflowSections.slice(0, 5)
+    const hasOverflow = overflowSections.length > 0
+
+    const pillLink = (s: NavSection) => (
+      <NavLink
+        key={s.to}
+        to={s.to}
+        end={s.to === '/'}
+        className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+      >
+        <s.Icon className={styles.icon} />
+      </NavLink>
+    )
+
+    // Overflow → mini-hub: M button appears in center
+    if (hasOverflow) {
+      const half = Math.floor(pinnedAvailable.length / 2)
+      const leftPinned = pinnedAvailable.slice(0, half)
+      const rightPinned = pinnedAvailable.slice(half)
+      const arcPos = visibleOverflow.length <= 3 ? ARC_POSITIONS_3
+                   : visibleOverflow.length === 4 ? ARC_POSITIONS_4
+                   : ARC_POSITIONS_5
+      return (
+        <>
+          {hubOpen && (
+            <div className={styles.backdrop} onClick={() => setHubOpen(false)} />
+          )}
+          <div className={styles.pillsAnchor}>
+            {visibleOverflow.map((s, i) => {
+              const pos = arcPos[i] ?? arcPos[arcPos.length - 1]
+              const isActive = s.to === '/' ? pathname === '/' : pathname.startsWith(s.to)
+              return (
+                <button
+                  key={s.to}
+                  type="button"
+                  className={`${styles.pill} ${hubOpen ? styles.pillVisible : ''} ${isActive ? styles.pillActive : ''}`}
+                  style={{
+                    '--px': `${pos.x}px`,
+                    '--py': `${pos.y}px`,
+                    transitionDelay: hubOpen ? `${i * 35}ms` : `${(visibleOverflow.length - 1 - i) * 25}ms`,
+                  } as React.CSSProperties}
+                  onClick={() => { setHubOpen(false); navigate(s.to) }}
+                >
+                  <span className={styles.pillIcon}><s.Icon /></span>
+                  <span className={styles.pillLabel}>{s.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          <nav className={styles.nav}>
+            {leftPinned.map(pillLink)}
+            <button
+              type="button"
+              className={`${styles.hubBtn} ${hubOpen ? styles.hubBtnOpen : ''}`}
+              onClick={() => setHubOpen(o => !o)}
+              aria-label="Всі розділи"
+            >
+              <AnsuzRune flipped={hubOpen} />
+            </button>
+            {rightPinned.map(pillLink)}
+          </nav>
+        </>
+      )
+    }
+
+    // Even count + dashboard pinned → dashboard goes to center
+    const dashSection = pinnedAvailable.find(s => s.to === '/')
+    if (pinnedAvailable.length % 2 === 0 && dashSection) {
+      const rest = pinnedAvailable.filter(s => s.to !== '/')
+      const half = rest.length / 2
+      const leftPinned = rest.slice(0, half)
+      const rightPinned = rest.slice(half)
+      return (
+        <nav className={styles.nav}>
+          {leftPinned.map(pillLink)}
           <NavLink
-            key={s.to}
-            to={s.to}
-            end={s.to === '/'}
+            to="/"
+            end
             className={({ isActive }) =>
-              `${styles.item} ${isActive ? styles.active : ''}`
+              `${styles.item} ${styles.pillCenterDash} ${isActive ? styles.active : ''}`
             }
           >
-            <s.Icon className={styles.icon} />
+            <dashSection.Icon className={styles.icon} />
           </NavLink>
-        ))}
+          {rightPinned.map(pillLink)}
+        </nav>
+      )
+    }
+
+    // Odd count, no overflow → plain row
+    return (
+      <nav className={styles.nav}>
+        {pinnedAvailable.map(pillLink)}
       </nav>
     )
   }
@@ -213,13 +312,7 @@ const BottomNav: React.FC = () => {
           onClick={() => setHubOpen(o => !o)}
           aria-label="Всі розділи"
         >
-          {hubOpen ? (
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
-            </svg>
-          ) : (
-            <span className={styles.hubBtnLetter}>M</span>
-          )}
+          <AnsuzRune flipped={hubOpen} />
         </button>
 
         {pinnedAvailable.slice(2, 4).map(s => (

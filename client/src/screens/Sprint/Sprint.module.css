@@ -3,7 +3,7 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 16px calc(var(--bottom-nav-height, 64px));
+  padding: 16px 16px calc(80px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 12px;

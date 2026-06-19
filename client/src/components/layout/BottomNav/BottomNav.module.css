@@ -39,7 +39,7 @@
 
 .active {
   color: var(--accent) !important;
-  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  /* background: color-mix(in srgb, var(--accent) 13%, transparent); */
 }
 .active svg { stroke: var(--accent); }
 
@@ -75,14 +75,33 @@
   color: var(--text2);
 }
 
-.hubBtnLetter {
-  font-family: var(--font-logo, var(--font-ui));
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  line-height: 1;
+/* ── Centered dashboard pill (even count, no overflow) ── */
+.pillCenterDash {
+  position: relative;
+  margin: 0 2px;
+}
+.pillCenterDash::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 38%, transparent);
   pointer-events: none;
-  user-select: none;
+  transition: border-color 0.18s;
+}
+.pillCenterDash.active::after {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* ── Ansuz rune (hub button) ── */
+.ansuzRune {
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ansuzFlipped {
+  transform: rotate(180deg);
 }
 
 /* ── Backdrop ── */
@@ -231,7 +250,7 @@
   border-bottom: none;
   border-left: none;
   border-right: none;
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  padding: 15px 5px;
   gap: 0;
   justify-content: space-around;
   box-shadow: 0 -4px 24px rgba(0,0,0,0.14);

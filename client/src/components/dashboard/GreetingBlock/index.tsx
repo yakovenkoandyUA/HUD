@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useProfileStore } from '../../../store/profileStore'
 import { useUiStore } from '../../../store/uiStore'
+import { useWeather } from '../../../hooks/useWeather'
 import styles from './GreetingBlock.module.css'
 
 /**
@@ -36,8 +37,9 @@ const THEME_PHOTOS: Partial<Record<string, string>> = {
 }
 
 const GreetingBlock: React.FC = () => {
-  const name  = useProfileStore(s => s.activeProfile?.name ?? '')
-  const theme = useUiStore(s => s.theme)
+  const profile = useProfileStore(s => s.activeProfile)
+  const theme   = useUiStore(s => s.theme)
+  const weather = useWeather(profile?.city)
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -60,8 +62,17 @@ const GreetingBlock: React.FC = () => {
 
       <div className={styles.content}>
         <span className={styles.greetText}>{greet}</span>
-        <span className={styles.name}>{name}</span>
+        <span className={styles.name}>{profile?.name ?? ''}</span>
         <span className={styles.date}>{dateStr}</span>
+        {weather && (
+          <div className={styles.weatherRow}>
+            <img src={weather.icon} alt={weather.desc} className={styles.weatherIcon} />
+            <div className={styles.weatherInfo}>
+              <span className={styles.weatherTemp}>{weather.temp}°</span>
+              <span className={styles.weatherDesc}>{weather.desc}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

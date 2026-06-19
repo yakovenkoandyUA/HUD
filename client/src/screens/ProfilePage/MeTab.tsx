@@ -259,10 +259,6 @@ const MeTab: React.FC = () => {
     }, 800)
   }
 
-  const handleTimeSlot = (field: 'morningStart' | 'afternoonStart' | 'eveningStart', value: number) => {
-    updateProfile({ [field]: value })
-  }
-
   if (!activeProfile) return null
 
   return (
@@ -593,21 +589,6 @@ const MeTab: React.FC = () => {
             placeholder="Київ"
           />
         </div>
-        <p className={styles.sectionHint} style={{ marginTop: 12 }}>Часові межі секцій</p>
-        {([
-          { key: 'morningStart',   label: 'Ранок починається о' },
-          { key: 'afternoonStart', label: 'День починається о' },
-          { key: 'eveningStart',   label: 'Вечір починається о' },
-        ] as const).map(({ key, label }) => (
-          <div key={key} className={styles.slotRow}>
-            <span className={styles.slotLabel}>{label}</span>
-            <div className={styles.slotStepper}>
-              <button type="button" className={styles.stepperBtn} onClick={() => handleTimeSlot(key, Math.max(0, (activeProfile[key] ?? 6) - 1))}>−</button>
-              <span className={styles.stepperVal}>{String(activeProfile[key] ?? 0).padStart(2, '0')}:00</span>
-              <button type="button" className={styles.stepperBtn} onClick={() => handleTimeSlot(key, Math.min(23, (activeProfile[key] ?? 6) + 1))}>+</button>
-            </div>
-          </div>
-        ))}
       </section>
 
       {/* ── Modules ── */}

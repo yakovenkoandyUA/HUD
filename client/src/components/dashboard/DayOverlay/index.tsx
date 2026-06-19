@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
+import { useWeather } from '../../../hooks/useWeather'
 import { useNavigate } from 'react-router-dom'
 import MoodIcon from './MoodIcon'
 import MoodCalendar from '../MoodCalendar'
@@ -23,20 +24,13 @@ function toIso(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
-function getCurrentSlot(profile: { morningStart?: number; afternoonStart?: number; eveningStart?: number } | null): 'morning' | 'afternoon' | 'evening' {
+function getCurrentSlot(): 'morning' | 'afternoon' | 'evening' {
   const h = new Date().getHours()
-  const afternoon = profile?.afternoonStart ?? 12
-  const evening   = profile?.eveningStart   ?? 18
-  if (h >= evening)   return 'evening'
-  if (h >= afternoon) return 'afternoon'
+  if (h >= 18) return 'evening'
+  if (h >= 12) return 'afternoon'
   return 'morning'
 }
 
-interface WeatherData {
-  temp: string
-  desc: string
-  icon: string
-}
 
 /**
  * DayOverlay
@@ -62,12 +56,12 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const sheetRef   = useSwipeToDismiss(onClose, { overlayRef, bodyRef })
   useModalHistory(onClose, true)
 
-  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const weather   = useWeather(activeProfile?.city)
   const [noteValue, setNoteValue] = useState('')
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const today        = toIso(new Date())
-  const currentSlot  = getCurrentSlot(activeProfile)
+  const currentSlot  = getCurrentSlot()
   const currentMood  = todayScore()
 
   // Sync note textarea when logs load
@@ -89,57 +83,6 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
     load()
     return () => { cancelled = true }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Weather via wttr.in
-  useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      const city = activeProfile?.city?.trim()
-      let url = ''
-      if (city) {
-        url = `https://wttr.in/${encodeURIComponent(city)}?format=j1`
-      } else if (navigator.geolocation) {
-        await new Promise<void>(resolve => {
-          navigator.geolocation.getCurrentPosition(
-            pos => { url = `https://wttr.in/${pos.coords.latitude},${pos.coords.longitude}?format=j1`; resolve() },
-            () => resolve(),
-            { timeout: 5000 }
-          )
-        })
-      }
-      if (!url || cancelled) return
-      try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(6000) })
-        if (!res.ok || cancelled) return
-        const data = await res.json() as {
-          current_condition: Array<{ temp_C: string; weatherDesc: Array<{ value: string }> }>
-        }
-        const cc = data.current_condition?.[0]
-        if (cc && !cancelled) {
-          setWeather({
-            temp: cc.temp_C,
-            desc: cc.weatherDesc?.[0]?.value ?? '',
-            icon: getWeatherEmoji(cc.weatherDesc?.[0]?.value ?? ''),
-          })
-        }
-      } catch {
-        // silent fail
-      }
-    }
-    load()
-    return () => { cancelled = true }
-  }, [activeProfile?.city]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  function getWeatherEmoji(desc: string): string {
-    const d = desc.toLowerCase()
-    if (d.includes('thunder')) return '⛈'
-    if (d.includes('snow'))    return '❄️'
-    if (d.includes('rain') || d.includes('drizzle')) return '🌧'
-    if (d.includes('cloud') || d.includes('overcast')) return '☁️'
-    if (d.includes('fog') || d.includes('mist'))       return '🌫'
-    if (d.includes('sunny') || d.includes('clear'))    return '☀️'
-    return '🌤'
-  }
 
   // Routines due today only
   const todayDate = new Date()
@@ -188,7 +131,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
           </div>
           {weather && (
             <div className={styles.weather}>
-              <span className={styles.weatherIcon}>{weather.icon}</span>
+              <img src={weather.icon} alt={weather.desc} className={styles.weatherIcon} />
               <span className={styles.weatherTemp}>{weather.temp}°</span>
             </div>
           )}

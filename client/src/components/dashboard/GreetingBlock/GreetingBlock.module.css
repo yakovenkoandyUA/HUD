@@ -112,6 +112,42 @@
 	font-family: var(--font-mono);
 	font-size: 11px;
 	color: var(--text2);
-	margin-top: 3px;
 	letter-spacing: 0.02em;
+	margin-top: 3px;
+}
+
+.weatherRow {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 6px;
+}
+
+.weatherIcon {
+	width: 52px;
+	height: 52px;
+	object-fit: contain;
+	flex-shrink: 0;
+}
+
+.weatherInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.weatherTemp {
+	font-family: var(--font-mono);
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text);
+	line-height: 1;
+}
+
+.weatherDesc {
+	font-family: var(--font-ui);
+	font-size: 10px;
+	color: var(--text3);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
 }
