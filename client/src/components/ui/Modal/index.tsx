@@ -25,7 +25,7 @@ interface ModalProps {
   draggable?: boolean
 }
 
-const ANIM_MS = 420
+const ANIM_MS = 460
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggable = false }) => {
   const [mounted, setMounted] = useState(isOpen)

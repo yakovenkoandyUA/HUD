@@ -269,6 +269,10 @@
   flex: 1;
   -webkit-tap-highlight-color: transparent;
 }
+
+.classicItem:last-child svg {
+  width: 30px;
+}
 .classicItem.active {
   color: var(--accent);
 }

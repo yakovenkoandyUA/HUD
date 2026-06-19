@@ -1,0 +1,315 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding-bottom: 8px;
+}
+
+/* ── Current ──────────────────────────────── */
+
+.current {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 0 12px;
+	text-align: center;
+}
+
+.bigIcon {
+	width: 110px;
+	height: 110px;
+	object-fit: contain;
+	filter: drop-shadow(0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent));
+}
+
+.currentInfo {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+}
+
+.bigTemp {
+	font-family: var(--font-display);
+	font-size: 64px;
+	line-height: 1;
+	color: var(--text);
+}
+
+.desc {
+	font-family: var(--font-ui);
+	font-size: 14px;
+	color: var(--text2);
+}
+
+.city {
+	font-family: var(--font-ui);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text3);
+	margin-top: 2px;
+}
+
+/* ── Section ──────────────────────────────── */
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.sectionLabel {
+	font-family: var(--font-ui);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	color: var(--text3);
+}
+
+/* ── Hourly ───────────────────────────────── */
+
+.hourlyTrack {
+	display: flex;
+	gap: 8px;
+	overflow-x: auto;
+	scrollbar-width: none;
+	padding-bottom: 4px;
+}
+
+.hourlyTrack::-webkit-scrollbar { display: none; }
+
+.hourCard {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 5px;
+	flex-shrink: 0;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	padding: 10px 12px;
+	min-width: 58px;
+	transition: border-color 0.2s;
+}
+
+.hourCardNow {
+	border-color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.hourTime {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--text3);
+}
+
+.hourIcon {
+	width: 32px;
+	height: 32px;
+	object-fit: contain;
+}
+
+.hourTemp {
+	font-family: var(--font-mono);
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text);
+}
+
+.hourHum {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--text3);
+}
+
+/* ── Stats grid ───────────────────────────── */
+
+.statsGrid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+
+.statCard {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	border: 1px solid var(--border);
+	border-radius: 16px;
+	padding: 14px;
+	background: var(--surface);
+	position: relative;
+	overflow: hidden;
+}
+
+/* subtle tinted background per card */
+.statCardFeel  { background: color-mix(in srgb, #60a5fa 6%, var(--surface)); }
+.statCardHum   { background: color-mix(in srgb, #38bdf8 6%, var(--surface)); }
+.statCardWind  { background: color-mix(in srgb, #94a3b8 6%, var(--surface)); }
+.statCardUv    { background: color-mix(in srgb, #fbbf24 6%, var(--surface)); }
+
+.statHeader {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.statIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	flex-shrink: 0;
+}
+
+.statIconFeel { background: color-mix(in srgb, #60a5fa 18%, transparent); color: #60a5fa; }
+.statIconHum  { background: color-mix(in srgb, #38bdf8 18%, transparent); color: #38bdf8; }
+.statIconWind { background: color-mix(in srgb, #94a3b8 18%, transparent); color: #94a3b8; }
+.statIconUv   { background: color-mix(in srgb, #fbbf24 18%, transparent); color: #fbbf24; }
+
+.statLabel {
+	font-family: var(--font-ui);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text3);
+}
+
+.statBigValue {
+	font-family: var(--font-mono);
+	font-size: 28px;
+	font-weight: 700;
+	color: var(--text);
+	line-height: 1;
+}
+
+.statFooter {
+	font-family: var(--font-ui);
+	font-size: 10px;
+	color: var(--text3);
+	margin-top: 2px;
+}
+
+/* Humidity bar */
+.humBar {
+	height: 4px;
+	background: var(--border);
+	border-radius: 2px;
+	overflow: hidden;
+	margin-top: 2px;
+}
+
+.humBarFill {
+	height: 100%;
+	background: linear-gradient(to right, #38bdf8, #0ea5e9);
+	border-radius: 2px;
+	transition: width 0.6s ease;
+}
+
+/* Wind */
+.windRow {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+}
+
+.windUnit {
+	font-family: var(--font-ui);
+	font-size: 11px;
+	color: var(--text2);
+}
+
+.windArrow {
+	font-size: 16px;
+	color: var(--accent);
+	display: inline-block;
+	transition: transform 0.4s ease;
+	margin-left: 4px;
+	line-height: 1;
+}
+
+/* UV bar */
+.uvBar {
+	display: flex;
+	gap: 2px;
+	margin-top: 2px;
+}
+
+.uvSegment {
+	flex: 1;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--border);
+	transition: background 0.3s;
+}
+
+/* ── Forecast ─────────────────────────────── */
+
+.forecastList {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.forecastRow {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 16px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 14px;
+}
+
+.forecastDay {
+	font-family: var(--font-ui);
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--text);
+	min-width: 64px;
+}
+
+.forecastIcon {
+	width: 44px;
+	height: 44px;
+	object-fit: contain;
+	flex-shrink: 0;
+}
+
+.forecastDesc {
+	font-family: var(--font-ui);
+	font-size: 12px;
+	color: var(--text2);
+	flex: 1;
+}
+
+.forecastTemps {
+	display: flex;
+	align-items: baseline;
+	gap: 3px;
+}
+
+.forecastMax {
+	font-family: var(--font-mono);
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--text);
+}
+
+.forecastSep {
+	font-family: var(--font-mono);
+	font-size: 13px;
+	color: var(--text3);
+}
+
+.forecastMin {
+	font-family: var(--font-mono);
+	font-size: 14px;
+	color: var(--text3);
+}

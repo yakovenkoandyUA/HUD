@@ -10,8 +10,8 @@
   transition: opacity 0.38s ease;
 }
 
-.overlayVisible { opacity: 1; }
-.overlayHidden  { opacity: 0; }
+.overlayVisible { opacity: 1; pointer-events: auto; }
+.overlayHidden  { opacity: 0; pointer-events: none; }
 
 .modal {
   background: var(--bg2);

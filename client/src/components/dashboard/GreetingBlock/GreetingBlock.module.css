@@ -21,17 +21,17 @@
 }
 
 :global([data-theme='noir']) .cardPhoto {
-	background-position-y: 120px;
+	background-position-y: 170px;
 	filter: grayscale(1);
 }
 :global([data-theme='cyber']) .cardPhoto {
-	background-position-y: 100px;
+	background-position-y: 160px;
 }
 :global([data-theme='japan']) .cardPhoto {
 	background-position-y: 200px;
 }
 :global([data-theme='arctic']) .cardPhoto {
-	background-position: 30px -5px;;
+	background-position: -30px 0;
 }
 :global([data-theme='velvet']) .cardPhoto {
 	background-position: 168px -20px;
@@ -40,7 +40,7 @@
 	background: linear-gradient(to right, var(--surface) 28%, color-mix(in srgb, var(--surface) 65%, transparent) 52%, transparent 72%);
 }
 :global([data-theme='pixel']) .cardPhoto {
-	background-position: 60px -80px;
+	background-position: 60px -50px;
 }
 :global([data-theme='pixel']) .cardPhoto::before {
 	background: linear-gradient(to right, var(--surface) 28%, color-mix(in srgb, var(--surface) 95%, transparent) 42%, transparent 82%);
@@ -121,6 +121,17 @@
 	align-items: center;
 	gap: 6px;
 	margin-top: 6px;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	text-align: left;
+	-webkit-tap-highlight-color: transparent;
+	transition: opacity 0.15s;
+}
+
+.weatherRow:active {
+	opacity: 0.7;
 }
 
 .weatherIcon {
