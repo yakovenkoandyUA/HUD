@@ -450,8 +450,8 @@ const WalletTab: React.FC = () => {
               </button>
             )}
           </div>
-          <div className={styles.totalActive}><span>{activeCount} активних категорій</span></div>
         </div>
+        <div className={styles.totalActive}><span>{activeCount} активних категорій</span></div>
       </div>
 
       {/* ── SubCategory modal ── */}

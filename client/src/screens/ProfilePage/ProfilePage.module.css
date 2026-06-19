@@ -399,7 +399,7 @@
   font-size: 11px;
   color: var(--text3);
   text-align: center;
-  margin-top: -8px;
+  padding-top: 8px;
 }
 
 /* ── Migration modal body ── */
@@ -1404,6 +1404,7 @@
 .navPinCount {
   font-family: var(--font-mono);
   color: var(--accent);
+  margin-left: 6px;
 }
 
 .navPinRow {
