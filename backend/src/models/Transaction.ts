@@ -13,6 +13,7 @@ export interface ITransaction extends Document {
   monoId?: string | null
   source?: 'manual' | 'monobank' | 'csv'
   incomeCategory?: string | null
+  mcc?: number | null
 }
 
 const schema = new Schema<ITransaction>({
@@ -28,6 +29,7 @@ const schema = new Schema<ITransaction>({
   monoId:         { type: String, default: null },
   source:         { type: String, enum: ['manual', 'monobank', 'csv'], default: 'manual' },
   incomeCategory: { type: String, default: null },
+  mcc:            { type: Number, default: null },
 }, { timestamps: true })
 
 schema.index({ userId: 1, date: -1 })

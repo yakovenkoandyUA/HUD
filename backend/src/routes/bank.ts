@@ -190,7 +190,7 @@ router.post('/sync', requireAuth, async (req: Request, res: Response) => {
     .filter(s => s.currencyCode === 980 && s.amount !== 0 && !existingMonoIds.has(s.id))
     .map(s => {
       const desc = s.description || s.counterName || ''
-      const match = categorize(desc, userCategories)
+      const match = categorize(desc, userCategories, s.mcc || undefined)
       return {
         userId:     req.userId,
         type:       s.amount < 0 ? 'expense' : 'income',
@@ -201,6 +201,7 @@ router.post('/sync', requireAuth, async (req: Request, res: Response) => {
         categoryId: match?.id   ?? null,
         date:       isoDate(s.time),
         monoId:     s.id,
+        mcc:        s.mcc || null,
         source:     'monobank' as const,
       }
     })
@@ -337,6 +338,7 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
 
   const dateIdx = headers.findIndex(h => h.includes('дата'))
   const descIdx = headers.findIndex(h => h.includes('деталі') || h.includes('опис'))
+  const mccIdx  = headers.findIndex(h => h === 'mcc')
 
   // Format A: single amount column
   const amountIdx = headers.findIndex(h =>
@@ -399,7 +401,10 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
     const isoDateStr = `${year}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`
     if (isNaN(new Date(isoDateStr).getTime())) continue
 
-    const match = categorize(rawDesc, userCategories)
+    const rawMcc = mccIdx !== -1 ? parseInt(cols[mccIdx]?.replace(/"/g, '').trim(), 10) : NaN
+    const mcc = isNaN(rawMcc) ? undefined : rawMcc
+
+    const match = categorize(rawDesc, userCategories, mcc)
 
     toInsert.push({
       userId:     req.userId,
@@ -411,6 +416,7 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
       categoryId: match?.id   ?? null,
       date:       isoDateStr,
       monoId:     null,
+      mcc:        mcc ?? null,
       source:     'csv' as const,
     })
   }
@@ -442,7 +448,7 @@ router.post('/recategorize', requireAuth, async (req: Request, res: Response) =>
   let skipped = 0
 
   for (const tx of uncategorized) {
-    const match = categorize(tx.desc ?? '', userCategories)
+    const match = categorize(tx.desc ?? '', userCategories, tx.mcc ?? undefined)
     if (!match) { skipped++; continue }
     tx.category   = match.name
     tx.categoryId = match.id

@@ -1,6 +1,6 @@
 /**
- * Keyword-based auto-categorizer for Monobank transactions.
- * Matches Ukrainian merchant names and MCC-style descriptions.
+ * Auto-categorizer for Monobank transactions.
+ * Priority: keyword match (brand-aware) → MCC code → null.
  */
 
 interface CategoryEntry {
@@ -9,6 +9,69 @@ interface CategoryEntry {
 }
 
 type CategoryMatch = { name: string; id: string } | null
+
+// ISO 18245 MCC → MIMIR category name
+const MCC_MAP: Record<number, string> = {
+  // Продукти
+  5411: 'Продукти', 5412: 'Продукти', 5441: 'Продукти', 5451: 'Продукти',
+  5462: 'Продукти', 5499: 'Продукти', 5921: 'Продукти',
+
+  // Заклади
+  5812: 'Заклади', 5813: 'Заклади', 5814: 'Заклади',
+
+  // Транспорт
+  4111: 'Транспорт', 4112: 'Транспорт', 4121: 'Транспорт', 4131: 'Транспорт',
+  4411: 'Транспорт', 4511: 'Транспорт', 4784: 'Транспорт',
+  5171: 'Транспорт', 5172: 'Транспорт', 5541: 'Транспорт', 5542: 'Транспорт',
+  7511: 'Транспорт', 7512: 'Транспорт', 7523: 'Транспорт',
+
+  // Медицина
+  5122: 'Медицина', 5912: 'Медицина',
+  8011: 'Медицина', 8021: 'Медицина', 8031: 'Медицина',
+  8049: 'Медицина', 8062: 'Медицина', 8099: 'Медицина',
+
+  // Спорт
+  5941: 'Спорт', 7941: 'Спорт', 7991: 'Спорт', 7992: 'Спорт', 7997: 'Спорт',
+
+  // Одяг
+  5137: 'Одяг', 5139: 'Одяг', 5611: 'Одяг', 5621: 'Одяг',
+  5631: 'Одяг', 5641: 'Одяг', 5651: 'Одяг', 5661: 'Одяг', 5699: 'Одяг',
+
+  // Розваги
+  5816: 'Розваги', 7832: 'Розваги', 7922: 'Розваги',
+  7929: 'Розваги', 7993: 'Розваги', 7994: 'Розваги', 7996: 'Розваги', 7999: 'Розваги',
+
+  // Навчання
+  5942: 'Навчання', 8220: 'Навчання', 8241: 'Навчання',
+  8244: 'Навчання', 8249: 'Навчання', 8299: 'Навчання',
+
+  // Комунальні
+  4812: 'Комунальні', 4813: 'Комунальні', 4814: 'Комунальні',
+  4816: 'Комунальні', 4899: 'Комунальні', 4900: 'Комунальні',
+
+  // Житло
+  5200: 'Житло', 5211: 'Житло', 5231: 'Житло', 5251: 'Житло',
+  5712: 'Житло', 5719: 'Житло', 5722: 'Житло',
+
+  // Краса
+  5977: 'Краса', 7230: 'Краса', 7231: 'Краса', 7298: 'Краса',
+
+  // Побут
+  7349: 'Побут', 7389: 'Побут', 7629: 'Побут',
+
+  // Підписки
+  7372: 'Підписки', 7374: 'Підписки',
+
+  // Подорожі
+  4722: 'Подорожі', 7011: 'Подорожі', 7012: 'Подорожі',
+}
+
+function matchMcc(mcc: number): string | null {
+  if (MCC_MAP[mcc]) return MCC_MAP[mcc]
+  // Hotel range 3501–3999
+  if (mcc >= 3501 && mcc <= 3999) return 'Подорожі'
+  return null
+}
 
 // Ordered rules — first match wins.
 // Patterns are tested case-insensitively against the full description.
@@ -268,11 +331,12 @@ function matchCategory(desc: string): string | null {
 }
 
 /**
- * Given a transaction description and a user's category list,
+ * Given a transaction description, MCC code (optional), and user's category list,
  * returns { name, id } of the best-matching category or null.
+ * Keyword match wins over MCC for brand-specific precision.
  */
-export function categorize(desc: string, categories: CategoryEntry[]): CategoryMatch {
-  const matched = matchCategory(desc)
+export function categorize(desc: string, categories: CategoryEntry[], mcc?: number): CategoryMatch {
+  const matched = matchCategory(desc) ?? (mcc ? matchMcc(mcc) : null)
   if (!matched) return null
   const cat = categories.find(c => c.name === matched)
   if (!cat) return null
