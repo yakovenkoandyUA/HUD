@@ -1,7 +1,9 @@
-import React, { useState, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
+import { useModalHistory } from '../../../hooks/useModalHistory'
 import type { Recipe } from '../../../types'
 import { normalizeIngredient } from '../../../utils/normalizeIngredient'
+import { tokenize, phraseMatchesQuery, tokenSignature } from '../../../utils/ingredientMatch'
 import styles from './IngredientSearchSheet.module.css'
 
 /**
@@ -28,12 +30,25 @@ const IngredientSearchSheet: React.FC<IngredientSearchSheetProps> = ({
 }) => {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<string[]>([])
-  const sheetRef = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false)
+  const [visible, setVisible] = useState(false)
   const overlayRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useSwipeToDismiss(onClose, { enabled: isOpen, bodyRef, overlayRef })
+  useModalHistory(onClose, isOpen)
+  const sheetRef = useSwipeToDismiss(onClose, { enabled: mounted, bodyRef, overlayRef })
+
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true)
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+    } else {
+      setVisible(false)
+      const t = setTimeout(() => setMounted(false), 340)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen])
 
   // All unique ingredients from all recipes
   const allIngredients = useMemo(() => {
@@ -45,9 +60,20 @@ const IngredientSearchSheet: React.FC<IngredientSearchSheetProps> = ({
     return [...set].sort()
   }, [recipes])
 
-  const suggestions = query.length >= 2
-    ? allIngredients.filter(i => i.includes(query.toLowerCase()) && !selected.includes(i))
-    : []
+  const suggestions = useMemo(() => {
+    if (query.length < 2) return []
+    const q = query.toLowerCase()
+    const seenSignatures = new Set<string>()
+    const result: string[] = []
+    for (const i of allIngredients) {
+      if (selected.includes(i) || !i.includes(q)) continue
+      const sig = tokenSignature(i)
+      if (seenSignatures.has(sig)) continue
+      seenSignatures.add(sig)
+      result.push(i)
+    }
+    return result
+  }, [query, allIngredients, selected])
 
   const addIngredient = (ing: string) => {
     const normalized = ing.toLowerCase().trim()
@@ -62,7 +88,9 @@ const IngredientSearchSheet: React.FC<IngredientSearchSheetProps> = ({
     ? []
     : recipes.filter(r =>
         selected.every(sel =>
-          (r.ingredients ?? []).some(raw => normalizeIngredient(raw).name.toLowerCase().includes(sel))
+          (r.ingredients ?? []).some(raw =>
+            phraseMatchesQuery(tokenize(normalizeIngredient(raw).name), tokenize(sel))
+          )
         )
       )
 
@@ -75,13 +103,17 @@ const IngredientSearchSheet: React.FC<IngredientSearchSheetProps> = ({
     }
   }
 
-  if (!isOpen) return null
+  if (!mounted) return null
 
   return (
-    <div ref={overlayRef} className={styles.overlay} onClick={onClose}>
+    <div
+      ref={overlayRef}
+      className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`}
+      onClick={onClose}
+    >
       <div
         ref={sheetRef}
-        className={styles.sheet}
+        className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`}
         onClick={e => e.stopPropagation()}
       >
         <div className={styles.handle} />

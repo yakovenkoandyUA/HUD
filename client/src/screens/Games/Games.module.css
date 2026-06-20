@@ -5,6 +5,21 @@
   min-height: 0;
 }
 
+/* ── Header search button ── */
+.searchBtn {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.searchBtn:active { color: var(--accent); }
+
 /* ── Stats row ── */
 .statsRow {
   display: flex;
@@ -56,16 +71,19 @@
 .tabsWrap {
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);
-  overflow: hidden;
+  display: flex;
+  align-items: center;
 }
 
 .tabs {
+  flex: 1;
   display: flex;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 0 12px;
   gap: 4px;
+  min-width: 0;
 }
 .tabs::-webkit-scrollbar { display: none; }
 
@@ -86,6 +104,109 @@
 .tabActive {
   color: var(--accent);
   border-bottom-color: var(--accent);
+}
+
+/* ── Sort ── */
+.sortWrap {
+  position: relative;
+  flex-shrink: 0;
+  padding-right: 10px;
+}
+
+.sortBtn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.sortBtn:active { color: var(--accent); }
+
+.sortBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+}
+
+.sortMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 10px;
+  z-index: 111;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  overflow: hidden;
+  min-width: 180px;
+  animation: sortMenuIn 0.15s ease;
+}
+@keyframes sortMenuIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sortOption {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sortOption:last-child { border-bottom: none; }
+.sortOption:active { background: var(--surface); }
+.sortOptionActive {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Genre filter chips ── */
+.genreWrap {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.genreScroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 8px 12px;
+}
+.genreScroll::-webkit-scrollbar { display: none; }
+
+.genreChip {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.genreChipActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 /* ── Content ── */

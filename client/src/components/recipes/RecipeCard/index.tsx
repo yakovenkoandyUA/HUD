@@ -33,6 +33,14 @@ const HeartIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   </svg>
 )
 
+const SparkleIcon: React.FC = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 2c0 0 1.4 6 4.5 9S22 14 22 14s-5.4 1.4-8.5 4.5S12 22 12 22s-1.4-5.4-4.5-8.5S2 12 2 12s5.4-1.4 8.5-4.5S12 2 12 2z"/>
+  </svg>
+)
+
+const AI_OWNER_NAME = 'MIMIR AI'
+
 const DIFFICULTY_LABEL: Record<string, string> = {
   easy:   'легко',
   medium: 'середньо',
@@ -45,6 +53,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
   const [loaded, setLoaded] = useState(false)
 
   const hasOwner = recipe.isOwn === false && !!recipe.ownerName
+  const isAiOwner = hasOwner && recipe.ownerName === AI_OWNER_NAME
 
   return (
     <div
@@ -94,12 +103,18 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
         <div className={styles.titleRow}>
           <h3 className={styles.title}>{recipe.title}</h3>
           {hasOwner && (
-            <div className={styles.ownerBadge} title={recipe.ownerName}>
-              {recipe.ownerAvatarUrl
-                ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
-                : <span className={styles.ownerInitial}>{recipe.ownerName![0]}</span>
-              }
-            </div>
+            isAiOwner ? (
+              <div className={styles.ownerAiBadge} title={AI_OWNER_NAME}>
+                <SparkleIcon />
+              </div>
+            ) : (
+              <div className={styles.ownerBadge} title={recipe.ownerName}>
+                {recipe.ownerAvatarUrl
+                  ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
+                  : <span className={styles.ownerInitial}>{recipe.ownerName![0]}</span>
+                }
+              </div>
+            )
           )}
         </div>
         <div className={styles.meta}>

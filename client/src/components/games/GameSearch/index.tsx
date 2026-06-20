@@ -24,46 +24,58 @@ const STATUS_OPTIONS: { value: GameStatus; label: string }[] = [
 /**
  * GameSearch
  * ----------
- * Search bar that proxies to RAWG via /api/games/search.
- * Tap a result → fullscreen preview with status picker → add to list.
+ * Fullscreen search overlay triggered by parent (isOpen prop).
+ * Searches RAWG via /api/games/search. Tap result → preview → add.
+ * Renders nothing when closed — no persistent bar in the screen.
  *
  * Props:
- * @prop {(game: Omit<GameItem, 'id' | 'addedAt'>) => void} onAdd — save game
+ * @prop {boolean}                                          isOpen  — show/hide overlay
+ * @prop {() => void}                                       onClose — called on cancel or add
+ * @prop {(game: Omit<GameItem, 'id' | 'addedAt'>) => void} onAdd   — save game to store
  */
 interface GameSearchProps {
+  isOpen: boolean
+  onClose: () => void
   onAdd: (game: Omit<GameItem, 'id' | 'addedAt'>) => void
 }
 
-const GameSearch: React.FC<GameSearchProps> = ({ onAdd }) => {
-  const [query, setQuery]           = useState('')
-  const [results, setResults]       = useState<RawgResult[]>([])
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState('')
-  const [isOpen, setIsOpen]         = useState(false)
-  const [searchActive, setSearchActive] = useState(false)
-  const [preview, setPreview]       = useState<RawgResult | null>(null)
+const GameSearch: React.FC<GameSearchProps> = ({ isOpen, onClose, onAdd }) => {
+  const [query, setQuery]         = useState('')
+  const [results, setResults]     = useState<RawgResult[]>([])
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState('')
+  const [resultsOpen, setResultsOpen] = useState(false)
+  const [preview, setPreview]     = useState<RawgResult | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<GameStatus>('want')
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const activateSearch = () => {
-    setSearchActive(true)
-    setTimeout(() => inputRef.current?.focus(), 80)
-  }
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 80)
+    } else {
+      reset()
+    }
+  }, [isOpen])
 
-  const deactivateSearch = () => {
-    setSearchActive(false)
+  const reset = () => {
     setQuery('')
     setResults([])
-    setIsOpen(false)
+    setResultsOpen(false)
     setPreview(null)
     setSelectedStatus('want')
+    setError('')
     inputRef.current?.blur()
   }
 
+  const handleClose = () => {
+    reset()
+    onClose()
+  }
+
   const search = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); setIsOpen(false); return }
+    if (!q.trim()) { setResults([]); setResultsOpen(false); return }
     setLoading(true)
     setError('')
     try {
@@ -75,7 +87,7 @@ const GameSearch: React.FC<GameSearchProps> = ({ onAdd }) => {
       }
       const data: RawgResult[] = await res.json()
       setResults(data)
-      setIsOpen(true)
+      setResultsOpen(true)
     } catch {
       setError('Помилка пошуку')
     } finally {
@@ -85,7 +97,7 @@ const GameSearch: React.FC<GameSearchProps> = ({ onAdd }) => {
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
-    if (!query.trim()) { setResults([]); setIsOpen(false); return }
+    if (!query.trim()) { setResults([]); setResultsOpen(false); return }
     if (query.trim().length < 2) return
     timerRef.current = setTimeout(() => search(query), 600)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
@@ -109,51 +121,53 @@ const GameSearch: React.FC<GameSearchProps> = ({ onAdd }) => {
       hoursPlayed:   null,
       completedAt:   null,
     })
-    deactivateSearch()
+    handleClose()
   }
 
-  const showResults = searchActive && !preview && (isOpen || !!error)
+  if (!isOpen && !preview) return null
 
   return (
     <div className={styles.wrap}>
-      {searchActive && !preview && (
-        <div className={styles.overlay} onClick={deactivateSearch} />
+      {/* Backdrop */}
+      {!preview && (
+        <div className={styles.overlay} onClick={handleClose} />
       )}
 
-      <div className={`${styles.searchBar} ${searchActive ? styles.searchBarActive : ''}`}>
-        <div className={styles.inputRow}>
-          <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          <input
-            ref={inputRef}
-            className={styles.input}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onFocus={activateSearch}
-            placeholder="Пошук гри..."
-          />
-          {query && (
-            <button
-              type="button"
-              className={styles.clearBtn}
-              onClick={() => { setQuery(''); setResults([]); setIsOpen(false) }}
-            >✕</button>
-          )}
-          {loading && <div className={styles.spinner} />}
-        </div>
-        {searchActive && (
-          <button type="button" className={styles.cancelBtn} onClick={deactivateSearch}>
+      {/* Search bar — fixed under AppHeader */}
+      {!preview && (
+        <div className={styles.searchBar}>
+          <div className={styles.inputRow}>
+            <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <input
+              ref={inputRef}
+              className={styles.input}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Пошук гри..."
+            />
+            {query && (
+              <button
+                type="button"
+                className={styles.clearBtn}
+                onClick={() => { setQuery(''); setResults([]); setResultsOpen(false) }}
+              >✕</button>
+            )}
+            {loading && <div className={styles.spinner} />}
+          </div>
+          <button type="button" className={styles.cancelBtn} onClick={handleClose}>
             Скасувати
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {showResults && (
+      {/* Results list */}
+      {!preview && (resultsOpen || !!error) && (
         <div className={styles.results}>
           {error && <p className={styles.err}>{error}</p>}
-          {isOpen && results.length > 0 && results.map(r => (
+          {resultsOpen && results.length > 0 && results.map(r => (
             <button
               key={r.rawgId}
               type="button"
@@ -180,13 +194,13 @@ const GameSearch: React.FC<GameSearchProps> = ({ onAdd }) => {
               )}
             </button>
           ))}
-          {isOpen && results.length === 0 && !loading && query && (
+          {resultsOpen && results.length === 0 && !loading && query && (
             <div className={styles.noResults}>Нічого не знайдено</div>
           )}
         </div>
       )}
 
-      {/* Preview screen */}
+      {/* Game preview fullscreen */}
       {preview && (
         <div className={styles.previewScreen}>
           <div className={styles.previewHeader}>

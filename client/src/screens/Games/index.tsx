@@ -11,6 +11,7 @@ import type { GameItem, GameStatus } from '../../types'
 import styles from './Games.module.css'
 
 type StatusFilter = 'all' | GameStatus
+type SortBy = 'added' | 'rating' | 'hours' | 'title'
 
 const STATUS_TABS: { id: StatusFilter; label: string }[] = [
   { id: 'all',       label: 'Всі'      },
@@ -21,11 +22,22 @@ const STATUS_TABS: { id: StatusFilter; label: string }[] = [
   { id: 'dropped',   label: 'Кинув'    },
 ]
 
+const SORT_OPTIONS: { id: SortBy; label: string }[] = [
+  { id: 'added',  label: 'За датою додавання' },
+  { id: 'rating', label: 'За оцінкою'         },
+  { id: 'hours',  label: 'За годинами'        },
+  { id: 'title',  label: 'За назвою'          },
+]
+
 const Games: React.FC = () => {
   const { items, loading, fetchGames, addGame, updateGame, deleteGame } = useGamesStore()
   const { showToast } = useUiStore()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [selected, setSelected]         = useState<GameItem | null>(null)
+  const [searchOpen, setSearchOpen]     = useState(false)
+  const [sortBy, setSortBy]             = useState<SortBy>('added')
+  const [sortOpen, setSortOpen]         = useState(false)
+  const [genreFilter, setGenreFilter]   = useState<string | null>(null)
   const lastSelectedRef                 = useRef<GameItem | null>(null)
 
   useEffect(() => {
@@ -46,10 +58,39 @@ const Games: React.FC = () => {
   if (effectiveSelected) lastSelectedRef.current = effectiveSelected
   const displayItem = effectiveSelected ?? lastSelectedRef.current
 
+  const byStatus = useMemo(
+    () => statusFilter === 'all' ? items : items.filter(i => i.status === statusFilter),
+    [items, statusFilter],
+  )
+
+  const availableGenres = useMemo(() => {
+    const counts = new Map<string, number>()
+    byStatus.forEach(i => i.genres.forEach(g => counts.set(g, (counts.get(g) ?? 0) + 1)))
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([g]) => g).slice(0, 12)
+  }, [byStatus])
+
+  useEffect(() => {
+    if (genreFilter && !availableGenres.includes(genreFilter)) setGenreFilter(null)
+  }, [availableGenres, genreFilter])
+
   const filtered = useMemo(() => {
-    if (statusFilter === 'all') return items
-    return items.filter(i => i.status === statusFilter)
-  }, [items, statusFilter])
+    const list = genreFilter ? byStatus.filter(i => i.genres.includes(genreFilter)) : byStatus
+    const sorted = [...list]
+    switch (sortBy) {
+      case 'rating':
+        sorted.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1))
+        break
+      case 'hours':
+        sorted.sort((a, b) => (b.hoursPlayed ?? 0) - (a.hoursPlayed ?? 0))
+        break
+      case 'title':
+        sorted.sort((a, b) => a.title.localeCompare(b.title, 'uk'))
+        break
+      default:
+        sorted.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
+    }
+    return sorted
+  }, [byStatus, genreFilter, sortBy])
 
   const playingNow = useMemo(() => items.filter(i => i.status === 'playing'), [items])
 
@@ -87,7 +128,19 @@ const Games: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <AppHeader />
+      <AppHeader right={
+        <button
+          type="button"
+          className={styles.searchBtn}
+          onClick={() => setSearchOpen(true)}
+          aria-label="Пошук гри"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="8.5" cy="8.5" r="6" stroke="currentColor" strokeWidth="1.8"/>
+            <path d="M13.5 13.5L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        </button>
+      } />
 
       {/* Stats row — tap a stat to filter */}
       <div className={styles.statsRow}>
@@ -128,10 +181,10 @@ const Games: React.FC = () => {
         />
       )}
 
-      {/* Search */}
-      <GameSearch onAdd={handleAdd} />
+      {/* Search overlay — triggered from header icon */}
+      <GameSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} onAdd={handleAdd} />
 
-      {/* Status filter tabs */}
+      {/* Status filter tabs + sort */}
       <div className={styles.tabsWrap}>
         <div className={styles.tabs}>
           {STATUS_TABS.map(t => (
@@ -145,7 +198,62 @@ const Games: React.FC = () => {
             </button>
           ))}
         </div>
+        <div className={styles.sortWrap}>
+          <button
+            type="button"
+            className={styles.sortBtn}
+            onClick={() => setSortOpen(o => !o)}
+            aria-label="Сортування"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 7h11M3 12h7M3 17h4"/>
+              <path d="M17 5v14M17 5l-3 3M17 5l3 3"/>
+            </svg>
+          </button>
+          {sortOpen && (
+            <>
+              <div className={styles.sortBackdrop} onClick={() => setSortOpen(false)} />
+              <div className={styles.sortMenu}>
+                {SORT_OPTIONS.map(opt => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`${styles.sortOption} ${sortBy === opt.id ? styles.sortOptionActive : ''}`}
+                    onClick={() => { setSortBy(opt.id); setSortOpen(false) }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Genre filter chips */}
+      {availableGenres.length > 1 && (
+        <div className={styles.genreWrap}>
+          <div className={styles.genreScroll}>
+            <button
+              type="button"
+              className={`${styles.genreChip} ${genreFilter === null ? styles.genreChipActive : ''}`}
+              onClick={() => setGenreFilter(null)}
+            >
+              Всі жанри
+            </button>
+            {availableGenres.map(g => (
+              <button
+                key={g}
+                type="button"
+                className={`${styles.genreChip} ${genreFilter === g ? styles.genreChipActive : ''}`}
+                onClick={() => setGenreFilter(genreFilter === g ? null : g)}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Grid */}
       <div className={styles.content}>
@@ -162,7 +270,9 @@ const Games: React.FC = () => {
               <circle cx="18" cy="13.5" r="1" fill="currentColor" stroke="none"/>
             </svg>
             <p className={styles.emptyText}>
-              {statusFilter === 'all' ? 'Додай першу гру через пошук' : 'Немає ігор у цій категорії'}
+              {genreFilter
+                ? 'Немає ігор цього жанру'
+                : statusFilter === 'all' ? 'Додай першу гру через пошук' : 'Немає ігор у цій категорії'}
             </p>
           </div>
         ) : (

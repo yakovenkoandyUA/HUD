@@ -89,6 +89,7 @@
 - **MIMIR Wrapped** — річна статистика à la Spotify Wrapped
 - **Letterboxd / Goodreads імпорт** — Monobank є, але інші імпорти ні
 - **Книги (Books)** — backend `/api/books/search` (Google Books) є, але UI у Watchlist позначено "В РОЗРОБЦІ" (тоггл в профілі disabled, placeholder при відкритті табу)
+- **AI Chef-асистент** — чат-бот у RecipeDetail (концепт описано нижче в пріоритизованому плані, п. 2a)
 
 ### 🟠 Потребує доопрацювання
 - **Memories: карта + експорт** — реалізовано, але потребує polish (деталі уточнюються з юзером)
@@ -111,6 +112,21 @@
 
 ### 2. 🎮 Games — окремий UI у Watchlist
 `gamesStore` і модель є, але ігри не відображаються в Watchlist. Додати таб 🎮 (OpenMoji) поруч з movie/series/anime/book. Мінімум: пошук (IGDB або RAWG API) або ручне додавання.
+
+### 2a. 🤖 AI Chef-асистент (концепт, обговорено з юзером 2026-06-20)
+Чат-бот у `RecipeDetail` — кнопка поруч з існуючими діями (Wishlist/Покупки/Приготував), відкриває bottom sheet схожий на `AiChatSheet` з Dashboard (SSE streaming, Claude Haiku).
+
+**Контекст у промпт:** поточний рецепт (ingredients + instructions + servings + difficulty), щоб асистент відповідав предметно, а не загально.
+
+**Сценарії використання:**
+- Заміна інгредієнтів ("немає сметани, чим замінити?")
+- Адаптація порцій/дієтичних обмежень ("зроби без глютену", "на 2 персони замість 4")
+- Дієтичні питання (калорійність, чи підходить для кето)
+- Підказки під час готування ("що робити якщо тісто липне")
+
+**Технічно:** новий ендпоінт `/api/recipes/:id/chef-chat` (SSE, аналогічно `/api/ai/chat`) з system prompt що включає дані рецепту; фронтенд — новий компонент `ChefChatSheet` в `components/recipes/`, повторно використовує паттерн `AiChatSheet` (markdown rendering, streaming).
+
+**Не починалось** — потребує окремої сесії для імплементації SSE ендпоінту + UI.
 
 ### ~~3. 📧 Верифікація email~~ ✅ Зроблено
 Домен `mimir-hud.tech`, Resend, `VerificationBanner`, enforcement у receipt scanner — все є.

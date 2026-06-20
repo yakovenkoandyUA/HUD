@@ -2,22 +2,21 @@
   position: relative;
 }
 
+/* Backdrop */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
+  background: rgba(0, 0, 0, 0.6);
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* ── Search bar ── */
+/* ── Search bar — fixed under AppHeader ── */
 .searchBar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 16px;
-  margin-bottom: 8px;
-}
-
-.searchBarActive {
   position: fixed;
   top: var(--header-height, 56px);
   left: 0;
@@ -26,9 +25,16 @@
   background: var(--bg);
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  animation: slideDown 0.2s ease;
+}
+@keyframes slideDown {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 .inputRow {
@@ -170,14 +176,14 @@
   border-radius: 4px;
   flex-shrink: 0;
 }
-.metacriticGood { background: rgba(77,175,74,0.2); color: #4daf4a; }
+.metacriticGood { background: rgba(77,175,74,0.2);  color: #4daf4a; }
 .metacriticOk   { background: rgba(255,193,7,0.2);  color: #ffc107; }
 .metacriticBad  { background: rgba(244,67,54,0.2);  color: #f44336; }
 
 .err       { padding: 12px 16px; font-size: 13px; color: var(--negative); font-family: var(--font-ui); }
 .noResults { padding: 16px; text-align: center; color: var(--text3); font-size: 13px; font-family: var(--font-ui); }
 
-/* ── Preview screen ── */
+/* ── Preview fullscreen ── */
 .previewScreen {
   position: fixed;
   inset: 0;
@@ -277,11 +283,7 @@
   color: var(--text2);
 }
 
-.previewPlatforms {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
+.previewPlatforms { display: flex; gap: 6px; flex-wrap: wrap; }
 .platformChip {
   font-family: var(--font-ui);
   font-size: 11px;
@@ -292,11 +294,7 @@
   padding: 3px 8px;
 }
 
-.previewGenres {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
+.previewGenres { display: flex; gap: 6px; flex-wrap: wrap; }
 .previewGenre {
   font-family: var(--font-ui);
   font-size: 11px;
@@ -316,11 +314,7 @@
   color: var(--text3);
   margin: 0;
 }
-.previewStatusChips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+.previewStatusChips { display: flex; gap: 8px; flex-wrap: wrap; }
 .previewStatusChip {
   font-family: var(--font-ui);
   font-size: 12px;
