@@ -36,6 +36,10 @@
   margin-bottom: 32px;
 }
 
+.header > :first-child {
+  margin-bottom: 12px;
+}
+
 .title {
   font-family: var(--font-display);
   font-size: 48px;

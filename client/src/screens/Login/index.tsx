@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
 import { saveRefreshToken } from '../../services/api'
+import MimirFillIcon from '../../components/ui/MimirFillIcon'
 import styles from './Login.module.css'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
@@ -113,6 +114,10 @@ const LoginScreen: React.FC = () => {
         <span className={`${styles.corner} ${styles.br}`} />
 
         <div className={styles.header}>
+          <MimirFillIcon
+            size={88}
+            progress={[email.trim().length > 0, password.length > 0].filter(Boolean).length / 2}
+          />
           <h1 className={styles.title}>MIMIR</h1>
           <p className={styles.subtitle}>HEADS UP DISPLAY</p>
         </div>

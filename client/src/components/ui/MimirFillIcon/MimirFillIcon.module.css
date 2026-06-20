@@ -1,0 +1,58 @@
+.root {
+  position: relative;
+  display: block;
+  margin: 0 auto;
+}
+
+.base,
+.fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.base {
+  color: var(--border);
+  opacity: 0.35;
+}
+
+.fillWrap {
+  position: absolute;
+  inset: 0;
+  transition: clip-path 500ms ease;
+}
+
+.fill {
+  color: var(--gold, var(--accent));
+  filter: drop-shadow(0 0 10px var(--accent-glow));
+}
+
+.shimmer {
+  position: absolute;
+  left: -6%;
+  width: 112%;
+  height: 10px;
+  margin-top: -5px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--gold, var(--accent)) 80%, white) 45%,
+    transparent
+  );
+  filter: blur(3px);
+  transition: top 500ms ease, opacity 300ms ease;
+  pointer-events: none;
+}
+
+.pulse .fillWrap,
+.pulse .fill {
+  animation: mimirPulse 600ms ease;
+}
+
+@keyframes mimirPulse {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.08); filter: drop-shadow(0 0 22px var(--accent-glow)); }
+  100% { transform: scale(1); }
+}

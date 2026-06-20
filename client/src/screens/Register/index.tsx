@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
+import MimirFillIcon from '../../components/ui/MimirFillIcon'
 import styles from './Register.module.css'
 
 /**
@@ -48,6 +49,15 @@ const RegisterScreen: React.FC = () => {
         <span className={`${styles.corner} ${styles.br}`} />
 
         <div className={styles.header}>
+          <MimirFillIcon
+            size={88}
+            progress={[
+              name.trim().length > 0,
+              username.trim().length > 0,
+              email.trim().length > 0,
+              password.length >= 6,
+            ].filter(Boolean).length / 4}
+          />
           <h1 className={styles.title}>MIMIR</h1>
           <p className={styles.subtitle}>РЕЄСТРАЦІЯ</p>
         </div>
