@@ -1,9 +1,7 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import PhotoViewerModal from '../../components/memories/PhotoViewerModal'
-import Modal from '../../components/ui/Modal'
-import PosterGenerator from '../../components/memories/PosterGenerator'
-import MimirIcon from '../../components/ui/MimirIcon'
+import ImageUploadButton from '../../components/ui/ImageUploadButton'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { generateMemoryPosterBlob } from '../../utils/generateMemoryPoster'
@@ -93,16 +91,18 @@ const PhotoItem: React.FC<PhotoItemProps> = ({ photo, onTap, onSetCover, onDelet
 /**
  * EditMemoryModal
  * ---------------
- * Inline модалка редагування назви / місця події.
+ * Inline модалка редагування обкладинки / назви / місця події.
  */
 interface EditMemoryModalProps {
   title: string
   location: string
+  coverUrl: string
   onSave: (title: string, location: string) => void
+  onChangeCover: (url: string) => void
   onClose: () => void
 }
 
-const EditMemoryModal: React.FC<EditMemoryModalProps> = ({ title: initTitle, location: initLoc, onSave, onClose }) => {
+const EditMemoryModal: React.FC<EditMemoryModalProps> = ({ title: initTitle, location: initLoc, coverUrl, onSave, onChangeCover, onClose }) => {
   const [title, setTitle]       = useState(initTitle)
   const [location, setLocation] = useState(initLoc)
 
@@ -114,6 +114,14 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({ title: initTitle, loc
           <button type="button" className={styles.editClose} onClick={onClose}>×</button>
         </div>
         <div className={styles.editBody}>
+          <label className={styles.editLabel}>ОБКЛАДИНКА</label>
+          <ImageUploadButton
+            currentUrl={coverUrl}
+            folder="mimir/memories/covers"
+            onUpload={onChangeCover}
+            placeholder="Обкладинка"
+            variant="wide"
+          />
           <label className={styles.editLabel}>НАЗВА</label>
           <input
             className={styles.editInput}
@@ -163,11 +171,11 @@ const MemoryDetailScreen: React.FC = () => {
   const [menuOpen, setMenuOpen]         = useState(false)
   const [showEdit, setShowEdit]         = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [showPosterGen, setShowPosterGen] = useState(false)
   const [sharing, setSharing]           = useState(false)
 
   const [editingNotes, setEditingNotes] = useState(false)
   const [localNotes, setLocalNotes]     = useState('')
+  const [addingTag, setAddingTag]       = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -287,6 +295,15 @@ const MemoryDetailScreen: React.FC = () => {
           </p>
         </div>
 
+        {memory.ownerName && (
+          <div className={styles.ownerBadge} title={memory.ownerName}>
+            {memory.ownerAvatarUrl
+              ? <img src={memory.ownerAvatarUrl} alt={memory.ownerName} className={styles.ownerAvatar} />
+              : <span className={styles.ownerInitial}>{memory.ownerName[0]}</span>
+            }
+          </div>
+        )}
+
         <button
           type="button"
           className={styles.menuBtn}
@@ -366,19 +383,10 @@ const MemoryDetailScreen: React.FC = () => {
             </>
           )}
         </button>
-        <button
-          type="button"
-          className={styles.btnPoster}
-          onClick={() => setShowPosterGen(true)}
-        >
-          <MimirIcon size={13} />
-          ПОСТЕР
-        </button>
       </div>
 
-      {/* ── Notes ── */}
-      <div className={styles.notesSection}>
-        <p className={styles.sectionLabel}>НОТАТКИ</p>
+      {/* ── Notes + tags (collapsed row) ── */}
+      <div className={styles.metaRow}>
         {editingNotes ? (
           <textarea
             className={styles.notesTextarea}
@@ -386,24 +394,25 @@ const MemoryDetailScreen: React.FC = () => {
             onChange={e => setLocalNotes(e.target.value)}
             onBlur={() => handleSaveNotes(localNotes)}
             autoFocus
-            rows={4}
+            rows={3}
           />
-        ) : (
+        ) : memory.notes ? (
           <p
             className={styles.notesText}
             onClick={() => { setLocalNotes(memory.notes ?? ''); setEditingNotes(true) }}
           >
-            {memory.notes
-              ? memory.notes
-              : <span className={styles.notesPlaceholder}>Додати нотатки...</span>
-            }
+            {memory.notes}
           </p>
+        ) : (
+          <button
+            type="button"
+            className={styles.pillBtn}
+            onClick={() => { setLocalNotes(''); setEditingNotes(true) }}
+          >
+            + нотатка
+          </button>
         )}
-      </div>
 
-      {/* ── Tags ── */}
-      <div className={styles.tagsSection}>
-        <p className={styles.sectionLabel}>ТЕГИ</p>
         <div className={styles.tagsWrap}>
           {(memory.tags ?? []).map(tag => (
             <span key={tag} className={styles.tag}>
@@ -416,20 +425,28 @@ const MemoryDetailScreen: React.FC = () => {
               >×</button>
             </span>
           ))}
-          <span className={styles.tagInputWrap}>
-            <span className={styles.tagInputPrefix}>#</span>
-            <input
-              className={styles.tagInput}
-              placeholder="тег"
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ',') {
-                  e.preventDefault()
-                  handleAddTag(e.currentTarget.value)
-                  e.currentTarget.value = ''
-                }
-              }}
-            />
-          </span>
+          {addingTag ? (
+            <span className={styles.tagInputWrap}>
+              <span className={styles.tagInputPrefix}>#</span>
+              <input
+                className={styles.tagInput}
+                placeholder="тег"
+                autoFocus
+                onBlur={() => setAddingTag(false)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault()
+                    handleAddTag(e.currentTarget.value)
+                    e.currentTarget.value = ''
+                  }
+                }}
+              />
+            </span>
+          ) : (
+            <button type="button" className={styles.pillBtn} onClick={() => setAddingTag(true)}>
+              + тег
+            </button>
+          )}
         </div>
       </div>
 
@@ -442,34 +459,22 @@ const MemoryDetailScreen: React.FC = () => {
         </div>
       ) : (
         <div className={styles.photoGrid}>
-          <div className={styles.photoColumn}>
-            {memory.photos.filter((_, i) => i % 2 === 0).map((photo) => {
-              const i = memory.photos.indexOf(photo)
-              return (
-                <PhotoItem
-                  key={photo.id}
-                  photo={photo}
-                  onTap={() => setViewerIndex(i)}
-                  onSetCover={() => setCover(id!, photo.url)}
-                  onDelete={() => deletePhoto(id!, photo.id)}
-                />
-              )
-            })}
-          </div>
-          <div className={styles.photoColumn}>
-            {memory.photos.filter((_, i) => i % 2 === 1).map((photo) => {
-              const i = memory.photos.indexOf(photo)
-              return (
-                <PhotoItem
-                  key={photo.id}
-                  photo={photo}
-                  onTap={() => setViewerIndex(i)}
-                  onSetCover={() => setCover(id!, photo.url)}
-                  onDelete={() => deletePhoto(id!, photo.id)}
-                />
-              )
-            })}
-          </div>
+          {[0, 1, 2].map(col => (
+            <div className={styles.photoColumn} key={col}>
+              {memory.photos.filter((_, i) => i % 3 === col).map((photo) => {
+                const i = memory.photos.indexOf(photo)
+                return (
+                  <PhotoItem
+                    key={photo.id}
+                    photo={photo}
+                    onTap={() => setViewerIndex(i)}
+                    onSetCover={() => setCover(id!, photo.url)}
+                    onDelete={() => deletePhoto(id!, photo.id)}
+                  />
+                )
+              })}
+            </div>
+          ))}
         </div>
       )}
 
@@ -497,24 +502,12 @@ const MemoryDetailScreen: React.FC = () => {
         <EditMemoryModal
           title={memory.title}
           location={memory.location ?? ''}
+          coverUrl={memory.coverUrl ?? ''}
           onSave={(title, location) => updateMemory(id!, { title, location: location || undefined })}
+          onChangeCover={(url) => setCover(id!, url)}
           onClose={() => setShowEdit(false)}
         />
       )}
-
-      {/* ── Poster generator ── */}
-      <Modal
-        isOpen={showPosterGen}
-        onClose={() => setShowPosterGen(false)}
-        title="ПОСТЕР"
-        draggable
-      >
-        <PosterGenerator
-          memory={memory}
-          onSetCover={(url) => { setCover(id!, url) }}
-          onClose={() => setShowPosterGen(false)}
-        />
-      </Modal>
 
       {/* ── Delete confirm ── */}
       {showDeleteConfirm && (

@@ -130,7 +130,7 @@ const MemoriesScreen: React.FC = () => {
         method: 'POST',
         body: JSON.stringify({
           title:    plan.title,
-          date:     new Date().toISOString(),
+          date:     new Date().toISOString().slice(0, 10),
           notes:    plan.notes,
           photos:   plan.photos,
           location: plan.location?.name ?? '',

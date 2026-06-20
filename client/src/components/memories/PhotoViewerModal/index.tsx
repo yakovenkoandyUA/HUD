@@ -48,6 +48,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   const isDragLocked = useRef(false) // locked to horizontal after first 10px
+  const imageWrapRef = useRef<HTMLDivElement>(null)
 
   const photo = photos[index]
 
@@ -98,54 +99,71 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   }, [handleClose, goPrev, goNext])
 
   // ── Touch swipe with live drag ────────────────────────────────────────────────
+  // Imperative listeners (passive: false) — React's synthetic onTouchMove is
+  // passive by default, so e.preventDefault() inside a JSX handler is a no-op
+  // and the browser's own scroll/gesture handling wins over the swipe.
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-    touchStartY.current = e.touches[0].clientY
-    isDragLocked.current = false
-    setIsDragging(false)
-    setSlideDir(null)
-  }
+  useEffect(() => {
+    const el = imageWrapRef.current
+    if (!el) return
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const dx = e.touches[0].clientX - touchStartX.current
-    const dy = e.touches[0].clientY - touchStartY.current
-
-    if (!isDragLocked.current) {
-      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
-      if (Math.abs(dy) > Math.abs(dx)) return // vertical scroll — ignore
-      isDragLocked.current = true
-    }
-
-    e.preventDefault()
-    setIsDragging(true)
-
-    // Resist at edges
-    const atStart = index === 0 && dx > 0
-    const atEnd   = index === photos.length - 1 && dx < 0
-    const resist  = atStart || atEnd
-    setDragX(resist ? dx * 0.25 : dx)
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!isDragLocked.current) {
-      setDragX(0)
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX
+      touchStartY.current = e.touches[0].clientY
+      isDragLocked.current = false
       setIsDragging(false)
-      return
+      setSlideDir(null)
     }
 
-    const dx = e.changedTouches[0].clientX - touchStartX.current
-    setIsDragging(false)
+    const onTouchMove = (e: TouchEvent) => {
+      const dx = e.touches[0].clientX - touchStartX.current
+      const dy = e.touches[0].clientY - touchStartY.current
 
-    if (dx < -SWIPE_THRESHOLD && index < photos.length - 1) {
-      goNext()
-    } else if (dx > SWIPE_THRESHOLD && index > 0) {
-      goPrev()
-    } else {
-      // Spring back
-      setDragX(0)
+      if (!isDragLocked.current) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+        if (Math.abs(dy) > Math.abs(dx)) return // vertical scroll — ignore
+        isDragLocked.current = true
+      }
+
+      e.preventDefault()
+      setIsDragging(true)
+
+      // Resist at edges
+      const atStart = index === 0 && dx > 0
+      const atEnd   = index === photos.length - 1 && dx < 0
+      const resist  = atStart || atEnd
+      setDragX(resist ? dx * 0.25 : dx)
     }
-  }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!isDragLocked.current) {
+        setDragX(0)
+        setIsDragging(false)
+        return
+      }
+
+      const dx = e.changedTouches[0].clientX - touchStartX.current
+      setIsDragging(false)
+
+      if (dx < -SWIPE_THRESHOLD && index < photos.length - 1) {
+        goNext()
+      } else if (dx > SWIPE_THRESHOLD && index > 0) {
+        goPrev()
+      } else {
+        setDragX(0)
+      }
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    el.addEventListener('touchend',   onTouchEnd,   { passive: true })
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove',  onTouchMove)
+      el.removeEventListener('touchend',   onTouchEnd)
+    }
+  }, [index, photos.length, goNext, goPrev])
 
   // ── Delete ────────────────────────────────────────────────────────────────────
 
@@ -180,10 +198,8 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
     <div className={`${styles.fullscreen} ${closing ? styles.viewerOut : styles.viewerIn}`}>
       {/* Photo */}
       <div
+        ref={imageWrapRef}
         className={styles.imageWrap}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         onClick={() => { if (!isDragging) setShowUI(v => !v) }}
       >
         <img

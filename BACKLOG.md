@@ -23,8 +23,8 @@
 - `shopping` — список покупок
 - `watchlist` — movie/series/anime/book (TMDB + Google Books proxy)
 - `watchlistComments` — коментарі між профілями
-- `memories` — спогади + фото (Cloudinary) + теги + PosterGenerator (Canvas API, без зовнішніх AI-сервісів)
-- `plans` — місця (want/planned/visited), Nominatim, конвертація в Memory
+- `memories` — спогади + фото (Cloudinary) + теги + Canvas-експорт для "Поділитись" (без зовнішніх AI-сервісів)
+- `plans` — місця (want/planned/visited), LocationIQ геокодинг, конвертація в Memory
 - `notes` — нотатки
 - `mood` — трекер настрою (1-5), MoodLog, сімейні настрої
 - `family` — FamilyLink (pending/accepted), пошук юзерів
@@ -50,8 +50,8 @@
 - `/recipes/:id` — Складові/Приготування таби, step checklist, CookLog, wishlist
 - `/recipes/planner` — тижневий планер Пн–Нд
 - `/watchlist` — movie/series/anime/book/game (OpenMoji таби), TMDB пошук; налаштування видимості табів у профілі; **game tab** — повний UI (RAWG пошук через GameSearch overlay, сортування, фільтр жанрів, GameHero, статуси); WatchlistStatsSheet (кнопка статистики) — реальна тривалість з TMDB (з фолбеком на оцінку для елементів без даних), SVG-іконки замість emoji
-- `/memories` — таймлайн + сітка + Leaflet карта, "Цей день рік тому"
-- `/memories/:id` — фото, Canvas export → PNG/Web Share
+- `/memories` — таймлайн + сітка + Leaflet карта, "Цей день рік тому"; МІСЦЕ через LocationSearch (LocationIQ автокомпліт) або LocationMapPicker (тап на карті)
+- `/memories/:id` — фото, Canvas export → PNG/Web Share (поставити обкладинкою — лише з галереї фото або EditMemoryModal, без накладання тексту)
 - `/notes` — inline edit, пошук
 - `/profile` — MeTab (avatar, name, username, password, секція МЕДІА — toggles для movie/series/anime/game + книги "в розробці", СІМ'Я), WalletTab (Monobank, salaryDay, категорії pill-cloud + ВИТРАТИ/ПОПОВНЕННЯ таби + icon picker), PlanTab, AdminTab
 - `/f1` — NextRaceCard, LastRaceCard, RacePredictionCard, ChampionshipTable (Пілоти/Конструктори/МІЙ СЕЗОН), McLarenViewer (Three.js)
@@ -66,9 +66,9 @@
 **Ключові компоненти:**
 - `AiChatSheet` — SSE streaming AI чат (Dashboard), markdown rendering
 - `DayOverlay` — МІЙ ДЕНЬ: слоти morning/afternoon/evening, mood tracker (SVG), сімейні настрої, місячний heatmap
-- `MemoryMap` — Leaflet + Nominatim піни
+- `MemoryMap` — Leaflet піни (координати з LocationIQ)
+- `LocationSearch` / `LocationMapPicker` — пошук місця (LocationIQ автокомпліт) або тап на карті, спільні для AddMemoryModal і PlanForm
 - `ReceiptScanner` — Anthropic Vision
-- `PosterGenerator` — Anthropic Haiku → Pollinations.ai → Cloudinary
 - `Modal` — drag-to-dismiss (0.4× damping, 120px cap, 0.18s overlay fade)
 - `useSwipeToDismiss` / `useModalHistory` — стандартні хуки для bottom sheets
 
@@ -91,8 +91,11 @@
 - **Книги (Books)** — backend `/api/books/search` (Google Books) є, але UI у Watchlist позначено "В РОЗРОБЦІ" (тоггл в профілі disabled, placeholder при відкритті табу)
 - **AI Chef-асистент** — чат-бот у RecipeDetail (концепт описано нижче в пріоритизованому плані, п. 2a)
 
+### ✅ Memories: форма "Нова подія" — доопрацьовано
+Компактна обкладинка, МІСЦЕ+ДАТА в один ряд, дата DD.MM.YYYY. Пошук місця замінено з Nominatim на LocationIQ (POI-пошук закладів, не лише адрес; Mapbox оцінювався, але вимагає картку навіть на free tier). Додано "Обрати на карті" (`LocationMapPicker`, тап на Leaflet + реверс-геокодинг), центрується по введеному запиту або геолокації. Прибрано "Поставити постер як обкладинку" (`PosterGenerator`) — псувало фото текстом, дублюючи вже чистіші шляхи (галерея фото / EditMemoryModal); "Поділитись" (export PNG) залишився.
+
 ### 🟠 Потребує доопрацювання
-- **Memories: карта + експорт** — реалізовано, але потребує polish (деталі уточнюються з юзером)
+- Інше по Memories — за потреби, уточнювати з юзером
 
 ### 🔵 Стратегічне (Фаза 2+)
 - **Onboarding flow** — welcome 3-4 кроки, empty states з підказками, вибір модулів

@@ -11,16 +11,24 @@ import styles from './LocationMapPicker.module.css'
  * ------------------
  * Fullscreen bottom sheet — обрати місце тапом на карті (Leaflet),
  * замість пошуку за назвою. Реверс-геокодинг тапнутої точки через LocationIQ.
+ * Якщо вже є обране місце (`initialLocation` — обране через пошук) — мітка
+ * одразу стоїть там. Інакше центр карти: найкращий збіг з `searchHint`
+ * (текст з поля пошуку), якщо він є — інакше геолокація користувача,
+ * інакше центр України.
  *
  * Props:
  * @prop {boolean}                       isOpen
  * @prop {() => void}                    onClose
  * @prop {(loc: PlanLocation) => void}   onSelect
+ * @prop {string}                        [searchHint]       — поточний текст пошуку для центрування
+ * @prop {PlanLocation | null}           [initialLocation]  — вже обране місце (показати мітку)
  */
 interface LocationMapPickerProps {
   isOpen: boolean
   onClose: () => void
   onSelect: (loc: PlanLocation) => void
+  searchHint?: string
+  initialLocation?: PlanLocation | null
 }
 
 const LOCATIONIQ_KEY = import.meta.env.VITE_LOCATIONIQ_KEY as string | undefined
@@ -41,23 +49,56 @@ const ClickHandler: React.FC<{ onPick: (lat: number, lng: number) => void }> = (
   return null
 }
 
-const LocationMapPicker: React.FC<LocationMapPickerProps> = ({ isOpen, onClose, onSelect }) => {
+const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
+  isOpen, onClose, onSelect, searchHint = '', initialLocation = null,
+}) => {
   useModalHistory(onClose, isOpen)
 
   const [center, setCenter] = useState<[number, number] | null>(null)
   const [marker, setMarker] = useState<[number, number] | null>(null)
   const [address, setAddress] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resolvingCenter, setResolvingCenter] = useState(false)
 
-  useEffect(() => {
-    if (!isOpen || center) return
+  const locateByGeolocation = () => {
     if (!navigator.geolocation) { setCenter(UKRAINE_CENTER); return }
     navigator.geolocation.getCurrentPosition(
       (pos) => setCenter([pos.coords.latitude, pos.coords.longitude]),
       () => setCenter(UKRAINE_CENTER),
       { timeout: 5000 }
     )
-  }, [isOpen, center])
+  }
+
+  useEffect(() => {
+    if (!isOpen || center) return
+
+    if (initialLocation?.lat != null && initialLocation?.lng != null) {
+      const pos: [number, number] = [initialLocation.lat, initialLocation.lng]
+      setCenter(pos)
+      setMarker(pos)
+      setAddress(initialLocation.address || initialLocation.name || '')
+      return
+    }
+
+    const hint = searchHint.trim()
+
+    if (hint.length >= 3 && LOCATIONIQ_KEY) {
+      setResolvingCenter(true)
+      const params = new URLSearchParams({
+        key: LOCATIONIQ_KEY, q: hint, format: 'json', limit: '1', 'accept-language': 'uk',
+      })
+      fetch(`https://us1.locationiq.com/v1/search?${params}`)
+        .then(r => (r.ok ? r.json() : null))
+        .then((data: Array<{ lat: string; lon: string }> | null) => {
+          if (data?.[0]) setCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)])
+          else locateByGeolocation()
+        })
+        .catch(() => locateByGeolocation())
+        .finally(() => setResolvingCenter(false))
+    } else {
+      locateByGeolocation()
+    }
+  }, [isOpen, center]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePick = (lat: number, lng: number) => {
     setMarker([lat, lng])
@@ -89,6 +130,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({ isOpen, onClose, 
     setMarker(null)
     setAddress('')
     setCenter(null)
+    setResolvingCenter(false)
     onClose()
   }
 
@@ -104,6 +146,9 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({ isOpen, onClose, 
         </div>
 
         <div className={styles.mapWrap}>
+          {!center && resolvingCenter && (
+            <p className={styles.centeringHint}>Шукаємо «{searchHint.trim()}»...</p>
+          )}
           {center && (
             <MapContainer center={center} zoom={13} className={styles.map} zoomControl={false}>
               <TileLayer

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import type { PlanLocation } from '../../../store/plansStore'
 import LocationMapPicker from '../LocationMapPicker'
 import styles from './LocationSearch.module.css'
@@ -31,12 +31,15 @@ interface LocationIqResult {
 const LOCATIONIQ_KEY = import.meta.env.VITE_LOCATIONIQ_KEY as string | undefined
 
 const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' }) => {
-  const [query,      setQuery]      = useState(initial)
-  const [results,    setResults]    = useState<LocationIqResult[]>([])
-  const [loading,    setLoading]    = useState(false)
-  const [pickerOpen, setPickerOpen] = useState(false)
+  const [query,         setQuery]         = useState(initial)
+  const [results,       setResults]       = useState<LocationIqResult[]>([])
+  const [loading,       setLoading]       = useState(false)
+  const [pickerOpen,    setPickerOpen]    = useState(false)
+  const [lastLocation,  setLastLocation]  = useState<PlanLocation | null>(null)
+  const skipSearch = useRef(false)
 
   useEffect(() => {
+    if (skipSearch.current) { skipSearch.current = false; return }
     if (query.length < 3) { setResults([]); return }
     if (!LOCATIONIQ_KEY) return
     let cancelled = false
@@ -52,7 +55,15 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
           'accept-language':  'uk',
         })
         const r = await fetch(`https://us1.locationiq.com/v1/autocomplete?${params}`)
-        if (r.ok && !cancelled) setResults(await r.json())
+        if (r.ok && !cancelled) {
+          const raw: LocationIqResult[] = await r.json()
+          const seen = new Set<string>()
+          setResults(raw.filter(item => {
+            if (seen.has(item.place_id)) return false
+            seen.add(item.place_id)
+            return true
+          }))
+        }
       } catch { /* silent */ }
       finally { if (!cancelled) setLoading(false) }
     }, 500)
@@ -61,18 +72,23 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
   }, [query])
 
   const handlePick = (r: LocationIqResult) => {
-    onSelect({
+    const loc: PlanLocation = {
       name:    r.display_place || query,
       address: r.display_name,
       lat:     parseFloat(r.lat),
       lng:     parseFloat(r.lon),
-    })
+    }
+    onSelect(loc)
+    setLastLocation(loc)
+    skipSearch.current = true
     setQuery(r.display_name)
     setResults([])
   }
 
   const handleMapPick = (loc: PlanLocation) => {
     onSelect(loc)
+    setLastLocation(loc)
+    skipSearch.current = true
     setQuery(loc.address || loc.name || '')
     setResults([])
   }
@@ -95,7 +111,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
           <button
             type="button"
             className={styles.clear}
-            onClick={() => { setQuery(''); setResults([]) }}
+            onClick={() => { setQuery(''); setResults([]); setLastLocation(null) }}
             aria-label="Очистити"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -121,6 +137,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
         isOpen={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onSelect={handleMapPick}
+        searchHint={query}
+        initialLocation={lastLocation}
       />
 
       {loading && <p className={styles.loading}>Пошук...</p>}

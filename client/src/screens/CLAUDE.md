@@ -145,14 +145,13 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 ## 10. Memories (`/memories`, `/memories/:id`)
 - Таймлайн по місяцях + сітка 3 колонки
 - Вкладки: СПОГАДИ / ПЛАНИ / КАРТА
-- **MemoryMap** — Leaflet карта з пінами спогадів і планів (Nominatim геокодування)
+- **MemoryMap** — Leaflet карта з пінами спогадів і планів (координати з LocationSearch/LocationMapPicker)
 - **Плани** — PlanCard/PlanForm, статуси (want/planned/visited), конвертація в спогад
 - "Цей день рік тому" банер
-- **PosterGenerator** — Canvas API (обкладинка + назва + дата/місце + теги) → Cloudinary, без AI/зовнішніх сервісів
-- MemoryDetail — фото (PhotoViewerModal fullscreen), підписи, обкладинка (setCover)
-- **Експорт спогаду** — Canvas API → PNG (обкладинка + назва + дата + теги), Web Share API або download (спільна утиліта з PosterGenerator: `utils/generateMemoryPoster.ts`)
+- MemoryDetail — фото (PhotoViewerModal fullscreen), підписи, обкладинка (setCover з фото галереї або через EditMemoryModal; "Постер" як обкладинка прибрано — псувало фото текстом, дублюючи чистіші шляхи)
+- **Поділитись** — Canvas API → PNG (обкладинка + назва + дата + теги), Web Share API або download (`utils/generateMemoryPoster.ts`)
 - Cloudinary upload для фото
-- **AddMemoryModal** — поле МІСЦЕ через `LocationSearch` (LocationIQ автокомпліт, `VITE_LOCATIONIQ_KEY`), ДАТА/МІСЦЕ в один ряд
+- **AddMemoryModal** — поле МІСЦЕ через `LocationSearch` (LocationIQ автокомпліт, `VITE_LOCATIONIQ_KEY`) + "Обрати на карті" (`LocationMapPicker`, тап на Leaflet-карті + реверс-геокодинг), ДАТА/МІСЦЕ в один ряд, дата відображається DD.MM.YYYY
 
 ## 11. Notes (`/notes`)
 - `notesStore` (Zustand, без persist) — `fetchNotes`, `addNote`, `updateNote`, `deleteNote`

@@ -40,8 +40,9 @@ export async function create(req: Request, res: Response): Promise<void> {
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
+  const familyIds = await getAcceptedFamilyIds(req.userId!)
   const item = await Memory.findOneAndUpdate(
-    { _id: req.params.id, userId: req.userId },
+    { _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } },
     req.body,
     { new: true }
   )
@@ -50,13 +51,15 @@ export async function update(req: Request, res: Response): Promise<void> {
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
-  const item = await Memory.findOneAndDelete({ _id: req.params.id, userId: req.userId })
+  const familyIds = await getAcceptedFamilyIds(req.userId!)
+  const item = await Memory.findOneAndDelete({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
   if (!item) { res.status(404).json({ error: 'Not found' }); return }
   res.status(204).end()
 }
 
 export async function addPhoto(req: Request, res: Response): Promise<void> {
-  const memory = await Memory.findOne({ _id: req.params.id, userId: req.userId })
+  const familyIds = await getAcceptedFamilyIds(req.userId!)
+  const memory = await Memory.findOne({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
   if (!memory) { res.status(404).json({ error: 'Not found' }); return }
   memory.photos.push({ url: req.body.url, caption: req.body.caption ?? '' } as any)
   await memory.save()
@@ -64,7 +67,8 @@ export async function addPhoto(req: Request, res: Response): Promise<void> {
 }
 
 export async function deletePhoto(req: Request, res: Response): Promise<void> {
-  const memory = await Memory.findOne({ _id: req.params.id, userId: req.userId })
+  const familyIds = await getAcceptedFamilyIds(req.userId!)
+  const memory = await Memory.findOne({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
   if (!memory) { res.status(404).json({ error: 'Not found' }); return }
   memory.photos = memory.photos.filter(p => String(p._id) !== req.params.photoId) as any
   await memory.save()
@@ -72,7 +76,8 @@ export async function deletePhoto(req: Request, res: Response): Promise<void> {
 }
 
 export async function updatePhoto(req: Request, res: Response): Promise<void> {
-  const memory = await Memory.findOne({ _id: req.params.id, userId: req.userId })
+  const familyIds = await getAcceptedFamilyIds(req.userId!)
+  const memory = await Memory.findOne({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
   if (!memory) { res.status(404).json({ error: 'Not found' }); return }
   const photo = memory.photos.find(p => String(p._id) === req.params.photoId)
   if (!photo) { res.status(404).json({ error: 'Photo not found' }); return }

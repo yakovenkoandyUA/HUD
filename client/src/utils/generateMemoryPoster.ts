@@ -36,7 +36,7 @@ export async function generateMemoryPosterBlob(memory: Memory, formattedDate: st
       })
       if (coverLoaded) {
         const imgRatio = img.naturalWidth / img.naturalHeight
-        const slotH = Math.round(H * 0.62)
+        const slotH = Math.round(H * 0.84)
         const slotW = W
         let drawW = slotW
         let drawH = drawW / imgRatio
@@ -50,17 +50,19 @@ export async function generateMemoryPosterBlob(memory: Memory, formattedDate: st
         ctx.drawImage(img, ox, oy, drawW, drawH)
         ctx.restore()
 
-        // gradient overlay at bottom of image
-        const grad = ctx.createLinearGradient(0, slotH - 200, 0, slotH)
+        // gradient overlay at bottom of image — text sits on top of the photo, not below it
+        const gradH = 360
+        const grad = ctx.createLinearGradient(0, slotH - gradH, 0, slotH)
         grad.addColorStop(0, 'rgba(14,14,14,0)')
-        grad.addColorStop(1, 'rgba(14,14,14,1)')
+        grad.addColorStop(1, 'rgba(14,14,14,0.95)')
         ctx.fillStyle = grad
-        ctx.fillRect(0, slotH - 200, W, 200)
+        ctx.fillRect(0, slotH - gradH, W, gradH)
       }
     } catch { /* skip image */ }
   }
 
-  const textTop = coverLoaded ? Math.round(H * 0.62) + 24 : 80
+  const slotBottom = Math.round(H * 0.84)
+  const textTop = coverLoaded ? slotBottom - 170 : 80
 
   // title
   ctx.fillStyle = '#ffffff'

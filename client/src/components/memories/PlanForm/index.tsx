@@ -190,9 +190,12 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
                 {uploading ? (
                   <span className={styles.spinner} />
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M2 9h14M9 2v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                  </svg>
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                      <path d="M2 9h14M9 2v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                    <span className={styles.addThumbLabel}>ФОТО</span>
+                  </>
                 )}
                 <input
                   type="file"
