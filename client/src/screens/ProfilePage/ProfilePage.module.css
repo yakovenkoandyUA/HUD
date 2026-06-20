@@ -60,6 +60,31 @@
   padding: 16px 16px calc(72px + env(safe-area-inset-bottom));
 }
 
+/* ── Top-level tab switch (me/wallet/plan/admin) ── */
+.tabFade {
+  animation: meFadeIn 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes meFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Me tab: menu ↔ section transition ── */
+.slideInRight {
+  animation: meSlideInRight 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.slideInLeft {
+  animation: meSlideInLeft 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes meSlideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes meSlideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* ── Profile hero card ── */
 .heroCard {
   display: flex;
@@ -1688,6 +1713,94 @@
   padding: 1px 5px;
   vertical-align: middle;
   line-height: 1.5;
+}
+
+/* ── Me tab: sub-section header (back + title) ── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+}
+
+.sectionHeaderTitle {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+
+/* ── Me tab: menu list ── */
+.menuRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  min-height: 56px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.menuRow:hover { background: var(--surface2); }
+
+.menuIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--surface2);
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.menuRowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menuRowLabel {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.menuRowSub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.menuBadge {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.menuChevron {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--text3);
 }
 
 /* ── Admin users section ── */

@@ -4,6 +4,9 @@ import { useProfileStore } from '../../store/profileStore'
 import MimirFillIcon from '../../components/ui/MimirFillIcon'
 import styles from './Register.module.css'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/
+
 /**
  * RegisterScreen
  * --------------
@@ -24,6 +27,14 @@ const RegisterScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !username.trim() || !email.trim() || !password) return
+    if (!EMAIL_RE.test(email.trim())) {
+      setError('Невірний формат email')
+      return
+    }
+    if (!USERNAME_RE.test(username.trim())) {
+      setError('Нікнейм: 3-20 символів, тільки латиниця, цифри і "_"')
+      return
+    }
     if (password.length < 6) {
       setError('Пароль мінімум 6 символів')
       return
@@ -79,17 +90,18 @@ const RegisterScreen: React.FC = () => {
               />
             </div>
             <div className={styles.inputWrap}>
-              <label className={styles.label}>ЛОГІН</label>
+              <label className={styles.label}>НІКНЕЙМ</label>
               <input
                 className={styles.input}
                 type="text"
                 placeholder="kotkа"
                 value={username}
-                onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                 autoComplete="username"
                 disabled={loading}
                 required
               />
+              <span className={styles.fieldHint}>унікальний @нік для пошуку в сім'ї</span>
             </div>
           </div>
 

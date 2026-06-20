@@ -21,6 +21,16 @@ import styles from './Sprint.module.css'
 type FilterType   = 'task' | 'shopping'
 type StatusFilter = 'active' | 'done'
 
+const SWIPE_TUTORIAL_KEY = 'hud-sprint-swipe-tutorial-seen'
+
+const SWIPE_GHOST_TASK: UnifiedTodo = {
+	id: '__swipe-tutorial-ghost__',
+	title: 'Спробуй видалити мене свайпом вліво ←',
+	done: false,
+	type: 'sprint',
+	createdAt: new Date(0).toISOString(),
+}
+
 // Exponential urgency: відчуття "підйому" від низу до верху
 function deadlineUrgency(dueDate: string, todayIso: string): number {
 	const [ty, tm, td] = todayIso.split('-').map(Number)
@@ -55,6 +65,11 @@ const Sprint: React.FC = () => {
 	const [weekExpanded, setWeekExpanded] = useState(false)
 	const [binHidden, setBinHidden]       = useState(true)
 	const binTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const [showSwipeTutorial, setShowSwipeTutorial] = useState(() => !localStorage.getItem(SWIPE_TUTORIAL_KEY))
+	const handleSwipeTutorialDone = () => {
+		localStorage.setItem(SWIPE_TUTORIAL_KEY, '1')
+		setShowSwipeTutorial(false)
+	}
 
 	const _td = new Date()
 	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
@@ -152,14 +167,16 @@ const Sprint: React.FC = () => {
 		return b.createdAt.localeCompare(a.createdAt)
 	})
 
+	const showSwipeGhost = showSwipeTutorial && isDayToday && filterType === 'task' && filterStatus === 'active'
+
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
-		if (dayQuests.length === 0) {
+		if (dayQuests.length === 0 && !showSwipeGhost) {
 			binTimerRef.current = setTimeout(() => setBinHidden(true), 300)
 		} else {
 			binTimerRef.current = setTimeout(() => setBinHidden(false), 0)
 		}
-	}, [dayQuests.length])
+	}, [dayQuests.length, showSwipeGhost])
 
 	const handleDayLongPress = (day: Date) => {
 		const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
@@ -246,21 +263,25 @@ const Sprint: React.FC = () => {
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
 					{loading && items.length === 0 ? (
 						<p className={styles.dayEmptyText}>Завантаження...</p>
-					) : dayQuests.length === 0 ? (
+					) : dayQuests.length === 0 && !showSwipeGhost ? (
 						<div className={styles.dayEmpty}>
 							<DoodleIllustration variant="sprint" size={72} />
 							<p className={styles.dayEmptyText}>Немає задач на цей день</p>
 						</div>
 					) : (
-						<>
-							{dayQuests.length > 0 && (
-								<ul className={styles.list}>
-									{dayQuests.map(t => (
-										<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
-									))}
-								</ul>
+						<ul className={styles.list}>
+							{showSwipeGhost && (
+								<TaskCard
+									item={SWIPE_GHOST_TASK}
+									onToggle={() => {}}
+									onDelete={handleSwipeTutorialDone}
+									onOpenDetail={() => {}}
+								/>
 							)}
-						</>
+							{dayQuests.map(t => (
+								<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
+							))}
+						</ul>
 					)}
 				</div>
 

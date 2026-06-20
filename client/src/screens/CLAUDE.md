@@ -167,11 +167,13 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 
 **BottomNav на `/profile`** адаптується: замість основних 5 іконок показує профільні таби.
 
-**MeTab:**
-- Аватар, ім'я, username (inline edit + uniqueness check), зміна пароля (accordion)
-- **Місто (погода)** — текстове поле + кнопка геолокації (`navigator.geolocation` → Nominatim reverse geocoding → авто-заповнення міста, `updateProfile({ city })`)
-- **МЕДІА settingsCard** — toggles для movie/series/anime/game; книги disabled з бейджем "В РОЗРОБЦІ"; зберігається як `mediaEnabledTabs: string[]` у User моделі через `PATCH /api/auth/me`
-- **СІМ'Я settingsCard** внизу — пошук юзерів, pending received (прийняти/відхилити), accepted members, pending sent; `useFamilyStore` читається зі store (fetchFamily() в ProfilePage при mount)
+**MeTab** — hero-картка (аватар, ім'я, username inline edit) + меню-навігація на 5 підекранів (`?tab=me&section=...`, керується `useSearchParams`, back-кнопка прибирає `section`):
+- **MeSecurity** (`section=security`) — зміна пароля (accordion), PIN-код (numpad UI)
+- **MeAppearance** (`section=appearance`) — теми (6 палітр), стиль навігації (Класик/Пілюля/Хаб), закріплені розділи (pinning)
+- **MeSystem** (`section=system`) — місто (текст + геолокація через Nominatim reverse geocoding), F1 toggle, push-сповіщення, очищення кешу, оновлення/install PWA
+- **MeMedia** (`section=media`) — toggles movie/series/anime/game; книги disabled з бейджем "В РОЗРОБЦІ"; `mediaEnabledTabs: string[]` через `PATCH /api/auth/me`
+- **MeFamily** (`section=family`) — пошук юзерів, pending received (прийняти/відхилити), accepted members, pending sent; `useFamilyStore` (fetchFamily() в ProfilePage при mount); бейдж-лічильник у рядку меню "Сім'я"
+- Кожен підекран — окремий файл-компонент у `ProfilePage/`, читає потрібні Zustand stores напряму (без prop drilling); стилі й клас-неймінг спільні з `ProfilePage.module.css` (`.menuRow`, `.sectionHeader`)
 
 **WalletTab:**
 - Три settingsCard: РАХУНКИ / ДЕНЬ ЗАРПЛАТИ / КАТЕГОРІЇ

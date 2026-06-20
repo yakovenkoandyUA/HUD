@@ -9,6 +9,7 @@ import GameCard from '../../components/games/GameCard'
 import GameDetail from '../../components/games/GameDetail'
 import GameHero from '../../components/games/GameHero'
 import WatchlistStatsSheet from '../../components/watchlist/WatchlistStatsSheet'
+import ImportLetterboxdModal from '../../components/watchlist/ImportLetterboxdModal'
 import { useWatchlistStore } from '../../store/watchlistStore'
 import { useGamesStore } from '../../store/gamesStore'
 import { useUiStore } from '../../store/uiStore'
@@ -95,6 +96,7 @@ const Watchlist: React.FC = () => {
   const [sortOpen, setSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
   const [statsOpen, setStatsOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   useEffect(() => {
     if (!getToken()) return
@@ -419,6 +421,20 @@ const Watchlist: React.FC = () => {
 
             <div className={styles.searchWrap}>
               <WatchlistSearch category={tab as WatchlistCategory} onAdd={handleAdd} />
+              {tab === 'movie' && (
+                <button
+                  type="button"
+                  className={styles.sortBtn}
+                  onClick={() => setImportOpen(true)}
+                  aria-label="Імпорт з Letterboxd"
+                  title="Імпорт з Letterboxd"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2v8M8 10l-3-3M8 10l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2 12.5v1A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              )}
               <div className={styles.sortWrap} ref={sortRef}>
                 <button
                   type="button"
@@ -642,6 +658,14 @@ const Watchlist: React.FC = () => {
         isOpen={gameSearchOpen}
         onClose={() => setGameSearchOpen(false)}
         onAdd={handleAddGame}
+      />
+
+      {/* ── Letterboxd import ── */}
+      <ImportLetterboxdModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        existingItems={items}
+        onAdd={addItem}
       />
     </div>
   )

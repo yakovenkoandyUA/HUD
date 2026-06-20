@@ -7,6 +7,7 @@ import styles from './Login.module.css'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) ?? ''
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
  * LoginScreen
@@ -93,6 +94,10 @@ const LoginScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !password) return
+    if (!EMAIL_RE.test(email.trim())) {
+      setError('Невірний формат email')
+      return
+    }
     setLoading(true)
     setError(null)
     try {

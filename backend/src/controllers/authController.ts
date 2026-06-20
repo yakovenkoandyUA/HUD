@@ -137,13 +137,24 @@ async function sendAuthResponse(res: Response, userId: string, role: string, use
 /** POST /auth/register — { email, password, name, username } → JWT + user
  *  If username exists but has no passwordHash → claims the existing account.
  */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/
+
 export async function register(req: Request, res: Response): Promise<void> {
   const { email, password, name, username } = req.body as {
     email?: string; password?: string; name?: string; username?: string
   }
 
   if (!email || !password || !name || !username) {
-    res.status(400).json({ error: 'email, password, name, username required' })
+    res.status(400).json({ error: "Заповніть ім'я, нікнейм, email і пароль" })
+    return
+  }
+  if (!EMAIL_RE.test(email.trim())) {
+    res.status(400).json({ error: 'Невірний формат email' })
+    return
+  }
+  if (!USERNAME_RE.test(username.trim().toLowerCase())) {
+    res.status(400).json({ error: 'Нікнейм: 3-20 символів, тільки латиниця, цифри і "_"' })
     return
   }
   if (password.length < 6) {
@@ -196,7 +207,11 @@ export async function register(req: Request, res: Response): Promise<void> {
 
     const userId = (user._id as { toString(): string }).toString()
     await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user), 201)
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.name === 'ValidationError') {
+      res.status(400).json({ error: 'Некоректні дані реєстрації' })
+      return
+    }
     res.status(500).json({ error: 'Помилка реєстрації' })
   }
 }
@@ -205,7 +220,7 @@ export async function register(req: Request, res: Response): Promise<void> {
 export async function loginEmail(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body as { email?: string; password?: string }
   if (!email || !password) {
-    res.status(400).json({ error: 'email and password required' })
+    res.status(400).json({ error: 'Вкажіть email і пароль' })
     return
   }
 

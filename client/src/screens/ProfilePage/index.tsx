@@ -55,10 +55,12 @@ const ProfilePage: React.FC = () => {
 
       {/* ── Tab content (with bottom nav padding) ── */}
       <div className={styles.content}>
-        {activeTab === 'me'     && <MeTab />}
-        {activeTab === 'wallet' && <WalletTab />}
-        {activeTab === 'plan'   && <PlanTab />}
-        {activeTab === 'admin' && activeProfile.role === 'admin' && <AdminTab />}
+        <div key={activeTab} className={styles.tabFade}>
+          {activeTab === 'me'     && <MeTab />}
+          {activeTab === 'wallet' && <WalletTab />}
+          {activeTab === 'plan'   && <PlanTab />}
+          {activeTab === 'admin' && activeProfile.role === 'admin' && <AdminTab />}
+        </div>
       </div>
     </div>
   )

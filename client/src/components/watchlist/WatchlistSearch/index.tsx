@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import styles from './WatchlistSearch.module.css'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '../../../types'
+import { TMDB_GENRES } from '../../../utils/tmdbGenres'
 
 const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY
 const TMDB_IMG  = 'https://image.tmdb.org/t/p/w92'
@@ -11,15 +12,6 @@ interface CastMember {
   name: string
   character: string
   profilePath: string | null
-}
-
-const TMDB_GENRES: Record<number, string> = {
-  28: 'Бойовик', 12: 'Пригоди', 16: 'Анімація', 35: 'Комедія',
-  80: 'Кримінал', 99: 'Документальний', 18: 'Драма', 10751: 'Сімейний',
-  14: 'Фентезі', 36: 'Історичний', 27: 'Жахи', 10402: 'Музичний',
-  9648: 'Містика', 10749: 'Романтика', 878: 'Фантастика', 53: 'Трилер',
-  10752: 'Воєнний', 37: 'Вестерн', 10759: 'Пригоди',
-  10765: 'Sci-Fi & Fantasy', 10762: 'Дитячий', 10766: 'Мило', 10767: 'Ток-шоу',
 }
 
 interface SearchResult {
