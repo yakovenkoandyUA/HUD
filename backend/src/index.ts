@@ -52,7 +52,7 @@ const PORT = Number(process.env.PORT) || 8080
 
 app.use(helmet())
 
-const allowedOrigins = ['https://hud-murex.vercel.app', 'http://localhost:5173']
+const allowedOrigins = ['https://hud-murex.vercel.app', 'https://mimir-hud.tech', 'https://www.mimir-hud.tech', 'http://localhost:5173']
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin || allowedOrigins.includes(origin)) cb(null, true)
