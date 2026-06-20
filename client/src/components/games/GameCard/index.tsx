@@ -23,7 +23,9 @@ const PS_PLATFORMS = new Set(['PS5', 'PS4'])
 /**
  * GameCard
  * --------
- * Cover card in the 2-column games grid.
+ * Full-cover card in the 2-column games grid.
+ * Title and meta are overlaid on the image via a bottom gradient.
+ * Metacritic score shown as a color-coded badge top-right.
  *
  * Props:
  * @prop {GameItem}   item    — game to display
@@ -53,30 +55,37 @@ const GameCard: React.FC<GameCardProps> = ({ item, onClick }) => {
           </div>
         )}
 
+        <div className={styles.gradient} />
+
         <span className={`${styles.statusBadge} ${STATUS_CLASS[item.status] ?? ''}`}>
           {STATUS_LABEL[item.status]}
         </span>
 
-        {item.platinum && isPS && (
-          <div className={styles.platinumBadge} title="Platinum">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 2 .7-4.1L2 5.4l4.2-.8L8 1z" fill="currentColor"/>
-            </svg>
-          </div>
+        {item.metacritic && (
+          <span className={`${styles.metacriticBadge} ${item.metacritic >= 75 ? styles.mcGood : item.metacritic >= 50 ? styles.mcOk : styles.mcBad}`}>
+            {item.metacritic}
+          </span>
         )}
 
         {item.status === 'playing' && <div className={styles.playingBar} />}
-      </div>
 
-      <div className={styles.info}>
-        <p className={styles.title}>{item.title}</p>
-        <div className={styles.meta}>
-          {item.releaseDate && (
-            <span className={styles.year}>{item.releaseDate.slice(0, 4)}</span>
-          )}
-          {item.status === 'completed' && item.rating != null && item.rating > 0 && (
-            <span className={styles.ratingTag}>★ {item.rating}</span>
-          )}
+        <div className={styles.info}>
+          <p className={styles.title}>{item.title}</p>
+          <div className={styles.meta}>
+            {item.releaseDate && (
+              <span className={styles.year}>{item.releaseDate.slice(0, 4)}</span>
+            )}
+            {item.status === 'completed' && item.rating != null && item.rating > 0 && (
+              <span className={styles.ratingTag}>★ {item.rating}</span>
+            )}
+            {item.platinum && isPS && (
+              <span className={styles.platinumMini} title="Platinum">
+                <svg width="9" height="9" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 2 .7-4.1L2 5.4l4.2-.8L8 1z" fill="currentColor"/>
+                </svg>
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </button>

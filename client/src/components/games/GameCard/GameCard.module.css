@@ -4,10 +4,8 @@
   cursor: pointer;
   text-align: left;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   width: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .cover {
@@ -24,9 +22,9 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.25s ease;
+  transition: transform 0.3s ease;
 }
-.card:active .img { transform: scale(1.03); }
+.card:active .img { transform: scale(1.04); }
 
 .noImg {
   width: 100%;
@@ -37,14 +35,26 @@
   color: var(--text3);
 }
 
-/* ── Status badge ── */
+/* Gradient overlay — heavy at bottom for legible text */
+.gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.90) 0%,
+    rgba(0, 0, 0, 0.35) 40%,
+    transparent 68%
+  );
+  pointer-events: none;
+}
+
+/* ── Status badge — top left ── */
 .statusBadge {
   position: absolute;
   top: 8px;
   left: 0;
-  background: rgba(0, 0, 0, 0.78);
   border-left: 3px solid;
-  padding: 4px 8px 4px 6px;
+  padding: 4px 7px 4px 5px;
   border-radius: 0 4px 4px 0;
   font-size: 9px;
   font-family: var(--font-ui);
@@ -52,29 +62,31 @@
   letter-spacing: 0.08em;
   line-height: 1;
   color: #fff;
+  background: rgba(0, 0, 0, 0.65);
 }
 
-.statusAnnounced { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, rgba(0,0,0,0.6)); }
+.statusAnnounced { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 25%, rgba(0,0,0,0.55)); }
 .statusWant      { border-color: var(--text2); }
 .statusPlaying   { border-color: #2DD4BF; background: rgba(45, 212, 191, 0.25); }
-.statusCompleted { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 20%, rgba(0,0,0,0.6)); }
+.statusCompleted { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 22%, rgba(0,0,0,0.55)); }
 .statusDropped   { border-color: var(--negative); }
 
-/* ── Platinum badge ── */
-.platinumBadge {
+/* ── Metacritic — top right ── */
+.metacriticBadge {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #a8c4d8 0%, #6b9ab8 50%, #c8d8e8 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  letter-spacing: 0.02em;
 }
+.mcGood { background: rgba(77, 175, 74, 0.88);  color: #fff; }
+.mcOk   { background: rgba(255, 193, 7, 0.88);  color: #111; }
+.mcBad  { background: rgba(244, 67, 54, 0.88);  color: #fff; }
 
 /* ── Playing bar ── */
 .playingBar {
@@ -88,28 +100,33 @@
 }
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+  50%       { opacity: 0.35; }
 }
 
-/* ── Info ── */
+/* ── Info overlay — bottom of cover ── */
 .info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 9px 7px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 2px;
+  gap: 3px;
 }
 
 .title {
   font-family: var(--font-ui);
   font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
+  color: #fff;
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .meta {
@@ -121,11 +138,18 @@
 .year {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--text3);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .ratingTag {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--gold);
+}
+
+.platinumMini {
+  color: #a8c4d8;
+  display: flex;
+  align-items: center;
+  line-height: 0;
 }

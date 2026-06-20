@@ -50,6 +50,8 @@ const Games: React.FC = () => {
     return items.filter(i => i.status === statusFilter)
   }, [items, statusFilter])
 
+  const playingNow = useMemo(() => items.filter(i => i.status === 'playing'), [items])
+
   const stats = useMemo(() => ({
     total:     items.length,
     playing:   items.filter(i => i.status === 'playing').length,
@@ -99,6 +101,48 @@ const Games: React.FC = () => {
           <span className={styles.statLabel}>platinum</span>
         </div>
       </div>
+
+      {/* Now Playing shelf */}
+      {playingNow.length > 0 && statusFilter === 'all' && (
+        <div className={styles.shelfSection}>
+          <p className={styles.shelfLabel}>ГРАЮ ЗАРАЗ</p>
+          <div className={styles.shelf}>
+            {playingNow.map(game => (
+              <button
+                key={game.id}
+                type="button"
+                className={styles.shelfCard}
+                onClick={() => setSelected(game)}
+              >
+                {game.backgroundUrl ? (
+                  <img src={game.backgroundUrl} alt={game.title} className={styles.shelfBg} />
+                ) : (
+                  <div className={styles.shelfBgFallback} />
+                )}
+                <div className={styles.shelfGradient} />
+                <div className={styles.shelfContent}>
+                  {game.coverUrl && (
+                    <div className={styles.shelfCover}>
+                      <img src={game.coverUrl} alt={game.title} className={styles.shelfCoverImg} />
+                    </div>
+                  )}
+                  <div className={styles.shelfInfo}>
+                    <p className={styles.shelfTitle}>{game.title}</p>
+                    <div className={styles.shelfMeta}>
+                      <span className={styles.shelfDot} />
+                      <span className={styles.shelfPlaying}>Граю</span>
+                      {game.hoursPlayed ? (
+                        <span className={styles.shelfHours}>{game.hoursPlayed} год</span>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.shelfBar} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <GameSearch onAdd={handleAdd} />
