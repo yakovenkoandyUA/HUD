@@ -4,6 +4,7 @@ import ImageUploadButton from '../../ui/ImageUploadButton'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LocationSearch from '../LocationSearch'
 import Button from '../../ui/Button'
+import type { PlanLocation } from '../../../store/plansStore'
 import styles from './AddMemoryModal.module.css'
 
 /**
@@ -19,6 +20,8 @@ import styles from './AddMemoryModal.module.css'
 export interface AddMemoryData {
   title: string
   location?: string
+  lat?: number | null
+  lng?: number | null
   date: string
   coverUrl: string
   notes?: string
@@ -48,7 +51,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   useModalHistory(onClose, isOpen)
 
   const [title, setTitle]       = useState('')
-  const [location, setLocation] = useState('')
+  const [location, setLocation] = useState<PlanLocation>({ name: null, address: null, lat: null, lng: null })
   const [date, setDate]         = useState(today())
   const [coverUrl, setCoverUrl] = useState('')
   const [notes, setNotes]       = useState('')
@@ -57,7 +60,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 
   const reset = () => {
     setTitle('')
-    setLocation('')
+    setLocation({ name: null, address: null, lat: null, lng: null })
     setDate(today())
     setCoverUrl('')
     setNotes('')
@@ -85,7 +88,9 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
     if (!title.trim() || !date) return
     onCreate({
       title:    title.trim(),
-      location: location.trim() || undefined,
+      location: location.address || location.name || undefined,
+      lat:      location.lat,
+      lng:      location.lng,
       date,
       coverUrl,
       notes:    notes.trim() || undefined,
@@ -128,8 +133,8 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
             <div className={`${styles.field} ${styles.fieldLocation}`}>
               <label className={styles.label}>МІСЦЕ <span className={styles.optional}>(необов'язково)</span></label>
               <LocationSearch
-                initial={location}
-                onSelect={loc => setLocation(loc.address || loc.name || '')}
+                initial={location.address ?? ''}
+                onSelect={setLocation}
               />
             </div>
 

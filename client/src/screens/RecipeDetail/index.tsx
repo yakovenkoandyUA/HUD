@@ -5,6 +5,7 @@ import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
 import { useSprintStore } from '../../store/sprintStore'
 import RecipeForm from '../../components/recipes/RecipeForm'
+import ChefChatSheet from '../../components/recipes/ChefChatSheet'
 import Modal from '../../components/ui/Modal'
 import IngredientIcon from '../../components/ui/IngredientIcon'
 import type { Recipe } from '../../types'
@@ -57,6 +58,15 @@ const ShoppingIcon: React.FC = () => (
   </svg>
 )
 
+const ChefIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M4 7a2.3 2.3 0 0 1 .6-4.4 2.3 2.3 0 0 1 4.3-1.4 2.3 2.3 0 0 1 4.3 1.4A2.3 2.3 0 0 1 12 7"
+      stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+    <path d="M4 7h8v2.5H4V7z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+    <path d="M4.5 9.5L5 14h6l.5-4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
 const UtensilsIcon: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
     <path d="M5 2v3.5" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round"/>
@@ -99,6 +109,7 @@ const RecipeDetailScreen: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showAddConfirm, setShowAddConfirm] = useState(false)
   const [cookLogged, setCookLogged] = useState(false)
+  const [showChef, setShowChef] = useState(false)
 
   const stat = id ? cookStats[id] : undefined
   const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions'>('ingredients')
@@ -313,6 +324,14 @@ const RecipeDetailScreen: React.FC = () => {
           </button>
           <button
             type="button"
+            className={styles.actionBtn}
+            onClick={() => setShowChef(true)}
+            aria-label="AI шеф-асистент"
+          >
+            <ChefIcon />
+          </button>
+          <button
+            type="button"
             className={`${styles.actionBtn} ${styles.actionBtnSplit} ${alreadyInList ? styles.actionBtnActive : ''}`}
             onClick={handleAddToShopping}
             aria-label={alreadyInList ? 'Вже у покупках' : 'Додати до покупок'}
@@ -476,6 +495,12 @@ const RecipeDetailScreen: React.FC = () => {
           onCancel={() => setShowEdit(false)}
         />
       </Modal>
+
+      <ChefChatSheet
+        isOpen={showChef}
+        onClose={() => setShowChef(false)}
+        recipe={recipe}
+      />
     </div>
   )
 }

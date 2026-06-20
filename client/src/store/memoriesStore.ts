@@ -18,6 +18,8 @@ function toMemory(d: Record<string, any>): Memory {
     id:             d._id,
     title:          d.title,
     location:       d.location || undefined,
+    lat:            d.lat ?? null,
+    lng:            d.lng ?? null,
     date:           d.date,
     coverUrl:       d.coverUrl ?? '',
     notes:          d.notes ?? '',

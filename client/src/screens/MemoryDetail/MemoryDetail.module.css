@@ -42,6 +42,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
 }
 
 .headerSub {
@@ -49,7 +50,18 @@
   font-size: 11px;
   color: var(--text3);
   margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: space-evenly;
 }
+
+.headerPhotoCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.headerPhotoCount svg { flex-shrink: 0; }
 
 .menuBtn {
   font-size: 20px;

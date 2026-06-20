@@ -2,11 +2,14 @@ import React, { useState, useRef, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import PhotoViewerModal from '../../components/memories/PhotoViewerModal'
 import ImageUploadButton from '../../components/ui/ImageUploadButton'
+import LocationSearch from '../../components/memories/LocationSearch'
 import { useMemoriesStore } from '../../store/memoriesStore'
+import { useUiStore } from '../../store/uiStore'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { generateMemoryPosterBlob } from '../../utils/generateMemoryPoster'
 import { useLongPress } from '../../hooks/useLongPress'
 import type { MemoryPhoto } from '../../types/memory'
+import type { PlanLocation } from '../../store/plansStore'
 import styles from './MemoryDetail.module.css'
 
 const MONTHS_UA_SHORT = [
@@ -96,15 +99,21 @@ const PhotoItem: React.FC<PhotoItemProps> = ({ photo, onTap, onSetCover, onDelet
 interface EditMemoryModalProps {
   title: string
   location: string
+  lat: number | null
+  lng: number | null
   coverUrl: string
-  onSave: (title: string, location: string) => void
+  onSave: (title: string, location: PlanLocation) => void
   onChangeCover: (url: string) => void
   onClose: () => void
 }
 
-const EditMemoryModal: React.FC<EditMemoryModalProps> = ({ title: initTitle, location: initLoc, coverUrl, onSave, onChangeCover, onClose }) => {
+const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
+  title: initTitle, location: initLoc, lat: initLat, lng: initLng, coverUrl, onSave, onChangeCover, onClose,
+}) => {
   const [title, setTitle]       = useState(initTitle)
-  const [location, setLocation] = useState(initLoc)
+  const [location, setLocation] = useState<PlanLocation>({
+    name: null, address: initLoc || null, lat: initLat, lng: initLng,
+  })
 
   return (
     <div className={styles.editOverlay} onClick={onClose}>
@@ -129,17 +138,12 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({ title: initTitle, loc
             onChange={e => setTitle(e.target.value)}
           />
           <label className={styles.editLabel}>МІСЦЕ</label>
-          <input
-            className={styles.editInput}
-            value={location}
-            onChange={e => setLocation(e.target.value)}
-            placeholder="Де це було?"
-          />
+          <LocationSearch initial={initLoc} onSelect={setLocation} />
           <button
             type="button"
             className={styles.editSave}
             disabled={!title.trim()}
-            onClick={() => { onSave(title.trim(), location.trim()); onClose() }}
+            onClick={() => { onSave(title.trim(), location); onClose() }}
           >
             ЗБЕРЕГТИ
           </button>
@@ -162,6 +166,7 @@ const MemoryDetailScreen: React.FC = () => {
   const navigate  = useNavigate()
   const { memories, addPhoto, deletePhoto, setCover, updatePhoto, updateMemory, deleteMemory } =
     useMemoriesStore()
+  const { showToast } = useUiStore()
 
   const memory = memories.find(m => m.id === id)
 
@@ -242,6 +247,8 @@ const MemoryDetailScreen: React.FC = () => {
     if (!memory || sharing) return
     setSharing(true)
 
+    const shareUrl = `${window.location.origin}/memories/${memory.id}`
+
     try {
       const blob = await generateMemoryPosterBlob(memory, formattedDate)
       const file = new File([blob], `memory-${memory.id}.png`, { type: 'image/png' })
@@ -251,22 +258,28 @@ const MemoryDetailScreen: React.FC = () => {
           await navigator.share({
             files: [file],
             title: memory.title,
-            text: `${memory.title} · ${formattedDate}`,
+            text: `${memory.title} · ${formattedDate}\n${shareUrl}`,
+            url: shareUrl,
           })
         } catch { /* user cancelled or not supported */ }
       } else {
-        // download fallback
+        // download fallback + copy link
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
         a.download = `${memory.title.toLowerCase().replace(/\s+/g, '-')}.png`
         a.click()
         URL.revokeObjectURL(url)
+
+        try {
+          await navigator.clipboard.writeText(shareUrl)
+          showToast('Посилання на спогад скопійовано', 'success')
+        } catch { /* clipboard unavailable — image download still happened */ }
       }
     } finally {
       setSharing(false)
     }
-  }, [memory, sharing, formattedDate])
+  }, [memory, sharing, formattedDate, showToast])
 
   if (!memory) {
     return (
@@ -290,7 +303,14 @@ const MemoryDetailScreen: React.FC = () => {
             {memory.location && <span>{memory.location} · </span>}
             <span>{formatMemoryDate(memory.date)}</span>
             {memory.photos.length > 0 && (
-              <span> · 🖼 {memory.photos.length} фото</span>
+              <span className={styles.headerPhotoCount}>
+                <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                  <rect x="1.5" y="2.5" width="11" height="9" rx="1.3" stroke="currentColor" strokeWidth="1.2"/>
+                  <circle cx="4.7" cy="5.5" r="1" fill="currentColor"/>
+                  <path d="M2 9.5l3-3 2 2 2.5-3 2.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {memory.photos.length} фото
+              </span>
             )}
           </p>
         </div>
@@ -502,8 +522,15 @@ const MemoryDetailScreen: React.FC = () => {
         <EditMemoryModal
           title={memory.title}
           location={memory.location ?? ''}
+          lat={memory.lat ?? null}
+          lng={memory.lng ?? null}
           coverUrl={memory.coverUrl ?? ''}
-          onSave={(title, location) => updateMemory(id!, { title, location: location || undefined })}
+          onSave={(title, location) => updateMemory(id!, {
+            title,
+            location: location.address || location.name || undefined,
+            lat:      location.lat,
+            lng:      location.lng,
+          })}
           onChangeCover={(url) => setCover(id!, url)}
           onClose={() => setShowEdit(false)}
         />

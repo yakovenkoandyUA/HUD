@@ -109,8 +109,9 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 ## 8. RecipeDetail (`/recipes/:id`)
 - Hero-фото (або noHero header з кнопками)
 - Мета: час готування, порції (stepper +/−), калорії, складність
-- Кнопки дій: Wishlist heart / Покупки (→ sprintStore shopping) / «Приготував» (flame)
+- Кнопки дій: Wishlist heart / **Шеф** (AI чат, `ChefChatSheet`) / Покупки (→ sprintStore shopping) / «Приготував» (flame)
 - «Приготував» → `logCook(id)` — POST /api/recipes/:id/cook → CookLog MongoDB; оптимістичне оновлення `cookStats`; показує "Готував N×" + дату останнього разу
+- **ChefChatSheet** — bottom-sheet AI асистент для конкретного рецепту (на відміну від RecipeGenerator — не створює новий рецепт, а консультує по вже відкритому: заміна інгредієнтів, адаптація порцій/дієти, калорійність, підказки під час готування). SSE streaming через `/api/ai/chef-chat`, контекст рецепту (ingredients/instructions/servings/difficulty) передається в тілі запиту з фронтенду; той самий UI-паттерн що `AiChatSheet` з Dashboard
 - **Таби «Складові» / «Приготування»** — `activeTab: 'ingredients' | 'instructions'` state
   - Складові: `<IngredientIcon ingredient={name} size={38} />` + назва + кількість з перерахунком
   - Приготування: `recipe.instructions[]` або fallback split `recipe.steps` по `\n`

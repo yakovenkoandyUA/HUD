@@ -10,6 +10,8 @@ interface IMemoryPhoto {
 export interface IMemory extends Document {
   title: string
   location: string
+  lat: number | null
+  lng: number | null
   date: string
   coverUrl: string
   notes: string
@@ -27,6 +29,8 @@ const photoSchema = new Schema<IMemoryPhoto>({
 const schema = new Schema<IMemory>({
   title:    { type: String, required: true },
   location: { type: String, default: '' },
+  lat:      { type: Number, default: null },
+  lng:      { type: Number, default: null },
   date:     { type: String, required: true },
   coverUrl: { type: String, default: '' },
   notes:    { type: String, default: '' },

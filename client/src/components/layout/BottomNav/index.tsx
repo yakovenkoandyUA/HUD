@@ -223,9 +223,9 @@ const BottomNav: React.FC = () => {
       )
     }
 
-    // Even count + dashboard pinned → dashboard goes to center
+    // Odd total count (5 or 7, including dashboard) + dashboard pinned → dashboard goes to center
     const dashSection = pinnedAvailable.find(s => s.to === '/')
-    if (pinnedAvailable.length % 2 === 0 && dashSection) {
+    if (pinnedAvailable.length % 2 === 1 && pinnedAvailable.length > 1 && dashSection) {
       const rest = pinnedAvailable.filter(s => s.to !== '/')
       const half = rest.length / 2
       const leftPinned = rest.slice(0, half)
@@ -247,7 +247,7 @@ const BottomNav: React.FC = () => {
       )
     }
 
-    // Odd count, no overflow → plain row
+    // Even count, or no dashboard pinned, or single item → plain row
     return (
       <nav className={styles.nav}>
         {pinnedAvailable.map(pillLink)}

@@ -119,6 +119,28 @@
 }
 .emptyBtn:hover { background: var(--accent-glow); }
 
+/* ── Stats row ── */
+.statsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  margin: 0 0 12px;
+}
+
+.statNum {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.statsDot {
+  color: var(--border2);
+}
+
 /* ── This Day banner ── */
 .thisDayBanner {
   display: flex;

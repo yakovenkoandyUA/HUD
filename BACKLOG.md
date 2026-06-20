@@ -66,7 +66,7 @@
 **Ключові компоненти:**
 - `AiChatSheet` — SSE streaming AI чат (Dashboard), markdown rendering
 - `DayOverlay` — МІЙ ДЕНЬ: слоти morning/afternoon/evening, mood tracker (SVG), сімейні настрої, місячний heatmap
-- `MemoryMap` — Leaflet піни (координати з LocationIQ)
+- `MemoryMap` — Leaflet піни планів і спогадів (координати з LocationIQ); тап на пін плану — popup/highlight на карті, тап на пін спогаду — navigate на `/memories/:id`
 - `LocationSearch` / `LocationMapPicker` — пошук місця (LocationIQ автокомпліт) або тап на карті, спільні для AddMemoryModal і PlanForm
 - `ReceiptScanner` — Anthropic Vision
 - `Modal` — drag-to-dismiss (0.4× damping, 120px cap, 0.18s overlay fade)
@@ -89,10 +89,15 @@
 - **MIMIR Wrapped** — річна статистика à la Spotify Wrapped
 - **Letterboxd / Goodreads імпорт** — Monobank є, але інші імпорти ні
 - **Книги (Books)** — backend `/api/books/search` (Google Books) є, але UI у Watchlist позначено "В РОЗРОБЦІ" (тоггл в профілі disabled, placeholder при відкритті табу)
-- **AI Chef-асистент** — чат-бот у RecipeDetail (концепт описано нижче в пріоритизованому плані, п. 2a)
+
+### ✅ AI Chef-асистент — зроблено
+Кнопка "Шеф" в `RecipeDetail` (поряд з Wishlist/Покупки/Приготував) відкриває `ChefChatSheet` — той самий UI-паттерн що `AiChatSheet` з Dashboard (SSE streaming, Claude Haiku). Контекст рецепту (title/ingredients/instructions/servings/difficulty/cookTime/calories) передається в тілі запиту з фронтенду напряму в `POST /api/ai/chef-chat` — без додаткового похід в БД і дублювання scope-логіки доступу до рецептів (mine/family/all).
 
 ### ✅ Memories: форма "Нова подія" — доопрацьовано
 Компактна обкладинка, МІСЦЕ+ДАТА в один ряд, дата DD.MM.YYYY. Пошук місця замінено з Nominatim на LocationIQ (POI-пошук закладів, не лише адрес; Mapbox оцінювався, але вимагає картку навіть на free tier). Додано "Обрати на карті" (`LocationMapPicker`, тап на Leaflet + реверс-геокодинг), центрується по введеному запиту або геолокації. Прибрано "Поставити постер як обкладинку" (`PosterGenerator`) — псувало фото текстом, дублюючи вже чистіші шляхи (галерея фото / EditMemoryModal); "Поділитись" (export PNG) залишився.
+
+### ✅ Memories: карта з пінами спогадів
+`Memory` модель отримала `lat`/`lng` (опціонально). `AddMemoryModal`/`EditMemoryModal` зберігають координати разом з адресою. `MemoryMap` (таб КАРТА) тепер показує піни і планів, і спогадів одночасно — план відкриває popup/highlight на карті, спогад одразу веде на `/memories/:id`. Старі спогади без координат не з'являються на карті, поки їх не відредагувати через EditMemoryModal.
 
 ### 🟠 Потребує доопрацювання
 - Інше по Memories — за потреби, уточнювати з юзером
@@ -110,26 +115,14 @@
 
 ## Пріоритизований план — що далі і в якій послідовності
 
-### 1. 🔧 Memories доопрацювання *(наступне)*
-Конкретні проблеми уточнити з юзером. Карта і експорт є, але щось не влаштовує.
+### ~~1. 🔧 Memories доопрацювання~~ ✅ Зроблено
+Пошук місця (LocationIQ), "Обрати на карті" (LocationMapPicker), дата DD.MM.YYYY, прибраний постер-як-обкладинка, карта з пінами планів+спогадів, z-index фікс модалки плану.
 
 ### ~~2. 🎮 Games — окремий UI у Watchlist~~ ✅ Зроблено
 Game tab повністю інтегрований у `/watchlist` (GameSearch overlay, GameCard, GameDetail, GameHero, сортування, фільтр жанрів). Окремий екран `/screens/Games` видалено — `/games` редіректить на `/watchlist`.
 
-### 2a. 🤖 AI Chef-асистент (концепт, обговорено з юзером 2026-06-20)
-Чат-бот у `RecipeDetail` — кнопка поруч з існуючими діями (Wishlist/Покупки/Приготував), відкриває bottom sheet схожий на `AiChatSheet` з Dashboard (SSE streaming, Claude Haiku).
-
-**Контекст у промпт:** поточний рецепт (ingredients + instructions + servings + difficulty), щоб асистент відповідав предметно, а не загально.
-
-**Сценарії використання:**
-- Заміна інгредієнтів ("немає сметани, чим замінити?")
-- Адаптація порцій/дієтичних обмежень ("зроби без глютену", "на 2 персони замість 4")
-- Дієтичні питання (калорійність, чи підходить для кето)
-- Підказки під час готування ("що робити якщо тісто липне")
-
-**Технічно:** новий ендпоінт `/api/recipes/:id/chef-chat` (SSE, аналогічно `/api/ai/chat`) з system prompt що включає дані рецепту; фронтенд — новий компонент `ChefChatSheet` в `components/recipes/`, повторно використовує паттерн `AiChatSheet` (markdown rendering, streaming).
-
-**Не починалось** — потребує окремої сесії для імплементації SSE ендпоінту + UI.
+### ~~2a. 🤖 AI Chef-асистент~~ ✅ Зроблено
+Кнопка "Шеф" у `RecipeDetail` → `ChefChatSheet` (SSE, Claude Haiku, контекст рецепту з фронтенду). Деталі в розділі "Що реалізовано" вище.
 
 ### ~~3. 📧 Верифікація email~~ ✅ Зроблено
 Домен `mimir-hud.tech`, Resend, `VerificationBanner`, enforcement у receipt scanner — все є.

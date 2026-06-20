@@ -19,6 +19,8 @@ export interface Memory {
   id: string
   title: string
   location?: string
+  lat?: number | null
+  lng?: number | null
   date: string
   coverUrl: string
   notes?: string

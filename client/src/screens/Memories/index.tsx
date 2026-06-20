@@ -37,6 +37,15 @@ function coverSrc(m: Memory): string | null {
   return m.coverUrl || m.photos[0]?.url || null
 }
 
+function yearsAgoLabel(years: number): string {
+  const mod100 = years % 100
+  const mod10  = years % 10
+  if (mod100 >= 11 && mod100 <= 14) return `${years} РОКІВ ТОМУ`
+  if (mod10 === 1) return `${years} РІК ТОМУ`
+  if (mod10 >= 2 && mod10 <= 4) return `${years} РОКИ ТОМУ`
+  return `${years} РОКІВ ТОМУ`
+}
+
 /**
  * MemoriesScreen
  * --------------
@@ -76,10 +85,21 @@ const MemoriesScreen: React.FC = () => {
     const now   = new Date()
     const month = now.getMonth()
     const day   = now.getDate()
-    return memories.filter(m => {
-      const d = new Date(m.date)
-      return d.getMonth() === month && d.getDate() === day && d.getFullYear() < now.getFullYear()
-    })
+    return memories
+      .filter(m => {
+        const d = new Date(m.date)
+        return d.getMonth() === month && d.getDate() === day && d.getFullYear() < now.getFullYear()
+      })
+      .map(m => ({ memory: m, yearsAgo: now.getFullYear() - new Date(m.date).getFullYear() }))
+      .sort((a, b) => a.yearsAgo - b.yearsAgo)
+  }, [memories])
+
+  const stats = useMemo(() => {
+    const totalPhotos = memories.reduce((s, m) => s + m.photos.length, 0)
+    const uniqueLocations = new Set(
+      memories.map(m => m.location?.trim()).filter((l): l is string => !!l)
+    ).size
+    return { count: memories.length, totalPhotos, uniqueLocations }
   }, [memories])
 
   const currentMonthKey = useMemo(
@@ -108,6 +128,8 @@ const MemoriesScreen: React.FC = () => {
     const id = await addMemory({
       title:    data.title,
       location: data.location,
+      lat:      data.lat,
+      lng:      data.lng,
       date:     data.date,
       coverUrl: data.coverUrl,
       notes:    data.notes,
@@ -134,6 +156,8 @@ const MemoriesScreen: React.FC = () => {
           notes:    plan.notes,
           photos:   plan.photos,
           location: plan.location?.name ?? '',
+          lat:      plan.location?.lat ?? null,
+          lng:      plan.location?.lng ?? null,
         }),
       })
       if (r.ok) {
@@ -195,20 +219,31 @@ const MemoriesScreen: React.FC = () => {
             </div>
           ) : (
             <div className={styles.timeline}>
+              {/* Stats row */}
+              <p className={styles.statsRow}>
+                <span><b className={styles.statNum}>{stats.count}</b> спогадів</span>
+                <span className={styles.statsDot}>·</span>
+                <span><b className={styles.statNum}>{stats.totalPhotos}</b> фото</span>
+                <span className={styles.statsDot}>·</span>
+                <span><b className={styles.statNum}>{stats.uniqueLocations}</b> місць</span>
+              </p>
+
               {/* This Day banner */}
               {thisDay.length > 0 && (
                 <div
                   className={styles.thisDayBanner}
-                  onClick={() => navigate(`/memories/${thisDay[0].id}`)}
+                  onClick={() => navigate(`/memories/${thisDay[0].memory.id}`)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && navigate(`/memories/${thisDay[0].id}`)}
+                  onKeyDown={e => e.key === 'Enter' && navigate(`/memories/${thisDay[0].memory.id}`)}
                 >
                   <div className={styles.thisDayIcon}>📅</div>
                   <div className={styles.thisDayContent}>
-                    <p className={styles.thisDayTitle}>ЦЬОГО ДНЯ РІК ТОМУ</p>
+                    <p className={styles.thisDayTitle}>
+                      ЦЬОГО ДНЯ {yearsAgoLabel(thisDay[0].yearsAgo)}
+                    </p>
                     <p className={styles.thisDayMemory}>
-                      {thisDay[0].title}
+                      {thisDay[0].memory.title}
                       {thisDay.length > 1 && ` та ще ${thisDay.length - 1}`}
                     </p>
                   </div>
@@ -468,7 +503,7 @@ const MemoriesScreen: React.FC = () => {
       {/* ── Map tab ── */}
       {activeTab === 'map' && (
         <div className={styles.mapTab}>
-          <MemoryMap plans={plans} />
+          <MemoryMap plans={plans} memories={memories} />
         </div>
       )}
     </div>

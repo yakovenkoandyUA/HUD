@@ -81,6 +81,7 @@
 | `/api/push/unsubscribe` | POST |
 | `/api/push/test` | POST — тестова нотифікація |
 | `/api/ai/chat` | POST — SSE streaming (Claude Haiku), domain-aware context |
+| `/api/ai/chef-chat` | POST — SSE streaming (Claude Haiku), контекст рецепту з тіла запиту |
 | `/api/finance/report/:month` | GET — AI-аналіз витрат по місяцю (Anthropic) |
 | `/api/bank/connect` | POST — Monobank OAuth initiate |
 | `/api/bank/status` | GET — статус з'єднання |
@@ -122,7 +123,7 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 
 **FamilyLink** — `requester: string`, `recipient: string`, `status: 'pending'|'accepted'`. Унікальний compound index `{requester, recipient}`. `getAcceptedFamilyIds(userId)` — shared helper.
 
-**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`, `location`. GET повертає `ownerName` + `ownerAvatarUrl` для сімейних записів.
+**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`, `location: string`, `lat`/`lng: number|null` (для пінів на MemoryMap). GET повертає `ownerName` + `ownerAvatarUrl` для сімейних записів.
 
 **Plan** — `status: 'want'|'planned'|'visited'`, `location`, `photos[]`, `withProfiles[]`; при 'visited' конвертується в Memory
 
