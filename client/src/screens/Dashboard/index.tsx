@@ -10,6 +10,8 @@ import WeekHeader from '../../components/sprint/WeekHeader'
 import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
 import AddSprintItemModal from '../../components/sprint/AddSprintItemModal'
+import WeatherModal from '../../components/dashboard/WeatherModal'
+import type { WeatherData } from '../../hooks/useWeather'
 import { useFinanceStore } from '../../store/financeStore'
 import { useSprintStore } from '../../store/sprintStore'
 import { useUiStore } from '../../store/uiStore'
@@ -42,6 +44,7 @@ const Dashboard: React.FC = () => {
   const [fabOpen, setFabOpen]           = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [addModalDefaultType, setAddModalDefaultType] = useState<'todo' | 'shopping'>('todo')
+  const [weatherModal, setWeatherModal] = useState<WeatherData | null>(null)
 
   const fabRef     = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -116,7 +119,7 @@ const Dashboard: React.FC = () => {
     <div className={styles.screen}>
       <AppHeader />
       <div ref={contentRef} className={styles.content}>
-        <GreetingBlock />
+        <GreetingBlock onWeatherClick={setWeatherModal} />
 
         <div className={styles.calendarWrap}>
           {raceThisWeek ? (
@@ -223,6 +226,14 @@ const Dashboard: React.FC = () => {
           </svg>
         </button>
       </div>
+
+      {weatherModal && (
+        <WeatherModal
+          isOpen={!!weatherModal}
+          onClose={() => setWeatherModal(null)}
+          weather={weatherModal}
+        />
+      )}
 
       {showDay && <DayOverlay onClose={() => setShowDay(false)} />}
 

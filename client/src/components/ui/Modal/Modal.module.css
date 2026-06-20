@@ -7,7 +7,7 @@
   justify-content: center;
   z-index: 200;
   overflow: hidden;
-  transition: opacity 0.18s ease;
+  transition: opacity 0.3s ease;
 }
 
 .overlayVisible { opacity: 1; pointer-events: auto; }
@@ -24,8 +24,8 @@
   overscroll-behavior: contain;
   will-change: transform, opacity;
   transition:
-    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity   0.38s ease;
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity   0.45s ease;
 }
 
 .modalVisible {
