@@ -123,7 +123,8 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - Рецепти по днях зберігаються на бекенді: `GET/PUT /api/meal-plan` (MealPlan модель: userId + plan Map<dayKey, recipeId[]>)
 - `useMealPlanStore` — без localStorage persist, authFetch + optimistic local update
 - `fetchPlan()` при mount разом з `fetchRecipes()`
-- Кнопка «Список покупок (N страв)» → `addFromRecipe` для кожного рецепту → navigate('/shopping')
+- `totalPlanned` рахується тільки з ID, що резолвляться в існуючий рецепт (`recipes.some`) — щоб видалений рецепт не накручував лічильник на кнопці
+- Кнопка «Покупки (N)» → `addItems` (sprintStore, type: 'shopping') → `navigate('/sprint', { state: { filterType: 'shopping' } })` — одразу відкриває таб ПОКУПКИ
 - Кнопка «Очистити» — очищає всі дні поточного тижня
 - BottomNav прихований на `/recipes/planner`
 
@@ -135,9 +136,10 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - Пошук: TMDB API (фільми/серіали/аніме) або backend proxy `/api/books/search` (книги, Google Books з кешем)
 - Search overlay: fullscreen backdrop, fixed search bar під AppHeader (`--header-height: 56px`), "Скасувати"
 - **Книги (book)** — таб є в `ALL_TABS`, але при активації показується placeholder "Функція в розробці" (контент/пошук не підключені)
-- **WatchlistStatsSheet** — bottom sheet, відкривається кнопкою 📊 у рядку статусів (тільки для isMedia); показує: загальні години (Furore), розбивка 🎬/📺/🌸 по кількості, 5-6 жартівливих порівнянь (ходьба до міста, рейс Київ–NY, книжки, марафони, Титанік, ночі сну). Години: фільм=2г, серіал=45хв/еп, аніме=24хв/еп
+- **Game tab** — повний UI: пошук гри через `GameSearch` (fullscreen overlay, `isOpen`/`onClose`, RAWG API), `GameCard`/`GameDetail`/`GameHero`, статуси (хочу/граю/пройдено/анонс/кинув), сортування (дата/оцінка/години/назва), фільтр жанрів. Окремий екран `/screens/Games` видалено — `/games` редіректить на `/watchlist`
+- **WatchlistStatsSheet** — bottom sheet, відкривається кнопкою статистики у рядку статусів (тільки для isMedia); SVG-іконки (без emoji): `FilmIcon`/`TvIcon`/`SparkleIcon` для розбивки, `WalkIcon`/`PlaneIcon`/`BooksIcon`/`RunIcon`/`MoonIcon` для порівнянь. Години рахуються з **реальної тривалості TMDB** (`runtimeMin` для фільмів, `episodeRuntimeMin` для серіалів/аніме) — бекфіл при відкритті sheet для елементів без збережених даних (`updateItem` персистить результат); фолбек-оцінка (2г/45хв/24хв) тільки якщо TMDB не дав даних
 - WatchlistCard — pill-бейдж статусу на постері, book-aware лейбли (ЧИТАЮ / ПРОЧИТАВ)
-- WatchlistDetail — status chips (book-aware), StarRating, EpisodesList для серіалів/аніме
+- WatchlistDetail — status chips (book-aware, кольори через `color-mix` з `var(--text)` для читабельності на світлих темах), StarRating, EpisodesList для серіалів/аніме; рік/рейтинг/жанри в одному `metaRow` (без окремого лейбла "ЖАНРИ")
 - Кастомний постер через ImageUploadButton + Cloudinary
 
 ## 10. Memories (`/memories`, `/memories/:id`)

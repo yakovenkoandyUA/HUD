@@ -155,7 +155,10 @@ const MealPlannerScreen: React.FC = () => {
     return () => { cancelled = true }
   }, [fetchPlan, fetchRecipes, recipes.length])
 
-  const totalPlanned = weekKeys.reduce((acc, k) => acc + (plan[k]?.length ?? 0), 0)
+  const totalPlanned = weekKeys.reduce((acc, k) => {
+    const ids = plan[k] ?? []
+    return acc + ids.filter(id => recipes.some(r => r.id === id)).length
+  }, 0)
 
 const handleCopyWeek = async () => {
     await copyWeekToNext(weekKeys)
@@ -184,7 +187,7 @@ const handleCopyWeek = async () => {
     }
     addItems(tasks)
     showToast(`${tasks.length} рецептів додано до покупок`, 'success')
-    navigate('/sprint')
+    navigate('/sprint', { state: { filterType: 'shopping' } })
   }
 
   const pickerAssignedIds = pickerDay ? (plan[pickerDay.key] ?? []) : []

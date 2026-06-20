@@ -220,6 +220,8 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
       totalEpisodes:   d?.number_of_episodes   ?? null,
       totalSeasons:    d?.number_of_seasons    ?? null,
       nextEpisodeDate: d?.next_episode_to_air?.air_date ?? null,
+      runtimeMin:        category === 'movie' ? (d?.runtime ?? null) : null,
+      episodeRuntimeMin: category !== 'movie' ? (d?.episode_run_time?.[0] ?? null) : null,
     })
     deactivateSearch()
   }

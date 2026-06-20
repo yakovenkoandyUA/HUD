@@ -11,6 +11,8 @@ export interface IWatchlistItem extends Document {
   overview: string
   year: string
   genres: string[]
+  runtimeMin: number | null
+  episodeRuntimeMin: number | null
   rating: number | null
   seasonReminder: boolean
   reminderDate: string
@@ -41,6 +43,8 @@ const schema = new Schema<IWatchlistItem>({
   overview:      { type: String, default: '' },
   year:          { type: String, default: '' },
   genres:        { type: [String], default: [] },
+  runtimeMin:        { type: Number, default: null },
+  episodeRuntimeMin: { type: Number, default: null },
   rating:        { type: Number, default: null },
   seasonReminder:{ type: Boolean, default: false },
   reminderDate:  { type: String, default: '' },

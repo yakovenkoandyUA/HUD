@@ -27,12 +27,16 @@
 .sheetHidden  { transform: translateY(100%); opacity: 0; }
 
 .handle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 36px;
   height: 4px;
-  background: var(--border2);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 2px;
-  margin: 12px auto 8px;
-  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  z-index: 3;
 }
 
 /* ── Backdrop ── */
@@ -145,6 +149,11 @@
   font-family: var(--font-mono);
   font-weight: 700;
 }
+.metaSep {
+  color: var(--border2);
+  font-size: 13px;
+  user-select: none;
+}
 
 /* ── Overview ── */
 .overview {
@@ -199,10 +208,10 @@
 }
 .statusChip:active { opacity: 0.7; }
 
-.statusChip[data-status="want"].active     { background: rgba(139,111,212,0.25); border-color: #8B6FD4; color: #d4c8f8; }
-.statusChip[data-status="watching"].active { background: rgba(0,229,204,0.2);    border-color: #00E5CC; color: #00E5CC; }
-.statusChip[data-status="watched"].active  { background: rgba(201,147,58,0.25);  border-color: #C9933A; color: #f0d49a; }
-.statusChip[data-status="dropped"].active  { background: rgba(107,101,96,0.25);  border-color: #6B6560; color: #b0a9a4; }
+.statusChip[data-status="want"].active     { background: rgba(139,111,212,0.25); border-color: #8B6FD4; color: color-mix(in srgb, #8B6FD4 55%, var(--text)); }
+.statusChip[data-status="watching"].active { background: rgba(0,229,204,0.2);    border-color: #00E5CC; color: color-mix(in srgb, #00E5CC 55%, var(--text)); }
+.statusChip[data-status="watched"].active  { background: rgba(201,147,58,0.25);  border-color: #C9933A; color: color-mix(in srgb, #C9933A 55%, var(--text)); }
+.statusChip[data-status="dropped"].active  { background: rgba(107,101,96,0.25);  border-color: #6B6560; color: color-mix(in srgb, #6B6560 55%, var(--text)); }
 
 /* ── Rating ── */
 .ratingWrap {
@@ -391,11 +400,13 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
+  padding: 3px 9px;
   background: var(--surface2);
+  border: 1px solid var(--border);
   border-radius: 20px;
   font-family: var(--font-ui);
   font-size: 11px;
+  font-weight: 600;
   color: var(--text2);
 }
 

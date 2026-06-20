@@ -119,7 +119,7 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 
 **TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для рутин
 
-**WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members), `totalSeasons` з TMDB, `category: 'movie'|'series'|'anime'|'book'|'game'`
+**WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members), `totalSeasons` з TMDB, `category: 'movie'|'series'|'anime'|'book'|'game'`, `runtimeMin`/`episodeRuntimeMin` — реальна тривалість з TMDB (фільм/епізод, хв) для точного підрахунку годин у WatchlistStatsSheet
 
 **FamilyLink** — `requester: string`, `recipient: string`, `status: 'pending'|'accepted'`. Унікальний compound index `{requester, recipient}`. `getAcceptedFamilyIds(userId)` — shared helper.
 

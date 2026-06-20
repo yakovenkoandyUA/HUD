@@ -90,8 +90,10 @@
 }
 
 .breakIcon {
-  font-size: 20px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
 }
 
 .breakNum {
@@ -153,10 +155,12 @@
 .compRow:last-child { border-bottom: none; }
 
 .compIcon {
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   width: 24px;
-  text-align: center;
+  color: var(--text2);
 }
 
 .compText {

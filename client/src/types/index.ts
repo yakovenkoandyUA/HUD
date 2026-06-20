@@ -190,6 +190,8 @@ export interface WatchlistItem {
   overview: string
   year: string
   genres: string[]
+  runtimeMin?: number | null
+  episodeRuntimeMin?: number | null
   rating: number | null
   seasonReminder: boolean
   reminderDate: string | null

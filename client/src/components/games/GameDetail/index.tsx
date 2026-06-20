@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import { useModalHistory } from '../../../hooks/useModalHistory'
+import CustomDatePicker from '../../ui/CustomDatePicker'
 import styles from './GameDetail.module.css'
 import type { GameItem, GameStatus } from '../../../types'
 
@@ -14,10 +15,15 @@ const STATUS_OPTIONS: { value: GameStatus; label: string; color: string }[] = [
   { value: 'dropped',   label: 'Кинув',    color: 'var(--negative)'  },
 ]
 
+function formatLongDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 /**
  * GameDetail
  * ----------
- * Bottom-sheet with full game details: status, platinum toggle, rating, notes, hours.
+ * Bottom-sheet with full game details: status, platinum, half-star rating,
+ * hours played (with quick-adjust), genres, notes, added/completed dates.
  *
  * Props:
  * @prop {GameItem}                                        item
@@ -42,13 +48,14 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [notes, setNotes]                 = useState(item.notes ?? '')
   const [hours, setHours]                 = useState<string>(item.hoursPlayed != null ? String(item.hoursPlayed) : '')
+  const [showCompletedPicker, setShowCompletedPicker] = useState(false)
 
   const overlayRef = useRef<HTMLDivElement>(null)
   const bodyRef    = useRef<HTMLDivElement>(null)
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hoursTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const sheetRef = useSwipeToDismiss(onClose, { overlayRef, bodyRef })
+  const sheetRef = useSwipeToDismiss(onClose, { overlayRef, bodyRef, enabled: mounted })
 
   useModalHistory(onClose, isOpen)
 
@@ -100,6 +107,14 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
     }
   }
 
+  const adjustHours = (delta: number) => {
+    if (hoursTimer.current) clearTimeout(hoursTimer.current)
+    const current = parseFloat(hours) || 0
+    const next = Math.max(0, current + delta)
+    setHours(String(next))
+    onUpdate(item.id, { hoursPlayed: next })
+  }
+
   const handleDelete = () => {
     if (!confirmDelete) { setConfirmDelete(true); return }
     onDelete(item.id)
@@ -117,8 +132,6 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
         ref={sheetRef}
         className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}
       >
-        <div className={styles.handle} />
-
         {/* Hero */}
         <div className={styles.hero}>
           {item.backgroundUrl ? (
@@ -127,13 +140,23 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
             <div className={styles.heroFallback} />
           )}
           <div className={styles.heroGradient} />
+          <div className={styles.handle} />
           {item.coverUrl && (
             <div className={styles.heroCoverWrap}>
               <img src={item.coverUrl} alt={item.title} className={styles.heroCoverImg} />
             </div>
           )}
           <div className={styles.heroContent}>
-            <h2 className={styles.title}>{item.title}</h2>
+            <div className={styles.titleRow}>
+              <h2 className={styles.title}>{item.title}</h2>
+              {item.platinum && isPS && (
+                <span className={styles.platinumBadgeHero} title="Platinum отримано">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 2 .7-4.1L2 5.4l4.2-.8L8 1z" fill="currentColor"/>
+                  </svg>
+                </span>
+              )}
+            </div>
             {item.releaseDate && (
               <span className={styles.releaseYear}>{item.releaseDate.slice(0, 4)}</span>
             )}
@@ -141,7 +164,7 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
         </div>
 
         <div ref={bodyRef} className={styles.body}>
-          {/* Meta row */}
+          {/* Meta row — platforms + metacritic only */}
           <div className={styles.metaRow}>
             {item.platforms.map(p => (
               <span key={p} className={styles.platformChip}>{p}</span>
@@ -151,10 +174,19 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
                 MC {item.metacritic}
               </span>
             )}
-            {item.genres.slice(0, 2).map(g => (
-              <span key={g} className={styles.genreChip}>{g}</span>
-            ))}
           </div>
+
+          {/* Genres */}
+          {item.genres.length > 0 && (
+            <div className={styles.section}>
+              <p className={styles.sectionLabel}>ЖАНРИ</p>
+              <div className={styles.genreRow}>
+                {item.genres.map(g => (
+                  <span key={g} className={styles.genreChip}>{g}</span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Status */}
           <div className={styles.section}>
@@ -194,21 +226,41 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
             </div>
           )}
 
-          {/* Rating 1–10 */}
+          {/* Rating — 5 half-stars, 1–10 scale */}
           {(item.status === 'completed' || item.status === 'dropped' || item.status === 'playing') && (
             <div className={styles.section}>
               <p className={styles.sectionLabel}>ОЦІНКА</p>
-              <div className={styles.ratingRow}>
-                {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
-                  <button
-                    key={n}
-                    type="button"
-                    className={`${styles.ratingBtn} ${item.rating != null && n <= item.rating ? styles.ratingActive : ''}`}
-                    onClick={() => handleRating(n)}
-                  >
-                    {n}
-                  </button>
-                ))}
+              <div className={styles.starsRow}>
+                {[1, 2, 3, 4, 5].map(i => {
+                  const full    = i * 2
+                  const half    = full - 1
+                  const current = item.rating ?? 0
+                  const filled  = Math.max(0, Math.min(2, current - (i - 1) * 2))
+                  const percent = (filled / 2) * 100
+                  return (
+                    <div key={i} className={styles.starSlot}>
+                      <span className={styles.starBg}>★</span>
+                      <span className={styles.starFill} style={{ width: `${percent}%` }}>★</span>
+                      <button
+                        type="button"
+                        className={styles.starHalfBtn}
+                        style={{ left: 0 }}
+                        onClick={() => handleRating(half)}
+                        aria-label={`${half} з 10`}
+                      />
+                      <button
+                        type="button"
+                        className={styles.starHalfBtn}
+                        style={{ left: '50%' }}
+                        onClick={() => handleRating(full)}
+                        aria-label={`${full} з 10`}
+                      />
+                    </div>
+                  )
+                })}
+                {item.rating != null && (
+                  <span className={styles.ratingValue}>{item.rating}/10</span>
+                )}
               </div>
             </div>
           )}
@@ -231,6 +283,12 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
               />
               <span className={styles.hoursUnit}>год</span>
             </div>
+            <div className={styles.hoursQuickRow}>
+              <button type="button" className={styles.hoursQuickBtn} onClick={() => adjustHours(-1)}>−1</button>
+              <button type="button" className={styles.hoursQuickBtn} onClick={() => adjustHours(1)}>+1</button>
+              <button type="button" className={styles.hoursQuickBtn} onClick={() => adjustHours(5)}>+5</button>
+              <button type="button" className={styles.hoursQuickBtn} onClick={() => adjustHours(10)}>+10</button>
+            </div>
           </div>
 
           {/* Notes */}
@@ -245,12 +303,28 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
             />
           </div>
 
-          {/* Completed date */}
-          {item.completedAt && (
-            <p className={styles.completedDate}>
-              Пройдено: {new Date(item.completedAt).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          )}
+          {/* Dates */}
+          <div className={styles.section}>
+            <p className={styles.sectionLabel}>ДАТИ</p>
+            <div className={styles.datesRow}>
+              <div className={styles.dateItem}>
+                <span className={styles.dateLabel}>Додано</span>
+                <span className={styles.dateValue}>{formatLongDate(item.addedAt)}</span>
+              </div>
+              {item.status === 'completed' && (
+                <div className={styles.dateItem}>
+                  <span className={styles.dateLabel}>Пройдено</span>
+                  <button
+                    type="button"
+                    className={styles.dateEditBtn}
+                    onClick={() => setShowCompletedPicker(true)}
+                  >
+                    {item.completedAt ? formatLongDate(item.completedAt) : 'Обрати дату'} ✎
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Delete */}
           <button
@@ -262,6 +336,18 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
           </button>
         </div>
       </div>
+
+      {showCompletedPicker && (
+        <CustomDatePicker
+          value={item.completedAt ?? undefined}
+          onChange={(dateStr) => {
+            onUpdate(item.id, { completedAt: dateStr })
+            setShowCompletedPicker(false)
+          }}
+          onClose={() => setShowCompletedPicker(false)}
+          minDate={new Date(item.addedAt)}
+        />
+      )}
     </>
   )
 }

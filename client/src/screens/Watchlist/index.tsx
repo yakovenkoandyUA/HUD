@@ -7,6 +7,7 @@ import WatchlistDetail from '../../components/watchlist/WatchlistDetail'
 import GameSearch from '../../components/games/GameSearch'
 import GameCard from '../../components/games/GameCard'
 import GameDetail from '../../components/games/GameDetail'
+import GameHero from '../../components/games/GameHero'
 import WatchlistStatsSheet from '../../components/watchlist/WatchlistStatsSheet'
 import { useWatchlistStore } from '../../store/watchlistStore'
 import { useGamesStore } from '../../store/gamesStore'
@@ -22,6 +23,7 @@ type Tab = WatchlistCategory | 'game' | 'book'
 type SortBy = 'newest' | 'oldest' | 'year_desc' | 'year_asc' | 'rating'
 type WatchScope = 'all' | 'together' | 'solo'
 type GameStatusFilter = 'all' | GameStatus
+type GameSortBy = 'added' | 'rating' | 'hours' | 'title'
 
 const WATCH_SCOPE_OPTIONS: { key: WatchScope; label: string }[] = [
   { key: 'all',      label: 'Всі'       },
@@ -36,6 +38,13 @@ const GAME_STATUS_TABS: { id: GameStatusFilter; label: string }[] = [
   { id: 'completed', label: 'Пройдено' },
   { id: 'announced', label: 'Анонси'   },
   { id: 'dropped',   label: 'Кинув'    },
+]
+
+const GAME_SORT_OPTIONS: { id: GameSortBy; label: string }[] = [
+  { id: 'added',  label: 'За датою додавання' },
+  { id: 'rating', label: 'За оцінкою'         },
+  { id: 'hours',  label: 'За годинами'        },
+  { id: 'title',  label: 'За назвою'          },
 ]
 
 const STATUS_ORDER: Record<string, number> = {
@@ -77,6 +86,10 @@ const Watchlist: React.FC = () => {
   const [activeGenres, setActiveGenres] = useState<Set<string>>(new Set())
   const [watchScope, setWatchScope] = useState<WatchScope>('all')
   const [gameStatusFilter, setGameStatusFilter] = useState<GameStatusFilter>('all')
+  const [gameSortBy, setGameSortBy] = useState<GameSortBy>('added')
+  const [gameSortOpen, setGameSortOpen] = useState(false)
+  const [gameGenreFilter, setGameGenreFilter] = useState<string | null>(null)
+  const gameSortRef = useRef<HTMLDivElement>(null)
 
   const [sortBy, setSortBy] = useState<SortBy>('newest')
   const [sortOpen, setSortOpen] = useState(false)
@@ -147,17 +160,59 @@ const Watchlist: React.FC = () => {
     }
   }, [byCategoryItems, activeStatus, activeGenres, watchScope, sortBy])
 
+  const gamesByStatus = useMemo(
+    () => gameStatusFilter === 'all' ? games : games.filter(g => g.status === gameStatusFilter),
+    [games, gameStatusFilter]
+  )
+
+  const availableGameGenres = useMemo(() => {
+    const counts = new Map<string, number>()
+    gamesByStatus.forEach(g => g.genres.forEach(genre => counts.set(genre, (counts.get(genre) ?? 0) + 1)))
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([g]) => g).slice(0, 12)
+  }, [gamesByStatus])
+
+  useEffect(() => {
+    if (gameGenreFilter && !availableGameGenres.includes(gameGenreFilter)) setGameGenreFilter(null)
+  }, [availableGameGenres, gameGenreFilter])
+
   const filteredGames = useMemo(() => {
-    if (gameStatusFilter === 'all') return games
-    return games.filter(g => g.status === gameStatusFilter)
-  }, [games, gameStatusFilter])
+    const list = gameGenreFilter ? gamesByStatus.filter(g => g.genres.includes(gameGenreFilter)) : gamesByStatus
+    const sorted = [...list]
+    switch (gameSortBy) {
+      case 'rating':
+        sorted.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1))
+        break
+      case 'hours':
+        sorted.sort((a, b) => (b.hoursPlayed ?? 0) - (a.hoursPlayed ?? 0))
+        break
+      case 'title':
+        sorted.sort((a, b) => a.title.localeCompare(b.title, 'uk'))
+        break
+      default:
+        sorted.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
+    }
+    return sorted
+  }, [gamesByStatus, gameGenreFilter, gameSortBy])
+
+  const playingGames = useMemo(() => games.filter(g => g.status === 'playing'), [games])
 
   const gameStats = useMemo(() => ({
-    total:     games.length,
-    playing:   games.filter(g => g.status === 'playing').length,
-    completed: games.filter(g => g.status === 'completed').length,
-    platinum:  games.filter(g => g.platinum).length,
+    total:      games.length,
+    playing:    games.filter(g => g.status === 'playing').length,
+    completed:  games.filter(g => g.status === 'completed').length,
+    platinum:   games.filter(g => g.platinum).length,
+    totalHours: Math.round(games.reduce((s, g) => s + (g.hoursPlayed ?? 0), 0)),
   }), [games])
+
+  useEffect(() => {
+    if (!gameSortOpen) return
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (gameSortRef.current && !gameSortRef.current.contains(e.target as Node)) setGameSortOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => { document.removeEventListener('mousedown', handler); document.removeEventListener('touchstart', handler) }
+  }, [gameSortOpen])
 
   useEffect(() => {
     if (!sortOpen) return
@@ -192,6 +247,13 @@ const Watchlist: React.FC = () => {
   const handleAddGame = (game: Omit<GameItem, 'id' | 'addedAt'>) => {
     addGame(game)
     showToast(`${game.title} додано`, 'success')
+  }
+
+  const handleAddHourGame = (id: string) => {
+    const game = games.find(g => g.id === id)
+    if (!game) return
+    updateGame(id, { hoursPlayed: Math.round((game.hoursPlayed ?? 0) + 1) })
+    showToast('+1 година зараховано', 'success')
   }
 
   const handleStatusChange = (status: WatchlistStatus) => {
@@ -275,33 +337,43 @@ const Watchlist: React.FC = () => {
 
       {/* ── Game stats row ── */}
       {isGame && (
-        <div className={styles.statsRow}>
-          <div className={styles.stat}>
-            <span className={styles.statNum}>{gameStats.total}</span>
-            <span className={styles.statLabel}>всього</span>
+        <div className={styles.gameStatsRow}>
+          <div className={styles.gameStat} onClick={() => setGameStatusFilter('all')}>
+            <span className={styles.gameStatNum}>{gameStats.total}</span>
+            <span className={styles.gameStatLabel}>всього</span>
           </div>
-          <span className={styles.statSep}>·</span>
-          <div className={styles.stat}>
-            <span className={styles.statNum}>{gameStats.playing}</span>
-            <span className={styles.statLabel}>граю</span>
+          <div className={styles.gameStatSep} />
+          <div className={styles.gameStat} onClick={() => setGameStatusFilter('playing')}>
+            <span className={`${styles.gameStatNum} ${styles.gameStatNumTeal}`}>{gameStats.playing}</span>
+            <span className={styles.gameStatLabel}>граю</span>
           </div>
-          <span className={styles.statSep}>·</span>
-          <div className={styles.stat}>
-            <span className={styles.statNum}>{gameStats.completed}</span>
-            <span className={styles.statLabel}>пройдено</span>
+          <div className={styles.gameStatSep} />
+          <div className={styles.gameStat} onClick={() => setGameStatusFilter('completed')}>
+            <span className={`${styles.gameStatNum} ${styles.gameStatNumGold}`}>{gameStats.completed}</span>
+            <span className={styles.gameStatLabel}>пройдено</span>
           </div>
-          <span className={styles.statSep}>·</span>
-          <div className={styles.stat}>
-            <span className={styles.statNum}>{gameStats.platinum}</span>
-            <span className={styles.statLabel}>platinum</span>
-          </div>
+          <div className={styles.gameStatSep} />
+          {gameStats.totalHours > 0 ? (
+            <div className={styles.gameStat}>
+              <span className={`${styles.gameStatNum} ${styles.gameStatNumAccent}`}>{gameStats.totalHours}</span>
+              <span className={styles.gameStatLabel}>годин</span>
+            </div>
+          ) : (
+            <div className={styles.gameStat}>
+              <span className={`${styles.gameStatNum} ${styles.gameStatNumAccent}`}>{gameStats.platinum}</span>
+              <span className={styles.gameStatLabel}>platinum</span>
+            </div>
+          )}
         </div>
       )}
 
       {/* ── Content (scrollable) ── */}
       <div className={styles.content}>
-        {/* hero scrolls away — only for media tabs */}
+        {/* hero scrolls away — media or games */}
         {isMedia && watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
+        {isGame && gameStatusFilter === 'all' && (
+          <GameHero items={playingGames} onTap={setSelectedGame} onAddHour={handleAddHourGame} />
+        )}
 
         {/* ── Tabs — sticky ── */}
         <div className={styles.tabBar}>
@@ -432,6 +504,59 @@ const Watchlist: React.FC = () => {
                 </svg>
                 Пошук гри...
               </button>
+              <div className={styles.sortWrap} ref={gameSortRef}>
+                <button
+                  type="button"
+                  className={`${styles.sortBtn} ${gameSortBy !== 'added' || gameGenreFilter !== null ? styles.sortBtnActive : ''}`}
+                  onClick={() => setGameSortOpen(v => !v)}
+                  aria-label="Сортування і фільтр"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </button>
+                {gameSortOpen && (
+                  <div className={styles.sortDropdown}>
+                    {availableGameGenres.length > 1 && (
+                      <>
+                        <p className={styles.dropdownSection}>ЖАНР</p>
+                        <div className={styles.dropdownGenres}>
+                          <button
+                            type="button"
+                            className={`${styles.dropdownGenreChip} ${gameGenreFilter === null ? styles.dropdownGenreChipActive : ''}`}
+                            onClick={() => { setGameGenreFilter(null); setGameSortOpen(false) }}
+                          >
+                            Всі
+                          </button>
+                          {availableGameGenres.map(g => (
+                            <button
+                              key={g}
+                              type="button"
+                              className={`${styles.dropdownGenreChip} ${gameGenreFilter === g ? styles.dropdownGenreChipActive : ''}`}
+                              onClick={() => { setGameGenreFilter(gameGenreFilter === g ? null : g); setGameSortOpen(false) }}
+                            >
+                              {g}
+                            </button>
+                          ))}
+                        </div>
+                        <div className={styles.dropdownDivider} />
+                      </>
+                    )}
+                    <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
+                    {GAME_SORT_OPTIONS.map(o => (
+                      <button
+                        key={o.id}
+                        type="button"
+                        className={`${styles.sortOption} ${gameSortBy === o.id ? styles.sortOptionActive : ''}`}
+                        onClick={() => { setGameSortBy(o.id); setGameSortOpen(false) }}
+                      >
+                        {gameSortBy === o.id && <span className={styles.sortOptionDot} />}
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className={styles.tabsInner}>
@@ -447,7 +572,7 @@ const Watchlist: React.FC = () => {
               ))}
             </div>
 
-            <div key={`game-${gameStatusFilter}`} className={styles.contentAnimated}>
+            <div key={`game-${gameStatusFilter}-${gameGenreFilter ?? ''}-${gameSortBy}`} className={styles.contentAnimated}>
               {filteredGames.length === 0 ? (
                 <div className={styles.emptyGames}>
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
@@ -457,7 +582,9 @@ const Watchlist: React.FC = () => {
                     <circle cx="18" cy="13.5" r="1" fill="currentColor" stroke="none"/>
                   </svg>
                   <p className={styles.emptyText}>
-                    {gameStatusFilter === 'all' ? 'Додай першу гру через пошук' : 'Немає ігор у цій категорії'}
+                    {gameGenreFilter
+                      ? 'Немає ігор цього жанру'
+                      : gameStatusFilter === 'all' ? 'Додай першу гру через пошук' : 'Немає ігор у цій категорії'}
                   </p>
                 </div>
               ) : (

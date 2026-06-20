@@ -388,7 +388,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
         className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={styles.handle} />
         {/* ── Backdrop ── */}
         <div className={styles.backdropWrap}>
           {backdropSrc ? (
@@ -399,6 +398,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             <div className={styles.backdropFallback} />
           )}
           <div className={styles.backdropGrad} />
+          <div className={styles.handle} />
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
             ✕
           </button>
@@ -412,25 +412,25 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
         {/* ── Body ── */}
         <div className={styles.body}>
-          {/* Meta row */}
+          {/* Meta row — year, rating, genres in one line */}
           <div className={styles.metaRow}>
             {item.year && <span className={styles.year}>{item.year}</span>}
             {item.rating != null && item.rating > 0 && (
               <span className={styles.ratingInline}>★ {item.rating}</span>
             )}
+            {item.genres && item.genres.length > 0 && (
+              <>
+                {(item.year || (item.rating != null && item.rating > 0)) && (
+                  <span className={styles.metaSep}>·</span>
+                )}
+                <div className={styles.genreChips}>
+                  {item.genres.map(g => (
+                    <span key={g} className={styles.genreChip}>{g}</span>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-
-          {/* Genres — read-only */}
-          {item.genres && item.genres.length > 0 && (
-            <div className={styles.section}>
-              <p className={styles.sectionLabel}>ЖАНРИ</p>
-              <div className={styles.genreChips}>
-                {item.genres.map(g => (
-                  <span key={g} className={styles.genreChip}>{g}</span>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Custom poster — show when no TMDB backdrop */}
           {!item.backdropPath && onImageChange && (

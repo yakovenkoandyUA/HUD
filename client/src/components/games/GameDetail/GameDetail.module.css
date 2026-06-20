@@ -28,12 +28,16 @@
 .sheetVisible { transform: translateY(0); }
 
 .handle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 36px;
   height: 4px;
-  background: var(--border2);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 2px;
-  margin: 10px auto 0;
-  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  z-index: 3;
 }
 
 /* ── Hero ── */
@@ -92,6 +96,11 @@
   flex-direction: column;
   gap: 4px;
 }
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .title {
   font-family: var(--font-ui);
   font-size: 19px;
@@ -100,6 +109,18 @@
   margin: 0;
   line-height: 1.2;
   text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+.platinumBadgeHero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a8c4d8 0%, #6b9ab8 50%, #c8d8e8 100%);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  flex-shrink: 0;
 }
 .releaseYear {
   font-family: var(--font-mono);
@@ -147,6 +168,11 @@
 .mcOk   { background: rgba(255,193,7,0.2);  color: #ffc107; }
 .mcBad  { background: rgba(244,67,54,0.2);  color: #f44336; }
 
+.genreRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .genreChip {
   font-family: var(--font-ui);
   font-size: 11px;
@@ -231,30 +257,51 @@
 }
 .platinumActive .platinumLabel { color: #6b9ab8; }
 
-/* ── Rating ── */
-.ratingRow {
+/* ── Rating — 5 half-stars (1–10 scale) ── */
+.starsRow {
   display: flex;
-  gap: 5px;
+  align-items: center;
+  gap: 4px;
 }
-.ratingBtn {
-  flex: 1;
-  padding: 10px 2px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+.starSlot {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  font-size: 24px;
+  line-height: 26px;
+}
+.starBg,
+.starFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+.starBg { color: var(--border2); }
+.starFill {
+  color: var(--gold);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.starHalfBtn {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ratingValue {
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 700;
-  color: var(--text3);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
-}
-.ratingBtn:active { transform: scale(0.93); }
-.ratingActive {
-  background: color-mix(in srgb, var(--gold) 22%, transparent);
-  border-color: var(--gold);
   color: var(--gold);
+  margin-left: 6px;
 }
 
 /* ── Hours ── */
@@ -285,6 +332,30 @@
   color: var(--text3);
 }
 
+.hoursQuickRow {
+  display: flex;
+  gap: 6px;
+}
+.hoursQuickBtn {
+  flex: 1;
+  padding: 7px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.hoursQuickBtn:active {
+  transform: scale(0.93);
+  background: var(--surface2);
+  border-color: var(--accent);
+}
+
 /* ── Notes ── */
 .notesInput {
   width: 100%;
@@ -304,14 +375,42 @@
 .notesInput:focus { border-color: var(--accent); }
 .notesInput::placeholder { color: var(--text3); }
 
-/* ── Completed date ── */
-.completedDate {
+/* ── Dates ── */
+.datesRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dateItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dateLabel {
   font-family: var(--font-ui);
   font-size: 12px;
   color: var(--text3);
-  text-align: center;
-  margin: 0;
+  flex-shrink: 0;
 }
+.dateValue {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text2);
+  text-align: right;
+}
+.dateEditBtn {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  text-align: right;
+  padding: 0;
+  transition: color 0.15s;
+}
+.dateEditBtn:active { color: var(--accent); }
 
 /* ── Delete ── */
 .deleteBtn {

@@ -49,7 +49,7 @@
 - `/recipes` — сітка, фільтри, AI-генератор, «Що є вдома?» ingredient search
 - `/recipes/:id` — Складові/Приготування таби, step checklist, CookLog, wishlist
 - `/recipes/planner` — тижневий планер Пн–Нд
-- `/watchlist` — movie/series/anime/book/game (OpenMoji таби), TMDB пошук; налаштування видимості табів у профілі; WatchlistStatsSheet (📊 кнопка) з годинами, розбивкою і жартівливими порівняннями
+- `/watchlist` — movie/series/anime/book/game (OpenMoji таби), TMDB пошук; налаштування видимості табів у профілі; **game tab** — повний UI (RAWG пошук через GameSearch overlay, сортування, фільтр жанрів, GameHero, статуси); WatchlistStatsSheet (кнопка статистики) — реальна тривалість з TMDB (з фолбеком на оцінку для елементів без даних), SVG-іконки замість emoji
 - `/memories` — таймлайн + сітка + Leaflet карта, "Цей день рік тому"
 - `/memories/:id` — фото, Canvas export → PNG/Web Share
 - `/notes` — inline edit, пошук
@@ -110,8 +110,8 @@
 ### 1. 🔧 Memories доопрацювання *(наступне)*
 Конкретні проблеми уточнити з юзером. Карта і експорт є, але щось не влаштовує.
 
-### 2. 🎮 Games — окремий UI у Watchlist
-`gamesStore` і модель є, але ігри не відображаються в Watchlist. Додати таб 🎮 (OpenMoji) поруч з movie/series/anime/book. Мінімум: пошук (IGDB або RAWG API) або ручне додавання.
+### ~~2. 🎮 Games — окремий UI у Watchlist~~ ✅ Зроблено
+Game tab повністю інтегрований у `/watchlist` (GameSearch overlay, GameCard, GameDetail, GameHero, сортування, фільтр жанрів). Окремий екран `/screens/Games` видалено — `/games` редіректить на `/watchlist`.
 
 ### 2a. 🤖 AI Chef-асистент (концепт, обговорено з юзером 2026-06-20)
 Чат-бот у `RecipeDetail` — кнопка поруч з існуючими діями (Wishlist/Покупки/Приготував), відкриває bottom sheet схожий на `AiChatSheet` з Dashboard (SSE streaming, Claude Haiku).
