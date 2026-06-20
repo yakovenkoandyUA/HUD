@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { uploadToCloudinary } from '../utils/uploadToCloudinary'
 import { useSprintStore } from './sprintStore'
-import { saveRefreshToken, clearRefreshToken } from '../services/api'
+import { saveRefreshToken, clearRefreshToken, authFetch } from '../services/api'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
 
@@ -217,13 +217,15 @@ export const useProfileStore = create<ProfileState>()(
       },
 
       verifyPIN: async (pin: string) => {
-        const { token } = get()
-        if (!token) return false
         try {
-          const res = await apiPost('/api/auth/pin/verify', { pin }, token)
+          // authFetch handles expired token: refreshes automatically, retries once.
+          // A 401 here means the refresh also failed (logout triggered) or truly wrong PIN.
+          const res = await authFetch('/api/auth/pin/verify', {
+            method: 'POST',
+            body: JSON.stringify({ pin }),
+          })
           if (res.ok) return true
           if (res.status === 401) return false
-          // Server error or offline — throw so caller can distinguish
           throw new Error('network')
         } catch (err) {
           if (err instanceof Error && err.message !== 'network') throw err
@@ -236,7 +238,10 @@ export const useProfileStore = create<ProfileState>()(
         if (activeProfile?.hasPIN) set({ pinLocked: true })
       },
 
-      unlockPIN: () => set({ pinLocked: false }),
+      unlockPIN: () => {
+        sessionStorage.setItem('hud-pin-session', '1')
+        set({ pinLocked: false })
+      },
 
       verifyEmailToken: async (token: string) => {
         const res = await apiPost('/api/auth/verify-email', { token })

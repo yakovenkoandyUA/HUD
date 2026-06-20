@@ -126,6 +126,12 @@ const PinGuard: React.FC = () => {
   useEffect(() => {
     if (!activeProfile?.hasPIN) return
 
+    // Lock on every fresh page load (sessionStorage clears on tab close/reload)
+    if (sessionStorage.getItem('hud-pin-session') !== '1') {
+      lockWithPIN()
+      return
+    }
+
     // On mount: check if app was in background long enough to require PIN
     const savedBgTime = localStorage.getItem(PIN_BG_KEY)
     if (savedBgTime) {
