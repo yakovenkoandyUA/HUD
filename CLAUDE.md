@@ -39,7 +39,9 @@ Flow: `/login` → `POST /api/auth/login { email, password }` або Google → 
 Google OAuth: GIS `renderButton` → callback → `POST /api/auth/google { credential }` → JWT.
 Refresh: `POST /api/auth/refresh` — читає `rt` cookie, rotate → новий access token. `POST /api/auth/logout` — очищає cookie і DB запис.
 
-**PIN-lock:** 4-цифровий PIN опціонально (bcrypt). Після 5 хв неактивності — `PinLock` overlay поверх усього app. `pinLocked` в store НЕ персистується.
+**PIN-lock:** 4-цифровий PIN опціонально (bcrypt). Блокується при кожному свіжому завантаженні сторінки (`sessionStorage 'hud-pin-session'`) та після 5 хв неактивності. `pinLocked` в store НЕ персистується. `verifyPIN` використовує `authFetch` (автоматичний refresh).
+
+**Верифікація email:** Resend + домен `mimir-hud.tech`. При реєстрації → `sendVerificationEmail` → лист з посиланням `/verify?token=...` → `POST /api/auth/verify-email` → `User.isVerified = true`. `VerificationBanner` показується незверифікованим юзерам. Деякі фічі (receipt scanner) вимагають `isVerified`. `POST /api/auth/resend-verification` — повторна відправка.
 
 Всі запити через `authFetch` з Bearer токеном (проактивний refresh < 60с до expiry, singleton refresh race prevention). Маршрути захищені `ProtectedRoute`.
 

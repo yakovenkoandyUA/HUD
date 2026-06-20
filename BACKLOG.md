@@ -78,8 +78,8 @@
 
 ## Що реально НЕ зроблено
 
-### 🔴 Заблоковано зовнішнім
-- **Верифікація email** — код є (`/api/auth/verify-email`, Resend), заблоковано відсутністю домену `mimir.app` + DNS верифікація в Resend. `User.isVerified` default `false`, але не enforced в UI.
+### ✅ Верифікація email — повністю реалізована
+Домен `mimir-hud.tech`, Resend налаштовано. `noreply@mimir-hud.tech` → `/verify?token=...` → `User.isVerified = true`. `VerificationBanner` в UI, enforcement у receipt scanner (`isVerified` required). Роути: `POST /api/auth/verify-email`, `POST /api/auth/resend-verification`.
 
 ### 🟡 Не починалось (продуктові фічі)
 - **MIMIR Wrapped** — річна статистика à la Spotify Wrapped
@@ -108,8 +108,8 @@
 ### 2. 🎮 Games — окремий UI у Watchlist
 `gamesStore` і модель є, але ігри не відображаються в Watchlist. Додати таб 🎮 (OpenMoji) поруч з movie/series/anime/book. Мінімум: пошук (IGDB або RAWG API) або ручне додавання.
 
-### 3. 📧 Верифікація email
-Код готовий на 100%. Потрібно: купити домен mimir.app → верифікувати DNS в Resend → увімкнути enforce в UI (банер "підтвердь email" + блок деяких дій). Залежить від рішення про домен.
+### ~~3. 📧 Верифікація email~~ ✅ Зроблено
+Домен `mimir-hud.tech`, Resend, `VerificationBanner`, enforcement у receipt scanner — все є.
 
 ### 4. 📊 MIMIR Wrapped
 Річна статистика: топ-категорії витрат, скільки рецептів приготовано, скільки фільмів переглянуто, топ-настрій, F1 accuracy. Canvas/SVG шаркейбл картка. Anthropic для narrative summary. Є сенс робити ближче до кінця року або як "підсумок місяця".
@@ -129,6 +129,6 @@ Free/Pro/Family. Тільки якщо буде рішення про монет
 
 | Задача | Статус |
 |--------|--------|
-| Верифікація email | 🟡 Код є, потрібен домен |
+| Верифікація email | ✅ Закрито (mimir-hud.tech + Resend) |
 | MongoDB M10+ | 🟢 Некритично поки < 100 юзерів |
 | Усі інші | ✅ Закрито |
