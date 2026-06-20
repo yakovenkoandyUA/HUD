@@ -102,6 +102,7 @@ const Watchlist: React.FC = () => {
   const displayItem = effectiveSelected ?? lastSelectedRef.current
 
   // ── Games state ──
+  const [gameSearchOpen, setGameSearchOpen] = useState(false)
   const [selectedGame, setSelectedGame] = useState<GameItem | null>(null)
   const lastSelectedGameRef = useRef<GameItem | null>(null)
   const effectiveSelectedGame = useMemo(
@@ -420,7 +421,17 @@ const Watchlist: React.FC = () => {
         {isGame && (
           <>
             <div className={styles.searchWrap}>
-              <GameSearch onAdd={handleAddGame} />
+              <button
+                type="button"
+                className={styles.gameSearchTrigger}
+                onClick={() => setGameSearchOpen(true)}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                Пошук гри...
+              </button>
             </div>
 
             <div className={styles.tabsInner}>
@@ -497,6 +508,13 @@ const Watchlist: React.FC = () => {
         isOpen={statsOpen}
         onClose={() => setStatsOpen(false)}
         items={items}
+      />
+
+      {/* ── Game search overlay ── */}
+      <GameSearch
+        isOpen={gameSearchOpen}
+        onClose={() => setGameSearchOpen(false)}
+        onAdd={handleAddGame}
       />
     </div>
   )

@@ -201,6 +201,22 @@
   padding-right: 16px;
 }
 
+.gameSearchTrigger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: var(--text3);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
 .sortWrap {
   position: relative;
   flex-shrink: 0;
