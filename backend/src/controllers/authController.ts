@@ -14,7 +14,7 @@ async function sendVerificationEmail(email: string, token: string, name: string)
   const resend = new Resend(process.env.RESEND_API_KEY)
   const link = `${CLIENT_URL}/verify?token=${token}`
   await resend.emails.send({
-    from: 'MIMIR <noreply@mimir.app>',
+    from: 'MIMIR <noreply@mimir-hud.tech>',
     to: email,
     subject: 'Підтвердіть ваш email — MIMIR',
     html: `<p>Привіт, ${name}!</p>
@@ -116,11 +116,14 @@ export async function register(req: Request, res: Response): Promise<void> {
       // Claim existing account (migration)
       user.email = normalEmail
       user.passwordHash = passwordHash
-      user.isVerified = true
-      user.verificationToken = null
+      user.isVerified = false
+      const migrationToken = crypto.randomBytes(32).toString('hex')
+      user.verificationToken = migrationToken
       if (!user.name || user.name === user.username) user.name = name.trim()
       await user.save()
+      await sendVerificationEmail(normalEmail, migrationToken, user.name)
     } else {
+      const verificationToken = crypto.randomBytes(32).toString('hex')
       user = await User.create({
         name: name.trim(),
         username: username.trim().toLowerCase(),
@@ -128,11 +131,12 @@ export async function register(req: Request, res: Response): Promise<void> {
         passwordHash,
         role: 'user',
         f1Enabled: false,
-        isVerified: true,
-        verificationToken: null,
+        isVerified: false,
+        verificationToken,
       })
       const userId = (user._id as { toString(): string }).toString()
       await seedCategoriesForUser(userId)
+      await sendVerificationEmail(normalEmail, verificationToken, name.trim())
     }
 
     const userId = (user._id as { toString(): string }).toString()
