@@ -39,9 +39,17 @@ const LoginScreen: React.FC = () => {
         const data = await res.json() as { error?: string }
         throw new Error(data.error ?? 'Google auth failed')
       }
-      const { token, user, refreshToken } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; salaryDay: number; hasPIN: boolean; isVerified: boolean; city: string; morningStart: number; afternoonStart: number; eveningStart: number }; refreshToken?: string }
+      const { token, user, refreshToken } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; salaryDay: number; hasPIN: boolean; isVerified: boolean; city: string; morningStart: number; afternoonStart: number; eveningStart: number; reportStyle?: string; mediaEnabledTabs?: string[] }; refreshToken?: string }
       if (refreshToken) saveRefreshToken(refreshToken)
-      useProfileStore.setState({ token, activeProfile: user, pinLocked: false })
+      useProfileStore.setState({
+        token,
+        activeProfile: {
+          ...user,
+          reportStyle: user.reportStyle ?? 'standard',
+          mediaEnabledTabs: user.mediaEnabledTabs ?? ['movie', 'series', 'anime', 'game'],
+        },
+        pinLocked: false,
+      })
       navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Помилка Google входу')
