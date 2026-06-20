@@ -17,10 +17,63 @@ async function sendVerificationEmail(email: string, token: string, name: string)
     from: 'MIMIR <noreply@mimir-hud.tech>',
     to: email,
     subject: 'Підтвердіть ваш email — MIMIR',
-    html: `<p>Привіт, ${name}!</p>
-<p>Натисніть посилання нижче, щоб підтвердити вашу адресу:</p>
-<p><a href="${link}">${link}</a></p>
-<p>Посилання дійсне 24 години.</p>`,
+    html: `<!DOCTYPE html>
+<html lang="uk">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0e0e0e;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e0e;padding:40px 0;">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#161616;border:1px solid #2a2a2a;border-radius:2px;overflow:hidden;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#111;border-bottom:2px solid #c9a84c;padding:32px 40px;text-align:center;">
+            <div style="font-size:28px;letter-spacing:8px;color:#c9a84c;font-weight:700;font-family:Georgia,serif;">MIMIR</div>
+            <div style="font-size:10px;letter-spacing:4px;color:#555;margin-top:4px;text-transform:uppercase;">Heads Up Display</div>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:40px 40px 32px;">
+            <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;color:#555;text-transform:uppercase;">Верифікація email</p>
+            <p style="margin:0 0 24px;font-size:22px;color:#e8e0d0;line-height:1.4;">Привіт, ${name}!</p>
+            <p style="margin:0 0 32px;font-size:14px;color:#888;line-height:1.7;">
+              Для завершення реєстрації в <strong style="color:#c9a84c;">MIMIR</strong> підтвердіть вашу електронну адресу. Натисніть кнопку нижче — посилання дійсне <strong style="color:#e8e0d0;">24 години</strong>.
+            </p>
+
+            <!-- CTA Button -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+              <tr>
+                <td style="background:#c9a84c;border-radius:1px;">
+                  <a href="${link}" style="display:block;padding:14px 40px;font-size:12px;letter-spacing:3px;color:#0e0e0e;text-decoration:none;font-weight:700;text-transform:uppercase;font-family:Georgia,serif;">
+                    ПІДТВЕРДИТИ EMAIL
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;font-size:11px;color:#444;line-height:1.6;word-break:break-all;">
+              Або скопіюйте посилання вручну:<br>
+              <a href="${link}" style="color:#666;">${link}</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="border-top:1px solid #1e1e1e;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:11px;color:#333;letter-spacing:1px;">
+              DRINK DEEP &nbsp;·&nbsp; mimir-hud.tech
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
   })
 }
 
