@@ -8,20 +8,30 @@ import styles from './EpisodesList.module.css'
  * Interactive episode list with tap-to-toggle watched tracking.
  * Season 0 (Specials/OVA) is automatically filtered out.
  * Progress bar and "mark as watched" hint shown in 'watching' status.
+ * partnerEpisodes shows partner's progress as small avatar badges.
  *
  * Props:
- * @prop {number}   tmdbId           — TMDB series ID
- * @prop {number[]} seasons          — available season numbers (built from totalSeasons)
- * @prop {{ season: number; episode: number }[]} watchedEpisodes — watched state
+ * @prop {number}   tmdbId            — TMDB series ID
+ * @prop {number[]} seasons           — available season numbers (built from totalSeasons)
+ * @prop {{ season: number; episode: number }[]} watchedEpisodes — MY watched episodes
+ * @prop {{ season: number; episode: number; name: string; avatarUrl: string | null }[]} [partnerEpisodes] — partner progress
  * @prop {(s: number, e: number) => void} onToggleEpisode — toggle watched for one episode
- * @prop {string}   status           — WatchlistStatus ('watching' shows progress)
- * @prop {number}   [initialSeason]  — season to show first (default: first valid season)
+ * @prop {string}   status            — WatchlistStatus ('watching' shows progress)
+ * @prop {number}   [initialSeason]   — season to show first (default: first valid season)
  * @prop {() => void} [onMarkWatched] — called when user taps "mark as watched" hint
  */
+interface PartnerEpisode {
+  season: number
+  episode: number
+  name: string
+  avatarUrl: string | null
+}
+
 interface EpisodesListProps {
   tmdbId: number
   seasons: number[]
   watchedEpisodes: { season: number; episode: number }[]
+  partnerEpisodes?: PartnerEpisode[]
   onToggleEpisode: (season: number, episode: number) => void
   status: string
   initialSeason?: number
@@ -44,7 +54,7 @@ function relativeLabel(days: number): string {
 }
 
 const EpisodesList: React.FC<EpisodesListProps> = ({
-  tmdbId, seasons, watchedEpisodes, onToggleEpisode, status, initialSeason, onMarkWatched,
+  tmdbId, seasons, watchedEpisodes, partnerEpisodes = [], onToggleEpisode, status, initialSeason, onMarkWatched,
 }) => {
   const validSeasons = seasons.filter(s => s > 0)
   const fallbackSeason = (initialSeason && initialSeason > 0 ? initialSeason : null) ?? validSeasons[0] ?? 1
@@ -131,6 +141,9 @@ const EpisodesList: React.FC<EpisodesListProps> = ({
             const aired = days !== null ? days <= 0 : false
             const watched = isWatched(activeSeason, ep.episode_number)
             const canInteract = status === 'watching'
+            const partner = partnerEpisodes.find(
+              p => p.season === activeSeason && p.episode === ep.episode_number
+            )
 
             return (
               <button
@@ -151,6 +164,14 @@ const EpisodesList: React.FC<EpisodesListProps> = ({
                 )}
                 <span className={styles.epNum}>{ep.episode_number}</span>
                 <span className={styles.epTitle}>{ep.name || `Епізод ${ep.episode_number}`}</span>
+                {partner && (
+                  <span className={styles.epPartner} title={`${partner.name} переглянув`}>
+                    {partner.avatarUrl
+                      ? <img src={partner.avatarUrl} alt={partner.name} className={styles.epPartnerAvatar} />
+                      : <span className={styles.epPartnerInitial}>{partner.name[0]?.toUpperCase()}</span>
+                    }
+                  </span>
+                )}
                 {!aired && days !== null && days > 0 && (
                   <span className={styles.epDate}>{relativeLabel(days)}</span>
                 )}

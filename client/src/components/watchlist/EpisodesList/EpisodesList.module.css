@@ -223,3 +223,36 @@
   text-align: center;
   padding: 8px 0;
 }
+
+/* ── Partner episode indicator ── */
+.epPartner {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.epPartnerAvatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--accent);
+  opacity: 0.85;
+}
+
+.epPartnerInitial {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+}

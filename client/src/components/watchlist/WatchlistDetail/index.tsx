@@ -125,7 +125,8 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [loadingSimilarDet, setLoadingSimilarDet] = useState(false)
   const [localRating, setLocalRating] = useState<number>(item.rating ?? 0)
 
-  const [watchedEpisodes, setWatchedEpisodes] = useState<{ season: number; episode: number }[]>(
+  const myId = useProfileStore(s => s.activeProfile?.id ?? '')
+  const [watchedEpisodes, setWatchedEpisodes] = useState<{ season: number; episode: number; userId: string }[]>(
     item.watchedEpisodes ?? []
   )
   const [nextEpisodeDate, setNextEpisodeDate] = useState<Date | null>(
@@ -150,10 +151,10 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const seasons = Array.from({ length: item.totalSeasons ?? 1 }, (_, i) => i + 1)
 
   const handleToggleEpisode = (season: number, episode: number) => {
-    const already = watchedEpisodes.some(w => w.season === season && w.episode === episode)
+    const already = watchedEpisodes.some(w => w.season === season && w.episode === episode && w.userId === myId)
     const updated = already
-      ? watchedEpisodes.filter(w => !(w.season === season && w.episode === episode))
-      : [...watchedEpisodes, { season, episode }]
+      ? watchedEpisodes.filter(w => !(w.season === season && w.episode === episode && w.userId === myId))
+      : [...watchedEpisodes, { season, episode, userId: myId }]
     setWatchedEpisodes(updated)
     authFetch(`/api/watchlist/${item.id}`, {
       method: 'PATCH',
@@ -507,7 +508,15 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
               <EpisodesList
                 tmdbId={item.tmdbId}
                 seasons={seasons}
-                watchedEpisodes={watchedEpisodes}
+                watchedEpisodes={watchedEpisodes.filter(w => w.userId === myId)}
+                partnerEpisodes={watchedEpisodes
+                  .filter(w => w.userId !== myId)
+                  .map(w => ({
+                    season: w.season,
+                    episode: w.episode,
+                    name: accepted.find(m => m.id === w.userId)?.name ?? '',
+                    avatarUrl: accepted.find(m => m.id === w.userId)?.avatarUrl ?? null,
+                  }))}
                 onToggleEpisode={handleToggleEpisode}
                 status={item.status}
                 initialSeason={item.currentSeason ?? 1}

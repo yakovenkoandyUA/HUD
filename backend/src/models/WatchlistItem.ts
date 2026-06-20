@@ -23,7 +23,7 @@ export interface IWatchlistItem extends Document {
   notifyNewSeason: boolean
   nextEpisodeDate: Date | null
   nextSeasonDate: Date | null
-  watchedEpisodes: { season: number; episode: number }[]
+  watchedEpisodes: { season: number; episode: number; userId: string }[]
   watchTogether: boolean
   watchedWith: string[]
   userId: string
@@ -54,7 +54,11 @@ const schema = new Schema<IWatchlistItem>({
   nextEpisodeDate:  { type: Date,    default: null  },
   nextSeasonDate:   { type: Date,    default: null  },
   watchedEpisodes: {
-    type: [{ season: { type: Number, required: true }, episode: { type: Number, required: true } }],
+    type: [{
+      season:  { type: Number, required: true },
+      episode: { type: Number, required: true },
+      userId:  { type: String, required: true },
+    }],
     default: [],
   },
   watchTogether: { type: Boolean, default: false },
