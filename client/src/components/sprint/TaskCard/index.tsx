@@ -322,7 +322,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                 )}
                 {item.type === 'shopping' && item.priority && (
                   <PriorityBadge priority={item.priority} compact={item.priority === 'normal'} />
-                )}}
+                )}
                 <span className={styles.title}>{item.title}</span>
                 {item.ownerName && (
                   <span className={styles.ownerBadge}>{item.ownerName}</span>
