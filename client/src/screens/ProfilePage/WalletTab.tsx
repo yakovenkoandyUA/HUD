@@ -28,6 +28,15 @@ const ICON_OPTIONS = [
   'ti-map', 'ti-school', 'ti-star', 'ti-wallet', 'ti-tag',
 ]
 
+const ANALYST_STYLES: { id: string; emoji: string; label: string }[] = [
+  { id: 'standard',   emoji: '📊', label: 'Стандартний' },
+  { id: 'coach',      emoji: '💪', label: 'Тренер' },
+  { id: 'yoda',       emoji: '🟢', label: 'Йода' },
+  { id: 'kozak',      emoji: '⚔️', label: 'Козак' },
+  { id: 'motivator',  emoji: '🚀', label: 'Мотиватор' },
+  { id: 'accountant', emoji: '🔢', label: 'Бухгалтер' },
+]
+
 function pickColor(usedColors: string[]): string {
   const available = CAT_PALETTE.filter(c => !usedColors.includes(c))
   const pool = available.length > 0 ? available : CAT_PALETTE
@@ -433,6 +442,30 @@ const WalletTab: React.FC = () => {
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* ── AI Analyst style ── */}
+      <div className={styles.settingsCard}>
+        <div className={styles.cardTitle}>СТИЛЬ АНАЛІТИКА</div>
+        <div className={styles.pushSub} style={{ marginBottom: 12 }}>
+          Вибери манеру в якій AI подає місячний звіт
+        </div>
+        <div className={styles.styleGrid}>
+          {ANALYST_STYLES.map(s => (
+            <button
+              key={s.id}
+              type="button"
+              className={`${styles.styleChip} ${(activeProfile?.reportStyle ?? 'standard') === s.id ? styles.styleChipActive : ''}`}
+              onClick={async () => {
+                if ((activeProfile?.reportStyle ?? 'standard') === s.id) return
+                await updateProfile({ reportStyle: s.id })
+              }}
+            >
+              <span className={styles.styleEmoji}>{s.emoji}</span>
+              <span className={styles.styleLabel}>{s.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 

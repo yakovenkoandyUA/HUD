@@ -16,6 +16,7 @@ export interface IUser extends Document {
   eveningStart: number
   isVerified: boolean
   verificationToken: string | null
+  reportStyle: string
   createdAt: Date
 }
 
@@ -35,6 +36,7 @@ const schema = new Schema<IUser>({
   eveningStart:      { type: Number, default: 18, min: 0, max: 23 },
   isVerified:        { type: Boolean, default: false },
   verificationToken: { type: String, default: null },
+  reportStyle:       { type: String, default: 'standard' },
   createdAt:         { type: Date, default: Date.now },
 })
 

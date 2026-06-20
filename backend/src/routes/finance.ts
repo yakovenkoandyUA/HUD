@@ -2,6 +2,16 @@ import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
 import Transaction from '../models/Transaction'
 import FinancialReport from '../models/FinancialReport'
+import { User } from '../models/User'
+
+const STYLE_PERSONAS: Record<string, string> = {
+  standard: '',
+  coach: `Ти суворий особистий фінансовий тренер. Говориш прямо і жорстко, без м'яких слів. Якщо бачиш дурні витрати — кажеш це в лоб. Можеш матюкнутись для акценту (не більше 1-2 разів, цензурно: "чорт", "біс", "та ну нафіг"). Мотивуєш через тиск і реальні факти.`,
+  yoda: `Ти Майстер Йода і аналізуєш фінанси. ОБОВ'ЯЗКОВО говориш інвертованими реченнями у стилі Йоди — підмет завжди в кінці: "Великі витрати маєш ти", "Продукти дорого коштують, хм?", "Мудріше витрачати треба, молодий падаван". Мудрий, спокійний, з гумором.`,
+  kozak: `Ти старий козак-характерник з Запорізької Січі що аналізує сучасні фінанси. Звертаєшся "браче", "козаче", "товаришу". Порівнюєш сучасні витрати з козацьким побутом. Прямий і чесний як козацька шабля.`,
+  motivator: `Ти надміру позитивний мотиватор у стилі американського Ted Talk. КОЖНА проблема — це можливість для зростання. Вживаєш "Ти МОЛОДЕЦЬ!", "НЕЙМОВІРНО!", "ЦЕ КРОКИ ДО УСПІХУ!" навіть якщо витрати жахливі. Пишеш важливе КАПСЛОКОМ.`,
+  accountant: `Ти педантичний бухгалтер з 30-річним стажем. Тільки цифри, відсотки, коефіцієнти. Жодних емоцій. Жодних метафор. Якщо щось неможливо виразити числом — про це не пишеш. Дуже сухо і точно.`,
+}
 
 const router = Router()
 router.use(requireAuth)
@@ -35,6 +45,7 @@ function buildPrompt(
   categoryTotals: Record<string, { cur: number; prev: number }>,
   receiptData: { store: string; items: { name: string; price: number }[] }[],
   dayOfWeekTotals: number[],
+  reportStyle = 'standard',
 ): string {
   const monthLabel = new Date(`${month}-15`).toLocaleString('uk-UA', { month: 'long', year: 'numeric' })
 
@@ -71,7 +82,10 @@ function buildPrompt(
   const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
   const dowText = dayOfWeekTotals.map((v, i) => `${days[i]}: ${v}₴`).join(', ')
 
-  return `Ти фінансовий аналітик застосунку MIMIR. Проаналізуй витрати за ${monthLabel} і дай чіткі практичні поради українською.
+  const persona = STYLE_PERSONAS[reportStyle] || ''
+  const personaLine = persona ? `${persona}\n\n` : ''
+
+  return `${personaLine}Проаналізуй витрати за ${monthLabel} і дай чіткі практичні поради українською.
 
 ВИТРАТИ ПО КАТЕГОРІЯХ:
 ${categoriesText}
@@ -160,7 +174,9 @@ router.post('/report/:month', async (req: Request, res: Response): Promise<void>
     dowTotals[dow] += t.amount
   }
 
-  const prompt = buildPrompt(month, categoryTotals, receiptData, dowTotals)
+  const userDoc = await User.findById(req.userId, { reportStyle: 1 })
+  const reportStyle = userDoc?.reportStyle ?? 'standard'
+  const prompt = buildPrompt(month, categoryTotals, receiptData, dowTotals, reportStyle)
 
   try {
     const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
