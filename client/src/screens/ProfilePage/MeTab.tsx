@@ -52,6 +52,14 @@ const PALETTES: ThemePalette[] = [
   { id: 'arctic', name: 'ARCTIC', bg: '#1e2330', surface: '#313a4e', border: '#4a5570', accent: '#88c0d0', second: '#b48ead', gold: '#ebcb8b',  text: '#eceff4' },
 ]
 
+const MEDIA_TABS_CONFIG: { id: string; label: string; sub: string; wip?: boolean }[] = [
+  { id: 'movie',  label: 'Фільми',  sub: 'Повнометражні' },
+  { id: 'series', label: 'Серіали', sub: 'Серіали та шоу' },
+  { id: 'anime',  label: 'Аніме',   sub: 'Аніме та манга' },
+  { id: 'game',   label: 'Ігри',    sub: 'Відеоігри' },
+  { id: 'book',   label: 'Книги',   sub: 'Бібліотека',    wip: true },
+]
+
 /**
  * MeTab
  * -----
@@ -293,6 +301,14 @@ const MeTab: React.FC = () => {
     cityDebounceRef.current = setTimeout(() => {
       updateProfile({ city: value.trim() })
     }, 800)
+  }
+
+  const handleMediaTabToggle = (tabId: string) => {
+    const current = activeProfile?.mediaEnabledTabs ?? ['movie', 'series', 'anime', 'game']
+    const next = current.includes(tabId)
+      ? current.filter(t => t !== tabId)
+      : [...current, tabId]
+    updateProfile({ mediaEnabledTabs: next })
   }
 
   if (!activeProfile) return null
@@ -696,6 +712,39 @@ const MeTab: React.FC = () => {
             </div>
           </>
         )}
+      </div>
+
+      {/* ── МЕДІА ── */}
+      <div className={styles.settingsCard}>
+        <div className={styles.cardTitle}>МЕДІА</div>
+
+        {MEDIA_TABS_CONFIG.map((t, i) => {
+          const enabled = (activeProfile.mediaEnabledTabs ?? ['movie', 'series', 'anime', 'game']).includes(t.id)
+          return (
+            <React.Fragment key={t.id}>
+              {i > 0 && <div className={styles.cardDivider} />}
+              <div className={styles.cardRow}>
+                <div className={styles.pushInfo}>
+                  <span className={styles.cardRowLabel}>
+                    {t.label}
+                    {t.wip && <span className={styles.wipBadge}>В РОЗРОБЦІ</span>}
+                  </span>
+                  <span className={styles.pushSub}>{t.sub}</span>
+                </div>
+                <button
+                  type="button"
+                  className={`${styles.toggle} ${!t.wip && enabled ? styles.toggleOn : ''}`}
+                  onClick={() => !t.wip && handleMediaTabToggle(t.id)}
+                  aria-label={`${enabled ? 'Вимкнути' : 'Увімкнути'} вкладку ${t.label}`}
+                  aria-pressed={!t.wip && enabled}
+                  disabled={t.wip}
+                >
+                  <span className={styles.toggleThumb} />
+                </button>
+              </div>
+            </React.Fragment>
+          )
+        })}
       </div>
 
       {/* ── СІМ'Я ── */}

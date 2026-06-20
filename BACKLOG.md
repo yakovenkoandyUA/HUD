@@ -49,11 +49,11 @@
 - `/recipes` — сітка, фільтри, AI-генератор, «Що є вдома?» ingredient search
 - `/recipes/:id` — Складові/Приготування таби, step checklist, CookLog, wishlist
 - `/recipes/planner` — тижневий планер Пн–Нд
-- `/watchlist` — movie/series/anime/book (OpenMoji таби), TMDB пошук
+- `/watchlist` — movie/series/anime/book/game (OpenMoji таби), TMDB пошук; налаштування видимості табів у профілі; WatchlistStatsSheet (📊 кнопка) з годинами, розбивкою і жартівливими порівняннями
 - `/memories` — таймлайн + сітка + Leaflet карта, "Цей день рік тому"
 - `/memories/:id` — фото, Canvas export → PNG/Web Share
 - `/notes` — inline edit, пошук
-- `/profile` — MeTab (avatar, name, username, password, СІМ'Я), WalletTab (Monobank, salaryDay, категорії pill-cloud + ВИТРАТИ/ПОПОВНЕННЯ таби + icon picker), PlanTab, AdminTab
+- `/profile` — MeTab (avatar, name, username, password, секція МЕДІА — toggles для movie/series/anime/game + книги "в розробці", СІМ'Я), WalletTab (Monobank, salaryDay, категорії pill-cloud + ВИТРАТИ/ПОПОВНЕННЯ таби + icon picker), PlanTab, AdminTab
 - `/f1` — NextRaceCard, LastRaceCard, RacePredictionCard, ChampionshipTable (Пілоти/Конструктори/МІЙ СЕЗОН), McLarenViewer (Three.js)
 - `/f1/live` — F1 Live Dashboard (OpenF1 polling)
 - `/f1/:round` — RaceDetail (CircuitStats, SessionSchedule, Weather, Podium)
@@ -88,7 +88,7 @@
 ### 🟡 Не починалось (продуктові фічі)
 - **MIMIR Wrapped** — річна статистика à la Spotify Wrapped
 - **Letterboxd / Goodreads імпорт** — Monobank є, але інші імпорти ні
-- **Ігри (Games)** — модель + store є (`gamesStore`, alias до watchlist), але окремого UI/екрану немає; не відображається в Watchlist табах
+- **Книги (Books)** — backend `/api/books/search` (Google Books) є, але UI у Watchlist позначено "В РОЗРОБЦІ" (тоггл в профілі disabled, placeholder при відкритті табу)
 
 ### 🟠 Потребує доопрацювання
 - **Memories: карта + експорт** — реалізовано, але потребує polish (деталі уточнюються з юзером)

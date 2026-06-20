@@ -9,11 +9,18 @@
 .statsRow {
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
+  justify-content: space-between;
   gap: 0;
-  padding: 4px 12px;
+  padding: 4px 8px 4px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+.statsPills {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: space-evenly;
 }
 
 .stat {
@@ -61,6 +68,24 @@
   flex-shrink: 0;
   padding: 0 2px;
 }
+
+.statsBtn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 7px;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.statsBtn:active { background: var(--surface2); color: var(--accent); }
 
 .statClear {
   font-family: var(--font-ui);
@@ -330,4 +355,38 @@
   color: var(--text3);
   text-align: center;
   margin: 0;
+}
+
+/* ── Book WIP placeholder ── */
+.bookWip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 32px;
+  text-align: center;
+}
+
+.bookWipIcon {
+  width: 64px;
+  height: 64px;
+  opacity: 0.5;
+}
+
+.bookWipTitle {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  color: var(--text2);
+  margin: 0;
+  letter-spacing: 0.08em;
+}
+
+.bookWipSub {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text3);
+  margin: 0;
+  max-width: 260px;
+  line-height: 1.6;
 }

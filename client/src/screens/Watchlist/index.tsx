@@ -7,16 +7,18 @@ import WatchlistDetail from '../../components/watchlist/WatchlistDetail'
 import GameSearch from '../../components/games/GameSearch'
 import GameCard from '../../components/games/GameCard'
 import GameDetail from '../../components/games/GameDetail'
+import WatchlistStatsSheet from '../../components/watchlist/WatchlistStatsSheet'
 import { useWatchlistStore } from '../../store/watchlistStore'
 import { useGamesStore } from '../../store/gamesStore'
 import { useUiStore } from '../../store/uiStore'
 import { useFamilyStore } from '../../store/familyStore'
+import { useProfileStore } from '../../store/profileStore'
 import { getToken } from '../../services/api'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus, GameItem, GameStatus } from '../../types'
 import { openmojiUrl } from '../../utils/openmojiUrl'
 import styles from './Watchlist.module.css'
 
-type Tab = WatchlistCategory | 'game'
+type Tab = WatchlistCategory | 'game' | 'book'
 type SortBy = 'newest' | 'oldest' | 'year_desc' | 'year_asc' | 'rating'
 type WatchScope = 'all' | 'together' | 'solo'
 type GameStatusFilter = 'all' | GameStatus
@@ -43,11 +45,12 @@ const STATUS_ORDER: Record<string, number> = {
   dropped:  3,
 }
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
+const ALL_TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'movie',  label: 'Фільми',  icon: '1F3AC' },
   { id: 'series', label: 'Серіали', icon: '1F4FA' },
   { id: 'anime',  label: 'Аніме',   icon: '1F338' },
   { id: 'game',   label: 'Ігри',    icon: '1F3AE' },
+  { id: 'book',   label: 'Книги',   icon: '1F4DA' },
 ]
 
 const STAT_LABELS: Record<string, { short: string }> = {
@@ -61,7 +64,15 @@ const Watchlist: React.FC = () => {
   const { items: games, fetchGames, addGame, updateGame, deleteGame } = useGamesStore()
   const { showToast } = useUiStore()
   const { accepted, fetchFamily } = useFamilyStore()
-  const [tab, setTab] = useState<Tab>('movie')
+  const { activeProfile } = useProfileStore()
+
+  const enabledTabIds = activeProfile?.mediaEnabledTabs ?? ['movie', 'series', 'anime', 'game']
+  const TABS = ALL_TABS.filter(t => enabledTabIds.includes(t.id))
+
+  const [tab, setTab] = useState<Tab>(() => {
+    const first = ALL_TABS.find(t => enabledTabIds.includes(t.id))
+    return first?.id ?? 'movie'
+  })
   const [activeStatus, setActiveStatus] = useState<string | null>(null)
   const [activeGenres, setActiveGenres] = useState<Set<string>>(new Set())
   const [watchScope, setWatchScope] = useState<WatchScope>('all')
@@ -70,6 +81,7 @@ const Watchlist: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortBy>('newest')
   const [sortOpen, setSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
+  const [statsOpen, setStatsOpen] = useState(false)
 
   useEffect(() => {
     if (!getToken()) return
@@ -213,27 +225,50 @@ const Watchlist: React.FC = () => {
   }
 
   const isGame = tab === 'game'
+  const isBook = tab === 'book'
+  const isMedia = !isGame && !isBook
+
+  useEffect(() => {
+    if (!enabledTabIds.includes(tab)) {
+      const first = ALL_TABS.find(t => enabledTabIds.includes(t.id))
+      if (first) setTab(first.id)
+    }
+  }, [enabledTabIds, tab])
 
   return (
     <div className={styles.screen}>
       <AppHeader />
 
-      {/* ── Stats row — hidden on games tab ── */}
-      {!isGame && (
+      {/* ── Stats row — hidden on games and book tabs ── */}
+      {isMedia && (
         <div className={styles.statsRow}>
-          {(['want', 'watching', 'watched'] as const).map((status, i) => {
-            const isActive = activeStatus === status
-            return (
-              <React.Fragment key={status}>
-                {i > 0 && <span className={styles.statSep}>·</span>}
-                <button type="button" className={`${styles.stat} ${isActive ? styles.statActive : ''}`} onClick={() => setActiveStatus(isActive ? null : status)}>
-                  <span className={styles.statNum}>{stats[status]}</span>
-                  <span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
-                  {isActive && <span className={styles.statClear}>×</span>}
-                </button>
-              </React.Fragment>
-            )
-          })}
+          <div className={styles.statsPills}>
+            {(['want', 'watching', 'watched'] as const).map((status, i) => {
+              const isActive = activeStatus === status
+              return (
+                <React.Fragment key={status}>
+                  {i > 0 && <span className={styles.statSep}>·</span>}
+                  <button type="button" className={`${styles.stat} ${isActive ? styles.statActive : ''}`} onClick={() => setActiveStatus(isActive ? null : status)}>
+                    <span className={styles.statNum}>{stats[status]}</span>
+                    <span className={styles.statLabel}>{STAT_LABELS[status].short}</span>
+                    {isActive && <span className={styles.statClear}>×</span>}
+                  </button>
+                </React.Fragment>
+              )
+            })}
+          </div>
+          <button
+            type="button"
+            className={styles.statsBtn}
+            onClick={() => setStatsOpen(true)}
+            aria-label="Статистика перегляду"
+          >
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+              <rect x="1" y="8" width="3" height="6" rx="1" fill="currentColor" opacity="0.5"/>
+              <rect x="6" y="5" width="3" height="9" rx="1" fill="currentColor" opacity="0.75"/>
+              <rect x="11" y="1" width="3" height="13" rx="1" fill="currentColor"/>
+            </svg>
+          </button>
         </div>
       )}
 
@@ -265,7 +300,7 @@ const Watchlist: React.FC = () => {
       {/* ── Content (scrollable) ── */}
       <div className={styles.content}>
         {/* hero scrolls away — only for media tabs */}
-        {!isGame && watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
+        {isMedia && watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
 
         {/* ── Tabs — sticky ── */}
         <div className={styles.tabBar}>
@@ -286,7 +321,7 @@ const Watchlist: React.FC = () => {
         </div>
 
         {/* ── Media content ── */}
-        {!isGame && (
+        {isMedia && (
           <>
             {availableGenres.length > 0 && (
               <div className={styles.genreStrip}>
@@ -372,6 +407,15 @@ const Watchlist: React.FC = () => {
           </>
         )}
 
+        {/* ── Book placeholder ── */}
+        {isBook && (
+          <div className={styles.bookWip}>
+            <img src={openmojiUrl('1F4DA')} alt="" className={styles.bookWipIcon} aria-hidden="true" />
+            <p className={styles.bookWipTitle}>Книги</p>
+            <p className={styles.bookWipSub}>Функція в розробці — бібліотека та читалка з'являться тут найближчим часом</p>
+          </div>
+        )}
+
         {/* ── Games content ── */}
         {isGame && (
           <>
@@ -418,7 +462,7 @@ const Watchlist: React.FC = () => {
       </div>
 
       {/* ── Watchlist detail modal ── */}
-      {displayItem && !isGame && (
+      {displayItem && isMedia && (
         <WatchlistDetail
           item={displayItem}
           isOpen={!!selected}
@@ -447,6 +491,13 @@ const Watchlist: React.FC = () => {
           }}
         />
       )}
+
+      {/* ── Stats sheet ── */}
+      <WatchlistStatsSheet
+        isOpen={statsOpen}
+        onClose={() => setStatsOpen(false)}
+        items={items}
+      />
     </div>
   )
 }

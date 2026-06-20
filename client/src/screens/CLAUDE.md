@@ -128,10 +128,14 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - BottomNav прихований на `/recipes/planner`
 
 ## 9. Watchlist (`/watchlist`)
-- Категорії: movie / series / anime / book
-- **Tab icons (OpenMoji)**: 🎬 1F3AC / 📺 1F4FA / 🌸 1F338 / 📚 1F4DA — flex-column icon+label; `openmojiUrl(unicode)` → CDN SVG
+- Категорії: movie / series / anime / game / book — **фільтруються за `activeProfile.mediaEnabledTabs`**
+- Таби відображаються лише якщо увімкнені в профілі (`ALL_TABS.filter(t => enabledTabIds.includes(t.id))`)
+- При відкритті автоматично вибирається перший увімкнений таб; якщо поточний таб вимикається — скидається на перший доступний (`useEffect`)
+- **Tab icons (OpenMoji)**: 🎬 1F3AC / 📺 1F4FA / 🌸 1F338 / 🎮 1F3AE / 📚 1F4DA
 - Пошук: TMDB API (фільми/серіали/аніме) або backend proxy `/api/books/search` (книги, Google Books з кешем)
 - Search overlay: fullscreen backdrop, fixed search bar під AppHeader (`--header-height: 56px`), "Скасувати"
+- **Книги (book)** — таб є в `ALL_TABS`, але при активації показується placeholder "Функція в розробці" (контент/пошук не підключені)
+- **WatchlistStatsSheet** — bottom sheet, відкривається кнопкою 📊 у рядку статусів (тільки для isMedia); показує: загальні години (Furore), розбивка 🎬/📺/🌸 по кількості, 5-6 жартівливих порівнянь (ходьба до міста, рейс Київ–NY, книжки, марафони, Титанік, ночі сну). Години: фільм=2г, серіал=45хв/еп, аніме=24хв/еп
 - WatchlistCard — pill-бейдж статусу на постері, book-aware лейбли (ЧИТАЮ / ПРОЧИТАВ)
 - WatchlistDetail — status chips (book-aware), StarRating, EpisodesList для серіалів/аніме
 - Кастомний постер через ImageUploadButton + Cloudinary
@@ -162,6 +166,7 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 
 **MeTab:**
 - Аватар, ім'я, username (inline edit + uniqueness check), зміна пароля (accordion)
+- **МЕДІА settingsCard** — toggles для movie/series/anime/game; книги disabled з бейджем "В РОЗРОБЦІ"; зберігається як `mediaEnabledTabs: string[]` у User моделі через `PATCH /api/auth/me`
 - **СІМ'Я settingsCard** внизу — пошук юзерів, pending received (прийняти/відхилити), accepted members, pending sent; `useFamilyStore` читається зі store (fetchFamily() в ProfilePage при mount)
 
 **WalletTab:**

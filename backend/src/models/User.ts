@@ -17,6 +17,7 @@ export interface IUser extends Document {
   isVerified: boolean
   verificationToken: string | null
   reportStyle: string
+  mediaEnabledTabs: string[]
   createdAt: Date
 }
 
@@ -37,6 +38,7 @@ const schema = new Schema<IUser>({
   isVerified:        { type: Boolean, default: false },
   verificationToken: { type: String, default: null },
   reportStyle:       { type: String, default: 'standard' },
+  mediaEnabledTabs:  { type: [String], default: ['movie', 'series', 'anime', 'game'] },
   createdAt:         { type: Date, default: Date.now },
 })
 

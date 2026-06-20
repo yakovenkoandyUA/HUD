@@ -95,6 +95,7 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   hasPIN: !!user.pinHash,
   isVerified: user.isVerified ?? false,
   reportStyle: user.reportStyle ?? 'standard',
+  mediaEnabledTabs: user.mediaEnabledTabs?.length ? user.mediaEnabledTabs : ['movie', 'series', 'anime', 'game'],
 })
 
 const COOKIE_NAME = 'rt'
@@ -478,13 +479,14 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
 
 /** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl, name, f1Enabled, salaryDay, username, city, morningStart, afternoonStart, eveningStart, reportStyle } = req.body as {
+  const { avatarUrl, name, f1Enabled, salaryDay, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs } = req.body as {
     avatarUrl?: string; name?: string; f1Enabled?: boolean; salaryDay?: number; username?: string
     city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string
+    mediaEnabledTabs?: string[]
   }
   if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && !username &&
       city === undefined && morningStart === undefined && afternoonStart === undefined && eveningStart === undefined &&
-      reportStyle === undefined) {
+      reportStyle === undefined && mediaEnabledTabs === undefined) {
     res.status(400).json({ error: 'At least one field required' })
     return
   }
@@ -511,6 +513,10 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
     if (eveningStart !== undefined)   update.eveningStart   = Math.max(0, Math.min(23, Math.round(eveningStart)))
     const VALID_STYLES = ['standard', 'coach', 'yoda', 'kozak', 'motivator', 'accountant']
     if (reportStyle !== undefined && VALID_STYLES.includes(reportStyle)) update.reportStyle = reportStyle
+    const VALID_MEDIA_TABS = ['movie', 'series', 'anime', 'game', 'book']
+    if (Array.isArray(mediaEnabledTabs)) {
+      update.mediaEnabledTabs = mediaEnabledTabs.filter(t => VALID_MEDIA_TABS.includes(t))
+    }
     await User.findByIdAndUpdate(req.userId, update)
     res.json({ ok: true })
   } catch {

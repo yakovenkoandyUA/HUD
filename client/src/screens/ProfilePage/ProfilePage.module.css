@@ -1675,6 +1675,21 @@
 }
 .toggleOn .toggleThumb { transform: translateX(18px); }
 
+.wipBadge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 9px;
+  font-family: var(--font-ui);
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  background: color-mix(in srgb, var(--text3) 12%, transparent);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
 /* ── Admin users section ── */
 .adminEmpty {
   font-family: var(--font-body);

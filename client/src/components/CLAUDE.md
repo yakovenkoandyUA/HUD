@@ -91,6 +91,8 @@ components/
 │   ├── WatchlistSearch     ← fullscreen search overlay (backdrop + "Скасувати"), TMDB + Google Books
 │   ├── WatchlistDetail     ← деталі + статус chips (book-aware labels) + StarRating + EpisodesList
 │   ├── WatchlistCard       ← pill-бейдж статусу на постері (book-aware labels)
+│   ├── WatchlistStatsSheet ← bottom sheet статистики: години, розбивка по категоріях, жартівливі порівняння
+│   │                          відкривається кнопкою 📊 у рядку статусів; фільм=2г, серіал=45хв/еп, аніме=24хв/еп
 │   ├── StarRating          ← зіркова оцінка 1–10, readOnly та interactive режими
 │   └── EpisodesList        ← список епізодів для серіалів/аніме
 ├── memories/
