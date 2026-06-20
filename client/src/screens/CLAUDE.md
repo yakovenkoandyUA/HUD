@@ -148,10 +148,11 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - **MemoryMap** — Leaflet карта з пінами спогадів і планів (Nominatim геокодування)
 - **Плани** — PlanCard/PlanForm, статуси (want/planned/visited), конвертація в спогад
 - "Цей день рік тому" банер
-- **PosterGenerator** — Anthropic Haiku → Pollinations.ai → Cloudinary
+- **PosterGenerator** — Canvas API (обкладинка + назва + дата/місце + теги) → Cloudinary, без AI/зовнішніх сервісів
 - MemoryDetail — фото (PhotoViewerModal fullscreen), підписи, обкладинка (setCover)
-- **Експорт спогаду** — Canvas API → PNG (обкладинка + назва + дата + теги), Web Share API або download
+- **Експорт спогаду** — Canvas API → PNG (обкладинка + назва + дата + теги), Web Share API або download (спільна утиліта з PosterGenerator: `utils/generateMemoryPoster.ts`)
 - Cloudinary upload для фото
+- **AddMemoryModal** — поле МІСЦЕ через `LocationSearch` (LocationIQ автокомпліт, `VITE_LOCATIONIQ_KEY`), ДАТА/МІСЦЕ в один ряд
 
 ## 11. Notes (`/notes`)
 - `notesStore` (Zustand, без persist) — `fetchNotes`, `addNote`, `updateNote`, `deleteNote`
@@ -168,6 +169,7 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 
 **MeTab:**
 - Аватар, ім'я, username (inline edit + uniqueness check), зміна пароля (accordion)
+- **Місто (погода)** — текстове поле + кнопка геолокації (`navigator.geolocation` → Nominatim reverse geocoding → авто-заповнення міста, `updateProfile({ city })`)
 - **МЕДІА settingsCard** — toggles для movie/series/anime/game; книги disabled з бейджем "В РОЗРОБЦІ"; зберігається як `mediaEnabledTabs: string[]` у User моделі через `PATCH /api/auth/me`
 - **СІМ'Я settingsCard** внизу — пошук юзерів, pending received (прийняти/відхилити), accepted members, pending sent; `useFamilyStore` читається зі store (fetchFamily() в ProfilePage при mount)
 

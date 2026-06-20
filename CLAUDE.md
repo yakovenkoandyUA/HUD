@@ -53,6 +53,7 @@ VITE_CLOUDINARY_CLOUD_NAME=mimir-hud
 VITE_CLOUDINARY_UPLOAD_PRESET=mimirorg
 VITE_VAPID_PUBLIC_KEY=...
 VITE_GOOGLE_CLIENT_ID=1067623625292-c8jdgeea4q3ub1nf0bp0jgg5vf1nmigi.apps.googleusercontent.com
+VITE_LOCATIONIQ_KEY=...
 ```
 
 ## Сімейні профілі (FamilyLink)

@@ -81,7 +81,6 @@
 | `/api/push/unsubscribe` | POST |
 | `/api/push/test` | POST — тестова нотифікація |
 | `/api/ai/chat` | POST — SSE streaming (Claude Haiku), domain-aware context |
-| `/api/ai/poster-prompt` | POST — генерація промпту для постера спогаду |
 | `/api/finance/report/:month` | GET — AI-аналіз витрат по місяцю (Anthropic) |
 | `/api/bank/connect` | POST — Monobank OAuth initiate |
 | `/api/bank/status` | GET — статус з'єднання |
@@ -143,7 +142,7 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 
 | API | Де використовується |
 |-----|-------------|
-| **Anthropic (Claude Haiku)** | AI чат (SSE), сканування чеків, генерація рецептів, постери спогадів, фінансовий аналіз |
+| **Anthropic (Claude Haiku)** | AI чат (SSE), сканування чеків, генерація рецептів, фінансовий аналіз |
 | **Monobank API** | OAuth connect, sync транзакцій, баланс |
 | **OpenF1 API** | F1 live data (`api.openf1.org/v1/`) |
 | **Jolpica API** | F1 залік команд/пілотів, результати гонок |
@@ -151,7 +150,6 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 | **Google Books** | Пошук книг (через backend proxy) |
 | **Resend** | Email верифікація (потребує домену mimir.app) |
 | **Cloudinary** | Upload фото (unsigned preset, frontend direct) |
-| **Pollinations.ai** | Генерація постерів для спогадів |
 | **OpenStreetMap Nominatim** | Геокодування локацій для планів |
 | **wttr.in** | Погода (через backend proxy) |
 

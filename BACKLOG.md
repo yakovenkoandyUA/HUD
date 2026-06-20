@@ -23,13 +23,13 @@
 - `shopping` — список покупок
 - `watchlist` — movie/series/anime/book (TMDB + Google Books proxy)
 - `watchlistComments` — коментарі між профілями
-- `memories` — спогади + фото (Cloudinary) + теги + PosterGenerator (Anthropic → Pollinations.ai)
+- `memories` — спогади + фото (Cloudinary) + теги + PosterGenerator (Canvas API, без зовнішніх AI-сервісів)
 - `plans` — місця (want/planned/visited), Nominatim, конвертація в Memory
 - `notes` — нотатки
 - `mood` — трекер настрою (1-5), MoodLog, сімейні настрої
 - `family` — FamilyLink (pending/accepted), пошук юзерів
 - `push` — Web Push підписки (VAPID), test endpoint
-- `ai` — SSE streaming чат (Claude Haiku), генерація постерів
+- `ai` — SSE streaming чат (Claude Haiku)
 - `finance` — AI-аналіз фінансів по місяцях (Anthropic), FinancialReport модель
 - `receipt` — сканування чеків (Anthropic Vision API), auto-categorize
 - `bank` — Monobank OAuth (3-етапний flow) + sync транзакцій + CSV import, AES-256-GCM шифрування токену

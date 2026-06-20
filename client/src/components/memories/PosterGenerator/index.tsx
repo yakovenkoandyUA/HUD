@@ -1,18 +1,28 @@
 import React, { useState, useCallback } from 'react'
-import { authFetch } from '../../../services/api'
 import type { Memory } from '../../../types/memory'
+import { generateMemoryPosterBlob } from '../../../utils/generateMemoryPoster'
+import { uploadToCloudinary } from '../../../utils/uploadToCloudinary'
 import styles from './PosterGenerator.module.css'
+
+const MONTHS_UA_SHORT = [
+  'Січ', 'Лют', 'Бер', 'Квіт', 'Трав', 'Черв',
+  'Лип', 'Серп', 'Вер', 'Жовт', 'Лист', 'Груд',
+]
+
+function formatMemoryDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${d} ${MONTHS_UA_SHORT[m - 1]} ${y}`
+}
 
 /**
  * PosterGenerator
  * ---------------
- * AI-генератор постера для спогаду.
- * Step 1: backend → Anthropic Haiku → cinematic image prompt.
- * Step 2: Pollinations.ai → рендерить зображення.
- * Показує прев'ю, пропонує встановити як обкладинку або згенерувати ще раз.
+ * Генератор постера для спогаду через Canvas API (обкладинка + назва +
+ * дата/місце + теги), без зовнішніх сервісів. Завантажує результат на
+ * Cloudinary і пропонує встановити як обкладинку.
  *
  * Props:
- * @prop {Memory}               memory      — спогад (для title/location/date)
+ * @prop {Memory}               memory      — спогад (для cover/title/date/tags)
  * @prop {(url: string) => void} onSetCover — зберегти URL як обкладинку
  * @prop {() => void}           onClose     — закрити (після setCover)
  */
@@ -33,53 +43,11 @@ const PosterGenerator: React.FC<PosterGeneratorProps> = ({ memory, onSetCover, o
     setPosterUrl(null)
 
     try {
-      // Step 1 — prompt via Anthropic (backend)
-      console.log('[PosterGenerator] Step 1: requesting prompt from /api/ai/poster-prompt')
-      console.log('[PosterGenerator] payload:', { title: memory.title, notes: memory.notes, date: memory.date })
-
-      const res = await authFetch('/api/ai/poster-prompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: memory.title,
-          notes: memory.notes ?? '',
-          date:  new Date(memory.date).toLocaleDateString('uk-UA'),
-        }),
-      })
-
-      console.log('[PosterGenerator] Step 1 response status:', res.status)
-
-      if (!res.ok) {
-        const errBody = await res.text()
-        console.error('[PosterGenerator] Step 1 failed:', res.status, errBody)
-        throw new Error(`prompt failed: ${res.status} ${errBody}`)
-      }
-
-      const { prompt } = await res.json() as { prompt: string }
-      console.log('[PosterGenerator] Step 1 prompt received:', prompt)
-
-      // Step 2 — backend proxy: fetch Pollinations + upload to Cloudinary
-      console.log('[PosterGenerator] Step 2: requesting poster image via backend proxy...')
-      const imgRes = await authFetch('/api/memories/generate-poster-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      })
-
-      console.log('[PosterGenerator] Step 2 response status:', imgRes.status)
-
-      if (!imgRes.ok) {
-        const errBody = await imgRes.text()
-        console.error('[PosterGenerator] Step 2 failed:', imgRes.status, errBody)
-        throw new Error(`image generation failed: ${imgRes.status} ${errBody}`)
-      }
-
-      const { imageUrl } = await imgRes.json() as { imageUrl: string }
-      console.log('[PosterGenerator] Step 2 Cloudinary URL:', imageUrl)
-
-      setPosterUrl(imageUrl)
+      const blob = await generateMemoryPosterBlob(memory, formatMemoryDate(memory.date))
+      const file = new File([blob], `poster-${memory.id}.png`, { type: 'image/png' })
+      const url = await uploadToCloudinary(file, 'mimir/posters')
+      setPosterUrl(url)
       setGenState('done')
-      console.log('[PosterGenerator] Done.')
     } catch (err) {
       console.error('[PosterGenerator] Generation failed:', err)
       setGenState('error')
@@ -97,7 +65,7 @@ const PosterGenerator: React.FC<PosterGeneratorProps> = ({ memory, onSetCover, o
       {genState === 'idle' && (
         <>
           <p className={styles.hint}>
-            AI створить унікальний кінематографічний постер на основі назви та місця події
+            Постер з обкладинки, назви, дати та тегів цього спогаду
           </p>
           <button type="button" className={styles.generateBtn} onClick={generate}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -114,13 +82,12 @@ const PosterGenerator: React.FC<PosterGeneratorProps> = ({ memory, onSetCover, o
         <div className={styles.loadingWrap}>
           <div className={styles.spinner} />
           <p className={styles.loadingText}>Створюємо постер...</p>
-          <p className={styles.loadingHint}>Зазвичай займає 10–20 секунд</p>
         </div>
       )}
 
       {genState === 'done' && posterUrl && (
         <div className={styles.resultWrap}>
-          <img src={posterUrl} alt="AI poster" className={styles.poster} />
+          <img src={posterUrl} alt="Memory poster" className={styles.poster} />
           <div className={styles.actions}>
             <button type="button" className={styles.retryBtn} onClick={generate}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
