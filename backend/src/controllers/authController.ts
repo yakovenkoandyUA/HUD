@@ -306,7 +306,8 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
     user.isVerified = true
     user.verificationToken = null
     await user.save()
-    res.json({ ok: true, user: USER_PUBLIC_FIELDS(user) })
+    const userId = (user._id as { toString(): string }).toString()
+    await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user))
   } catch {
     res.status(500).json({ error: 'Помилка верифікації' })
   }

@@ -249,9 +249,9 @@ export const useProfileStore = create<ProfileState>()(
           const data = await res.json() as { error?: string }
           throw new Error(data.error ?? 'Помилка верифікації')
         }
-        const { user } = await res.json() as { user: Profile }
-        const { activeProfile } = get()
-        if (activeProfile) set({ activeProfile: { ...activeProfile, isVerified: user.isVerified } })
+        const { token: accessToken, user, refreshToken } = await res.json() as { token: string; user: Profile; refreshToken?: string }
+        if (refreshToken) saveRefreshToken(refreshToken)
+        set({ token: accessToken, activeProfile: user, pinLocked: false })
       },
 
       resendVerification: async () => {
