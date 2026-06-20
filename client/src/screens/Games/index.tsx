@@ -53,10 +53,11 @@ const Games: React.FC = () => {
   const playingNow = useMemo(() => items.filter(i => i.status === 'playing'), [items])
 
   const stats = useMemo(() => ({
-    total:     items.length,
-    playing:   items.filter(i => i.status === 'playing').length,
-    completed: items.filter(i => i.status === 'completed').length,
-    platinum:  items.filter(i => i.platinum).length,
+    total:      items.length,
+    playing:    items.filter(i => i.status === 'playing').length,
+    completed:  items.filter(i => i.status === 'completed').length,
+    platinum:   items.filter(i => i.platinum).length,
+    totalHours: Math.round(items.reduce((s, i) => s + (i.hoursPlayed ?? 0), 0)),
   }), [items])
 
   const handleAdd = (game: Omit<GameItem, 'id' | 'addedAt'>) => {
@@ -85,21 +86,28 @@ const Games: React.FC = () => {
           <span className={styles.statNum}>{stats.total}</span>
           <span className={styles.statLabel}>всього</span>
         </div>
-        <span className={styles.statSep}>·</span>
+        <div className={styles.statSep} />
         <div className={styles.stat}>
-          <span className={styles.statNum}>{stats.playing}</span>
+          <span className={`${styles.statNum} ${styles.statNumTeal}`}>{stats.playing}</span>
           <span className={styles.statLabel}>граю</span>
         </div>
-        <span className={styles.statSep}>·</span>
+        <div className={styles.statSep} />
         <div className={styles.stat}>
-          <span className={styles.statNum}>{stats.completed}</span>
+          <span className={`${styles.statNum} ${styles.statNumGold}`}>{stats.completed}</span>
           <span className={styles.statLabel}>пройдено</span>
         </div>
-        <span className={styles.statSep}>·</span>
-        <div className={styles.stat}>
-          <span className={styles.statNum}>{stats.platinum}</span>
-          <span className={styles.statLabel}>platinum</span>
-        </div>
+        <div className={styles.statSep} />
+        {stats.totalHours > 0 ? (
+          <div className={styles.stat}>
+            <span className={`${styles.statNum} ${styles.statNumAccent}`}>{stats.totalHours}</span>
+            <span className={styles.statLabel}>годин</span>
+          </div>
+        ) : (
+          <div className={styles.stat}>
+            <span className={`${styles.statNum} ${styles.statNumAccent}`}>{stats.platinum}</span>
+            <span className={styles.statLabel}>platinum</span>
+          </div>
+        )}
       </div>
 
       {/* Now Playing shelf */}
