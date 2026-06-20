@@ -408,3 +408,26 @@
 .aiSpacer {
   height: 6px;
 }
+
+.aiList {
+  margin: 4px 0 6px 0;
+  padding: 0 0 0 14px;
+  list-style: none;
+}
+
+.aiListItem {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text2);
+  padding: 2px 0;
+  position: relative;
+}
+
+.aiListItem::before {
+  content: '–';
+  position: absolute;
+  left: -12px;
+  color: var(--accent);
+  font-weight: 700;
+}

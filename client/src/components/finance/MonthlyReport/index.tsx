@@ -6,18 +6,58 @@ import MimirIcon from '../../ui/MimirIcon'
 import type { Transaction } from '../../../types'
 import styles from './MonthlyReport.module.css'
 
+function applyInline(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+}
+
 function renderMarkdown(md: string): React.ReactNode[] {
-  return md.split('\n').map((line, i) => {
+  const nodes: React.ReactNode[] = []
+  let listItems: string[] = []
+  let listKey = 0
+
+  const flushList = () => {
+    if (listItems.length === 0) return
+    nodes.push(
+      <ul key={`list-${listKey++}`} className={styles.aiList}>
+        {listItems.map((item, j) => (
+          <li key={j} className={styles.aiListItem} dangerouslySetInnerHTML={{ __html: applyInline(item) }} />
+        ))}
+      </ul>
+    )
+    listItems = []
+  }
+
+  for (const line of md.split('\n')) {
+    // Skip markdown table rows and separators
+    if (line.trim().startsWith('|')) continue
+
     if (line.startsWith('## ')) {
-      return <p key={i} className={styles.aiSection}>{line.slice(3)}</p>
+      flushList()
+      nodes.push(<p key={nodes.length} className={styles.aiSection}>{line.slice(3)}</p>)
+      continue
     }
-    const bold = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    if (bold !== line) {
-      return <p key={i} className={styles.aiLine} dangerouslySetInnerHTML={{ __html: bold }} />
+
+    if (line.match(/^[-*] /)) {
+      listItems.push(line.slice(2))
+      continue
     }
-    if (line.trim() === '') return <div key={i} className={styles.aiSpacer} />
-    return <p key={i} className={styles.aiLine}>{line}</p>
-  })
+
+    flushList()
+
+    if (line.trim() === '' || line.trim() === '—' || line.trim() === '--') {
+      nodes.push(<div key={nodes.length} className={styles.aiSpacer} />)
+      continue
+    }
+
+    nodes.push(
+      <p key={nodes.length} className={styles.aiLine} dangerouslySetInnerHTML={{ __html: applyInline(line) }} />
+    )
+  }
+
+  flushList()
+  return nodes
 }
 
 /**
