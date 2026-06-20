@@ -165,6 +165,14 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     setLocalRating(item.rating ?? 0)
   }, [item.rating])
 
+  useEffect(() => {
+    setWatchedEpisodes(item.watchedEpisodes ?? [])
+    setNextEpisodeDate(item.nextEpisodeDate ? new Date(item.nextEpisodeDate) : null)
+    setNextSeasonDate(item.nextSeasonDate ?? null)
+    initialNextEpRef.current = item.nextEpisodeDate
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id])
+
   // Load comments when item changes
   useEffect(() => {
     let cancelled = false

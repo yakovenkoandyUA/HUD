@@ -232,7 +232,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
     category === 'series' ? 'Пошук серіалу...' :
                             'Пошук фільму...'
 
-  const closePreview = () => { setPreview(null); setPreviewDetails(null); setPreviewCast([]) }
+  const closePreview = () => { setPreview(null); setPreviewDetails(null); setPreviewCast([]); setSelectedStatus('want') }
 
   const handleHeroTouchStart = (e: React.TouchEvent) => {
     heroStartY.current = e.touches[0].clientY
