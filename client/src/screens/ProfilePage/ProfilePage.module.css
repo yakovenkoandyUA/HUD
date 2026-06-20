@@ -1816,6 +1816,37 @@
 .fieldInput::placeholder { color: var(--text3); }
 .fieldInput:focus { outline: none; border-color: var(--accent); }
 
+.cityInputRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.locateBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  transition: border-color 0.15s, color 0.15s;
+}
+.locateBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.locateBtn:disabled { opacity: 0.6; }
+
+.locateSpinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+}
+
 .slotRow {
   display: flex;
   align-items: center;

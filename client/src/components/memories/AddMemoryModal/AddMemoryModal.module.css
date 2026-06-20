@@ -54,6 +54,14 @@
   gap: 6px;
 }
 
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.fieldLocation { flex: 2; }
+.fieldDate { flex: 1; }
+
 .label {
   font-family: var(--font-ui);
   font-size: 10px;

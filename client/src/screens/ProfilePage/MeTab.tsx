@@ -31,6 +31,13 @@ const PencilIcon: React.FC = () => (
   </svg>
 )
 
+const LocateIcon: React.FC = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.4"/>
+    <path d="M8 1v2.2M8 12.8V15M1 8h2.2M12.8 8H15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+  </svg>
+)
+
 interface ThemePalette {
   id: Theme
   name: string
@@ -106,6 +113,7 @@ const MeTab: React.FC = () => {
   const [cacheCleared, setCacheCleared] = useState(false)
 
   const [city, setCity] = useState(activeProfile?.city ?? '')
+  const [locatingCity, setLocatingCity] = useState(false)
   const cityDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { accepted, pendingSent, pendingReceived, searchResults, searchUsers, sendRequest, acceptRequest, removeLink, clearSearch } = useFamilyStore()
@@ -301,6 +309,43 @@ const MeTab: React.FC = () => {
     cityDebounceRef.current = setTimeout(() => {
       updateProfile({ city: value.trim() })
     }, 800)
+  }
+
+  const handleLocateCity = () => {
+    if (!navigator.geolocation) {
+      showToast('Геолокація не підтримується', 'error')
+      return
+    }
+    setLocatingCity(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const r = await fetch(
+            `https://nominatim.openstreetmap.org/reverse` +
+            `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&accept-language=uk`,
+            { headers: { 'User-Agent': 'MIMIR-App/1.0' } }
+          )
+          const data = await r.json()
+          const found = data.address?.city || data.address?.town || data.address?.village || data.address?.county
+          if (found) {
+            setCity(found)
+            updateProfile({ city: found })
+            showToast(`Місто визначено: ${found}`, 'success')
+          } else {
+            showToast('Не вдалося визначити місто', 'error')
+          }
+        } catch {
+          showToast('Не вдалося визначити місто', 'error')
+        } finally {
+          setLocatingCity(false)
+        }
+      },
+      () => {
+        showToast('Доступ до геолокації відхилено', 'error')
+        setLocatingCity(false)
+      },
+      { timeout: 8000 }
+    )
   }
 
   const handleMediaTabToggle = (tabId: string) => {
@@ -607,12 +652,23 @@ const MeTab: React.FC = () => {
             <div className={styles.cardRowLabel}>Місто (погода)</div>
             <div className={styles.pushSub}>Для блоку "Мій день"</div>
           </div>
-          <input
-            className={styles.fieldInput}
-            value={city}
-            onChange={e => handleCityChange(e.target.value)}
-            placeholder="Київ"
-          />
+          <div className={styles.cityInputRow}>
+            <input
+              className={styles.fieldInput}
+              value={city}
+              onChange={e => handleCityChange(e.target.value)}
+              placeholder="Київ"
+            />
+            <button
+              type="button"
+              className={styles.locateBtn}
+              onClick={handleLocateCity}
+              disabled={locatingCity}
+              aria-label="Визначити місто автоматично"
+            >
+              {locatingCity ? <span className={styles.locateSpinner} /> : <LocateIcon />}
+            </button>
+          </div>
         </div>
 
         <div className={styles.cardDivider} />

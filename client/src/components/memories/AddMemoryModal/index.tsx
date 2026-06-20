@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
 import ImageUploadButton from '../../ui/ImageUploadButton'
 import CustomDatePicker from '../../ui/CustomDatePicker'
+import LocationSearch from '../LocationSearch'
 import Button from '../../ui/Button'
 import styles from './AddMemoryModal.module.css'
 
@@ -36,6 +37,11 @@ const today = () => {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
+}
+
+const formatDisplayDate = (iso: string) => {
+  const [y, m, d] = iso.split('-')
+  return y && m && d ? `${d}.${m}.${y}` : iso
 }
 
 const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCreate }) => {
@@ -105,7 +111,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
             folder="mimir/memories/covers"
             onUpload={setCoverUrl}
             placeholder="Обкладинка"
-            variant="wide"
+            variant="compact"
           />
 
           <div className={styles.field}>
@@ -118,25 +124,25 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
             />
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label}>МІСЦЕ <span className={styles.optional}>(необов'язково)</span></label>
-            <input
-              className={styles.input}
-              value={location}
-              onChange={e => setLocation(e.target.value)}
-              placeholder="Де це було?"
-            />
-          </div>
+          <div className={styles.row}>
+            <div className={`${styles.field} ${styles.fieldLocation}`}>
+              <label className={styles.label}>МІСЦЕ <span className={styles.optional}>(необов'язково)</span></label>
+              <LocationSearch
+                initial={location}
+                onSelect={loc => setLocation(loc.address || loc.name || '')}
+              />
+            </div>
 
-          <div className={styles.field}>
-            <label className={styles.label}>ДАТА</label>
-            <button
-              type="button"
-              className={styles.dateBtn}
-              onClick={() => setShowPicker(true)}
-            >
-              {date || 'Вибрати дату'}
-            </button>
+            <div className={`${styles.field} ${styles.fieldDate}`}>
+              <label className={styles.label}>ДАТА</label>
+              <button
+                type="button"
+                className={styles.dateBtn}
+                onClick={() => setShowPicker(true)}
+              >
+                {date ? formatDisplayDate(date) : 'Вибрати дату'}
+              </button>
+            </div>
           </div>
 
           {showPicker && (

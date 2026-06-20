@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import type { PlanLocation } from '../../../store/plansStore'
+import LocationMapPicker from '../LocationMapPicker'
 import styles from './LocationSearch.module.css'
 
 /**
  * LocationSearch
  * --------------
- * Autocomplete field backed by OpenStreetMap Nominatim (free, no key needed).
- * Debounces 500ms. Calls onSelect with structured location on pick.
+ * Autocomplete field backed by LocationIQ Autocomplete API (OSM-based, but
+ * better POI tuning than raw Nominatim — finds named places like zoos/cafes,
+ * not just addresses). Free tier, no card required. Debounces 500ms.
+ * Calls onSelect with structured location on pick.
  *
  * Props:
  * @prop {(loc: PlanLocation) => void} onSelect — called when user picks a result
@@ -17,75 +20,60 @@ interface LocationSearchProps {
   initial?: string
 }
 
-interface NominatimResult {
-  place_id:     number
+interface LocationIqResult {
+  place_id:     string
   display_name: string
-  name:         string
+  display_place?: string
   lat:          string
   lon:          string
 }
 
+const LOCATIONIQ_KEY = import.meta.env.VITE_LOCATIONIQ_KEY as string | undefined
+
 const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' }) => {
-  const [query,       setQuery]       = useState(initial)
-  const [results,     setResults]     = useState<NominatimResult[]>([])
-  const [loading,     setLoading]     = useState(false)
-  const [countryCode, setCountryCode] = useState<string>('ua')
-
-  useEffect(() => {
-    if (!navigator.geolocation) return
-    let cancelled = false
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const r = await fetch(
-            `https://nominatim.openstreetmap.org/reverse` +
-            `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`,
-            { headers: { 'User-Agent': 'MIMIR-App/1.0' } }
-          )
-          if (r.ok && !cancelled) {
-            const data = await r.json()
-            const code = data.address?.country_code
-            if (code) setCountryCode(code)
-          }
-        } catch { /* fallback ua */ }
-      },
-      () => { /* permission denied — keep ua */ },
-      { timeout: 5000 }
-    )
-
-    return () => { cancelled = true }
-  }, [])
+  const [query,      setQuery]      = useState(initial)
+  const [results,    setResults]    = useState<LocationIqResult[]>([])
+  const [loading,    setLoading]    = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   useEffect(() => {
     if (query.length < 3) { setResults([]); return }
+    if (!LOCATIONIQ_KEY) return
     let cancelled = false
 
     const timer = setTimeout(async () => {
       setLoading(true)
       try {
-        const r = await fetch(
-          `https://nominatim.openstreetmap.org/search` +
-          `?q=${encodeURIComponent(query)}&format=json&limit=5` +
-          `&accept-language=uk&countrycodes=${countryCode}`,
-          { headers: { 'User-Agent': 'MIMIR-App/1.0' } }
-        )
+        const params = new URLSearchParams({
+          key:                LOCATIONIQ_KEY,
+          q:                  query,
+          format:             'json',
+          limit:              '5',
+          'accept-language':  'uk',
+        })
+        const r = await fetch(`https://us1.locationiq.com/v1/autocomplete?${params}`)
         if (r.ok && !cancelled) setResults(await r.json())
       } catch { /* silent */ }
       finally { if (!cancelled) setLoading(false) }
     }, 500)
 
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [query, countryCode])
+  }, [query])
 
-  const handlePick = (r: NominatimResult) => {
+  const handlePick = (r: LocationIqResult) => {
     onSelect({
-      name:    r.name || query,
+      name:    r.display_place || query,
       address: r.display_name,
       lat:     parseFloat(r.lat),
       lng:     parseFloat(r.lon),
     })
     setQuery(r.display_name)
+    setResults([])
+  }
+
+  const handleMapPick = (loc: PlanLocation) => {
+    onSelect(loc)
+    setQuery(loc.address || loc.name || '')
     setResults([])
   }
 
@@ -116,6 +104,25 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
           </button>
         )}
       </div>
+      <button
+        type="button"
+        className={styles.mapPickBtn}
+        onClick={() => setPickerOpen(true)}
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 1a3 3 0 0 1 3 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 0 1 3-3Z"
+            stroke="currentColor" strokeWidth="1.2"/>
+          <circle cx="6" cy="4" r="1.2" fill="currentColor"/>
+        </svg>
+        Обрати на карті
+      </button>
+
+      <LocationMapPicker
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={handleMapPick}
+      />
+
       {loading && <p className={styles.loading}>Пошук...</p>}
       {results.length > 0 && (
         <div className={styles.results}>

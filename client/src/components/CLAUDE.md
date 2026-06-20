@@ -96,7 +96,10 @@ components/
 │   ├── StarRating          ← зіркова оцінка 1–10, readOnly та interactive режими
 │   └── EpisodesList        ← список епізодів для серіалів/аніме
 ├── memories/
-│   └── MemoryCard, MemoryForm, PhotoGrid
+│   ├── MemoryCard, MemoryForm, PhotoGrid
+│   ├── AddMemoryModal     ← LocationSearch для поля МІСЦЕ, CustomDatePicker для ДАТА
+│   ├── LocationSearch     ← автокомпліт місць через LocationIQ API (`VITE_LOCATIONIQ_KEY`)
+│   └── PosterGenerator    ← постер спогаду через Canvas API (обкладинка+назва+дата+теги) → Cloudinary
 └── dashboard/
     ├── CarHero             ← Three.js McLaren, 260px canvas, 80 частинок, OrbitControls
     ├── HeroCard            ← баланс (Furore) + sparkline 7 днів + dailyBudget bar
