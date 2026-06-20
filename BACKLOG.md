@@ -4,7 +4,7 @@
 
 ---
 
-## Статус (2026-06-19) — Що реалізовано
+## Статус (2026-06-20) — Що реалізовано
 
 > Технічний борг: Sentry ✅, Zod ✅, JWT refresh rotation ✅, helmet+CORS+rate-limit ✅, multi-tenancy audit ✅, PWA offline ✅, AI via backend ✅, feature flags замість ролей ✅
 
@@ -78,8 +78,12 @@
 
 ## Що реально НЕ зроблено
 
-### ✅ Верифікація email — повністю реалізована
-Домен `mimir-hud.tech`, Resend налаштовано. `noreply@mimir-hud.tech` → `/verify?token=...` → `User.isVerified = true`. `VerificationBanner` в UI, enforcement у receipt scanner (`isVerified` required). Роути: `POST /api/auth/verify-email`, `POST /api/auth/resend-verification`.
+### ✅ Верифікація email — повністю реалізована і активована
+Домен `mimir-hud.tech` куплено на nic.ua, підключено до Vercel і Resend. DNS записи (DKIM/SPF/DMARC/MX) прописані. `noreply@mimir-hud.tech` → стилізований HTML лист (темний фон, золота кнопка, DRINK DEEP) → `/verify?token=...` → автологін (бекенд повертає JWT після верифікації). CORS і Google OAuth оновлені для нового домену.
+
+### ✅ PIN lock — виправлено два баги
+- `verifyPIN` тепер використовує `authFetch` замість сирого `fetch` — токен автоматично рефреститься якщо протух (раніше 401 від `requireAuth` помилково трактувався як "невірний PIN")
+- `PinGuard` блокує при кожному свіжому завантаженні через `sessionStorage['hud-pin-session']` (раніше при refresh `pinLocked` скидався і PIN не показувався)
 
 ### 🟡 Не починалось (продуктові фічі)
 - **MIMIR Wrapped** — річна статистика à la Spotify Wrapped

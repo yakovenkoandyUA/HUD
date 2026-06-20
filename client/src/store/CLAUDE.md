@@ -48,6 +48,14 @@ store/
 - `streakStore` — persist local (лише числові лічильники, не контент)
 - Жодного юзерського контенту в localStorage — тільки auth token, тема UI, sprint items (rich local cache), streak лічильники
 
+## profileStore — PIN lock
+
+- `pinLocked: boolean` — НЕ персистується (скидається при refresh)
+- `verifyPIN(pin)` — використовує `authFetch` (автоматичний refresh токена, не сирий fetch)
+- `unlockPIN()` — встановлює `sessionStorage['hud-pin-session'] = '1'`
+- `PinGuard` в App.tsx блокує при кожному свіжому завантаженні якщо sessionStorage ключ відсутній
+- `sessionStorage` очищається при закритті вкладки/refresh → PIN запитується при кожному відкритті
+
 ## shoppingListStore — структура
 
 ```ts
