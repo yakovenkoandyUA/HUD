@@ -127,6 +127,11 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
             <div className={styles.heroFallback} />
           )}
           <div className={styles.heroGradient} />
+          {item.coverUrl && (
+            <div className={styles.heroCoverWrap}>
+              <img src={item.coverUrl} alt={item.title} className={styles.heroCoverImg} />
+            </div>
+          )}
           <div className={styles.heroContent}>
             <h2 className={styles.title}>{item.title}</h2>
             {item.releaseDate && (
