@@ -28,15 +28,17 @@ export const changePasswordSchema = z.object({
 })
 
 export const updateMeSchema = z.object({
-  name:           z.string().min(1).max(64).optional(),
-  avatarUrl:      z.string().url().optional(),
-  f1Enabled:      z.boolean().optional(),
-  salaryDay:      z.number().int().min(1).max(31).optional(),
-  username:       z.string().min(2).max(32).regex(/^[a-z0-9_]+$/).optional(),
-  city:           z.string().max(100).optional(),
-  morningStart:   z.number().int().min(0).max(23).optional(),
-  afternoonStart: z.number().int().min(0).max(23).optional(),
-  eveningStart:   z.number().int().min(0).max(23).optional(),
+  name:              z.string().min(1).max(64).optional(),
+  avatarUrl:         z.string().url().optional(),
+  f1Enabled:         z.boolean().optional(),
+  salaryDay:         z.number().int().min(1).max(31).optional(),
+  username:          z.string().min(2).max(32).regex(/^[a-z0-9_]+$/).optional(),
+  city:              z.string().max(100).optional(),
+  morningStart:      z.number().int().min(0).max(23).optional(),
+  afternoonStart:    z.number().int().min(0).max(23).optional(),
+  eveningStart:      z.number().int().min(0).max(23).optional(),
+  reportStyle:       z.string().max(32).optional(),
+  mediaEnabledTabs:  z.array(z.string()).optional(),
 }).refine(d => Object.values(d).some(v => v !== undefined), { message: 'At least one field required' })
 
 // ── Sprint ────────────────────────────────────────────────────────────────────
