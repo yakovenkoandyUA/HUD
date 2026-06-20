@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import AppHeader from '../../components/AppHeader'
 import GameCard from '../../components/games/GameCard'
+import GameHero from '../../components/games/GameHero'
 import GameSearch from '../../components/games/GameSearch'
 import GameDetail from '../../components/games/GameDetail'
 import { useGamesStore } from '../../store/gamesStore'
@@ -76,23 +77,31 @@ const Games: React.FC = () => {
     if (g) showToast(`${g.title} видалено`, 'info')
   }
 
+  const handleAddHour = (id: string) => {
+    const game = items.find(i => i.id === id)
+    if (!game) return
+    const updated = Math.round((game.hoursPlayed ?? 0) + 1)
+    updateGame(id, { hoursPlayed: updated })
+    showToast('+1 година зараховано', 'success')
+  }
+
   return (
     <div className={styles.screen}>
       <AppHeader />
 
-      {/* Stats row */}
+      {/* Stats row — tap a stat to filter */}
       <div className={styles.statsRow}>
-        <div className={styles.stat}>
+        <div className={styles.stat} onClick={() => setStatusFilter('all')} style={{ cursor: 'pointer' }}>
           <span className={styles.statNum}>{stats.total}</span>
           <span className={styles.statLabel}>всього</span>
         </div>
         <div className={styles.statSep} />
-        <div className={styles.stat}>
+        <div className={styles.stat} onClick={() => setStatusFilter('playing')} style={{ cursor: 'pointer' }}>
           <span className={`${styles.statNum} ${styles.statNumTeal}`}>{stats.playing}</span>
           <span className={styles.statLabel}>граю</span>
         </div>
         <div className={styles.statSep} />
-        <div className={styles.stat}>
+        <div className={styles.stat} onClick={() => setStatusFilter('completed')} style={{ cursor: 'pointer' }}>
           <span className={`${styles.statNum} ${styles.statNumGold}`}>{stats.completed}</span>
           <span className={styles.statLabel}>пройдено</span>
         </div>
@@ -110,46 +119,13 @@ const Games: React.FC = () => {
         )}
       </div>
 
-      {/* Now Playing shelf */}
-      {playingNow.length > 0 && statusFilter === 'all' && (
-        <div className={styles.shelfSection}>
-          <p className={styles.shelfLabel}>ГРАЮ ЗАРАЗ</p>
-          <div className={styles.shelf}>
-            {playingNow.map(game => (
-              <button
-                key={game.id}
-                type="button"
-                className={styles.shelfCard}
-                onClick={() => setSelected(game)}
-              >
-                {game.backgroundUrl ? (
-                  <img src={game.backgroundUrl} alt={game.title} className={styles.shelfBg} />
-                ) : (
-                  <div className={styles.shelfBgFallback} />
-                )}
-                <div className={styles.shelfGradient} />
-                <div className={styles.shelfContent}>
-                  {game.coverUrl && (
-                    <div className={styles.shelfCover}>
-                      <img src={game.coverUrl} alt={game.title} className={styles.shelfCoverImg} />
-                    </div>
-                  )}
-                  <div className={styles.shelfInfo}>
-                    <p className={styles.shelfTitle}>{game.title}</p>
-                    <div className={styles.shelfMeta}>
-                      <span className={styles.shelfDot} />
-                      <span className={styles.shelfPlaying}>Граю</span>
-                      {game.hoursPlayed ? (
-                        <span className={styles.shelfHours}>{game.hoursPlayed} год</span>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.shelfBar} />
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* "Граю зараз" hero strip */}
+      {statusFilter === 'all' && (
+        <GameHero
+          items={playingNow}
+          onTap={setSelected}
+          onAddHour={handleAddHour}
+        />
       )}
 
       {/* Search */}
