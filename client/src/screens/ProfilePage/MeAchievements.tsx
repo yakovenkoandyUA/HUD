@@ -3,6 +3,8 @@ import { useProfileStore } from '../../store/profileStore'
 import { ACHIEVEMENTS, type Achievement } from '../../data/achievements'
 import styles from './ProfilePage.module.css'
 
+const EMPTY_UNLOCKED: { id: string; unlockedAt: string }[] = []
+
 const MONTHS_UA_SHORT = [
   'Січ', 'Лют', 'Бер', 'Квіт', 'Трав', 'Черв',
   'Лип', 'Серп', 'Вер', 'Жовт', 'Лист', 'Груд',
@@ -21,7 +23,7 @@ function formatDate(iso: string): string {
  * з датою отримання. Тап → міні-картка з описом.
  */
 const MeAchievements: React.FC = () => {
-  const unlocked = useProfileStore(s => s.activeProfile?.unlockedAchievements ?? [])
+  const unlocked = useProfileStore(s => s.activeProfile?.unlockedAchievements ?? EMPTY_UNLOCKED)
   const [selected, setSelected] = useState<Achievement | null>(null)
 
   const unlockedMap = new Map(unlocked.map(a => [a.id, a.unlockedAt]))
