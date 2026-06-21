@@ -34,6 +34,57 @@ export async function getAll(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function getRelated(req: Request, res: Response): Promise<void> {
+  const familyIds = await getAcceptedFamilyIds(req.userId!)
+  const allUserIds = [req.userId!, ...familyIds]
+
+  const current = await Memory.findOne({ _id: req.params.id, userId: { $in: allUserIds } })
+  if (!current) { res.status(404).json({ error: 'Not found' }); return }
+
+  const others = await Memory.find({
+    _id: { $ne: current._id },
+    userId: { $in: allUserIds },
+  })
+
+  const currentMonth = current.date.slice(0, 7)
+  const currentTags = new Set((current.tags ?? []).map(t => t.toLowerCase()))
+  const currentLocation = (current.location ?? '').trim().toLowerCase()
+
+  const scored = others.map(m => {
+    let score = 0
+    const tags = (m.tags ?? []).map(t => t.toLowerCase())
+    score += tags.filter(t => currentTags.has(t)).length * 3
+    if (currentLocation && (m.location ?? '').trim().toLowerCase() === currentLocation) score += 2
+    if (currentMonth && m.date.slice(0, 7) === currentMonth) score += 1
+    return { m, score }
+  })
+
+  const top = scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6)
+    .map(s => s.m)
+
+  let ownerMap = new Map<string, { name: string; avatarUrl: string | null }>()
+  if (familyIds.length > 0) {
+    const owners = await User.find({ _id: { $in: familyIds } }, { name: 1, avatarUrl: 1 })
+    owners.forEach(u => {
+      ownerMap.set((u._id as { toString(): string }).toString(), { name: u.name, avatarUrl: u.avatarUrl })
+    })
+  }
+
+  const result = top.map(m => {
+    const obj = m.toObject()
+    if (m.userId !== req.userId) {
+      const owner = ownerMap.get(m.userId)
+      return { ...obj, ownerName: owner?.name, ownerAvatarUrl: owner?.avatarUrl ?? null }
+    }
+    return obj
+  })
+
+  res.json(result)
+}
+
 export async function create(req: Request, res: Response): Promise<void> {
   const item = await Memory.create({ ...req.body, userId: req.userId })
   res.status(201).json(item)

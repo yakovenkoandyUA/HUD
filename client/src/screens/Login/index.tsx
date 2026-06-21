@@ -43,7 +43,7 @@ const LoginScreen: React.FC = () => {
         const data = await res.json() as { error?: string }
         throw new Error(data.error ?? 'Google auth failed')
       }
-      const { token, user, refreshToken } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; salaryDay: number; hasPIN: boolean; isVerified: boolean; city: string; morningStart: number; afternoonStart: number; eveningStart: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean }; refreshToken?: string }
+      const { token, user, refreshToken } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; salaryDay: number; hasPIN: boolean; isVerified: boolean; city: string; morningStart: number; afternoonStart: number; eveningStart: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean; weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean }; refreshToken?: string }
       if (refreshToken) saveRefreshToken(refreshToken)
       useProfileStore.setState({
         token,
@@ -53,6 +53,8 @@ const LoginScreen: React.FC = () => {
           mediaEnabledTabs: user.mediaEnabledTabs ?? ['movie', 'series', 'anime', 'game'],
           unlockedAchievements: user.unlockedAchievements ?? [],
           sprintTutorialSeen: user.sprintTutorialSeen ?? false,
+          weekdayLongPressTutorialSeen: user.weekdayLongPressTutorialSeen ?? false,
+          swipeDismissTutorialSeen: user.swipeDismissTutorialSeen ?? false,
         },
         pinLocked: false,
       })

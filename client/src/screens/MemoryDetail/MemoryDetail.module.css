@@ -364,6 +364,45 @@
 }
 
 /* ── Photo grid (3-column JS masonry) ── */
+.relatedRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 16px 14px;
+}
+
+.relatedLabel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+
+.relatedScroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+
+.relatedScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.relatedItem {
+  flex: 0 0 auto;
+  width: 128px;
+  aspect-ratio: 3 / 4;
+}
+
+.relatedItem > * {
+  width: 100%;
+  height: 100%;
+}
+
 .photoGrid {
   display: flex;
   gap: 3px;

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { RefObject } from 'react'
+import { useProfileStore } from '../store/profileStore'
+import hintStyles from './useSwipeToDismiss.module.css'
 
 /**
  * useSwipeToDismiss
@@ -25,9 +27,30 @@ export function useSwipeToDismiss(
 ): RefObject<HTMLDivElement | null> {
   const internalRef = useRef<HTMLDivElement | null>(null)
   const onCloseRef  = useRef(onClose)
+  const hintElRef   = useRef<HTMLDivElement | null>(null)
   useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
   const { enabled = true, bodyRef, overlayRef, sheetRef: externalRef } = options ?? {}
+
+  // One-time global hint: "свайпни вниз щоб закрити" — зникає на першому
+  // реальному свайп-закритті будь-якого sheet і більше не показується ніде.
+  useEffect(() => {
+    if (!enabled) return
+    if (useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) return
+
+    const hint = document.createElement('div')
+    hint.className = hintStyles.hint
+    hint.textContent = '↓ Свайпни вниз щоб закрити'
+    document.body.appendChild(hint)
+    const t = requestAnimationFrame(() => hint.classList.add(hintStyles.hintVisible))
+    hintElRef.current = hint
+
+    return () => {
+      cancelAnimationFrame(t)
+      hint.remove()
+      if (hintElRef.current === hint) hintElRef.current = null
+    }
+  }, [enabled])
 
   useEffect(() => {
     if (!enabled) return
@@ -79,6 +102,10 @@ export function useSwipeToDismiss(
         if (overlayRef?.current) {
           overlayRef.current.style.transition = 'opacity 0.3s ease'
           overlayRef.current.style.opacity    = '0'
+        }
+        if (hintElRef.current) { hintElRef.current.remove(); hintElRef.current = null }
+        if (!useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) {
+          useProfileStore.getState().updateProfile({ swipeDismissTutorialSeen: true })
         }
         setTimeout(() => onCloseRef.current(), 280)
       } else {

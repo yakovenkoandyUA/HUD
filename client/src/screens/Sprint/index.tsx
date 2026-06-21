@@ -176,11 +176,14 @@ const Sprint: React.FC = () => {
 		}
 	}, [dayQuests.length, showSwipeGhost])
 
+	const weekdayLongPressTutorialSeen = useProfileStore(s => s.activeProfile?.weekdayLongPressTutorialSeen ?? false)
+
 	const handleDayLongPress = (day: Date) => {
 		const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
 		setSelectedDay(iso)
 		setQuickAddDate(iso)
 		setShowAdd(true)
+		if (!weekdayLongPressTutorialSeen) updateProfile({ weekdayLongPressTutorialSeen: true })
 	}
 
 	return (
@@ -199,6 +202,7 @@ const Sprint: React.FC = () => {
 						else setSelectedDay(iso)
 					}}
 					onLongPress={handleDayLongPress}
+					showLongPressHint={!weekdayLongPressTutorialSeen}
 					onPrevWeek={goToPrevWeek}
 					onNextWeek={goToNextWeek}
 					calendarMode={calendarMode}

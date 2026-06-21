@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader'
 import { useNotesStore } from '../../store/notesStore'
+import DoodleIllustration from '../../components/ui/DoodleIllustration'
 import styles from './Notes.module.css'
 
 function formatDate(iso: string): string {
@@ -135,10 +136,7 @@ const NotesScreen: React.FC = () => {
         {/* Notes list */}
         {!loading && filtered.length === 0 && !showNew && (
           <div className={styles.empty}>
-            <svg className={styles.emptyIcon} width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
+            <DoodleIllustration variant="notes" size={72} />
             <span className={styles.emptyText}>
               {query ? 'Нічого не знайдено' : 'Ще немає нотаток\nДодай першу через +'}
             </span>

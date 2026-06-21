@@ -124,7 +124,7 @@ const MeAppearance: React.FC = () => {
           ))}
         </div>
 
-        {navStyle !== 'classic' && (
+        {navStyle === 'hub' && (
           <div className={styles.navPinSection}>
             <p className={styles.navPinTitle}>
               ГОЛОВНЕ МЕНЮ
@@ -159,9 +159,7 @@ const MeAppearance: React.FC = () => {
               )
             })}
             <p className={styles.sectionHint} style={{ marginTop: 8 }}>
-              {navStyle === 'hub'
-                ? 'Незакріплені розділи відкриваються через кнопку M'
-                : 'Тільки закріплені розділи видно в меню'}
+              Незакріплені розділи відкриваються через кнопку M
             </p>
           </div>
         )}

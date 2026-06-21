@@ -78,11 +78,30 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
+  margin-bottom: 16px;
 }
 
 .avatarCol {
-  position: relative;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.avatarWrap {
+  position: relative;
+}
+
+.rankPill {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 20px;
+  white-space: nowrap;
 }
 
 .avatarBtn {
@@ -1115,13 +1134,12 @@
 .tabContent {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  /* gap: 16px; */
 }
 
 /* ── Settings card (grouped sections) ── */
 .settingsCard {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-top: 1px solid var(--border);
   overflow: hidden;
   background: var(--surface);
 }
@@ -1178,48 +1196,6 @@
   padding: 14px;
   background: var(--surface);
 }
-
-/* ── Achievements grid ── */
-.achGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.achBadge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  padding: 10px 4px;
-  border-radius: 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  transition: transform 0.12s ease;
-}
-.achBadge:active { transform: scale(0.95); }
-
-.achBadgeLocked {
-  color: var(--text3);
-  opacity: 0.55;
-}
-
-.achBadgeUnlocked {
-  --ach-color: var(--accent);
-  color: var(--ach-color);
-  background: color-mix(in srgb, var(--ach-color) 12%, var(--surface2));
-  border-color: var(--ach-color);
-}
-
-.achBadgeLabel {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  text-align: center;
-  line-height: 1.25;
-  color: var(--text2);
-}
-.achBadgeUnlocked .achBadgeLabel { color: var(--ach-color); }
 
 /* ── Logout button ── */
 .logoutBtn {
@@ -1764,7 +1740,6 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.menuRow:hover { background: var(--surface2); }
 
 /* ── Me tab: accordion body for each menu item ── */
 .menuAccordionBody {

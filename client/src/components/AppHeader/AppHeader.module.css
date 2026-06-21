@@ -139,7 +139,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border2);
+  border: 2px solid var(--border2);
   transition: border-color 0.15s;
 }
 .avatarBtn:hover .avatarFallback { border-color: var(--accent); }

@@ -37,6 +37,7 @@ function toIso(d: Date): string {
  * @prop {string}          [selectedDay]    — ISO вибраного дня ('YYYY-MM-DD')
  * @prop {(iso: string) => void} [onDaySelect]  — callback при тапі на день
  * @prop {(day: Date) => void}   [onLongPress]  — callback при довгому тапі на день
+ * @prop {boolean}         [showLongPressHint] — підсвітити "сьогодні" і показати підказку про довгий тап (поки юзер не спробує хоч раз)
  * @prop {() => void}      [onPrevWeek]     — перейти на попередній тиждень
  * @prop {() => void}      [onNextWeek]     — перейти на наступний тиждень
  * @prop {'week'|'month'}  [calendarMode]   — режим відображення: тижнева смужка або місячна сітка
@@ -51,6 +52,7 @@ interface WeekHeaderProps {
   selectedDay?: string
   onDaySelect?: (iso: string) => void
   onLongPress?: (day: Date) => void
+  showLongPressHint?: boolean
   onPrevWeek?: () => void
   onNextWeek?: () => void
   calendarMode?: 'week' | 'month'
@@ -100,7 +102,7 @@ function getWeekDays(weekStart: string): Date[] {
   })
 }
 
-const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExpand, hideTitle, routineItems = [], selectedDay, onDaySelect, onLongPress, onPrevWeek, onNextWeek, calendarMode = 'week', onToggleCalendarMode }) => {
+const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExpand, hideTitle, routineItems = [], selectedDay, onDaySelect, onLongPress, showLongPressHint, onPrevWeek, onNextWeek, calendarMode = 'week', onToggleCalendarMode }) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -368,7 +370,7 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
 											onTouchEnd={lpStop}
 										>
 											<span className={`${styles.dayName} ${isToday ? styles.dayNameToday : isSelected ? styles.dayNameSelected : isDim ? styles.dayNameDim : ''}`}>{DAY_LABELS[i]}</span>
-											<span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isDim ? styles.dayNumberDim : ''}`}>{day.getDate()}</span>
+											<span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isDim ? styles.dayNumberDim : ''} ${showLongPressHint && isToday ? styles.dayNumberHint : ''}`}>{day.getDate()}</span>
 											{routineItems.length > 0 && (
 												<div className={styles.dotWrap}>
 													{dotStatus !== 'none' && <span className={`${styles.dot} ${dotStatus === 'done' ? styles.dotDone : dotStatus === 'overdue' ? styles.dotOverdue : styles.dotPending}`} />}
@@ -379,6 +381,10 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
 								})}
 							</div>
 						</div>
+					)}
+
+					{showLongPressHint && onLongPress && calendarMode === 'week' && (
+						<p className={styles.longPressHint}>Затримай палець на дні щоб додати задачу саме на нього</p>
 					)}
         <div className={styles.routinesBadgeWrap}>
 

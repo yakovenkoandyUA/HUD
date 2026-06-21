@@ -9,6 +9,7 @@ import MeSystem from './MeSystem'
 import MeMedia from './MeMedia'
 import MeFamily from './MeFamily'
 import MeAchievements from './MeAchievements'
+import { getRank } from '../../data/ranks'
 import styles from './ProfilePage.module.css'
 
 type MeSection = 'security' | 'appearance' | 'system' | 'media' | 'family' | 'achievements'
@@ -180,6 +181,7 @@ const MeTab: React.FC = () => {
   if (!activeProfile) return null
 
   const familyBadge = accepted.length + pendingReceived.length
+  const rank = getRank(activeProfile.unlockedAchievements?.length ?? 0)
 
   return (
     <div className={styles.tabContent}>
@@ -187,23 +189,29 @@ const MeTab: React.FC = () => {
       {/* ── Profile hero card ── */}
       <div className={styles.heroCard}>
         <div className={styles.avatarCol}>
-          <button
-            type="button"
-            className={styles.avatarBtn}
-            onClick={() => fileRef.current?.click()}
-            disabled={uploadingAvatar}
-            aria-label="Змінити аватар"
-          >
-            {activeProfile.avatarUrl ? (
-              <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
-            ) : (
-              <span className={styles.avatarInitial}>{activeProfile.name[0].toUpperCase()}</span>
-            )}
-          </button>
-          <div className={styles.avatarBadge} aria-hidden="true">
-            {uploadingAvatar ? <div className={styles.spinner} /> : <CameraIcon />}
+          <div className={styles.avatarWrap}>
+            <button
+              type="button"
+              className={styles.avatarBtn}
+              style={{ borderColor: rank.color }}
+              onClick={() => fileRef.current?.click()}
+              disabled={uploadingAvatar}
+              aria-label="Змінити аватар"
+            >
+              {activeProfile.avatarUrl ? (
+                <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
+              ) : (
+                <span className={styles.avatarInitial}>{activeProfile.name[0].toUpperCase()}</span>
+              )}
+            </button>
+            <div className={styles.avatarBadge} aria-hidden="true">
+              {uploadingAvatar ? <div className={styles.spinner} /> : <CameraIcon />}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleAvatarChange} />
           </div>
-          <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleAvatarChange} />
+          <span className={styles.rankPill} style={{ color: rank.color, borderColor: rank.color }}>
+            {rank.label}
+          </span>
         </div>
 
         <div className={styles.profileCol}>

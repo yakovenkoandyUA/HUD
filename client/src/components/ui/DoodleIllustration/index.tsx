@@ -1,7 +1,7 @@
 import React from 'react'
 import styles from './DoodleIllustration.module.css'
 
-export type DoodleVariant = 'recipes' | 'memories' | 'watchlist' | 'sprint' | 'shopping' | 'finance'
+export type DoodleVariant = 'recipes' | 'memories' | 'watchlist' | 'sprint' | 'shopping' | 'finance' | 'notes' | 'theme' | 'racing' | 'family'
 
 /**
  * DoodleIllustration
@@ -131,6 +131,64 @@ const Finance = () => (
   </>
 )
 
+const Notes = () => (
+  <>
+    {/* Bubble body */}
+    <rect x="18" y="16" width="64" height="50" rx="8" strokeWidth="2.5"/>
+    {/* Bubble tail */}
+    <path d="M30 66 L24 80 L40 66" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Text lines */}
+    <path d="M30 32 L70 32" strokeWidth="2.2" strokeLinecap="round"/>
+    <path d="M30 42 L66 42" strokeWidth="2.2" strokeLinecap="round"/>
+    <path d="M30 52 L58 52" strokeWidth="2.2" strokeLinecap="round"/>
+    {/* Stars */}
+    <path d="M14 14 L15.5 10 L17 14 L21 15 L17 16 L15.5 20 L14 16 L10 15 Z" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M86 50 L87 47 L88 50 L91 51 L88 52 L87 55 L86 52 L83 51 Z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </>
+)
+
+const Theme = () => (
+  <>
+    {/* Palette body */}
+    <path d="M50 16 C30 16 16 28 16 44 C16 56 24 62 32 62 C36 62 38 60 38 57 C38 54 36 53 36 50 C36 46 40 44 44 44 L62 44 C76 44 84 36 84 26 C84 20 70 16 50 16 Z" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Color dots */}
+    <circle cx="32" cy="30" r="4" strokeWidth="2"/>
+    <circle cx="48" cy="24" r="4" strokeWidth="2"/>
+    <circle cx="64" cy="28" r="4" strokeWidth="2"/>
+    {/* Brush */}
+    <path d="M60 60 L78 78" strokeWidth="2.4" strokeLinecap="round"/>
+    <path d="M76 76 L84 84 L80 88 L72 80 Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Sparkle */}
+    <path d="M16 72 L17 69 L18 72 L21 73 L18 74 L17 77 L16 74 L13 73 Z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </>
+)
+
+const Racing = () => (
+  <>
+    {/* Pole */}
+    <path d="M28 14 L28 88" strokeWidth="2.5" strokeLinecap="round"/>
+    {/* Flag */}
+    <path d="M28 16 L70 16 L70 42 L28 42 Z" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Checker pattern */}
+    <path d="M28 16 L42 16 L42 23 L28 23 Z M56 16 L70 16 L70 23 L56 23 Z M35 23 L49 23 L49 30 L35 30 Z M28 30 L42 30 L42 37 L28 37 Z M56 30 L70 30 L70 37 L56 37 Z" strokeWidth="1.6"/>
+    {/* Sparkle */}
+    <path d="M78 60 L79 57 L80 60 L83 61 L80 62 L79 65 L78 62 L75 61 Z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </>
+)
+
+const Family = () => (
+  <>
+    {/* Two heads */}
+    <circle cx="36" cy="34" r="13" strokeWidth="2.4"/>
+    <circle cx="64" cy="34" r="13" strokeWidth="2.4"/>
+    {/* Heart between */}
+    <path d="M50 54 C50 54 36 45 36 38 C36 34 40 31 44 34 C46 36 50 39 50 39 C50 39 54 36 56 34 C60 31 64 34 64 38 C64 45 50 54 50 54 Z" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Shoulders */}
+    <path d="M18 80 C18 70 27 64 36 64 C40 64 44 65 47 68" strokeWidth="2.2" strokeLinecap="round"/>
+    <path d="M82 80 C82 70 73 64 64 64 C60 64 56 65 53 68" strokeWidth="2.2" strokeLinecap="round"/>
+  </>
+)
+
 const ILLUSTRATIONS: Record<DoodleVariant, React.ReactNode> = {
   recipes:  <Recipes />,
   memories: <Memories />,
@@ -138,6 +196,10 @@ const ILLUSTRATIONS: Record<DoodleVariant, React.ReactNode> = {
   sprint:   <Sprint />,
   shopping: <Shopping />,
   finance:  <Finance />,
+  notes:    <Notes />,
+  theme:    <Theme />,
+  racing:   <Racing />,
+  family:   <Family />,
 }
 
 const DoodleIllustration: React.FC<DoodleIllustrationProps> = ({ variant, size = 96, className }) => (

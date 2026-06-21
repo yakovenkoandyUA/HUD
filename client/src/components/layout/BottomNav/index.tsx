@@ -11,13 +11,14 @@ import MemoriesIcon  from '../../../assets/icons/nav/memories.svg?react'
 import { useProfileStore } from '../../../store/profileStore'
 import { useUiStore } from '../../../store/uiStore'
 
-type ProfileTab = 'me' | 'wallet' | 'plan' | 'admin'
+type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'admin'
 
 const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
-  { id: 'me',     label: 'Я',        icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> },
-  { id: 'wallet', label: 'Гаманець', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="18" height="13" rx="2"/><path d="M2 10h18"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M6 3l10 0" strokeWidth="1.3"/></svg> },
-  { id: 'plan',   label: 'План',     icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 15L5.5 18.5L7.5 12L2 8H8.5L11 2Z"/></svg> },
-  { id: 'admin',  label: 'Адмін',   adminOnly: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.93 4.93l1.41 1.41M15.66 15.66l1.41 1.41M4.93 17.07l1.41-1.41M15.66 6.34l1.41-1.41"/></svg> },
+  { id: 'me',       label: 'Я',        icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> },
+  { id: 'wallet',   label: 'Гаманець', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="18" height="13" rx="2"/><path d="M2 10h18"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M6 3l10 0" strokeWidth="1.3"/></svg> },
+  { id: 'plan',     label: 'План',     icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 15L5.5 18.5L7.5 12L2 8H8.5L11 2Z"/></svg> },
+  { id: 'timeline', label: 'Хроніка',  icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M11 6.5V11l3.5 2"/></svg> },
+  { id: 'admin',    label: 'Адмін',   adminOnly: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.93 4.93l1.41 1.41M15.66 15.66l1.41 1.41M4.93 17.07l1.41-1.41M15.66 6.34l1.41-1.41"/></svg> },
 ]
 
 export interface NavSection {
@@ -156,11 +157,9 @@ const BottomNav: React.FC = () => {
   }
 
   // ── Pill style ────────────────────────────────────────────────
+  // Завжди всі доступні розділи (максимум 7), без налаштування — Dashboard
+  // тенденційно в центрі ряду, без виділення колом (просто звичайна іконка).
   if (navStyle === 'pill') {
-    const overflowSections = availableSections.filter(s => !pinnedSections.includes(s.to))
-    const visibleOverflow = overflowSections.slice(0, 5)
-    const hasOverflow = overflowSections.length > 0
-
     const pillLink = (s: NavSection) => (
       <NavLink
         key={s.to}
@@ -172,85 +171,15 @@ const BottomNav: React.FC = () => {
       </NavLink>
     )
 
-    // Overflow → mini-hub: M button appears in center
-    if (hasOverflow) {
-      const half = Math.floor(pinnedAvailable.length / 2)
-      const leftPinned = pinnedAvailable.slice(0, half)
-      const rightPinned = pinnedAvailable.slice(half)
-      const arcPos = visibleOverflow.length <= 3 ? ARC_POSITIONS_3
-                   : visibleOverflow.length === 4 ? ARC_POSITIONS_4
-                   : ARC_POSITIONS_5
-      return (
-        <>
-          {hubOpen && (
-            <div className={styles.backdrop} onClick={() => setHubOpen(false)} />
-          )}
-          <div className={styles.pillsAnchor}>
-            {visibleOverflow.map((s, i) => {
-              const pos = arcPos[i] ?? arcPos[arcPos.length - 1]
-              const isActive = s.to === '/' ? pathname === '/' : pathname.startsWith(s.to)
-              return (
-                <button
-                  key={s.to}
-                  type="button"
-                  className={`${styles.pill} ${hubOpen ? styles.pillVisible : ''} ${isActive ? styles.pillActive : ''}`}
-                  style={{
-                    '--px': `${pos.x}px`,
-                    '--py': `${pos.y}px`,
-                    transitionDelay: hubOpen ? `${i * 35}ms` : `${(visibleOverflow.length - 1 - i) * 25}ms`,
-                  } as React.CSSProperties}
-                  onClick={() => { setHubOpen(false); navigate(s.to) }}
-                >
-                  <span className={styles.pillIcon}><s.Icon /></span>
-                  <span className={styles.pillLabel}>{s.label}</span>
-                </button>
-              )
-            })}
-          </div>
-          <nav className={styles.nav}>
-            {leftPinned.map(pillLink)}
-            <button
-              type="button"
-              className={`${styles.hubBtn} ${hubOpen ? styles.hubBtnOpen : ''}`}
-              onClick={() => setHubOpen(o => !o)}
-              aria-label="Всі розділи"
-            >
-              <AnsuzRune flipped={hubOpen} />
-            </button>
-            {rightPinned.map(pillLink)}
-          </nav>
-        </>
-      )
-    }
+    const dashSection = availableSections.find(s => s.to === '/')
+    const rest = availableSections.filter(s => s.to !== '/')
+    const half = Math.ceil(rest.length / 2)
 
-    // Odd total count (5 or 7, including dashboard) + dashboard pinned → dashboard goes to center
-    const dashSection = pinnedAvailable.find(s => s.to === '/')
-    if (pinnedAvailable.length % 2 === 1 && pinnedAvailable.length > 1 && dashSection) {
-      const rest = pinnedAvailable.filter(s => s.to !== '/')
-      const half = rest.length / 2
-      const leftPinned = rest.slice(0, half)
-      const rightPinned = rest.slice(half)
-      return (
-        <nav className={styles.nav}>
-          {leftPinned.map(pillLink)}
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              `${styles.item} ${styles.pillCenterDash} ${isActive ? styles.active : ''}`
-            }
-          >
-            <dashSection.Icon className={styles.icon} />
-          </NavLink>
-          {rightPinned.map(pillLink)}
-        </nav>
-      )
-    }
-
-    // Even count, or no dashboard pinned, or single item → plain row
     return (
       <nav className={styles.nav}>
-        {pinnedAvailable.map(pillLink)}
+        {rest.slice(0, half).map(pillLink)}
+        {dashSection && pillLink(dashSection)}
+        {rest.slice(half).map(pillLink)}
       </nav>
     )
   }

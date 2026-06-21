@@ -25,6 +25,7 @@ import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils
 import { usePullToRefresh } from '../../hooks/usePullToRefresh'
 import { calcDailyBudget } from './helpers'
 import { useAchievementsStore } from '../../store/achievementsStore'
+import AchievementTeaser from '../../components/dashboard/AchievementTeaser'
 import type { ExpenseCategory } from '../../types'
 import DayOverlay from '../../components/dashboard/DayOverlay'
 import styles from './Dashboard.module.css'
@@ -166,6 +167,7 @@ const Dashboard: React.FC = () => {
             todaySpent={todaySpent}
             sparklineData={sparklineData}
           />
+          <AchievementTeaser />
         </div>
 
       </div>

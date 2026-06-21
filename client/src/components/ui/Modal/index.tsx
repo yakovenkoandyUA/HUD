@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
+import { useProfileStore } from '../../../store/profileStore'
+import hintStyles from '../../../hooks/useSwipeToDismiss.module.css'
 import styles from './Modal.module.css'
 
 /**
@@ -40,6 +42,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
 
   const drag        = useRef({ startY: 0, startTime: 0, active: false })
   const dragClosing = useRef(false)
+  const hintElRef   = useRef<HTMLDivElement | null>(null)
 
   // Body scroll lock — tied to mounted, not isOpen, so it stays locked during close animation
   useEffect(() => {
@@ -90,6 +93,26 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
     return () => el.removeEventListener('focusin', onFocusIn)
   }, [mounted])
 
+  // One-time global hint: "свайпни вниз щоб закрити" — зникає на першому
+  // реальному свайп-закритті будь-якої draggable-модалки і більше не показується ніде.
+  useEffect(() => {
+    if (!draggable || !mounted) return
+    if (useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) return
+
+    const hint = document.createElement('div')
+    hint.className = hintStyles.hint
+    hint.textContent = '↓ Свайпни вниз щоб закрити'
+    document.body.appendChild(hint)
+    const t = requestAnimationFrame(() => hint.classList.add(hintStyles.hintVisible))
+    hintElRef.current = hint
+
+    return () => {
+      cancelAnimationFrame(t)
+      hint.remove()
+      if (hintElRef.current === hint) hintElRef.current = null
+    }
+  }, [draggable, mounted])
+
   // Drag-to-dismiss — attached to the whole modal panel (not just the handle bar)
   // Guard: if modal is scrolled down, cancel the drag so inner scroll works normally
   useEffect(() => {
@@ -135,6 +158,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
         if (overlayRef.current) {
           overlayRef.current.style.transition = 'opacity 0.3s ease'
           overlayRef.current.style.opacity    = '0'
+        }
+        if (hintElRef.current) { hintElRef.current.remove(); hintElRef.current = null }
+        if (!useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) {
+          useProfileStore.getState().updateProfile({ swipeDismissTutorialSeen: true })
         }
         setTimeout(() => onCloseRef.current(), 300)
       } else {

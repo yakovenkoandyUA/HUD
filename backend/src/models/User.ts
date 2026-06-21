@@ -19,6 +19,8 @@ export interface IUser extends Document {
   reportStyle: string
   mediaEnabledTabs: string[]
   sprintTutorialSeen: boolean
+  weekdayLongPressTutorialSeen: boolean
+  swipeDismissTutorialSeen: boolean
   unlockedAchievements: { id: string; unlockedAt: Date }[]
   createdAt: Date
 }
@@ -42,6 +44,8 @@ const schema = new Schema<IUser>({
   reportStyle:       { type: String, default: 'standard' },
   mediaEnabledTabs:  { type: [String], default: ['movie', 'series', 'anime', 'game'] },
   sprintTutorialSeen: { type: Boolean, default: false },
+  weekdayLongPressTutorialSeen: { type: Boolean, default: false },
+  swipeDismissTutorialSeen: { type: Boolean, default: false },
   unlockedAchievements: {
     type: [{ id: { type: String, required: true }, unlockedAt: { type: Date, default: Date.now } }],
     default: [],

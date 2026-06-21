@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { useProfileStore } from './profileStore'
 import { ACHIEVEMENTS_BY_ID, type Achievement } from '../data/achievements'
+import { getRank, type Rank } from '../data/ranks'
 
 /**
  * achievementsStore
@@ -9,15 +10,21 @@ import { ACHIEVEMENTS_BY_ID, type Achievement } from '../data/achievements'
  * `unlock(id)` ідемпотентний: повторний виклик для вже розблокованої
  * ачівки — no-op, тож викликати можна без перевірок "чи це вперше"
  * прямо в місці дії (наприклад, після кожного addTransaction).
+ *
+ * Якщо unlock підіймає ранг — `pendingRank` ставиться окремо і показується
+ * ПІСЛЯ того як `pending` (картка ачівки) закриється (див. AchievementUnlockedModal).
  */
 interface AchievementsState {
   pending: Achievement | null
+  pendingRank: Rank | null
   unlock: (id: string) => void
   dismiss: () => void
+  dismissRank: () => void
 }
 
 export const useAchievementsStore = create<AchievementsState>()((set) => ({
   pending: null,
+  pendingRank: null,
 
   unlock: (id) => {
     const achievement = ACHIEVEMENTS_BY_ID[id]
@@ -25,13 +32,21 @@ export const useAchievementsStore = create<AchievementsState>()((set) => ({
 
     const { activeProfile, updateProfile } = useProfileStore.getState()
     if (!activeProfile) return
-    if (activeProfile.unlockedAchievements?.some(a => a.id === id)) return
+    const before = activeProfile.unlockedAchievements ?? []
+    if (before.some(a => a.id === id)) return
 
-    const next = [...(activeProfile.unlockedAchievements ?? []), { id, unlockedAt: new Date().toISOString() }]
+    const next = [...before, { id, unlockedAt: new Date().toISOString() }]
     updateProfile({ unlockedAchievements: next }).catch(() => {})
 
-    set({ pending: achievement })
+    const rankBefore = getRank(before.length)
+    const rankAfter  = getRank(next.length)
+
+    set({
+      pending: achievement,
+      pendingRank: rankAfter.id !== rankBefore.id ? rankAfter : null,
+    })
   },
 
   dismiss: () => set({ pending: null }),
+  dismissRank: () => set({ pendingRank: null }),
 }))

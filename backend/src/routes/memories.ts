@@ -8,6 +8,7 @@ router.use(requireAuth)
 router.get('/', ctrl.getAll)
 router.post('/', ctrl.create)
 
+router.get('/:id/related', ctrl.getRelated)
 router.patch('/:id', ctrl.update)
 router.delete('/:id', ctrl.remove)
 router.post('/:id/photos', ctrl.addPhoto)

@@ -46,6 +46,7 @@ interface MemoriesState {
   deletePhoto: (memoryId: string, photoId: string) => Promise<void>
   setCover: (memoryId: string, photoUrl: string) => Promise<void>
   updatePhoto: (memoryId: string, photoId: string, updates: Partial<MemoryPhoto>) => Promise<void>
+  fetchRelated: (memoryId: string) => Promise<Memory[]>
 }
 
 export const useMemoriesStore = create<MemoriesState>()((set) => ({
@@ -144,5 +145,12 @@ export const useMemoriesStore = create<MemoriesState>()((set) => ({
       method: 'PATCH',
       body: JSON.stringify(updates),
     })
+  },
+
+  fetchRelated: async (memoryId) => {
+    const res = await authFetch(`/api/memories/${memoryId}/related`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.map(toMemory)
   },
 }))

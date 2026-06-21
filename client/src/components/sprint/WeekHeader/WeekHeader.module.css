@@ -155,6 +155,26 @@
 
 .dayNumberSelected { color: var(--text); }
 
+@keyframes longPressPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--gold) 45%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--gold) 0%, transparent); }
+}
+
+.dayNumberHint {
+  border-radius: 50%;
+  animation: longPressPulse 1.6s ease-in-out infinite;
+}
+
+.longPressHint {
+  width: 100%;
+  margin: 4px 0 0;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text3);
+  text-align: center;
+}
+
 .dayNumberDim {
   color: var(--text3);
   opacity: 0.45;

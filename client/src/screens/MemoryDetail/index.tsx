@@ -1,14 +1,15 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react'
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import PhotoViewerModal from '../../components/memories/PhotoViewerModal'
 import ImageUploadButton from '../../components/ui/ImageUploadButton'
 import LocationSearch from '../../components/memories/LocationSearch'
+import MemoryCard from '../../components/memories/MemoryCard'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { useUiStore } from '../../store/uiStore'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { generateMemoryPosterBlob } from '../../utils/generateMemoryPoster'
 import { useLongPress } from '../../hooks/useLongPress'
-import type { MemoryPhoto } from '../../types/memory'
+import type { Memory, MemoryPhoto } from '../../types/memory'
 import type { PlanLocation } from '../../store/plansStore'
 import styles from './MemoryDetail.module.css'
 
@@ -164,11 +165,24 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
 const MemoryDetailScreen: React.FC = () => {
   const { id }    = useParams<{ id: string }>()
   const navigate  = useNavigate()
-  const { memories, addPhoto, deletePhoto, setCover, updatePhoto, updateMemory, deleteMemory } =
+  const { memories, fetchMemories, addPhoto, deletePhoto, setCover, updatePhoto, updateMemory, deleteMemory, fetchRelated } =
     useMemoriesStore()
   const { showToast } = useUiStore()
 
   const memory = memories.find(m => m.id === id)
+  const [related, setRelated] = useState<Memory[]>([])
+
+  // Deep-link entry (e.g. from Timeline) can land here before memoriesStore was ever populated.
+  useEffect(() => {
+    if (memories.length === 0) fetchMemories()
+  }, [memories.length, fetchMemories])
+
+  useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    fetchRelated(id).then(r => { if (!cancelled) setRelated(r) })
+    return () => { cancelled = true }
+  }, [id, fetchRelated])
 
   const [viewerIndex, setViewerIndex]   = useState<number | null>(null)
   const [uploading, setUploading]       = useState(false)
@@ -480,6 +494,20 @@ const MemoryDetailScreen: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* ── Related memories ── */}
+      {related.length > 0 && (
+        <div className={styles.relatedRow}>
+          <span className={styles.relatedLabel}>ПОВ'ЯЗАНІ СПОГАДИ</span>
+          <div className={styles.relatedScroll}>
+            {related.map(r => (
+              <div key={r.id} className={styles.relatedItem}>
+                <MemoryCard memory={r} onClick={() => navigate(`/memories/${r.id}`)} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Photos masonry grid ── */}
       {memory.photos.length === 0 ? (

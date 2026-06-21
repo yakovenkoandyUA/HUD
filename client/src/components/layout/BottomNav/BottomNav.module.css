@@ -75,24 +75,6 @@
   color: var(--text2);
 }
 
-/* ── Centered dashboard pill (even count, no overflow) ── */
-.pillCenterDash {
-  position: relative;
-  margin: 0 2px;
-}
-.pillCenterDash::after {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--accent) 38%, transparent);
-  pointer-events: none;
-  transition: border-color 0.18s;
-}
-.pillCenterDash.active::after {
-  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
-}
-
 /* ── Ansuz rune (hub button) ── */
 .ansuzRune {
   display: block;

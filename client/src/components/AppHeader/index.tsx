@@ -6,6 +6,7 @@ import AiChatSheet from '../dashboard/AiChatSheet'
 import MimirIcon from '../ui/MimirIcon'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
+import { getRank } from '../../data/ranks'
 import styles from './AppHeader.module.css'
 
 /**
@@ -32,6 +33,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const navigate = useNavigate()
+  const rank = getRank(activeProfile?.unlockedAchievements?.length ?? 0)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
@@ -78,9 +80,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
             aria-label="Профіль і налаштування"
           >
             {activeProfile?.avatarUrl ? (
-              <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatar} />
+              <img
+                src={activeProfile.avatarUrl}
+                alt={activeProfile.name}
+                className={styles.avatar}
+                style={{ borderColor: rank.color }}
+              />
             ) : (
-              <div className={styles.avatarFallback}>
+              <div className={styles.avatarFallback} style={{ borderColor: rank.color }}>
                 {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}
