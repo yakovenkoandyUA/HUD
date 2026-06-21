@@ -29,7 +29,7 @@ const MeMedia: React.FC = () => {
   if (!activeProfile) return null
 
   return (
-    <div className={styles.settingsCard}>
+    <>
       {MEDIA_TABS_CONFIG.map((t, i) => {
         const enabled = (activeProfile.mediaEnabledTabs ?? ['movie', 'series', 'anime', 'game']).includes(t.id)
         return (
@@ -57,7 +57,7 @@ const MeMedia: React.FC = () => {
           </React.Fragment>
         )
       })}
-    </div>
+    </>
   )
 }
 

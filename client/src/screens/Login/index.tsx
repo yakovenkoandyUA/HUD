@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
 import { saveRefreshToken } from '../../services/api'
 import MimirFillIcon from '../../components/ui/MimirFillIcon'
+import PasswordToggleButton from '../../components/ui/PasswordToggleButton'
 import styles from './Login.module.css'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
@@ -21,6 +22,7 @@ const LoginScreen: React.FC = () => {
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
 
@@ -144,8 +146,8 @@ const LoginScreen: React.FC = () => {
 
           <div className={styles.inputWrap}>
             <input
-              className={styles.input}
-              type="password"
+              className={`${styles.input} ${styles.passwordInput}`}
+              type={showPassword ? 'text' : 'password'}
               placeholder="ПАРОЛЬ"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -153,6 +155,7 @@ const LoginScreen: React.FC = () => {
               disabled={loading}
               required
             />
+            <PasswordToggleButton visible={showPassword} onToggle={() => setShowPassword(v => !v)} />
           </div>
 
           {error && <p className={styles.error}>{error}</p>}

@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { useFamilyStore } from '../../store/familyStore'
 import { useUiStore } from '../../store/uiStore'
+import { useAchievementsStore } from '../../store/achievementsStore'
 import styles from './ProfilePage.module.css'
 
 /**
@@ -35,6 +36,7 @@ const MeFamily: React.FC = () => {
   const handleFamilyAccept = useCallback(async (linkId: string) => {
     try {
       await acceptRequest(linkId)
+      useAchievementsStore.getState().unlock('family-linked')
       showToast("Сім'ю підтверджено", 'success')
     } catch {
       showToast('Помилка підтвердження', 'error')
@@ -47,7 +49,7 @@ const MeFamily: React.FC = () => {
   }, [removeLink, showToast])
 
   return (
-    <div className={styles.settingsCard}>
+    <>
       {pendingReceived.length > 0 && (
         <div className={styles.familyPending}>
           {pendingReceived.map(l => (
@@ -159,7 +161,7 @@ const MeFamily: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

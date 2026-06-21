@@ -11,6 +11,7 @@ import MimirIcon from '../../components/ui/MimirIcon'
 import DoodleIllustration from '../../components/ui/DoodleIllustration'
 import FabHint from '../../components/ui/FabHint'
 import { useRecipesStore } from '../../store/recipesStore'
+import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
 import type { Recipe, RecipeScope } from '../../types'
 import styles from './Recipes.module.css'
@@ -32,6 +33,7 @@ const SCOPE_TABS: { value: RecipeScope; label: string }[] = [
 const Recipes: React.FC = () => {
   const navigate = useNavigate()
   const { recipes, scope, wishlistIds, fetchRecipes, setScope, addRecipe, updateRecipe } = useRecipesStore()
+  const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
 
   const [showForm, setShowForm]           = useState(false)
@@ -229,7 +231,10 @@ const Recipes: React.FC = () => {
         <button
           type="button"
           className={styles.fabAi}
-          onClick={() => setShowGenerator(true)}
+          onClick={() => {
+            if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-генератора рецептів', 'error'); return }
+            setShowGenerator(true)
+          }}
           aria-label="Згенерувати рецепт"
         >
           <MimirIcon size={18} />

@@ -21,8 +21,6 @@ import styles from './Sprint.module.css'
 type FilterType   = 'task' | 'shopping'
 type StatusFilter = 'active' | 'done'
 
-const SWIPE_TUTORIAL_KEY = 'hud-sprint-swipe-tutorial-seen'
-
 const SWIPE_GHOST_TASK: UnifiedTodo = {
 	id: '__swipe-tutorial-ghost__',
 	title: 'Спробуй видалити мене свайпом вліво ←',
@@ -53,6 +51,8 @@ const Sprint: React.FC = () => {
 	const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
 	const { recipes, fetchRecipes } = useRecipesStore()
 	const myUserId = useProfileStore(s => s.activeProfile?.id)
+	const sprintTutorialSeen = useProfileStore(s => s.activeProfile?.sprintTutorialSeen ?? false)
+	const updateProfile = useProfileStore(s => s.updateProfile)
 	const location = useLocation()
 	const navigate = useNavigate()
 	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
@@ -65,10 +65,8 @@ const Sprint: React.FC = () => {
 	const [weekExpanded, setWeekExpanded] = useState(false)
 	const [binHidden, setBinHidden]       = useState(true)
 	const binTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-	const [showSwipeTutorial, setShowSwipeTutorial] = useState(() => !localStorage.getItem(SWIPE_TUTORIAL_KEY))
 	const handleSwipeTutorialDone = () => {
-		localStorage.setItem(SWIPE_TUTORIAL_KEY, '1')
-		setShowSwipeTutorial(false)
+		updateProfile({ sprintTutorialSeen: true })
 	}
 
 	const _td = new Date()
@@ -167,7 +165,7 @@ const Sprint: React.FC = () => {
 		return b.createdAt.localeCompare(a.createdAt)
 	})
 
-	const showSwipeGhost = showSwipeTutorial && isDayToday && filterType === 'task' && filterStatus === 'active'
+	const showSwipeGhost = !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
 
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)

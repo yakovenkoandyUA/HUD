@@ -10,6 +10,7 @@ import Modal from '../../components/ui/Modal'
 import IngredientIcon from '../../components/ui/IngredientIcon'
 import type { Recipe } from '../../types'
 import { normalizeIngredient } from '../../utils/normalizeIngredient'
+import { useAchievementsStore } from '../../store/achievementsStore'
 import styles from './RecipeDetail.module.css'
 
 /**
@@ -127,6 +128,7 @@ const RecipeDetailScreen: React.FC = () => {
   const handleLogCook = async () => {
     if (!id) return
     await logCook(id)
+    useAchievementsStore.getState().unlock('first-recipe-cooked')
     setCookLogged(true)
     showToast('Записано! Смачного 🍽', 'success')
   }
@@ -325,7 +327,10 @@ const RecipeDetailScreen: React.FC = () => {
           <button
             type="button"
             className={styles.actionBtn}
-            onClick={() => setShowChef(true)}
+            onClick={() => {
+              if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-шефа', 'error'); return }
+              setShowChef(true)
+            }}
             aria-label="AI шеф-асистент"
           >
             <ChefIcon />

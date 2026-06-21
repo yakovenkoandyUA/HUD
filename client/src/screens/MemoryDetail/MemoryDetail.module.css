@@ -195,7 +195,6 @@
   flex-direction: column;
   gap: 8px;
   padding: 10px 16px;
-  border-top: 1px solid var(--border);
 }
 
 .pillBtn {
@@ -221,6 +220,12 @@
   margin: 0;
 }
 
+.notesEditWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .notesTextarea {
   width: 100%;
   background: none;
@@ -235,6 +240,37 @@
   resize: none;
   outline: none;
 }
+
+.notesEditActions {
+  display: flex;
+  gap: 8px;
+  align-self: flex-end;
+}
+
+.notesCancelBtn,
+.notesDoneBtn {
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.notesCancelBtn {
+  background: none;
+  border: 1px dashed var(--border2);
+  color: var(--text3);
+}
+.notesCancelBtn:hover { color: var(--text2); border-color: var(--border); }
+
+.notesDoneBtn {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--bg);
+}
+.notesDoneBtn:hover { opacity: 0.85; }
 
 /* ── Tags ── */
 .tagsWrap {
@@ -355,7 +391,6 @@
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  min-height: 80px;
 }
 
 .photoSkeleton {

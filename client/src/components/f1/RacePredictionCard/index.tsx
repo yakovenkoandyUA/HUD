@@ -4,6 +4,7 @@ import { useF1PredictionsStore, toRaceId, isRaceLocked } from '../../../store/f1
 import { useChampionshipStandings } from '../../../hooks/useChampionshipStandings'
 import { useLastRace } from '../LastRaceCard'
 import { getDriverHeadshot } from '../../../utils/f1'
+import { useAchievementsStore } from '../../../store/achievementsStore'
 import styles from './RacePredictionCard.module.css'
 
 /**
@@ -111,6 +112,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
   const handleSave = () => {
     if (!p1 || !p2 || !p3 || new Set([p1, p2, p3]).size < 3) return
     savePrediction(race, p1, p2, p3, constructorPick, driverOfTheDay, safetyCarPick)
+    useAchievementsStore.getState().unlock('first-prediction')
     setIsEditing(false)
   }
 

@@ -81,6 +81,10 @@
 ### ✅ Верифікація email — повністю реалізована і активована
 Домен `mimir-hud.tech` куплено на nic.ua, підключено до Vercel і Resend. DNS записи (DKIM/SPF/DMARC/MX) прописані. `noreply@mimir-hud.tech` → стилізований HTML лист (темний фон, золота кнопка, DRINK DEEP) → `/verify?token=...` → автологін (бекенд повертає JWT після верифікації). CORS і Google OAuth оновлені для нового домену.
 
+### ✅ Обмеження AI-фіч для непідтверджених email — requireVerified gate
+Бекенд: `requireVerified` middleware (`backend/src/middleware/requireVerified.ts`) — DB-lookup `isVerified` (не в JWT), 403 якщо false. Навішаний тільки на фічі що коштують Anthropic API: `/api/ai/chat`, `/api/ai/chef-chat`, `/api/receipt/scan`, `/api/recipes/generate`, `POST /api/finance/report/:month` (генерація; GET кешованого звіту лишився відкритим). Core CRUD (задачі/фінанси/рецепти/нотатки/watchlist/спогади) свідомо НЕ заблоковано — інакше сімейні профілі без email (username-only) втратили б основний функціонал.
+Фронтенд: мікс UX-гейтів за розміром елемента — статичний бейдж "ВЕРИФІКАЦІЯ" там де є місце для тексту (ReceiptScanner кнопка в ExpenseForm, MonthlyReport "Аналіз"/"Оновити"), тільки toast по тапу на дрібних іконках (AiChatSheet тригер у AppHeader, "Шеф" у RecipeDetail, AI-генератор FAB у Recipes).
+
 ### ✅ PIN lock — виправлено два баги
 - `verifyPIN` тепер використовує `authFetch` замість сирого `fetch` — токен автоматично рефреститься якщо протух (раніше 401 від `requireAuth` помилково трактувався як "невірний PIN")
 - `PinGuard` блокує при кожному свіжому завантаженні через `sessionStorage['hud-pin-session']` (раніше при refresh `pinLocked` скидався і PIN не показувався)

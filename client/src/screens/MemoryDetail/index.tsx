@@ -222,6 +222,11 @@ const MemoryDetailScreen: React.FC = () => {
     updateMemory(id!, { notes })
   }
 
+  const handleCancelNotes = () => {
+    setEditingNotes(false)
+    setLocalNotes(memory?.notes ?? '')
+  }
+
   const handleAddTag = (tag: string) => {
     if (!tag || !memory) return
     const trimmed = tag.trim().toLowerCase().replace(/\s+/g, '')
@@ -408,14 +413,20 @@ const MemoryDetailScreen: React.FC = () => {
       {/* ── Notes + tags (collapsed row) ── */}
       <div className={styles.metaRow}>
         {editingNotes ? (
-          <textarea
-            className={styles.notesTextarea}
-            value={localNotes}
-            onChange={e => setLocalNotes(e.target.value)}
-            onBlur={() => handleSaveNotes(localNotes)}
-            autoFocus
-            rows={3}
-          />
+          <div className={styles.notesEditWrap}>
+            <textarea
+              className={styles.notesTextarea}
+              value={localNotes}
+              onChange={e => setLocalNotes(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); handleCancelNotes() } }}
+              autoFocus
+              rows={3}
+            />
+            <div className={styles.notesEditActions}>
+              <button type="button" className={styles.notesCancelBtn} onClick={handleCancelNotes}>Скасувати</button>
+              <button type="button" className={styles.notesDoneBtn} onClick={() => handleSaveNotes(localNotes)}>Готово</button>
+            </div>
+          </div>
         ) : memory.notes ? (
           <p
             className={styles.notesText}

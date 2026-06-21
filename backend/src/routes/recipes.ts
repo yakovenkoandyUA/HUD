@@ -1,11 +1,12 @@
 import { Router } from 'express'
 import { getAll, create, update, remove, generateRecipe, logCook, getCookStats } from '../controllers/recipeController'
 import { requireAuth } from '../middleware/auth'
+import { requireVerified } from '../middleware/requireVerified'
 
 const router = Router()
 
 router.use(requireAuth)
-router.post('/generate', generateRecipe)
+router.post('/generate', requireVerified, generateRecipe)
 router.get('/cook-stats', getCookStats)
 router.get('/', getAll)
 router.post('/', create)

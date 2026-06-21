@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'rea
 import BottomNav from './components/layout/BottomNav'
 import ToastContainer from './components/ui/Toast'
 import PwaInstallBanner from './components/ui/PwaInstallBanner'
+import AchievementUnlockedModal from './components/ui/AchievementUnlockedModal'
 import CitySplash from './components/ui/CitySplash'
 import PinLock from './components/ui/PinLock'
 import { usePwaInstall } from './hooks/usePwaInstall'
@@ -234,6 +235,7 @@ const App: React.FC = () => {
       <NavGuard />
       <PinGuard />
       <ToastContainer />
+      <AchievementUnlockedModal />
       {!splashDone && <CitySplash onDone={() => setSplashDone(true)} />}
     </BrowserRouter>
     </ErrorBoundary>

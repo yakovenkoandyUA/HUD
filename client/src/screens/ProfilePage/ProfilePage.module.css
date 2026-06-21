@@ -69,22 +69,6 @@
   to   { opacity: 1; transform: none; }
 }
 
-/* ── Me tab: menu ↔ section transition ── */
-.slideInRight {
-  animation: meSlideInRight 240ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.slideInLeft {
-  animation: meSlideInLeft 240ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-@keyframes meSlideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: none; }
-}
-@keyframes meSlideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
-  to   { opacity: 1; transform: none; }
-}
-
 /* ── Profile hero card ── */
 .heroCard {
   display: flex;
@@ -1195,6 +1179,48 @@
   background: var(--surface);
 }
 
+/* ── Achievements grid ── */
+.achGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.achBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 4px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  transition: transform 0.12s ease;
+}
+.achBadge:active { transform: scale(0.95); }
+
+.achBadgeLocked {
+  color: var(--text3);
+  opacity: 0.55;
+}
+
+.achBadgeUnlocked {
+  --ach-color: var(--accent);
+  color: var(--ach-color);
+  background: color-mix(in srgb, var(--ach-color) 12%, var(--surface2));
+  border-color: var(--ach-color);
+}
+
+.achBadgeLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+  color: var(--text2);
+}
+.achBadgeUnlocked .achBadgeLabel { color: var(--ach-color); }
+
 /* ── Logout button ── */
 .logoutBtn {
   display: flex;
@@ -1308,12 +1334,16 @@
   padding: 4px 14px 14px;
 }
 
+.pwInputWrap {
+  position: relative;
+}
+
 .pwInput {
   width: 100%;
   background: var(--bg3);
   border: 1px solid var(--border2);
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 10px 42px 10px 14px;
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--text);
@@ -1322,6 +1352,11 @@
 }
 .pwInput:focus { border-color: var(--accent); }
 .pwInput::placeholder { color: var(--text3); }
+.pwInput:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg3) inset;
+  caret-color: var(--text);
+}
 
 .fieldError {
   font-family: var(--font-ui);
@@ -1715,24 +1750,7 @@
   line-height: 1.5;
 }
 
-/* ── Me tab: sub-section header (back + title) ── */
-.sectionHeader {
-  display: flex;
-  align-items: center;
-}
-
-.sectionHeaderTitle {
-  flex: 1;
-  text-align: center;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--text3);
-  text-transform: uppercase;
-}
-
-/* ── Me tab: menu list ── */
+/* ── Me tab: menu list (acts as accordion header per item) ── */
 .menuRow {
   display: flex;
   align-items: center;
@@ -1747,6 +1765,19 @@
   transition: background 0.15s;
 }
 .menuRow:hover { background: var(--surface2); }
+
+/* ── Me tab: accordion body for each menu item ── */
+.menuAccordionBody {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 320ms ease-in-out, opacity 220ms ease-in-out;
+}
+.menuAccordionBodyOpen {
+  max-height: 2400px;
+  opacity: 1;
+  border-top: 1px solid var(--border);
+}
 
 .menuIcon {
   display: flex;
@@ -1801,6 +1832,10 @@
   flex-shrink: 0;
   display: flex;
   color: var(--text3);
+  transition: transform 0.2s ease;
+}
+.menuChevronOpen {
+  transform: rotate(90deg);
 }
 
 /* ── Admin users section ── */

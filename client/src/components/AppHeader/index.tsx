@@ -5,6 +5,7 @@ import VerificationBanner from '../ui/VerificationBanner'
 import AiChatSheet from '../dashboard/AiChatSheet'
 import MimirIcon from '../ui/MimirIcon'
 import { useProfileStore } from '../../store/profileStore'
+import { useUiStore } from '../../store/uiStore'
 import styles from './AppHeader.module.css'
 
 /**
@@ -29,6 +30,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const [showChat, setShowChat] = useState(false)
   const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
+  const { showToast } = useUiStore()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -61,7 +63,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
           <button
             type="button"
             className={styles.aiBtn}
-            onClick={() => setShowChat(true)}
+            onClick={() => {
+              if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-асистента', 'error'); return }
+              setShowChat(true)
+            }}
             aria-label="AI асистент"
           >
             <MimirIcon size={16} />

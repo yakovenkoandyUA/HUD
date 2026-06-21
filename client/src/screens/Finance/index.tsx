@@ -16,6 +16,7 @@ import { useProfileStore } from '../../store/profileStore'
 import { useBankStore } from '../../store/bankStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart } from '../../utils/finance'
 import { getToken } from '../../services/api'
+import { useAchievementsStore } from '../../store/achievementsStore'
 import styles from './Finance.module.css'
 
 const IconExpense: React.FC = () => (
@@ -127,12 +128,14 @@ const Finance: React.FC = () => {
 
   const handleTopup = (amount: number, description: string, category: string) => {
     addTopup(amount, description, category)
+    useAchievementsStore.getState().unlock('first-transaction')
     setShowTopup(false)
     showToast(`+${amount} ₴ додано`, 'success')
   }
 
   const handleExpense = (amount: number, description: string, category?: string) => {
     addExpense(amount, description, category)
+    useAchievementsStore.getState().unlock('first-transaction')
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')
   }

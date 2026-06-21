@@ -2,7 +2,7 @@
 
 ## 1. Dashboard (`/`)
 - GreetingBlock — привітання + дата
-- **AiChatSheet** — bottom sheet AI асистент (SSE streaming, Claude Haiku), domain-aware контекст, markdown rendering; відкривається кнопкою в хедері
+- **AiChatSheet** — bottom sheet AI асистент (SSE streaming, Claude Haiku), domain-aware контекст, markdown rendering; відкривається кнопкою в хедері (`AppHeader`), toast-гейт якщо `!activeProfile.isVerified` (бекенд `requireVerified` на `/api/ai/chat`)
 - WeekHeader (7-денний стрип) або RaceHeroCard (якщо гонка цього тижня) — в `.calendarWrap` з `margin-top: 10px`
 - RaceCountdownStrip — стрічка відліку до наступної гонки (тільки якщо `f1Enabled && nextRace && !raceThisWeek`)
 - **DaySummaryCard** — уніфікований блок "СЬОГОДНІ" (замінив TasksAccordion + окремі meal-chips):
@@ -21,12 +21,12 @@
 - BalanceHero, TodayCard, StatsGrid
 - TopupForm, ExpenseForm (модалки) — кастомні категорії з `/api/categories`
 - TransactionList — фільтри з анімацією, кожна категорія свого кольору
-- ReceiptScanner — сканування чеків через Anthropic Vision API
+- ReceiptScanner — сканування чеків через Anthropic Vision API; кнопка "Сканувати чек" у ExpenseForm показує бейдж "ВЕРИФІКАЦІЯ" + toast при кліку якщо `!activeProfile.isVerified` (бекенд `requireVerified` на `/api/receipt/scan`)
 - RecurringPayments — регулярні платежі з іконками сервісів, UAH/USD/EUR конвертація
 - ShoppingTracker — трекер магазинних покупок
 - GoalsList + GoalDetail — savings goals з deposits[], горизонтальний скрол, деталі у модалці
 - ExpenseChart — donut chart (Recharts)
-- **MonthlyReport** — AI-аналіз витрат за місяць (Anthropic), markdown rendering, `GET /api/finance/report/:month`
+- **MonthlyReport** — AI-аналіз витрат за місяць (Anthropic), markdown rendering, `GET /api/finance/report/:month` (кеш, відкритий) / `POST` (генерація, requireVerified); кнопка "Аналіз"/"Оновити" показує бейдж "ВЕРИФІКАЦІЯ" якщо email не підтверджено
 - streakStore — streak економії (persist local)
 
 **Логіка бюджету:**
@@ -102,14 +102,14 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - «Що приготувати?» — dice кнопка в scopeActions, рандомний navigate серед видимих
 - Scope таби: МОЄ / СІМ'Я / СПІЛЬНОТА + wishlist toggle
 - RecipeForm з кастомними chip-пікерами (категорія, складність)
-- FAB-група: 📅 Планер / 🔍 Інгредієнти / 🤖 AI-генератор / ➕ Новий рецепт
+- FAB-група: 📅 Планер / 🔍 Інгредієнти / 🤖 AI-генератор / ➕ Новий рецепт — AI-генератор без бейджа (іконка), тільки toast при кліці якщо `!activeProfile.isVerified` (бекенд `requireVerified` на `/api/recipes/generate`)
 - `IngredientSearchSheet` — bottom sheet, multi-chip вибір інгредієнтів, swipe-to-dismiss
 - body::after прибрано для velvet/pixel/cyber тем (`[data-theme][data-page="recipes"] body::after { display:none }`)
 
 ## 8. RecipeDetail (`/recipes/:id`)
 - Hero-фото (або noHero header з кнопками)
 - Мета: час готування, порції (stepper +/−), калорії, складність
-- Кнопки дій: Wishlist heart / **Шеф** (AI чат, `ChefChatSheet`) / Покупки (→ sprintStore shopping) / «Приготував» (flame)
+- Кнопки дій: Wishlist heart / **Шеф** (AI чат, `ChefChatSheet`, toast-гейт якщо `!activeProfile.isVerified`, бекенд `requireVerified` на `/api/ai/chef-chat`) / Покупки (→ sprintStore shopping) / «Приготував» (flame)
 - «Приготував» → `logCook(id)` — POST /api/recipes/:id/cook → CookLog MongoDB; оптимістичне оновлення `cookStats`; показує "Готував N×" + дату останнього разу
 - **ChefChatSheet** — bottom-sheet AI асистент для конкретного рецепту (на відміну від RecipeGenerator — не створює новий рецепт, а консультує по вже відкритому: заміна інгредієнтів, адаптація порцій/дієти, калорійність, підказки під час готування). SSE streaming через `/api/ai/chef-chat`, контекст рецепту (ingredients/instructions/servings/difficulty) передається в тілі запиту з фронтенду; той самий UI-паттерн що `AiChatSheet` з Dashboard
 - **Таби «Складові» / «Приготування»** — `activeTab: 'ingredients' | 'instructions'` state
@@ -167,13 +167,14 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 
 **BottomNav на `/profile`** адаптується: замість основних 5 іконок показує профільні таби.
 
-**MeTab** — hero-картка (аватар, ім'я, username inline edit) + меню-навігація на 5 підекранів (`?tab=me&section=...`, керується `useSearchParams`, back-кнопка прибирає `section`):
-- **MeSecurity** (`section=security`) — зміна пароля (accordion), PIN-код (numpad UI)
-- **MeAppearance** (`section=appearance`) — теми (6 палітр), стиль навігації (Класик/Пілюля/Хаб), закріплені розділи (pinning)
-- **MeSystem** (`section=system`) — місто (текст + геолокація через Nominatim reverse geocoding), F1 toggle, push-сповіщення, очищення кешу, оновлення/install PWA
-- **MeMedia** (`section=media`) — toggles movie/series/anime/game; книги disabled з бейджем "В РОЗРОБЦІ"; `mediaEnabledTabs: string[]` через `PATCH /api/auth/me`
-- **MeFamily** (`section=family`) — пошук юзерів, pending received (прийняти/відхилити), accepted members, pending sent; `useFamilyStore` (fetchFamily() в ProfilePage при mount); бейдж-лічильник у рядку меню "Сім'я"
-- Кожен підекран — окремий файл-компонент у `ProfilePage/`, читає потрібні Zustand stores напряму (без prop drilling); стилі й клас-неймінг спільні з `ProfilePage.module.css` (`.menuRow`, `.sectionHeader`)
+**MeTab** — hero-картка (аватар, ім'я, username inline edit) + акордеон-меню підрозділів (локальний state `openSection`, один відкритий за раз; клік по рядку — toggle, chevron rotate 90° при відкритті, `.menuAccordionBody`/`.menuAccordionBodyOpen` max-height transition):
+- **MeSecurity** — зміна пароля (вкладений accordion), PIN-код (numpad UI)
+- **MeAppearance** — теми (6 палітр), стиль навігації (Класик/Пілюля/Хаб), закріплені розділи (pinning)
+- **MeSystem** — місто (текст + геолокація через Nominatim reverse geocoding), F1 toggle, push-сповіщення, очищення кешу, оновлення/install PWA
+- **MeMedia** — toggles movie/series/anime/game; книги disabled з бейджем "В РОЗРОБЦІ"; `mediaEnabledTabs: string[]` через `PATCH /api/auth/me`
+- **MeFamily** — пошук юзерів, pending received (прийняти/відхилити), accepted members, pending sent; `useFamilyStore` (fetchFamily() в ProfilePage при mount); бейдж-лічильник у рядку меню "Сім'я"
+- **MeAchievements** — грід бейджів досягнень (косметичний прогрес, не керує доступом до фіч); `ACHIEVEMENTS` з `data/achievements.ts`, `unlockedAchievements` в профілі; `useAchievementsStore.getState().unlock(id)` викликається в місцях першого досягнення (напр. зміна теми, прийняття сімейного запиту)
+- Кожен підекран — окремий файл-компонент у `ProfilePage/`, повертає лише внутрішній контент (без власної `settingsCard`-обгортки — її дає `MeTab` на рівень акордеон-картки), читає потрібні Zustand stores напряму (без prop drilling)
 
 **WalletTab:**
 - Три settingsCard: РАХУНКИ / ДЕНЬ ЗАРПЛАТИ / КАТЕГОРІЇ

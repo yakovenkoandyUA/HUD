@@ -18,6 +18,8 @@ export interface IUser extends Document {
   verificationToken: string | null
   reportStyle: string
   mediaEnabledTabs: string[]
+  sprintTutorialSeen: boolean
+  unlockedAchievements: { id: string; unlockedAt: Date }[]
   createdAt: Date
 }
 
@@ -39,6 +41,11 @@ const schema = new Schema<IUser>({
   verificationToken: { type: String, default: null },
   reportStyle:       { type: String, default: 'standard' },
   mediaEnabledTabs:  { type: [String], default: ['movie', 'series', 'anime', 'game'] },
+  sprintTutorialSeen: { type: Boolean, default: false },
+  unlockedAchievements: {
+    type: [{ id: { type: String, required: true }, unlockedAt: { type: Date, default: Date.now } }],
+    default: [],
+  },
   createdAt:         { type: Date, default: Date.now },
 })
 

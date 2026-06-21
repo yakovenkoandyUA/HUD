@@ -2,6 +2,8 @@ import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { fmt } from '../../../utils/finance'
 import { authFetch } from '../../../services/api'
 import { useCategoryStore } from '../../../store/categoryStore'
+import { useProfileStore } from '../../../store/profileStore'
+import { useUiStore } from '../../../store/uiStore'
 import MimirIcon from '../../ui/MimirIcon'
 import type { Transaction } from '../../../types'
 import styles from './MonthlyReport.module.css'
@@ -109,6 +111,8 @@ const FALLBACK_COLOR = '#7a7a8c'
 
 const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const { categories } = useCategoryStore()
+  const { activeProfile } = useProfileStore()
+  const { showToast } = useUiStore()
   const now   = new Date()
   const [year,  setYear]  = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
@@ -155,6 +159,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   }, [open, ym])
 
   const generateReport = async () => {
+    if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-аналізу', 'error'); return }
     let cancelled = false
     setAiLoading(true)
     setAiError(false)
@@ -334,6 +339,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                 >
                   {aiLoading ? <span className={styles.aiSpinner} /> : <MimirIcon size={12} />}
                   {aiContent ? 'Оновити' : 'Аналіз'}
+                  {!activeProfile?.isVerified && <span className={styles.verifyBadge}>ВЕРИФІКАЦІЯ</span>}
                 </button>
               </div>
 

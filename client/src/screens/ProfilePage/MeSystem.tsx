@@ -110,7 +110,7 @@ const MeSystem: React.FC = () => {
   if (!activeProfile) return null
 
   return (
-    <div className={styles.settingsCard}>
+    <>
       <div className={styles.cardRow}>
         <div>
           <div className={styles.cardRowLabel}>Місто (погода)</div>
@@ -232,7 +232,7 @@ const MeSystem: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+    </>
   )
 }
 

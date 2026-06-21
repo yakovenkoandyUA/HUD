@@ -32,6 +32,8 @@ export interface Profile {
   isVerified: boolean
   reportStyle: string
   mediaEnabledTabs: string[]
+  unlockedAchievements: { id: string; unlockedAt: string }[]
+  sprintTutorialSeen: boolean
 }
 
 interface ProfileState {
@@ -46,7 +48,7 @@ interface ProfileState {
   selectProfile: (username: string) => Promise<void>
   logout: () => void
   uploadAvatar: (file: File) => Promise<void>
-  updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[] }) => Promise<void>
+  updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean }) => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   setPIN: (pin: string) => Promise<void>
   removePIN: () => Promise<void>
@@ -168,7 +170,7 @@ export const useProfileStore = create<ProfileState>()(
         await get().updateProfile({ avatarUrl: url })
       },
 
-      updateProfile: async (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[] }) => {
+      updateProfile: async (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean }) => {
         const { token, activeProfile } = get()
         if (!activeProfile) return
 

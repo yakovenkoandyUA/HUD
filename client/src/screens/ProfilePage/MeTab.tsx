@@ -1,5 +1,4 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
 import { useFamilyStore } from '../../store/familyStore'
@@ -9,17 +8,10 @@ import MeAppearance from './MeAppearance'
 import MeSystem from './MeSystem'
 import MeMedia from './MeMedia'
 import MeFamily from './MeFamily'
+import MeAchievements from './MeAchievements'
 import styles from './ProfilePage.module.css'
 
-type MeSection = 'security' | 'appearance' | 'system' | 'media' | 'family'
-
-const SECTION_TITLES: Record<MeSection, string> = {
-  security: 'БЕЗПЕКА',
-  appearance: 'ВИГЛЯД',
-  system: 'СИСТЕМА',
-  media: 'МЕДІА',
-  family: "СІМ'Я",
-}
+type MeSection = 'security' | 'appearance' | 'system' | 'media' | 'family' | 'achievements'
 
 const CameraIcon: React.FC = () => (
   <svg width="12" height="12" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -38,12 +30,6 @@ const PencilIcon: React.FC = () => (
   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
     <path d="M9.5 2L12 4.5 5 11.5H2.5V9L9.5 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
     <path d="M8 3.5l2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-  </svg>
-)
-
-const BackChevronIcon: React.FC = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-    <path d="M12.5 16L7 10l5.5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 )
 
@@ -83,6 +69,12 @@ const FilmIcon: React.FC = () => (
   </svg>
 )
 
+const TrophyIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M8 1.5l1.85 3.75L14 5.85l-3 2.92.7 4.13L8 10.9l-3.7 1.99.7-4.13-3-2.92 4.15-.6L8 1.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+  </svg>
+)
+
 const UsersIcon: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
     <circle cx="6" cy="5.5" r="2" stroke="currentColor" strokeWidth="1.3"/>
@@ -105,21 +97,21 @@ const MENU_ITEMS: MenuItemConfig[] = [
   { id: 'system',     label: 'Система', sub: 'Місто, F1, сповіщення, кеш',   Icon: GearIcon },
   { id: 'media',      label: 'Медіа',   sub: 'Фільми, серіали, ігри...',     Icon: FilmIcon },
   { id: 'family',     label: "Сім'я",   sub: 'Запити, учасники',             Icon: UsersIcon },
+  { id: 'achievements', label: 'Досягнення', sub: 'Бейджі за перші кроки',   Icon: TrophyIcon },
 ]
 
 /**
  * MeTab
  * -----
- * Вкладка "Я" — hero-картка (аватар/ім'я) + меню-навігація на підекрани
- * (Безпека / Вигляд / Система / Медіа / Сім'я), кожен зі своїм бек-хедером.
+ * Вкладка "Я" — hero-картка (аватар/ім'я) + акордеон-меню підрозділів
+ * (Безпека / Вигляд / Система / Медіа / Сім'я / Досягнення), один відкритий за раз.
  */
 const MeTab: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
   const { accepted, pendingReceived } = useFamilyStore()
   const { showToast } = useUiStore()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const section = searchParams.get('section') as MeSection | null
-  const [direction, setDirection] = useState<'forward' | 'back' | null>(null)
+  const [openSection, setOpenSection] = useState<MeSection | null>(null)
+  const toggleSection = (id: MeSection) => setOpenSection(prev => prev === id ? null : id)
 
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
@@ -185,51 +177,12 @@ const MeTab: React.FC = () => {
     }
   }, [usernameInput, activeProfile?.username, updateProfile, showToast])
 
-  const goSection = (id: MeSection) => {
-    setDirection('forward')
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev)
-      next.set('tab', 'me')
-      next.set('section', id)
-      return next
-    })
-  }
-
-  const goBack = () => {
-    setDirection('back')
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev)
-      next.set('tab', 'me')
-      next.delete('section')
-      return next
-    })
-  }
-
   if (!activeProfile) return null
-
-  if (section) {
-    return (
-      <div key={`section-${section}`} className={`${styles.tabContent} ${styles.slideInRight}`}>
-        <div className={styles.sectionHeader}>
-          <button type="button" className={styles.backBtn} onClick={goBack} aria-label="Назад">
-            <BackChevronIcon />
-          </button>
-          <span className={styles.sectionHeaderTitle}>{SECTION_TITLES[section]}</span>
-          <span className={styles.headerSpacer} />
-        </div>
-        {section === 'security' && <MeSecurity />}
-        {section === 'appearance' && <MeAppearance />}
-        {section === 'system' && <MeSystem />}
-        {section === 'media' && <MeMedia />}
-        {section === 'family' && <MeFamily />}
-      </div>
-    )
-  }
 
   const familyBadge = accepted.length + pendingReceived.length
 
   return (
-    <div key="menu" className={`${styles.tabContent} ${direction === 'back' ? styles.slideInLeft : ''}`}>
+    <div className={styles.tabContent}>
 
       {/* ── Profile hero card ── */}
       <div className={styles.heroCard}>
@@ -306,12 +259,17 @@ const MeTab: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Меню підекранів ── */}
-      <div className={styles.settingsCard}>
-        {MENU_ITEMS.map((item, i) => (
-          <React.Fragment key={item.id}>
-            {i > 0 && <div className={styles.cardDivider} />}
-            <button type="button" className={styles.menuRow} onClick={() => goSection(item.id)}>
+      {/* ── Акордеон-меню підрозділів ── */}
+      {MENU_ITEMS.map(item => {
+        const isOpen = openSection === item.id
+        return (
+          <div key={item.id} className={styles.settingsCard}>
+            <button
+              type="button"
+              className={styles.menuRow}
+              onClick={() => toggleSection(item.id)}
+              aria-expanded={isOpen}
+            >
               <span className={styles.menuIcon}><item.Icon /></span>
               <span className={styles.menuRowText}>
                 <span className={styles.menuRowLabel}>{item.label}</span>
@@ -320,11 +278,19 @@ const MeTab: React.FC = () => {
               {item.id === 'family' && familyBadge > 0 && (
                 <span className={styles.menuBadge}>{familyBadge}</span>
               )}
-              <span className={styles.menuChevron}><ChevronRightIcon /></span>
+              <span className={`${styles.menuChevron} ${isOpen ? styles.menuChevronOpen : ''}`}><ChevronRightIcon /></span>
             </button>
-          </React.Fragment>
-        ))}
-      </div>
+            <div className={`${styles.menuAccordionBody} ${isOpen ? styles.menuAccordionBodyOpen : ''}`}>
+              {item.id === 'security' && <MeSecurity />}
+              {item.id === 'appearance' && <MeAppearance />}
+              {item.id === 'system' && <MeSystem />}
+              {item.id === 'media' && <MeMedia />}
+              {item.id === 'family' && <MeFamily />}
+              {item.id === 'achievements' && <MeAchievements />}
+            </div>
+          </div>
+        )
+      })}
 
     </div>
   )

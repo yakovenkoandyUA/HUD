@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
 import MimirFillIcon from '../../components/ui/MimirFillIcon'
+import PasswordToggleButton from '../../components/ui/PasswordToggleButton'
 import styles from './Register.module.css'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -21,6 +22,7 @@ const RegisterScreen: React.FC = () => {
   const [username, setUsername] = useState('')
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
 
@@ -101,7 +103,6 @@ const RegisterScreen: React.FC = () => {
                 disabled={loading}
                 required
               />
-              <span className={styles.fieldHint}>унікальний @нік для пошуку в сім'ї</span>
             </div>
           </div>
 
@@ -121,16 +122,19 @@ const RegisterScreen: React.FC = () => {
 
           <div className={styles.inputWrap}>
             <label className={styles.label}>ПАРОЛЬ</label>
-            <input
-              className={styles.input}
-              type="password"
-              placeholder="мінімум 6 символів"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              autoComplete="new-password"
-              disabled={loading}
-              required
-            />
+            <div className={styles.passwordFieldWrap}>
+              <input
+                className={styles.input}
+                type={showPassword ? 'text' : 'password'}
+                placeholder="мінімум 6 символів"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="new-password"
+                disabled={loading}
+                required
+              />
+              <PasswordToggleButton visible={showPassword} onToggle={() => setShowPassword(v => !v)} />
+            </div>
           </div>
 
           {error && <p className={styles.error}>{error}</p>}

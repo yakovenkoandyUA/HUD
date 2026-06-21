@@ -12,6 +12,7 @@
 
 - `requireAuth` — перевіряє JWT, додає `req.userId`, `req.userRole`
 - `requireAdmin` — 403 якщо `req.userRole !== 'admin'`
+- `requireVerified` — 403 якщо `!user.isVerified` (DB-запит по `req.userId`, бо `isVerified` не входить у JWT payload). Навішаний на AI-фічі, що коштують грошей: `router.use` в `routes/ai.ts` (chat + chef-chat), інлайн на `POST /api/finance/report/:month` (тільки генерація, GET кешованого звіту відкритий), `POST /api/receipt/scan`, `POST /api/recipes/generate`
 
 ## API ендпоінти
 

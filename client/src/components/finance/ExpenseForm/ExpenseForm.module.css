@@ -42,6 +42,18 @@
 }
 .scanBtn:hover { border-color: var(--accent); color: var(--accent); }
 
+.verifyBadge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text3);
+  background: color-mix(in srgb, var(--text3) 12%, transparent);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  line-height: 1.5;
+}
+
 /* ── Category 4-column grid ── */
 .catGrid {
   display: grid;

@@ -123,6 +123,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
             }}>
             <CameraIcon />
             Сканувати чек
+            {!activeProfile?.isVerified && <span className={styles.verifyBadge}>ВЕРИФІКАЦІЯ</span>}
           </button>
         </div>
 

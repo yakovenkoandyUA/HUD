@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
+import { requireVerified } from '../middleware/requireVerified'
 import Transaction from '../models/Transaction'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
@@ -9,6 +10,7 @@ import { User } from '../models/User'
 
 const router = Router()
 router.use(requireAuth)
+router.use(requireVerified)
 
 // ── Domain detection ─────────────────────────────────────────────────────────
 

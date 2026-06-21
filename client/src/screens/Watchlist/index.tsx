@@ -18,6 +18,7 @@ import { useProfileStore } from '../../store/profileStore'
 import { getToken } from '../../services/api'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus, GameItem, GameStatus } from '../../types'
 import { openmojiUrl } from '../../utils/openmojiUrl'
+import { useAchievementsStore } from '../../store/achievementsStore'
 import styles from './Watchlist.module.css'
 
 type Tab = WatchlistCategory | 'game' | 'book'
@@ -243,11 +244,13 @@ const Watchlist: React.FC = () => {
     )
     if (alreadyExists) { showToast('Вже є у списку', 'info'); return }
     addItem(item)
+    useAchievementsStore.getState().unlock('first-watchlist')
     showToast('Додано до списку', 'success')
   }
 
   const handleAddGame = (game: Omit<GameItem, 'id' | 'addedAt'>) => {
     addGame(game)
+    useAchievementsStore.getState().unlock('first-watchlist')
     showToast(`${game.title} додано`, 'success')
   }
 
@@ -665,7 +668,7 @@ const Watchlist: React.FC = () => {
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
         existingItems={items}
-        onAdd={addItem}
+        onAdd={item => { addItem(item); useAchievementsStore.getState().unlock('first-watchlist') }}
       />
     </div>
   )

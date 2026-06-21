@@ -96,6 +96,11 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   isVerified: user.isVerified ?? false,
   reportStyle: user.reportStyle ?? 'standard',
   mediaEnabledTabs: user.mediaEnabledTabs?.length ? user.mediaEnabledTabs : ['movie', 'series', 'anime', 'game'],
+  sprintTutorialSeen: user.sprintTutorialSeen ?? false,
+  unlockedAchievements: (user.unlockedAchievements ?? []).map(a => ({
+    id: a.id,
+    unlockedAt: a.unlockedAt.toISOString(),
+  })),
 })
 
 const COOKIE_NAME = 'rt'
@@ -494,14 +499,15 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
 
 /** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl, name, f1Enabled, salaryDay, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs } = req.body as {
+  const { avatarUrl, name, f1Enabled, salaryDay, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs, unlockedAchievements, sprintTutorialSeen } = req.body as {
     avatarUrl?: string; name?: string; f1Enabled?: boolean; salaryDay?: number; username?: string
     city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string
-    mediaEnabledTabs?: string[]
+    mediaEnabledTabs?: string[]; unlockedAchievements?: ({ id: string } | string)[]; sprintTutorialSeen?: boolean
   }
   if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && !username &&
       city === undefined && morningStart === undefined && afternoonStart === undefined && eveningStart === undefined &&
-      reportStyle === undefined && mediaEnabledTabs === undefined) {
+      reportStyle === undefined && mediaEnabledTabs === undefined && unlockedAchievements === undefined &&
+      sprintTutorialSeen === undefined) {
     res.status(400).json({ error: 'At least one field required' })
     return
   }
@@ -531,6 +537,18 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
     const VALID_MEDIA_TABS = ['movie', 'series', 'anime', 'game', 'book']
     if (Array.isArray(mediaEnabledTabs)) {
       update.mediaEnabledTabs = mediaEnabledTabs.filter(t => VALID_MEDIA_TABS.includes(t))
+    }
+    if (sprintTutorialSeen !== undefined) update.sprintTutorialSeen = sprintTutorialSeen
+    if (Array.isArray(unlockedAchievements)) {
+      const incomingIds = unlockedAchievements
+        .map(a => (typeof a === 'string' ? a : a?.id))
+        .filter((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= 64)
+      const current = await User.findById(req.userId, { unlockedAchievements: 1 })
+      const existingDates = new Map((current?.unlockedAchievements ?? []).map(a => [a.id, a.unlockedAt]))
+      update.unlockedAchievements = [...new Set(incomingIds)].slice(0, 100).map(id => ({
+        id,
+        unlockedAt: existingDates.get(id) ?? new Date(),
+      }))
     }
     await User.findByIdAndUpdate(req.userId, update)
     res.json({ ok: true })

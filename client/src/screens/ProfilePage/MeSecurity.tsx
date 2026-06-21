@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
+import PasswordToggleButton from '../../components/ui/PasswordToggleButton'
 import styles from './ProfilePage.module.css'
 
 /**
@@ -17,6 +18,7 @@ const MeSecurity: React.FC = () => {
   const [pwConfirm, setPwConfirm] = useState('')
   const [pwError, setPwError]     = useState<string | null>(null)
   const [savingPw, setSavingPw]   = useState(false)
+  const [showPw, setShowPw]       = useState(false)
   const [pwOpen, setPwOpen]       = useState(false)
 
   const [pinStep, setPinStep]       = useState<'idle' | 'enter' | 'confirm'>('idle')
@@ -100,7 +102,7 @@ const MeSecurity: React.FC = () => {
   if (!activeProfile) return null
 
   return (
-    <div className={styles.settingsCard}>
+    <>
       {activeProfile.email && (
         <>
           <div className={styles.cardRow}>
@@ -111,9 +113,18 @@ const MeSecurity: React.FC = () => {
           </div>
           <div className={`${styles.accordionBody} ${pwOpen ? styles.accordionBodyOpen : ''}`}>
             <div className={styles.pwForm}>
-              <input type="password" className={styles.pwInput} placeholder="Поточний пароль" value={pwCurrent} onChange={e => { setPwCurrent(e.target.value); setPwError(null) }} autoComplete="current-password" />
-              <input type="password" className={styles.pwInput} placeholder="Новий пароль (мін. 6 символів)" value={pwNew} onChange={e => { setPwNew(e.target.value); setPwError(null) }} autoComplete="new-password" />
-              <input type="password" className={styles.pwInput} placeholder="Підтвердь новий пароль" value={pwConfirm} onChange={e => { setPwConfirm(e.target.value); setPwError(null) }} autoComplete="new-password" />
+              <div className={styles.pwInputWrap}>
+                <input type={showPw ? 'text' : 'password'} className={styles.pwInput} placeholder="Поточний пароль" value={pwCurrent} onChange={e => { setPwCurrent(e.target.value); setPwError(null) }} autoComplete="current-password" />
+                <PasswordToggleButton visible={showPw} onToggle={() => setShowPw(v => !v)} />
+              </div>
+              <div className={styles.pwInputWrap}>
+                <input type={showPw ? 'text' : 'password'} className={styles.pwInput} placeholder="Новий пароль (мін. 6 символів)" value={pwNew} onChange={e => { setPwNew(e.target.value); setPwError(null) }} autoComplete="new-password" />
+                <PasswordToggleButton visible={showPw} onToggle={() => setShowPw(v => !v)} />
+              </div>
+              <div className={styles.pwInputWrap}>
+                <input type={showPw ? 'text' : 'password'} className={styles.pwInput} placeholder="Підтвердь новий пароль" value={pwConfirm} onChange={e => { setPwConfirm(e.target.value); setPwError(null) }} autoComplete="new-password" />
+                <PasswordToggleButton visible={showPw} onToggle={() => setShowPw(v => !v)} />
+              </div>
               {pwError && <p className={styles.fieldError}>{pwError}</p>}
               <button type="button" className={styles.pwSaveBtn} onClick={handlePasswordChange} disabled={savingPw}>
                 {savingPw ? 'Збереження...' : 'Змінити пароль'}
@@ -170,7 +181,7 @@ const MeSecurity: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 

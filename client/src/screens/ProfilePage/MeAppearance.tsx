@@ -4,6 +4,7 @@ import { useUiStore } from '../../store/uiStore'
 import { ALL_NAV_SECTIONS } from '../../components/layout/BottomNav'
 import type { Theme, NavStyle } from '../../store/uiStore'
 import { NAV_STYLE_MAX_PINNED } from '../../store/uiStore'
+import { useAchievementsStore } from '../../store/achievementsStore'
 import styles from './ProfilePage.module.css'
 
 interface ThemePalette {
@@ -37,7 +38,7 @@ const MeAppearance: React.FC = () => {
   const { theme, setTheme, navStyle, setNavStyle, pinnedSections, setPinnedSections } = useUiStore()
 
   return (
-    <div className={styles.settingsCard}>
+    <>
       <div className={styles.cardPadded}>
         <div className={styles.themeGrid}>
           {PALETTES.map(p => {
@@ -52,7 +53,7 @@ const MeAppearance: React.FC = () => {
                   border: isActive ? `2px solid ${p.accent}` : `1.5px solid ${p.border}`,
                   boxShadow: isActive ? `0 0 16px ${p.accent}44` : 'none',
                 }}
-                onClick={() => setTheme(p.id)}
+                onClick={() => { setTheme(p.id); useAchievementsStore.getState().unlock('theme-changed') }}
                 aria-pressed={isActive}
               >
                 <span className={styles.themeCardName} style={{ color: p.accent }}>{p.name}</span>
@@ -165,7 +166,7 @@ const MeAppearance: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }
 

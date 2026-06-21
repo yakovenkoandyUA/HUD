@@ -95,6 +95,16 @@
   opacity: 0.5;
 }
 
+.input:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg2) inset;
+  caret-color: var(--text);
+}
+
+.passwordInput {
+  padding-right: 42px;
+}
+
 .error {
   font-family: var(--font-ui);
   font-size: 12px;

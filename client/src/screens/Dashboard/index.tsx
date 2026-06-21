@@ -24,6 +24,7 @@ import { getNextRace, getRaceThisWeek } from '../../utils/f1'
 import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '../../utils/sprint'
 import { usePullToRefresh } from '../../hooks/usePullToRefresh'
 import { calcDailyBudget } from './helpers'
+import { useAchievementsStore } from '../../store/achievementsStore'
 import type { ExpenseCategory } from '../../types'
 import DayOverlay from '../../components/dashboard/DayOverlay'
 import styles from './Dashboard.module.css'
@@ -105,6 +106,7 @@ const Dashboard: React.FC = () => {
 
   const handleExpense = (amount: number, description: string, category?: string) => {
     addExpense(amount, description, category as ExpenseCategory | undefined)
+    useAchievementsStore.getState().unlock('first-transaction')
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')
   }

@@ -6,6 +6,7 @@ import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
 import { useSprintStore } from '../../../store/sprintStore'
 import { useUiStore } from '../../../store/uiStore'
+import { useAchievementsStore } from '../../../store/achievementsStore'
 import type { TodoPriority, SprintLabel, RepeatConfig } from '../../../types'
 import styles from './AddSprintItemModal.module.css'
 
@@ -199,6 +200,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
         ...(newReminder ? { reminder: newReminder } : {}),
       } : {}),
     })
+
+    if (newType !== 'shopping') useAchievementsStore.getState().unlock('first-quest')
 
     const isRoutine = newType === 'todo' && newRepeat !== 'none'
     const msg = isRoutine ? `Рутину «${newTitle.trim()}» додано` : newType === 'shopping' ? 'Покупку додано' : 'Квест додано'

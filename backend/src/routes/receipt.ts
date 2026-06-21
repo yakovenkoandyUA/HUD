@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
+import { requireVerified } from '../middleware/requireVerified'
 
 const router = Router()
 
@@ -22,7 +23,7 @@ interface AnthropicResponse {
   content: { type: string; text: string }[]
 }
 
-router.post('/scan', requireAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/scan', requireAuth, requireVerified, async (req: Request, res: Response): Promise<void> => {
   const { imageBase64, mimeType } = req.body as { imageBase64?: string; mimeType?: string }
 
   if (!imageBase64 || !mimeType) {

@@ -132,9 +132,9 @@ color: 'var(--accent)'
 ## Типографіка
 
 ```css
---font-display:  'Furore', 'Barlow Condensed', sans-serif
---font-ui:       'Barlow Condensed', sans-serif
---font-body:     'Barlow', sans-serif
+--font-display:  'Furore', 'Oswald', 'Barlow Condensed', sans-serif
+--font-ui:       'Oswald', 'Barlow Condensed', sans-serif
+--font-body:     'PT Sans', 'Barlow', sans-serif
 --font-mono:     'JetBrains Mono', monospace
 ```
 
@@ -142,3 +142,5 @@ color: 'var(--accent)'
 - **₴** — Barlow Condensed (Furore не підтримує гривню)
 - **JetBrains Mono** — числові значення, дати, технічні рядки
 - **Barlow Condensed** — навігація, теги, кнопки, підписи
+
+**Кирилиця:** `Furore`, `Barlow Condensed` і `Barlow` не містять кириличних гліфів (перевірено по cmap шрифтів) — будь-який український текст у цих стеках фолбекав на system sans-serif. Тому в `--font-display`/`--font-ui` доданий `Oswald`, а в `--font-body` — `PT Sans` (обидва мають повний кириличний набір, включно з і/ї/є/ґ) перед латинськими шрифтами. `JetBrains Mono` кирилицю підтримує сам.
