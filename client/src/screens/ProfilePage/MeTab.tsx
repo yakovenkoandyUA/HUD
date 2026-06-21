@@ -10,6 +10,7 @@ import MeMedia from './MeMedia'
 import MeFamily from './MeFamily'
 import MeAchievements from './MeAchievements'
 import { getRank } from '../../data/ranks'
+import { ACHIEVEMENTS } from '../../data/achievements'
 import styles from './ProfilePage.module.css'
 
 type MeSection = 'security' | 'appearance' | 'system' | 'media' | 'family' | 'achievements'
@@ -183,6 +184,10 @@ const MeTab: React.FC = () => {
   const familyBadge = accepted.length + pendingReceived.length
   const rank = getRank(activeProfile.unlockedAchievements?.length ?? 0)
 
+  const unlockedIds = activeProfile.unlockedAchievements ?? []
+  const nextAchievement = ACHIEVEMENTS.find(a => !unlockedIds.some(u => u.id === a.id))
+  const achievementsSub = nextAchievement ? `Далі: ${nextAchievement.title}` : 'Всі бейджі зібрано!'
+
   return (
     <div className={styles.tabContent}>
 
@@ -281,7 +286,9 @@ const MeTab: React.FC = () => {
               <span className={styles.menuIcon}><item.Icon /></span>
               <span className={styles.menuRowText}>
                 <span className={styles.menuRowLabel}>{item.label}</span>
-                <span className={styles.menuRowSub}>{item.sub}</span>
+                <span className={styles.menuRowSub}>
+                  {item.id === 'achievements' ? achievementsSub : item.sub}
+                </span>
               </span>
               {item.id === 'family' && familyBadge > 0 && (
                 <span className={styles.menuBadge}>{familyBadge}</span>

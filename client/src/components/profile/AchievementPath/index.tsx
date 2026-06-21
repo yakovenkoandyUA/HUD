@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ACHIEVEMENTS } from '../../../data/achievements'
 import styles from './AchievementPath.module.css'
 
@@ -125,6 +125,7 @@ interface AchievementPathProps {
 
 const AchievementPath: React.FC<AchievementPathProps> = ({ unlocked }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const nextNodeRef = useRef<HTMLButtonElement>(null)
 
   const unlockedMap = new Map(unlocked.map(u => [u.id, u.unlockedAt]))
   const totalHeight = (ACHIEVEMENTS.length - 1) * ROW_H + NODE_SIZE
@@ -136,33 +137,23 @@ const AchievementPath: React.FC<AchievementPathProps> = ({ unlocked }) => {
     unlocked: unlockedMap.has(a.id),
   }))
 
+  const nextIndex = points.findIndex(p => !p.unlocked)
+
   const selected = points.find(p => p.achievement.id === selectedId) ?? null
+  const selectedIndex = selected ? points.indexOf(selected) : -1
+  const selectedRevealed = !!selected && (selected.unlocked || selectedIndex <= nextIndex)
+
+  // Auto-scroll to the next achievable goal on open — no need to hunt for "what's next"
+  useEffect(() => {
+    const t = setTimeout(() => {
+      nextNodeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 350)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className={styles.wrap} style={{ height: totalHeight }}>
-      <svg
-        className={styles.lines}
-        viewBox={`0 0 100 ${totalHeight}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        {points.slice(0, -1).map((p, i) => {
-          const next = points[i + 1]
-          const lit = p.unlocked && next.unlocked
-          const color = lit ? 'var(--accent)' : 'var(--border2)'
-          return (
-            <line
-              key={p.achievement.id}
-              x1={p.x} y1={p.y} x2={next.x} y2={next.y}
-              stroke={color}
-              strokeWidth={lit ? 2.4 : 1.6}
-              vectorEffect="non-scaling-stroke"
-              strokeLinecap="round"
-            />
-          )
-        })}
-      </svg>
-
       {points.slice(0, -1).map((p, i) => {
         const next = points[i + 1]
         const lit = p.unlocked && next.unlocked
@@ -172,14 +163,14 @@ const AchievementPath: React.FC<AchievementPathProps> = ({ unlocked }) => {
         return (
           <svg
             key={`arrow-${p.achievement.id}`}
-            className={styles.arrow}
+            className={`${styles.arrow} ${lit ? styles.arrowLit : ''}`}
             style={{
               left: `${mx}%`,
               top: my,
               color: lit ? 'var(--accent)' : 'var(--border2)',
               transform: `translate(-50%, -50%) ${goesRight ? 'scaleY(-1)' : 'scale(-1, -1)'}`,
             }}
-            width="14" height="20" viewBox="0 0 82 120"
+            width="26" height="38" viewBox="0 0 82 120"
             aria-hidden="true"
           >
             <path d={ARROW_PATH} fill="currentColor"/>
@@ -187,22 +178,47 @@ const AchievementPath: React.FC<AchievementPathProps> = ({ unlocked }) => {
         )
       })}
 
-      {points.map(p => {
+      {points.slice(0, -1).map((p, i) => {
+        const next = points[i + 1]
+        if (!(p.unlocked && next.unlocked)) return null
+        return (
+          <span
+            key={`flow-${p.achievement.id}`}
+            className={styles.flowDot}
+            style={{
+              '--from-x': `${p.x}%`,
+              '--from-y': `${p.y}px`,
+              '--to-x': `${next.x}%`,
+              '--to-y': `${next.y}px`,
+              animationDelay: `${i * 0.25}s`,
+            } as React.CSSProperties}
+            aria-hidden="true"
+          />
+        )
+      })}
+
+      {points.map((p, i) => {
         const Icon = BADGE_ICONS[p.achievement.id]
+        // Fog of war: only unlocked + the one next achievable goal show their real
+        // icon — anything further out is a mystery "?" until you get there.
+        const revealed = p.unlocked || i <= nextIndex
+        const isActive = selectedId === p.achievement.id
         return (
           <button
             key={p.achievement.id}
+            ref={i === nextIndex ? nextNodeRef : undefined}
             type="button"
-            className={`${styles.node} ${p.unlocked ? styles.nodeUnlocked : styles.nodeLocked}`}
+            className={`${styles.node} ${p.unlocked ? styles.nodeUnlocked : styles.nodeLocked} ${isActive ? styles.nodeActive : ''}`}
             style={{
               left: `${p.x}%`,
               top: p.y,
+              animationDelay: `${i * 60}ms`,
               ...(p.unlocked ? { '--node-color': p.achievement.color } : {}),
             } as React.CSSProperties}
             onClick={() => setSelectedId(prev => prev === p.achievement.id ? null : p.achievement.id)}
-            aria-label={p.achievement.title}
+            aria-label={revealed ? p.achievement.title : 'Ще не відкрито'}
           >
-            {Icon && <Icon />}
+            {revealed ? (Icon && <Icon />) : <span className={styles.nodeMystery}>?</span>}
           </button>
         )
       })}
@@ -217,12 +233,19 @@ const AchievementPath: React.FC<AchievementPathProps> = ({ unlocked }) => {
               top: selected.y,
             }}
             data-side={selected.x >= 60 ? 'left' : selected.x <= 40 ? 'right' : 'center'}
+            data-vside={selected.y < 80 ? 'below' : 'above'}
             onClick={e => e.stopPropagation()}
           >
-            <p className={styles.popoverTitle}>{selected.achievement.title}</p>
-            <p className={styles.popoverDesc}>{selected.achievement.description}</p>
-            {unlockedMap.has(selected.achievement.id) && (
-              <p className={styles.popoverDate}>Отримано {formatDate(unlockedMap.get(selected.achievement.id)!)}</p>
+            {selectedRevealed ? (
+              <>
+                <p className={styles.popoverTitle}>{selected.achievement.title}</p>
+                <p className={styles.popoverDesc}>{selected.achievement.description}</p>
+                {unlockedMap.has(selected.achievement.id) && (
+                  <p className={styles.popoverDate}>Отримано {formatDate(unlockedMap.get(selected.achievement.id)!)}</p>
+                )}
+              </>
+            ) : (
+              <p className={styles.popoverDesc}>Ще закрито — спочатку виконай попередні кроки</p>
             )}
           </div>
         </>

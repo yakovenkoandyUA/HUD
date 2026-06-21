@@ -71,6 +71,14 @@ const TimelineBody: React.FC = () => {
         >›</button>
       </div>
 
+      <button type="button" className={styles.yearbookLink} onClick={() => navigate(`/yearbook/${year}`)}>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.3"/>
+          <path d="M5 9.5l2-2.5 1.5 1.5L11 5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Підсумки {year}
+      </button>
+
       <div className={styles.chipRow}>
         {SCOPE_OPTIONS.map(o => (
           <button

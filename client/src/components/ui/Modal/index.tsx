@@ -28,6 +28,7 @@ interface ModalProps {
 }
 
 const ANIM_MS = 360
+const SWIPE_DISMISS_HINT_LIMIT = 2
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggable = false }) => {
   const [mounted, setMounted] = useState(isOpen)
@@ -93,11 +94,15 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
     return () => el.removeEventListener('focusin', onFocusIn)
   }, [mounted])
 
-  // One-time global hint: "свайпни вниз щоб закрити" — зникає на першому
-  // реальному свайп-закритті будь-якої draggable-модалки і більше не показується ніде.
+  // Global hint: "свайпни вниз щоб закрити" — зникає на першому реальному свайп-закритті
+  // будь-якої draggable-модалки, або після SWIPE_DISMISS_HINT_LIMIT показів поспіль —
+  // навіть якщо юзер завжди закриває через × чи тап по фону і ніколи не свайпає.
   useEffect(() => {
     if (!draggable || !mounted) return
-    if (useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) return
+    const profile = useProfileStore.getState().activeProfile
+    if (profile?.swipeDismissTutorialSeen) return
+    const shownCount = profile?.swipeDismissShownCount ?? 0
+    if (shownCount >= SWIPE_DISMISS_HINT_LIMIT) return
 
     const hint = document.createElement('div')
     hint.className = hintStyles.hint
@@ -105,6 +110,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
     document.body.appendChild(hint)
     const t = requestAnimationFrame(() => hint.classList.add(hintStyles.hintVisible))
     hintElRef.current = hint
+
+    const nextCount = shownCount + 1
+    useProfileStore.getState().updateProfile({
+      swipeDismissShownCount: nextCount,
+      ...(nextCount >= SWIPE_DISMISS_HINT_LIMIT ? { swipeDismissTutorialSeen: true } : {}),
+    })
 
     return () => {
       cancelAnimationFrame(t)
@@ -186,11 +197,20 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
 
   if (!mounted) return null
 
+  // Будь-яке усвідомлене закриття draggable-модалки (×, тап по фону, не лише свайп)
+  // теж рахується як "побачив підказку" — інакше юзер, що завжди тапає ×, бачить її вічно.
+  const handleClose = () => {
+    if (draggable && !useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) {
+      useProfileStore.getState().updateProfile({ swipeDismissTutorialSeen: true })
+    }
+    onClose()
+  }
+
   return (
     <div
       ref={overlayRef}
       className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`}
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         ref={modalRef}
@@ -205,7 +225,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
         {title && (
           <div className={styles.header}>
             <h3 className={styles.title}>{title}</h3>
-            <button className={styles.close} onClick={onClose}>✕</button>
+            <button className={styles.close} onClick={handleClose}>✕</button>
           </div>
         )}
         <div className={styles.body}>{children}</div>

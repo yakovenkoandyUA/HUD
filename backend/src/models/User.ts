@@ -21,6 +21,9 @@ export interface IUser extends Document {
   sprintTutorialSeen: boolean
   weekdayLongPressTutorialSeen: boolean
   swipeDismissTutorialSeen: boolean
+  sprintTutorialShownCount: number
+  weekdayLongPressShownCount: number
+  swipeDismissShownCount: number
   unlockedAchievements: { id: string; unlockedAt: Date }[]
   createdAt: Date
 }
@@ -46,6 +49,9 @@ const schema = new Schema<IUser>({
   sprintTutorialSeen: { type: Boolean, default: false },
   weekdayLongPressTutorialSeen: { type: Boolean, default: false },
   swipeDismissTutorialSeen: { type: Boolean, default: false },
+  sprintTutorialShownCount: { type: Number, default: 0 },
+  weekdayLongPressShownCount: { type: Number, default: 0 },
+  swipeDismissShownCount: { type: Number, default: 0 },
   unlockedAchievements: {
     type: [{ id: { type: String, required: true }, unlockedAt: { type: Date, default: Date.now } }],
     default: [],

@@ -21,6 +21,9 @@ import styles from './Sprint.module.css'
 type FilterType   = 'task' | 'shopping'
 type StatusFilter = 'active' | 'done'
 
+const GHOST_HINT_LIMIT     = 1
+const LONGPRESS_HINT_LIMIT = 1
+
 const SWIPE_GHOST_TASK: UnifiedTodo = {
 	id: '__swipe-tutorial-ghost__',
 	title: 'Спробуй видалити мене свайпом вліво ←',
@@ -52,12 +55,20 @@ const Sprint: React.FC = () => {
 	const { recipes, fetchRecipes } = useRecipesStore()
 	const myUserId = useProfileStore(s => s.activeProfile?.id)
 	const sprintTutorialSeen = useProfileStore(s => s.activeProfile?.sprintTutorialSeen ?? false)
+	const sprintTutorialShownCount = useProfileStore(s => s.activeProfile?.sprintTutorialShownCount ?? 0)
+	const weekdayLongPressTutorialSeen = useProfileStore(s => s.activeProfile?.weekdayLongPressTutorialSeen ?? false)
+	const weekdayLongPressShownCount = useProfileStore(s => s.activeProfile?.weekdayLongPressShownCount ?? 0)
 	const updateProfile = useProfileStore(s => s.updateProfile)
 	const location = useLocation()
 	const navigate = useNavigate()
 	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
 	const [filterType, setFilterType]     = useState<FilterType>(locationState?.filterType ?? 'task')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
+
+	// "Заморожуємо" рішення показувати підказку на момент монтування — інакше інкремент
+	// лічильника в фоні одразу ховав би підказку реактивно (миготіння в той же сеанс).
+	const [ghostHintEligible]     = useState(() => !sprintTutorialSeen && sprintTutorialShownCount < GHOST_HINT_LIMIT)
+	const [longPressHintEligible] = useState(() => !weekdayLongPressTutorialSeen && weekdayLongPressShownCount < LONGPRESS_HINT_LIMIT)
 
 	const [showAdd, setShowAdd]           = useState(false)
 	const [quickAddDate, setQuickAddDate] = useState<string | null>(null)
@@ -87,6 +98,16 @@ const Sprint: React.FC = () => {
 		},
 		[],
 	)
+
+	// Лічильники показів — підказка ховається назавжди після ліміту, навіть якщо
+	// користувач ніколи не виконав жест (свайп / long-press), не лише на завершення дії.
+	useEffect(() => {
+		if (ghostHintEligible) updateProfile({ sprintTutorialShownCount: sprintTutorialShownCount + 1 })
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+	useEffect(() => {
+		if (longPressHintEligible) updateProfile({ weekdayLongPressShownCount: weekdayLongPressShownCount + 1 })
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 	useEffect(() => {
 		if (!getToken()) return
@@ -165,7 +186,7 @@ const Sprint: React.FC = () => {
 		return b.createdAt.localeCompare(a.createdAt)
 	})
 
-	const showSwipeGhost = !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
+	const showSwipeGhost = ghostHintEligible && !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
 
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
@@ -175,8 +196,6 @@ const Sprint: React.FC = () => {
 			binTimerRef.current = setTimeout(() => setBinHidden(false), 0)
 		}
 	}, [dayQuests.length, showSwipeGhost])
-
-	const weekdayLongPressTutorialSeen = useProfileStore(s => s.activeProfile?.weekdayLongPressTutorialSeen ?? false)
 
 	const handleDayLongPress = (day: Date) => {
 		const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
@@ -202,7 +221,7 @@ const Sprint: React.FC = () => {
 						else setSelectedDay(iso)
 					}}
 					onLongPress={handleDayLongPress}
-					showLongPressHint={!weekdayLongPressTutorialSeen}
+					showLongPressHint={longPressHintEligible && !weekdayLongPressTutorialSeen}
 					onPrevWeek={goToPrevWeek}
 					onNextWeek={goToNextWeek}
 					calendarMode={calendarMode}
@@ -329,6 +348,7 @@ const Sprint: React.FC = () => {
 						setWeekExpanded(false)
 						setQuickAddDate(iso)
 						setShowAdd(true)
+						if (!weekdayLongPressTutorialSeen) updateProfile({ weekdayLongPressTutorialSeen: true })
 					}}
 				/>
 			)}

@@ -36,6 +36,9 @@ export interface Profile {
   sprintTutorialSeen: boolean
   weekdayLongPressTutorialSeen: boolean
   swipeDismissTutorialSeen: boolean
+  sprintTutorialShownCount: number
+  weekdayLongPressShownCount: number
+  swipeDismissShownCount: number
 }
 
 interface ProfileState {
@@ -50,7 +53,7 @@ interface ProfileState {
   selectProfile: (username: string) => Promise<void>
   logout: () => void
   uploadAvatar: (file: File) => Promise<void>
-  updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean; weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean }) => Promise<void>
+  updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean; weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean; sprintTutorialShownCount?: number; weekdayLongPressShownCount?: number; swipeDismissShownCount?: number }) => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   setPIN: (pin: string) => Promise<void>
   removePIN: () => Promise<void>
@@ -172,7 +175,7 @@ export const useProfileStore = create<ProfileState>()(
         await get().updateProfile({ avatarUrl: url })
       },
 
-      updateProfile: async (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean; weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean }) => {
+      updateProfile: async (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean; weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean; sprintTutorialShownCount?: number; weekdayLongPressShownCount?: number; swipeDismissShownCount?: number }) => {
         const { token, activeProfile } = get()
         if (!activeProfile) return
 

@@ -47,6 +47,7 @@ import mealPlanRouter from './routes/mealPlan'
 import bankRouter from './routes/bank'
 import weatherRouter from './routes/weather'
 import timelineRouter from './routes/timeline'
+import yearbookRouter from './routes/yearbook'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -99,6 +100,7 @@ app.use('/api/meal-plan', mealPlanRouter)
 app.use('/api/bank', bankRouter)
 app.use('/api/weather', weatherRouter)
 app.use('/api/timeline', timelineRouter)
+app.use('/api/yearbook', yearbookRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
