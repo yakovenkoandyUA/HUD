@@ -36,7 +36,6 @@ export const useAchievementsStore = create<AchievementsState>()((set) => ({
     if (before.some(a => a.id === id)) return
 
     const next = [...before, { id, unlockedAt: new Date().toISOString() }]
-    updateProfile({ unlockedAchievements: next }).catch(() => {})
 
     const rankBefore = getRank(before.length)
     const rankAfter  = getRank(next.length)
@@ -44,6 +43,10 @@ export const useAchievementsStore = create<AchievementsState>()((set) => ({
     set({
       pending: achievement,
       pendingRank: rankAfter.id !== rankBefore.id ? rankAfter : null,
+    })
+
+    updateProfile({ unlockedAchievements: next }).catch(() => {
+      set({ pending: null, pendingRank: null })
     })
   },
 

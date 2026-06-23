@@ -39,6 +39,13 @@ export const updateMeSchema = z.object({
   eveningStart:      z.number().int().min(0).max(23).optional(),
   reportStyle:       z.string().max(32).optional(),
   mediaEnabledTabs:  z.array(z.string()).optional(),
+  unlockedAchievements:          z.array(z.union([z.string(), z.object({ id: z.string() }).passthrough()])).optional(),
+  sprintTutorialSeen:            z.boolean().optional(),
+  weekdayLongPressTutorialSeen:  z.boolean().optional(),
+  swipeDismissTutorialSeen:      z.boolean().optional(),
+  sprintTutorialShownCount:      z.number().optional(),
+  weekdayLongPressShownCount:    z.number().optional(),
+  swipeDismissShownCount:        z.number().optional(),
 }).refine(d => Object.values(d).some(v => v !== undefined), { message: 'At least one field required' })
 
 // ── Sprint ────────────────────────────────────────────────────────────────────
