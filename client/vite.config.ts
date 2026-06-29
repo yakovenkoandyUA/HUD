@@ -11,6 +11,8 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules/three')) return 'three'
+          if (id.includes('node_modules/react-dom')) return 'react-dom'
+          if (id.includes('node_modules/')) return 'vendor'
         },
       },
     },
@@ -24,6 +26,9 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       registerType: 'autoUpdate',
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 МБ
+      },
       manifest: {
         name: 'MIMIR',
         short_name: 'MIMIR',
