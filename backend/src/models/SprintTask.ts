@@ -12,6 +12,7 @@ export interface ISprintTask extends Document {
   category?: string | null
   labels?: string[]
   dueDate?: string | null
+  dueTime?: string | null
   description?: string
   order?: number
   repeat: string
@@ -21,6 +22,7 @@ export interface ISprintTask extends Document {
   repeatStartDate?: string
   completionHistory?: string[]
   reminder?: { amount: number; unit: string }
+  reminderSent?: boolean
   checklist?: Array<{ id: string; title: string; done: boolean }>
   isPinned?: boolean
   deletedAt?: Date | null
@@ -40,6 +42,7 @@ const schema = new Schema<ISprintTask>({
   category:   { type: String, default: null },
   labels:     { type: [String], default: [] },
   dueDate:    { type: String, default: null },
+  dueTime:    { type: String, default: null },
   description:{ type: String, default: '' },
   order:      { type: Number, default: 0 },
   repeat:     { type: String, default: 'none' },
@@ -49,6 +52,7 @@ const schema = new Schema<ISprintTask>({
   repeatStartDate: { type: String },
   completionHistory: { type: [String], default: [] },
   reminder:   { type: Schema.Types.Mixed, default: null },
+  reminderSent: { type: Boolean, default: false },
   checklist:  { type: Schema.Types.Mixed, default: [] },
   isPinned:   { type: Boolean, default: false },
   deletedAt:  { type: Date, default: null, index: { expireAfterSeconds: 86400 } },

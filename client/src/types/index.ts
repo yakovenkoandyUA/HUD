@@ -114,6 +114,7 @@ export interface UnifiedTodo {
   // Rich card fields (local-only, not synced to backend)
   description?: string
   dueDate?: string
+  dueTime?: string
   labels?: SprintLabel[]
   checklist?: ChecklistItem[]
   recipeImageUrl?: string

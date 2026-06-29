@@ -5,6 +5,7 @@ export interface ITodoItem extends Document {
   priority: 'urgent' | 'normal' | 'low'
   done: boolean
   dueDate: string
+  dueTime?: string | null
   type: string
   repeat: string
   nextDue?: string
@@ -13,6 +14,7 @@ export interface ITodoItem extends Document {
   repeatStartDate?: string
   completionHistory?: string[]
   reminder?: { amount: number; unit: string }
+  reminderSent?: boolean
   description?: string
   checklist?: Array<{ id: string; title: string; done: boolean }>
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | null
@@ -24,6 +26,7 @@ const schema = new Schema<ITodoItem>({
   priority: { type: String, enum: ['urgent', 'normal', 'low'], default: 'normal' },
   done:     { type: Boolean, default: false },
   dueDate:  { type: String, default: '' },
+  dueTime:  { type: String, default: null },
   type:     { type: String, default: 'todo' },
   repeat:   { type: String, default: 'none' },
   nextDue:  { type: String },
@@ -32,6 +35,7 @@ const schema = new Schema<ITodoItem>({
   repeatStartDate: { type: String },
   completionHistory: { type: [String], default: [] },
   reminder:  { type: Schema.Types.Mixed, default: null },
+  reminderSent: { type: Boolean, default: false },
   description: { type: String, default: '' },
   checklist:  { type: Schema.Types.Mixed, default: [] },
   timeOfDay:  { type: String, enum: ['morning', 'afternoon', 'evening', null], default: null },

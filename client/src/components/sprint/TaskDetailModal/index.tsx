@@ -5,6 +5,7 @@ import { authFetch } from '../../../services/api'
 import { useSprintStore } from '../../../store/sprintStore'
 import { useFamilyStore } from '../../../store/familyStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
+import TimeWheelPicker from '../../ui/TimeWheelPicker'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
 import { isRecurring, calcStreak, calcRecord, calcMonthRate, buildMonthGrid } from '../../../utils/sprint'
@@ -143,6 +144,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [showReminderPicker, setShowReminderPicker] = useState(false)
   const [reminderAmount, setReminderAmount] = useState<number | ''>(1)
   const [reminderUnit, setReminderUnit] = useState<ReminderUnit>('days')
+  const [showTimePicker, setShowTimePicker] = useState(false)
   const [showConfirm, setShowConfirm]         = useState(false)
   const [animatingDone, setAnimatingDone]     = useState(false)
   const [localAssignedTo, setLocalAssignedTo] = useState<string[]>([])
@@ -307,7 +309,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
   const handleDateChange = (date: string) => {
     if (!task) return
-    updateTask(task.id, { dueDate: date || undefined })
+    updateTask(task.id, { dueDate: date || undefined, ...(date ? {} : { dueTime: undefined }) })
+  }
+
+  const handleTimeSave = (time: string) => {
+    if (!task) return
+    updateTask(task.id, { dueTime: time })
+    setShowTimePicker(false)
   }
 
   const handleRepeatSave = (config: RepeatConfig) => {
@@ -569,9 +577,27 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                         )}
                       </button>
                       {task.dueDate && (
-                        <button type="button" className={styles.deadlineClear} onClick={() => updateTask(task.id, { dueDate: undefined })} aria-label="Скинути дату">×</button>
+                        <button type="button" className={styles.deadlineClear} onClick={() => updateTask(task.id, { dueDate: undefined, dueTime: undefined })} aria-label="Скинути дату">×</button>
                       )}
                     </div>
+                    {task.dueDate && (
+                      <div className={styles.deadlineCompact}>
+                        <button type="button" className={styles.deadlineCompactBtn} onClick={() => setShowTimePicker(true)}>
+                          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                            <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
+                            <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          {task.dueTime ? (
+                            <span>{task.dueTime}</span>
+                          ) : (
+                            <span className={styles.deadlinePlaceholder}>Час</span>
+                          )}
+                        </button>
+                        {task.dueTime && (
+                          <button type="button" className={styles.deadlineClear} onClick={() => updateTask(task.id, { dueTime: undefined })} aria-label="Скинути час">×</button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -852,6 +878,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
           value={task.dueDate}
           onChange={handleDateChange}
           onClose={() => setShowDatePicker(false)}
+        />
+      )}
+
+      {/* ── Time Picker for deadline (z-index 400) ── */}
+      {showTimePicker && task && (
+        <TimeWheelPicker
+          value={task.dueTime ?? '09:00'}
+          onSave={handleTimeSave}
+          onClose={() => setShowTimePicker(false)}
         />
       )}
 

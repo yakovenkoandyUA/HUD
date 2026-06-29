@@ -5,11 +5,17 @@ import { User } from '../models/User'
 import { sendPushToUser } from '../services/webpush'
 
 const TASK_ALLOWED = [
-  'title', 'done', 'priority', 'category', 'labels', 'dueDate', 'description',
+  'title', 'done', 'priority', 'category', 'labels', 'dueDate', 'dueTime', 'description',
   'checklist', 'order', 'tag', 'weekStart', 'weekNumber', 'year',
   'repeat', 'nextDue', 'repeatDay', 'repeatConfig', 'repeatStartDate',
   'completionHistory', 'reminder', 'isPinned', 'assignedTo', 'timeOfDay',
 ]
+
+// Зміна дедлайну/часу/повторення/нагадування скидає прапорець "вже надіслано" — щоб нагадування пересчиталось
+const REMINDER_RESET_FIELDS = ['dueDate', 'dueTime', 'nextDue', 'reminder']
+function touchesReminderSchedule(body: Record<string, unknown>): boolean {
+  return REMINDER_RESET_FIELDS.some(k => body[k] !== undefined)
+}
 
 export async function getTasks(req: Request, res: Response): Promise<void> {
   const { week, year } = req.query
@@ -80,6 +86,7 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
     TASK_ALLOWED.forEach(key => {
       if (req.body[key] !== undefined) (task as unknown as Record<string, unknown>)[key] = req.body[key]
     })
+    if (touchesReminderSchedule(req.body)) task.reminderSent = false
     await task.save()
     res.json(task)
 
@@ -105,7 +112,7 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
   // Fall back to TodoItem (legacy)
   const todo = await TodoItem.findOneAndUpdate(
     { _id: req.params.id, userId: req.userId },
-    req.body,
+    touchesReminderSchedule(req.body) ? { ...req.body, reminderSent: false } : req.body,
     { new: true }
   )
   if (!todo) { res.status(404).json({ error: 'Not found' }); return }
@@ -157,7 +164,7 @@ export async function createTodo(req: Request, res: Response): Promise<void> {
 export async function updateTodo(req: Request, res: Response): Promise<void> {
   const item = await TodoItem.findOneAndUpdate(
     { _id: req.params.id, userId: req.userId },
-    req.body,
+    touchesReminderSchedule(req.body) ? { ...req.body, reminderSent: false } : req.body,
     { new: true }
   )
   if (!item) { res.status(404).json({ error: 'Not found' }); return }

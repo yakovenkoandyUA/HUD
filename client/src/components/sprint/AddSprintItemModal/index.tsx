@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import CustomDatePicker from '../../ui/CustomDatePicker'
+import TimeWheelPicker from '../../ui/TimeWheelPicker'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
 import { useSprintStore } from '../../../store/sprintStore'
@@ -138,6 +139,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   const [showFormReminderPicker, setShowFormReminderPicker] = useState(false)
   const [showQuestDueDatePicker, setShowQuestDueDatePicker] = useState(false)
   const [quickAddDate, setQuickAddDate]         = useState<string | null>(null)
+  const [quickAddTime, setQuickAddTime]         = useState<string | null>(null)
+  const [showQuestTimePicker, setShowQuestTimePicker] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -165,6 +168,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     setShowFormReminderPicker(false)
     setShowQuestDueDatePicker(false)
     setQuickAddDate(null)
+    setQuickAddTime(null)
+    setShowQuestTimePicker(false)
   }
 
   const handleClose = () => {
@@ -189,6 +194,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
       title:    newTitle.trim(),
       priority: newType === 'shopping' ? (newPriority ?? undefined) : undefined,
       ...(quickAddDate && newRepeat === 'none' ? { dueDate: quickAddDate } : {}),
+      ...(quickAddDate && newRepeat === 'none' && quickAddTime ? { dueTime: quickAddTime } : {}),
       ...(quickAddDate && newRepeat === 'none' && newReminder ? { reminder: newReminder } : {}),
       ...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
       ...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
@@ -362,6 +368,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                         onClick={e => {
                           e.stopPropagation()
                           setQuickAddDate(null)
+                          setQuickAddTime(null)
                           setNewReminder(null)
                           setShowQuestDueDatePicker(false)
                         }}
@@ -374,6 +381,36 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                         <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                       </svg>
                       Дедлайн
+                    </button>
+                  )
+                )}
+
+                {/* Time of day — only once a deadline date is set */}
+                {newRepeat === 'none' && !showRepeatList && quickAddDate && (
+                  quickAddTime ? (
+                    <button
+                      type="button"
+                      className={`${styles.metaChip} ${styles.metaChipActive}`}
+                      onClick={() => setShowQuestTimePicker(true)}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
+                        <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {quickAddTime}
+                      <span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setQuickAddTime(null) }}>✕</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.metaChip}
+                      onClick={() => setShowQuestTimePicker(true)}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
+                        <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Час
                     </button>
                   )
                 )}
@@ -561,6 +598,15 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
           onChange={date => { setQuickAddDate(date); setShowQuestDueDatePicker(false) }}
           onClose={() => setShowQuestDueDatePicker(false)}
           minDate={new Date()}
+        />
+      )}
+
+      {/* Time of day picker sheet */}
+      {showQuestTimePicker && (
+        <TimeWheelPicker
+          value={quickAddTime ?? '09:00'}
+          onSave={time => { setQuickAddTime(time); setShowQuestTimePicker(false) }}
+          onClose={() => setShowQuestTimePicker(false)}
         />
       )}
 

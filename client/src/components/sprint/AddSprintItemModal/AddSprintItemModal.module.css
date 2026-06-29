@@ -147,10 +147,17 @@
 /* ── Meta chips row ── */
 .metaRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 6px;
   align-items: center;
+  margin: 0 -20px;
+  padding: 2px 20px 4px;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
 }
+.metaRow::-webkit-scrollbar { display: none; }
 
 .metaChip {
   display: inline-flex;
@@ -166,9 +173,10 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
-  white-space: nowrap;
 }
 .metaChip:hover { color: var(--text2); border-color: var(--border2); }
 

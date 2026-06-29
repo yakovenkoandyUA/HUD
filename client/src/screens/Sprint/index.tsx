@@ -286,8 +286,10 @@ const Sprint: React.FC = () => {
 						<p className={styles.dayEmptyText}>Завантаження...</p>
 					) : dayQuests.length === 0 && !showSwipeGhost ? (
 						<div className={styles.dayEmpty}>
-							<DoodleIllustration variant="sprint" size={72} />
-							<p className={styles.dayEmptyText}>Немає задач на цей день</p>
+							<DoodleIllustration variant={filterType === 'shopping' ? 'shopping' : 'sprint'} size={72} />
+							<p className={styles.dayEmptyText}>
+								{filterType === 'shopping' ? 'Список покупок порожній' : 'Квестів на цей день немає'}
+							</p>
 						</div>
 					) : (
 						<ul className={styles.list}>

@@ -75,21 +75,19 @@ const Watchlist = () => (
 
 const Sprint = () => (
   <>
-    {/* Pencil body */}
-    <path d="M28 76 L66 18" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" opacity="0.08"/>
-    <path d="M30 74 L68 16" strokeWidth="2.5" strokeLinecap="round"/>
-    <path d="M22 80 L30 74" strokeWidth="2.5" strokeLinecap="round"/>
-    {/* Pencil tip */}
-    <path d="M22 80 L18 84 L24 82 Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    {/* Eraser */}
-    <path d="M64 18 L70 14 L74 20 L68 24 Z" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-    {/* Pencil line divider */}
-    <path d="M56 30 L62 26" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="0"/>
-    {/* Checkmark */}
-    <path d="M58 62 L65 72 L80 52" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Hill */}
+    <path d="M6 80 Q28 56 50 80 Q72 56 94 80" strokeWidth="2.5" strokeLinecap="round"/>
+    {/* Flagpole */}
+    <path d="M50 80 L50 26" strokeWidth="2.5" strokeLinecap="round"/>
+    {/* Flag (waving pennant) */}
+    <path d="M50 28 C60 30 70 32 73 37 C70 41 59 43 50 46 Z" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Pole base flutter */}
+    <path d="M46 80 Q50 84 54 80" strokeWidth="2" strokeLinecap="round"/>
+    {/* Dotted trail to the summit */}
+    <path d="M14 86 Q32 82 50 86 Q68 90 86 86" strokeWidth="2" strokeLinecap="round" strokeDasharray="4 3"/>
     {/* Stars */}
-    <path d="M14 32 L15.5 28 L17 32 L21 33 L17 34 L15.5 38 L14 34 L10 33 Z" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M72 78 L73 75 L74 78 L77 79 L74 80 L73 83 L72 80 L69 79 Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M18 30 L19.5 26 L21 30 L25 31 L21 32 L19.5 36 L18 32 L14 31 Z" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M82 22 L83 19 L84 22 L87 23 L84 24 L83 27 L82 24 L79 23 Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </>
 )
 

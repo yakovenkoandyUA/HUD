@@ -79,41 +79,43 @@ export async function sendRaceWeekendAlert(): Promise<void> {
   )
 }
 
-function toDateStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+interface ReminderItem {
+  _id: unknown; title: string; userId: string
+  dueDate?: string | null; dueTime?: string | null; nextDue?: string; repeat?: string
+  reminder?: { amount: number; unit: string } | null
 }
 
-async function sendReminderNotifications(): Promise<void> {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayStr = toDateStr(today)
+// Дедлайн + час (за умовчанням 09:00, якщо час не вказано) → конкретний момент
+function parseDueAt(dateStr: string, timeStr?: string | null): Date {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const [hh, mm] = (timeStr || '09:00').split(':').map(Number)
+  return new Date(y, m - 1, d, hh, mm, 0, 0)
+}
 
-  const [tasks, todos] = await Promise.all([
-    SprintTask.find({ repeat: { $ne: 'none' }, reminder: { $ne: null }, nextDue: { $exists: true } }).lean(),
-    TodoItem.find({ repeat: { $ne: 'none' }, reminder: { $ne: null }, nextDue: { $exists: true } }).lean(),
-  ])
+// Перевіряє та шле нагадування для одної моделі (SprintTask або TodoItem), позначає reminderSent
+async function processReminders(
+  Model: { updateOne: (filter: Record<string, unknown>, update: Record<string, unknown>) => Promise<unknown> },
+  items: ReminderItem[],
+  now: Date
+): Promise<number> {
+  let sentCount = 0
+  for (const item of items) {
+    if (!item.reminder) continue
+    const isRecurring = !!item.repeat && item.repeat !== 'none'
+    const dateStr = isRecurring ? item.nextDue : item.dueDate
+    if (!dateStr) continue
 
-  const allItems = [...tasks, ...todos] as Array<{
-    _id: unknown; title: string; userId: string; nextDue?: string
-    reminder?: { amount: number; unit: string } | null
-  }>
-
-  for (const item of allItems) {
-    if (!item.reminder || !item.nextDue) continue
-
-    const [ny, nm, nd] = item.nextDue.split('-').map(Number)
-    const nextDueDate = new Date(ny, nm - 1, nd)
-    nextDueDate.setHours(0, 0, 0, 0)
-
-    const reminderDate = new Date(nextDueDate)
+    const dueAt = parseDueAt(dateStr, item.dueTime)
+    const reminderAt = new Date(dueAt)
     const { amount, unit } = item.reminder
-    if (unit === 'minutes') reminderDate.setMinutes(reminderDate.getMinutes() - amount)
-    else if (unit === 'hours') reminderDate.setHours(reminderDate.getHours() - amount)
-    else if (unit === 'days') reminderDate.setDate(reminderDate.getDate() - amount)
-    else if (unit === 'weeks') reminderDate.setDate(reminderDate.getDate() - amount * 7)
-    reminderDate.setHours(0, 0, 0, 0)
+    if (unit === 'minutes') reminderAt.setMinutes(reminderAt.getMinutes() - amount)
+    else if (unit === 'hours') reminderAt.setHours(reminderAt.getHours() - amount)
+    else if (unit === 'days') reminderAt.setDate(reminderAt.getDate() - amount)
+    else if (unit === 'weeks') reminderAt.setDate(reminderAt.getDate() - amount * 7)
 
-    if (toDateStr(reminderDate) !== todayStr) continue
+    if (now < reminderAt) continue
+    // Пропущене нагадування (сервер був недоступний/деплой) — не спамити через добу
+    if (now.getTime() - dueAt.getTime() > 24 * 60 * 60 * 1000) continue
 
     const subs = await PushSubscription.find({ userId: item.userId }).lean()
     for (const sub of subs) {
@@ -129,11 +131,30 @@ async function sendReminderNotifications(): Promise<void> {
         }
       }
     }
+    await Model.updateOne({ _id: item._id }, { reminderSent: true })
+    sentCount++
   }
+  return sentCount
+}
 
-  console.log(`🔔 Reminder notifications processed (${allItems.length} recurring tasks checked)`)
+async function sendReminderNotifications(): Promise<void> {
+  const now = new Date()
+  const baseFilter = { reminder: { $ne: null }, reminderSent: { $ne: true }, done: false }
 
-  // Recurring payments — notify on the payment day
+  const [tasks, todos] = await Promise.all([
+    SprintTask.find({ ...baseFilter, deletedAt: null }).lean(),
+    TodoItem.find(baseFilter).lean(),
+  ])
+
+  const sentTasks = await processReminders(SprintTask, tasks as unknown as ReminderItem[], now)
+  const sentTodos = await processReminders(TodoItem, todos as unknown as ReminderItem[], now)
+  if (sentTasks + sentTodos > 0) {
+    console.log(`🔔 Reminder notifications sent (${sentTasks + sentTodos})`)
+  }
+}
+
+// Регулярні платежі — раз на добу, окремо від 5-хвилинного reminder-циклу
+async function sendRecurringPaymentNotifications(): Promise<void> {
   const todayDay = new Date().getDate()
   const payments = await RecurringPayment.find({ dayOfMonth: todayDay, isActive: true }).lean()
   for (const payment of payments) {
@@ -166,9 +187,15 @@ export function startF1Scheduler(): void {
   }, { timezone: 'Europe/Kyiv' })
   console.log('🏎 F1 race weekend scheduler started (Sun 08:00 Kyiv time)')
 
-  // Recurring task reminders — every day at 08:00 Kyiv (05:00 UTC)
-  cron.schedule('0 5 * * *', () => {
+  // Task/quest reminders — every 5 minutes, precise to dueDate+dueTime
+  cron.schedule('*/5 * * * *', () => {
     sendReminderNotifications().catch(console.error)
   })
-  console.log('🔔 Reminder scheduler started (daily 05:00 UTC / 08:00 Kyiv)')
+  console.log('🔔 Reminder scheduler started (every 5 min)')
+
+  // Recurring payments — daily at 08:00 Kyiv (05:00 UTC)
+  cron.schedule('0 5 * * *', () => {
+    sendRecurringPaymentNotifications().catch(console.error)
+  })
+  console.log('💳 Recurring payment scheduler started (daily 05:00 UTC / 08:00 Kyiv)')
 }

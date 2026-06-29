@@ -74,6 +74,7 @@ interface ApiTask {
   category?: string | null
   labels?: string[]
   dueDate?: string | null
+  dueTime?: string | null
   description?: string
   order?: number
   repeat?: string
@@ -196,6 +197,7 @@ function taskBody(item: Partial<UnifiedTodo> & { type?: string }): Record<string
     ...(item.type  !== undefined    && { type:        item.type }),
     ...(item.priority !== undefined && { priority:    item.priority }),
     ...(item.dueDate  !== undefined && { dueDate:     item.dueDate ?? null }),
+    ...(item.dueTime  !== undefined && { dueTime:     item.dueTime ?? null }),
     ...(item.description !== undefined && { description: item.description }),
     ...(item.category !== undefined && { category:   item.category ?? null }),
     ...(labelIds.length             && { labels:      labelIds }),
@@ -281,6 +283,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           weekStart: t.weekStart ?? (t.weekNumber ? isoWeekToMonday(t.year ?? 0, t.weekNumber) : undefined),
           createdAt: t.createdAt ?? now,
           ...(t.dueDate     && { dueDate:     t.dueDate }),
+          ...(t.dueTime     && { dueTime:     t.dueTime }),
           ...(t.description && { description: t.description }),
           ...(t.category    && { category:    t.category }),
           ...(labelObjs.length && { labels:   labelObjs }),
