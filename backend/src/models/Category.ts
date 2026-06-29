@@ -23,4 +23,6 @@ const schema = new Schema<ICategory>({
   parentId:  { type: String, default: null },
 }, { timestamps: true })
 
+schema.index({ userId: 1, name: 1, parentId: 1 }, { unique: true })
+
 export default model<ICategory>('Category', schema)

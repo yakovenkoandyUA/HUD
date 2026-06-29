@@ -31,8 +31,13 @@ export const seedCategoriesForUser = async (userId: string): Promise<void> => {
     isActive: true,
   }))
 
-  await Category.insertMany(docs)
-  console.log(`✅ Seeded ${docs.length} base categories for user ${userId}`)
+  try {
+    await Category.insertMany(docs, { ordered: false })
+    console.log(`✅ Seeded ${docs.length} base categories for user ${userId}`)
+  } catch (err) {
+    // Concurrent call already seeded this user (unique userId+name+parentId index) — ignore
+    if ((err as { code?: number }).code !== 11000) throw err
+  }
 }
 
 export const seedCategoriesForAllUsers = async (): Promise<void> => {

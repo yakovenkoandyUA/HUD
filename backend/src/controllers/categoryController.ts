@@ -10,16 +10,21 @@ export async function getAll(req: Request, res: Response): Promise<void> {
 export async function create(req: Request, res: Response): Promise<void> {
   const { name, icon, color, parentId } = req.body as { name?: string; icon?: string; color?: string; parentId?: string }
   if (!name?.trim()) { res.status(400).json({ error: 'name required' }); return }
-  const item = await Category.create({
-    name:   name.trim(),
-    icon:   icon?.trim()  || 'ti-dots',
-    color:  color?.trim() || '#9CA3AF',
-    userId: req.userId,
-    isDefault: false,
-    isActive:  true,
-    parentId:  parentId ?? null,
-  })
-  res.status(201).json(item)
+  try {
+    const item = await Category.create({
+      name:   name.trim(),
+      icon:   icon?.trim()  || 'ti-dots',
+      color:  color?.trim() || '#9CA3AF',
+      userId: req.userId,
+      isDefault: false,
+      isActive:  true,
+      parentId:  parentId ?? null,
+    })
+    res.status(201).json(item)
+  } catch (err) {
+    if ((err as { code?: number }).code === 11000) { res.status(409).json({ error: 'Category already exists' }); return }
+    throw err
+  }
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
