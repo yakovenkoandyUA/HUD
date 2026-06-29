@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { authFetch, getToken } from '../services/api'
-import type { Memory, MemoryPhoto } from '../types/memory'
+import type { Memory, MemoryPhoto, MemoryPlace } from '../types/memory'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toPhoto(p: Record<string, any>): MemoryPhoto {
@@ -9,6 +9,17 @@ function toPhoto(p: Record<string, any>): MemoryPhoto {
     url:       p.url,
     caption:   p.caption ?? undefined,
     createdAt: typeof p.createdAt === 'string' ? p.createdAt : new Date(p.createdAt).toISOString(),
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toPlace(p: Record<string, any>): MemoryPlace {
+  return {
+    id:      p._id,
+    name:    p.name,
+    address: p.address || undefined,
+    lat:     p.lat,
+    lng:     p.lng,
   }
 }
 
@@ -24,6 +35,7 @@ function toMemory(d: Record<string, any>): Memory {
     coverUrl:       d.coverUrl ?? '',
     notes:          d.notes ?? '',
     tags:           d.tags ?? [],
+    places:         (d.places ?? []).map(toPlace),
     photos:         (d.photos ?? []).map(toPhoto),
     createdAt:      typeof d.createdAt === 'string' ? d.createdAt : new Date(d.createdAt).toISOString(),
     ownerName:      d.ownerName ?? undefined,

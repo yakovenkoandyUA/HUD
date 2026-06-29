@@ -4,6 +4,8 @@ import type { MapMouseEvent, MapRef } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useModalHistory } from '../../../hooks/useModalHistory'
 import { forwardGeocodeCenter, reverseGeocodeAddress } from '../../../utils/mapboxGeocode'
+import { useUiStore } from '../../../store/uiStore'
+import { getLightPresetForTheme } from '../../../utils/mapboxTheme'
 import Button from '../../ui/Button'
 import type { PlanLocation } from '../../../store/plansStore'
 import styles from './LocationMapPicker.module.css'
@@ -47,7 +49,21 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   isOpen, onClose, onSelect, searchHint = '', initialLocation = null,
 }) => {
   useModalHistory(onClose, isOpen)
+  const [mounted, setMounted] = useState(false)
+  const [visible, setVisible] = useState(false)
 
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true)
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+    } else {
+      setVisible(false)
+      const t = setTimeout(() => setMounted(false), 340)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen])
+
+  const theme = useUiStore(s => s.theme)
   const mapRef = useRef<MapRef>(null)
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null)
   const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(null)
@@ -128,11 +144,17 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     onClose()
   }
 
-  if (!isOpen) return null
+  if (!mounted) return null
 
   return (
-    <div className={styles.overlay} onClick={handleClose}>
-      <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+    <div
+      className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`}
+      onClick={handleClose}
+    >
+      <div
+        className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`}
+        onClick={e => e.stopPropagation()}
+      >
 
         <div className={styles.header}>
           <span className={styles.headerTitle}>ОБРАТИ НА КАРТІ</span>
@@ -160,7 +182,10 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
                 mapStyle="mapbox://styles/mapbox/standard"
                 style={{ width: '100%', height: '100%' }}
                 onClick={handlePick}
-                onLoad={() => mapRef.current?.setLanguage('uk')}
+                onLoad={() => {
+                  mapRef.current?.setLanguage('uk')
+                  mapRef.current?.setConfigProperty('basemap', 'lightPreset', getLightPresetForTheme(theme))
+                }}
               >
                 <NavigationControl position="top-right" showCompass={false} />
                 {marker && (

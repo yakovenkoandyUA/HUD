@@ -11,6 +11,19 @@ export interface MemoryPhoto {
 }
 
 /**
+ * MemoryPlace
+ * -----------
+ * Заклад (кафе, ресторан, музей тощо), знайдений у місті спогаду.
+ */
+export interface MemoryPlace {
+  id: string
+  name: string
+  address?: string
+  lat: number
+  lng: number
+}
+
+/**
  * Memory
  * ------
  * Подія-спогад з набором фотографій.
@@ -25,6 +38,7 @@ export interface Memory {
   coverUrl: string
   notes?: string
   tags?: string[]
+  places?: MemoryPlace[]
   photos: MemoryPhoto[]
   createdAt: string
   ownerName?: string

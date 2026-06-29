@@ -1,5 +1,17 @@
 import type { Memory } from '../types/memory'
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined
+
+function drawRoundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  if (typeof ctx.roundRect === 'function') {
+    ctx.beginPath()
+    ctx.roundRect(x, y, w, h, r)
+  } else {
+    ctx.beginPath()
+    ctx.rect(x, y, w, h)
+  }
+}
+
 /**
  * generateMemoryPosterBlob
  * ------------------------
@@ -59,6 +71,34 @@ export async function generateMemoryPosterBlob(memory: Memory, formattedDate: st
         ctx.fillRect(0, slotH - gradH, W, gradH)
       }
     } catch { /* skip image */ }
+  }
+
+  // location pin badge — small static map overlaid top-right on the cover photo
+  if (coverLoaded && memory.lat != null && memory.lng != null && MAPBOX_TOKEN) {
+    try {
+      const badgeSize = 170
+      const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+d4a017(${memory.lng},${memory.lat})/${memory.lng},${memory.lat},13,0/${badgeSize}x${badgeSize}@2x?access_token=${MAPBOX_TOKEN}`
+      const mapImg = new Image()
+      mapImg.crossOrigin = 'anonymous'
+      await new Promise<void>((resolve) => {
+        mapImg.onload = () => resolve()
+        mapImg.onerror = () => resolve()
+        mapImg.src = mapUrl
+      })
+      if (mapImg.complete && mapImg.naturalWidth > 0) {
+        const bx = W - badgeSize - 32
+        const by = 32
+        ctx.save()
+        drawRoundedRectPath(ctx, bx, by, badgeSize, badgeSize, 16)
+        ctx.clip()
+        ctx.drawImage(mapImg, bx, by, badgeSize, badgeSize)
+        ctx.restore()
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'
+        ctx.lineWidth = 2
+        drawRoundedRectPath(ctx, bx, by, badgeSize, badgeSize, 16)
+        ctx.stroke()
+      }
+    } catch { /* skip map badge */ }
   }
 
   const slotBottom = Math.round(H * 0.84)
