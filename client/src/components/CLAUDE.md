@@ -36,7 +36,9 @@ components/
 │   ├── PriorityBadge       ← ▲◆▽ (urgent/normal/low), не emoji
 │   ├── CustomDatePicker    ← нативний UI замість input[type=date]
 │   ├── ImageUploadButton   ← Cloudinary upload (square/wide варіанти)
-│   ├── CitySplash          ← анімація запуску (sessionStorage)
+│   ├── PinLock             ← fullscreen PIN-оверлей, Mimir face watermark (guardian) над аватаром
+│   ├── TimeWheelPicker     ← bottom sheet вибору часу (ГГ:ХХ), для dueTime квестів/тудушек
+│   ├── AchievementUnlockedModal ← non-blocking slide-down toast при розблокуванні ачівки/рангу
 │   └── PwaInstallBanner    ← банер встановлення PWA
 ├── layout/
 │   ├── TopBar
@@ -68,6 +70,9 @@ components/
 │   └── McLarenViewer       ← Three.js
 ├── PixelCar/               ← SVG pixel-art болид (viewBox 0 0 48 16), team-colored fill
 │                              Props: team (string), size (number)
+├── profile/
+│   └── AchievementGrid     ← грід бейджів ачівок, БЕЗ примусового порядку — кожна картка
+│                              сама показує іконку+назву одразу, тап розгортає опис (locked → hint)
 ├── sprint/
 │   ├── TaskCard            ← прогрес-бар чек-листа, лічильник ☑ X/Y
 │   ├── TaskDetailModal     ← МІТКИ/ДЕДЛАЙН/ЧЕК-ЛІСТ/ОПИС + LabelPicker
