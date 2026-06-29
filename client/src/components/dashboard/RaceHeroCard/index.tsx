@@ -91,52 +91,37 @@ const RaceHeroCard: React.FC<RaceHeroCardProps> = ({ race, onClick }) => {
 
   return (
     <Card variant="accent" className={styles.card} onClick={onClick}>
-      {race.trackSvg && (
-        <img src={race.trackSvg} className={styles.watermark} aria-hidden="true" alt="" />
-      )}
+      <div className={styles.topRow}>
+        <div className={styles.titleGroup}>
+          <span className={styles.flag}>{race.flag}</span>
+          <span className={styles.gpName}>{gpLabel}</span>
+        </div>
 
-      <div className={styles.header}>
-        <span className={styles.flag}>{race.flag}</span>
-        <span className={styles.gpName}>{gpLabel}</span>
-      </div>
-      <div className={styles.circuit}>{race.circuit}</div>
-
-      {cd ? (
-        <div className={styles.countdownRow}>
-          <div className={styles.unit}>
-            <span className={`${styles.num} ${cd.d === 0 ? styles.numAccent : ''}`}>{cd.d}</span>
-            {/* <span className={styles.sub}>д</span> */}
-          </div>
-          <span className={styles.sep}>:</span>
-          <div className={styles.unit}>
+        {cd ? (
+          <div className={styles.countdownRow}>
+            {cd.d > 0 && <><span className={styles.num}>{cd.d}</span><span className={styles.sep}>:</span></>}
             <span className={styles.num}>{pad(cd.h)}</span>
-            {/* <span className={styles.sub}>г</span> */}
-          </div>
-          <span className={styles.sep}>:</span>
-          <div className={styles.unit}>
+            <span className={styles.sep}>:</span>
             <span className={styles.num}>{pad(cd.m)}</span>
-            {/* <span className={styles.sub}>хв</span> */}
-          </div>
-          <span className={styles.sep}>:</span>
-          <div className={styles.unit}>
+            <span className={styles.sep}>:</span>
             <span className={styles.num}>{pad(cd.s)}</span>
-            {/* <span className={styles.sub}>с</span> */}
           </div>
-        </div>
-      ) : (
-        <div className={styles.raceDay}>
-          <span className={styles.raceDayText}>RACE DAY!</span>
-          <span className={styles.raceDayFlag}>🏁</span>
-        </div>
-      )}
+        ) : (
+          <div className={styles.raceDay}>
+            <span className={styles.raceDayText}>RACE DAY</span>
+            <span className={styles.raceDayFlag}>🏁</span>
+          </div>
+        )}
+      </div>
 
-      <div className={styles.meta}>
+      <div className={styles.subRow}>
+        <span className={styles.circuit}>{race.circuit}</span>
         {race.sprint && <span className={styles.sprintBadge}>SPRINT</span>}
         {weather && (
-          <div className={styles.weather}>
+          <span className={styles.weather}>
             <span className={styles.weatherIcon}>{weatherIcon(weather.desc)}</span>
-            <span>{weather.tempC}°C</span>
-          </div>
+            {weather.tempC}°C
+          </span>
         )}
       </div>
     </Card>

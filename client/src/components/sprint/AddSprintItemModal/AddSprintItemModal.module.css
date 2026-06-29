@@ -1,32 +1,6 @@
 /* ── Add task form ── */
 .taskForm { display: flex; flex-direction: column; gap: 12px; }
 
-/* ── Quick-add date indicator ── */
-.quickAddDateRow {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--accent);
-  background: var(--accent-soft);
-  border-radius: 6px;
-  padding: 4px 8px;
-}
-
-.quickAddDateClear {
-  background: none;
-  border: none;
-  color: var(--text3);
-  font-size: 13px;
-  line-height: 1;
-  padding: 0 0 0 2px;
-  cursor: pointer;
-  margin-left: 2px;
-  transition: color 0.15s;
-}
-.quickAddDateClear:hover { color: var(--accent); }
-
 /* ── Segmented control: Квест / Покупка ── */
 .typeSegment {
   display: flex;
@@ -339,78 +313,6 @@
   flex-direction: column;
   gap: 14px;
 }
-
-.formReminderAmountRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.formReminderAmountInput {
-  width: 72px;
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-family: var(--font-mono);
-  font-size: 18px;
-  color: var(--text);
-  text-align: center;
-  -moz-appearance: textfield;
-}
-.formReminderAmountInput::-webkit-inner-spin-button,
-.formReminderAmountInput::-webkit-outer-spin-button { -webkit-appearance: none; }
-.formReminderAmountInput:focus { border-color: var(--accent); outline: none; }
-
-.formReminderAmountLabel {
-  font-family: var(--font-body);
-  font-size: 15px;
-  color: var(--text2);
-}
-
-.formReminderUnitList {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.formReminderUnitRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 16px;
-  background: none;
-  border: none;
-  border-top: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.12s;
-}
-.formReminderUnitRow:first-child { border-top: none; }
-.formReminderUnitRow:hover { background: rgba(255,255,255,0.03); }
-
-.formReminderRadio {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1.5px solid var(--text3);
-  flex-shrink: 0;
-  position: relative;
-  transition: border-color 0.15s;
-}
-
-.formReminderRadioActive { border-color: var(--accent); }
-.formReminderRadioActive::after {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.formReminderUnitLabel { font-family: var(--font-body); font-size: 14px; color: var(--text2); }
-.formReminderUnitLabelActive { color: var(--accent); }
 
 .formReminderDoneBtn {
   margin: 16px 20px 0;

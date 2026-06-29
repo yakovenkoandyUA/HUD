@@ -88,24 +88,26 @@ const RepeatConfigScreen: React.FC<RepeatConfigScreenProps> = ({ initial, onSave
 					{/* Section 1: Interval */}
 					<div className={styles.section}>
 						<div className={styles.sectionTitle}>ПОВТОРЮЄТЬСЯ З ІНТЕРВАЛОМ</div>
-						<div className={styles.intervalRow}>
+						<div className={styles.intervalAmountRow}>
 							<input
 								type="number"
 								className={styles.intervalInput}
 								value={interval}
+								onFocus={e => e.target.select()}
 								onChange={e => setInterval(Math.max(1, parseInt(e.target.value, 10) || 1))}
 							/>
-							<select
-								className={styles.unitSelect}
-								value={unit}
-								onChange={e => setUnit(e.target.value as UnitOption)}
-							>
-								{UNIT_OPTIONS.map(opt => (
-									<option key={opt.value} value={opt.value}>
-										{unitLabel(opt.value, interval)}
-									</option>
-								))}
-							</select>
+						</div>
+						<div className={styles.unitGrid}>
+							{UNIT_OPTIONS.map(opt => (
+								<button
+									key={opt.value}
+									type="button"
+									className={`${styles.unitPill} ${unit === opt.value ? styles.unitPillActive : ''}`}
+									onClick={() => setUnit(opt.value)}
+								>
+									{unitLabel(opt.value, interval)}
+								</button>
+							))}
 						</div>
 					</div>
 

@@ -87,21 +87,20 @@
 
 /* ── Interval row ─────────────────────────────────────────────────────────── */
 
-.intervalRow {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+.intervalAmountRow {
+  margin-bottom: 8px;
 }
 
 .intervalInput {
-  width: 64px;
+  width: 72px;
   padding: 10px;
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: 20px;
+  font-weight: 700;
   background: var(--bg3);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
-  color: var(--text);
+  color: var(--accent);
   text-align: center;
   outline: none;
   box-sizing: border-box;
@@ -115,22 +114,30 @@
 }
 .intervalInput:focus { border-color: var(--accent); }
 
-.unitSelect {
-  flex: 1;
-  padding: 10px;
-  font-family: var(--font-mono);
-  font-size: 16px;
+.unitGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.unitPill {
   background: var(--bg3);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
-  color: var(--text);
-  outline: none;
-  box-sizing: border-box;
-  appearance: none;
-  -webkit-appearance: none;
+  padding: 10px 4px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
   cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.unitSelect:focus { border-color: var(--accent); }
+
+.unitPillActive {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
 
 /* ── Week day picker ──────────────────────────────────────────────────────── */
 

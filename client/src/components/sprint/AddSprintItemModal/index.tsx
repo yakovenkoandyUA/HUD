@@ -3,6 +3,7 @@ import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import DeadlineSheet from '../DeadlineSheet'
+import ReminderFields, { type ReminderUnit } from '../ReminderFields'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
 import { useSprintStore } from '../../../store/sprintStore'
@@ -13,7 +14,6 @@ import styles from './AddSprintItemModal.module.css'
 
 type ItemType     = 'todo' | 'shopping'
 type RepeatType   = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
-type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks'
 
 const PRIORITIES: TodoPriority[] = ['urgent', 'low']
 
@@ -33,13 +33,6 @@ const PRIORITY_CONFIG: Record<TodoPriority, { icon: React.ReactNode; label: stri
   normal: { icon: null,            label: 'НОРМ',      activeClass: styles.priBtnActiveNormal },
   low:    { icon: PRI_ICON_LOW,    label: 'АБИ БУЛО',  activeClass: styles.priBtnActiveLow    },
 }
-
-const FORM_REMINDER_UNITS: { key: ReminderUnit; label: string }[] = [
-  { key: 'minutes', label: 'Хв. до' },
-  { key: 'hours',   label: 'Годин'  },
-  { key: 'days',    label: 'Днів'   },
-  { key: 'weeks',   label: 'Тижнів' },
-]
 
 const QUICK_REPEAT_OPTIONS: { key: Exclude<RepeatType, 'none' | 'custom'>; label: string }[] = [
   { key: 'daily',   label: 'Щодня'    },
@@ -208,7 +201,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     if (newType !== 'shopping') useAchievementsStore.getState().unlock('first-quest')
 
     const isRoutine = newType === 'todo' && newRepeat !== 'none'
-    const msg = isRoutine ? `Рутину «${newTitle.trim()}» додано` : newType === 'shopping' ? 'Покупку додано' : 'Квест додано'
+    const msg = isRoutine ? `Звичку «${newTitle.trim()}» додано` : newType === 'shopping' ? 'Покупку додано' : 'Квест додано'
     showToast(msg, 'success')
     reset()
     onClose()
@@ -220,19 +213,6 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     <>
       <Modal isOpen={isOpen} onClose={handleClose} title={modalTitle} draggable>
         <form onSubmit={handleAdd} className={styles.taskForm}>
-          {quickAddDate && (
-            <div className={styles.quickAddDateRow}>
-              <svg width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-                <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-                <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-              <span>{formatStartDate(quickAddDate)}</span>
-              <button type="button" className={styles.quickAddDateClear} onClick={() => setQuickAddDate(null)} aria-label="Прибрати дату">
-                ×
-              </button>
-            </div>
-          )}
-
           <div className={styles.typeSegment}>
             <button
               type="button"
@@ -362,7 +342,12 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                       </svg>
                       {new Date(quickAddDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
                       {quickAddTime && ` · ${quickAddTime}`}
-                      {newReminder && ' 🔔'}
+                      {newReminder && (
+                        <svg width="9" height="9" viewBox="0 0 16 18" fill="none" aria-hidden="true">
+                          <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                      )}
                       <span
                         className={styles.metaChipClear}
                         onClick={e => {
@@ -432,7 +417,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                     <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
                     <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                   </svg>
-                  Ця задача стане рутиною — видно у тижневому вигляді
+                  Ця задача стане звичкою — видно у тижневому вигляді
                 </div>
               )}
 
@@ -501,28 +486,12 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
               </button>
             </div>
             <div className={styles.formReminderSheetBody}>
-              <div className={styles.formReminderAmountRow}>
-                <input
-                  type="number"
-                  className={styles.formReminderAmountInput}
-                  value={newReminderAmount}
-                  min={1}
-                  max={999}
-                  onFocus={e => e.target.select()}
-                  onChange={e => setNewReminderAmount(e.target.value === '' ? '' : Math.min(999, Number(e.target.value)))}
-                />
-                <span className={styles.formReminderAmountLabel}>
-                  {newReminderUnit === 'minutes' ? 'хвилин' : newReminderUnit === 'hours' ? 'годин' : newReminderUnit === 'days' ? 'днів' : 'тижнів'} до
-                </span>
-              </div>
-              <div className={styles.formReminderUnitList}>
-                {FORM_REMINDER_UNITS.map(u => (
-                  <button key={u.key} type="button" className={styles.formReminderUnitRow} onClick={() => setNewReminderUnit(u.key)}>
-                    <span className={`${styles.formReminderRadio} ${newReminderUnit === u.key ? styles.formReminderRadioActive : ''}`} />
-                    <span className={`${styles.formReminderUnitLabel} ${newReminderUnit === u.key ? styles.formReminderUnitLabelActive : ''}`}>{u.label}</span>
-                  </button>
-                ))}
-              </div>
+              <ReminderFields
+                amount={newReminderAmount}
+                unit={newReminderUnit}
+                onAmountChange={setNewReminderAmount}
+                onUnitChange={setNewReminderUnit}
+              />
             </div>
             <button
               type="button"

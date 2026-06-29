@@ -6,12 +6,12 @@ import styles from './DaySummaryCard.module.css'
  * DaySummaryCard
  * --------------
  * Єдина картка "СЬОГОДНІ" на Dashboard.
- * Зверху — рутин-чіпи (інтерактивні), знизу — 2×2 навігаційний грід.
+ * Зверху — чіпи звичок (інтерактивні), знизу — 2×2 навігаційний грід.
  *
  * Props:
- * @prop {UnifiedTodo[]} routineItems   — рутини що заплановані на сьогодні
- * @prop {(t: UnifiedTodo) => boolean} isDoneToday — чи виконана рутина сьогодні
- * @prop {(id: string) => void} onToggle — тогл рутини
+ * @prop {UnifiedTodo[]} routineItems   — звички що заплановані на сьогодні
+ * @prop {(t: UnifiedTodo) => boolean} isDoneToday — чи виконана звичка сьогодні
+ * @prop {(id: string) => void} onToggle — тогл звички
  * @prop {number}   activeQuests        — кількість активних квестів
  * @prop {number}   shoppingCount       — кількість непридбаних покупок
  * @prop {string[]} meals               — назви страв на сьогодні

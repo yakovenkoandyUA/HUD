@@ -9,8 +9,8 @@ import styles from './WeekExpandedView.module.css'
  * ----------------
  * Повноекранний overlay з трьома вкладками:
  * - МІСЯЦЬ: сітка місяця з крапками-індикаторами задач, навігація < >
- * - ТИЖДЕНЬ: timeline рутин поточного тижня
- * - ДЕНЬ: рутини + задачі для вибраного дня
+ * - ТИЖДЕНЬ: timeline звичок поточного тижня
+ * - ДЕНЬ: звички + задачі для вибраного дня
  *
  * Props:
  * @prop {string}               weekStart      — ISO дата понеділка ('YYYY-MM-DD')
@@ -250,7 +250,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
 
         {dayRoutines.length > 0 && (
           <>
-            <p className={styles.daySectionLabel}>Рутини</p>
+            <p className={styles.daySectionLabel}>Звички</p>
             {dayRoutines.map(t => {
               const isDoneForDay = t.completionLog?.includes(selectedDay) ?? false
               const isAnimating  = completing.get(t.id) === selectedDay
@@ -430,7 +430,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
         {weekStats.some(w => w.total > 0) && (
           <div className={styles.stats}>
             <div className={styles.statsHeader}>
-              <span className={styles.statsTitle}>Статистика рутин</span>
+              <span className={styles.statsTitle}>Статистика звичок</span>
             </div>
             <div className={styles.statsRows}>
               {weekStats.map((w, i) => {
@@ -571,7 +571,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
 
             {detailRoutines.length > 0 && (
               <>
-                <p className={styles.daySectionLabel}>Рутини</p>
+                <p className={styles.daySectionLabel}>Звички</p>
                 {detailRoutines.map(t => {
                   const isDoneForDay = t.completionLog?.includes(panelDay) ?? false
                   const isAnimating  = completing.get(t.id) === panelDay

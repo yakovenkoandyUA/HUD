@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import { TimeWheelRow } from '../../ui/TimeWheelPicker'
+import ReminderFields, { type ReminderUnit } from '../ReminderFields'
 import styles from './DeadlineSheet.module.css'
 
-export type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks'
+export type { ReminderUnit }
 export interface DeadlineDraft {
   date: string | null
   time: string | null
@@ -17,12 +18,14 @@ function formatDate(iso: string): string {
   return `${String(d).padStart(2, '0')} ${MONTHS[m - 1]} ${y}`
 }
 
-const REMINDER_UNITS: { key: ReminderUnit; label: string }[] = [
-  { key: 'minutes', label: 'хв' },
-  { key: 'hours',   label: 'год' },
-  { key: 'days',    label: 'дн' },
-  { key: 'weeks',   label: 'тиж' },
-]
+function formatReminderPhrase(amount: number, unit: ReminderUnit): string {
+  const unitWord =
+    unit === 'minutes' ? (amount === 1 ? 'хвилину' : amount < 5 ? 'хвилини' : 'хвилин') :
+    unit === 'hours'   ? (amount === 1 ? 'годину'  : amount < 5 ? 'години'  : 'годин') :
+    unit === 'days'    ? (amount === 1 ? 'день'     : amount < 5 ? 'дні'     : 'днів') :
+                         (amount === 1 ? 'тиждень'  : amount < 5 ? 'тижні'   : 'тижнів')
+  return `За ${amount} ${unitWord} до дедлайну`
+}
 
 interface DeadlineSheetProps {
   date: string | null
@@ -37,7 +40,9 @@ interface DeadlineSheetProps {
  * DeadlineSheet
  * -------------
  * Об'єднаний редактор дедлайну квесту: дата, час (необов'язково) і нагадування
- * (необов'язково) в одному bottom sheet — замість трьох окремих чіпів/шітів.
+ * (необов'язково) в одному bottom sheet. Час і нагадування після підтвердження
+ * згортаються у компактний рядок-результат — барабан/форма нагадування не
+ * займають місце весь час, тільки під час активного редагування.
  *
  * Props:
  * @prop {string|null} date     — поточна дата дедлайну "YYYY-MM-DD"
@@ -51,9 +56,13 @@ const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, min
   const [draftDate, setDraftDate]   = useState(date)
   const [draftTime, setDraftTime]   = useState(time)
   const [timeOn, setTimeOn]         = useState(!!time)
+  const [timeEditing, setTimeEditing] = useState(false)
+
   const [reminderOn, setReminderOn] = useState(!!reminder)
+  const [reminderEditing, setReminderEditing] = useState(false)
   const [reminderAmount, setReminderAmount] = useState<number | ''>(reminder?.amount ?? 1)
   const [reminderUnit, setReminderUnit]     = useState<ReminderUnit>(reminder?.unit ?? 'days')
+
   const [showDatePicker, setShowDatePicker] = useState(false)
 
   const handleSave = () => {
@@ -94,48 +103,61 @@ const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, min
 
           {draftDate && (
             <>
-              {/* Time — optional */}
+              {/* ── Time — optional, collapses to a compact row once confirmed ── */}
               <div className={styles.optionRow}>
                 <span className={styles.optionLabel}>Час</span>
-                {timeOn ? (
-                  <button type="button" className={styles.optionClear} onClick={() => setTimeOn(false)}>Прибрати</button>
-                ) : (
-                  <button type="button" className={styles.optionAdd} onClick={() => setTimeOn(true)}>+ Додати</button>
-                )}
+                {timeOn && !timeEditing ? (
+                  <button type="button" className={styles.optionClear} onClick={() => { setTimeOn(false); setTimeEditing(false) }}>Прибрати</button>
+                ) : !timeOn ? (
+                  <button type="button" className={styles.optionAdd} onClick={() => { setTimeOn(true); setTimeEditing(true) }}>+ Додати</button>
+                ) : null}
               </div>
-              {timeOn && <TimeWheelRow value={draftTime ?? '09:00'} onChange={setDraftTime} />}
 
-              {/* Reminder — optional */}
+              {timeOn && !timeEditing && (
+                <button type="button" className={styles.resultRow} onClick={() => setTimeEditing(true)}>
+                  <span className={styles.resultValue}>{draftTime ?? '09:00'}</span>
+                  <span className={styles.resultEdit}>Змінити</span>
+                </button>
+              )}
+
+              {timeOn && timeEditing && (
+                <div className={styles.editingBlock}>
+                  <TimeWheelRow value={draftTime ?? '09:00'} onChange={setDraftTime} />
+                  <button type="button" className={styles.confirmBtn} onClick={() => setTimeEditing(false)}>
+                    Підтвердити час
+                  </button>
+                </div>
+              )}
+
+              {/* ── Reminder — optional, same collapse pattern ── */}
               <div className={styles.optionRow}>
                 <span className={styles.optionLabel}>Нагадати</span>
-                {reminderOn ? (
-                  <button type="button" className={styles.optionClear} onClick={() => setReminderOn(false)}>Прибрати</button>
-                ) : (
-                  <button type="button" className={styles.optionAdd} onClick={() => setReminderOn(true)}>+ Додати</button>
-                )}
+                {reminderOn && !reminderEditing ? (
+                  <button type="button" className={styles.optionClear} onClick={() => { setReminderOn(false); setReminderEditing(false) }}>Прибрати</button>
+                ) : !reminderOn ? (
+                  <button type="button" className={styles.optionAdd} onClick={() => { setReminderOn(true); setReminderEditing(true) }}>+ Додати</button>
+                ) : null}
               </div>
-              {reminderOn && (
-                <div className={styles.reminderRow}>
-                  <input
-                    type="number"
-                    className={styles.reminderInput}
-                    value={reminderAmount}
-                    onFocus={e => e.target.select()}
-                    onChange={e => setReminderAmount(e.target.value === '' ? '' : Math.min(999, Number(e.target.value)))}
+
+              {reminderOn && !reminderEditing && (
+                <button type="button" className={styles.resultRow} onClick={() => setReminderEditing(true)}>
+                  <span className={styles.resultValue}>{formatReminderPhrase(Number(reminderAmount) || 1, reminderUnit)}</span>
+                  <span className={styles.resultEdit}>Змінити</span>
+                </button>
+              )}
+
+              {reminderOn && reminderEditing && (
+                <div className={styles.editingBlock}>
+                  <ReminderFields
+                    amount={reminderAmount}
+                    unit={reminderUnit}
+                    onAmountChange={setReminderAmount}
+                    onUnitChange={setReminderUnit}
+                    suffix="до дедлайну"
                   />
-                  <div className={styles.unitSegment}>
-                    {REMINDER_UNITS.map(u => (
-                      <button
-                        key={u.key}
-                        type="button"
-                        className={`${styles.unitBtn} ${reminderUnit === u.key ? styles.unitBtnActive : ''}`}
-                        onClick={() => setReminderUnit(u.key)}
-                      >
-                        {u.label}
-                      </button>
-                    ))}
-                  </div>
-                  <span className={styles.reminderSuffix}>до</span>
+                  <button type="button" className={styles.confirmBtn} onClick={() => setReminderEditing(false)}>
+                    Підтвердити нагадування
+                  </button>
                 </div>
               )}
             </>

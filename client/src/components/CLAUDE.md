@@ -109,14 +109,14 @@ components/
     ├── CarHero             ← Three.js McLaren, 260px canvas, 80 частинок, OrbitControls
     ├── HeroCard            ← баланс (Furore) + sparkline 7 днів + dailyBudget bar
     │                          плаский стиль: border-top/bottom + border-left gold, без radius
-    ├── DaySummaryCard      ← уніфікований блок "СЬОГОДНІ": рутин-чіпи + 2×2 навігаційний грід
+    ├── DaySummaryCard      ← уніфікований блок "СЬОГОДНІ": чіпи звичок + 2×2 навігаційний грід
     │                          Чіпи: без фону/radius, □ checkbox, роздільник · через CSS ::before
     │                          2×2: Квести(gold)/Покупки(accent)/Страва(second)/Нотатки(text)
     │                          Фон: color-mix accent+bg з per-theme overrides (:global([data-theme]))
     ├── RaceHeroCard        ← F1 блок в Dashboard (тільки якщо f1Enabled)
     ├── RaceCountdownStrip  ← стрічка відліку до наступної гонки
     ├── GreetingBlock       ← привітання + дата
-    ├── DayOverlay          ← fullscreen "МІЙ ДЕНЬ" (mood, рутини по слотах, погода)
+    ├── DayOverlay          ← fullscreen "МІЙ ДЕНЬ" (mood, звички по слотах, погода)
     └── SprintMini, LessonsMini, TodosMini
 ```
 

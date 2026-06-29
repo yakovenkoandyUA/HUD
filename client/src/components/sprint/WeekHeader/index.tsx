@@ -23,7 +23,7 @@ function toIso(d: Date): string {
  * WeekHeader
  * ----------
  * Заголовок тижня: назва, діапазон дат, 7 комірок днів.
- * Під числом дня — одна крапка: зелена (всі рутини виконано), золота (pending),
+ * Під числом дня — одна крапка: зелена (всі звички виконано), золота (pending),
  * червона (прострочено — минулий день без виконання).
  * Свайп ліво/право — навігація між тижнями через onPrevWeek/onNextWeek.
  * Тап по дню — викликає onDaySelect; довгий тап — onLongPress.
@@ -33,7 +33,7 @@ function toIso(d: Date): string {
  * @prop {boolean}         [isCurrentWeek]  — чи це поточний тиждень
  * @prop {() => void}      [onExpand]       — відкрити розгорнутий вигляд тижня
  * @prop {boolean}         [hideTitle]      — приховати рядок "Тиждень / діапазон дат"
- * @prop {UnifiedTodo[]}   [routineItems]   — рутини для крапок і WeekExpandedView
+ * @prop {UnifiedTodo[]}   [routineItems]   — звички для крапок і WeekExpandedView
  * @prop {string}          [selectedDay]    — ISO вибраного дня ('YYYY-MM-DD')
  * @prop {(iso: string) => void} [onDaySelect]  — callback при тапі на день
  * @prop {(day: Date) => void}   [onLongPress]  — callback при довгому тапі на день
@@ -389,7 +389,7 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
         <div className={styles.routinesBadgeWrap}>
 
 					{onExpand && todayTotal > 0 && (
-            <button type="button" className={`${styles.routinesBadge} ${todayDone === todayTotal ? styles.routinesBadgeDone : ''}`} onClick={onExpand} aria-label="Рутини">
+            <button type="button" className={`${styles.routinesBadge} ${todayDone === todayTotal ? styles.routinesBadgeDone : ''}`} onClick={onExpand} aria-label="Звички">
 							<svg width="9" height="9" viewBox="0 0 10 10" fill="none">
 								<circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
 								<path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />

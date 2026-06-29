@@ -78,29 +78,42 @@
 .breakdown {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  padding: 12px 24px 20px;
+  gap: 10px;
+  padding: 12px 16px 20px;
 }
 
 .breakItem {
+  flex: 1;
+  max-width: 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: var(--radius-lg, 16px);
+  background: var(--surface2);
+  border: 1px solid var(--border);
 }
 
 .breakIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 }
+
+.breakIconAccent { color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--bg2)); }
+.breakIconSecond { color: var(--second); background: color-mix(in srgb, var(--second) 18%, var(--bg2)); }
+.breakIconGold    { color: var(--gold);   background: color-mix(in srgb, var(--gold) 18%, var(--bg2)); }
 
 .breakNum {
   font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   color: var(--text);
+  line-height: 1;
 }
 
 .breakLbl {
@@ -108,6 +121,7 @@
   font-size: 10px;
   letter-spacing: 0.05em;
   color: var(--text3);
+  text-align: center;
 }
 
 /* ── Divider ── */
@@ -145,12 +159,18 @@
   overflow: hidden;
 }
 
+@keyframes compRowIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .compRow {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
+  animation: compRowIn 0.3s ease both;
 }
 .compRow:last-child { border-bottom: none; }
 
@@ -159,8 +179,16 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 24px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   color: var(--text2);
+  background: color-mix(in srgb, var(--text2) 12%, var(--bg2));
+}
+
+.compIconJoke {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg2));
 }
 
 .compText {

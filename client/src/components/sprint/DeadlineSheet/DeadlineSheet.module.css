@@ -131,62 +131,66 @@
 }
 .optionClear:hover { color: var(--accent); }
 
-/* ── Reminder inline row ── */
+/* ── Collapsed result row (time / reminder, after confirming) ── */
 
-.reminderRow {
+.resultRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0 8px;
+  justify-content: space-between;
+  width: 100%;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-dim);
+  border-radius: 10px;
+  padding: 11px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  text-align: left;
 }
 
-.reminderInput {
-  width: 52px;
+.resultValue {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.resultEdit {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+
+/* ── Active editing block (wheel / reminder form) ── */
+
+.editingBlock {
   background: var(--surface);
   border: 1px solid var(--border2);
-  border-radius: 8px;
-  padding: 8px 6px;
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--accent);
-  text-align: center;
-  outline: none;
-  -moz-appearance: textfield;
-}
-.reminderInput::-webkit-inner-spin-button,
-.reminderInput::-webkit-outer-spin-button { -webkit-appearance: none; }
-.reminderInput:focus { border-color: var(--accent); }
-
-.unitSegment {
+  border-radius: 12px;
+  padding: 8px 12px 12px;
+  margin-bottom: 8px;
   display: flex;
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  overflow: hidden;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
-.unitBtn {
-  background: none;
+.confirmBtn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px;
+  background: var(--accent);
+  color: #fff;
   border: none;
-  border-right: 1px solid var(--border2);
-  padding: 8px 9px;
+  border-radius: 8px;
   font-family: var(--font-ui);
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text3);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer;
-}
-.unitBtn:last-child { border-right: none; }
-
-.unitBtnActive {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.reminderSuffix {
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--text2);
 }
 
 .doneBtn {

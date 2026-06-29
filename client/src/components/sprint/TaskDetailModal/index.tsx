@@ -6,6 +6,7 @@ import { useSprintStore } from '../../../store/sprintStore'
 import { useFamilyStore } from '../../../store/familyStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import TimeWheelPicker from '../../ui/TimeWheelPicker'
+import ReminderFields, { type ReminderUnit } from '../ReminderFields'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
 import { isRecurring, calcStreak, calcRecord, calcMonthRate, buildMonthGrid } from '../../../utils/sprint'
@@ -17,7 +18,7 @@ import styles from './TaskDetailModal.module.css'
  * ---------------
  * Bottom-sheet картка задачі у стилі Trello.
  * Для звичайних задач: МІТКИ / ДЕДЛАЙН / ЧЕК-ЛІСТ / ОПИС.
- * Для рутин (repeat !== 'none'): МІТКИ / ПОВТОРЮВАНІСТЬ / НАСТУПНЕ ВИКОНАННЯ / ОПИС.
+ * Для звичок (repeat !== 'none'): МІТКИ / ПОВТОРЮВАНІСТЬ / НАСТУПНЕ ВИКОНАННЯ / ОПИС.
  *
  * Props:
  * @prop {string | null}  taskId    — id задачі або null (modal закритий)
@@ -89,15 +90,6 @@ function formatDueDateHuman(dateStr: string): string {
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
-
-type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks'
-
-const REMINDER_UNITS: { key: ReminderUnit; label: string }[] = [
-  { key: 'minutes', label: 'Хв. до' },
-  { key: 'hours',   label: 'Годин'  },
-  { key: 'days',    label: 'Днів'   },
-  { key: 'weeks',   label: 'Тижнів' },
-]
 
 function formatReminderLabel(reminder: { amount: number; unit: string }): string {
   const { amount, unit } = reminder
@@ -464,7 +456,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
             {recurring ? (
               <>
-                {/* ── МІТКИ (рутини — окрема секція) ── */}
+                {/* ── МІТКИ (звички — окрема секція) ── */}
                 <div className={styles.section}>
                   <p className={styles.sectionLabel}>Мітки</p>
                   <div className={styles.labelsRow}>
@@ -752,7 +744,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               </div>
             )}
 
-            {/* ── ЧАС ДОБИ (тільки для рутин) ── */}
+            {/* ── ЧАС ДОБИ (тільки для звичок) ── */}
             {recurring && (
               <div className={styles.section}>
                 <p className={styles.sectionLabel}>Час доби</p>
@@ -860,7 +852,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
                   </svg>
-                  Видалити рутину
+                  Видалити звичку
                 </button>
               )}
               <button type="button" className={styles.closeBottomBtn} onClick={onClose}>
@@ -918,33 +910,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               <button type="button" className={styles.closeBtn} onClick={() => setShowReminderPicker(false)} aria-label="Закрити">✕</button>
             </div>
             <div className={styles.reminderSheetBody}>
-              <div className={styles.reminderAmountRow}>
-                <input
-                  type="number"
-                  className={styles.reminderAmountInput}
-                  value={reminderAmount}
-                  onFocus={e => e.target.select()}
-                  onChange={e => setReminderAmount(e.target.value === '' ? '' : Math.min(999, Number(e.target.value)))}
-                />
-                <span className={styles.reminderAmountLabel}>
-                  {reminderUnit === 'minutes' ? 'хвилин' : reminderUnit === 'hours' ? 'годин' : reminderUnit === 'days' ? 'днів' : 'тижнів'} до
-                </span>
-              </div>
-              <div className={styles.reminderUnitList}>
-                {REMINDER_UNITS.map(u => (
-                  <button
-                    key={u.key}
-                    type="button"
-                    className={styles.reminderUnitRow}
-                    onClick={() => setReminderUnit(u.key)}
-                  >
-                    <span className={`${styles.reminderRadio} ${reminderUnit === u.key ? styles.reminderRadioActive : ''}`} />
-                    <span className={`${styles.reminderUnitLabel} ${reminderUnit === u.key ? styles.reminderUnitLabelActive : ''}`}>
-                      {u.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <ReminderFields
+                amount={reminderAmount}
+                unit={reminderUnit}
+                onAmountChange={setReminderAmount}
+                onUnitChange={setReminderUnit}
+              />
             </div>
             <button
               type="button"

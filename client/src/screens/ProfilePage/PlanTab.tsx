@@ -12,7 +12,7 @@ interface PlanFeature {
 }
 
 const FEATURES: PlanFeature[] = [
-  { label: 'Квести, рутини, покупки',    free: true,           pro: true,             family: true },
+  { label: 'Квести, звички, покупки',    free: true,           pro: true,             family: true },
   { label: 'Транзакції / місяць',         free: '50',           pro: 'Без ліміту',     family: 'Без ліміту' },
   { label: 'Цілі накопичення',            free: '2',            pro: 'Без ліміту',     family: 'Без ліміту' },
   { label: 'Рецепти',                     free: '15',           pro: 'Без ліміту',     family: 'Без ліміту' },

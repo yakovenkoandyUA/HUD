@@ -45,10 +45,14 @@ const TAG_BG: Record<SprintTag, string> = {
   learning:   'var(--orange-s)',
 }
 
-function getDueDateColor(dateStr: string): string {
+function getDueDateDiff(dateStr: string): number {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const target = new Date(dateStr); target.setHours(0, 0, 0, 0)
-  const diff = Math.round((target.getTime() - today.getTime()) / 86400000)
+  return Math.round((target.getTime() - today.getTime()) / 86400000)
+}
+
+function getDueDateColor(dateStr: string): string {
+  const diff = getDueDateDiff(dateStr)
   if (diff < 0)  return 'var(--negative)'
   if (diff <= 1) return 'var(--gold)'
   return 'var(--text3)'
@@ -102,6 +106,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const streak       = isRecurring(item) ? calcStreak(item) : 0
   const hasLabels    = (item.labels ?? []).length > 0
   const hasDueDate   = !!item.dueDate
+  const isOverdue    = hasDueDate && !item.done && getDueDateDiff(item.dueDate!) < 0
   const hasExtras    = hasLabels || hasDueDate || hasMissed
   const showBar      = checkTotal > 0 && checkPct > 0
 
@@ -114,7 +119,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const swipingRef = useRef(false)
   const deletingRef = useRef(false)
 
-  const [confirmClose, setConfirmClose] = useState(false)
+  const [confirmClose, setConfirmClose]   = useState(false)
+  const [confirmReturn, setConfirmReturn] = useState(false)
 
   // Keep latest prop refs so imperative handlers don't go stale
   const onDeleteRef  = useRef(onDelete)
@@ -213,10 +219,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
 
   const handleToggleDone = () => {
     if (item.done) {
-      onToggleRef.current?.()
+      setConfirmReturn(true)
       return
     }
     setConfirmClose(true)
+  }
+
+  const handleConfirmReturn = () => {
+    setConfirmReturn(false)
+    onToggleRef.current?.()
   }
 
   const handleConfirmClose = () => {
@@ -292,7 +303,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   return (
     <li
       ref={itemRef}
-      className={`${styles.item} ${item.done ? styles.done : ''} ${missedLevel === 'warn' ? styles.cardWarn : missedLevel === 'danger' ? styles.cardDanger : ''}`}
+      className={`${styles.item} ${item.done ? styles.done : ''} ${missedLevel === 'warn' ? styles.cardWarn : missedLevel === 'danger' ? styles.cardDanger : ''} ${isOverdue ? styles.cardOverdue : ''}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -359,12 +370,20 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                   </div>
                 )}
                 {hasDueDate && (
-                  <span className={styles.dueDateBadge} style={{ color: getDueDateColor(item.dueDate!) }}>
-                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none" className={styles.dueDateIcon}>
-                      <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
-                      <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    </svg>
-                    {formatDueDate(item.dueDate!)}
+                  <span className={`${styles.dueDateBadge} ${isOverdue ? styles.dueDateBadgeOverdue : ''}`} style={{ color: getDueDateColor(item.dueDate!) }}>
+                    {isOverdue ? (
+                      <svg width="10" height="9" viewBox="0 0 10 9" fill="none" className={styles.dueDateIcon}>
+                        <path d="M5 1L9 8H1L5 1Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+                        <path d="M5 4v1.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                        <circle cx="5" cy="6.7" r="0.5" fill="currentColor" />
+                      </svg>
+                    ) : (
+                      <svg width="9" height="9" viewBox="0 0 10 10" fill="none" className={styles.dueDateIcon}>
+                        <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.3" />
+                        <path d="M5 3v2.5l1.5 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                      </svg>
+                    )}
+                    {isOverdue ? `Просрочено · ${formatDueDate(item.dueDate!)}` : formatDueDate(item.dueDate!)}
                   </span>
                 )}
                 {hasMissed && !item.done && (
@@ -387,6 +406,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
             <div className={styles.confirmBtns}>
               <button type="button" className={styles.confirmNo} onClick={() => setConfirmClose(false)}>Ні</button>
               <button type="button" className={styles.confirmYes} onClick={handleConfirmClose}>Так</button>
+            </div>
+          </div>
+        )}
+
+        {confirmReturn && (
+          <div className={styles.confirmBanner}>
+            <span className={styles.confirmText}>Повернути завершений квест?</span>
+            <div className={styles.confirmBtns}>
+              <button type="button" className={styles.confirmNo} onClick={() => setConfirmReturn(false)}>Ні</button>
+              <button type="button" className={styles.confirmYes} onClick={handleConfirmReturn}>Так</button>
             </div>
           </div>
         )}

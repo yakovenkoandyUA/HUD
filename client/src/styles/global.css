@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=PT+Sans:wght@400;700&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&family=Cinzel:wght@400;600;700;900&family=Bebas+Neue&family=Press+Start+2P&family=Uncial+Antiqua&family=Philosopher:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=PT+Sans:wght@400;700&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&family=Cinzel:wght@400;600;700;900&family=Bebas+Neue&family=Press+Start+2P&family=Philosopher:wght@400;700&display=swap');
 
 @font-face {
   font-family: 'Furore';
@@ -305,7 +305,11 @@
   --negative:      #bf616a;
   --negative-soft: rgba(191, 97, 106, 0.12);
 
-  --font-display: 'Uncial Antiqua', 'Philosopher', serif;
+  /* Uncial Antiqua прибрано — її капітальна H читається як D (підтверджено
+     рендером), а на динамічних написах (назви гонок, SPRINT) це критично.
+     Philosopher має повний кириличний набір і цифри, тож фолбек був ідентичний
+     і непомітний для кирилиці — лишаємо тільки його. */
+  --font-display: 'Philosopher', serif;
 }
 
 /* Arctic: gradient body + sea glow at bottom */

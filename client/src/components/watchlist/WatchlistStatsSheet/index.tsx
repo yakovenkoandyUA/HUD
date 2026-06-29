@@ -12,11 +12,29 @@ const FALLBACK_MOVIE_MIN  = 120
 const FALLBACK_SERIES_MIN = 45
 const FALLBACK_ANIME_MIN  = 24
 
-interface Comparison { Icon: React.FC; text: string }
+interface Comparison { Icon: React.FC; text: string; joke: boolean }
 
 function countEpisodes(item: WatchlistItem): number {
   if (item.status === 'watched' && item.totalEpisodes) return item.totalEpisodes
   return item.watchedEpisodes?.length ?? 0
+}
+
+// Українська плюралізація (1/2-4/5+, з винятком 11-14)
+function pluralUA(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return few
+  return many
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }
 
 const WALK_DESTS = [
@@ -42,22 +60,25 @@ function walkingText(h: number): string {
 /* ── Icons (SVG, без емодзі) ───────────────────────────────────────────── */
 
 const FilmIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="3" y="5" width="18" height="14" rx="2"/>
-    <path d="M3 9h4M3 15h4M17 9h4M17 15h4M9 5v14M15 5v14"/>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 8l1.5-4h3L6 8M9 8l1.5-4h3L12 8M15 8l1.5-4h3L18 8" />
+    <rect x="3" y="8" width="18" height="12" rx="1.5"/>
+    <path d="M9 12l5 3-5 3v-6Z" fill="currentColor" stroke="none"/>
   </svg>
 )
 
 const TvIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="2" y="7" width="20" height="13" rx="2"/>
-    <path d="M8 21h8M12 3l4 4M12 3l-4 4"/>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="2" y="5" width="20" height="14" rx="2"/>
+    <path d="M9 9.5l5 2.5-5 2.5v-5Z" fill="currentColor" stroke="none"/>
+    <path d="M8 22h8"/>
   </svg>
 )
 
 const SparkleIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <path d="M12 2c0 0 1.4 6 4.5 9S22 14 22 14s-5.4 1.4-8.5 4.5S12 22 12 22s-1.4-5.4-4.5-8.5S2 12 2 12s5.4-1.4 8.5-4.5S12 2 12 2z"/>
+    <circle cx="19" cy="5" r="1.4"/>
   </svg>
 )
 
@@ -93,31 +114,117 @@ const MoonIcon: React.FC = () => (
   </svg>
 )
 
+const CoffeeIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"/>
+    <path d="M16 10h1.5a2.3 2.3 0 0 1 0 4.6H16"/>
+    <path d="M8 3.5c.4.7.4 1.3 0 2M12 3.5c.4.7.4 1.3 0 2"/>
+  </svg>
+)
+
+const QueueIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="8" cy="6" r="2"/>
+    <path d="M4 14c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5"/>
+    <circle cx="17" cy="7.5" r="1.7"/>
+    <path d="M14.5 14c.3-1.8 1.5-2.8 2.5-2.8s2.2 1 2.5 2.8"/>
+    <path d="M3 20h18"/>
+  </svg>
+)
+
+const MusicIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M9 18V5l11-2v13"/>
+    <circle cx="6" cy="18" r="3"/>
+    <circle cx="17" cy="16" r="3"/>
+  </svg>
+)
+
+const GameIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="2" y="8" width="20" height="9" rx="4"/>
+    <path d="M7 11v3M5.5 12.5h3"/>
+    <circle cx="15.5" cy="11.5" r="1" fill="currentColor" stroke="none"/>
+    <circle cx="18" cy="14" r="1" fill="currentColor" stroke="none"/>
+  </svg>
+)
+
+const PopcornIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M7 9l1 12h8l1-12"/>
+    <path d="M5.5 9a2 2 0 1 1 2.3-3.3A2.2 2.2 0 0 1 12 4.8a2.2 2.2 0 0 1 4.2.9A2 2 0 1 1 18.5 9Z"/>
+  </svg>
+)
+
+interface ComparisonGen { build: (h: number) => Comparison | null }
+
+const COMPARISON_GENERATORS: ComparisonGen[] = [
+  { build: h => ({ Icon: WalkIcon, joke: false, text: walkingText(h) }) },
+
+  { build: h => {
+    const n = Math.max(1, Math.round(h / 10))
+    return { Icon: PlaneIcon, joke: false, text: `Злітати Київ — Нью-Йорк ${n} ${pluralUA(n, 'раз', 'рази', 'разів')}` }
+  } },
+
+  { build: h => {
+    const n = Math.max(1, Math.round(h / 8))
+    return { Icon: BooksIcon, joke: false, text: `Прочитати ${n} ${pluralUA(n, 'книжку', 'книжки', 'книжок')}` }
+  } },
+
+  { build: h => {
+    const n = Math.round(h / 4.5)
+    if (n < 1) return null
+    return { Icon: RunIcon, joke: false, text: `Пробігти ${n} ${pluralUA(n, 'марафон', 'марафони', 'марафонів')}` }
+  } },
+
+  { build: h => {
+    const n = Math.round(h / 7)
+    if (n < 1) return null
+    return { Icon: MoonIcon, joke: false, text: `Проспати ${n} ${pluralUA(n, 'ніч', 'ночі', 'ночей')} поспіль` }
+  } },
+
+  { build: h => {
+    const n = Math.round(h / 3.2)
+    if (n < 1) return null
+    return { Icon: FilmIcon, joke: true, text: `Передивитись «Титанік» ${n} ${pluralUA(n, 'раз', 'рази', 'разів')} — і щоразу сподіватись, що Джек виживе` }
+  } },
+
+  { build: h => {
+    const n = Math.max(1, Math.round(h / 3))
+    return { Icon: CoffeeIcon, joke: true, text: `Випити ${n} ${pluralUA(n, 'чашку', 'чашки', 'чашок')} кави, щоб не заснути на середині` }
+  } },
+
+  { build: h => {
+    const n = Math.max(1, Math.round(h * 60 / 25))
+    return { Icon: QueueIcon, joke: true, text: `Простояти в черзі в Новій Пошті ${n} ${pluralUA(n, 'раз', 'рази', 'разів')}` }
+  } },
+
+  { build: h => {
+    const n = Math.max(1, Math.round(h * 60 / 3.5))
+    return { Icon: MusicIcon, joke: true, text: `Прослухати улюблену пісню на повторі ${n} ${pluralUA(n, 'раз', 'рази', 'разів')}` }
+  } },
+
+  { build: h => {
+    const n = Math.round(h / 50)
+    if (n < 1) return null
+    return { Icon: GameIcon, joke: true, text: `Пройти «Відьмака 3» з нуля ${n} ${pluralUA(n, 'раз', 'рази', 'разів')}` }
+  } },
+
+  { build: h => {
+    const kg = +(h / 2 * 0.2).toFixed(1)
+    if (kg < 0.1) return null
+    return { Icon: PopcornIcon, joke: true, text: `З'їсти ${kg.toLocaleString('uk')} кг кінотеатрального попкорну` }
+  } },
+]
+
+const SHOWN_COUNT = 6
+
 function buildComparisons(h: number): Comparison[] {
-  const list: Comparison[] = []
+  const built = shuffle(COMPARISON_GENERATORS)
+    .map(g => g.build(h))
+    .filter((c): c is Comparison => c !== null)
 
-  list.push({ Icon: WalkIcon, text: walkingText(h) })
-
-  const flights = Math.max(1, Math.round(h / 10))
-  list.push({ Icon: PlaneIcon, text: `Злітати Київ — Нью-Йорк ${flights} ${flights === 1 ? 'раз' : 'разів'}` })
-
-  const books = Math.max(1, Math.round(h / 8))
-  list.push({ Icon: BooksIcon, text: `Прочитати ${books} ${books === 1 ? 'книжку' : books < 5 ? 'книжки' : 'книжок'}` })
-
-  const marathons = Math.round(h / 4.5)
-  if (marathons >= 1) {
-    list.push({ Icon: RunIcon, text: `Пробігти ${marathons} ${marathons === 1 ? 'марафон' : marathons < 5 ? 'марафони' : 'марафонів'}` })
-  }
-
-  const titanics = Math.round(h / 3.2)
-  if (titanics >= 1) {
-    list.push({ Icon: FilmIcon, text: `Переглянути «Титанік» ${titanics} ${titanics === 1 ? 'раз' : 'разів'} — і щоразу плакати в кінці` })
-  }
-
-  const nights = Math.round(h / 7)
-  list.push({ Icon: MoonIcon, text: `Проспати ${nights} ${nights === 1 ? 'ніч' : nights < 5 ? 'ночі' : 'ночей'} поспіль` })
-
-  return list
+  return built.slice(0, SHOWN_COUNT)
 }
 
 /**
@@ -213,7 +320,8 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
   }, [items])
 
   const { totalH, movieWatched, seriesCount, animeCount, seriesEp, animeEp } = stats
-  const comparisons = useMemo(() => totalH > 0 ? buildComparisons(totalH) : [], [totalH])
+  // isOpen у залежностях — пул жартів/порівнянь перемішується щоразу при відкритті sheet
+  const comparisons = useMemo(() => totalH > 0 ? buildComparisons(totalH) : [], [totalH, isOpen])
 
   if (!mounted) return null
 
@@ -249,21 +357,21 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
             <div className={styles.breakdown}>
               {movieWatched > 0 && (
                 <div className={styles.breakItem}>
-                  <span className={styles.breakIcon}><FilmIcon /></span>
+                  <span className={`${styles.breakIcon} ${styles.breakIconAccent}`}><FilmIcon /></span>
                   <span className={styles.breakNum}>{movieWatched}</span>
                   <span className={styles.breakLbl}>фільмів</span>
                 </div>
               )}
               {seriesCount > 0 && (
                 <div className={styles.breakItem}>
-                  <span className={styles.breakIcon}><TvIcon /></span>
+                  <span className={`${styles.breakIcon} ${styles.breakIconSecond}`}><TvIcon /></span>
                   <span className={styles.breakNum}>{seriesEp}</span>
                   <span className={styles.breakLbl}>еп. серіалів</span>
                 </div>
               )}
               {animeCount > 0 && (
                 <div className={styles.breakItem}>
-                  <span className={styles.breakIcon}><SparkleIcon /></span>
+                  <span className={`${styles.breakIcon} ${styles.breakIconGold}`}><SparkleIcon /></span>
                   <span className={styles.breakNum}>{animeEp}</span>
                   <span className={styles.breakLbl}>еп. аніме</span>
                 </div>
@@ -277,8 +385,12 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
             {/* ── Comparisons ── */}
             <div className={styles.compList}>
               {comparisons.map((c, i) => (
-                <div key={i} className={styles.compRow}>
-                  <span className={styles.compIcon}><c.Icon /></span>
+                <div
+                  key={i}
+                  className={styles.compRow}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <span className={`${styles.compIcon} ${c.joke ? styles.compIconJoke : ''}`}><c.Icon /></span>
                   <span className={styles.compText}>{c.text}</span>
                 </div>
               ))}

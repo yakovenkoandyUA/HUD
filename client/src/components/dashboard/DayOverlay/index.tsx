@@ -35,7 +35,7 @@ function getCurrentSlot(): 'morning' | 'afternoon' | 'evening' {
 /**
  * DayOverlay
  * ----------
- * Full-screen overlay "Мій день" — рутини на сьогодні по слотах,
+ * Full-screen overlay "Мій день" — звички на сьогодні по слотах,
  * погода, трекер настрою з нотаткою, сімейний настрій, місячний heatmap.
  *
  * Props:
@@ -256,7 +256,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
           )}
 
           {routines.length === 0 && (
-            <p className={styles.emptyHint}>Немає рутин на сьогодні.</p>
+            <p className={styles.emptyHint}>Немає звичок на сьогодні.</p>
           )}
 
           {/* ── Mood calendar ── */}

@@ -47,9 +47,9 @@ cron.schedule('0 9 * * *', async () => {
       const count = titles.length
       const body = count === 1
         ? `«${titles[0]}» — не виконано сьогодні`
-        : `${count} рутини не виконані сьогодні`
+        : `${count} звичок не виконано сьогодні`
       await sendPushToUser(userId, {
-        title: '⏰ Нагадування про рутини',
+        title: '⏰ Нагадування про звички',
         body,
         url: '/sprint',
       })

@@ -49,6 +49,14 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ values, index, onChange }) =>
   const viewCenter = scrollTop + (ITEM_HEIGHT * VISIBLE_COUNT) / 2
   const maxDist = ITEM_HEIGHT * PAD
 
+  const selectIndex = (i: number) => {
+    const el = ref.current
+    if (!el) return
+    if (settleRef.current) clearTimeout(settleRef.current)
+    el.scrollTo({ top: i * ITEM_HEIGHT, behavior: 'smooth' })
+    onChange(i)
+  }
+
   return (
     <div className={styles.wheel} style={{ height: ITEM_HEIGHT * VISIBLE_COUNT }}>
       <div className={styles.highlight} style={{ height: ITEM_HEIGHT, top: ITEM_HEIGHT * PAD }} />
@@ -66,6 +74,7 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ values, index, onChange }) =>
               key={v}
               className={styles.item}
               style={{ height: ITEM_HEIGHT, opacity: 1 - ratio * 0.75, transform: `scale(${1 - ratio * 0.22})` }}
+              onClick={() => selectIndex(i)}
             >
               {v}
             </div>
