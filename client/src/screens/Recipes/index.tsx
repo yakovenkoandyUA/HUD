@@ -19,9 +19,9 @@ import styles from './Recipes.module.css'
 const GHOST_COUNT = 6
 
 const SCOPE_TABS: { value: RecipeScope; label: string }[] = [
-  { value: 'all',    label: 'СПІЛЬНОТА'  },
-  { value: 'family', label: "СІМ'Я"      },
   { value: 'mine',   label: 'МОЄ'        },
+  { value: 'family', label: "СІМ'Я"      },
+  { value: 'all',    label: 'СПІЛЬНОТА'  },
 ]
 
 /**

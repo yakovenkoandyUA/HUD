@@ -46,6 +46,7 @@ interface WeatherData { tempC: string; desc: string }
 
 function useWeather(city: string): WeatherData | null {
   const [data, setData] = useState<WeatherData | null>(null)
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
     if (!city) return
     let cancelled = false
@@ -63,10 +64,13 @@ function useWeather(city: string): WeatherData | null {
         if (!c) return
         setData({ tempC: c.temp_C ?? '?', desc: c.weatherDesc?.[0]?.value ?? '' })
       })
-      .catch(() => {})
+      .catch(() => {
+        // Cold PWA start often loses this race (SW activating, slow first connect) — retry once.
+        if (!cancelled && retry < 1) setTimeout(() => { if (!cancelled) setRetry(r => r + 1) }, 2000)
+      })
       .finally(() => clearTimeout(t))
     return () => { cancelled = true; ctrl.abort() }
-  }, [city])
+  }, [city, retry])
   return data
 }
 

@@ -1,8 +1,7 @@
 .hint {
   position: fixed;
-  bottom: calc(var(--nav-height, 64px) + 76px);
-      right: 60px;
-    bottom: 100px;
+  right: 60px;
+  bottom: 140px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -18,6 +17,8 @@
 }
 
 .text {
+  position: relative;
+  z-index: 1;
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 600;
@@ -29,10 +30,10 @@
 
 .arrow {
   opacity: 0.8;
-  margin-top: 2px;
+  margin-top: 18px;
   margin-right: 10px;
   transform: rotate(60deg);
-  transform-origin: 70% 30%;
+  transform-origin: 50% 100%;
 }
 
 @keyframes fadeIn {

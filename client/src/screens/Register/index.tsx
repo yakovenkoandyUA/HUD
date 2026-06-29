@@ -82,7 +82,7 @@ const RegisterScreen: React.FC = () => {
               <input
                 className={styles.input}
                 type="text"
-                placeholder="Котька"
+                placeholder="Андрій"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 autoFocus
@@ -96,7 +96,7 @@ const RegisterScreen: React.FC = () => {
               <input
                 className={styles.input}
                 type="text"
-                placeholder="kotkа"
+                placeholder="andriy"
                 value={username}
                 onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                 autoComplete="username"

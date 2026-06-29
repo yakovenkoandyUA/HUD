@@ -4,6 +4,7 @@ import { useUiStore } from '../../store/uiStore'
 import { usePushSubscription } from '../../hooks/usePushSubscription'
 import { usePwaInstall } from '../../hooks/usePwaInstall'
 import { clearApiCaches } from '../../utils/appCache'
+import { reverseGeocodeCity } from '../../utils/geocode'
 import styles from './ProfilePage.module.css'
 
 const LocateIcon: React.FC = () => (
@@ -79,13 +80,7 @@ const MeSystem: React.FC = () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const r = await fetch(
-            `https://nominatim.openstreetmap.org/reverse` +
-            `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&accept-language=uk`,
-            { headers: { 'User-Agent': 'MIMIR-App/1.0' } }
-          )
-          const data = await r.json()
-          const found = data.address?.city || data.address?.town || data.address?.village || data.address?.county
+          const found = await reverseGeocodeCity(pos.coords.latitude, pos.coords.longitude)
           if (found) {
             setCity(found)
             updateProfile({ city: found })

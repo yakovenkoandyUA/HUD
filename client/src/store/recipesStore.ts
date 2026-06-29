@@ -46,7 +46,7 @@ export const useRecipesStore = create<RecipesState>()(
   persist(
     (set, get) => ({
       recipes: [],
-      scope: 'all',
+      scope: 'mine',
       wishlistIds: [],
       cookStats: {},
 

@@ -4,12 +4,12 @@ import BottomNav from './components/layout/BottomNav'
 import ToastContainer from './components/ui/Toast'
 import PwaInstallBanner from './components/ui/PwaInstallBanner'
 import AchievementUnlockedModal from './components/ui/AchievementUnlockedModal'
-import CitySplash from './components/ui/CitySplash'
 import PinLock from './components/ui/PinLock'
 import { usePwaInstall } from './hooks/usePwaInstall'
 import { useProfileStore } from './store/profileStore'
 import { useUiStore } from './store/uiStore'
 import { usePushSubscription } from './hooks/usePushSubscription'
+import { reverseGeocodeCity } from './utils/geocode'
 import Dashboard from './screens/Dashboard'
 import Finance from './screens/Finance'
 import F1Screen from './screens/F1'
@@ -185,13 +185,11 @@ const PinGuard: React.FC = () => {
 }
 
 const App: React.FC = () => {
-  const [splashDone, setSplashDone] = useState(
-    () => sessionStorage.getItem('hud-city-splash') === '1'
-  )
   const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
-  const { token, activeProfile } = useProfileStore()
+  const { token, activeProfile, updateProfile } = useProfileStore()
   const { setUpdateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe } = usePushSubscription()
+  const cityAutoLocateRef = useRef(false)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
@@ -223,6 +221,24 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, isSupported, isSubscribed])
 
+  useEffect(() => {
+    if (!token || !activeProfile || activeProfile.city || cityAutoLocateRef.current) return
+    if (!navigator.geolocation) return
+    cityAutoLocateRef.current = true
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const found = await reverseGeocodeCity(pos.coords.latitude, pos.coords.longitude)
+          if (found) await updateProfile({ city: found })
+        } catch {
+          // мовчки ігноруємо — користувач завжди може задати місто вручну в налаштуваннях
+        }
+      },
+      () => {},
+      { timeout: 8000 }
+    )
+  }, [token, activeProfile, updateProfile])
+
   const showBanner = !isDismissed && (isInstallable || isIOS)
  
   return (
@@ -240,7 +256,6 @@ const App: React.FC = () => {
       <PinGuard />
       <ToastContainer />
       <AchievementUnlockedModal />
-      {!splashDone && <CitySplash onDone={() => setSplashDone(true)} />}
     </BrowserRouter>
     </ErrorBoundary>
   )

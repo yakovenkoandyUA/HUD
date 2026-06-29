@@ -16,6 +16,19 @@
   width: min(320px, calc(100vw - 48px));
 }
 
+/* Guardian — Mimir face watermark above the avatar */
+.guardian {
+  width: 88px;
+  height: auto;
+  margin-bottom: 16px;
+  animation: guardianGlow 3s ease-in-out infinite;
+}
+
+@keyframes guardianGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(239, 159, 39, 0.25)); }
+  50%      { filter: drop-shadow(0 0 20px rgba(239, 159, 39, 0.55)); }
+}
+
 /* Avatar */
 .avatar {
   width: 72px;

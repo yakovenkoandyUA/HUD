@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { useProfileStore } from '../../../store/profileStore'
+import MimirFace from '../../../assets/mimir-face.svg?react'
 import styles from './PinLock.module.css'
 
 const PIN_LENGTH = 4
@@ -59,6 +60,9 @@ const PinLock: React.FC = () => {
   return (
     <div className={styles.overlay}>
       <div className={styles.content}>
+        {/* Mimir — охоронець криниці мудрості, охороняє вхід */}
+        <MimirFace className={styles.guardian} aria-hidden="true" />
+
         {/* Profile avatar */}
         <div className={styles.avatar}>
           {activeProfile?.avatarUrl ? (
