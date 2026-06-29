@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
 import type { UnifiedTodo } from '../../../types'
 import { isRoutineDueOnDay, isRecurring } from '../../../utils/sprint'
+import RoutineRing from '../RoutineRing'
 import styles from './WeekExpandedView.module.css'
 
 /**
@@ -259,13 +260,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
               return (
                 <div key={t.id} className={`${styles.taskRow} ${isAnimating ? styles.taskRowDone : ''} ${isDoneForDay && !isAnimating ? styles.taskRowCompleted : ''}`}>
                   <button type="button" className={styles.checkboxWrapper} onClick={() => handleCheckboxTap(t, isDoneForDay, selectedDay)}>
-                    <span className={`${styles.circle} ${isDone ? styles.circleChecked : styles.circleGold}`}>
-                      {isDone && (
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                          <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </span>
+                    <RoutineRing task={t} done={isDone} size={28} />
                   </button>
                   <button type="button" className={styles.taskName} onClick={() => onOpenDetail?.(t.id)}>
                     {t.title}
@@ -394,13 +389,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
                           onClick={() => handleCheckboxTap(t, isDoneForDay, toIso(dt))}
                           aria-label="Виконати"
                         >
-                          <span className={`${styles.circle} ${isDone ? styles.circleChecked : styles.circleGold}`}>
-                            {isDone && (
-                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                                <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            )}
-                          </span>
+                          <RoutineRing task={t} done={isDone} size={28} />
                         </button>
 
                         <button type="button" className={styles.taskName} onClick={() => onOpenDetail?.(t.id)}>
@@ -430,14 +419,19 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
         {weekStats.some(w => w.total > 0) && (
           <div className={styles.stats}>
             <div className={styles.statsHeader}>
-              <span className={styles.statsTitle}>Статистика звичок</span>
+              <span className={styles.statsTitle}>Виконання звичок</span>
+              <span className={styles.statsHint}>яка частка запланованих звичок виконана — по тижнях за останній місяць</span>
             </div>
             <div className={styles.statsRows}>
               {weekStats.map((w, i) => {
                 if (w.total === 0) return null
                 const pct = w.done / w.total
                 const [, wm, wd] = w.mondayIso.split('-').map(Number)
-                const dateLabel = `${wd} ${MONTHS_SHORT[wm - 1]}`
+                const sun = new Date(w.mondayIso); sun.setDate(sun.getDate() + 6)
+                const sameMonth = sun.getMonth() + 1 === wm
+                const rangeLabel = sameMonth
+                  ? `${wd}–${sun.getDate()} ${MONTHS_SHORT[wm - 1]}`
+                  : `${wd} ${MONTHS_SHORT[wm - 1]} – ${sun.getDate()} ${MONTHS_SHORT[sun.getMonth()]}`
                 const fillClass = pct >= 0.8
                   ? styles.statsBarFillHigh
                   : pct >= 0.5
@@ -445,11 +439,14 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
                   : styles.statsBarFillLow
                 return (
                   <div key={i} className={`${styles.statsRow} ${w.isCurrent ? styles.statsRowCurrent : ''}`}>
-                    <span className={styles.statsWeekLabel}>{dateLabel}</span>
+                    <span className={styles.statsWeekLabel}>
+                      {rangeLabel}
+                      {w.isCurrent && <span className={styles.statsCurrentTag}>триває</span>}
+                    </span>
                     <div className={styles.statsBar}>
                       <div className={`${styles.statsBarFill} ${fillClass}`} style={{ width: `${pct * 100}%` }} />
                     </div>
-                    <span className={styles.statsCount}>{w.done}/{w.total}</span>
+                    <span className={styles.statsCount}>{Math.round(pct * 100)}% <span className={styles.statsCountFraction}>({w.done}/{w.total})</span></span>
                   </div>
                 )
               })}
@@ -580,13 +577,7 @@ const WeekExpandedView: React.FC<WeekExpandedViewProps> = ({
                   return (
                     <div key={t.id} className={`${styles.taskRow} ${isAnimating ? styles.taskRowDone : ''} ${isDoneForDay && !isAnimating ? styles.taskRowCompleted : ''}`}>
                       <button type="button" className={styles.checkboxWrapper} onClick={() => handleCheckboxTap(t, isDoneForDay, panelDay)}>
-                        <span className={`${styles.circle} ${isDone ? styles.circleChecked : styles.circleGold}`}>
-                          {isDone && (
-                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                              <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                        </span>
+                        <RoutineRing task={t} done={isDone} size={28} />
                       </button>
                       <button type="button" className={styles.taskName} onClick={() => onOpenDetail?.(t.id)}>
                         {t.title}

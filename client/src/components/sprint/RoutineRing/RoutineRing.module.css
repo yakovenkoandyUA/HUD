@@ -1,0 +1,49 @@
+.ringWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ringSvg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.ringTrack {
+  fill: none;
+  stroke: color-mix(in srgb, var(--text3) 35%, transparent);
+}
+
+.ringProgress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease, stroke 0.2s ease;
+}
+
+.ringWrapDone .ringProgress {
+  stroke: var(--positive);
+}
+
+:global([data-theme="velvet"]) .ringTrack {
+  stroke: color-mix(in srgb, var(--surface2) 60%, transparent);
+}
+
+.ringIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+}
+
+.ringWrapDone .ringIcon {
+  color: var(--positive);
+}
+
+:global([data-theme="velvet"]) .ringIcon {
+  color: var(--surface2);
+}

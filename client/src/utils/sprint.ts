@@ -71,6 +71,24 @@ export function calcRecord(task: UnifiedTodo): number {
   return record
 }
 
+export function calcWeekRate(task: UnifiedTodo): number {
+  if (!isRecurring(task)) return 0
+  const log = new Set(task.completionLog ?? [])
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let due = 0
+  let done = 0
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    if (isRoutineDueOnDay(task, d)) {
+      due++
+      if (log.has(toIso(d))) done++
+    }
+  }
+  return due === 0 ? 0 : Math.round((done / due) * 100)
+}
+
 export function calcMonthRate(task: UnifiedTodo): number {
   if (!isRecurring(task)) return 0
   const log = new Set(task.completionLog ?? [])

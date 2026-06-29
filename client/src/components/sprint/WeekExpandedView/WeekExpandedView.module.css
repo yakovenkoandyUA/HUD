@@ -435,6 +435,9 @@
 
 .statsHeader {
   margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .statsTitle {
@@ -444,6 +447,13 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text3);
+}
+
+.statsHint {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.4;
 }
 
 .statsRows { display: flex; flex-direction: column; gap: 6px; }
@@ -464,14 +474,27 @@
 }
 
 .statsWeekLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text3);
-  width: 52px;
+  width: 76px;
   flex-shrink: 0;
 }
 
 .statsRowCurrent .statsWeekLabel { color: var(--gold); }
+
+.statsCurrentTag {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.85;
+}
 
 .statsBar {
   flex: 1;
@@ -493,11 +516,18 @@
 
 .statsCount {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text3);
-  width: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  width: 92px;
   flex-shrink: 0;
   text-align: right;
+}
+
+.statsCountFraction {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text3);
 }
 
 .statsRowCurrent .statsCount { color: var(--gold); }
