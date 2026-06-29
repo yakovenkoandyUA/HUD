@@ -8,8 +8,9 @@ import styles from './GreetingBlock.module.css'
 /**
  * GreetingBlock
  * -------------
- * Персоналізований вітальний блок з іменем, часовим привітанням, датою
- * та тематичною SVG-ілюстрацією на фоні.
+ * Компактний вітальний рядок з тематичною ілюстрацією на фоні.
+ * Привітання+ім'я — дрібний підпис (вже відомі юзеру, не несуть інформації);
+ * дата+погода — головний рядок, бо це єдине, що реально варто глянути зранку.
  * При натисканні на погоду — викликає onWeatherClick з даними погоди.
  *
  * Props:
@@ -19,8 +20,7 @@ interface GreetingBlockProps {
   onWeatherClick?: (weather: WeatherData) => void
 }
 
-const DAYS = ['Неділя','Понеділок','Вівторок','Середа','Четвер','Пятниця','Субота']
-const MONTHS = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня']
+const DAYS_SHORT = ['Нд','Пн','Вт','Ср','Чт','Пт','Сб']
 
 function greeting(h: number): string {
   if (h < 6)  return 'Добраніч'
@@ -29,8 +29,12 @@ function greeting(h: number): string {
   return 'Добрий вечір'
 }
 
+// Числовий формат — "Пн · 29.06" замість "Понеділок · 29 червня": вдвічі коротше,
+// не вгортається навіть на вузьких екранах, а погода тепер на своєму рядку нижче
 function formatDate(d: Date): string {
-  return `${DAYS[d.getDay()]} · ${d.getDate()} ${MONTHS[d.getMonth()]}`
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  return `${DAYS_SHORT[d.getDay()]} · ${dd}.${mm}`
 }
 
 /* ── Component ───────────────────────────────────────────── */
@@ -69,21 +73,22 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick }) => {
       )}
 
       <div className={styles.content}>
-        <span className={styles.greetText}>{greet}</span>
-        <span className={styles.name}>{profile?.name ?? ''}</span>
+        <span className={styles.greetLine}>
+          {greet}, <span className={styles.name}>{profile?.name ?? ''}</span>
+        </span>
+
         <span className={styles.date}>{dateStr}</span>
+
         {weather && (
           <button
             type="button"
-            className={styles.weatherRow}
+            className={styles.weatherChip}
             onClick={() => onWeatherClick?.(weather)}
             aria-label="Деталі погоди"
           >
             <img src={weather.icon} alt={weather.desc} className={styles.weatherIcon} />
-            <div className={styles.weatherInfo}>
-              <span className={styles.weatherTemp}>{weather.temp}°</span>
-              <span className={styles.weatherDesc}>{weather.desc}</span>
-            </div>
+            <span className={styles.weatherTemp}>{weather.temp}°</span>
+            <span className={styles.weatherDesc}>{weather.desc}</span>
           </button>
         )}
       </div>
