@@ -6,6 +6,7 @@ import HeroCard from '../../components/dashboard/HeroCard'
 import RaceHeroCard from '../../components/dashboard/RaceHeroCard'
 import RaceCountdownStrip from '../../components/dashboard/RaceCountdownStrip'
 import DaySummaryCard from '../../components/dashboard/DaySummaryCard'
+import TodayHabits from '../../components/dashboard/TodayHabits'
 import WeekHeader from '../../components/sprint/WeekHeader'
 import Modal from '../../components/ui/Modal'
 import ExpenseForm from '../../components/finance/ExpenseForm'
@@ -124,6 +125,13 @@ const Dashboard: React.FC = () => {
       <div ref={contentRef} className={styles.content}>
         <GreetingBlock onWeatherClick={setWeatherModal} />
 
+        <TodayHabits
+          routineItems={routineItems}
+          isDoneToday={isDoneToday}
+          onToggle={toggleItem}
+          onOpenDay={() => setShowDay(true)}
+        />
+
         <div className={styles.calendarWrap}>
           {raceThisWeek ? (
             <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
@@ -142,15 +150,11 @@ const Dashboard: React.FC = () => {
         )}
 
         <DaySummaryCard
-          routineItems={routineItems}
-          isDoneToday={isDoneToday}
-          onToggle={toggleItem}
           activeQuests={activeQuests}
           shoppingCount={shoppingCount}
           meals={todayMeals.map(r => r.title)}
           notesCount={notes.length}
           latestNote={latestNote}
-          onOpenDay={() => setShowDay(true)}
           onQuestsClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'task' } })}
           onShoppingClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'shopping' } })}
           onMealsClick={() => todayMeals.length === 1

@@ -158,7 +158,9 @@ const BottomNav: React.FC = () => {
 
   // ── Pill style ────────────────────────────────────────────────
   // Завжди всі доступні розділи (максимум 7), без налаштування — Dashboard
-  // тенденційно в центрі ряду, без виділення колом (просто звичайна іконка).
+  // в центрі ряду тільки коли загальна кількість непарна (5/7 — є справжній
+  // центр); інакше (6 — типовий випадок без F1) Dashboard зліва, бо немає
+  // парного центру і "зліва" найпередбачуваніше для головного розділу.
   if (navStyle === 'pill') {
     const pillLink = (s: NavSection) => (
       <NavLink
@@ -173,8 +175,18 @@ const BottomNav: React.FC = () => {
 
     const dashSection = availableSections.find(s => s.to === '/')
     const rest = availableSections.filter(s => s.to !== '/')
-    const half = Math.ceil(rest.length / 2)
+    const isOdd = availableSections.length % 2 === 1
 
+    if (!isOdd) {
+      return (
+        <nav className={styles.nav}>
+          {dashSection && pillLink(dashSection)}
+          {rest.map(pillLink)}
+        </nav>
+      )
+    }
+
+    const half = Math.ceil(rest.length / 2)
     return (
       <nav className={styles.nav}>
         {rest.slice(0, half).map(pillLink)}

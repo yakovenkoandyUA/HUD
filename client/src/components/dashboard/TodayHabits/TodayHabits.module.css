@@ -1,0 +1,146 @@
+.root {
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg));
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+:global([data-theme="velvet"]) .root {
+  background: color-mix(in srgb, var(--accent) 90%, var(--bg));
+}
+
+:global([data-theme="cyber"]) .root {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
+
+:global([data-theme="japan"]) .root {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+
+:global([data-theme="pixel"]) .root {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+
+:global([data-theme="noir"]) .root {
+  background: var(--surface2);
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 9px 14px 8px;
+}
+
+.headerLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+:global([data-theme="velvet"]) .headerLabel {
+  color: var(--surface);
+}
+
+.openBtn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.openBtn:hover { color: var(--accent); }
+:global([data-theme="velvet"]) .openBtn {
+  color: var(--surface);
+}
+
+/* ── Routine chips ───────────────────────────────────────────── */
+
+.chipsRow {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.chipsRow::-webkit-scrollbar { display: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 0;
+  border-radius: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.chip:active { opacity: 0.7; }
+
+.chip + .chip::before {
+  content: '·';
+  color: var(--text3);
+  margin-right: 10px;
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+:global([data-theme="velvet"]) .chip {
+  color: var(--surface2);
+}
+
+.chipDone {
+  color: var(--text3);
+  font-weight: 400;
+}
+
+.chipDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  background: none;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+:global([data-theme="velvet"]) .chipDot {
+  border: 1.5px solid var(--surface);
+}
+.chipDone .chipDot {
+  border-color: var(--positive);
+  background: var(--positive);
+}
+
+.chipTimeIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--text3);
+  opacity: 0.7;
+}
+:global([data-theme="velvet"]) .chipTimeIcon {
+  color: var(--surface2);
+}

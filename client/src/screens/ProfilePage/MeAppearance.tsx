@@ -94,7 +94,17 @@ const MeAppearance: React.FC = () => {
               key={opt.id}
               type="button"
               className={`${styles.navStyleCard} ${navStyle === opt.id ? styles.navStyleCardActive : ''}`}
-              onClick={() => setNavStyle(opt.id)}
+              onClick={() => {
+                setNavStyle(opt.id)
+                // Перемикання стилю не мало очевидно зрозумілого ефекту — якщо закріплених
+                // розділів більше за ліміт нового стилю (напр. перейшли з "Пілюля", де
+                // закріплено все, на "Хаб" з лімітом 4), зайві самі зникають з головного
+                // меню й одразу потрапляють у розкладне коло, без ручного вимикання чекбоксів.
+                const max = NAV_STYLE_MAX_PINNED[opt.id]
+                if (pinnedSections.length > max) {
+                  setPinnedSections(pinnedSections.slice(0, max))
+                }
+              }}
               aria-pressed={navStyle === opt.id}
             >
               <div className={styles.navPreview}>
