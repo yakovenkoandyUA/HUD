@@ -202,7 +202,6 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
   }
 
   const handlePinClick = (pin: MapPin) => {
-    console.log('[DEBUG] handlePinClick', pin.id, 'activeId was', activeId)
     const next = pin.id === activeId ? null : pin.id
     setActiveId(next)
     setPopupPin(next ? pin : null)
@@ -271,6 +270,7 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
                 anchor="bottom"
                 offset={40}
                 closeButton
+                closeOnClick={false}
                 onClose={() => setPopupPin(null)}
                 className={styles.popup}
               >
