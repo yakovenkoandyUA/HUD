@@ -1,7 +1,7 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore'
 import { ACHIEVEMENTS } from '../../data/achievements'
-import AchievementPath from '../../components/profile/AchievementPath'
+import AchievementGrid from '../../components/profile/AchievementGrid'
 import styles from './ProfilePage.module.css'
 
 const EMPTY_UNLOCKED: { id: string; unlockedAt: string }[] = []
@@ -9,9 +9,9 @@ const EMPTY_UNLOCKED: { id: string; unlockedAt: string }[] = []
 /**
  * MeAchievements
  * --------------
- * Підекран "Досягнення" вкладки "Я" — стежка бейджів (косметичний прогрес,
- * не керує доступом до фіч). Тап на вузол → попап з описом прямо біля нього
- * (логіка в AchievementPath, тут лише обгортка з прогрес-баром).
+ * Підекран "Досягнення" вкладки "Я" — грід бейджів (косметичний прогрес,
+ * не керує доступом до фіч). Тап на картку розгортає опис/підказку прямо
+ * під назвою (логіка в AchievementGrid, тут лише обгортка з прогрес-баром).
  */
 const MeAchievements: React.FC = () => {
   const unlocked = useProfileStore(s => s.activeProfile?.unlockedAchievements ?? EMPTY_UNLOCKED)
@@ -25,7 +25,7 @@ const MeAchievements: React.FC = () => {
       <div className={styles.achProgressTrack}>
         <div className={styles.achProgressFill} style={{ width: `${pct}%` }} />
       </div>
-      <AchievementPath unlocked={unlocked} />
+      <AchievementGrid unlocked={unlocked} />
     </div>
   )
 }

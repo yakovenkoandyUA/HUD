@@ -185,8 +185,9 @@ const MeTab: React.FC = () => {
   const rank = getRank(activeProfile.unlockedAchievements?.length ?? 0)
 
   const unlockedIds = activeProfile.unlockedAchievements ?? []
-  const nextAchievement = ACHIEVEMENTS.find(a => !unlockedIds.some(u => u.id === a.id))
-  const achievementsSub = nextAchievement ? `Далі: ${nextAchievement.title}` : 'Всі бейджі зібрано!'
+  const achievementsSub = unlockedIds.length === ACHIEVEMENTS.length
+    ? 'Всі бейджі зібрано!'
+    : `${unlockedIds.length}/${ACHIEVEMENTS.length} розблоковано`
 
   return (
     <div className={styles.tabContent}>
