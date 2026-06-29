@@ -309,299 +309,300 @@ const MemoryDetailScreen: React.FC = () => {
   }
 
   return (
-    <div className={styles.screen}>
-      {/* ── Header ── */}
-      <div className={styles.header}>
-        <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
-          ←
-        </button>
+		<div className={styles.screen}>
+			{/* ── Header ── */}
+			<div className={styles.header}>
+				<button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
+					←
+				</button>
 
-        <div className={styles.headerMeta}>
-          <h1 className={styles.headerTitle}>{memory.title.toUpperCase()}</h1>
-          <p className={styles.headerSub}>
-            {memory.location && <span>{memory.location} · </span>}
-            <span>{formatMemoryDate(memory.date)}</span>
-            {memory.photos.length > 0 && (
-              <span className={styles.headerPhotoCount}>
-                <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
-                  <rect x="1.5" y="2.5" width="11" height="9" rx="1.3" stroke="currentColor" strokeWidth="1.2"/>
-                  <circle cx="4.7" cy="5.5" r="1" fill="currentColor"/>
-                  <path d="M2 9.5l3-3 2 2 2.5-3 2.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                {memory.photos.length} фото
-              </span>
-            )}
-          </p>
-        </div>
+				<div className={styles.headerMeta}>
+					<h1 className={styles.headerTitle}>{memory.title.toUpperCase()}</h1>
+					<p className={styles.headerSub}>
+						{memory.location && (
+							<span className={styles.headerLocation} title={memory.location}>
+								{memory.location}
+							</span>
+						)}
+						<span className={styles.headerMetaRight}>
+							{formatMemoryDate(memory.date)}
+							{memory.photos.length > 0 && (
+								<span className={styles.headerPhotoCount}>
+									<svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+										<rect x="1.5" y="2.5" width="11" height="9" rx="1.3" stroke="currentColor" strokeWidth="1.2" />
+										<circle cx="4.7" cy="5.5" r="1" fill="currentColor" />
+										<path d="M2 9.5l3-3 2 2 2.5-3 2.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+									</svg>
+									{memory.photos.length} фото
+								</span>
+							)}
+						</span>
+					</p>
+				</div>
 
-        {memory.ownerName && (
-          <div className={styles.ownerBadge} title={memory.ownerName}>
-            {memory.ownerAvatarUrl
-              ? <img src={memory.ownerAvatarUrl} alt={memory.ownerName} className={styles.ownerAvatar} />
-              : <span className={styles.ownerInitial}>{memory.ownerName[0]}</span>
-            }
-          </div>
-        )}
+				{memory.ownerName && (
+					<div className={styles.ownerBadge} title={memory.ownerName}>
+						{memory.ownerAvatarUrl ? <img src={memory.ownerAvatarUrl} alt={memory.ownerName} className={styles.ownerAvatar} /> : <span className={styles.ownerInitial}>{memory.ownerName[0]}</span>}
+					</div>
+				)}
 
-        <button
-          type="button"
-          className={styles.menuBtn}
-          onClick={() => setMenuOpen(v => !v)}
-          aria-label="Меню"
-        >
-          ⋮
-        </button>
+				<button type="button" className={styles.menuBtn} onClick={() => setMenuOpen(v => !v)} aria-label="Меню">
+					⋮
+				</button>
 
-        {menuOpen && (
-          <>
-            <div className={styles.dropBackdrop} onClick={() => setMenuOpen(false)} />
-            <div className={styles.dropdown}>
-              <button
-                type="button"
-                className={styles.dropItem}
-                onClick={() => { setShowEdit(true); setMenuOpen(false) }}
-              >
-                Редагувати подію
-              </button>
-              <div className={styles.dropDivider} />
-              <button
-                type="button"
-                className={`${styles.dropItem} ${styles.dropItemDanger}`}
-                onClick={() => { setShowDeleteConfirm(true); setMenuOpen(false) }}
-              >
-                Видалити подію
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+				{menuOpen && (
+					<>
+						<div className={styles.dropBackdrop} onClick={() => setMenuOpen(false)} />
+						<div className={styles.dropdown}>
+							<button
+								type="button"
+								className={styles.dropItem}
+								onClick={() => {
+									setShowEdit(true)
+									setMenuOpen(false)
+								}}
+							>
+								Редагувати подію
+							</button>
+							<div className={styles.dropDivider} />
+							<button
+								type="button"
+								className={`${styles.dropItem} ${styles.dropItemDanger}`}
+								onClick={() => {
+									setShowDeleteConfirm(true)
+									setMenuOpen(false)
+								}}
+							>
+								Видалити подію
+							</button>
+						</div>
+					</>
+				)}
+			</div>
 
-      {/* ── Upload row ── */}
-      <div className={styles.uploadRow}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          style={{ display: 'none' }}
-          onChange={handleFilesChange}
-        />
-        <button
-          type="button"
-          className={styles.btnPhoto}
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading && uploadProgress
-            ? `${uploadProgress.done}/${uploadProgress.total}...`
-            : (
-              <>
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-                ФОТО
-              </>
-            )
-          }
-        </button>
-        <button
-          type="button"
-          className={styles.btnShare}
-          onClick={handleShare}
-          disabled={sharing}
-        >
-          {sharing ? (
-            '...'
-          ) : (
-            <>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
-              ПОДІЛИТИСЬ
-            </>
-          )}
-        </button>
-      </div>
+			{/* ── Bottom action bar: photo/share + note/tags, compact + thumb-reachable ── */}
+			<div className={styles.bottomBar}>
+				{/* ── Notes + tags (collapsed row) ── */}
+				<div className={styles.metaRow}>
+					{editingNotes ? (
+						<div className={styles.notesEditWrap}>
+							<textarea
+								className={styles.notesTextarea}
+								value={localNotes}
+								onChange={e => setLocalNotes(e.target.value)}
+								onKeyDown={e => {
+									if (e.key === 'Escape') {
+										e.preventDefault()
+										handleCancelNotes()
+									}
+								}}
+								autoFocus
+								rows={3}
+							/>
+							<div className={styles.notesEditActions}>
+								<button type="button" className={styles.notesCancelBtn} onClick={handleCancelNotes}>
+									Скасувати
+								</button>
+								<button type="button" className={styles.notesDoneBtn} onClick={() => handleSaveNotes(localNotes)}>
+									Готово
+								</button>
+							</div>
+						</div>
+					) : memory.notes ? (
+						<button
+							type="button"
+							className={styles.noteCard}
+							onClick={() => {
+								setLocalNotes(memory.notes ?? '')
+								setEditingNotes(true)
+							}}
+						>
+							<p className={styles.notesText}>{memory.notes}</p>
+							<svg className={styles.noteEditIcon} width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+								<path d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+							</svg>
+						</button>
+					) : (
+						<button
+							type="button"
+							className={styles.noteCardEmpty}
+							onClick={() => {
+								setLocalNotes('')
+								setEditingNotes(true)
+							}}
+						>
+							<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+								<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+							</svg>
+							Додати нотатку
+						</button>
+					)}
 
-      {/* ── Notes + tags (collapsed row) ── */}
-      <div className={styles.metaRow}>
-        {editingNotes ? (
-          <div className={styles.notesEditWrap}>
-            <textarea
-              className={styles.notesTextarea}
-              value={localNotes}
-              onChange={e => setLocalNotes(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); handleCancelNotes() } }}
-              autoFocus
-              rows={3}
-            />
-            <div className={styles.notesEditActions}>
-              <button type="button" className={styles.notesCancelBtn} onClick={handleCancelNotes}>Скасувати</button>
-              <button type="button" className={styles.notesDoneBtn} onClick={() => handleSaveNotes(localNotes)}>Готово</button>
-            </div>
-          </div>
-        ) : memory.notes ? (
-          <p
-            className={styles.notesText}
-            onClick={() => { setLocalNotes(memory.notes ?? ''); setEditingNotes(true) }}
-          >
-            {memory.notes}
-          </p>
-        ) : (
-          <button
-            type="button"
-            className={styles.pillBtn}
-            onClick={() => { setLocalNotes(''); setEditingNotes(true) }}
-          >
-            + нотатка
-          </button>
-        )}
+					<div className={styles.tagsWrap}>
+						{(memory.tags ?? []).map(tag => (
+							<span key={tag} className={styles.tag}>
+								<span className={styles.tagHash}>#</span>
+								{tag}
+								<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>
+									×
+								</button>
+							</span>
+						))}
+						{addingTag ? (
+							<span className={styles.tagInputWrap}>
+								<span className={styles.tagInputPrefix}>#</span>
+								<input
+									className={styles.tagInput}
+									placeholder="тег"
+									autoFocus
+									onBlur={() => setAddingTag(false)}
+									onKeyDown={e => {
+										if (e.key === 'Enter' || e.key === ',') {
+											e.preventDefault()
+											handleAddTag(e.currentTarget.value)
+											e.currentTarget.value = ''
+										}
+									}}
+								/>
+							</span>
+						) : (
+							<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
+								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+									<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+								</svg>
+								тег
+							</button>
+						)}
+					</div>
+				</div>
+				<div className={styles.uploadRow}>
+					<input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleFilesChange} />
+					<button type="button" className={styles.btnPhoto} onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+						{uploading && uploadProgress ? (
+							`${uploadProgress.done}/${uploadProgress.total}...`
+						) : (
+							<>
+								<svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+									<path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+								</svg>
+								ФОТО
+							</>
+						)}
+					</button>
+					<button type="button" className={styles.btnShare} onClick={handleShare} disabled={sharing}>
+						{sharing ? (
+							'...'
+						) : (
+							<>
+								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+									<circle cx="18" cy="5" r="3" />
+									<circle cx="6" cy="12" r="3" />
+									<circle cx="18" cy="19" r="3" />
+									<line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+									<line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+								</svg>
+								ПОДІЛИТИСЬ
+							</>
+						)}
+					</button>
+				</div>
+			</div>
 
-        <div className={styles.tagsWrap}>
-          {(memory.tags ?? []).map(tag => (
-            <span key={tag} className={styles.tag}>
-              <span className={styles.tagHash}>#</span>
-              {tag}
-              <button
-                type="button"
-                className={styles.tagRemove}
-                onClick={() => handleRemoveTag(tag)}
-              >×</button>
-            </span>
-          ))}
-          {addingTag ? (
-            <span className={styles.tagInputWrap}>
-              <span className={styles.tagInputPrefix}>#</span>
-              <input
-                className={styles.tagInput}
-                placeholder="тег"
-                autoFocus
-                onBlur={() => setAddingTag(false)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ',') {
-                    e.preventDefault()
-                    handleAddTag(e.currentTarget.value)
-                    e.currentTarget.value = ''
-                  }
-                }}
-              />
-            </span>
-          ) : (
-            <button type="button" className={styles.pillBtn} onClick={() => setAddingTag(true)}>
-              + тег
-            </button>
-          )}
-        </div>
-      </div>
+			{/* ── Related memories ── */}
+			{related.length > 0 && (
+				<div className={styles.relatedRow}>
+					<span className={styles.relatedLabel}>ПОВ'ЯЗАНІ СПОГАДИ</span>
+					<div className={styles.relatedScroll}>
+						{related.map(r => (
+							<div key={r.id} className={styles.relatedItem}>
+								<MemoryCard memory={r} onClick={() => navigate(`/memories/${r.id}`)} />
+							</div>
+						))}
+					</div>
+				</div>
+			)}
 
-      {/* ── Related memories ── */}
-      {related.length > 0 && (
-        <div className={styles.relatedRow}>
-          <span className={styles.relatedLabel}>ПОВ'ЯЗАНІ СПОГАДИ</span>
-          <div className={styles.relatedScroll}>
-            {related.map(r => (
-              <div key={r.id} className={styles.relatedItem}>
-                <MemoryCard memory={r} onClick={() => navigate(`/memories/${r.id}`)} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+			{/* ── Photos masonry grid ── */}
+			{memory.photos.length === 0 ? (
+				<div className={styles.emptyPhotos}>
+					<span className={styles.emptyIcon}>📷</span>
+					<p className={styles.emptyText}>Поки немає фотографій</p>
+					<p className={styles.emptyHint}>Натисни «+ Додати фото» вище</p>
+				</div>
+			) : (
+				<div className={styles.photoGrid}>
+					{[0, 1, 2].map(col => (
+						<div className={styles.photoColumn} key={col}>
+							{memory.photos
+								.filter((_, i) => i % 3 === col)
+								.map(photo => {
+									const i = memory.photos.indexOf(photo)
+									return <PhotoItem key={photo.id} photo={photo} onTap={() => setViewerIndex(i)} onSetCover={() => setCover(id!, photo.url)} onDelete={() => deletePhoto(id!, photo.id)} />
+								})}
+						</div>
+					))}
+				</div>
+			)}
 
-      {/* ── Photos masonry grid ── */}
-      {memory.photos.length === 0 ? (
-        <div className={styles.emptyPhotos}>
-          <span className={styles.emptyIcon}>📷</span>
-          <p className={styles.emptyText}>Поки немає фотографій</p>
-          <p className={styles.emptyHint}>Натисни «+ Додати фото» вище</p>
-        </div>
-      ) : (
-        <div className={styles.photoGrid}>
-          {[0, 1, 2].map(col => (
-            <div className={styles.photoColumn} key={col}>
-              {memory.photos.filter((_, i) => i % 3 === col).map((photo) => {
-                const i = memory.photos.indexOf(photo)
-                return (
-                  <PhotoItem
-                    key={photo.id}
-                    photo={photo}
-                    onTap={() => setViewerIndex(i)}
-                    onSetCover={() => setCover(id!, photo.url)}
-                    onDelete={() => deletePhoto(id!, photo.id)}
-                  />
-                )
-              })}
-            </div>
-          ))}
-        </div>
-      )}
+			{/* ── Photo viewer ── */}
+			{viewerIndex !== null && (
+				<PhotoViewerModal
+					photos={memory.photos}
+					initialIndex={viewerIndex}
+					onClose={() => setViewerIndex(null)}
+					onDelete={photoId => {
+						const newIndex = Math.min(viewerIndex, memory.photos.length - 2)
+						deletePhoto(id!, photoId)
+						if (memory.photos.length <= 1) {
+							setViewerIndex(null)
+						} else {
+							setViewerIndex(newIndex >= 0 ? newIndex : 0)
+						}
+					}}
+					onCaption={(photoId, caption) => updatePhoto(id!, photoId, { caption })}
+				/>
+			)}
 
-      {/* ── Photo viewer ── */}
-      {viewerIndex !== null && (
-        <PhotoViewerModal
-          photos={memory.photos}
-          initialIndex={viewerIndex}
-          onClose={() => setViewerIndex(null)}
-          onDelete={(photoId) => {
-            const newIndex = Math.min(viewerIndex, memory.photos.length - 2)
-            deletePhoto(id!, photoId)
-            if (memory.photos.length <= 1) {
-              setViewerIndex(null)
-            } else {
-              setViewerIndex(newIndex >= 0 ? newIndex : 0)
-            }
-          }}
-          onCaption={(photoId, caption) => updatePhoto(id!, photoId, { caption })}
-        />
-      )}
+			{/* ── Edit modal ── */}
+			{showEdit && (
+				<EditMemoryModal
+					title={memory.title}
+					location={memory.location ?? ''}
+					lat={memory.lat ?? null}
+					lng={memory.lng ?? null}
+					coverUrl={memory.coverUrl ?? ''}
+					onSave={(title, location) =>
+						updateMemory(id!, {
+							title,
+							location: location.address || location.name || undefined,
+							lat: location.lat,
+							lng: location.lng,
+						})
+					}
+					onChangeCover={url => setCover(id!, url)}
+					onClose={() => setShowEdit(false)}
+				/>
+			)}
 
-      {/* ── Edit modal ── */}
-      {showEdit && (
-        <EditMemoryModal
-          title={memory.title}
-          location={memory.location ?? ''}
-          lat={memory.lat ?? null}
-          lng={memory.lng ?? null}
-          coverUrl={memory.coverUrl ?? ''}
-          onSave={(title, location) => updateMemory(id!, {
-            title,
-            location: location.address || location.name || undefined,
-            lat:      location.lat,
-            lng:      location.lng,
-          })}
-          onChangeCover={(url) => setCover(id!, url)}
-          onClose={() => setShowEdit(false)}
-        />
-      )}
-
-      {/* ── Delete confirm ── */}
-      {showDeleteConfirm && (
-        <div className={styles.confirmOverlay} onClick={() => setShowDeleteConfirm(false)}>
-          <div className={styles.confirmSheet} onClick={e => e.stopPropagation()}>
-            <p className={styles.confirmText}>Видалити «{memory.title}»?</p>
-            <p className={styles.confirmHint}>Всі фотографії залишаться в Cloudinary.</p>
-            <div className={styles.confirmActions}>
-              <button
-                type="button"
-                className={styles.confirmCancel}
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Скасувати
-              </button>
-              <button
-                type="button"
-                className={styles.confirmDelete}
-                onClick={handleDeleteMemory}
-              >
-                Видалити
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+			{/* ── Delete confirm ── */}
+			{showDeleteConfirm && (
+				<div className={styles.confirmOverlay} onClick={() => setShowDeleteConfirm(false)}>
+					<div className={styles.confirmSheet} onClick={e => e.stopPropagation()}>
+						<p className={styles.confirmText}>Видалити «{memory.title}»?</p>
+						<p className={styles.confirmHint}>Всі фотографії залишаться в Cloudinary.</p>
+						<div className={styles.confirmActions}>
+							<button type="button" className={styles.confirmCancel} onClick={() => setShowDeleteConfirm(false)}>
+								Скасувати
+							</button>
+							<button type="button" className={styles.confirmDelete} onClick={handleDeleteMemory}>
+								Видалити
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+		</div>
+	)
 }
 
 export default MemoryDetailScreen

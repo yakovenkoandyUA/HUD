@@ -103,8 +103,9 @@ components/
 ├── memories/
 │   ├── MemoryCard, MemoryForm, PhotoGrid
 │   ├── AddMemoryModal     ← LocationSearch для поля МІСЦЕ, CustomDatePicker для ДАТА
-│   ├── LocationSearch     ← автокомпліт місць через LocationIQ API (`VITE_LOCATIONIQ_KEY`) + "Обрати на карті"
-│   └── LocationMapPicker  ← Leaflet bottom sheet, тап-вибір місця, реверс-геокодинг LocationIQ
+│   ├── LocationSearch     ← автокомпліт місць через Mapbox Search Box API (`VITE_MAPBOX_TOKEN`) + "Обрати на карті"
+│   ├── LocationMapPicker  ← Mapbox GL bottom sheet, тап-вибір місця, реверс-геокодинг Mapbox Geocoding
+│   └── MemoryMap          ← Mapbox GL карта з пінами спогадів/планів, самописна piксель-кластеризація (без external lib)
 └── dashboard/
     ├── CarHero             ← Three.js McLaren, 260px canvas, 80 частинок, OrbitControls
     ├── HeroCard            ← баланс (Furore) + sparkline 7 днів + dailyBudget bar

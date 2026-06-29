@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
 import type { PlanLocation } from '../../../store/plansStore'
+import { searchPlaces, retrievePlace, type PlaceSuggestion } from '../../../utils/mapboxGeocode'
 import LocationMapPicker from '../LocationMapPicker'
 import styles from './LocationSearch.module.css'
 
 /**
  * LocationSearch
  * --------------
- * Autocomplete field backed by LocationIQ Autocomplete API (OSM-based, but
- * better POI tuning than raw Nominatim — finds named places like zoos/cafes,
- * not just addresses). Free tier, no card required. Debounces 500ms.
+ * Autocomplete field backed by Mapbox Search Box API — POI-aware (знаходить
+ * названі місця як зоопарки/кафе, не лише адреси). Debounces 500ms.
  * Calls onSelect with structured location on pick.
  *
  * Props:
@@ -20,50 +20,25 @@ interface LocationSearchProps {
   initial?: string
 }
 
-interface LocationIqResult {
-  place_id:     string
-  display_name: string
-  display_place?: string
-  lat:          string
-  lon:          string
-}
-
-const LOCATIONIQ_KEY = import.meta.env.VITE_LOCATIONIQ_KEY as string | undefined
-
 const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' }) => {
   const [query,         setQuery]         = useState(initial)
-  const [results,       setResults]       = useState<LocationIqResult[]>([])
+  const [results,       setResults]       = useState<PlaceSuggestion[]>([])
   const [loading,       setLoading]       = useState(false)
   const [pickerOpen,    setPickerOpen]    = useState(false)
   const [lastLocation,  setLastLocation]  = useState<PlanLocation | null>(null)
   const skipSearch = useRef(false)
+  const sessionToken = useRef(crypto.randomUUID())
 
   useEffect(() => {
     if (skipSearch.current) { skipSearch.current = false; return }
     if (query.length < 3) { setResults([]); return }
-    if (!LOCATIONIQ_KEY) return
     let cancelled = false
 
     const timer = setTimeout(async () => {
       setLoading(true)
       try {
-        const params = new URLSearchParams({
-          key:                LOCATIONIQ_KEY,
-          q:                  query,
-          format:             'json',
-          limit:              '5',
-          'accept-language':  'uk',
-        })
-        const r = await fetch(`https://us1.locationiq.com/v1/autocomplete?${params}`)
-        if (r.ok && !cancelled) {
-          const raw: LocationIqResult[] = await r.json()
-          const seen = new Set<string>()
-          setResults(raw.filter(item => {
-            if (seen.has(item.place_id)) return false
-            seen.add(item.place_id)
-            return true
-          }))
-        }
+        const suggestions = await searchPlaces(query, sessionToken.current)
+        if (!cancelled) setResults(suggestions)
       } catch { /* silent */ }
       finally { if (!cancelled) setLoading(false) }
     }, 500)
@@ -71,17 +46,14 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
     return () => { cancelled = true; clearTimeout(timer) }
   }, [query])
 
-  const handlePick = (r: LocationIqResult) => {
-    const loc: PlanLocation = {
-      name:    r.display_place || query,
-      address: r.display_name,
-      lat:     parseFloat(r.lat),
-      lng:     parseFloat(r.lon),
-    }
+  const handlePick = async (s: PlaceSuggestion) => {
+    const loc = await retrievePlace(s.mapboxId, sessionToken.current)
+    sessionToken.current = crypto.randomUUID()
+    if (!loc) return
     onSelect(loc)
     setLastLocation(loc)
     skipSearch.current = true
-    setQuery(r.display_name)
+    setQuery(s.fullAddress)
     setResults([])
   }
 
@@ -144,19 +116,19 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
       {loading && <p className={styles.loading}>Пошук...</p>}
       {results.length > 0 && (
         <div className={styles.results}>
-          {results.map((r) => (
+          {results.map((s) => (
             <button
-              key={r.place_id}
+              key={s.mapboxId}
               type="button"
               className={styles.result}
-              onClick={() => handlePick(r)}
+              onClick={() => handlePick(s)}
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={styles.pinIcon}>
                 <path d="M6 1a3 3 0 0 1 3 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 0 1 3-3Z"
                   stroke="currentColor" strokeWidth="1.2"/>
                 <circle cx="6" cy="4" r="1.2" fill="currentColor"/>
               </svg>
-              <span className={styles.resultText}>{r.display_name}</span>
+              <span className={styles.resultText}>{s.fullAddress}</span>
             </button>
           ))}
         </div>

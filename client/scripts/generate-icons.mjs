@@ -36,6 +36,28 @@ await Promise.all(sizes.map(async (size) => {
   console.log(`✅  icon-${size}.png`)
 }))
 
+// ── 1b. Maskable icons ───────────────────────────────────────────────────────
+// Android crops adaptive icons to its own shape (circle/squircle/square) and only
+// guarantees the inner ~66% "safe zone" survives. Our artwork goes edge-to-edge
+// (horns, braid tip), so a dedicated maskable variant scales the face down onto
+// a full-bleed background swatch instead of relying on the regular icon.
+
+const bgColor = '#0F0F10'
+const maskableSizes = [192, 512]
+
+await Promise.all(maskableSizes.map(async (size) => {
+  const contentSize = Math.round(size * 0.66)
+  const content = await sharpSrc().resize(contentSize, contentSize).png().toBuffer()
+  const outPath = path.join(iconsDir, `icon-${size}-maskable.png`)
+  await sharp({
+    create: { width: size, height: size, channels: 4, background: bgColor },
+  })
+    .composite([{ input: content, gravity: 'center' }])
+    .png()
+    .toFile(outPath)
+  console.log(`✅  icon-${size}-maskable.png`)
+}))
+
 // ── 2. favicon.png (32×32) ────────────────────────────────────────────────────
 
 await sharpSrc().resize(32, 32).png().toFile(path.join(root, 'public/favicon.png'))

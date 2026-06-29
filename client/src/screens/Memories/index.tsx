@@ -15,7 +15,6 @@ import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import DoodleIllustration from '../../components/ui/DoodleIllustration'
 import FabHint from '../../components/ui/FabHint'
 import { useAchievementsStore } from '../../store/achievementsStore'
-import 'leaflet/dist/leaflet.css'
 import styles from './Memories.module.css'
 
 type ActiveTab = 'memories' | 'plans' | 'map'
