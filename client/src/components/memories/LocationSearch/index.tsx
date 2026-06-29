@@ -115,7 +115,15 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
 
       {loading && <p className={styles.loading}>Пошук...</p>}
       {results.length > 0 && (
-        <div className={styles.results}>
+        <div
+          className={styles.results}
+          // Список має власний overflow-y:auto — без stopPropagation свайп тут
+          // підхоплює useSwipeToDismiss батьківського bottom sheet (якщо sheet.scrollTop
+          // ще 0, бо поле МІСЦЕ зазвичай вгорі форми) замість натурального скролу списку.
+          onTouchStart={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
+          onTouchEnd={e => e.stopPropagation()}
+        >
           {results.map((s) => (
             <button
               key={s.mapboxId}

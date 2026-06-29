@@ -6,7 +6,10 @@
   align-items: flex-end;
   justify-content: center;
   z-index: 200;
+  transition: opacity 0.28s ease;
 }
+.overlayVisible { opacity: 1; }
+.overlayHidden  { opacity: 0; pointer-events: none; }
 
 .sheet {
   background: var(--bg2);
@@ -16,6 +19,20 @@
   max-width: 480px;
   max-height: 92dvh;
   overflow-y: auto;
+  will-change: transform, opacity;
+  transition:
+    transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity   0.28s ease;
+}
+.sheetVisible { transform: translateY(0); opacity: 1; }
+.sheetHidden  { transform: translateY(100%); opacity: 0; }
+
+.handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 10px auto 0;
 }
 
 .header {

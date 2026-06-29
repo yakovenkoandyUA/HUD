@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
+import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import ImageUploadButton from '../../ui/ImageUploadButton'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LocationSearch from '../LocationSearch'
@@ -48,7 +49,22 @@ const formatDisplayDate = (iso: string) => {
 }
 
 const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCreate }) => {
+  const [mounted, setMounted] = useState(false)
+  const [visible, setVisible] = useState(false)
+
   useModalHistory(onClose, isOpen)
+  const sheetRef = useSwipeToDismiss(onClose, { enabled: mounted })
+
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true)
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+    } else {
+      setVisible(false)
+      const t = setTimeout(() => setMounted(false), 340)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen])
 
   const [title, setTitle]       = useState('')
   const [location, setLocation] = useState<PlanLocation>({ name: null, address: null, lat: null, lng: null })
@@ -99,11 +115,19 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
     reset()
   }
 
-  if (!isOpen) return null
+  if (!mounted) return null
 
   return (
-    <div className={styles.overlay} onClick={handleClose}>
-      <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+    <div
+      className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`}
+      onClick={handleClose}
+    >
+      <div
+        ref={sheetRef}
+        className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className={styles.handle} />
 
         <div className={styles.header}>
           <span className={styles.headerTitle}>НОВА ПОДІЯ</span>

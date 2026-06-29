@@ -4,12 +4,15 @@ import PhotoViewerModal from '../../components/memories/PhotoViewerModal'
 import ImageUploadButton from '../../components/ui/ImageUploadButton'
 import LocationSearch from '../../components/memories/LocationSearch'
 import MemoryCard from '../../components/memories/MemoryCard'
+import Modal from '../../components/ui/Modal'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { useUiStore } from '../../store/uiStore'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { generateMemoryPosterBlob } from '../../utils/generateMemoryPoster'
 import { useLongPress } from '../../hooks/useLongPress'
-import type { Memory, MemoryPhoto } from '../../types/memory'
+import { useModalHistory } from '../../hooks/useModalHistory'
+import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss'
+import type { Memory, MemoryPhoto, MemoryPlace } from '../../types/memory'
 import type { PlanLocation } from '../../store/plansStore'
 import styles from './MemoryDetail.module.css'
 
@@ -108,6 +111,8 @@ interface EditMemoryModalProps {
   onClose: () => void
 }
 
+const EDIT_CLOSE_MS = 260
+
 const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   title: initTitle, location: initLoc, lat: initLat, lng: initLng, coverUrl, onSave, onChangeCover, onClose,
 }) => {
@@ -115,13 +120,34 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   const [location, setLocation] = useState<PlanLocation>({
     name: null, address: initLoc || null, lat: initLat, lng: initLng,
   })
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+  }, [])
+
+  const handleClose = () => {
+    setVisible(false)
+    setTimeout(onClose, EDIT_CLOSE_MS)
+  }
+
+  useModalHistory(handleClose, visible)
+  const sheetRef = useSwipeToDismiss(onClose, { enabled: visible })
 
   return (
-    <div className={styles.editOverlay} onClick={onClose}>
-      <div className={styles.editSheet} onClick={e => e.stopPropagation()}>
+    <div
+      className={`${styles.editOverlay} ${visible ? styles.editOverlayVisible : styles.editOverlayHidden}`}
+      onClick={handleClose}
+    >
+      <div
+        ref={sheetRef}
+        className={`${styles.editSheet} ${visible ? styles.editSheetVisible : styles.editSheetHidden}`}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className={styles.editHandle} />
         <div className={styles.editHeader}>
           <span className={styles.editTitle}>РЕДАГУВАТИ</span>
-          <button type="button" className={styles.editClose} onClick={onClose}>×</button>
+          <button type="button" className={styles.editClose} onClick={handleClose}>×</button>
         </div>
         <div className={styles.editBody}>
           <label className={styles.editLabel}>ОБКЛАДИНКА</label>
@@ -144,7 +170,7 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
             type="button"
             className={styles.editSave}
             disabled={!title.trim()}
-            onClick={() => { onSave(title.trim(), location); onClose() }}
+            onClick={() => { onSave(title.trim(), location); handleClose() }}
           >
             ЗБЕРЕГТИ
           </button>
@@ -195,8 +221,10 @@ const MemoryDetailScreen: React.FC = () => {
   const [editingNotes, setEditingNotes] = useState(false)
   const [localNotes, setLocalNotes]     = useState('')
   const [addingTag, setAddingTag]       = useState(false)
+  const [addingPlace, setAddingPlace]   = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const notesTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleFilesChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
@@ -256,6 +284,35 @@ const MemoryDetailScreen: React.FC = () => {
     const updated = (memory.tags ?? []).filter(t => t !== tag)
     updateMemory(id!, { tags: updated })
   }
+
+  const handleAddPlace = (loc: PlanLocation) => {
+    if (!memory || loc.lat == null || loc.lng == null) return
+    const place: MemoryPlace = {
+      id: crypto.randomUUID(),
+      name: loc.name || loc.address || 'Заклад',
+      address: loc.address ?? undefined,
+      lat: loc.lat,
+      lng: loc.lng,
+    }
+    updateMemory(id!, { places: [...(memory.places ?? []), place] })
+    setAddingPlace(false)
+  }
+
+  const handleRemovePlace = (placeId: string) => {
+    if (!memory) return
+    const updated = (memory.places ?? []).filter(p => p.id !== placeId)
+    updateMemory(id!, { places: updated })
+  }
+
+  useEffect(() => {
+    if (!editingNotes) return
+    const el = notesTextareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    const fits = el.scrollHeight <= 160
+    el.style.height = `${fits ? el.scrollHeight : 160}px`
+    el.style.overflowY = fits ? 'hidden' : 'auto'
+  }, [editingNotes, localNotes])
 
   const formattedDate = useMemo(
     () => memory ? formatMemoryDate(memory.date) : '',
@@ -384,31 +441,7 @@ const MemoryDetailScreen: React.FC = () => {
 			<div className={styles.bottomBar}>
 				{/* ── Notes + tags (collapsed row) ── */}
 				<div className={styles.metaRow}>
-					{editingNotes ? (
-						<div className={styles.notesEditWrap}>
-							<textarea
-								className={styles.notesTextarea}
-								value={localNotes}
-								onChange={e => setLocalNotes(e.target.value)}
-								onKeyDown={e => {
-									if (e.key === 'Escape') {
-										e.preventDefault()
-										handleCancelNotes()
-									}
-								}}
-								autoFocus
-								rows={3}
-							/>
-							<div className={styles.notesEditActions}>
-								<button type="button" className={styles.notesCancelBtn} onClick={handleCancelNotes}>
-									Скасувати
-								</button>
-								<button type="button" className={styles.notesDoneBtn} onClick={() => handleSaveNotes(localNotes)}>
-									Готово
-								</button>
-							</div>
-						</div>
-					) : memory.notes ? (
+					{memory.notes ? (
 						<button
 							type="button"
 							className={styles.noteCard}
@@ -438,43 +471,67 @@ const MemoryDetailScreen: React.FC = () => {
 						</button>
 					)}
 
-					<div className={styles.tagsWrap}>
-						{(memory.tags ?? []).map(tag => (
-							<span key={tag} className={styles.tag}>
-								<span className={styles.tagHash}>#</span>
-								{tag}
-								<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>
-									×
-								</button>
-							</span>
-						))}
-						{addingTag ? (
-							<span className={styles.tagInputWrap}>
-								<span className={styles.tagInputPrefix}>#</span>
-								<input
-									className={styles.tagInput}
-									placeholder="тег"
-									autoFocus
-									onBlur={() => setAddingTag(false)}
-									onKeyDown={e => {
-										if (e.key === 'Enter' || e.key === ',') {
-											e.preventDefault()
-											handleAddTag(e.currentTarget.value)
-											e.currentTarget.value = ''
-										}
-									}}
-								/>
-							</span>
-						) : (
-							<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
-								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-									<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-								</svg>
-								тег
-							</button>
-						)}
-					</div>
 				</div>
+
+				{/* ── Tags + Заклади (combined chips row) ── */}
+				<div className={styles.metaChipsRow}>
+					{(memory.tags ?? []).map(tag => (
+						<span key={tag} className={styles.tag}>
+							<span className={styles.tagHash}>#</span>
+							{tag}
+							<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>
+								×
+							</button>
+						</span>
+					))}
+					{addingTag ? (
+						<span className={styles.tagInputWrap}>
+							<span className={styles.tagInputPrefix}>#</span>
+							<input
+								className={styles.tagInput}
+								placeholder="тег"
+								autoFocus
+								onBlur={() => setAddingTag(false)}
+								onKeyDown={e => {
+									if (e.key === 'Enter' || e.key === ',') {
+										e.preventDefault()
+										handleAddTag(e.currentTarget.value)
+										e.currentTarget.value = ''
+									}
+								}}
+							/>
+						</span>
+					) : (
+						<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
+							<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+								<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+							</svg>
+							тег
+						</button>
+					)}
+
+					<span className={styles.chipsDivider} />
+
+					{(memory.places ?? []).map(place => (
+						<span key={place.id} className={styles.placeChip}>
+							<svg className={styles.placeIcon} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+								<path d="M5 0.5a3 3 0 0 1 3 3c0 2.3-3 6-3 6S2 5.8 2 3.5a3 3 0 0 1 3-3Z" stroke="currentColor" strokeWidth="1.1"/>
+								<circle cx="5" cy="3.5" r="1.1" fill="currentColor"/>
+							</svg>
+							{place.name}
+							<button type="button" className={styles.placeRemove} onClick={() => handleRemovePlace(place.id)}>
+								×
+							</button>
+						</span>
+					))}
+					<button type="button" className={styles.addPlaceBtn} onClick={() => setAddingPlace(true)}>
+						<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+							<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+						</svg>
+						заклад
+					</button>
+				</div>
+
 				<div className={styles.uploadRow}>
 					<input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleFilesChange} />
 					<button type="button" className={styles.btnPhoto} onClick={() => fileInputRef.current?.click()} disabled={uploading}>
@@ -543,6 +600,33 @@ const MemoryDetailScreen: React.FC = () => {
 					))}
 				</div>
 			)}
+
+			{/* ── Add place modal ── */}
+			<Modal isOpen={addingPlace} onClose={() => setAddingPlace(false)} title="Додати заклад" draggable>
+				<LocationSearch onSelect={handleAddPlace} />
+			</Modal>
+
+			{/* ── Notes modal ── */}
+			<Modal isOpen={editingNotes} onClose={handleCancelNotes} title="Нотатка" draggable>
+				<div className={styles.notesEditWrap}>
+					<textarea
+						ref={notesTextareaRef}
+						className={styles.notesTextarea}
+						value={localNotes}
+						onChange={e => setLocalNotes(e.target.value)}
+						autoFocus
+						rows={1}
+					/>
+					<div className={styles.notesEditActions}>
+						<button type="button" className={styles.notesCancelBtn} onClick={handleCancelNotes}>
+							Скасувати
+						</button>
+						<button type="button" className={styles.notesDoneBtn} onClick={() => handleSaveNotes(localNotes)}>
+							Готово
+						</button>
+					</div>
+				</div>
+			</Modal>
 
 			{/* ── Photo viewer ── */}
 			{viewerIndex !== null && (

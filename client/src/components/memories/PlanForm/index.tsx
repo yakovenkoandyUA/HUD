@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
+import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import LocationSearch from '../LocationSearch'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import { formatDateUA } from '../../../utils/formatDate'
@@ -34,14 +35,22 @@ const STATUS_OPTIONS: { value: PlanStatus; label: string }[] = [
 const CLOSE_MS = 260
 
 const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
-  const [closing, setClosing] = useState(false)
+  const [visible, setVisible] = useState(false)
 
+  useEffect(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+  }, [])
+
+  // Backdrop/cancel/back-button close — animates out locally, then unmounts.
+  // Swipe close is separate (below): the gesture already animates the sheet
+  // itself, so it calls the real onClose directly once it finishes.
   const handleClose = () => {
-    setClosing(true)
+    setVisible(false)
     setTimeout(onClose, CLOSE_MS)
   }
 
-  useModalHistory(handleClose, !closing)
+  useModalHistory(handleClose, visible)
+  const sheetRef = useSwipeToDismiss(onClose, { enabled: visible })
 
   const [title,        setTitle]        = useState('')
   const [location,     setLocation]     = useState<PlanLocation>({ name: null, address: null, lat: null, lng: null })
@@ -92,8 +101,8 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
 
   return (
     <>
-    <div className={`${styles.overlay} ${closing ? styles.overlayOut : ''}`} onClick={handleClose}>
-      <div className={`${styles.sheet} ${closing ? styles.sheetOut : ''}`} onClick={e => e.stopPropagation()}>
+    <div className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`} onClick={handleClose}>
+      <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`} onClick={e => e.stopPropagation()}>
         <div className={styles.handle} />
         <h2 className={styles.heading}>Новий план</h2>
 

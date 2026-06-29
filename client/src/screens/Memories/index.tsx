@@ -15,6 +15,7 @@ import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import DoodleIllustration from '../../components/ui/DoodleIllustration'
 import FabHint from '../../components/ui/FabHint'
 import { useAchievementsStore } from '../../store/achievementsStore'
+import { haversineKm } from '../../utils/geo'
 import styles from './Memories.module.css'
 
 type ActiveTab = 'memories' | 'plans' | 'map'
@@ -63,7 +64,6 @@ const MemoriesScreen: React.FC = () => {
   const [selectedPlan,  setSelectedPlan]  = useState<Plan | null>(null)
   const [convertPrompt,  setConvertPrompt]  = useState<Plan | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  const [search,         setSearch]         = useState('')
 
   useEffect(() => { fetchMemories() }, [fetchMemories])
 
@@ -72,14 +72,7 @@ const MemoriesScreen: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
-  const filteredMemories = useMemo(() =>
-    search.trim()
-      ? memories.filter(m => m.title.toLowerCase().includes(search.toLowerCase()))
-      : memories,
-    [memories, search]
-  )
-
-  const grouped = useMemo(() => groupByMonth(filteredMemories), [filteredMemories])
+  const grouped = useMemo(() => groupByMonth(memories), [memories])
 
   const thisDay = useMemo(() => {
     const now   = new Date()
@@ -99,7 +92,20 @@ const MemoriesScreen: React.FC = () => {
     const uniqueLocations = new Set(
       memories.map(m => m.location?.trim()).filter((l): l is string => !!l)
     ).size
-    return { count: memories.length, totalPhotos, uniqueLocations }
+
+    // Загальна відстань "подорожі" — сума відрізків між хронологічно послідовними спогадами з координатами
+    const withCoords = memories
+      .filter(m => m.lat != null && m.lng != null)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    let totalDistanceKm = 0
+    for (let i = 1; i < withCoords.length; i++) {
+      totalDistanceKm += haversineKm(
+        { lat: withCoords[i - 1].lat!, lng: withCoords[i - 1].lng! },
+        { lat: withCoords[i].lat!, lng: withCoords[i].lng! }
+      )
+    }
+
+    return { count: memories.length, totalPhotos, uniqueLocations, totalDistanceKm: Math.round(totalDistanceKm) }
   }, [memories])
 
   const currentMonthKey = useMemo(
@@ -227,6 +233,12 @@ const MemoriesScreen: React.FC = () => {
                 <span><b className={styles.statNum}>{stats.totalPhotos}</b> фото</span>
                 <span className={styles.statsDot}>·</span>
                 <span><b className={styles.statNum}>{stats.uniqueLocations}</b> місць</span>
+                {stats.totalDistanceKm > 0 && (
+                  <>
+                    <span className={styles.statsDot}>·</span>
+                    <span><b className={styles.statNum}>{stats.totalDistanceKm}</b> км подорожей</span>
+                  </>
+                )}
               </p>
 
               {/* This Day banner */}
@@ -254,69 +266,8 @@ const MemoriesScreen: React.FC = () => {
                 </div>
               )}
 
-              {/* Search */}
-              <div className={styles.searchRow}>
-                <div className={styles.searchWrap}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.3"/>
-                    <path d="M9.5 9.5l2.5 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                  </svg>
-                  <input
-                    className={styles.searchInput}
-                    placeholder="Пошук спогадів..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                  {search && (
-                    <button type="button" className={styles.searchClear} onClick={() => setSearch('')}>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* No results */}
-              {search.trim() && filteredMemories.length === 0 && (
-                <div className={styles.emptySearch}>
-                  <p className={styles.emptySearchText}>
-                    Нічого не знайдено по запиту «{search}»
-                  </p>
-                </div>
-              )}
-
-              {/* Flat grid when searching */}
-              {search.trim() && filteredMemories.length > 0 && (
-                <div className={styles.memoriesGrid}>
-                  {filteredMemories.map(m => (
-                    <div
-                      key={m.id}
-                      className={styles.card}
-                      onClick={() => navigate(`/memories/${m.id}`)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={e => e.key === 'Enter' && navigate(`/memories/${m.id}`)}
-                    >
-                      {coverSrc(m) ? (
-                        <img src={coverSrc(m)!} alt={m.title} className={styles.cardImg} loading="lazy" />
-                      ) : (
-                        <div className={styles.cardPlaceholder} />
-                      )}
-                      <div className={styles.cardGrad} />
-                      <div className={styles.cardInfo}>
-                        <p className={styles.cardTitle}>{m.title}</p>
-                        <p className={styles.cardDate}>
-                          {new Date(m.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Grouped timeline — only when not searching */}
-              {!search.trim() && grouped.map(([monthLabel, items]) => (
+              {/* Grouped timeline */}
+              {grouped.map(([monthLabel, items]) => (
                 <div key={monthLabel} className={styles.monthSection}>
                   <div className={styles.monthHeader}>
                     <div className={`${styles.monthDot} ${monthLabel === currentMonthKey ? styles.monthDotCurrent : ''}`} />

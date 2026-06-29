@@ -186,55 +186,6 @@
   margin: 0;
 }
 
-/* ── Search ── */
-.searchRow {
-  margin-bottom: 16px;
-}
-
-.searchWrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: var(--text3);
-}
-
-.searchInput {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--text);
-}
-.searchInput::placeholder { color: var(--text3); }
-
-.searchClear {
-  background: none;
-  border: none;
-  color: var(--text3);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.emptySearch {
-  padding: 24px 0;
-  text-align: center;
-}
-
-.emptySearchText {
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--text3);
-  margin: 0;
-}
 
 /* ── 3-column memories grid (grouped timeline + search results) ── */
 .memoriesGrid {

@@ -223,8 +223,22 @@
 /* ── Notes + tags (collapsed meta row) ── */
 .metaRow {
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
+}
+
+/* ── Tags + Заклади combined row ── */
+.metaChipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.chipsDivider {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: 0 2px;
 }
 
 .noteCard {
@@ -286,6 +300,7 @@
 
 .notesTextarea {
   width: 100%;
+  max-height: 160px;
   background: none;
   border: none;
   border-bottom: 1px solid var(--accent);
@@ -297,6 +312,8 @@
   line-height: 1.6;
   resize: none;
   outline: none;
+  overflow-y: hidden;
+  transition: height 0.15s ease;
 }
 
 .notesEditActions {
@@ -331,13 +348,6 @@
 .notesDoneBtn:hover { opacity: 0.85; }
 
 /* ── Tags ── */
-.tagsWrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-}
-
 .tag {
   display: inline-flex;
   align-items: center;
@@ -410,6 +420,55 @@
 }
 .tagInput::placeholder { color: var(--text3); }
 
+/* ── Заклади ── */
+
+.placeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.placeIcon {
+  color: var(--second);
+  flex-shrink: 0;
+}
+
+.placeRemove {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 0 0 2px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addPlaceBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px dashed var(--border2);
+  border-radius: 20px;
+  padding: 4px 10px 4px 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  transition: color 0.15s, border-color 0.15s;
+}
+.addPlaceBtn:hover { color: var(--text2); border-color: var(--border); }
+
 /* ── Empty photos ── */
 .emptyPhotos {
   flex: 1;
@@ -480,7 +539,7 @@
 .photoGrid {
   display: flex;
   gap: 3px;
-  padding: 0 4px 32px;
+  padding: 16px 4px 32px;
   align-items: flex-start;
 }
 
@@ -582,7 +641,10 @@
   align-items: flex-end;
   justify-content: center;
   z-index: 200;
+  transition: opacity 0.28s ease;
 }
+.editOverlayVisible { opacity: 1; }
+.editOverlayHidden  { opacity: 0; pointer-events: none; }
 
 .editSheet {
   background: var(--bg2);
@@ -590,6 +652,22 @@
   border-radius: 20px 20px 0 0;
   width: 100%;
   max-width: 480px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  will-change: transform, opacity;
+  transition:
+    transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity   0.28s ease;
+}
+.editSheetVisible { transform: translateY(0); opacity: 1; }
+.editSheetHidden  { transform: translateY(100%); opacity: 0; }
+
+.editHandle {
+  width: 36px;
+  height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 10px auto 0;
 }
 
 .editHeader {
