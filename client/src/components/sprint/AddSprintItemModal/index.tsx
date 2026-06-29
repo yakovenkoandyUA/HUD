@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import CustomDatePicker from '../../ui/CustomDatePicker'
-import TimeWheelPicker from '../../ui/TimeWheelPicker'
+import DeadlineSheet from '../DeadlineSheet'
 import LabelPicker from '../LabelPicker'
 import RepeatConfigScreen from '../RepeatConfigScreen'
 import { useSprintStore } from '../../../store/sprintStore'
@@ -137,10 +137,9 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   const [newReminderUnit, setNewReminderUnit]   = useState<ReminderUnit>('days')
   const [newReminder, setNewReminder]           = useState<{ amount: number; unit: ReminderUnit } | null>(null)
   const [showFormReminderPicker, setShowFormReminderPicker] = useState(false)
-  const [showQuestDueDatePicker, setShowQuestDueDatePicker] = useState(false)
   const [quickAddDate, setQuickAddDate]         = useState<string | null>(null)
   const [quickAddTime, setQuickAddTime]         = useState<string | null>(null)
-  const [showQuestTimePicker, setShowQuestTimePicker] = useState(false)
+  const [showDeadlineSheet, setShowDeadlineSheet] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -166,10 +165,9 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     setNewReminderUnit('days')
     setNewReminder(null)
     setShowFormReminderPicker(false)
-    setShowQuestDueDatePicker(false)
     setQuickAddDate(null)
     setQuickAddTime(null)
-    setShowQuestTimePicker(false)
+    setShowDeadlineSheet(false)
   }
 
   const handleClose = () => {
@@ -354,15 +352,17 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                   </button>
                 )}
 
-                {/* Deadline — non-routine only */}
+                {/* Deadline (date + optional time + optional reminder) — non-routine only */}
                 {newRepeat === 'none' && !showRepeatList && (
                   quickAddDate ? (
-                    <button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowQuestDueDatePicker(v => !v)}>
+                    <button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowDeadlineSheet(true)}>
                       <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
                         <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
                         <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                       </svg>
                       {new Date(quickAddDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
+                      {quickAddTime && ` · ${quickAddTime}`}
+                      {newReminder && ' 🔔'}
                       <span
                         className={styles.metaChipClear}
                         onClick={e => {
@@ -370,12 +370,11 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                           setQuickAddDate(null)
                           setQuickAddTime(null)
                           setNewReminder(null)
-                          setShowQuestDueDatePicker(false)
                         }}
                       >✕</span>
                     </button>
                   ) : (
-                    <button type="button" className={styles.metaChip} onClick={() => setShowQuestDueDatePicker(v => !v)}>
+                    <button type="button" className={styles.metaChip} onClick={() => setShowDeadlineSheet(true)}>
                       <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
                         <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
                         <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -385,38 +384,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                   )
                 )}
 
-                {/* Time of day — only once a deadline date is set */}
-                {newRepeat === 'none' && !showRepeatList && quickAddDate && (
-                  quickAddTime ? (
-                    <button
-                      type="button"
-                      className={`${styles.metaChip} ${styles.metaChipActive}`}
-                      onClick={() => setShowQuestTimePicker(true)}
-                    >
-                      <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-                        <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
-                        <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      {quickAddTime}
-                      <span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setQuickAddTime(null) }}>✕</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.metaChip}
-                      onClick={() => setShowQuestTimePicker(true)}
-                    >
-                      <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-                        <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
-                        <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      Час
-                    </button>
-                  )
-                )}
-
-                {/* Reminder */}
-                {(newRepeat !== 'none' || !!quickAddDate) && !showRepeatList && (
+                {/* Reminder — routines only (one-off reminder lives inside the Deadline sheet) */}
+                {newRepeat !== 'none' && !showRepeatList && (
                   newReminder ? (
                     <button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowFormReminderPicker(true)}>
                       <svg width="10" height="10" viewBox="0 0 16 18" fill="none">
@@ -591,22 +560,15 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
         />
       )}
 
-      {/* Deadline date picker */}
-      {showQuestDueDatePicker && (
-        <CustomDatePicker
-          value={quickAddDate ?? undefined}
-          onChange={date => { setQuickAddDate(date); setShowQuestDueDatePicker(false) }}
-          onClose={() => setShowQuestDueDatePicker(false)}
+      {/* Deadline sheet — date + optional time + optional reminder */}
+      {showDeadlineSheet && (
+        <DeadlineSheet
+          date={quickAddDate}
+          time={quickAddTime}
+          reminder={newReminder}
           minDate={new Date()}
-        />
-      )}
-
-      {/* Time of day picker sheet */}
-      {showQuestTimePicker && (
-        <TimeWheelPicker
-          value={quickAddTime ?? '09:00'}
-          onSave={time => { setQuickAddTime(time); setShowQuestTimePicker(false) }}
-          onClose={() => setShowQuestTimePicker(false)}
+          onSave={draft => { setQuickAddDate(draft.date); setQuickAddTime(draft.time); setNewReminder(draft.reminder) }}
+          onClose={() => setShowDeadlineSheet(false)}
         />
       )}
 

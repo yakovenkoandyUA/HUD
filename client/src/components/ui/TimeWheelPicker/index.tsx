@@ -76,6 +76,35 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ values, index, onChange }) =>
   )
 }
 
+interface TimeWheelRowProps {
+  value?: string
+  onChange: (time: string) => void
+}
+
+/**
+ * TimeWheelRow
+ * ------------
+ * Бар самих барабанів години/хвилини без обгортки-шіта — для вбудовування
+ * в інші bottom sheets (напр. комбінований редактор дедлайну).
+ */
+export const TimeWheelRow: React.FC<TimeWheelRowProps> = ({ value, onChange }) => {
+  const [h, m] = (value ?? '09:00').split(':').map(Number)
+  const [hourIndex, setHourIndex] = useState(h || 0)
+  const [minuteIndex, setMinuteIndex] = useState(m || 0)
+
+  const update = (nextHour: number, nextMinute: number) => {
+    onChange(`${HOURS[nextHour]}:${MINUTES[nextMinute]}`)
+  }
+
+  return (
+    <div className={styles.body}>
+      <WheelColumn values={HOURS} index={hourIndex} onChange={i => { setHourIndex(i); update(i, minuteIndex) }} />
+      <span className={styles.colon}>:</span>
+      <WheelColumn values={MINUTES} index={minuteIndex} onChange={i => { setMinuteIndex(i); update(hourIndex, i) }} />
+    </div>
+  )
+}
+
 interface TimeWheelPickerProps {
   value?: string
   title?: string

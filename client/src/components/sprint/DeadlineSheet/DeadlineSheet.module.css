@@ -1,0 +1,207 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 400;
+}
+
+.sheet {
+  background: var(--bg2);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding-bottom: 32px;
+  animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.handle {
+  width: 32px;
+  height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.body {
+  padding: 16px 16px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── Date row ── */
+
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dateRowValue { color: var(--text); font-weight: 600; }
+.dateRowPlaceholder { color: var(--text3); }
+
+.rowClear {
+  margin-left: auto;
+  opacity: 0.6;
+  font-size: 12px;
+}
+.dateRow:hover .rowClear { opacity: 1; }
+
+/* ── Optional section toggle ── */
+
+.optionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  margin-bottom: 2px;
+}
+
+.optionLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+}
+
+.optionAdd {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.optionClear {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px;
+}
+.optionClear:hover { color: var(--accent); }
+
+/* ── Reminder inline row ── */
+
+.reminderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 8px;
+}
+
+.reminderInput {
+  width: 52px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 6px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+}
+.reminderInput::-webkit-inner-spin-button,
+.reminderInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+.reminderInput:focus { border-color: var(--accent); }
+
+.unitSegment {
+  display: flex;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.unitBtn {
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border2);
+  padding: 8px 9px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+}
+.unitBtn:last-child { border-right: none; }
+
+.unitBtnActive {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.reminderSuffix {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.doneBtn {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 16px 16px 0;
+  padding: 12px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
