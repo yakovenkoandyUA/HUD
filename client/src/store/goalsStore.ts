@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Goal } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
 import { useFinanceStore } from './financeStore'
+import { useAchievementsStore } from './achievementsStore'
 
 interface ApiGoal {
   _id: string
@@ -82,6 +83,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
       deadline,
     }
     set(s => ({ goals: [...s.goals, goal] }))
+    useAchievementsStore.getState().unlock('first-goal')
     authFetch('/api/goals', {
       method: 'POST',
       body: JSON.stringify({ title, emoji, targetAmount, currentAmount: 0, deadline }),

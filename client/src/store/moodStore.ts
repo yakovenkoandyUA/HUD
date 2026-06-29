@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { authFetch } from '../services/api'
+import { useAchievementsStore } from './achievementsStore'
 
 export interface MoodLog {
   _id:   string
@@ -66,6 +67,7 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
         ? s.logs.map(l => l.date === date ? { ...l, score } : l)
         : [...s.logs, { _id: `tmp-${date}`, date, score }],
     }))
+    useAchievementsStore.getState().unlock('first-mood')
     try {
       const res = await authFetch(`/api/mood/${date}`, {
         method: 'PUT',

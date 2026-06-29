@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { authFetch } from '../services/api'
+import { useAchievementsStore } from './achievementsStore'
 
 export interface Note {
   _id: string
@@ -37,6 +38,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     const tempId = `temp-${Date.now()}`
     const optimistic: Note = { _id: tempId, text, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     set(s => ({ notes: [optimistic, ...s.notes] }))
+    useAchievementsStore.getState().unlock('first-note')
     try {
       const res = await authFetch('/api/notes', { method: 'POST', body: JSON.stringify({ text }) })
       if (!res.ok) { set(s => ({ notes: s.notes.filter(n => n._id !== tempId) })); return }

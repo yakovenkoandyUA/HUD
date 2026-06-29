@@ -94,6 +94,42 @@ export const ACHIEVEMENTS: Achievement[] = [
     color: 'var(--accent)',
     illustration: 'family',
   },
+  {
+    id: 'first-note',
+    title: 'Думка на пам\'ять',
+    description: 'Зберіг свою першу нотатку',
+    hint: 'Збережи свою першу нотатку',
+    route: '/notes',
+    color: 'var(--text2)',
+    illustration: 'notes',
+  },
+  {
+    id: 'first-goal',
+    title: 'Скарбничка',
+    description: 'Створив свою першу ціль накопичення',
+    hint: 'Створи ціль накопичення у Фінансах',
+    route: '/finance',
+    color: 'var(--positive)',
+    illustration: 'goal',
+  },
+  {
+    id: 'first-mood',
+    title: 'Щирість',
+    description: 'Зафіксував свій перший настрій дня',
+    hint: 'Зафіксуй свій настрій дня в "Моєму дні"',
+    route: '/',
+    color: 'var(--negative)',
+    illustration: 'mood',
+  },
+  {
+    id: 'streak-7',
+    title: 'Тиждень без пропусків',
+    description: 'Виконував звичку 7 днів поспіль',
+    hint: 'Виконуй будь-яку звичку 7 днів поспіль',
+    route: '/sprint',
+    color: 'var(--gold)',
+    illustration: 'streak',
+  },
 ]
 
 export const ACHIEVEMENTS_BY_ID: Record<string, Achievement> =

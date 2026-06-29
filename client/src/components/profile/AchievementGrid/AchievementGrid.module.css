@@ -13,10 +13,11 @@
 .card {
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  align-items: center;
+  padding: 14px 10px 10px;
   border-radius: var(--radius, 12px);
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.12s ease;
   animation: cardReveal 0.3s ease both;
@@ -40,22 +41,20 @@
   border-color: var(--node-color, var(--text3));
 }
 
-.cardTop {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.icon {
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+.illoWrap {
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--node-color, var(--text3));
-  background: color-mix(in srgb, var(--node-color, var(--text3)) 16%, var(--bg2));
+  margin-bottom: 4px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
 }
 
 .title {
@@ -66,10 +65,23 @@
   color: var(--text);
 }
 
+.chevron {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--text3);
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: var(--node-color, var(--text3));
+}
+
 .body {
   max-height: 0;
   overflow: hidden;
   opacity: 0;
+  width: 100%;
   transition: max-height 260ms ease-in-out, opacity 200ms ease-in-out;
 }
 

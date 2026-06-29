@@ -1,7 +1,7 @@
 import React from 'react'
 import styles from './DoodleIllustration.module.css'
 
-export type DoodleVariant = 'recipes' | 'memories' | 'watchlist' | 'sprint' | 'shopping' | 'finance' | 'notes' | 'theme' | 'racing' | 'family'
+export type DoodleVariant = 'recipes' | 'memories' | 'watchlist' | 'sprint' | 'shopping' | 'finance' | 'notes' | 'theme' | 'racing' | 'family' | 'goal' | 'mood' | 'streak'
 
 /**
  * DoodleIllustration
@@ -17,6 +17,8 @@ interface DoodleIllustrationProps {
   variant: DoodleVariant
   size?: number
   className?: string
+  /** Перекриває стандартну приглушену прозорість (0.18, для empty-states) — напр. 1 для бейджів досягнень, де ілюстрація сама є головним акцентом картки. */
+  opacity?: number
 }
 
 const Recipes = () => (
@@ -187,6 +189,55 @@ const Family = () => (
   </>
 )
 
+const Goal = () => (
+  <>
+    {/* Jar neck */}
+    <path d="M36 36 L36 28 C36 24 40 22 50 22 C60 22 64 24 64 28 L64 36" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Jar body */}
+    <path d="M32 36 C29 52 29 70 33 80 C35 85 41 88 50 88 C59 88 65 85 67 80 C71 70 71 52 68 36 Z" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Rim line */}
+    <path d="M33 40 C44 38 56 38 67 40" strokeWidth="2.2" strokeLinecap="round"/>
+    {/* Coin stack inside */}
+    <ellipse cx="50" cy="75" rx="15" ry="5" strokeWidth="2"/>
+    <ellipse cx="50" cy="66" rx="15" ry="5" strokeWidth="2"/>
+    {/* Falling coin above */}
+    <ellipse cx="50" cy="18" rx="7" ry="5.5" strokeWidth="2.2"/>
+    <path d="M50 24 L50 32" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="3 3"/>
+    {/* Sparkle */}
+    <path d="M16 28 L17 25 L18 28 L21 29 L18 30 L17 33 L16 30 L13 29 Z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </>
+)
+
+const Mood = () => (
+  <>
+    {/* Face */}
+    <circle cx="50" cy="54" r="32" strokeWidth="2.6"/>
+    {/* Eyes */}
+    <circle cx="39" cy="48" r="3" fill="currentColor" stroke="none"/>
+    <circle cx="61" cy="48" r="3" fill="currentColor" stroke="none"/>
+    {/* Smile */}
+    <path d="M36 62 C42 71 58 71 64 62" strokeWidth="2.4" strokeLinecap="round"/>
+    {/* Rays */}
+    <path d="M50 14 L50 6" strokeWidth="2.2" strokeLinecap="round"/>
+    <path d="M76 24 L82 18" strokeWidth="2.2" strokeLinecap="round"/>
+    <path d="M24 24 L18 18" strokeWidth="2.2" strokeLinecap="round"/>
+    {/* Sparkle */}
+    <path d="M84 64 L85 61 L86 64 L89 65 L86 66 L85 69 L84 66 L81 65 Z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </>
+)
+
+const Streak = () => (
+  <>
+    {/* Outer flame */}
+    <path d="M50 12 C64 30 72 44 72 58 C72 76 60 88 50 88 C40 88 28 76 28 58 C28 44 36 30 50 12 Z" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Inner flame */}
+    <path d="M50 38 C57 49 61 57 61 65 C61 75 56 81 50 81 C44 81 39 75 39 65 C39 57 43 49 50 38 Z" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+    {/* Sparkles */}
+    <path d="M78 46 L79 43 L80 46 L83 47 L80 48 L79 51 L78 48 L75 47 Z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M18 68 L19 65 L20 68 L23 69 L20 70 L19 73 L18 70 L15 69 Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </>
+)
+
 const ILLUSTRATIONS: Record<DoodleVariant, React.ReactNode> = {
   recipes:  <Recipes />,
   memories: <Memories />,
@@ -198,9 +249,12 @@ const ILLUSTRATIONS: Record<DoodleVariant, React.ReactNode> = {
   theme:    <Theme />,
   racing:   <Racing />,
   family:   <Family />,
+  goal:     <Goal />,
+  mood:     <Mood />,
+  streak:   <Streak />,
 }
 
-const DoodleIllustration: React.FC<DoodleIllustrationProps> = ({ variant, size = 96, className }) => (
+const DoodleIllustration: React.FC<DoodleIllustrationProps> = ({ variant, size = 96, className, opacity }) => (
   <svg
     width={size}
     height={size}
@@ -208,6 +262,7 @@ const DoodleIllustration: React.FC<DoodleIllustrationProps> = ({ variant, size =
     fill="none"
     stroke="currentColor"
     className={`${styles.illustration} ${className ?? ''}`}
+    style={opacity !== undefined ? { opacity } : undefined}
     aria-hidden="true"
   >
     {ILLUSTRATIONS[variant]}

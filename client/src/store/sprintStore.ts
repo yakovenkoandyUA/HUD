@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import type { UnifiedTodo, SprintTag, TodoPriority, SprintLabel, ChecklistItem, RepeatConfig } from '../types'
 import { getToken, authFetch, isBackendConfigured } from '../services/api'
-import { isRecurring } from '../utils/sprint'
+import { isRecurring, calcStreak } from '../utils/sprint'
+import { useAchievementsStore } from './achievementsStore'
 
 const DEFAULT_LABELS: SprintLabel[] = [
   { id: 'default-1', title: '',        color: '#216E4E' },
@@ -665,6 +666,9 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
       const newLog = [...(item.completionLog ?? []), completionDateStr]
       set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: true, completionLog: newLog } : i) }))
+      if (calcStreak({ ...item, completionLog: newLog }) >= 7) {
+        useAchievementsStore.getState().unlock('streak-7')
+      }
       const parts = completionDateStr.split('-').map(Number)
       const completionBase = new Date(parts[0], parts[1] - 1, parts[2])
       const nextDue = calcNextDue(item, completionBase)
