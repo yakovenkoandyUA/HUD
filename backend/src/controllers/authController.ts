@@ -23,20 +23,26 @@ async function sendVerificationEmail(email: string, token: string, name: string)
 <body style="margin:0;padding:0;background:#0e0e0e;font-family:Georgia,serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e0e;padding:40px 0;">
     <tr><td align="center">
-      <table width="520" cellpadding="0" cellspacing="0" style="background:#161616;border:1px solid #2a2a2a;border-radius:2px;overflow:hidden;">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#161616;border:1px solid #2a2a2a;border-radius:2px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.5);">
+
+        <!-- Accent bar -->
+        <tr>
+          <td style="height:4px;background:linear-gradient(90deg,#7a6022,#c9a84c,#f0d98c,#c9a84c,#7a6022);font-size:0;line-height:0;">&nbsp;</td>
+        </tr>
 
         <!-- Header -->
         <tr>
-          <td style="background:#111;border-bottom:2px solid #c9a84c;padding:32px 40px;text-align:center;">
+          <td style="background:radial-gradient(ellipse at center,#1c1813 0%,#111 70%);padding:36px 40px 30px;text-align:center;">
+            <img src="${CLIENT_URL}/icons/icon-192.png" width="56" height="56" alt="MIMIR" style="display:block;margin:0 auto 16px;border-radius:12px;border:1px solid #c9a84c;">
             <div style="font-size:28px;letter-spacing:8px;color:#c9a84c;font-weight:700;font-family:Georgia,serif;">MIMIR</div>
-            <div style="font-size:10px;letter-spacing:4px;color:#555;margin-top:4px;text-transform:uppercase;">Heads Up Display</div>
+            <div style="font-size:10px;letter-spacing:4px;color:#666;margin-top:6px;text-transform:uppercase;">Heads Up Display</div>
           </td>
         </tr>
 
         <!-- Body -->
         <tr>
           <td style="padding:40px 40px 32px;">
-            <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;color:#555;text-transform:uppercase;">Верифікація email</p>
+            <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;color:#c9a84c;text-transform:uppercase;">◆ Верифікація email</p>
             <p style="margin:0 0 24px;font-size:22px;color:#e8e0d0;line-height:1.4;">Привіт, ${name}!</p>
             <p style="margin:0 0 32px;font-size:14px;color:#888;line-height:1.7;">
               Для завершення реєстрації в <strong style="color:#c9a84c;">MIMIR</strong> підтвердіть вашу електронну адресу. Натисніть кнопку нижче — посилання дійсне <strong style="color:#e8e0d0;">24 години</strong>.
@@ -45,7 +51,7 @@ async function sendVerificationEmail(email: string, token: string, name: string)
             <!-- CTA Button -->
             <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
               <tr>
-                <td style="background:#c9a84c;border-radius:1px;">
+                <td style="background:linear-gradient(135deg,#e0c172,#c9a84c);border-radius:2px;box-shadow:0 8px 24px rgba(201,168,76,0.25);">
                   <a href="${link}" style="display:block;padding:14px 40px;font-size:12px;letter-spacing:3px;color:#0e0e0e;text-decoration:none;font-weight:700;text-transform:uppercase;font-family:Georgia,serif;">
                     ПІДТВЕРДИТИ EMAIL
                   </a>
@@ -63,8 +69,8 @@ async function sendVerificationEmail(email: string, token: string, name: string)
         <!-- Footer -->
         <tr>
           <td style="border-top:1px solid #1e1e1e;padding:20px 40px;text-align:center;">
-            <p style="margin:0;font-size:11px;color:#333;letter-spacing:1px;">
-              DRINK DEEP &nbsp;·&nbsp; mimir-hud.tech
+            <p style="margin:0;font-size:11px;color:#444;letter-spacing:1px;">
+              DRINK DEEP &nbsp;◆&nbsp; mimir-hud.tech
             </p>
           </td>
         </tr>
