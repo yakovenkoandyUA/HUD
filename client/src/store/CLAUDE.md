@@ -30,8 +30,9 @@ store/
 │                            БЕЗ persist (backend-only, /api/shopping)
 ├── watchlistStore.ts      — watchlist items
 │                            БЕЗ persist (backend-only)
-├── memoriesStore.ts       — спогади + фото
+├── memoriesStore.ts       — спогади + фото + places[]
 │                            БЕЗ persist (backend-only, /api/memories)
+│                            toPlace() нормалізує backend `_id` → `id` для places[]
 ├── f1PredictionsStore.ts  — прогнози гонок F1 + підрахунок очок
 │                            БЕЗ persist (backend-only, /api/f1/predictions)
 └── uiStore.ts             — theme, toasts
@@ -120,7 +121,16 @@ checkResult(raceId, p1, p2, p3)    // guard проти double-check, додає 
 - `description` ↔ `desc`
 - `notes` ↔ `sessionNotes`
 
-## Memory — структура фото
+## Memory — структура фото і places
 
 Embedded photos subdocument `{ url, caption, createdAt }`.
 Фото-операції: `POST/PATCH/DELETE /api/memories/:id/photos/:photoId`.
+
+`places: { id, name, address, lat, lng }[]` — заклади всередині спогаду (рендеряться окремими `kind: 'place'` пінами на `MemoryMap`, колір `var(--second)`). Зберігаються через звичайний `PATCH /api/memories/:id` (немає окремого роута). **UI додавання place в `AddMemoryModal`/`PlanForm` ще не реалізований** — поле тільки читається/рендериться.
+
+## sprintStore / UnifiedTodo — dueTime, timeOfDay, reminder
+
+- `dueTime?: string` (HH:MM) — опційний час дедлайну, редагується через `TimeWheelPicker` (доступний тільки коли вже стоїть `dueDate`)
+- `timeOfDay?: 'morning'|'afternoon'|'evening'|null` — слот доби для звички, керує іконкою в `RoutineRing`/`TodayHabits` (sunrise/sun/moon)
+- `reminder?: { amount: number; unit: 'minutes'|'hours'|'days'|'weeks' }` — редагується через спільний `ReminderFields` (DeadlineSheet / TaskDetailModal / AddSprintItemModal-звички), бекенд скидає `reminderSent` при будь-якій зміні `dueDate`/`dueTime`/`nextDue`/`reminder`
+- `calcWeekRate()` (`utils/sprint.ts`, нова) — % виконання звички за останні 7 днів, споживається `RoutineRing`; поряд з уже існуючими `calcMonthRate()`/`calcStreak()`/`calcRecord()`

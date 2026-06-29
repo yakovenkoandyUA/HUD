@@ -32,7 +32,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 
 ---
 
-## Статус (2026-06-20) — Що реалізовано
+## Статус (2026-06-29) — Що реалізовано
 
 > Технічний борг: Sentry ✅, Zod ✅, JWT refresh rotation ✅, helmet+CORS+rate-limit ✅, multi-tenancy audit ✅, PWA offline ✅, AI via backend ✅, feature flags замість ролей ✅
 
@@ -52,7 +52,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - `watchlist` — movie/series/anime/book (TMDB + Google Books proxy)
 - `watchlistComments` — коментарі між профілями
 - `memories` — спогади + фото (Cloudinary) + теги + Canvas-експорт для "Поділитись" (без зовнішніх AI-сервісів)
-- `plans` — місця (want/planned/visited), LocationIQ геокодинг, конвертація в Memory
+- `plans` — місця (want/planned/visited), Mapbox геокодинг (фронтенд напряму), конвертація в Memory
 - `notes` — нотатки
 - `mood` — трекер настрою (1-5), MoodLog, сімейні настрої
 - `family` — FamilyLink (pending/accepted), пошук юзерів
@@ -78,8 +78,8 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - `/recipes/:id` — Складові/Приготування таби, step checklist, CookLog, wishlist
 - `/recipes/planner` — тижневий планер Пн–Нд
 - `/watchlist` — movie/series/anime/book/game (OpenMoji таби), TMDB пошук; налаштування видимості табів у профілі; **game tab** — повний UI (RAWG пошук через GameSearch overlay, сортування, фільтр жанрів, GameHero, статуси); WatchlistStatsSheet (кнопка статистики) — реальна тривалість з TMDB (з фолбеком на оцінку для елементів без даних), SVG-іконки замість emoji
-- `/memories` — таймлайн + сітка + Leaflet карта, "Цей день рік тому"; МІСЦЕ через LocationSearch (LocationIQ автокомпліт) або LocationMapPicker (тап на карті)
-- `/memories/:id` — фото, Canvas export → PNG/Web Share (поставити обкладинкою — лише з галереї фото або EditMemoryModal, без накладання тексту)
+- `/memories` — таймлайн + сітка + Mapbox GL карта (globe projection, теми, 3D, маршрути, карусель пінів), "Цей день рік тому", статистика відстаней; МІСЦЕ через LocationSearch (Mapbox Search Box автокомпліт) або LocationMapPicker (тап на карті)
+- `/memories/:id` — фото, Canvas export → PNG/Web Share з мінікартою-бейджем (поставити обкладинкою — лише з галереї фото або EditMemoryModal, без накладання тексту); fixed bottomBar (фото/поділитись/нотатка/теги)
 - `/notes` — inline edit, пошук
 - `/profile` — MeTab (avatar, name, username, password, секція МЕДІА — toggles для movie/series/anime/game + книги "в розробці", СІМ'Я), WalletTab (Monobank, salaryDay, категорії pill-cloud + ВИТРАТИ/ПОПОВНЕННЯ таби + icon picker), PlanTab, AdminTab
 - `/f1` — NextRaceCard, LastRaceCard, RacePredictionCard, ChampionshipTable (Пілоти/Конструктори/МІЙ СЕЗОН), McLarenViewer (Three.js)
@@ -93,14 +93,16 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 
 **Ключові компоненти:**
 - `AiChatSheet` — SSE streaming AI чат (Dashboard), markdown rendering
-- `DayOverlay` — МІЙ ДЕНЬ: слоти morning/afternoon/evening, mood tracker (SVG), сімейні настрої, місячний heatmap
-- `MemoryMap` — Leaflet піни планів і спогадів (координати з LocationIQ); тап на пін плану — popup/highlight на карті, тап на пін спогаду — navigate на `/memories/:id`
-- `LocationSearch` / `LocationMapPicker` — пошук місця (LocationIQ автокомпліт) або тап на карті, спільні для AddMemoryModal і PlanForm
+- `DayOverlay` — МІЙ ДЕНЬ: слоти morning/afternoon/evening, mood tracker (SVG), сімейні настрої, місячний heatmap, RoutineRing для звичок
+- `MemoryMap` — Mapbox GL (Standard style, globe projection), піни планів/спогадів/places, карусель карток, попап-полароїд з кнопкою маршруту (Directions API), тема/3D/обертання
+- `LocationSearch` / `LocationMapPicker` — пошук місця (Mapbox Search Box автокомпліт) або тап на карті, спільні для AddMemoryModal і PlanForm
+- `DeadlineSheet` / `ReminderFields` / `TimeWheelPicker` — об'єднаний редактор дедлайну (дата+час+нагадування) для квестів, без дублювання верстки між TaskDetailModal/AddSprintItemModal
+- `RoutineRing` / `TodayHabits` — кільце прогресу звички (7 днів) і компактний рядок чіпів на Dashboard
 - `ReceiptScanner` — Anthropic Vision
 - `Modal` — drag-to-dismiss (0.4× damping, 120px cap, 0.18s overlay fade)
 - `useSwipeToDismiss` / `useModalHistory` — стандартні хуки для bottom sheets
 
-**Теми (7):** retro / velvet / japan / cyber / noir / pixel / arctic
+**Теми (6):** velvet / japan / cyber / noir / pixel / arctic
 
 ---
 
@@ -128,16 +130,48 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 Кнопка "Шеф" в `RecipeDetail` (поряд з Wishlist/Покупки/Приготував) відкриває `ChefChatSheet` — той самий UI-паттерн що `AiChatSheet` з Dashboard (SSE streaming, Claude Haiku). Контекст рецепту (title/ingredients/instructions/servings/difficulty/cookTime/calories) передається в тілі запиту з фронтенду напряму в `POST /api/ai/chef-chat` — без додаткового похід в БД і дублювання scope-логіки доступу до рецептів (mine/family/all).
 
 ### ✅ Memories: форма "Нова подія" — доопрацьовано
-Компактна обкладинка, МІСЦЕ+ДАТА в один ряд, дата DD.MM.YYYY. Пошук місця замінено з Nominatim на LocationIQ (POI-пошук закладів, не лише адрес; Mapbox оцінювався, але вимагає картку навіть на free tier). Додано "Обрати на карті" (`LocationMapPicker`, тап на Leaflet + реверс-геокодинг), центрується по введеному запиту або геолокації. Прибрано "Поставити постер як обкладинку" (`PosterGenerator`) — псувало фото текстом, дублюючи вже чистіші шляхи (галерея фото / EditMemoryModal); "Поділитись" (export PNG) залишився.
+Компактна обкладинка, МІСЦЕ+ДАТА в один ряд, дата DD.MM.YYYY. Додано "Обрати на карті" (`LocationMapPicker`, тап на карті + реверс-геокодинг), центрується по введеному запиту або геолокації. Прибрано "Поставити постер як обкладинку" (`PosterGenerator`) — псувало фото текстом, дублюючи вже чистіші шляхи (галерея фото / EditMemoryModal); "Поділитись" (export PNG) залишився.
 
 ### ✅ Memories: карта з пінами спогадів
-`Memory` модель отримала `lat`/`lng` (опціонально). `AddMemoryModal`/`EditMemoryModal` зберігають координати разом з адресою. `MemoryMap` (таб КАРТА) тепер показує піни і планів, і спогадів одночасно — план відкриває popup/highlight на карті, спогад одразу веде на `/memories/:id`. Старі спогади без координат не з'являються на карті, поки їх не відредагувати через EditMemoryModal.
+`Memory` модель отримала `lat`/`lng` (опціонально) + `places[]` (заклади всередині спогаду, поле є — UI додавання ще нема). `MemoryMap` показує піни планів+спогадів+places одночасно, тап на пін → flyTo+popup (не одразу навігація — деталі нижче).
+
+### ✅ Memories/Plans: повна міграція Leaflet → Mapbox GL
+Причина: користувача зацікавила візуальна якість Mapbox (vector tiles, 3D, кастомні стилі) — погоджено повний перехід, включно з геокодингом (LocationIQ → Mapbox).
+- **Геокодинг**: `LocationSearch` (автокомпліт) тепер на **Mapbox Search Box API** (`/suggest`+`/retrieve`, session-token флоу, POI-обізнаний — знаходить заклади, не лише адреси), `LocationMapPicker` reverse-geocode — на **Mapbox Geocoding API v6**. `utils/mapboxGeocode.ts`.
+- **Карти**: `react-map-gl` + `mapbox-gl` (`mapStyle="mapbox://styles/mapbox/standard"`), пакети `leaflet`/`react-leaflet`/`@types/leaflet` видалені. `VITE_MAPBOX_TOKEN` замінив `VITE_LOCATIONIQ_KEY`.
+- **5 "вау"-фіч додано окремим заходом** (за прямим запитом юзера, після того як стало видно що Mapbox вже в проєкті):
+  1. **Тема карти** — `lightPreset` 'day'/'night' підв'язаний до `useUiStore` теми (`utils/mapboxTheme.ts`), реагує на зміну теми наживо.
+  2. **Globe projection** — `MemoryMap` показує карту як 3D-кулю на малому зумі (`projection={{name:'globe'}}`).
+  3. **Маршрут із попапу** — кнопка "Маршрут" на піні: геолокація юзера → Mapbox Directions API → лінія на карті (`Source`+`Layer`) + "X км · Y хв" прямо в кнопці.
+  4. **Мінікарта в шер-постері** — `generateMemoryPoster.ts` додає округлену картку-бейдж (Mapbox Static Images API) з піном, якщо у спогаду є координати.
+  5. **Статистика відстаней** — "N км подорожей" в рядку статистики (СПОГАДИ) — сума Haversine-відстаней між хронологічно послідовними спогадами (`utils/geo.ts`).
+- **UX-полірування після фідбеку**: кнопка **3D** (pitch toggle), українські підписи (`map.setLanguage('uk')`), zoom +/− (`NavigationControl`), двопальцеве обертання (дефолтна поведінка Mapbox, нічого не вимикали). Виправлений баг — `Popup` за умовчанням `closeOnClick: true`, через що попап сам закривався одразу після кліку на пін (бо клік по піну рахується і кліком по карті) — додано `closeOnClick={false}`.
+- **Клік по піну/рядку списку** тепер **завжди** тільки виділяє пін + flyTo + popup (раніше клік на спогад одразу вів на `/memories/:id`, мимо карти) — перехід в деталі тільки тапом по самому попапу.
+- **Попап-полароїд**: обкладинка спогаду в білій рамці з нахилом -4° (випрямляється на hover) замість маленької квадратної мініатюри.
+- **Карусель** замінила вертикальний список пінів під картою.
+- **Одноразова підказка** (`MapFeatureHint`) — обертання двома пальцями / кнопка 3D / тап-пін-маршрут, дисміситься в localStorage.
+- **Стартовий zoom** — прибрано авто-`fitBounds` (раніше карта одразу наближалась на всі піни); тепер фіксований zoom 2 (огляд-глобус) за дефолтом, наближення тільки по тапу.
 
 ### ✅ Точні нагадування по часу (dueTime) — зроблено
-Квести/тудушки отримали опційний `dueTime` (`TimeWheelPicker`, доступний тільки коли вже стоїть дедлайн). Backend reminder-цикл переведено з щоденного крону на кожні 5 хвилин — нагадування шле в конкретну хвилину (`dueDate`+`dueTime`, дефолт 09:00 якщо час не вказано), з `reminderSent` прапорцем щоб не дублювати; пропущені (>24г, напр. деплой) — не спамляться постфактум. Зміна дедлайну/часу/повторення/нагадування скидає `reminderSent`. Регулярні платежі винесено в окремий daily cron, незалежний від 5-хвилинного циклу.
+Квести/тудушки отримали опційний `dueTime` (доступний тільки коли вже стоїть дедлайн). Backend reminder-цикл переведено з щоденного крону на кожні 5 хвилин — нагадування шле в конкретну хвилину (`dueDate`+`dueTime`, дефолт 09:00 якщо час не вказано), з `reminderSent` прапорцем щоб не дублювати; пропущені (>24г, напр. деплой) — не спамляться постфактум. Зміна дедлайну/часу/повторення/нагадування скидає `reminderSent`. Регулярні платежі винесено в окремий daily cron, незалежний від 5-хвилинного циклу.
+
+### ✅ Дедлайн/час/нагадування — об'єднаний UI, без дублювання верстки
+- `TimeWheelPicker` — iOS-style scroll-колесо (а не два текстові поля), tap-to-select на числі.
+- `DeadlineSheet` — дата + опційний час + опційне нагадування злиті в один компактний флоу (раніше три окремі чіпи "Дедлайн"/"Час"/"Нагадати", що рвало рядок на ламаний перенос).
+- `ReminderFields` — спільний редактор "за N <одиниця> до" (великий інпут + сітка 2×4 пілюль), витягнутий в один компонент і підключений в DeadlineSheet, TaskDetailModal і AddSprintItemModal (звички) — прибрав потрійне дублювання верстки вертикального radio-списку.
+- `RepeatConfigScreen` — інтервал повтору тепер pill-grid (день/тиждень/місяць/рік), а не нативний `<select>` (раніше при тапі відкривав системний OS-дропдаун замість кастомного UI застосунку).
+
+### ✅ "Рутина" → "звичка" — перейменування по всьому застосунку
+Слово "рутина" звучало депресивно для юзера. Замінено на "звичка" в усіх UI-текстах, aria-labels, push-копірайтінгу і коментарях (фронтенд + бекенд), включно з keyword-стемом для AI-чат domain detection (`рутин` → `звичк`). Внутрішні імена змінних/файлів (`routineItems`, `isRoutineDueOnDay`, `RoutineRing`, job `routineReminders`) лишені англійською — не user-facing текст.
+
+### ✅ Dashboard: звички винесені з DaySummaryCard в TodayHabits
+`DaySummaryCard` тепер тільки навігаційний 2×2 грід (Квести/Покупки/Страва/Нотатки). Звички — окремий компактний компонент `TodayHabits` (рядок чіпів) одразу під привітанням, бо концептуально ближче до "як пройде день" ніж до навігації по модулях. Деталізований вигляд звички (кільце прогресу за 7 днів, `RoutineRing` + `calcWeekRate`) — у WeekExpandedView (ДЕНЬ-таб) і DayOverlay, де є місце.
+
+### ✅ BottomNav: 3 стилі навігації
+`navStyle`: classic (повна панель) / pill (плаваюча, тільки закріплені розділи) / hub (плаваюча + центральна руна Ансуз, що відкриває радіальне меню решти розділів, rotate 180° при відкритті). На `/profile` завжди повна панель табів незалежно від стилю.
 
 ### ✅ Досягнення — toast замість fullscreen modal, грід без примусового порядку
-`AchievementUnlockedModal` тепер компактний non-blocking slide-down toast (раніше — fullscreen overlay з пульсуючим бейджем, що блокував взаємодію). Лінійну "стежку" з fog-of-war (іконка видна тільки для розблокованих + одне наступне) замінено на `AchievementGrid` — кожна картка одразу показує іконку+назву, юзер сам обирає що тапнути й дослідити; опис розкривається тільки після розблокування (до того — підказка що зробити, без "виконай попередні кроки"). "Далі: X" підказку в MeTab прибрано з тієї ж причини — жодна ачівка не привілейована як "наступна".
+`AchievementUnlockedModal` тепер компактний non-blocking slide-down toast (раніше — fullscreen overlay з пульсуючим бейджем, що блокував взаємодію). Лінійну "стежку" з fog-of-war (іконка видна тільки для розблокованих + одне наступне) замінено на `AchievementGrid` — кожна картка одразу показує іконку+назву, юзер сам обирає що тапнути й дослідити; опис розкривається тільки після розблокування (до того — підказка що зробити, без "виконай попередні кроки"). "Далі: X" підказку в MeTab прибрано з тієї ж причини — жодна ачівка не привілейована як "наступна". Doodle-іконки в гріді збільшені (56px); додано 4 нові ачівки (нотатки/ціль/настрій/streak) з відповідними новими `DoodleIllustration` variant-ами.
 
 ### ✅ Авто-визначення міста — зроблено
 При першому логіні (`App.tsx`) — геолокація + реверс-геокодинг (Nominatim, спільний `utils/geocode.ts`) автоматично заповнює `city` в профілі, якщо ще не задане. `CitySplash` (блокуюча анімація запуску) прибрано — авто-визначення відбувається мовчки у фоні, юзер завжди може поправити місто вручну в MeSystem.
@@ -159,7 +193,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 ## Пріоритизований план — що далі і в якій послідовності
 
 ### ~~1. 🔧 Memories доопрацювання~~ ✅ Зроблено
-Пошук місця (LocationIQ), "Обрати на карті" (LocationMapPicker), дата DD.MM.YYYY, прибраний постер-як-обкладинка, карта з пінами планів+спогадів, z-index фікс модалки плану.
+Пошук місця (тоді LocationIQ, з 2026-06-29 — Mapbox), "Обрати на карті" (LocationMapPicker), дата DD.MM.YYYY, прибраний постер-як-обкладинка, карта з пінами планів+спогадів, z-index фікс модалки плану.
 
 ### ~~2. 🎮 Games — окремий UI у Watchlist~~ ✅ Зроблено
 Game tab повністю інтегрований у `/watchlist` (GameSearch overlay, GameCard, GameDetail, GameHero, сортування, фільтр жанрів). Окремий екран `/screens/Games` видалено — `/games` редіректить на `/watchlist`.

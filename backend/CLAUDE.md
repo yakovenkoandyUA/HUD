@@ -116,15 +116,15 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 
 **Category** — `name`, `icon` (Tabler ti-*), `color` (hex), `userId`, `isDefault`, `isActive`, `parentId` (субкатегорії), `order: number`
 
-**SprintTask** — `weekNumber + year` = ідентифікатор тижня, `type: 'task'|'routine'`, `repeat: string` для рутин, `completionLog[]`, `checklist[]`, `labels[]`, `assignedTo[]`, `deletedAt` (soft-delete)
+**SprintTask** — `weekNumber + year` = ідентифікатор тижня, `type: 'task'|'routine'`, `repeat: string` для звичок, `completionLog[]`, `checklist[]`, `labels[]`, `assignedTo[]`, `deletedAt` (soft-delete), `dueTime?: string` (HH:MM, опційний час дедлайну), `reminderSent: boolean` (анти-дубль для 5-хвилинного reminder-циклу, скидається при зміні `dueDate`/`dueTime`/`nextDue`/`reminder`)
 
-**TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для рутин
+**TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для звичок, `dueTime?: string`, `reminderSent: boolean`, `timeOfDay?: 'morning'|'afternoon'|'evening'|null` (слот для RoutineRing/TodayHabits)
 
 **WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members), `totalSeasons` з TMDB, `category: 'movie'|'series'|'anime'|'book'|'game'`, `runtimeMin`/`episodeRuntimeMin` — реальна тривалість з TMDB (фільм/епізод, хв) для точного підрахунку годин у WatchlistStatsSheet
 
 **FamilyLink** — `requester: string`, `recipient: string`, `status: 'pending'|'accepted'`. Унікальний compound index `{requester, recipient}`. `getAcceptedFamilyIds(userId)` — shared helper.
 
-**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`, `location: string`, `lat`/`lng: number|null` (для пінів на MemoryMap). GET повертає `ownerName` + `ownerAvatarUrl` для сімейних записів.
+**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`, `location: string`, `lat`/`lng: number|null` (для пінів на MemoryMap), `places: IMemoryPlace[]` (`{name, address, lat, lng}` — заклади всередині спогаду, рендеряться окремими пінами на MemoryMap; зберігаються через звичайний `PATCH /api/memories/:id`, **UI додавання ще не реалізований** — поле читається/рендериться, але форми створення place немає). GET повертає `ownerName` + `ownerAvatarUrl` для сімейних записів.
 
 **Plan** — `status: 'want'|'planned'|'visited'`, `location`, `photos[]`, `withProfiles[]`; при 'visited' конвертується в Memory
 
@@ -152,16 +152,18 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 | **Google Books** | Пошук книг (через backend proxy) |
 | **Resend** | Email верифікація (потребує домену mimir.app) |
 | **Cloudinary** | Upload фото (unsigned preset, frontend direct) |
-| **OpenStreetMap Nominatim** | Геокодування локацій для планів |
 | **wttr.in** | Погода (через backend proxy) |
+
+> Геокодинг місць (Memories/Plans) — `Mapbox Search Box API` + `Geocoding API`, викликається **з фронтенду напряму** (`VITE_MAPBOX_TOKEN`), без backend-проксі. `OpenStreetMap Nominatim` лишився тільки для авто-визначення міста профілю (`MeSystem`), теж напряму з фронтенду.
 
 ## Jobs/Schedulers
 
-- `routineReminders` — cron 09:00 UTC, нагадування про невиконані рутини
-- `recurringReminders` — нагадування про платежі (1/2/7 днів до)
-- `dayReminder` — денний підсумок push 21:00
-- `episodeReminder` — нові епізоди серіалів 13:00
-- `f1Scheduler` — 22 GP 2026, push за 1г до старту гонки
+- `pushJobs` — три cron: F1 push за 1г до гонки (every-minute lightweight перевірка `F1_RACES_2026`), нова серія watchlist (10:00 UTC), новий сезон watchlist (09:00 UTC)
+- `routineReminders` — cron 09:00 UTC, нагадування про невиконані звички
+- `recurringReminders` — cron 09:00 UTC, нагадування про платежі (1/2/7 днів до)
+- `dayReminder` — денний підсумок push 18:00 UTC (21:00 Kyiv)
+- `f1Scheduler` — Sun 08:00 Kyiv weekend-алерт + **5-хвилинний reminder-цикл** для квестів/тудушок (точний до `dueDate`+`dueTime`, дефолт 09:00 якщо час не вказано; `reminderSent` анти-дубль) + daily 05:00 UTC нагадування про регулярні платежі (винесено в окремий cron, незалежний від 5-хвилинного циклу)
+- `jobs/episodeReminder.ts` існує в репо, але **не імпортується** в `index.ts` (мертвий код, функціонал перенесено в `pushJobs`)
 
 ## Скрипти міграції
 

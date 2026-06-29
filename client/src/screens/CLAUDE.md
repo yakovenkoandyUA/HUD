@@ -1,13 +1,12 @@
 # Екрани HUD
 
 ## 1. Dashboard (`/`)
-- GreetingBlock — привітання + дата
+- GreetingBlock — привітання + дата (компактніша версія, менше вертикального місця)
 - **AiChatSheet** — bottom sheet AI асистент (SSE streaming, Claude Haiku), domain-aware контекст, markdown rendering; відкривається кнопкою в хедері (`AppHeader`), toast-гейт якщо `!activeProfile.isVerified` (бекенд `requireVerified` на `/api/ai/chat`)
+- **TodayHabits** — рядок чіпів звичок на сьогодні (крапка-індикатор + іконка часу доби + назва, тап тоглить) + кнопка "детальніше ›" → DayOverlay. Звички тепер живуть тут, **не** в DaySummaryCard — ближче до привітання/погоди, ніж до навігації по модулях
 - WeekHeader (7-денний стрип) або RaceHeroCard (якщо гонка цього тижня) — в `.calendarWrap` з `margin-top: 10px`
 - RaceCountdownStrip — стрічка відліку до наступної гонки (тільки якщо `f1Enabled && nextRace && !raceThisWeek`)
-- **DaySummaryCard** — уніфікований блок "СЬОГОДНІ" (замінив TasksAccordion + окремі meal-chips):
-  - Header "СЬОГОДНІ" + кнопка "детальніше ›" → відкриває DayOverlay
-  - Горизонтально прокручуваний рядок чіпів звичок (без фону, без border-radius, лише `□ назва`, роздільник `·` через CSS `+::before`)
+- **DaySummaryCard** — тепер тільки навігаційний 2×2 грід (звички винесені в TodayHabits):
   - 2×2 грід: **Квести** (gold) / **Покупки** (accent) / **Страва** (second) / **Нотатки** (text); кожна комірка — самостійна кнопка навігації
   - Фон: `color-mix(in srgb, var(--accent) 22%, var(--bg))`; per-theme overrides: velvet 90%, cyber 10%, japan/pixel 8%, noir → `var(--surface2)`
   - Плаский стиль: `border-top/bottom: 1px solid var(--border)`, без `border-radius`
@@ -79,12 +78,15 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
   - Кнопки "Скинути" та "Готово" в футері
 - За замовчуванням — тільки **активні** (не done) задачі
 - TaskDetailModal — МІТКИ / ДЕДЛАЙН / ЧЕК-ЛІСТ / ОПИС + LabelPicker
+  - Дедлайн (одноразові задачі) → **DeadlineSheet**: дата + опційний час (`TimeWheelRow`) + опційне нагадування (`ReminderFields`), все в одному флоу
+  - Сповіщення (звички) → той самий `ReminderFields`, інша обгортка-шіт
   - Swipe-to-dismiss: imperative `addEventListener('touchmove', fn, { passive: false })`; перевірка `bodyRef.current.scrollTop > 0` перед drag
-- Форма додавання: тип + назва + пріоритет (для shopping/todo)
+- Форма додавання (`AddSprintItemModal`) — тип + назва + пріоритет (для shopping/todo); дедлайн теж через **DeadlineSheet** (один компактний чіп замість трьох); повторення → `RepeatConfigScreen` (pill-grid інтервалу, не нативний `<select>`)
 - Категорії спринту (dev/mentorship/personal/learning) — тільки через TaskDetailModal
 - **WeekExpandedView** — повноекранний overlay (3 таби: МІСЯЦЬ / ТИЖДЕНЬ / ДЕНЬ):
   - Місячна сітка: `grid-auto-rows: 62px`, кольорові числа (positive/gold/accent) + крапки, inline день-деталь панель
   - ТИЖДЕНЬ: навігація по тижнях (`viewWeekStart` state, `<`/`>`, swipe), slide анімація (left/right), «Повернутись на сьогодні» кнопка
+  - ДЕНЬ-вигляд: звички показують **RoutineRing** (кільце прогресу за 7 днів) замість простого чекбокса
   - `onAddForDay` → закриває overlay, відкриває форму з pre-filled датою
 
 ## 6. ShoppingList (`/shopping`)
@@ -146,13 +148,25 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 ## 10. Memories (`/memories`, `/memories/:id`)
 - Таймлайн по місяцях + сітка 3 колонки
 - Вкладки: СПОГАДИ / ПЛАНИ / КАРТА
-- **MemoryMap** — Mapbox GL карта з пінами спогадів і планів (координати з LocationSearch/LocationMapPicker)
+- Рядок статистики (СПОГАДИ) — кількість спогадів/фото/місць + **"N км подорожей"** (сума Haversine-відстаней між хронологічно послідовними спогадами з координатами, `utils/geo.ts`; не показується якщо сума округлюється до 0)
+- **MemoryMap** (КАРТА) — Mapbox GL, Standard style, `projection: 'globe'` (огляд-глобус на малому зумі), стартовий zoom 2, без авто-fitBounds
+  - Піни: план / спогад / **place** (заклад всередині спогаду, `kind: 'place'`, колір `var(--second)`)
+  - Самописна пиксель-кластеризація (без external lib); тап на кластер → flyTo + зум
+  - Горизонтальна **карусель карток** під картою (замість старого вертикального списку) — тап картки = тап піна (flyTo + popup, **не** одразу навігація)
+  - Попап: обкладинка-**полароїд** (`.popupPolaroid`, біла рамка, rotate -4°→0° на hover) + кнопка **"Маршрут"** (Mapbox Directions API, лінія через `Source`+`Layer`, показує "X км · Y хв" прямо в кнопці); тап по самому попапу → `/memories/:id` (тільки для спогадів)
+  - Кнопка **3D** (pitch toggle), українські підписи (`setLanguage('uk')`), lightPreset день/ніч під тему застосунку
+  - Одноразова `MapFeatureHint` (обертання/3D/маршрут), localStorage-дисміс
 - **Плани** — PlanCard/PlanForm, статуси (want/planned/visited), конвертація в спогад
 - "Цей день рік тому" банер
-- MemoryDetail — фото (PhotoViewerModal fullscreen), підписи, обкладинка (setCover з фото галереї або через EditMemoryModal; "Постер" як обкладинка прибрано — псувало фото текстом, дублюючи чистіші шляхи)
-- **Поділитись** — Canvas API → PNG (обкладинка + назва + дата + теги), Web Share API або download (`utils/generateMemoryPoster.ts`)
+- MemoryDetail — фото (PhotoViewerModal fullscreen), обкладинка (setCover з фото галереї або через EditMemoryModal; "Постер" як обкладинка прибрано)
+  - Адреса в заголовку — один рядок з `text-overflow: ellipsis` (раніше розгорталась на 3-4 рядки)
+  - **Нотатка** — картка з пунктирною рамкою + іконкою-редагування (✎), а не голий текст; порожній стан "+ Додати нотатку" з SVG-плюсиком
+  - **Тег** — кнопка "+ тег" теж із SVG-плюсиком замість символу `+`
+  - **bottomBar** — ФОТО/ПОДІЛИТИСЬ + нотатка + теги тепер в одній плаваючій картці, `position: fixed` знизу екрана (в зоні досягання великим пальцем); "ПОВ'ЯЗАНІ СПОГАДИ" і фотогрід підняті нагору одразу під заголовок
+- **Поділитись** — Canvas API → PNG (обкладинка + назва + дата + теги + **мінікарта-бейдж** у верхньому правому кутку якщо є координати, Mapbox Static Images API), Web Share API або download (`utils/generateMemoryPoster.ts`)
 - Cloudinary upload для фото
 - **AddMemoryModal** — поле МІСЦЕ через `LocationSearch` (Mapbox Search Box автокомпліт, `VITE_MAPBOX_TOKEN`) + "Обрати на карті" (`LocationMapPicker`, тап на Mapbox GL карті + реверс-геокодинг), ДАТА/МІСЦЕ в один ряд, дата відображається DD.MM.YYYY
+  - `places[]` (заклади всередині спогаду) — поле в моделі/сторі вже є, рендериться на MemoryMap, **але UI додавання ще не реалізований** в AddMemoryModal/PlanForm
 
 ## 11. Notes (`/notes`)
 - `notesStore` (Zustand, без persist) — `fetchNotes`, `addNote`, `updateNote`, `deleteNote`

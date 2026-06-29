@@ -37,12 +37,18 @@ components/
 │   ├── CustomDatePicker    ← нативний UI замість input[type=date]
 │   ├── ImageUploadButton   ← Cloudinary upload (square/wide варіанти)
 │   ├── PinLock             ← fullscreen PIN-оверлей, Mimir face watermark (guardian) над аватаром
-│   ├── TimeWheelPicker     ← bottom sheet вибору часу (ГГ:ХХ), для dueTime квестів/тудушек
+│   ├── TimeWheelPicker     ← iOS-style scroll-колесо вибору часу (ГГ:ХХ), tap-to-select на числі;
+│   │                          default export — самостійний bottom sheet; `TimeWheelRow` (named export) —
+│   │                          ті ж барабани без обгортки-шіта, для вбудовування в DeadlineSheet
 │   ├── AchievementUnlockedModal ← non-blocking slide-down toast при розблокуванні ачівки/рангу
 │   └── PwaInstallBanner    ← банер встановлення PWA
 ├── layout/
 │   ├── TopBar
 │   ├── BottomNav           ← F1 іконка тільки якщо f1Enabled (boolean feature flag)
+│   │                          3 стилі (`navStyle`): classic (повна панель) / pill (плаваюча, тільки
+│   │                          закріплені) / hub (плаваюча + центральна руна Ансуз — відкриває
+│   │                          радіальне меню решти розділів, rotate 180° при відкритті).
+│   │                          На `/profile` завжди повна панель табів незалежно від navStyle
 │   └── ThemePicker         ← теми + профіль + install PWA + кеш
 ├── finance/
 │   ├── BalanceHero, TodayCard, StatsGrid
@@ -73,13 +79,26 @@ components/
 ├── profile/
 │   └── AchievementGrid     ← грід бейджів ачівок, БЕЗ примусового порядку — кожна картка
 │                              сама показує іконку+назву одразу, тап розгортає опис (locked → hint)
+│                              Doodle-іконки збільшені (56px, opacity 0.9 unlocked / 0.32 locked);
+│                              `data/achievements.ts` — 4 нові ачівки (notes/goal/mood/streak),
+│                              `DoodleIllustration` має відповідні нові variant-и
 ├── sprint/
 │   ├── TaskCard            ← прогрес-бар чек-листа, лічильник ☑ X/Y
 │   ├── TaskDetailModal     ← МІТКИ/ДЕДЛАЙН/ЧЕК-ЛІСТ/ОПИС + LabelPicker
+│   ├── DeadlineSheet       ← об'єднаний bottom sheet: дата + опційний час (TimeWheelPicker) + опційне
+│   │                          нагадування (ReminderFields) в одному флоу, замість трьох окремих чіпів
+│   ├── ReminderFields      ← спільний редактор "за N <одиниця> до" (інпут числа + сітка 2×4 пілюль
+│   │                          Хвилин/Годин/Днів/Тижнів); юзається в DeadlineSheet, TaskDetailModal,
+│   │                          AddSprintItemModal (звички) — щоб не дублювати верстку
+│   ├── RepeatConfigScreen  ← інтервал повтору тепер pill-grid (день/тиждень/місяць/рік) замість
+│   │                          нативного `<select>` (раніше відкривав системний дропдаун)
+│   ├── RoutineRing         ← SVG кільце прогресу звички за 7 днів (`calcWeekRate`), у центрі —
+│   │                          іконка часу доби (sunrise/sun/moon) або ✓ якщо вже виконано сьогодні
 │   ├── WeekHeader          ← 7-денний стрип або компактна місячна сітка (toggle `calendarMode`)
 │   │                          Props: calendarMode 'week'|'month', onToggleCalendarMode
 │   │                          Month mode: getMonthGrid, internal vmYear/vmMonth state, < > nav
-│   ├── WeekExpandedView    ← повноекранний overlay; МІСЯЦЬ/ТИЖДЕНЬ/ДЕНЬ таби
+│   ├── WeekExpandedView    ← повноекранний overlay; МІСЯЦЬ/ТИЖДЕНЬ/ДЕНЬ таби; звички в ДЕНЬ-вигляді
+│   │                          показують RoutineRing замість простого чекбокса
 │   │                          Тиждень: viewWeekStart state, slide анімація, «Повернутись на сьогодні»
 │   │                          Місяць: inline день-деталь панель, onAddForDay callback
 │   └── SprintProgress
@@ -105,19 +124,32 @@ components/
 │   ├── AddMemoryModal     ← LocationSearch для поля МІСЦЕ, CustomDatePicker для ДАТА
 │   ├── LocationSearch     ← автокомпліт місць через Mapbox Search Box API (`VITE_MAPBOX_TOKEN`) + "Обрати на карті"
 │   ├── LocationMapPicker  ← Mapbox GL bottom sheet, тап-вибір місця, реверс-геокодинг Mapbox Geocoding
-│   └── MemoryMap          ← Mapbox GL карта з пінами спогадів/планів, самописна piксель-кластеризація (без external lib)
+│   │                          3D-кнопка (pitch toggle), українські підписи (`map.setLanguage('uk')`),
+│   │                          lightPreset день/ніч під тему застосунку (`utils/mapboxTheme.ts`)
+│   └── MemoryMap          ← Mapbox GL карта (Standard style, `projection: 'globe'`), самописна
+│                              пиксель-кластеризація (без external lib); піни планів + спогадів + places[]
+│                              (kind: 'plan'|'memory'|'place'); горизонтальна карусель карток замість
+│                              старого вертикального списку; попап з обкладинкою-полароїдом
+│                              (`.popupPolaroid`, rotate -4°, випрямляється на hover) + кнопкою
+│                              "Маршрут" (Mapbox Directions API, лінія через Source+Layer, малює
+│                              км/хв прямо в кнопці); одноразова `MapFeatureHint` (обертання двома
+│                              пальцями / 3D / тап-пін-маршрут), localStorage `hud-map-hint-dismissed`;
+│                              lightPreset день/ніч під тему; стартовий zoom 2 (огляд-глобус), без
+│                              авто-fitBounds — тап на пін/карусель сам робить flyTo
 └── dashboard/
     ├── CarHero             ← Three.js McLaren, 260px canvas, 80 частинок, OrbitControls
     ├── HeroCard            ← баланс (Furore) + sparkline 7 днів + dailyBudget bar
     │                          плаский стиль: border-top/bottom + border-left gold, без radius
-    ├── DaySummaryCard      ← уніфікований блок "СЬОГОДНІ": чіпи звичок + 2×2 навігаційний грід
-    │                          Чіпи: без фону/radius, □ checkbox, роздільник · через CSS ::before
-    │                          2×2: Квести(gold)/Покупки(accent)/Страва(second)/Нотатки(text)
-    │                          Фон: color-mix accent+bg з per-theme overrides (:global([data-theme]))
+    ├── TodayHabits         ← мінімалістичний рядок чіпів звичок на сьогодні (крапка + іконка часу
+    │                          доби + назва), + кнопка "детальніше ›" → DayOverlay; замінив звичка-чіпи
+    │                          що раніше були частиною DaySummaryCard
+    ├── DaySummaryCard      ← тепер тільки навігаційний 2×2 грід: Квести(gold)/Покупки(accent)/
+    │                          Страва(second)/Нотатки(text); звички повністю винесені в TodayHabits
     ├── RaceHeroCard        ← F1 блок в Dashboard (тільки якщо f1Enabled)
     ├── RaceCountdownStrip  ← стрічка відліку до наступної гонки
-    ├── GreetingBlock       ← привітання + дата
-    ├── DayOverlay          ← fullscreen "МІЙ ДЕНЬ" (mood, звички по слотах, погода)
+    ├── GreetingBlock       ← привітання + дата (компактніша версія)
+    ├── DayOverlay          ← fullscreen "МІЙ ДЕНЬ" (mood, звички по слотах — RoutineRing в
+    │                          деталізованому вигляді, погода)
     └── SprintMini, LessonsMini, TodosMini
 ```
 

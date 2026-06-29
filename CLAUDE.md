@@ -106,19 +106,6 @@ Service Worker підключений до Web Push (VAPID) — підписка
 
 ---
 
-## Наступний спринт
-
-### F1 Live Dashboard — `/f1/live`
-- Активний тільки під час гонки (перевірка сесії через OpenF1)
-- Live Standings, Circuit Map з крапками пілотів, Sector Times
-- Backend proxy `/api/f1/live/*`
-
-### Верифікація email
-- Потребує домену mimir.app + DNS верифікація в Resend
-- `sendVerificationEmail` вже реалізована в authController, але закоментована
-
----
-
 ## Правила написання коду (обов'язково для кожної сесії)
 
 ### React — useEffect
