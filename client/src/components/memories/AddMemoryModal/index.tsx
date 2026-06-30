@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
 import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import { useImageUpload } from '../../../hooks/useImageUpload'
