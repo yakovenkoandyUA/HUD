@@ -15,6 +15,7 @@ interface ApiTransaction {
   createdAt?: string
   recurringId?: string | null
   incomeCategory?: string | null
+  tripMemoryId?: string | null
 }
 
 const CACHE_KEY = 'hud-finance-v1'
@@ -60,6 +61,7 @@ function fromApi(raw: ApiTransaction): Transaction {
     date: raw.date,
     createdAt: raw.createdAt,
     recurringId: raw.recurringId ?? null,
+    tripMemoryId: raw.tripMemoryId ?? null,
   }
 }
 
@@ -74,10 +76,11 @@ interface FinanceState {
 
   fetchTransactions: (month?: string) => Promise<void>
   addTopup: (amount: number, description: string, incomeCategory?: string) => void
-  addExpense: (amount: number, description: string, category?: string) => void
+  addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
   patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => void
+  tagTripExpenses: (ids: string[], tripMemoryId: string) => void
   setSyncStatus: (s: SyncStatus) => void
 }
 
@@ -135,7 +138,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       .catch(() => set({ syncStatus: 'error' }))
   },
 
-  addExpense: (amount, description, category) => {
+  addExpense: (amount, description, category, tripMemoryId) => {
     const tx: Transaction = {
       id: crypto.randomUUID(),
       type: 'expense',
@@ -143,6 +146,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       description,
       category,
       date: new Date().toISOString(),
+      tripMemoryId: tripMemoryId ?? null,
     }
     set(s => {
       const transactions = [tx, ...s.transactions].slice(0, 200)
@@ -150,7 +154,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       writeCache(transactions, balance)
       return { balance, transactions, syncStatus: 'syncing' }
     })
-    authFetch('/api/transactions', { method: 'POST', body: JSON.stringify(toApiBody(tx)) })
+    authFetch('/api/transactions', { method: 'POST', body: JSON.stringify({ ...toApiBody(tx), tripMemoryId: tx.tripMemoryId }) })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then((created: ApiTransaction) => {
         set(s => {
@@ -184,6 +188,22 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       writeCache(transactions, balance)
       return { balance, transactions }
     })
+  },
+
+  tagTripExpenses: (ids, tripMemoryId) => {
+    set(s => {
+      const transactions = s.transactions.map(t =>
+        ids.includes(t.id) ? { ...t, tripMemoryId } : t
+      )
+      writeCache(transactions, s.balance)
+      return { transactions }
+    })
+    ids.forEach(id =>
+      authFetch(`/api/transactions/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ tripMemoryId }),
+      }).catch(() => {})
+    )
   },
 
   deleteTransaction: (id) => {

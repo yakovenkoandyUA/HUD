@@ -5,11 +5,13 @@ import AddMemoryModal from '../../components/memories/AddMemoryModal'
 import PlanCard from '../../components/memories/PlanCard'
 import PlanForm from '../../components/memories/PlanForm'
 import MemoryMap from '../../components/memories/MemoryMap'
+import TripExpensesSheet from '../../components/memories/TripExpensesSheet'
 import type { AddMemoryData } from '../../components/memories/AddMemoryModal'
 import type { Memory } from '../../types/memory'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { usePlansStore, type Plan } from '../../store/plansStore'
 import { useUiStore } from '../../store/uiStore'
+import { useFinanceStore } from '../../store/financeStore'
 import { authFetch } from '../../services/api'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import DoodleIllustration from '../../components/ui/DoodleIllustration'
@@ -17,6 +19,13 @@ import FabHint from '../../components/ui/FabHint'
 import { useAchievementsStore } from '../../store/achievementsStore'
 import { haversineKm } from '../../utils/geo'
 import styles from './Memories.module.css'
+
+interface TripSheetData {
+  memoryId: string
+  memoryTitle: string
+  dateFrom: string
+  dateTo: string
+}
 
 type ActiveTab = 'memories' | 'plans' | 'map'
 
@@ -57,6 +66,7 @@ const MemoriesScreen: React.FC = () => {
   const { memories, fetchMemories, addMemory } = useMemoriesStore()
   const { plans, fetchPlans, addPlan, updatePlan, deletePlan } = usePlansStore()
   const { showToast } = useUiStore()
+  const { transactions } = useFinanceStore()
 
   const [activeTab,     setActiveTab]     = useState<ActiveTab>('memories')
   const [showAdd,       setShowAdd]       = useState(false)
@@ -64,11 +74,13 @@ const MemoriesScreen: React.FC = () => {
   const [selectedPlan,  setSelectedPlan]  = useState<Plan | null>(null)
   const [convertPrompt,  setConvertPrompt]  = useState<Plan | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [tripSheet, setTripSheet] = useState<TripSheetData | null>(null)
+  const [pendingNav,  setPendingNav]  = useState<string | null>(null)
 
   useEffect(() => { fetchMemories() }, [fetchMemories])
 
   useEffect(() => {
-    if (activeTab === 'plans') fetchPlans()
+    if (activeTab === 'plans' || activeTab === 'map') fetchPlans()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
@@ -146,6 +158,20 @@ const MemoriesScreen: React.FC = () => {
     })
     useAchievementsStore.getState().unlock('first-memory')
     setShowAdd(false)
+
+    if (data.isTrip && data.dateEnd) {
+      const dateFrom = data.date
+      const dateTo   = data.dateEnd
+      const hasExpenses = transactions.some(
+        t => t.type === 'expense' && t.date.slice(0, 10) >= dateFrom && t.date.slice(0, 10) <= dateTo && !t.tripMemoryId
+      )
+      if (hasExpenses) {
+        setPendingNav(`/memories/${id}`)
+        setTripSheet({ memoryId: id, memoryTitle: data.title, dateFrom, dateTo })
+        return
+      }
+    }
+
     navigate(`/memories/${id}`)
   }
 
@@ -459,6 +485,23 @@ const MemoriesScreen: React.FC = () => {
         <div className={styles.mapTab}>
           <MemoryMap plans={plans} memories={memories} />
         </div>
+      )}
+
+      {/* ── Trip expenses sheet ── */}
+      {tripSheet && (
+        <TripExpensesSheet
+          isOpen={!!tripSheet}
+          onClose={() => {
+            const dest = pendingNav
+            setTripSheet(null)
+            setPendingNav(null)
+            if (dest) navigate(dest)
+          }}
+          memoryId={tripSheet.memoryId}
+          memoryTitle={tripSheet.memoryTitle}
+          dateFrom={tripSheet.dateFrom}
+          dateTo={tripSheet.dateTo}
+        />
       )}
     </div>
   )

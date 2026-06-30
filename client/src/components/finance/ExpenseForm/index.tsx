@@ -5,23 +5,22 @@ import ReceiptScanner from '../ReceiptScanner'
 import { useCategoryStore } from '../../../store/categoryStore'
 import { useProfileStore } from '../../../store/profileStore'
 import { useUiStore } from '../../../store/uiStore'
-import { useMemoriesStore } from '../../../store/memoriesStore'
 import type { Category } from '../../../types'
 import styles from './ExpenseForm.module.css'
 
 /**
  * ExpenseForm
  * -----------
- * Форма запису витрат з 4-колонковим гридом категорій (іконка + колір з бекенду).
+ * Форма запису витрат з 5-колонковим гридом категорій (іконка + колір з бекенду).
  * При виборі категорії з підкатегоріями — показує горизонтальні chips для деталізації.
  * Фінальна категорія: selectedSubCategoryId ?? selectedCategoryId.
- * Якщо є активні trip-спогади (isTrip + dateEnd, що перекривають сьогодні) — показує picker "ПОЇЗДКА".
+ * Прив'язка витрат до поїздки — ретроактивно через TripExpensesSheet (при створенні trip-спогаду).
  *
  * Props:
- * @prop {(amount: number, description: string, category: string, tripMemoryId?: string | null) => void} onExpense — колбек після підтвердження
+ * @prop {(amount: number, description: string, category: string) => void} onExpense — колбек після підтвердження
  */
 interface ExpenseFormProps {
-  onExpense: (amount: number, description: string, category: string, tripMemoryId?: string | null) => void
+  onExpense: (amount: number, description: string, category: string) => void
 }
 
 const CameraIcon: React.FC = () => (
@@ -38,24 +37,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const { categories, fetchCategories } = useCategoryStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
-  const { memories, fetchMemories } = useMemoriesStore()
   const [amount, setAmount]                     = useState('')
   const [description, setDescription]          = useState('')
   const [selectedCatId, setSelectedCatId]       = useState<string | null>(null)
   const [selectedSubCatId, setSelectedSubCatId] = useState<string | null>(null)
-  const [tripMemoryId, setTripMemoryId]         = useState<string | null>(null)
   const [scannerFile, setScannerFile]           = useState<File | null>(null)
   const [catsExpanded, setCatsExpanded]         = useState(false)
   const fileInputRef                            = useRef<HTMLInputElement>(null)
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
-  useEffect(() => { if (memories.length === 0) fetchMemories() }, [memories.length, fetchMemories])
-
-  // Trip memories whose date range includes today
-  const today = new Date().toISOString().slice(0, 10)
-  const activeTrips = memories.filter(m =>
-    m.isTrip && m.dateEnd && m.date <= today && m.dateEnd >= today
-  )
 
   const activeCategories = categories.filter(c => c.isActive)
   const parentCats       = activeCategories.filter(c => !c.parentId)
@@ -81,12 +71,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
     e.preventDefault()
     if (!canSubmit || !finalCat) return
     const desc = description.trim() || finalCat.name
-    onExpense(parseFloat(amount), desc, finalCat.name.toLowerCase(), tripMemoryId)
+    onExpense(parseFloat(amount), desc, finalCat.name.toLowerCase())
     setAmount('')
     setDescription('')
     setSelectedCatId(null)
     setSelectedSubCatId(null)
-    setTripMemoryId(null)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,32 +227,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
           >
             ×
           </button>
-        </div>
-      )}
-
-      {/* ── Trip picker — only shows when there are active trips today ── */}
-      {activeTrips.length > 0 && (
-        <div className={styles.tripPicker}>
-          <span className={styles.tripPickerLabel}>ПОЇЗДКА</span>
-          <div className={styles.tripChips}>
-            <button
-              type="button"
-              className={`${styles.tripChip} ${tripMemoryId === null ? styles.tripChipActive : ''}`}
-              onClick={() => setTripMemoryId(null)}
-            >
-              Без поїздки
-            </button>
-            {activeTrips.map(m => (
-              <button
-                key={m.id}
-                type="button"
-                className={`${styles.tripChip} ${tripMemoryId === m.id ? styles.tripChipActive : ''}`}
-                onClick={() => setTripMemoryId(prev => prev === m.id ? null : m.id)}
-              >
-                {m.title}
-              </button>
-            ))}
-          </div>
         </div>
       )}
 
