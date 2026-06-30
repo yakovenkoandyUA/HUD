@@ -199,32 +199,32 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 						</div>
 					</div>
 
-					{/* Поїздка — окремий рядок під місцем/датою */}
-					{isTrip ? (
-						<div className={styles.tripRow}>
-							<span className={styles.tripRowLabel}>ПОЇЗДКА</span>
-							<button type="button" className={styles.dateBtn} onClick={() => setShowEndPicker(true)}>
-								{dateEnd ? formatDisplayDate(dateEnd) : 'Кінцева дата'}
-							</button>
-							<button
-								type="button"
-								className={styles.dateClear}
-								onClick={() => { setIsTrip(false); setDateEnd(null) }}
-								aria-label="Прибрати поїздку"
-							>
-								<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-									<path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-								</svg>
-							</button>
-						</div>
-					) : (
+					{/* Кінець події — animated toggle */}
+					<div className={`${styles.tripRow} ${isTrip ? styles.tripRowVisible : ''}`}>
+						<span className={styles.tripRowLabel}>КІНЕЦЬ ПОДІЇ</span>
+						<button type="button" className={styles.dateBtn} onClick={() => setShowEndPicker(true)}>
+							{dateEnd ? formatDisplayDate(dateEnd) : 'Кінцева дата'}
+						</button>
+						<button
+							type="button"
+							className={styles.dateClear}
+							onClick={() => { setIsTrip(false); setDateEnd(null) }}
+							aria-label="Прибрати кінець події"
+						>
+							<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+								<path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+							</svg>
+						</button>
+					</div>
+
+					<div className={`${styles.tripAddBtnWrap} ${isTrip ? '' : styles.tripAddBtnWrapVisible}`}>
 						<button type="button" className={styles.tripAddBtn} onClick={() => setIsTrip(true)}>
 							<svg width="11" height="11" viewBox="0 0 11 11" fill="none">
 								<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
 							</svg>
-							Додати кінцеву дату поїздки
+							Додати кінець події
 						</button>
-					)}
+					</div>
 
 					{showPicker && <CustomDatePicker value={date} onChange={setDate} onClose={() => setShowPicker(false)} />}
 					{showEndPicker && <CustomDatePicker value={dateEnd ?? date} onChange={setDateEnd} onClose={() => setShowEndPicker(false)} />}

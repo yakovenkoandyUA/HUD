@@ -8,7 +8,20 @@
   padding-bottom: 180px;
 }
 
-/* ── Bottom action bar: photo/share + note/tags, fixed + thumb-reachable ── */
+/* ── Sticky subheader: note + tags/places ── */
+.subheader {
+  position: sticky;
+  top: 57px;
+  z-index: 9;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 16px 12px;
+}
+
+/* ── Bottom action bar: ФОТО + ПОДІЛИТИСЬ only ── */
 .bottomBar {
   position: fixed;
   bottom: 16px;
@@ -16,7 +29,6 @@
   right: 16px;
   z-index: 20;
   display: flex;
-  flex-direction: column;
   gap: 8px;
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -169,12 +181,6 @@
   margin: 0;
 }
 
-/* ── Upload row ── */
-.uploadRow {
-  display: flex;
-  gap: 8px;
-}
-
 .btnPhoto {
   flex: 1;
   display: flex;
@@ -219,12 +225,6 @@
 }
 .btnShare:hover:not(:disabled) { background: var(--surface); }
 .btnShare:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* ── Notes + tags (collapsed meta row) ── */
-.metaRow {
-  display: flex;
-  justify-content: space-between;
-}
 
 /* ── Tags + Заклади combined row ── */
 .metaChipsRow {
@@ -593,6 +593,27 @@
   opacity: 1;
 }
 
+/* ── Family contributor badge ── */
+.photoAttrBadge {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  background: rgba(0,0,0,0.62);
+  color: rgba(255,255,255,0.9);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  max-width: calc(100% - 10px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* ── Long-press menu ── */
 .menuBackdrop {
   position: fixed;
@@ -724,8 +745,8 @@
 
 .editDateRange {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  align-items: stretch;
+  gap: 6px;
 }
 
 .editDateBtn {
@@ -741,37 +762,35 @@
   text-align: left;
   cursor: pointer;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
   transition: border-color 0.15s;
 }
 .editDateBtn:hover { border-color: var(--accent); }
 
-.editDateBtnEnd { color: var(--text2); border-color: var(--border); }
-
-.editTripToggle {
-  height: 38px;
-  padding: 0 8px;
-  flex-shrink: 0;
-  border-radius: 7px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
+.editDateBtnEmpty {
   color: var(--text3);
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  display: flex;
+  border-color: var(--border);
+  border-style: dashed;
+}
+
+.editDateClear {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface2);
+  color: var(--text3);
   cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.editTripToggleActive {
-  background: var(--accent-dim, rgba(180,60,60,0.15));
-  border-color: var(--accent);
-  color: var(--accent);
-}
+.editDateClear:hover { color: var(--accent); }
 
 .editSave {
   margin-top: 4px;

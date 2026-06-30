@@ -8,6 +8,8 @@ export interface MemoryPhoto {
   url: string
   caption?: string
   createdAt: string
+  addedBy?: string
+  addedByName?: string
 }
 
 /**

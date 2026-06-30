@@ -66,6 +66,10 @@ const PhotoItem: React.FC<PhotoItemProps> = ({ photo, onTap, onSetCover, onDelet
         onClick={() => { if (!menuOpen) onTap() }}
       />
 
+      {photo.addedByName && (
+        <div className={styles.photoAttrBadge}>{photo.addedByName}</div>
+      )}
+
       {menuOpen && (
         <>
           <div
@@ -195,20 +199,23 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
             </button>
             <button
               type="button"
-              className={`${styles.editTripToggle} ${isTrip ? styles.editTripToggleActive : ''}`}
-              onClick={() => { setIsTrip(v => !v); if (isTrip) setDateEnd(null) }}
+              className={`${styles.editDateBtn} ${!dateEnd ? styles.editDateBtnEmpty : ''}`}
+              onClick={() => setShowEndPicker(true)}
             >
-              ПОЇЗДКА
+              {dateEnd ? formatDisplayDate(dateEnd) : 'Кінець події'}
+              {dateEnd && (
+                <span
+                  className={styles.editDateClear}
+                  role="button"
+                  aria-label="Прибрати кінець події"
+                  onClick={e => { e.stopPropagation(); setDateEnd(null); setIsTrip(false) }}
+                >
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                    <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  </svg>
+                </span>
+              )}
             </button>
-            {isTrip && (
-              <button
-                type="button"
-                className={`${styles.editDateBtn} ${styles.editDateBtnEnd}`}
-                onClick={() => setShowEndPicker(true)}
-              >
-                {dateEnd ? formatDisplayDate(dateEnd) : 'Кінець'}
-              </button>
-            )}
           </div>
           <button
             type="button"
@@ -225,7 +232,7 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
       <CustomDatePicker value={date} onChange={setDate} onClose={() => setShowPicker(false)} />
     )}
     {showEndPicker && (
-      <CustomDatePicker value={dateEnd ?? date} onChange={setDateEnd} onClose={() => setShowEndPicker(false)} />
+      <CustomDatePicker value={dateEnd ?? date} onChange={d => { setDateEnd(d); setIsTrip(true) }} onClose={() => setShowEndPicker(false)} />
     )}
     </>
   )
@@ -489,131 +496,118 @@ const MemoryDetailScreen: React.FC = () => {
 				)}
 			</div>
 
-			{/* ── Bottom action bar: photo/share + note/tags, compact + thumb-reachable ── */}
-			<div className={styles.bottomBar}>
-				{/* ── Notes + tags (collapsed row) ── */}
-				<div className={styles.metaRow}>
-					{memory.notes ? (
-						<button
-							type="button"
-							className={styles.noteCard}
-							onClick={() => {
-								setLocalNotes(memory.notes ?? '')
-								setEditingNotes(true)
-							}}
-						>
-							<p className={styles.notesText}>{memory.notes}</p>
-							<svg className={styles.noteEditIcon} width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-								<path d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-							</svg>
-						</button>
+			{/* ── Subheader: note + tags/places (sticky under header) ── */}
+			<div className={styles.subheader}>
+				{/* Note row */}
+				{memory.notes ? (
+					<button
+						type="button"
+						className={styles.noteCard}
+						onClick={() => { setLocalNotes(memory.notes ?? ''); setEditingNotes(true) }}
+					>
+						<p className={styles.notesText}>{memory.notes}</p>
+						<svg className={styles.noteEditIcon} width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+							<path d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+						</svg>
+					</button>
+				) : (
+					<button
+						type="button"
+						className={styles.noteCardEmpty}
+						onClick={() => { setLocalNotes(''); setEditingNotes(true) }}
+					>
+						<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+							<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+						</svg>
+						Додати нотатку
+					</button>
+				)}
+
+				{/* Tags + places chips */}
+				<div className={styles.metaChipsRow}>
+					{(memory.tags ?? []).map(tag => (
+						<span key={tag} className={styles.tag}>
+							<span className={styles.tagHash}>#</span>
+							{tag}
+							<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>×</button>
+						</span>
+					))}
+					{addingTag ? (
+						<span className={styles.tagInputWrap}>
+							<span className={styles.tagInputPrefix}>#</span>
+							<input
+								className={styles.tagInput}
+								placeholder="тег"
+								autoFocus
+								onBlur={() => setAddingTag(false)}
+								onKeyDown={e => {
+									if (e.key === 'Enter' || e.key === ',') {
+										e.preventDefault()
+										handleAddTag(e.currentTarget.value)
+										e.currentTarget.value = ''
+									}
+								}}
+							/>
+						</span>
 					) : (
-						<button
-							type="button"
-							className={styles.noteCardEmpty}
-							onClick={() => {
-								setLocalNotes('')
-								setEditingNotes(true)
-							}}
-						>
-							<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-								<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-							</svg>
-							Додати нотатку
-						</button>
-					)}
-
-					{/* ── Tags + Заклади (combined chips row) ── */}
-					<div className={styles.metaChipsRow}>
-						{(memory.tags ?? []).map(tag => (
-							<span key={tag} className={styles.tag}>
-								<span className={styles.tagHash}>#</span>
-								{tag}
-								<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>
-									×
-								</button>
-							</span>
-						))}
-						{addingTag ? (
-							<span className={styles.tagInputWrap}>
-								<span className={styles.tagInputPrefix}>#</span>
-								<input
-									className={styles.tagInput}
-									placeholder="тег"
-									autoFocus
-									onBlur={() => setAddingTag(false)}
-									onKeyDown={e => {
-										if (e.key === 'Enter' || e.key === ',') {
-											e.preventDefault()
-											handleAddTag(e.currentTarget.value)
-											e.currentTarget.value = ''
-										}
-									}}
-								/>
-							</span>
-						) : (
-							<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
-								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-									<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-								</svg>
-								тег
-							</button>
-						)}
-
-						<span className={styles.chipsDivider} />
-
-						{(memory.places ?? []).map(place => (
-							<span key={place.id} className={styles.placeChip}>
-								<svg className={styles.placeIcon} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-									<path d="M5 0.5a3 3 0 0 1 3 3c0 2.3-3 6-3 6S2 5.8 2 3.5a3 3 0 0 1 3-3Z" stroke="currentColor" strokeWidth="1.1" />
-									<circle cx="5" cy="3.5" r="1.1" fill="currentColor" />
-								</svg>
-								{place.name}
-								<button type="button" className={styles.placeRemove} onClick={() => handleRemovePlace(place.id)}>
-									×
-								</button>
-							</span>
-						))}
-						<button type="button" className={styles.addPlaceBtn} onClick={() => setAddingPlace(true)}>
+						<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
 							<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
 								<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
 							</svg>
-							заклад
+							тег
 						</button>
-					</div>
-				</div>
+					)}
 
-				<div className={styles.uploadRow}>
-					<input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleFilesChange} />
-					<button type="button" className={styles.btnPhoto} onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-						{uploading && uploadProgress ? (
-							`${uploadProgress.done}/${uploadProgress.total}...`
-						) : (
-							<>
-								<svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-									<path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-								</svg>
-								ФОТО
-							</>
-						)}
-					</button>
-					<button type="button" className={styles.btnShare} onClick={handleShare} disabled={sharing}>
-						{sharing ? (
-							'...'
-						) : (
-							<>
-								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-									<circle cx="18" cy="5" r="3" />
-									<circle cx="6" cy="12" r="3" />
-									<circle cx="18" cy="19" r="3" />
-									<line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-									<line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-								</svg>
-								ПОДІЛИТИСЬ
-							</>
-						)}
+					<span className={styles.chipsDivider} />
+
+					{(memory.places ?? []).map(place => (
+						<span key={place.id} className={styles.placeChip}>
+							<svg className={styles.placeIcon} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+								<path d="M5 0.5a3 3 0 0 1 3 3c0 2.3-3 6-3 6S2 5.8 2 3.5a3 3 0 0 1 3-3Z" stroke="currentColor" strokeWidth="1.1" />
+								<circle cx="5" cy="3.5" r="1.1" fill="currentColor" />
+							</svg>
+							{place.name}
+							<button type="button" className={styles.placeRemove} onClick={() => handleRemovePlace(place.id)}>×</button>
+						</span>
+					))}
+					<button type="button" className={styles.addPlaceBtn} onClick={() => setAddingPlace(true)}>
+						<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+							<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+						</svg>
+						заклад
 					</button>
 				</div>
+			</div>
+
+			{/* ── Bottom action bar: ФОТО + ПОДІЛИТИСЬ ── */}
+			<div className={styles.bottomBar}>
+				<input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleFilesChange} />
+				<button type="button" className={styles.btnPhoto} onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+					{uploading && uploadProgress ? (
+						`${uploadProgress.done}/${uploadProgress.total}...`
+					) : (
+						<>
+							<svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+								<path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+							</svg>
+							ФОТО
+						</>
+					)}
+				</button>
+				<button type="button" className={styles.btnShare} onClick={handleShare} disabled={sharing}>
+					{sharing ? '...' : (
+						<>
+							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+								<circle cx="18" cy="5" r="3" />
+								<circle cx="6" cy="12" r="3" />
+								<circle cx="18" cy="19" r="3" />
+								<line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+								<line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+							</svg>
+							ПОДІЛИТИСЬ
+						</>
+					)}
+				</button>
 			</div>
 
 			{/* ── Trip expenses ── */}

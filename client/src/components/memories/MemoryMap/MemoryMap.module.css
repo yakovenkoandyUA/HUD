@@ -230,6 +230,41 @@
   text-overflow: ellipsis;
 }
 
+/* ── Place chips inside memory card ── */
+.pinCardPlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 10px 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.pinCardPlaceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: color-mix(in srgb, var(--second) 14%, var(--surface2));
+  border: 1px solid color-mix(in srgb, var(--second) 30%, transparent);
+  border-radius: 20px;
+  padding: 3px 7px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--second);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pinCardPlaceChip:hover { background: color-mix(in srgb, var(--second) 22%, var(--surface2)); }
+.pinCardPlaceChipActive {
+  background: color-mix(in srgb, var(--second) 28%, var(--surface2));
+  border-color: var(--second);
+}
+
 /* ── Mapbox GL popup overrides ── */
 .popup :global(.mapboxgl-popup-content) {
   background: var(--surface);

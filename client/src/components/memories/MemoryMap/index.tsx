@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Map, Marker, Popup, Source, Layer, NavigationControl } from 'react-map-gl/mapbox'
 import type { MapRef } from 'react-map-gl/mapbox'
 import { LngLatBounds } from 'mapbox-gl'
@@ -54,6 +54,7 @@ interface MapPin {
   meta: string
   kind: 'plan' | 'memory' | 'place'
   coverUrl?: string
+  places?: MapPin[]
 }
 
 const KIND_ICON: Record<MapPin['kind'], React.ReactNode> = {
@@ -217,6 +218,16 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
       meta:     'Спогад',
       kind:     'memory' as const,
       coverUrl: m.coverUrl || m.photos[0]?.url,
+      places:   (m.places ?? []).map(place => ({
+        id:       `place-${place.id}`,
+        lat:      place.lat,
+        lng:      place.lng,
+        color:    PLACE_COLOR,
+        title:    place.name,
+        subtitle: place.address,
+        meta:     `Заклад · ${m.title}`,
+        kind:     'place' as const,
+      })),
     }))
 
   const placePins: MapPin[] = memories.flatMap(m =>
@@ -323,56 +334,6 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
       { timeout: 8000 }
     )
   }
-
-  const insights = useMemo(() => {
-    const chips: { icon: React.ReactNode; text: string; accent?: boolean }[] = []
-
-    // Найвідвідуваніше місце — Record замість Map (Map затінений react-map-gl)
-    const locCount: Record<string, number> = {}
-    memories.forEach(m => { if (m.location) locCount[m.location] = (locCount[m.location] ?? 0) + 1 })
-    const locEntries = Object.entries(locCount).sort((a, b) => b[1] - a[1])
-    if (locEntries[0] && locEntries[0][1] > 1) {
-      chips.push({
-        icon: <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1a3 3 0 013 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 013-3z" stroke="currentColor" strokeWidth="1.2"/></svg>,
-        text: `Найчастіше: ${locEntries[0][0]} (${locEntries[0][1]}×)`,
-        accent: true,
-      })
-    }
-
-    const uniqueCities = locEntries.length
-    if (uniqueCities > 0) {
-      chips.push({
-        icon: <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="4" width="9" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/><path d="M4 4V3a2 2 0 014 0v1" stroke="currentColor" strokeWidth="1.2"/></svg>,
-        text: `${uniqueCities} ${uniqueCities === 1 ? 'місце' : uniqueCities < 5 ? 'місця' : 'місць'} у спогадах`,
-      })
-    }
-
-    const pending = plans.filter(p => p.status === 'want' || p.status === 'planned').length
-    if (pending > 0) {
-      chips.push({
-        icon: <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/><path d="M6 3.5V6l1.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>,
-        text: `${pending} ${pending === 1 ? 'план' : 'планів'} ще чекають`,
-      })
-    }
-
-    const visitedCount = plans.filter(p => p.status === 'visited').length
-    if (visitedCount > 0) {
-      chips.push({
-        icon: <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-        text: `${visitedCount} ${visitedCount === 1 ? 'місце' : visitedCount < 5 ? 'місця' : 'місць'} відвідано`,
-      })
-    }
-
-    if (memoryPins.length > 0) {
-      chips.push({
-        icon: <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.2"/><path d="M1 7l3-3 2.5 2.5 2-2.5 3.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-        text: `${memoryPins.length} спогадів на карті`,
-      })
-    }
-
-    return chips
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memories.length, plans.length, memoryPins.length])
 
   if (allPins.length === 0) {
     return (
@@ -493,21 +454,9 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
         </div>
       </div>
 
-      {/* ── Geo insights strip ── */}
-      {insights.length > 0 && (
-        <div className={styles.insightsStrip}>
-          {insights.map((chip, i) => (
-            <div key={i} className={`${styles.insightChip} ${chip.accent ? styles.insightChipAccent : ''}`}>
-              <span className={styles.insightIcon}>{chip.icon}</span>
-              <span className={styles.insightText}>{chip.text}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Pin carousel ── */}
+      {/* ── Pin carousel: plans + memories only (places shown as chips inside) ── */}
       <div className={styles.carousel}>
-        {allPins.map(pin => {
+        {[...planPins, ...memoryPins].map(pin => {
           const active = pin.id === activeId
           return (
             <button
@@ -538,6 +487,24 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
                   <span className={styles.pinCardAddr}>{pin.subtitle}</span>
                 )}
               </div>
+              {pin.places && pin.places.length > 0 && (
+                <div className={styles.pinCardPlaces}>
+                  {pin.places.map(place => (
+                    <button
+                      key={place.id}
+                      type="button"
+                      className={`${styles.pinCardPlaceChip} ${activeId === place.id ? styles.pinCardPlaceChipActive : ''}`}
+                      onClick={e => { e.stopPropagation(); handlePinClick(place) }}
+                    >
+                      <svg width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                        <path d="M5 0.5a3 3 0 013 3c0 2.3-3 6-3 6S2 5.8 2 3.5a3 3 0 013-3z" stroke="currentColor" strokeWidth="1.2"/>
+                        <circle cx="5" cy="3.5" r="1" fill="currentColor"/>
+                      </svg>
+                      {place.title}
+                    </button>
+                  ))}
+                </div>
+              )}
             </button>
           )
         })}

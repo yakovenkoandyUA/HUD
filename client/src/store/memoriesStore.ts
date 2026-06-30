@@ -5,10 +5,12 @@ import type { Memory, MemoryPhoto, MemoryPlace } from '../types/memory'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toPhoto(p: Record<string, any>): MemoryPhoto {
   return {
-    id:        p._id,
-    url:       p.url,
-    caption:   p.caption ?? undefined,
-    createdAt: typeof p.createdAt === 'string' ? p.createdAt : new Date(p.createdAt).toISOString(),
+    id:           p._id,
+    url:          p.url,
+    caption:      p.caption ?? undefined,
+    createdAt:    typeof p.createdAt === 'string' ? p.createdAt : new Date(p.createdAt).toISOString(),
+    addedBy:      p.addedBy      || undefined,
+    addedByName:  p.addedByName  || undefined,
   }
 }
 

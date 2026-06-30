@@ -137,7 +137,36 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
               </svg>
             )}
           </button>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            disabled={uploading}
+            onChange={handlePhotoChange}
+          />
         </div>
+
+        {/* Compact photo strip when photos uploaded */}
+        {photoUrls.length > 0 && (
+          <div className={styles.photoStrip}>
+            {photoUrls.map(url => (
+              <div key={url} className={styles.photoThumb}>
+                <img src={url} alt="" className={styles.thumbImg} />
+                <button
+                  type="button"
+                  className={styles.removeThumb}
+                  onClick={() => removePhoto(url)}
+                  aria-label="Видалити фото"
+                >
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                    <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className={styles.fields}>
           {/* Title */}
@@ -241,47 +270,6 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
             </div>
           )}
 
-          {/* Photos */}
-          <div className={styles.field}>
-            <label className={styles.label}>ФОТО</label>
-            <div className={styles.photoRow}>
-              {photoUrls.map(url => (
-                <div key={url} className={styles.photoThumb}>
-                  <img src={url} alt="" className={styles.thumbImg} />
-                  <button
-                    type="button"
-                    className={styles.removeThumb}
-                    onClick={() => removePhoto(url)}
-                    aria-label="Видалити фото"
-                  >
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                </div>
-              ))}
-              <label className={`${styles.addThumb} ${uploading ? styles.addThumbLoading : ''}`}>
-                {uploading ? (
-                  <span className={styles.spinner} />
-                ) : (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                      <path d="M2 9h14M9 2v14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                    </svg>
-                    <span className={styles.addThumbLabel}>ФОТО</span>
-                  </>
-                )}
-                <input
-                  ref={photoInputRef}
-                  type="file"
-                  accept="image/*"
-                  className={styles.fileInput}
-                  disabled={uploading}
-                  onChange={handlePhotoChange}
-                />
-              </label>
-            </div>
-          </div>
         </div>
 
         <button
