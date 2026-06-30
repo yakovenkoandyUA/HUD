@@ -205,7 +205,7 @@ export async function register(req: Request, res: Response): Promise<void> {
       user.verificationToken = migrationToken
       if (!user.name || user.name === user.username) user.name = name.trim()
       await user.save()
-      await sendVerificationEmail(normalEmail, migrationToken, user.name)
+      sendVerificationEmail(normalEmail, migrationToken, user.name).catch(() => {})
     } else {
       const verificationToken = crypto.randomBytes(32).toString('hex')
       user = await User.create({
@@ -220,7 +220,7 @@ export async function register(req: Request, res: Response): Promise<void> {
       })
       const userId = (user._id as { toString(): string }).toString()
       await seedCategoriesForUser(userId)
-      await sendVerificationEmail(normalEmail, verificationToken, name.trim())
+      sendVerificationEmail(normalEmail, verificationToken, name.trim()).catch(() => {})
     }
 
     const userId = (user._id as { toString(): string }).toString()
