@@ -54,26 +54,27 @@
   line-height: 1.5;
 }
 
-/* ── Category 4-column grid ── */
+/* ── Category 5-column grid ── */
 .catGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
 }
 
 .catCell {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 10px 6px 8px;
-  border-radius: 10px;
+  gap: 4px;
+  padding: 8px 4px 6px;
+  border-radius: 9px;
   border: 1px solid var(--border);
   background: var(--bg3);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.catCell:active { opacity: 0.8; }
+.catCell:active { opacity: 0.75; }
 
 .catCellActive {
   border-color: var(--cat-color);
@@ -81,9 +82,9 @@
 }
 
 .catCellIcon {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,7 +92,7 @@
   transition: background 0.15s;
 }
 .catCellIcon i {
-  font-size: 17px;
+  font-size: 14px;
   color: var(--cat-color);
 }
 .catCellActive .catCellIcon {
@@ -100,7 +101,7 @@
 
 .catCellName {
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text2);
   white-space: nowrap;
   overflow: hidden;
@@ -111,6 +112,43 @@
   color: var(--cat-color);
   font-weight: 700;
 }
+
+/* ── Extra categories (accordion) ── */
+.catGridExtra {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 260ms ease-in-out, opacity 200ms ease-in-out;
+}
+.catGridExtraOpen {
+  max-height: 400px;
+  opacity: 1;
+}
+
+.catExpandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 6px;
+  background: none;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.catExpandBtn:hover { color: var(--text2); }
+.catExpandBtn svg { transition: transform 0.2s ease; }
+.catExpandIconUp { transform: rotate(180deg); }
 
 /* ── Subcategory chips ── */
 .subCatLabel {
@@ -186,3 +224,43 @@
   transition: color 0.15s;
 }
 .selectedClear:hover { color: var(--accent); }
+
+/* ── Trip picker ── */
+.tripPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tripPickerLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+}
+
+.tripChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tripChip {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tripChipActive {
+  border-color: var(--accent);
+  background: var(--accent-dim, rgba(180,60,60,0.12));
+  color: var(--accent);
+}
