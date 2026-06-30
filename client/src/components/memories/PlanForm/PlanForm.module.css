@@ -204,6 +204,65 @@
   font-weight: 400;
 }
 
+/* ── Companions ── */
+.companions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.companion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.companionActive {
+  border-color: var(--accent);
+  background: var(--accent-dim, rgba(180,60,60,0.1));
+}
+
+.companionAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.companionInitial {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.companionName {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.companionCheck {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
 /* ── Photos ── */
 .photoRow {
   display: flex;

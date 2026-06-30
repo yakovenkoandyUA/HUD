@@ -5,6 +5,7 @@ import LocationSearch from '../LocationSearch'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import { formatDateUA } from '../../../utils/formatDate'
 import { uploadToCloudinary } from '../../../utils/uploadToCloudinary'
+import { useFamilyStore } from '../../../store/familyStore'
 import type { PlanInput, PlanLocation } from '../../../store/plansStore'
 import styles from './PlanForm.module.css'
 
@@ -58,9 +59,16 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
   const [plannedDate,  setPlannedDate]  = useState<string | null>(null)
   const [notes,        setNotes]        = useState('')
   const [showDatePick, setShowDatePick] = useState(false)
-  const [photoUrls,    setPhotoUrls]    = useState<string[]>([])
-  const [uploading,    setUploading]    = useState(false)
+  const [photoUrls,     setPhotoUrls]    = useState<string[]>([])
+  const [uploading,     setUploading]    = useState(false)
+  const [withProfiles,  setWithProfiles] = useState<string[]>([])
   const photoInputRef = useRef<HTMLInputElement>(null)
+
+  const { accepted, fetchFamily } = useFamilyStore()
+  useEffect(() => { if (accepted.length === 0) fetchFamily() }, [accepted.length, fetchFamily])
+
+  const toggleCompanion = (id: string) =>
+    setWithProfiles(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
   const canSubmit = title.trim().length > 0
 
@@ -84,7 +92,7 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
     onSubmit({
       title:        title.trim(),
       location,
-      withProfiles: [],
+      withProfiles,
       notes:        notes.trim(),
       photos:       photoUrls.map(url => ({
         _id:       '',
@@ -200,6 +208,38 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
               rows={3}
             />
           </div>
+
+          {/* Companions — only if family members exist */}
+          {accepted.length > 0 && (
+            <div className={styles.field}>
+              <label className={styles.label}>З КИМ</label>
+              <div className={styles.companions}>
+                {accepted.map(m => {
+                  const active = withProfiles.includes(m.id)
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`${styles.companion} ${active ? styles.companionActive : ''}`}
+                      onClick={() => toggleCompanion(m.id)}
+                    >
+                      {m.avatarUrl ? (
+                        <img src={m.avatarUrl} alt="" className={styles.companionAvatar} />
+                      ) : (
+                        <span className={styles.companionInitial}>{m.name[0]?.toUpperCase()}</span>
+                      )}
+                      <span className={styles.companionName}>{m.name.split(' ')[0]}</span>
+                      {active && (
+                        <svg className={styles.companionCheck} width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Photos */}
           <div className={styles.field}>
