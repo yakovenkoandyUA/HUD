@@ -32,6 +32,8 @@ function toMemory(d: Record<string, any>): Memory {
     lat:            d.lat ?? null,
     lng:            d.lng ?? null,
     date:           d.date,
+    dateEnd:        d.dateEnd ?? null,
+    isTrip:         d.isTrip ?? false,
     coverUrl:       d.coverUrl ?? '',
     notes:          d.notes ?? '',
     tags:           d.tags ?? [],

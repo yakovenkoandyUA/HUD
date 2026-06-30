@@ -35,6 +35,8 @@ export interface Memory {
   lat?: number | null
   lng?: number | null
   date: string
+  dateEnd?: string | null
+  isTrip?: boolean
   coverUrl: string
   notes?: string
   tags?: string[]

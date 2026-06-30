@@ -721,6 +721,52 @@
 }
 .editInput:focus { border-color: var(--accent); }
 
+.editDateRange {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editDateBtn {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s;
+}
+.editDateBtn:hover { border-color: var(--accent); }
+
+.editDateBtnEnd { color: var(--text2); border-color: var(--border); }
+
+.editTripToggle {
+  width: 32px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.editTripToggleActive {
+  background: var(--accent-dim, rgba(180,60,60,0.15));
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .editSave {
   margin-top: 4px;
   width: 100%;

@@ -21,6 +21,8 @@ export interface IMemory extends Document {
   lat: number | null
   lng: number | null
   date: string
+  dateEnd: string | null
+  isTrip: boolean
   coverUrl: string
   notes: string
   tags: string[]
@@ -48,6 +50,8 @@ const schema = new Schema<IMemory>({
   lat:      { type: Number, default: null },
   lng:      { type: Number, default: null },
   date:     { type: String, required: true },
+  dateEnd:  { type: String, default: null },
+  isTrip:   { type: Boolean, default: false },
   coverUrl: { type: String, default: '' },
   notes:    { type: String, default: '' },
   tags:     [{ type: String }],

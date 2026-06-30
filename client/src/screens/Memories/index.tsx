@@ -137,6 +137,8 @@ const MemoriesScreen: React.FC = () => {
       lat:      data.lat,
       lng:      data.lng,
       date:     data.date,
+      dateEnd:  data.dateEnd,
+      isTrip:   data.isTrip,
       coverUrl: data.coverUrl,
       notes:    data.notes,
       tags:     data.tags,

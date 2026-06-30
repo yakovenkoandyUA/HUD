@@ -87,7 +87,14 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onClick }) => {
           <span className={styles.title}>{memory.title.toUpperCase()}</span>
           <span className={styles.date}>
             {memory.location ? `${memory.location} · ` : ''}
-            {formatMemoryDate(memory.date)}
+            {memory.isTrip && memory.dateEnd
+              ? (() => {
+                  const [y1, m1, d1] = memory.date.split('-').map(Number)
+                  const [y2, m2, d2] = memory.dateEnd.split('-').map(Number)
+                  const days = Math.round((Date.UTC(y2, m2-1, d2) - Date.UTC(y1, m1-1, d1)) / 86400000) + 1
+                  return `${formatMemoryDate(memory.date)} · ${days}д`
+                })()
+              : formatMemoryDate(memory.date)}
           </span>
         </div>
         <div className={styles.bottom}>

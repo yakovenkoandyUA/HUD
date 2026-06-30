@@ -25,6 +25,8 @@ export interface AddMemoryData {
   lat?: number | null
   lng?: number | null
   date: string
+  dateEnd?: string | null
+  isTrip?: boolean
   coverUrl: string
   notes?: string
   tags?: string[]
@@ -69,11 +71,14 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 
   const [title, setTitle]       = useState('')
   const [location, setLocation] = useState<PlanLocation>({ name: null, address: null, lat: null, lng: null })
-  const [date, setDate]         = useState(today())
-  const [coverUrl, setCoverUrl] = useState('')
-  const [notes, setNotes]       = useState('')
-  const [tags, setTags]         = useState<string[]>([])
-  const [showPicker, setShowPicker] = useState(false)
+  const [date, setDate]           = useState(today())
+  const [dateEnd, setDateEnd]     = useState<string | null>(null)
+  const [isTrip, setIsTrip]       = useState(false)
+  const [coverUrl, setCoverUrl]   = useState('')
+  const [notes, setNotes]         = useState('')
+  const [tags, setTags]           = useState<string[]>([])
+  const [showPicker, setShowPicker]       = useState(false)
+  const [showEndPicker, setShowEndPicker] = useState(false)
 
   const { showToast } = useUiStore()
   const { trigger: triggerCover, uploading: coverUploading, inputElement: coverInput } =
@@ -86,6 +91,8 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
     setTitle('')
     setLocation({ name: null, address: null, lat: null, lng: null })
     setDate(today())
+    setDateEnd(null)
+    setIsTrip(false)
     setCoverUrl('')
     setNotes('')
     setTags([])
@@ -116,6 +123,8 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
       lat:      location.lat,
       lng:      location.lng,
       date,
+      dateEnd:  isTrip ? (dateEnd || null) : null,
+      isTrip,
       coverUrl,
       notes:    notes.trim() || undefined,
       tags:     tags.length ? tags : undefined,
@@ -186,13 +195,34 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 
             <div className={`${styles.field} ${styles.fieldDate}`}>
               <label className={styles.label}>ДАТА</label>
-              <button
-                type="button"
-                className={styles.dateBtn}
-                onClick={() => setShowPicker(true)}
-              >
-                {date ? formatDisplayDate(date) : 'Вибрати дату'}
-              </button>
+              <div className={styles.dateRange}>
+                <button
+                  type="button"
+                  className={styles.dateBtn}
+                  onClick={() => setShowPicker(true)}
+                >
+                  {date ? formatDisplayDate(date) : 'Вибрати'}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.tripToggle} ${isTrip ? styles.tripToggleActive : ''}`}
+                  onClick={() => { setIsTrip(v => !v); if (isTrip) setDateEnd(null) }}
+                  title="Поїздка (діапазон дат)"
+                >
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7h10M8 4l4 3-4 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                {isTrip && (
+                  <button
+                    type="button"
+                    className={`${styles.dateBtn} ${styles.dateBtnEnd}`}
+                    onClick={() => setShowEndPicker(true)}
+                  >
+                    {dateEnd ? formatDisplayDate(dateEnd) : 'Кінець'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -201,6 +231,13 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
               value={date}
               onChange={setDate}
               onClose={() => setShowPicker(false)}
+            />
+          )}
+          {showEndPicker && (
+            <CustomDatePicker
+              value={dateEnd ?? date}
+              onChange={setDateEnd}
+              onClose={() => setShowEndPicker(false)}
             />
           )}
 

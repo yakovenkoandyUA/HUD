@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import CustomDatePicker from '../../components/ui/CustomDatePicker'
 import { useParams, useNavigate } from 'react-router-dom'
 import PhotoViewerModal from '../../components/memories/PhotoViewerModal'
 import ImageUploadButton from '../../components/ui/ImageUploadButton'
@@ -105,21 +106,36 @@ interface EditMemoryModalProps {
   location: string
   lat: number | null
   lng: number | null
+  date: string
+  dateEnd: string | null
+  isTrip: boolean
   coverUrl: string
-  onSave: (title: string, location: PlanLocation) => void
+  onSave: (title: string, location: PlanLocation, date: string, dateEnd: string | null, isTrip: boolean) => void
   onChangeCover: (url: string) => void
   onClose: () => void
 }
 
 const EDIT_CLOSE_MS = 260
 
+const formatDisplayDate = (iso: string) => {
+  const [y, m, d] = iso.split('-')
+  return y && m && d ? `${d}.${m}.${y}` : iso
+}
+
 const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
-  title: initTitle, location: initLoc, lat: initLat, lng: initLng, coverUrl, onSave, onChangeCover, onClose,
+  title: initTitle, location: initLoc, lat: initLat, lng: initLng,
+  date: initDate, dateEnd: initDateEnd, isTrip: initIsTrip,
+  coverUrl, onSave, onChangeCover, onClose,
 }) => {
-  const [title, setTitle]       = useState(initTitle)
-  const [location, setLocation] = useState<PlanLocation>({
+  const [title, setTitle]         = useState(initTitle)
+  const [location, setLocation]   = useState<PlanLocation>({
     name: null, address: initLoc || null, lat: initLat, lng: initLng,
   })
+  const [date, setDate]           = useState(initDate)
+  const [dateEnd, setDateEnd]     = useState<string | null>(initDateEnd)
+  const [isTrip, setIsTrip]       = useState(initIsTrip)
+  const [showPicker, setShowPicker]       = useState(false)
+  const [showEndPicker, setShowEndPicker] = useState(false)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -135,6 +151,7 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   const sheetRef = useSwipeToDismiss(onClose, { enabled: visible })
 
   return (
+    <>
     <div
       className={`${styles.editOverlay} ${visible ? styles.editOverlayVisible : styles.editOverlayHidden}`}
       onClick={handleClose}
@@ -166,17 +183,53 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
           />
           <label className={styles.editLabel}>МІСЦЕ</label>
           <LocationSearch initial={initLoc} onSelect={setLocation} />
+          <label className={styles.editLabel}>ДАТА</label>
+          <div className={styles.editDateRange}>
+            <button
+              type="button"
+              className={styles.editDateBtn}
+              onClick={() => setShowPicker(true)}
+            >
+              {formatDisplayDate(date)}
+            </button>
+            <button
+              type="button"
+              className={`${styles.editTripToggle} ${isTrip ? styles.editTripToggleActive : ''}`}
+              onClick={() => { setIsTrip(v => !v); if (isTrip) setDateEnd(null) }}
+              title="Поїздка (діапазон дат)"
+            >
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 7h10M8 4l4 3-4 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {isTrip && (
+              <button
+                type="button"
+                className={`${styles.editDateBtn} ${styles.editDateBtnEnd}`}
+                onClick={() => setShowEndPicker(true)}
+              >
+                {dateEnd ? formatDisplayDate(dateEnd) : 'Кінець'}
+              </button>
+            )}
+          </div>
           <button
             type="button"
             className={styles.editSave}
             disabled={!title.trim()}
-            onClick={() => { onSave(title.trim(), location); handleClose() }}
+            onClick={() => { onSave(title.trim(), location, date, isTrip ? dateEnd : null, isTrip); handleClose() }}
           >
             ЗБЕРЕГТИ
           </button>
         </div>
       </div>
     </div>
+    {showPicker && (
+      <CustomDatePicker value={date} onChange={setDate} onClose={() => setShowPicker(false)} />
+    )}
+    {showEndPicker && (
+      <CustomDatePicker value={dateEnd ?? date} onChange={setDateEnd} onClose={() => setShowEndPicker(false)} />
+    )}
+    </>
   )
 }
 
@@ -654,13 +707,19 @@ const MemoryDetailScreen: React.FC = () => {
 					location={memory.location ?? ''}
 					lat={memory.lat ?? null}
 					lng={memory.lng ?? null}
+					date={memory.date}
+					dateEnd={memory.dateEnd ?? null}
+					isTrip={memory.isTrip ?? false}
 					coverUrl={memory.coverUrl ?? ''}
-					onSave={(title, location) =>
+					onSave={(title, location, date, dateEnd, isTrip) =>
 						updateMemory(id!, {
 							title,
 							location: location.address || location.name || undefined,
 							lat: location.lat,
 							lng: location.lng,
+							date,
+							dateEnd,
+							isTrip,
 						})
 					}
 					onChangeCover={url => setCover(id!, url)}
