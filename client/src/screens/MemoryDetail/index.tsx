@@ -8,6 +8,7 @@ import MemoryCard from '../../components/memories/MemoryCard'
 import Modal from '../../components/ui/Modal'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { useUiStore } from '../../store/uiStore'
+import { useFinanceStore } from '../../store/financeStore'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { generateMemoryPosterBlob } from '../../utils/generateMemoryPoster'
 import { useLongPress } from '../../hooks/useLongPress'
@@ -247,6 +248,7 @@ const MemoryDetailScreen: React.FC = () => {
   const { memories, fetchMemories, addPhoto, deletePhoto, setCover, updatePhoto, updateMemory, deleteMemory, fetchRelated } =
     useMemoriesStore()
   const { showToast } = useUiStore()
+  const { transactions } = useFinanceStore()
 
   const memory = memories.find(m => m.id === id)
   const [related, setRelated] = useState<Memory[]>([])
@@ -617,6 +619,35 @@ const MemoryDetailScreen: React.FC = () => {
 					</button>
 				</div>
 			</div>
+
+			{/* ── Trip expenses ── */}
+			{memory.isTrip && (() => {
+				const tripTxs = transactions.filter(t => t.type === 'expense' && t.tripMemoryId === memory.id)
+				if (tripTxs.length === 0) return null
+				const total = tripTxs.reduce((s, t) => s + t.amount, 0)
+				return (
+					<div className={styles.tripExpenses}>
+						<div className={styles.tripExpensesHeader}>
+							<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+								<path d="M2 7h10M8 4l4 3-4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+							</svg>
+							<span className={styles.tripExpensesLabel}>ВИТРАТИ В ПОЇЗДЦІ</span>
+							<span className={styles.tripExpensesTotal}>{total.toLocaleString('uk-UA')} ₴</span>
+						</div>
+						<div className={styles.tripExpensesList}>
+							{tripTxs.slice(0, 5).map(t => (
+								<div key={t.id} className={styles.tripExpenseItem}>
+									<span className={styles.tripExpenseDesc}>{t.description}</span>
+									<span className={styles.tripExpenseAmt}>−{t.amount} ₴</span>
+								</div>
+							))}
+							{tripTxs.length > 5 && (
+								<span className={styles.tripExpensesMore}>ще {tripTxs.length - 5} транзакцій</span>
+							)}
+						</div>
+					</div>
+				)
+			})()}
 
 			{/* ── Related memories ── */}
 			{related.length > 0 && (

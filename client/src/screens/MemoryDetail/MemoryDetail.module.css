@@ -855,3 +855,79 @@
   font-size: 14px;
   color: var(--text3);
 }
+
+/* ── Trip expenses ── */
+.tripExpenses {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 0 4px;
+}
+
+.tripExpensesHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+}
+
+.tripExpensesLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  flex: 1;
+}
+
+.tripExpensesTotal {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.tripExpensesList {
+  display: flex;
+  flex-direction: column;
+}
+
+.tripExpenseItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.tripExpenseItem:last-child { border-bottom: none; }
+
+.tripExpenseDesc {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tripExpenseAmt {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.tripExpensesMore {
+  display: block;
+  padding: 8px 14px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.04em;
+}
