@@ -85,6 +85,15 @@
   animation: dropIn 0.12s ease both;
 }
 
+.resultsInline {
+  position: static;
+  margin-top: 8px;
+  box-shadow: none;
+  max-height: none;
+  border-color: var(--border2);
+  animation: none;
+}
+
 @keyframes dropIn {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }

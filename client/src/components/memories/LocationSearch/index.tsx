@@ -12,15 +12,19 @@ import styles from './LocationSearch.module.css'
  * Calls onSelect with structured location on pick.
  *
  * Props:
- * @prop {(loc: PlanLocation) => void} onSelect — called when user picks a result
- * @prop {string}                      [initial] — pre-fill display value
+ * @prop {(loc: PlanLocation) => void} onSelect       — called when user picks a result
+ * @prop {string}                      [initial]      — pre-fill display value
+ * @prop {boolean}                     [inlineResults] — results flow in document (not absolute);
+ *                                                       use when LocationSearch is the only content
+ *                                                       inside a Modal (avoids clipping)
  */
 interface LocationSearchProps {
   onSelect: (loc: PlanLocation) => void
   initial?: string
+  inlineResults?: boolean
 }
 
-const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' }) => {
+const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '', inlineResults = false }) => {
   const [query,         setQuery]         = useState(initial)
   const [results,       setResults]       = useState<PlaceSuggestion[]>([])
   const [loading,       setLoading]       = useState(false)
@@ -120,10 +124,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
       {loading && <p className={styles.loading}>Пошук...</p>}
       {results.length > 0 && (
         <div
-          className={styles.results}
-          // Список має власний overflow-y:auto — без stopPropagation свайп тут
-          // підхоплює useSwipeToDismiss батьківського bottom sheet (якщо sheet.scrollTop
-          // ще 0, бо поле МІСЦЕ зазвичай вгорі форми) замість натурального скролу списку.
+          className={`${styles.results} ${inlineResults ? styles.resultsInline : ''}`}
           onTouchStart={e => e.stopPropagation()}
           onTouchMove={e => e.stopPropagation()}
           onTouchEnd={e => e.stopPropagation()}

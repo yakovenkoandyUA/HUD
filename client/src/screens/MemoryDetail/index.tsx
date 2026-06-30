@@ -523,65 +523,64 @@ const MemoryDetailScreen: React.FC = () => {
 						</button>
 					)}
 
-				</div>
-
-				{/* ── Tags + Заклади (combined chips row) ── */}
-				<div className={styles.metaChipsRow}>
-					{(memory.tags ?? []).map(tag => (
-						<span key={tag} className={styles.tag}>
-							<span className={styles.tagHash}>#</span>
-							{tag}
-							<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>
-								×
+					{/* ── Tags + Заклади (combined chips row) ── */}
+					<div className={styles.metaChipsRow}>
+						{(memory.tags ?? []).map(tag => (
+							<span key={tag} className={styles.tag}>
+								<span className={styles.tagHash}>#</span>
+								{tag}
+								<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>
+									×
+								</button>
+							</span>
+						))}
+						{addingTag ? (
+							<span className={styles.tagInputWrap}>
+								<span className={styles.tagInputPrefix}>#</span>
+								<input
+									className={styles.tagInput}
+									placeholder="тег"
+									autoFocus
+									onBlur={() => setAddingTag(false)}
+									onKeyDown={e => {
+										if (e.key === 'Enter' || e.key === ',') {
+											e.preventDefault()
+											handleAddTag(e.currentTarget.value)
+											e.currentTarget.value = ''
+										}
+									}}
+								/>
+							</span>
+						) : (
+							<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
+								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+									<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+								</svg>
+								тег
 							</button>
-						</span>
-					))}
-					{addingTag ? (
-						<span className={styles.tagInputWrap}>
-							<span className={styles.tagInputPrefix}>#</span>
-							<input
-								className={styles.tagInput}
-								placeholder="тег"
-								autoFocus
-								onBlur={() => setAddingTag(false)}
-								onKeyDown={e => {
-									if (e.key === 'Enter' || e.key === ',') {
-										e.preventDefault()
-										handleAddTag(e.currentTarget.value)
-										e.currentTarget.value = ''
-									}
-								}}
-							/>
-						</span>
-					) : (
-						<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
+						)}
+
+						<span className={styles.chipsDivider} />
+
+						{(memory.places ?? []).map(place => (
+							<span key={place.id} className={styles.placeChip}>
+								<svg className={styles.placeIcon} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+									<path d="M5 0.5a3 3 0 0 1 3 3c0 2.3-3 6-3 6S2 5.8 2 3.5a3 3 0 0 1 3-3Z" stroke="currentColor" strokeWidth="1.1" />
+									<circle cx="5" cy="3.5" r="1.1" fill="currentColor" />
+								</svg>
+								{place.name}
+								<button type="button" className={styles.placeRemove} onClick={() => handleRemovePlace(place.id)}>
+									×
+								</button>
+							</span>
+						))}
+						<button type="button" className={styles.addPlaceBtn} onClick={() => setAddingPlace(true)}>
 							<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
 								<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
 							</svg>
-							тег
+							заклад
 						</button>
-					)}
-
-					<span className={styles.chipsDivider} />
-
-					{(memory.places ?? []).map(place => (
-						<span key={place.id} className={styles.placeChip}>
-							<svg className={styles.placeIcon} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-								<path d="M5 0.5a3 3 0 0 1 3 3c0 2.3-3 6-3 6S2 5.8 2 3.5a3 3 0 0 1 3-3Z" stroke="currentColor" strokeWidth="1.1"/>
-								<circle cx="5" cy="3.5" r="1.1" fill="currentColor"/>
-							</svg>
-							{place.name}
-							<button type="button" className={styles.placeRemove} onClick={() => handleRemovePlace(place.id)}>
-								×
-							</button>
-						</span>
-					))}
-					<button type="button" className={styles.addPlaceBtn} onClick={() => setAddingPlace(true)}>
-						<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-							<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-						</svg>
-						заклад
-					</button>
+					</div>
 				</div>
 
 				<div className={styles.uploadRow}>
@@ -618,33 +617,32 @@ const MemoryDetailScreen: React.FC = () => {
 			</div>
 
 			{/* ── Trip expenses ── */}
-			{memory.isTrip && (() => {
-				const tripTxs = transactions.filter(t => t.type === 'expense' && t.tripMemoryId === memory.id)
-				if (tripTxs.length === 0) return null
-				const total = tripTxs.reduce((s, t) => s + t.amount, 0)
-				return (
-					<div className={styles.tripExpenses}>
-						<div className={styles.tripExpensesHeader}>
-							<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-								<path d="M2 7h10M8 4l4 3-4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-							</svg>
-							<span className={styles.tripExpensesLabel}>ВИТРАТИ В ПОЇЗДЦІ</span>
-							<span className={styles.tripExpensesTotal}>{total.toLocaleString('uk-UA')} ₴</span>
+			{memory.isTrip &&
+				(() => {
+					const tripTxs = transactions.filter(t => t.type === 'expense' && t.tripMemoryId === memory.id)
+					if (tripTxs.length === 0) return null
+					const total = tripTxs.reduce((s, t) => s + t.amount, 0)
+					return (
+						<div className={styles.tripExpenses}>
+							<div className={styles.tripExpensesHeader}>
+								<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+									<path d="M2 7h10M8 4l4 3-4 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+								<span className={styles.tripExpensesLabel}>ВИТРАТИ В ПОЇЗДЦІ</span>
+								<span className={styles.tripExpensesTotal}>{total.toLocaleString('uk-UA')} ₴</span>
+							</div>
+							<div className={styles.tripExpensesList}>
+								{tripTxs.slice(0, 5).map(t => (
+									<div key={t.id} className={styles.tripExpenseItem}>
+										<span className={styles.tripExpenseDesc}>{t.description}</span>
+										<span className={styles.tripExpenseAmt}>−{t.amount} ₴</span>
+									</div>
+								))}
+								{tripTxs.length > 5 && <span className={styles.tripExpensesMore}>ще {tripTxs.length - 5} транзакцій</span>}
+							</div>
 						</div>
-						<div className={styles.tripExpensesList}>
-							{tripTxs.slice(0, 5).map(t => (
-								<div key={t.id} className={styles.tripExpenseItem}>
-									<span className={styles.tripExpenseDesc}>{t.description}</span>
-									<span className={styles.tripExpenseAmt}>−{t.amount} ₴</span>
-								</div>
-							))}
-							{tripTxs.length > 5 && (
-								<span className={styles.tripExpensesMore}>ще {tripTxs.length - 5} транзакцій</span>
-							)}
-						</div>
-					</div>
-				)
-			})()}
+					)
+				})()}
 
 			{/* ── Related memories ── */}
 			{related.length > 0 && (
@@ -684,20 +682,13 @@ const MemoryDetailScreen: React.FC = () => {
 
 			{/* ── Add place modal ── */}
 			<Modal isOpen={addingPlace} onClose={() => setAddingPlace(false)} title="Додати заклад" draggable>
-				<LocationSearch onSelect={handleAddPlace} />
+				<LocationSearch onSelect={handleAddPlace} inlineResults />
 			</Modal>
 
 			{/* ── Notes modal ── */}
 			<Modal isOpen={editingNotes} onClose={handleCancelNotes} title="Нотатка" draggable>
 				<div className={styles.notesEditWrap}>
-					<textarea
-						ref={notesTextareaRef}
-						className={styles.notesTextarea}
-						value={localNotes}
-						onChange={e => setLocalNotes(e.target.value)}
-						autoFocus
-						rows={1}
-					/>
+					<textarea ref={notesTextareaRef} className={styles.notesTextarea} value={localNotes} onChange={e => setLocalNotes(e.target.value)} autoFocus rows={1} />
 					<div className={styles.notesEditActions}>
 						<button type="button" className={styles.notesCancelBtn} onClick={handleCancelNotes}>
 							Скасувати
