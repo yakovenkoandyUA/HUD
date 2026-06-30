@@ -30,9 +30,10 @@ store/
 │                            БЕЗ persist (backend-only, /api/shopping)
 ├── watchlistStore.ts      — watchlist items
 │                            БЕЗ persist (backend-only)
-├── memoriesStore.ts       — спогади + фото + places[]
+├── memoriesStore.ts       — спогади + фото + places[] + dateEnd + isTrip
 │                            БЕЗ persist (backend-only, /api/memories)
 │                            toPlace() нормалізує backend `_id` → `id` для places[]
+│                            Memory: dateEnd?: string|null, isTrip?: boolean
 ├── f1PredictionsStore.ts  — прогнози гонок F1 + підрахунок очок
 │                            БЕЗ persist (backend-only, /api/f1/predictions)
 └── uiStore.ts             — theme, toasts

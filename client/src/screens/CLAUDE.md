@@ -163,10 +163,13 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
   - **Нотатка** — картка з пунктирною рамкою + іконкою-редагування (✎), а не голий текст; порожній стан "+ Додати нотатку" з SVG-плюсиком
   - **Тег** — кнопка "+ тег" теж із SVG-плюсиком замість символу `+`
   - **bottomBar** — ФОТО/ПОДІЛИТИСЬ + нотатка + теги тепер в одній плаваючій картці, `position: fixed` знизу екрана (в зоні досягання великим пальцем); "ПОВ'ЯЗАНІ СПОГАДИ" і фотогрід підняті нагору одразу під заголовок
+  - **Trip-спогади** — блок "ВИТРАТИ В ПОЇЗДЦІ": `transactions.filter(t => t.type === 'expense' && t.tripMemoryId === memory.id)`, підсумок + до 5 рядків + "ще N транзакцій". IIFE-паттерн `{memory.isTrip && (() => { ... })()}` для multi-statement JSX.
+  - **EditMemoryModal** — inline в MemoryDetail, підтримує edit `date`/`dateEnd`/`isTrip` через toggle "→" + CustomDatePicker
 - **Поділитись** — Canvas API → PNG (обкладинка + назва + дата + теги + **мінікарта-бейдж** у верхньому правому кутку якщо є координати, Mapbox Static Images API), Web Share API або download (`utils/generateMemoryPoster.ts`)
 - Cloudinary upload для фото
-- **AddMemoryModal** — поле МІСЦЕ через `LocationSearch` (Mapbox Search Box автокомпліт, `VITE_MAPBOX_TOKEN`) + "Обрати на карті" (`LocationMapPicker`, тап на Mapbox GL карті + реверс-геокодинг), ДАТА/МІСЦЕ в один ряд, дата відображається DD.MM.YYYY
+- **AddMemoryModal** — обкладинка як повноширинна зона (130px) над хедером (`useImageUpload` хук напряму, без `ImageUploadButton`); МІСЦЕ через `LocationSearch` (Mapbox Search Box автокомпліт) + "Обрати на карті" (`LocationMapPicker`); ДАТА + toggle "→" (isTrip) + другий DatePicker (dateEnd); ДАТА/МІСЦЕ в один ряд, дата DD.MM.YYYY
   - `places[]` (заклади всередині спогаду) — поле в моделі/сторі вже є, рендериться на MemoryMap, **але UI додавання ще не реалізований** в AddMemoryModal/PlanForm
+- **PlanForm** — хедер містить кнопку обкладинки (thumbnail + count-badge); секція "З КИМ" — chips прийнятих сімейних членів з `useFamilyStore`, `withProfiles` передається в `onSubmit`
 
 ## 11. Notes (`/notes`)
 - `notesStore` (Zustand, без persist) — `fetchNotes`, `addNote`, `updateNote`, `deleteNote`

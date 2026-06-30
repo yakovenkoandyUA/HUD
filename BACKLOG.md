@@ -79,7 +79,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - `/recipes/planner` — тижневий планер Пн–Нд
 - `/watchlist` — movie/series/anime/book/game (OpenMoji таби), TMDB пошук; налаштування видимості табів у профілі; **game tab** — повний UI (RAWG пошук через GameSearch overlay, сортування, фільтр жанрів, GameHero, статуси); WatchlistStatsSheet (кнопка статистики) — реальна тривалість з TMDB (з фолбеком на оцінку для елементів без даних), SVG-іконки замість emoji
 - `/memories` — таймлайн + сітка + Mapbox GL карта (globe projection, теми, 3D, маршрути, карусель пінів), "Цей день рік тому", статистика відстаней; МІСЦЕ через LocationSearch (Mapbox Search Box автокомпліт) або LocationMapPicker (тап на карті)
-- `/memories/:id` — фото, Canvas export → PNG/Web Share з мінікартою-бейджем (поставити обкладинкою — лише з галереї фото або EditMemoryModal, без накладання тексту); fixed bottomBar (фото/поділитись/нотатка/теги)
+- `/memories/:id` — фото, Canvas export → PNG/Web Share з мінікартою-бейджем (поставити обкладинкою — лише з галереї фото або EditMemoryModal, без накладання тексту); fixed bottomBar (фото/поділитись/нотатка/теги); trip-спогади: блок "ВИТРАТИ В ПОЇЗДЦІ" з підсумком і до 5 транзакцій (`tripMemoryId` на Transaction)
 - `/notes` — inline edit, пошук
 - `/profile` — MeTab (avatar, name, username, password, секція МЕДІА — toggles для movie/series/anime/game + книги "в розробці", СІМ'Я), WalletTab (Monobank, salaryDay, категорії pill-cloud + ВИТРАТИ/ПОПОВНЕННЯ таби + icon picker), PlanTab, AdminTab
 - `/f1` — NextRaceCard, LastRaceCard, RacePredictionCard, ChampionshipTable (Пілоти/Конструктори/МІЙ СЕЗОН), McLarenViewer (Three.js)
@@ -177,7 +177,20 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 При першому логіні (`App.tsx`) — геолокація + реверс-геокодинг (Nominatim, спільний `utils/geocode.ts`) автоматично заповнює `city` в профілі, якщо ще не задане. `CitySplash` (блокуюча анімація запуску) прибрано — авто-визначення відбувається мовчки у фоні, юзер завжди може поправити місто вручну в MeSystem.
 
 ### 🟠 Потребує доопрацювання
-- Інше по Memories — за потреби, уточнювати з юзером
+- Memories: `places[]` — UI додавання закладів всередині спогаду ще не реалізований (поле в моделі є, рендер на карті є)
+- Memories: "з ким" тег прямо на Memory (не лише через Plan→convert)
+- Memories: тривалість на trip-картках ("5 днів, Одеса")
+
+### ✅ Memories доопрацювання — зроблено (2026-06-30)
+
+1. ~~**AddMemoryModal — позиція кнопки фото.**~~ ✅ Повноширинна зона обкладинки (130px) над хедером, замість кнопки в тілі форми. Реюз `useImageUpload` хука напряму (без `ImageUploadButton`). `PlanForm` — кнопка обкладинки в `headingRow` хедері з thumbnail + count-badge.
+2. ~~**EditMemoryModal — баг автовідкриття пошуку адрес.**~~ ✅ `skipSearch = useRef(initial.length > 0)` в `LocationSearch` — скіп першого trigger коли є initial значення.
+3. ~~**LocationSearch — релевантність пошуку закладів.**~~ ✅ `proximity` (геолокація юзера, фолбек Київ) + `country: 'ua'` в `mapboxGeocode.ts`. Результати розбиті на `.resultName` + `.resultAddr` для кращої читабельності POI.
+4. ~~**Поїздки (trip) — діапазон дат на Memory.**~~ ✅ `dateEnd: string | null` + `isTrip: boolean` в MongoDB-моделі, frontend типах, sторі. AddMemoryModal/EditMemoryModal: toggle "→" + другий DatePicker. MemoryCard: "Дата · Nд" при isTrip+dateEnd.
+5. ~~**Поїздки — зв'язок з витратами.**~~ ✅ `tripMemoryId?: string | null` на Transaction (бекенд+фронт). `ExpenseForm`: picker активних trip-спогадів (chips), явний вибір юзером. `Finance/index.tsx` пробрасує tripMemoryId до `addExpense`. `MemoryDetail`: блок "ВИТРАТИ В ПОЇЗДЦІ" (IIFE-паттерн для multi-statement JSX) з підсумком і до 5 транзакцій.
+6. ~~**Компаньйон (з ким) у Планах.**~~ ✅ `PlanForm`: "З КИМ" секція — chips прийнятих сімейних членів (аватар/ініціал + name), `withProfiles` передається в `onSubmit`. `useFamilyStore`, `fetchFamily` при mount.
+
+**Відкриті ідеї (не реалізовано, на узгодження):** "з ким" тег прямо на Memory (не лише через Plan→convert); тривалість на trip-картках замість однієї дати ("5 днів, Одеса"); історична погода на дату спогаду (wttr.in past dates).
 
 ### 🔵 Стратегічне (Фаза 2+)
 - **Onboarding flow** — welcome 3-4 кроки, empty states з підказками, вибір модулів

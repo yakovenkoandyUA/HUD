@@ -112,7 +112,7 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 
 **User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `salaryDay: number`
 
-**Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, `source: 'manual'|'monobank'|'csv'`, сортувати по `createdAt`
+**Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, `source: 'manual'|'monobank'|'csv'`, `tripMemoryId?: string|null` (опційне посилання на trip-спогад для блоку "Витрати в поїздці"), сортувати по `createdAt`
 
 **Category** — `name`, `icon` (Tabler ti-*), `color` (hex), `userId`, `isDefault`, `isActive`, `parentId` (субкатегорії), `order: number`
 
@@ -124,7 +124,7 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 
 **FamilyLink** — `requester: string`, `recipient: string`, `status: 'pending'|'accepted'`. Унікальний compound index `{requester, recipient}`. `getAcceptedFamilyIds(userId)` — shared helper.
 
-**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`, `location: string`, `lat`/`lng: number|null` (для пінів на MemoryMap), `places: IMemoryPlace[]` (`{name, address, lat, lng}` — заклади всередині спогаду, рендеряться окремими пінами на MemoryMap; зберігаються через звичайний `PATCH /api/memories/:id`, **UI додавання ще не реалізований** — поле читається/рендериться, але форми створення place немає). GET повертає `ownerName` + `ownerAvatarUrl` для сімейних записів.
+**Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`, `location: string`, `lat`/`lng: number|null` (для пінів на MemoryMap), `places: IMemoryPlace[]` (`{name, address, lat, lng}` — заклади всередині спогаду, рендеряться окремими пінами на MemoryMap; зберігаються через звичайний `PATCH /api/memories/:id`, **UI додавання ще не реалізований** — поле читається/рендериться, але форми створення place немає), `dateEnd: string|null` (кінець поїздки, default null), `isTrip: boolean` (default false). GET повертає `ownerName` + `ownerAvatarUrl` для сімейних записів.
 
 **Plan** — `status: 'want'|'planned'|'visited'`, `location`, `photos[]`, `withProfiles[]`; при 'visited' конвертується в Memory
 
