@@ -26,18 +26,20 @@ const YearbookScreen: React.FC = () => {
   const { year: yearParam } = useParams<{ year: string }>()
   const navigate = useNavigate()
   const year = parseInt(yearParam ?? '', 10) || new Date().getFullYear()
-  const { report, loading, notGenerated, fetchYearbook, generateYearbook } = useYearbookStore()
+  const { loading, getReport, isNotGenerated, fetchYearbook, generateYearbook } = useYearbookStore()
 
   const [generating, setGenerating] = useState(false)
 
-  useEffect(() => { fetchYearbook(year) }, [year, fetchYearbook])
+  useEffect(() => { fetchYearbook(year, 'annual') }, [year, fetchYearbook])
 
   const handleGenerate = async () => {
     setGenerating(true)
-    await generateYearbook(year)
+    await generateYearbook(year, 'annual')
     setGenerating(false)
   }
 
+  const report      = getReport(year, 'annual')
+  const notGenerated = isNotGenerated(year, 'annual')
   const s = report?.sections
 
   return (
@@ -111,7 +113,7 @@ const YearbookScreen: React.FC = () => {
               <span className={styles.cardValue}>{formatUAH(s.totalSpent)} ₴</span>
               {s.topExpenseCategories.length > 0 && (
                 <span className={styles.cardSub}>
-                  Топ категорії: {s.topExpenseCategories.map(c => `${c.name} (${formatUAH(c.total)} ₴)`).join(', ')}
+                  Топ категорії: {s.topExpenseCategories.map((c: { name: string; total: number }) => `${c.name} (${formatUAH(c.total)} ₴)`).join(', ')}
                 </span>
               )}
             </div>
