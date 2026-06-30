@@ -193,28 +193,38 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 
 						<div className={`${styles.field} ${styles.fieldDate}`}>
 							<label className={styles.label}>ДАТА</label>
-							<div className={styles.dateRange}>
-								<button type="button" className={styles.dateBtn} onClick={() => setShowPicker(true)}>
-									{date ? formatDisplayDate(date) : 'Вибрати'}
-								</button>
-								<button
-									type="button"
-									className={`${styles.tripToggle} ${isTrip ? styles.tripToggleActive : ''}`}
-									onClick={() => {
-										setIsTrip(v => !v)
-										if (isTrip) setDateEnd(null)
-									}}
-								>
-									ПОЇЗДКА
-								</button>
-								{isTrip && (
-									<button type="button" className={`${styles.dateBtn} ${styles.dateBtnEnd}`} onClick={() => setShowEndPicker(true)}>
-										{dateEnd ? formatDisplayDate(dateEnd) : 'Кінець'}
-									</button>
-								)}
-							</div>
+							<button type="button" className={styles.dateBtn} onClick={() => setShowPicker(true)}>
+								{date ? formatDisplayDate(date) : 'Вибрати'}
+							</button>
 						</div>
 					</div>
+
+					{/* Поїздка — окремий рядок під місцем/датою */}
+					{isTrip ? (
+						<div className={styles.tripRow}>
+							<span className={styles.tripRowLabel}>ПОЇЗДКА</span>
+							<button type="button" className={styles.dateBtn} onClick={() => setShowEndPicker(true)}>
+								{dateEnd ? formatDisplayDate(dateEnd) : 'Кінцева дата'}
+							</button>
+							<button
+								type="button"
+								className={styles.dateClear}
+								onClick={() => { setIsTrip(false); setDateEnd(null) }}
+								aria-label="Прибрати поїздку"
+							>
+								<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+									<path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+								</svg>
+							</button>
+						</div>
+					) : (
+						<button type="button" className={styles.tripAddBtn} onClick={() => setIsTrip(true)}>
+							<svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+								<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+							</svg>
+							Додати кінцеву дату поїздки
+						</button>
+					)}
 
 					{showPicker && <CustomDatePicker value={date} onChange={setDate} onClose={() => setShowPicker(false)} />}
 					{showEndPicker && <CustomDatePicker value={dateEnd ?? date} onChange={setDateEnd} onClose={() => setShowEndPicker(false)} />}

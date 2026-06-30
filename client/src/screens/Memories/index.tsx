@@ -6,6 +6,7 @@ import PlanCard from '../../components/memories/PlanCard'
 import PlanForm from '../../components/memories/PlanForm'
 import MemoryMap from '../../components/memories/MemoryMap'
 import TripExpensesSheet from '../../components/memories/TripExpensesSheet'
+import FlashbackModal from '../../components/memories/FlashbackModal'
 import type { AddMemoryData } from '../../components/memories/AddMemoryModal'
 import type { Memory } from '../../types/memory'
 import { useMemoriesStore } from '../../store/memoriesStore'
@@ -76,6 +77,8 @@ const MemoriesScreen: React.FC = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [tripSheet, setTripSheet] = useState<TripSheetData | null>(null)
   const [pendingNav,  setPendingNav]  = useState<string | null>(null)
+  const [showFlashback, setShowFlashback] = useState(false)
+  const [statSheet, setStatSheet]         = useState<'count' | 'photos' | 'locations' | 'distance' | null>(null)
 
   useEffect(() => { fetchMemories() }, [fetchMemories])
 
@@ -101,24 +104,51 @@ const MemoriesScreen: React.FC = () => {
 
   const stats = useMemo(() => {
     const totalPhotos = memories.reduce((s, m) => s + m.photos.length, 0)
-    const uniqueLocations = new Set(
-      memories.map(m => m.location?.trim()).filter((l): l is string => !!l)
-    ).size
 
-    // Загальна відстань "подорожі" — сума відрізків між хронологічно послідовними спогадами з координатами
+    const locationCounts = new Map<string, number>()
+    memories.forEach(m => {
+      const loc = m.location?.trim()
+      if (loc) locationCounts.set(loc, (locationCounts.get(loc) ?? 0) + 1)
+    })
+    const locationsList = [...locationCounts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+
     const withCoords = memories
       .filter(m => m.lat != null && m.lng != null)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     let totalDistanceKm = 0
+    const segments: { from: Memory; to: Memory; km: number }[] = []
     for (let i = 1; i < withCoords.length; i++) {
-      totalDistanceKm += haversineKm(
+      const km = Math.round(haversineKm(
         { lat: withCoords[i - 1].lat!, lng: withCoords[i - 1].lng! },
         { lat: withCoords[i].lat!, lng: withCoords[i].lng! }
-      )
+      ))
+      if (km > 0) {
+        segments.push({ from: withCoords[i - 1], to: withCoords[i], km })
+        totalDistanceKm += km
+      }
     }
 
-    return { count: memories.length, totalPhotos, uniqueLocations, totalDistanceKm: Math.round(totalDistanceKm) }
+    return {
+      count: memories.length,
+      totalPhotos,
+      uniqueLocations: locationCounts.size,
+      locationsList,
+      totalDistanceKm: Math.round(totalDistanceKm),
+      segments: segments.sort((a, b) => b.km - a.km).slice(0, 5),
+    }
   }, [memories])
+
+  // Показати флешбек-попап раз на добу
+  useEffect(() => {
+    if (thisDay.length === 0) return
+    const key = `hud-flashback-${new Date().toISOString().slice(0, 10)}`
+    if (!sessionStorage.getItem(key)) {
+      setShowFlashback(true)
+      sessionStorage.setItem(key, '1')
+    }
+  }, [thisDay])
 
   const currentMonthKey = useMemo(
     () => new Date()
@@ -254,44 +284,64 @@ const MemoriesScreen: React.FC = () => {
             </div>
           ) : (
             <div className={styles.timeline}>
-              {/* Stats row */}
-              <p className={styles.statsRow}>
-                <span><b className={styles.statNum}>{stats.count}</b> спогадів</span>
+              {/* Stats row — інтерактивний */}
+              <div className={styles.statsRow}>
+                <button className={styles.statBtn} onClick={() => setStatSheet('count')}>
+                  <b className={styles.statNum}>{stats.count}</b> спогадів
+                </button>
                 <span className={styles.statsDot}>·</span>
-                <span><b className={styles.statNum}>{stats.totalPhotos}</b> фото</span>
+                <button className={styles.statBtn} onClick={() => setStatSheet('photos')}>
+                  <b className={styles.statNum}>{stats.totalPhotos}</b> фото
+                </button>
                 <span className={styles.statsDot}>·</span>
-                <span><b className={styles.statNum}>{stats.uniqueLocations}</b> місць</span>
+                <button className={styles.statBtn} onClick={() => setStatSheet('locations')}>
+                  <b className={styles.statNum}>{stats.uniqueLocations}</b> місць
+                </button>
                 {stats.totalDistanceKm > 0 && (
                   <>
                     <span className={styles.statsDot}>·</span>
-                    <span><b className={styles.statNum}>{stats.totalDistanceKm}</b> км подорожей</span>
+                    <button className={styles.statBtn} onClick={() => setStatSheet('distance')}>
+                      <b className={styles.statNum}>{stats.totalDistanceKm}</b> км
+                    </button>
                   </>
                 )}
-              </p>
+              </div>
 
-              {/* This Day banner */}
+              {/* This Day banner — покращений */}
               {thisDay.length > 0 && (
-                <div
+                <button
+                  type="button"
                   className={styles.thisDayBanner}
-                  onClick={() => navigate(`/memories/${thisDay[0].memory.id}`)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && navigate(`/memories/${thisDay[0].memory.id}`)}
+                  onClick={() => setShowFlashback(true)}
                 >
-                  <div className={styles.thisDayIcon}>📅</div>
+                  {(() => {
+                    const cover = thisDay[0].memory.coverUrl || thisDay[0].memory.photos[0]?.url
+                    return cover ? (
+                      <img src={cover} alt="" className={styles.thisDayThumb} />
+                    ) : (
+                      <div className={styles.thisDayThumbEmpty}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
+                          <path d="M7 4v3.2l1.8 1.8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                    )
+                  })()}
                   <div className={styles.thisDayContent}>
                     <p className={styles.thisDayTitle}>
-                      ЦЬОГО ДНЯ {yearsAgoLabel(thisDay[0].yearsAgo)}
+                      ЦЬОГО ДНЯ · {yearsAgoLabel(thisDay[0].yearsAgo)}
                     </p>
                     <p className={styles.thisDayMemory}>
                       {thisDay[0].memory.title}
-                      {thisDay.length > 1 && ` та ще ${thisDay.length - 1}`}
+                      {thisDay.length > 1 && (
+                        <span className={styles.thisDayMore}> +{thisDay.length - 1}</span>
+                      )}
                     </p>
                   </div>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={styles.thisDayChevron}>
+                    <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                </div>
+                </button>
               )}
 
               {/* Grouped timeline */}
@@ -484,6 +534,90 @@ const MemoriesScreen: React.FC = () => {
       {activeTab === 'map' && (
         <div className={styles.mapTab}>
           <MemoryMap plans={plans} memories={memories} />
+        </div>
+      )}
+
+      {/* ── Flashback modal ── */}
+      {showFlashback && thisDay.length > 0 && (
+        <FlashbackModal items={thisDay} onClose={() => setShowFlashback(false)} />
+      )}
+
+      {/* ── Stats detail sheet ── */}
+      {statSheet && (
+        <div className={styles.planOverlay} onClick={() => setStatSheet(null)}>
+          <div className={styles.planSheet} onClick={e => e.stopPropagation()}>
+            <div className={styles.handle} />
+            <p className={styles.statSheetTitle}>
+              {statSheet === 'count'     && 'СПОГАДИ'}
+              {statSheet === 'photos'    && 'ФОТОГРАФІЇ'}
+              {statSheet === 'locations' && 'МІСЦЯ'}
+              {statSheet === 'distance'  && 'ПОДОРОЖІ'}
+            </p>
+
+            {statSheet === 'count' && (
+              <div className={styles.statSheetContent}>
+                <div className={styles.statHero}>
+                  <span className={styles.statHeroNum}>{stats.count}</span>
+                  <span className={styles.statHeroLabel}>спогадів</span>
+                </div>
+                <p className={styles.statHint}>
+                  Середньо {(stats.count / Math.max(1, new Set(memories.map(m => m.date.slice(0, 4))).size)).toFixed(1)} на рік
+                </p>
+              </div>
+            )}
+
+            {statSheet === 'photos' && (
+              <div className={styles.statSheetContent}>
+                <div className={styles.statHero}>
+                  <span className={styles.statHeroNum}>{stats.totalPhotos}</span>
+                  <span className={styles.statHeroLabel}>фотографій</span>
+                </div>
+                <p className={styles.statHint}>
+                  Середньо {stats.count > 0 ? (stats.totalPhotos / stats.count).toFixed(1) : 0} фото на спогад
+                </p>
+              </div>
+            )}
+
+            {statSheet === 'locations' && (
+              <div className={styles.statSheetList}>
+                {stats.locationsList.length === 0 ? (
+                  <p className={styles.statEmpty}>Немає спогадів з місцями</p>
+                ) : stats.locationsList.map(({ name, count }) => (
+                  <div key={name} className={styles.statListRow}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={styles.statPin}>
+                      <path d="M6 1a3 3 0 013 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 013-3z" stroke="currentColor" strokeWidth="1.2"/>
+                    </svg>
+                    <span className={styles.statListName}>{name}</span>
+                    <span className={styles.statListCount}>{count}×</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {statSheet === 'distance' && (
+              <div className={styles.statSheetContent}>
+                <div className={styles.statHero}>
+                  <span className={styles.statHeroNum}>{stats.totalDistanceKm}</span>
+                  <span className={styles.statHeroLabel}>км подорожей</span>
+                </div>
+                <p className={styles.statHint}>Топ відстані між спогадами</p>
+                <div className={styles.statSheetList}>
+                  {stats.segments.map((s, i) => (
+                    <div key={i} className={styles.statListRow}>
+                      <span className={styles.statListName}>
+                        {s.from.title}
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ margin: '0 4px', opacity: 0.4 }}>
+                          <path d="M1 5h8M6 2l3 3-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                        </svg>
+                        {s.to.title}
+                      </span>
+                      <span className={styles.statListCount}>{s.km} км</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

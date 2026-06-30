@@ -5,6 +5,8 @@ interface IMemoryPhoto {
   url: string
   caption: string
   createdAt: Date
+  addedBy: string
+  addedByName: string
 }
 
 interface IMemoryPlace {
@@ -32,9 +34,11 @@ export interface IMemory extends Document {
 }
 
 const photoSchema = new Schema<IMemoryPhoto>({
-  url:       { type: String, required: true },
-  caption:   { type: String, default: '' },
-  createdAt: { type: Date, default: Date.now },
+  url:         { type: String, required: true },
+  caption:     { type: String, default: '' },
+  createdAt:   { type: Date, default: Date.now },
+  addedBy:     { type: String, default: '' },
+  addedByName: { type: String, default: '' },
 })
 
 const placeSchema = new Schema<IMemoryPlace>({

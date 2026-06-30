@@ -112,7 +112,14 @@ export async function addPhoto(req: Request, res: Response): Promise<void> {
   const familyIds = await getAcceptedFamilyIds(req.userId!)
   const memory = await Memory.findOne({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
   if (!memory) { res.status(404).json({ error: 'Not found' }); return }
-  memory.photos.push({ url: req.body.url, caption: req.body.caption ?? '' } as any)
+
+  let addedByName = ''
+  if (memory.userId !== req.userId!) {
+    const contributor = await User.findById(req.userId!, { name: 1 })
+    addedByName = contributor?.name ?? ''
+  }
+
+  memory.photos.push({ url: req.body.url, caption: req.body.caption ?? '', addedBy: req.userId!, addedByName } as any)
   await memory.save()
   res.json(memory)
 }
@@ -121,6 +128,15 @@ export async function deletePhoto(req: Request, res: Response): Promise<void> {
   const familyIds = await getAcceptedFamilyIds(req.userId!)
   const memory = await Memory.findOne({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
   if (!memory) { res.status(404).json({ error: 'Not found' }); return }
+
+  const photo = memory.photos.find(p => String(p._id) === req.params.photoId)
+  if (!photo) { res.status(404).json({ error: 'Photo not found' }); return }
+
+  // Може видаляти тільки власник спогаду або той хто додав фото
+  const isMemoryOwner = memory.userId === req.userId!
+  const isPhotoOwner  = !photo.addedBy || photo.addedBy === req.userId!
+  if (!isMemoryOwner && !isPhotoOwner) { res.status(403).json({ error: 'Forbidden' }); return }
+
   memory.photos = memory.photos.filter(p => String(p._id) !== req.params.photoId) as any
   await memory.save()
   res.json(memory)

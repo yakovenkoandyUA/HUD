@@ -160,8 +160,8 @@
   gap: 12px;
 }
 
-.fieldLocation { flex: 2; }
-.fieldDate { flex: 1; }
+.fieldLocation { flex: 2; min-width: 0; }
+.fieldDate { flex: 1; min-width: 0; overflow: hidden; }
 
 .label {
   font-family: var(--font-ui);
@@ -195,59 +195,79 @@
 .input::placeholder { color: var(--text3); }
 .input:focus { border-color: var(--accent); }
 
-.dateRange {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .dateBtn {
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 8px;
-  padding: 10px 10px;
+  padding: 10px 12px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text);
   text-align: left;
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   cursor: pointer;
   transition: border-color 0.15s;
   white-space: nowrap;
 }
 .dateBtn:hover { border-color: var(--accent); }
 
-.dateBtnEnd {
-  color: var(--text2);
-  border-color: var(--border);
+/* ── Trip row: ПОЇЗДКА label + end date btn + × ── */
+.tripRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.tripToggle {
-  height: 36px;
-  padding: 0 8px;
-  border-radius: 7px;
+.tripRowLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tripRow .dateBtn {
+  flex: 1;
+  width: auto;
+}
+
+.dateClear {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   border: 1px solid var(--border2);
   background: var(--surface);
   color: var(--text3);
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  flex-shrink: 0;
-  white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: color 0.15s, border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.tripToggleActive {
-  background: var(--accent-dim, rgba(180,60,60,0.15));
-  border-color: var(--accent);
-  color: var(--accent);
+.dateClear:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── "Додати кінцеву дату" link-button ── */
+.tripAddBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
+.tripAddBtn:hover { color: var(--accent); }
 
 .textarea {
   background: var(--surface);

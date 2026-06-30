@@ -223,6 +223,7 @@
 /* ── Notes + tags (collapsed meta row) ── */
 .metaRow {
   display: flex;
+  justify-content: space-between;
 }
 
 /* ── Tags + Заклади combined row ── */

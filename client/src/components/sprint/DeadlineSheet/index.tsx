@@ -24,7 +24,7 @@ function formatReminderPhrase(amount: number, unit: ReminderUnit): string {
     unit === 'hours'   ? (amount === 1 ? 'годину'  : amount < 5 ? 'години'  : 'годин') :
     unit === 'days'    ? (amount === 1 ? 'день'     : amount < 5 ? 'дні'     : 'днів') :
                          (amount === 1 ? 'тиждень'  : amount < 5 ? 'тижні'   : 'тижнів')
-  return `За ${amount} ${unitWord} до дедлайну`
+  return `За ${amount} ${unitWord}`
 }
 
 interface DeadlineSheetProps {
@@ -40,9 +40,8 @@ interface DeadlineSheetProps {
  * DeadlineSheet
  * -------------
  * Об'єднаний редактор дедлайну квесту: дата, час (необов'язково) і нагадування
- * (необов'язково) в одному bottom sheet. Час і нагадування після підтвердження
- * згортаються у компактний рядок-результат — барабан/форма нагадування не
- * займають місце весь час, тільки під час активного редагування.
+ * (необов'язково). Час і нагадування — повнорядкові тапабельні блоки з accordion-
+ * розкриттям (max-height transition) для зручного тапу на мобілі.
  *
  * Props:
  * @prop {string|null} date     — поточна дата дедлайну "YYYY-MM-DD"
@@ -54,7 +53,7 @@ interface DeadlineSheetProps {
  */
 const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, minDate, onSave, onClose }) => {
   const [draftDate, setDraftDate]   = useState(date)
-  const [draftTime, setDraftTime]   = useState(time)
+  const [draftTime, setDraftTime]   = useState(time ?? '09:00')
   const [timeOn, setTimeOn]         = useState(!!time)
   const [timeEditing, setTimeEditing] = useState(false)
 
@@ -74,19 +73,53 @@ const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, min
     onClose()
   }
 
+  const handleTimeRowTap = () => {
+    if (!timeOn) {
+      setTimeOn(true)
+      setTimeEditing(true)
+    } else {
+      setTimeEditing(v => !v)
+    }
+  }
+
+  const handleTimeRemove = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setTimeOn(false)
+    setTimeEditing(false)
+  }
+
+  const handleReminderRowTap = () => {
+    if (!reminderOn) {
+      setReminderOn(true)
+      setReminderEditing(true)
+    } else {
+      setReminderEditing(v => !v)
+    }
+  }
+
+  const handleReminderRemove = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setReminderOn(false)
+    setReminderEditing(false)
+  }
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.sheet} onClick={e => e.stopPropagation()}>
         <div className={styles.handle} />
         <div className={styles.header}>
           <span className={styles.title}>Дедлайн</span>
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">✕</button>
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
 
         <div className={styles.body}>
           {/* Date */}
           <button type="button" className={styles.dateRow} onClick={() => setShowDatePicker(true)}>
-            <svg width="13" height="13" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 11 11" fill="none" aria-hidden="true">
               <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
               <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
@@ -96,58 +129,81 @@ const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, min
             {draftDate && (
               <span
                 className={styles.rowClear}
+                role="button"
                 onClick={e => { e.stopPropagation(); setDraftDate(null); setTimeOn(false); setReminderOn(false) }}
-              >✕</span>
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
             )}
           </button>
 
           {draftDate && (
             <>
-              {/* ── Time — optional, collapses to a compact row once confirmed ── */}
-              <div className={styles.optionRow}>
-                <span className={styles.optionLabel}>Час</span>
-                {timeOn && !timeEditing ? (
-                  <button type="button" className={styles.optionClear} onClick={() => { setTimeOn(false); setTimeEditing(false) }}>Прибрати</button>
-                ) : !timeOn ? (
-                  <button type="button" className={styles.optionAdd} onClick={() => { setTimeOn(true); setTimeEditing(true) }}>+ Додати</button>
-                ) : null}
-              </div>
+              {/* ── Time row (full-width tappable) ── */}
+              <button
+                type="button"
+                className={`${styles.toggleRow} ${timeOn ? styles.toggleRowActive : ''}`}
+                onClick={handleTimeRowTap}
+              >
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true" className={styles.toggleIcon}>
+                  <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3" />
+                  <path d="M7.5 4.5v3.25l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className={styles.toggleRowLabel}>
+                  {timeOn ? draftTime : 'Час'}
+                </span>
+                {timeOn ? (
+                  <span className={styles.toggleClear} onClick={handleTimeRemove} role="button" aria-label="Прибрати час">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                ) : (
+                  <svg width="8" height="12" viewBox="0 0 6 10" fill="none" className={styles.chevron} aria-hidden="true">
+                    <path d="M1 1.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
 
-              {timeOn && !timeEditing && (
-                <button type="button" className={styles.resultRow} onClick={() => setTimeEditing(true)}>
-                  <span className={styles.resultValue}>{draftTime ?? '09:00'}</span>
-                  <span className={styles.resultEdit}>Змінити</span>
-                </button>
-              )}
-
-              {timeOn && timeEditing && (
-                <div className={styles.editingBlock}>
-                  <TimeWheelRow value={draftTime ?? '09:00'} onChange={setDraftTime} />
+              <div className={`${styles.accordionWrap} ${timeOn && timeEditing ? styles.accordionOpen : ''}`}>
+                <div className={styles.accordionInner}>
+                  <TimeWheelRow value={draftTime} onChange={setDraftTime} />
                   <button type="button" className={styles.confirmBtn} onClick={() => setTimeEditing(false)}>
-                    Підтвердити час
+                    Підтвердити
                   </button>
                 </div>
-              )}
-
-              {/* ── Reminder — optional, same collapse pattern ── */}
-              <div className={styles.optionRow}>
-                <span className={styles.optionLabel}>Нагадати</span>
-                {reminderOn && !reminderEditing ? (
-                  <button type="button" className={styles.optionClear} onClick={() => { setReminderOn(false); setReminderEditing(false) }}>Прибрати</button>
-                ) : !reminderOn ? (
-                  <button type="button" className={styles.optionAdd} onClick={() => { setReminderOn(true); setReminderEditing(true) }}>+ Додати</button>
-                ) : null}
               </div>
 
-              {reminderOn && !reminderEditing && (
-                <button type="button" className={styles.resultRow} onClick={() => setReminderEditing(true)}>
-                  <span className={styles.resultValue}>{formatReminderPhrase(Number(reminderAmount) || 1, reminderUnit)}</span>
-                  <span className={styles.resultEdit}>Змінити</span>
-                </button>
-              )}
+              {/* ── Reminder row (full-width tappable) ── */}
+              <button
+                type="button"
+                className={`${styles.toggleRow} ${reminderOn ? styles.toggleRowActive : ''}`}
+                onClick={handleReminderRowTap}
+              >
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true" className={styles.toggleIcon}>
+                  <path d="M7.5 2a5 5 0 015 5v2.5l1 1.5H1.5l1-1.5V7a5 5 0 015-5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                  <path d="M6 12.5a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+                <span className={styles.toggleRowLabel}>
+                  {reminderOn ? formatReminderPhrase(Number(reminderAmount) || 1, reminderUnit) : 'Нагадати'}
+                </span>
+                {reminderOn ? (
+                  <span className={styles.toggleClear} onClick={handleReminderRemove} role="button" aria-label="Прибрати нагадування">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                ) : (
+                  <svg width="8" height="12" viewBox="0 0 6 10" fill="none" className={styles.chevron} aria-hidden="true">
+                    <path d="M1 1.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
 
-              {reminderOn && reminderEditing && (
-                <div className={styles.editingBlock}>
+              <div className={`${styles.accordionWrap} ${reminderOn && reminderEditing ? styles.accordionOpen : ''}`}>
+                <div className={styles.accordionInner}>
                   <ReminderFields
                     amount={reminderAmount}
                     unit={reminderUnit}
@@ -156,10 +212,10 @@ const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, min
                     suffix="до дедлайну"
                   />
                   <button type="button" className={styles.confirmBtn} onClick={() => setReminderEditing(false)}>
-                    Підтвердити нагадування
+                    Підтвердити
                   </button>
                 </div>
-              )}
+              </div>
             </>
           )}
         </div>

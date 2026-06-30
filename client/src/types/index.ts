@@ -33,6 +33,7 @@ export interface Transaction {
   incomeCategory?: string | null
   createdAt?: string
   recurringId?: string | null
+  tripMemoryId?: string | null
 }
 
 export interface SprintTask {

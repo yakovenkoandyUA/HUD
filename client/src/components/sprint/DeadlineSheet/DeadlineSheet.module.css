@@ -51,16 +51,17 @@
   background: none;
   border: none;
   color: var(--text3);
-  font-size: 14px;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
 }
 
 .body {
   padding: 16px 16px 4px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 /* ── Date row ── */
@@ -68,119 +69,127 @@
 .dateRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 14px 14px;
   color: var(--text2);
   font-family: var(--font-ui);
   font-size: 13px;
   cursor: pointer;
   text-align: left;
+  min-height: 48px;
 }
 
-.dateRowValue { color: var(--text); font-weight: 600; }
-.dateRowPlaceholder { color: var(--text3); }
+.dateRowValue { color: var(--text); font-weight: 600; flex: 1; }
+.dateRowPlaceholder { color: var(--text3); flex: 1; }
 
 .rowClear {
   margin-left: auto;
-  opacity: 0.6;
-  font-size: 12px;
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  color: var(--text3);
 }
 .dateRow:hover .rowClear { opacity: 1; }
 
-/* ── Optional section toggle ── */
+/* ── Full-width toggle rows (time / reminder) ── */
 
-.optionRow {
+.toggleRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 14px;
-  margin-bottom: 2px;
-}
-
-.optionLabel {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text3);
-}
-
-.optionAdd {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 2px;
-}
-
-.optionClear {
-  background: none;
-  border: none;
-  color: var(--text3);
-  font-family: var(--font-ui);
-  font-size: 11px;
-  cursor: pointer;
-  padding: 2px;
-}
-.optionClear:hover { color: var(--accent); }
-
-/* ── Collapsed result row (time / reminder, after confirming) ── */
-
-.resultRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  gap: 10px;
   width: 100%;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-dim);
+  background: var(--surface);
+  border: 1px solid var(--border2);
   border-radius: 10px;
-  padding: 11px 14px;
-  margin-bottom: 8px;
+  padding: 14px 14px;
   cursor: pointer;
   text-align: left;
+  min-height: 52px;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.resultValue {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--accent);
+.toggleRow:active {
+  background: var(--bg2);
 }
 
-.resultEdit {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.toggleRowActive {
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+}
+
+.toggleIcon {
+  flex-shrink: 0;
   color: var(--text3);
 }
 
-/* ── Active editing block (wheel / reminder form) ── */
+.toggleRowActive .toggleIcon {
+  color: var(--accent);
+}
 
-.editingBlock {
+.toggleRowLabel {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text3);
+}
+
+.toggleRowActive .toggleRowLabel {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text3);
+  opacity: 0.5;
+}
+
+.toggleClear {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  color: var(--accent);
+  opacity: 0.7;
+}
+.toggleClear:hover { opacity: 1; }
+
+/* ── Accordion (time picker / reminder editor) ── */
+
+.accordionWrap {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 280ms ease-in-out, opacity 200ms ease-in-out;
+}
+
+.accordionOpen {
+  max-height: 480px;
+  opacity: 1;
+}
+
+.accordionInner {
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 12px;
   padding: 8px 12px 12px;
-  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
 }
 
+/* ── Confirm sub-button ── */
+
 .confirmBtn {
   width: 100%;
   margin-top: 4px;
-  padding: 10px;
+  padding: 11px;
   background: var(--accent);
   color: #fff;
   border: none;
@@ -193,11 +202,13 @@
   cursor: pointer;
 }
 
+/* ── Done button ── */
+
 .doneBtn {
   display: block;
   width: calc(100% - 32px);
   margin: 16px 16px 0;
-  padding: 12px;
+  padding: 14px;
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 700;
