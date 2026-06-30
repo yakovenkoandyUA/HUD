@@ -121,8 +121,10 @@ components/
 │   └── EpisodesList        ← список епізодів для серіалів/аніме
 ├── memories/
 │   ├── MemoryCard, MemoryForm, PhotoGrid
-│   ├── AddMemoryModal     ← LocationSearch для поля МІСЦЕ, CustomDatePicker для ДАТА
-│   ├── LocationSearch     ← автокомпліт місць через Mapbox Search Box API (`VITE_MAPBOX_TOKEN`) + "Обрати на карті"
+│   ├── AddMemoryModal     ← LocationSearch для поля МІСЦЕ, CustomDatePicker для ДАТА; isTrip — окремий `tripRow` під місцем/датою (ПОЇЗДКА + кінцева дата + ×)
+│   ├── FlashbackModal     ← fullscreen "цього дня N років тому" (раз на добу, sessionStorage), навігація вліво/вправо по кількох спогадах
+│   ├── TripExpensesSheet  ← bottom sheet ретроактивного тегування витрат у поїздці; відкривається після збереження trip-memory; checkboxes + bulk PATCH
+│   ├── LocationSearch     ← автокомпліт місць через Mapbox Search Box API (`VITE_MAPBOX_TOKEN`) + "Обрати на карті"; `userTyped` ref (не `skipSearch`) — надійно в StrictMode; `inlineResults` prop (results в `position:static`) для вбудованих модалок
 │   ├── LocationMapPicker  ← Mapbox GL bottom sheet, тап-вибір місця, реверс-геокодинг Mapbox Geocoding
 │   │                          3D-кнопка (pitch toggle), українські підписи (`map.setLanguage('uk')`),
 │   │                          lightPreset день/ніч під тему застосунку (`utils/mapboxTheme.ts`)
