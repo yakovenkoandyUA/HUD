@@ -747,17 +747,22 @@
 .editDateBtnEnd { color: var(--text2); border-color: var(--border); }
 
 .editTripToggle {
-  width: 32px;
   height: 38px;
+  padding: 0 8px;
   flex-shrink: 0;
   border-radius: 7px;
   border: 1px solid var(--border2);
   background: var(--surface);
   color: var(--text3);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  white-space: nowrap;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }

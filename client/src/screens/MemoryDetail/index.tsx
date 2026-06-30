@@ -197,11 +197,8 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
               type="button"
               className={`${styles.editTripToggle} ${isTrip ? styles.editTripToggleActive : ''}`}
               onClick={() => { setIsTrip(v => !v); if (isTrip) setDateEnd(null) }}
-              title="Поїздка (діапазон дат)"
             >
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                <path d="M2 7h10M8 4l4 3-4 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              ПОЇЗДКА
             </button>
             {isTrip && (
               <button

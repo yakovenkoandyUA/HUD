@@ -50,43 +50,80 @@
   letter-spacing: 0.06em;
 }
 
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+/* ── Cover photo zone ── */
 
-.coverBtn {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: 1.5px dashed var(--border2);
+.coverZone {
+  width: 100%;
+  height: 130px;
   background: var(--surface);
-  color: var(--text3);
+  border: none;
+  border-bottom: 1.5px dashed var(--border2);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s;
+  transition: background 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.coverBtn:hover { border-color: var(--accent); color: var(--accent); }
-.coverBtnFilled { border-style: solid; border-color: var(--border2); }
+.coverZone:active { background: var(--bg2); }
 
-.coverThumb {
+.coverZoneFilled {
+  border-bottom-style: none;
+}
+
+.coverEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text3);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.15s;
+}
+.coverZone:hover .coverEmpty,
+.coverZone:active .coverEmpty { color: var(--accent); }
+
+.coverImg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+.coverOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12px;
+  gap: 6px;
+  color: rgba(255,255,255,0.85);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.coverZone:hover .coverOverlay,
+.coverZone:active .coverOverlay { opacity: 1; }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 .coverSpinner {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border: 2px solid var(--border2);
   border-top-color: var(--accent);
   border-radius: 50%;
@@ -94,10 +131,14 @@
 }
 
 .closeBtn {
-  font-size: 20px;
   color: var(--text2);
-  padding: 4px 8px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
   transition: color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 .closeBtn:hover { color: var(--text); }
 
@@ -183,17 +224,22 @@
 }
 
 .tripToggle {
-  width: 30px;
   height: 36px;
+  padding: 0 8px;
   border-radius: 7px;
   border: 1px solid var(--border2);
   background: var(--surface);
   color: var(--text3);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  white-space: nowrap;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }

@@ -135,152 +135,121 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   if (!mounted) return null
 
   return (
-    <div
-      className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`}
-      onClick={handleClose}
-    >
-      {coverInput}
-      <div
-        ref={sheetRef}
-        className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className={styles.handle} />
+		<div className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`} onClick={handleClose}>
+			<div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`} onClick={e => e.stopPropagation()}>
+				{/* coverInput всередині sheet — stopPropagation не дає клікам спливти до overlay */}
+				{coverInput}
+				<div className={styles.handle} />
 
-        <div className={styles.header}>
-          <span className={styles.headerTitle}>НОВА ПОДІЯ</span>
-          <div className={styles.headerRight}>
-            <button
-              type="button"
-              className={`${styles.coverBtn} ${coverUrl ? styles.coverBtnFilled : ''}`}
-              onClick={triggerCover}
-              aria-label="Додати обкладинку"
-              title="Обкладинка"
-            >
-              {coverUploading ? (
-                <span className={styles.coverSpinner} />
-              ) : coverUrl ? (
-                <img src={coverUrl} alt="" className={styles.coverThumb} />
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                  <rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.4"/>
-                  <circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.4"/>
-                  <path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </button>
-            <button type="button" className={styles.closeBtn} onClick={handleClose}>×</button>
-          </div>
-        </div>
+				<div className={styles.header}>
+					<span className={styles.headerTitle}>НОВА ПОДІЯ</span>
+					<button type="button" className={styles.closeBtn} onClick={handleClose}>
+						<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+							<path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+						</svg>
+					</button>
+				</div>
 
-        <div className={styles.body}>
-          <div className={styles.field}>
-            <label className={styles.label}>НАЗВА</label>
-            <input
-              className={styles.input}
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Назва події..."
-            />
-          </div>
+				<div className={styles.body}>
+					{/* Cover photo zone */}
+					<button type="button" className={`${styles.coverZone} ${coverUrl ? styles.coverZoneFilled : ''}`} onClick={triggerCover} aria-label="Додати обкладинку">
+						{coverUploading ? (
+							<span className={styles.coverSpinner} />
+						) : coverUrl ? (
+							<>
+								<img src={coverUrl} alt="" className={styles.coverImg} />
+								<div className={styles.coverOverlay}>
+									<svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+										<rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.4" />
+										<circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.4" />
+										<path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+									</svg>
+									<span>Змінити обкладинку</span>
+								</div>
+							</>
+						) : (
+							<div className={styles.coverEmpty}>
+								<svg width="24" height="24" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+									<rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" />
+									<circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.3" />
+									<path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+								<span>Додати обкладинку</span>
+							</div>
+						)}
+					</button>
+					<div className={styles.field}>
+						<label className={styles.label}>НАЗВА</label>
+						<input className={styles.input} value={title} onChange={e => setTitle(e.target.value)} placeholder="Назва події..." />
+					</div>
 
-          <div className={styles.row}>
-            <div className={`${styles.field} ${styles.fieldLocation}`}>
-              <label className={styles.label}>МІСЦЕ <span className={styles.optional}>(необов'язково)</span></label>
-              <LocationSearch
-                initial={location.address ?? ''}
-                onSelect={setLocation}
-              />
-            </div>
+					<div className={styles.row}>
+						<div className={`${styles.field} ${styles.fieldLocation}`}>
+							<label className={styles.label}>
+								МІСЦЕ <span className={styles.optional}>(необов'язково)</span>
+							</label>
+							<LocationSearch initial={location.address ?? ''} onSelect={setLocation} />
+						</div>
 
-            <div className={`${styles.field} ${styles.fieldDate}`}>
-              <label className={styles.label}>ДАТА</label>
-              <div className={styles.dateRange}>
-                <button
-                  type="button"
-                  className={styles.dateBtn}
-                  onClick={() => setShowPicker(true)}
-                >
-                  {date ? formatDisplayDate(date) : 'Вибрати'}
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.tripToggle} ${isTrip ? styles.tripToggleActive : ''}`}
-                  onClick={() => { setIsTrip(v => !v); if (isTrip) setDateEnd(null) }}
-                  title="Поїздка (діапазон дат)"
-                >
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                    <path d="M2 7h10M8 4l4 3-4 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                {isTrip && (
-                  <button
-                    type="button"
-                    className={`${styles.dateBtn} ${styles.dateBtnEnd}`}
-                    onClick={() => setShowEndPicker(true)}
-                  >
-                    {dateEnd ? formatDisplayDate(dateEnd) : 'Кінець'}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+						<div className={`${styles.field} ${styles.fieldDate}`}>
+							<label className={styles.label}>ДАТА</label>
+							<div className={styles.dateRange}>
+								<button type="button" className={styles.dateBtn} onClick={() => setShowPicker(true)}>
+									{date ? formatDisplayDate(date) : 'Вибрати'}
+								</button>
+								<button
+									type="button"
+									className={`${styles.tripToggle} ${isTrip ? styles.tripToggleActive : ''}`}
+									onClick={() => {
+										setIsTrip(v => !v)
+										if (isTrip) setDateEnd(null)
+									}}
+								>
+									ПОЇЗДКА
+								</button>
+								{isTrip && (
+									<button type="button" className={`${styles.dateBtn} ${styles.dateBtnEnd}`} onClick={() => setShowEndPicker(true)}>
+										{dateEnd ? formatDisplayDate(dateEnd) : 'Кінець'}
+									</button>
+								)}
+							</div>
+						</div>
+					</div>
 
-          {showPicker && (
-            <CustomDatePicker
-              value={date}
-              onChange={setDate}
-              onClose={() => setShowPicker(false)}
-            />
-          )}
-          {showEndPicker && (
-            <CustomDatePicker
-              value={dateEnd ?? date}
-              onChange={setDateEnd}
-              onClose={() => setShowEndPicker(false)}
-            />
-          )}
+					{showPicker && <CustomDatePicker value={date} onChange={setDate} onClose={() => setShowPicker(false)} />}
+					{showEndPicker && <CustomDatePicker value={dateEnd ?? date} onChange={setDateEnd} onClose={() => setShowEndPicker(false)} />}
 
-          <div className={styles.field}>
-            <label className={styles.label}>НОТАТКИ <span className={styles.optional}>(необов'язково)</span></label>
-            <textarea
-              className={styles.textarea}
-              placeholder="Що запам'яталось..."
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
+					<div className={styles.field}>
+						<label className={styles.label}>
+							НОТАТКИ <span className={styles.optional}>(необов'язково)</span>
+						</label>
+						<textarea className={styles.textarea} placeholder="Що запам'яталось..." value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
+					</div>
 
-          <div className={styles.field}>
-            <label className={styles.label}>ТЕГИ <span className={styles.optional}>(Enter або кома)</span></label>
-            <div className={styles.tagsWrap}>
-              {tags.map(tag => (
-                <span key={tag} className={styles.tag}>
-                  #{tag}
-                  <button type="button" className={styles.tagRemove} onClick={() => removeTag(tag)}>×</button>
-                </span>
-              ))}
-              <input
-                className={styles.tagInput}
-                placeholder="+ додати тег"
-                onKeyDown={handleTagKeyDown}
-              />
-            </div>
-          </div>
+					<div className={styles.field}>
+						<label className={styles.label}>
+							ТЕГИ <span className={styles.optional}>(Enter або кома)</span>
+						</label>
+						<div className={styles.tagsWrap}>
+							{tags.map(tag => (
+								<span key={tag} className={styles.tag}>
+									#{tag}
+									<button type="button" className={styles.tagRemove} onClick={() => removeTag(tag)}>
+										×
+									</button>
+								</span>
+							))}
+							<input className={styles.tagInput} placeholder="+ додати тег" onKeyDown={handleTagKeyDown} />
+						</div>
+					</div>
 
-          <Button
-            fullWidth
-            disabled={!title.trim() || !date}
-            onClick={handleCreate}
-          >
-            СТВОРИТИ
-          </Button>
-        </div>
-
-      </div>
-    </div>
-  )
+					<Button fullWidth disabled={!title.trim() || !date} onClick={handleCreate}>
+						СТВОРИТИ
+					</Button>
+				</div>
+			</div>
+		</div>
+	)
 }
 
 export default AddMemoryModal
