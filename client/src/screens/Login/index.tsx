@@ -58,6 +58,7 @@ const LoginScreen: React.FC = () => {
           sprintTutorialShownCount: user.sprintTutorialShownCount ?? 0,
           weekdayLongPressShownCount: user.weekdayLongPressShownCount ?? 0,
           swipeDismissShownCount: user.swipeDismissShownCount ?? 0,
+          onboardingCompleted: (user as { onboardingCompleted?: boolean }).onboardingCompleted ?? true,
         },
         pinLocked: false,
       })
