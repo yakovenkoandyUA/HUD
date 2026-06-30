@@ -1,0 +1,384 @@
+/* ── Escape ProfilePage content padding ── */
+.wrap {
+  margin: -16px -16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Period picker ── */
+.picker {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pickerTabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.pickerTab {
+  flex: 1;
+  padding: 7px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pickerTabActive {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.pickerNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pickerArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.pickerArrow:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+.pickerArrow:disabled { opacity: 0.3; cursor: default; }
+
+.pickerLabel {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--text);
+  letter-spacing: 0.08em;
+}
+
+/* ── Loading / Empty ── */
+.loadingWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 80px 20px;
+}
+.emptyIcon { color: var(--text3); }
+.emptyText {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text3);
+  text-align: center;
+  margin: 0;
+}
+.generateBtn {
+  padding: 11px 24px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.generateBtn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Stale banner ── */
+.staleBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--gold) 12%, var(--surface));
+  border-top: 1px solid var(--gold);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text);
+}
+.staleBanner button {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.staleBanner button:hover { background: var(--gold); color: var(--bg); }
+.staleBanner button:disabled { opacity: 0.5; }
+
+/* ── Sections container ── */
+.sections {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Base section ── */
+.section {
+  position: relative;
+  min-height: 72dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 28px 40px;
+  overflow: hidden;
+  --s-text:  rgba(255, 255, 255, 0.92);
+  --s-text2: rgba(255, 255, 255, 0.55);
+  --s-text3: rgba(255, 255, 255, 0.35);
+  color: var(--s-text);
+}
+
+/* Extra bottom clearance on last section (bottom nav) */
+.sectionLast {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+.sectionInner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 360px;
+}
+
+/* ── Section text elements ── */
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--s-text2);
+  text-transform: uppercase;
+}
+
+.coverTitle {
+  font-family: var(--font-display);
+  font-size: 52px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  color: var(--s-text);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statNum {
+  font-family: var(--font-display);
+  font-size: 88px;
+  line-height: 0.9;
+  color: var(--s-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.statNumUah {
+  font-family: var(--font-ui);
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 0.9;
+}
+
+.statUnit {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--s-text2);
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.subText {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--s-text2);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.subStats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--s-text2);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--s-text);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.aiBox {
+  margin-top: 8px;
+  padding: 12px 16px;
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.aiBoxLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--s-text3);
+  text-transform: uppercase;
+}
+
+/* ── NOISE helper (shared SVG texture) ── */
+.section {
+  --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
+}
+
+/* ── Cover — indigo/navy + noise (mesher.app, static) ── */
+.sectionCover {
+  background-color: hsla(230,57%,20%,1);
+  background-image:
+    var(--noise),
+    radial-gradient(circle at 76% 20%, hsla(230,57%,20%,1) 17%, transparent 93.89%),
+    radial-gradient(circle at 40% 111%, hsla(356,83%,56%,1) 3.34%, transparent 62.33%),
+    radial-gradient(circle at -4% -11%, hsla(198,74%,54%,1) 3.34%, transparent 80.34%);
+  background-blend-mode: overlay, normal, normal, normal;
+}
+
+/* ── Подорожі — dark teal + mint (mesher.app, static) ── */
+.sectionTravel {
+  background-color: hsla(188,42%,17%,1);
+  background-image:
+    radial-gradient(circle at -45% 146%, hsla(171,74%,48%,1) 12%, transparent 52%),
+    radial-gradient(circle at 34%  90%,  hsla(171,74%,48%,1)  0%, transparent 71%),
+    radial-gradient(circle at 36%  95%,  hsla(171,73%,48%,1)  7%, transparent 71%),
+    radial-gradient(circle at -30% -28%, hsla(191,47%,17%,1)  7%, transparent 74%);
+  background-blend-mode: overlay, overlay, overlay, overlay;
+}
+
+/* ── Медіа — dark slate + crimson/purple (animated 10s) ── */
+@keyframes animMedia {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.sectionMedia {
+  background-color: hsla(198,14%,16%,1);
+  background-image:
+    radial-gradient(circle at 25% 61%, hsla(298,0%,100%,1)   0%, transparent 55.32%),
+    radial-gradient(circle at 42% 84%, hsla(298,0%,100%,1)   0%, transparent 55.32%),
+    radial-gradient(circle at 13% 58%, hsla(298,100%,66%,0.34) 0%, transparent 45.78%),
+    radial-gradient(circle at 53% 90%, hsla(163,100%,66%,0.34) 0%, transparent 45.78%),
+    radial-gradient(circle at 23% 79%, hsla(224,100%,66%,1)  0%, transparent 74%);
+  background-blend-mode: overlay, overlay, normal, normal, normal;
+  background-size: 200% 200%;
+  animation: animMedia 10s ease-in-out infinite alternate;
+}
+
+/* ── Кухня — amber/gold + deep teal + noise (mesher.app, animated 20s) ── */
+@keyframes animFood {
+  0%   { background-position: 0% 0%;   }
+  33%  { background-position: 100% 50%; }
+  66%  { background-position: 0% 100%; }
+  100% { background-position: 0% 0%;   }
+}
+.sectionFood {
+  background-color: hsla(41,100%,70%,1);
+  background-image:
+    var(--noise),
+    radial-gradient(circle at 29% 100%, hsla(345,84%,60%,1)  0%, transparent 27%),
+    radial-gradient(circle at 43% 81%,  hsla(41,100%,70%,1)  4.32%, transparent 44.82%),
+    radial-gradient(circle at 39% 38%,  hsla(194,87%,15%,1)  0%, transparent 32.2%),
+    radial-gradient(circle at 2%  39%,  hsla(194,87%,15%,1)  0%, transparent 50%),
+    radial-gradient(circle at 16% 23%,  hsla(165,100%,41%,1) 0%, transparent 37.13%),
+    radial-gradient(circle at 75% 25%,  hsla(345,84%,60%,1)  0%, transparent 50%),
+    radial-gradient(circle at 99% 61%,  hsla(165,100%,41%,1) 0%, transparent 57.9%),
+    radial-gradient(circle at 0%  50%,  hsla(194,82%,38%,1)  0%, transparent 50%);
+  background-blend-mode: overlay, normal, normal, normal, normal, normal, normal, normal, normal;
+  background-size: 200% 200%;
+  animation: animFood 20s linear infinite alternate;
+}
+
+/* ── Фінанси — red + teal + noise (mesher.app, static) ── */
+.sectionFinance {
+  background-color: hsla(359,100%,50%,1);
+  background-image:
+    var(--noise),
+    radial-gradient(circle at 0%  99%, hsla(11,100%,50%,1)  0%, transparent 67%),
+    radial-gradient(circle at 46% 94%, hsla(177,100%,50%,1) 0%, transparent 81%),
+    radial-gradient(circle at 89% 8%,  hsla(304,100%,9%,1)  0%, transparent 150%),
+    radial-gradient(circle at 89% 8%,  hsla(206,100%,9%,1)  0%, transparent 150%),
+    radial-gradient(circle at 93% 95%, hsla(236,100%,23%,1) 0%, transparent 66%),
+    radial-gradient(circle at 89% 8%,  hsla(0,100%,99%,1)   0%, transparent 150%),
+    radial-gradient(circle at 89% 8%,  hsla(55,94%,54%,1)   0%, transparent 150%);
+  background-blend-mode: overlay, normal, normal, normal, normal, normal, normal, normal;
+}

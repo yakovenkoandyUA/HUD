@@ -1296,11 +1296,17 @@
 	padding: 0 12px 12px 39px;
 }
 
-.placeDetailsLoading {
-	font-family: var(--font-ui);
-	font-size: 11px;
-	color: var(--text3);
-	display: block;
+@keyframes placeSpinAnim { to { transform: rotate(360deg); } }
+.placeDetailsSpinner {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border: 1.5px solid var(--border2);
+	border-top-color: var(--text3);
+	border-radius: 50%;
+	animation: placeSpinAnim 0.7s linear infinite;
+	flex-shrink: 0;
+	align-self: center;
 }
 
 .placeDetailsRow {

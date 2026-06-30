@@ -40,9 +40,11 @@ export interface Memory {
   dateEnd?: string | null
   isTrip?: boolean
   coverUrl: string
+  coverAttribution?: string
   notes?: string
   tags?: string[]
   places?: MemoryPlace[]
+  withProfiles?: string[]
   photos: MemoryPhoto[]
   createdAt: string
   ownerName?: string

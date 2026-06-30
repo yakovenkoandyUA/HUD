@@ -18,6 +18,8 @@ interface IYearbookSections {
 export interface IYearbookReport extends Document {
   userId: string
   year: number
+  /** 'annual' | 'spring' | 'summer' | 'autumn' | 'winter' | '01'..'12' */
+  period: string
   sections: IYearbookSections
   sourceSnapshotHash: string
   generatedAt: Date
@@ -26,6 +28,7 @@ export interface IYearbookReport extends Document {
 const schema = new Schema<IYearbookReport>({
   userId: { type: String, required: true, index: true },
   year:   { type: Number, required: true },
+  period: { type: String, required: true, default: 'annual' },
   sections: {
     memoriesCount:        { type: Number, default: 0 },
     placesVisitedCount:   { type: Number, default: 0 },
@@ -44,6 +47,6 @@ const schema = new Schema<IYearbookReport>({
   generatedAt:         { type: Date, default: Date.now },
 })
 
-schema.index({ userId: 1, year: 1 }, { unique: true })
+schema.index({ userId: 1, year: 1, period: 1 }, { unique: true })
 
 export default model<IYearbookReport>('YearbookReport', schema)

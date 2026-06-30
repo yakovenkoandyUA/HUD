@@ -9,6 +9,36 @@ import Transaction from '../models/Transaction'
 import F1Prediction from '../models/F1Prediction'
 import { getAcceptedFamilyIds } from './familyController'
 
+// ── Period helpers ─────────────────────────────────────────────────────────────
+
+type SeasonKey = 'spring' | 'summer' | 'autumn' | 'winter'
+
+/** Returns ISO date-string range [start, end] for a given period in a year */
+function periodRange(year: number, period: string): { start: string; end: string } {
+  // Annual
+  if (period === 'annual') {
+    return { start: `${year}-01-01`, end: `${year}-12-31` }
+  }
+  // Month '01'..'12'
+  if (/^\d{2}$/.test(period)) {
+    const m = period
+    const lastDay = new Date(year, parseInt(m, 10), 0).getDate()
+    return { start: `${year}-${m}-01`, end: `${year}-${m}-${String(lastDay).padStart(2, '0')}` }
+  }
+  // Season
+  const SEASONS: Record<SeasonKey, { start: string; end: string }> = {
+    spring: { start: `${year}-03-01`, end: `${year}-05-31` },
+    summer: { start: `${year}-06-01`, end: `${year}-08-31` },
+    autumn: { start: `${year}-09-01`, end: `${year}-11-30` },
+    winter: year === new Date().getFullYear()
+      ? { start: `${year}-12-01`, end: `${year}-12-31` }
+      : { start: `${year}-12-01`, end: `${year + 1}-02-28` },
+  }
+  return SEASONS[period as SeasonKey] ?? { start: `${year}-01-01`, end: `${year}-12-31` }
+}
+
+// ── Core aggregation ───────────────────────────────────────────────────────────
+
 function moodTrend(scores: number[]): 'up' | 'down' | 'flat' | null {
   if (scores.length < 2) return null
   const half = Math.floor(scores.length / 2)
@@ -27,27 +57,24 @@ function topByCount(items: string[], n: number): string[] {
 }
 
 /**
- * Будує секції звіту. Спогади/місця/медіа/рецепти/настрій — родинний скоуп
- * (userId + familyIds), як і Timeline. Фінанси та F1-прогнози — суто особисті:
- * жодна з цих фіч не має family-sharing в додатку, тож агрегувати їх по сім'ї
- * означало б показати чужі гроші/прогнози у звіті власника.
+ * Будує секції звіту для довільного date range.
+ * Спогади/місця/медіа/рецепти/настрій — родинний скоуп.
+ * Фінанси та F1 — суто особисті.
  */
-async function buildSections(userId: string, year: number) {
+async function buildSections(userId: string, year: number, dateStart: string, dateEnd: string) {
   const familyIds = await getAcceptedFamilyIds(userId)
   const sharedIds = [userId, ...familyIds]
 
-  const yearStart = `${year}-01-01`
-  const yearEnd = `${year}-12-31`
-  const yearStartDate = new Date(`${year}-01-01T00:00:00Z`)
-  const yearEndDate = new Date(`${year}-12-31T23:59:59Z`)
+  const dateStartObj = new Date(`${dateStart}T00:00:00Z`)
+  const dateEndObj   = new Date(`${dateEnd}T23:59:59Z`)
 
   const [memories, plans, watchlistItems, cookLogs, moodLogs, transactions, f1Predictions] = await Promise.all([
-    Memory.find({ userId: { $in: sharedIds }, date: { $gte: yearStart, $lte: yearEnd } }),
-    Plan.find({ userId: { $in: sharedIds }, status: 'visited', visitedDate: { $gte: yearStartDate, $lte: yearEndDate } }),
-    WatchlistItem.find({ userId: { $in: sharedIds }, status: 'watched', addedAt: { $gte: yearStart, $lte: yearEnd } }),
-    CookLog.find({ userId: { $in: sharedIds }, date: { $gte: yearStartDate, $lte: yearEndDate } }),
-    MoodLog.find({ userId: { $in: sharedIds }, date: { $gte: yearStart, $lte: yearEnd } }),
-    Transaction.find({ userId, type: 'expense', date: { $gte: yearStart, $lte: yearEnd } }),
+    Memory.find({ userId: { $in: sharedIds }, date: { $gte: dateStart, $lte: dateEnd } }),
+    Plan.find({ userId: { $in: sharedIds }, status: 'visited', visitedDate: { $gte: dateStartObj, $lte: dateEndObj } }),
+    WatchlistItem.find({ userId: { $in: sharedIds }, status: 'watched', addedAt: { $gte: dateStart, $lte: dateEnd } }),
+    CookLog.find({ userId: { $in: sharedIds }, date: { $gte: dateStartObj, $lte: dateEndObj } }),
+    MoodLog.find({ userId: { $in: sharedIds }, date: { $gte: dateStart, $lte: dateEnd } }),
+    Transaction.find({ userId, type: 'expense', date: { $gte: dateStart, $lte: dateEnd } }),
     F1Prediction.find({ userId, raceId: { $regex: `^${year}-` } }),
   ])
 
@@ -96,14 +123,18 @@ function snapshotHash(sections: Awaited<ReturnType<typeof buildSections>>): stri
   ].join('-')
 }
 
-/** GET /api/yearbook/:year — кешований звіт, 404 якщо ще не генерувався */
+// ── Route handlers ────────────────────────────────────────────────────────────
+
+/** GET /api/yearbook/:year?period=annual|spring|summer|autumn|winter|01..12 */
 export async function getYearbook(req: Request, res: Response): Promise<void> {
   try {
-    const year = parseInt(req.params.year, 10)
-    const report = await YearbookReport.findOne({ userId: req.userId, year })
+    const year   = parseInt(req.params.year, 10)
+    const period = (req.query.period as string) || 'annual'
+    const report = await YearbookReport.findOne({ userId: req.userId, year, period })
     if (!report) { res.status(404).json({ error: 'Not generated yet' }); return }
 
-    const freshSections = await buildSections(req.userId!, year)
+    const { start, end } = periodRange(year, period)
+    const freshSections  = await buildSections(req.userId!, year, start, end)
     const stale = snapshotHash(freshSections) !== report.sourceSnapshotHash
     res.json({ ...report.toObject(), stale })
   } catch {
@@ -111,13 +142,15 @@ export async function getYearbook(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** POST /api/yearbook/:year/generate — рахує і кешує звіт (тільки за явним запитом) */
+/** POST /api/yearbook/:year/generate?period=annual|spring|summer|autumn|winter|01..12 */
 export async function generateYearbook(req: Request, res: Response): Promise<void> {
   try {
-    const year = parseInt(req.params.year, 10)
-    const sections = await buildSections(req.userId!, year)
+    const year   = parseInt(req.params.year, 10)
+    const period = (req.query.period as string) || 'annual'
+    const { start, end } = periodRange(year, period)
+    const sections = await buildSections(req.userId!, year, start, end)
     const report = await YearbookReport.findOneAndUpdate(
-      { userId: req.userId, year },
+      { userId: req.userId, year, period },
       { sections, sourceSnapshotHash: snapshotHash(sections), generatedAt: new Date() },
       { upsert: true, new: true }
     )

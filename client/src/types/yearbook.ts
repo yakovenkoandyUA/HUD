@@ -1,9 +1,8 @@
 /**
  * YearbookSections
  * ----------------
- * Deterministic-статистика річного звіту `/api/yearbook/:year`.
- * Фінанси (`totalSpent`/`topExpenseCategories`) і `f1` — особисті дані власника
- * звіту, не агреговані по сім'ї (на відміну від решти секцій).
+ * Deterministic-статистика звіту `/api/yearbook/:year`.
+ * Фінанси (`totalSpent`/`topExpenseCategories`) і `f1` — особисті дані власника.
  */
 export interface YearbookSections {
   memoriesCount: number
@@ -20,8 +19,12 @@ export interface YearbookSections {
   f1: { points: number; predictionsCount: number } | null
 }
 
+/** 'annual' | 'spring' | 'summer' | 'autumn' | 'winter' | '01'..'12' */
+export type YearbookPeriod = string
+
 export interface YearbookReport {
   year: number
+  period: YearbookPeriod
   sections: YearbookSections
   generatedAt: string
   stale: boolean

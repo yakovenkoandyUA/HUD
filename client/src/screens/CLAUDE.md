@@ -156,20 +156,20 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
   - Попап: обкладинка-**полароїд** (`.popupPolaroid`, біла рамка, rotate -4°→0° на hover) + кнопка **"Маршрут"** (Mapbox Directions API, лінія через `Source`+`Layer`, показує "X км · Y хв" прямо в кнопці); тап по самому попапу → `/memories/:id` (тільки для спогадів)
   - Кнопка **3D** (pitch toggle), українські підписи (`setLanguage('uk')`), lightPreset день/ніч під тему застосунку
   - Одноразова `MapFeatureHint` (обертання/3D/маршрут), localStorage-дисміс
-- **Плани** — PlanCard/PlanForm, статуси (want/planned/visited), конвертація в спогад
+- **Плани** — PlanCard/PlanForm; статус завжди `'want'` при створенні (кнопки Хочу/План/Були прибрані як зайві); конвертація в спогад
 - "Цей день рік тому" банер
+- **Сітка карток** — 2-3 колонки; картки без обкладинки → `titleGradient()` (детермінований hsl-градієнт від хешу назви); trip-картки → `tripDateLabel()` ("30 — 4 лип. · 5д"); фото-бейдж SVG camera + count (top-left); owner-бейдж 20px (top-right для сімейних); companion micro-аватари 18px overlapping (bottom-right, `withProfiles` → `companionMap` з `useFamilyStore`)
 - MemoryDetail — фото (PhotoViewerModal fullscreen), обкладинка (setCover з фото галереї або через EditMemoryModal; "Постер" як обкладинка прибрано)
   - Адреса в заголовку — один рядок з `text-overflow: ellipsis` (раніше розгорталась на 3-4 рядки)
   - **Нотатка** — картка з пунктирною рамкою + іконкою-редагування (✎), а не голий текст; порожній стан "+ Додати нотатку" з SVG-плюсиком
   - **Тег** — кнопка "+ тег" теж із SVG-плюсиком замість символу `+`
-  - **bottomBar** — ФОТО/ПОДІЛИТИСЬ + нотатка + теги тепер в одній плаваючій картці, `position: fixed` знизу екрана (в зоні досягання великим пальцем); "ПОВ'ЯЗАНІ СПОГАДИ" і фотогрід підняті нагору одразу під заголовок
-  - **Trip-спогади** — блок "ВИТРАТИ В ПОЇЗДЦІ": `transactions.filter(t => t.type === 'expense' && t.tripMemoryId === memory.id)`, підсумок + до 5 рядків + "ще N транзакцій". IIFE-паттерн `{memory.isTrip && (() => { ... })()}` для multi-statement JSX.
-  - **EditMemoryModal** — inline в MemoryDetail, підтримує edit `date`/`dateEnd`/`isTrip` через toggle "→" + CustomDatePicker
-- **Поділитись** — Canvas API → PNG (обкладинка + назва + дата + теги + **мінікарта-бейдж** у верхньому правому кутку якщо є координати, Mapbox Static Images API), Web Share API або download (`utils/generateMemoryPoster.ts`)
-- Cloudinary upload для фото
-- **AddMemoryModal** — обкладинка як повноширинна зона (130px) над хедером (`useImageUpload` хук напряму, без `ImageUploadButton`); МІСЦЕ через `LocationSearch` (Mapbox Search Box автокомпліт) + "Обрати на карті" (`LocationMapPicker`); ДАТА + toggle "→" (isTrip) + другий DatePicker (dateEnd); ДАТА/МІСЦЕ в один ряд, дата DD.MM.YYYY
-  - `places[]` (заклади всередині спогаду) — поле в моделі/сторі вже є, рендериться на MemoryMap, **але UI додавання ще не реалізований** в AddMemoryModal/PlanForm
-- **PlanForm** — хедер містить кнопку обкладинки (thumbnail + count-badge); секція "З КИМ" — chips прийнятих сімейних членів з `useFamilyStore`, `withProfiles` передається в `onSubmit`
+  - **МІСЦЯ** — окрема секція між subheader і bottomBar; горизонтальний скрол warm cards (border-left 3px gold, gold pin SVG, назва + адреса + "На карті" посилання); кнопка "+ додати" у заголовку секції → Modal з LocationSearch
+  - **bottomBar** — ФОТО/ПОДІЛИТИСЬ плаваюча картка `position: fixed` знизу
+  - **Trip-спогади** — блок "ВИТРАТИ В ПОЇЗДЦІ": підсумок + до 5 рядків транзакцій
+  - **EditMemoryModal** — cover zone як в AddMemoryModal (Завантажити | Unsplash); `formatDisplayDate` використовує `iso.slice(0,10)` (фікс ISO timestamp); підтримує `date`/`dateEnd`/`isTrip`
+- **Поділитись** — Canvas API → PNG, Web Share API або download
+- **AddMemoryModal** — cover zone 130px: empty → Завантажити | Unsplash; filled → overlay chips при hover; "З КИМ" секція — chips сімейних членів → `withProfiles: string[]`; `UnsplashPicker` bottom sheet (`coverAttribution` зберігається в моделі)
+  - `places[]` — поле в моделі/сторі є, рендер на MemoryMap є; UI додавання в AddMemoryModal не реалізовано
 
 ## 11. Notes (`/notes`)
 - `notesStore` (Zustand, без persist) — `fetchNotes`, `addNote`, `updateNote`, `deleteNote`

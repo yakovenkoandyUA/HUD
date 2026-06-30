@@ -26,10 +26,12 @@ export interface IMemory extends Document {
   dateEnd: string | null
   isTrip: boolean
   coverUrl: string
+  coverAttribution: string
   notes: string
   tags: string[]
   photos: Types.DocumentArray<IMemoryPhoto>
   places: Types.DocumentArray<IMemoryPlace>
+  withProfiles: string[]
   userId: string
 }
 
@@ -56,12 +58,14 @@ const schema = new Schema<IMemory>({
   date:     { type: String, required: true },
   dateEnd:  { type: String, default: null },
   isTrip:   { type: Boolean, default: false },
-  coverUrl: { type: String, default: '' },
-  notes:    { type: String, default: '' },
+  coverUrl:          { type: String, default: '' },
+  coverAttribution:  { type: String, default: '' },
+  notes:             { type: String, default: '' },
   tags:     [{ type: String }],
-  photos:   { type: [photoSchema], default: [] },
-  places:   { type: [placeSchema], default: [] },
-  userId:   { type: String, required: true, index: true },
+  photos:       { type: [photoSchema], default: [] },
+  places:       { type: [placeSchema], default: [] },
+  withProfiles: [{ type: String }],
+  userId:       { type: String, required: true, index: true },
 }, { timestamps: true })
 
 export default model<IMemory>('Memory', schema)

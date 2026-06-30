@@ -3,9 +3,11 @@ import { useModalHistory } from '../../../hooks/useModalHistory'
 import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import { useImageUpload } from '../../../hooks/useImageUpload'
 import { useUiStore } from '../../../store/uiStore'
+import { useFamilyStore } from '../../../store/familyStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LocationSearch from '../LocationSearch'
 import Button from '../../ui/Button'
+import UnsplashPicker from '../UnsplashPicker'
 import type { PlanLocation } from '../../../store/plansStore'
 import styles from './AddMemoryModal.module.css'
 
@@ -28,8 +30,10 @@ export interface AddMemoryData {
   dateEnd?: string | null
   isTrip?: boolean
   coverUrl: string
+  coverAttribution?: string
   notes?: string
   tags?: string[]
+  withProfiles?: string[]
 }
 
 interface AddMemoryModalProps {
@@ -74,18 +78,26 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   const [date, setDate]           = useState(today())
   const [dateEnd, setDateEnd]     = useState<string | null>(null)
   const [isTrip, setIsTrip]       = useState(false)
-  const [coverUrl, setCoverUrl]   = useState('')
-  const [notes, setNotes]         = useState('')
+  const [coverUrl, setCoverUrl]             = useState('')
+  const [coverAttribution, setCoverAttribution] = useState('')
+  const [showUnsplash, setShowUnsplash]     = useState(false)
+  const [notes, setNotes]                   = useState('')
   const [tags, setTags]           = useState<string[]>([])
   const [showPicker, setShowPicker]       = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
+  const [withProfiles, setWithProfiles]   = useState<string[]>([])
 
   const { showToast } = useUiStore()
+  const { accepted, fetchFamily } = useFamilyStore()
+  useEffect(() => { if (isOpen && accepted.length === 0) fetchFamily() }, [isOpen, accepted.length, fetchFamily])
   const { trigger: triggerCover, uploading: coverUploading, inputElement: coverInput } =
     useImageUpload('mimir/memories/covers', (url) => {
       setCoverUrl(url)
       showToast('Обкладинку завантажено', 'success')
     })
+
+  const toggleCompanion = (id: string) =>
+    setWithProfiles(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
   const reset = () => {
     setTitle('')
@@ -94,9 +106,12 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
     setDateEnd(null)
     setIsTrip(false)
     setCoverUrl('')
+    setCoverAttribution('')
     setNotes('')
     setTags([])
+    setWithProfiles([])
     setShowPicker(false)
+    setShowUnsplash(false)
   }
 
   const handleClose = () => {
@@ -118,16 +133,18 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   const handleCreate = () => {
     if (!title.trim() || !date) return
     onCreate({
-      title:    title.trim(),
-      location: location.address || location.name || undefined,
-      lat:      location.lat,
-      lng:      location.lng,
+      title:            title.trim(),
+      location:         location.address || location.name || undefined,
+      lat:              location.lat,
+      lng:              location.lng,
       date,
-      dateEnd:  isTrip ? (dateEnd || null) : null,
+      dateEnd:          isTrip ? (dateEnd || null) : null,
       isTrip,
       coverUrl,
-      notes:    notes.trim() || undefined,
-      tags:     tags.length ? tags : undefined,
+      coverAttribution: coverAttribution || undefined,
+      notes:            notes.trim() || undefined,
+      tags:             tags.length ? tags : undefined,
+      withProfiles:     withProfiles.length ? withProfiles : undefined,
     })
     reset()
   }
@@ -135,6 +152,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   if (!mounted) return null
 
   return (
+		<>
 		<div className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`} onClick={handleClose}>
 			<div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`} onClick={e => e.stopPropagation()}>
 				{/* coverInput всередині sheet — stopPropagation не дає клікам спливти до overlay */}
@@ -152,32 +170,69 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 
 				<div className={styles.body}>
 					{/* Cover photo zone */}
-					<button type="button" className={`${styles.coverZone} ${coverUrl ? styles.coverZoneFilled : ''}`} onClick={triggerCover} aria-label="Додати обкладинку">
-						{coverUploading ? (
-							<span className={styles.coverSpinner} />
-						) : coverUrl ? (
-							<>
-								<img src={coverUrl} alt="" className={styles.coverImg} />
-								<div className={styles.coverOverlay}>
-									<svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-										<rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.4" />
-										<circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.4" />
-										<path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+					{coverUrl ? (
+						<div className={styles.coverZone}>
+							<img src={coverUrl} alt="" className={styles.coverImg} />
+							<div className={styles.coverOverlayActions}>
+								<button
+									type="button"
+									className={styles.coverActionChip}
+									onClick={triggerCover}
+									aria-label="Завантажити нове фото"
+								>
+									{coverUploading ? (
+										<span className={styles.coverSpinner} />
+									) : (
+										<svg width="13" height="13" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+											<rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+											<circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.5" />
+											<path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+										</svg>
+									)}
+									<span>Завантажити</span>
+								</button>
+								<button
+									type="button"
+									className={styles.coverActionChip}
+									onClick={() => setShowUnsplash(true)}
+									aria-label="Знайти в Unsplash"
+								>
+									<svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+										<circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5" />
+										<path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
 									</svg>
-									<span>Змінити обкладинку</span>
-								</div>
-							</>
-						) : (
-							<div className={styles.coverEmpty}>
-								<svg width="24" height="24" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-									<rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" />
-									<circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.3" />
-									<path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-								</svg>
-								<span>Додати обкладинку</span>
+									<span>Unsplash</span>
+								</button>
 							</div>
-						)}
-					</button>
+						</div>
+					) : (
+						<div className={styles.coverZone}>
+							{coverUploading ? (
+								<div className={styles.coverEmpty}>
+									<span className={styles.coverSpinner} />
+								</div>
+							) : (
+								<div className={styles.coverActions}>
+									<button type="button" className={styles.coverActionBtn} onClick={triggerCover}>
+										<svg width="20" height="20" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+											<rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" />
+											<circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.3" />
+											<path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+										</svg>
+										<span>Завантажити</span>
+									</button>
+									<div className={styles.coverDivider} />
+									<button type="button" className={styles.coverActionBtn} onClick={() => setShowUnsplash(true)}>
+										<svg width="20" height="20" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+											<circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.3" />
+											<path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+										</svg>
+										<span>Unsplash</span>
+									</button>
+								</div>
+							)}
+						</div>
+					)}
 					<div className={styles.field}>
 						<label className={styles.label}>НАЗВА</label>
 						<input className={styles.input} value={title} onChange={e => setTitle(e.target.value)} placeholder="Назва події..." />
@@ -253,12 +308,52 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 						</div>
 					</div>
 
+					{accepted.length > 0 && (
+						<div className={styles.field}>
+							<label className={styles.label}>З КИМ</label>
+							<div className={styles.companions}>
+								{accepted.map(m => {
+									const active = withProfiles.includes(m.id)
+									return (
+										<button
+											key={m.id}
+											type="button"
+											className={`${styles.companion} ${active ? styles.companionActive : ''}`}
+											onClick={() => toggleCompanion(m.id)}
+										>
+											{m.avatarUrl
+												? <img src={m.avatarUrl} alt="" className={styles.companionAvatar} />
+												: <span className={styles.companionInitial}>{m.name[0]?.toUpperCase()}</span>
+											}
+											<span className={styles.companionName}>{m.name.split(' ')[0]}</span>
+											{active && (
+												<svg className={styles.companionCheck} width="10" height="10" viewBox="0 0 10 10" fill="none">
+													<path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+												</svg>
+											)}
+										</button>
+									)
+								})}
+							</div>
+						</div>
+					)}
+
 					<Button fullWidth disabled={!title.trim() || !date} onClick={handleCreate}>
 						СТВОРИТИ
 					</Button>
 				</div>
 			</div>
 		</div>
+
+		<UnsplashPicker
+			isOpen={showUnsplash}
+			onClose={() => setShowUnsplash(false)}
+			onSelect={(url, attribution) => {
+				setCoverUrl(url)
+				setCoverAttribution(attribution)
+			}}
+		/>
+		</>
 	)
 }
 

@@ -120,6 +120,12 @@
   letter-spacing: 0.1em;
   color: var(--text3);
 }
+.labelOptional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
 
 .input {
   background: var(--surface2);

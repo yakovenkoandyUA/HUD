@@ -121,7 +121,8 @@ components/
 │   └── EpisodesList        ← список епізодів для серіалів/аніме
 ├── memories/
 │   ├── MemoryCard, MemoryForm, PhotoGrid
-│   ├── AddMemoryModal     ← LocationSearch для поля МІСЦЕ, CustomDatePicker для ДАТА; isTrip — окремий `tripRow` під місцем/датою (ПОЇЗДКА + кінцева дата + ×)
+│   ├── AddMemoryModal     ← cover zone: Завантажити | Unsplash (два варіанти в empty state, overlay chips у filled); "З КИМ" секція — chips сімейних членів → `withProfiles: string[]`; isTrip — `tripRow` під датою
+│   ├── UnsplashPicker     ← bottom sheet: debounced пошук (600мс), 3×3 сітка, attribution overlay; тригерить `/photos/:id/download` (Unsplash TOS); `VITE_UNSPLASH_ACCESS_KEY`
 │   ├── FlashbackModal     ← fullscreen "цього дня N років тому" (раз на добу, sessionStorage), навігація вліво/вправо по кількох спогадах
 │   ├── TripExpensesSheet  ← bottom sheet ретроактивного тегування витрат у поїздці; відкривається після збереження trip-memory; checkboxes + bulk PATCH
 │   ├── LocationSearch     ← автокомпліт місць через Mapbox Search Box API (`VITE_MAPBOX_TOKEN`) + "Обрати на карті"; `userTyped` ref (не `skipSearch`) — надійно в StrictMode; `inlineResults` prop (results в `position:static`) для вбудованих модалок

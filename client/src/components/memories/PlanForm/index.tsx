@@ -25,14 +25,6 @@ interface PlanFormProps {
   onClose:  () => void
 }
 
-type PlanStatus = 'want' | 'planned' | 'visited'
-
-const STATUS_OPTIONS: { value: PlanStatus; label: string }[] = [
-  { value: 'want',    label: 'Хочу' },
-  { value: 'planned', label: 'План' },
-  { value: 'visited', label: 'Були' },
-]
-
 const CLOSE_MS = 260
 
 const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
@@ -55,7 +47,6 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
 
   const [title,        setTitle]        = useState('')
   const [location,     setLocation]     = useState<PlanLocation>({ name: null, address: null, lat: null, lng: null })
-  const [status,       setStatus]       = useState<PlanStatus>('want')
   const [plannedDate,  setPlannedDate]  = useState<string | null>(null)
   const [notes,        setNotes]        = useState('')
   const [showDatePick, setShowDatePick] = useState(false)
@@ -100,7 +91,7 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
         caption:   '',
         createdAt: new Date().toISOString(),
       })),
-      status,
+      status:       'want' as const,
       plannedDate,
       visitedDate: null,
       memoryId:    null,
@@ -188,43 +179,24 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
             <LocationSearch onSelect={setLocation} />
           </div>
 
-          {/* Status */}
+          {/* Planned date */}
           <div className={styles.field}>
-            <label className={styles.label}>СТАТУС</label>
-            <div className={styles.statusChips}>
-              {STATUS_OPTIONS.map(o => (
-                <button
-                  key={o.value}
-                  type="button"
-                  className={`${styles.statusChip} ${status === o.value ? styles.statusActive : ''}`}
-                  onClick={() => setStatus(o.value)}
-                >
-                  {o.label}
-                </button>
-              ))}
-            </div>
+            <label className={styles.label}>ДАТА <span className={styles.labelOptional}>(необов'язково)</span></label>
+            <button
+              type="button"
+              className={styles.dateTrigger}
+              onClick={() => setShowDatePick(true)}
+            >
+              {plannedDate
+                ? formatDateUA(plannedDate)
+                : <span className={styles.datePlaceholder}>Обрати дату</span>
+              }
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="2" y="3" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M5 1v3M9 1v3M2 6h10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </button>
           </div>
-
-          {/* Planned date — only for planned/visited */}
-          {(status === 'planned' || status === 'visited') && (
-            <div className={styles.field}>
-              <label className={styles.label}>ДАТА</label>
-              <button
-                type="button"
-                className={styles.dateTrigger}
-                onClick={() => setShowDatePick(true)}
-              >
-                {plannedDate
-                  ? formatDateUA(plannedDate)
-                  : <span className={styles.datePlaceholder}>Обрати дату</span>
-                }
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <rect x="2" y="3" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-                  <path d="M5 1v3M9 1v3M2 6h10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-          )}
 
           {/* Notes */}
           <div className={styles.field}>

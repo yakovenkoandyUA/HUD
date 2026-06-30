@@ -58,36 +58,98 @@
   background: var(--surface);
   border: none;
   border-bottom: 1.5px dashed var(--border2);
-  cursor: pointer;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.coverZone:active { background: var(--bg2); }
-
-.coverZoneFilled {
-  border-bottom-style: none;
 }
 
-.coverEmpty {
+/* ── Empty state: two action buttons ── */
+.coverActions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.coverActionBtn {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 7px;
+  height: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
   color: var(--text3);
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: color 0.15s;
+  transition: color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.coverZone:hover .coverEmpty,
-.coverZone:active .coverEmpty { color: var(--accent); }
+.coverActionBtn:hover { color: var(--accent); background: var(--bg2); }
+.coverActionBtn:active { color: var(--accent); }
+
+.coverDivider {
+  width: 1px;
+  height: 40px;
+  background: var(--border2);
+  flex-shrink: 0;
+}
+
+/* ── Spinner in empty state ── */
+.coverEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Filled state overlay: two chips at bottom ── */
+.coverOverlayActions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 10px;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%);
+}
+.coverZone:hover .coverOverlayActions,
+.coverZone:active .coverOverlayActions { opacity: 1; }
+
+.coverActionChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 5px 10px;
+  color: rgba(255,255,255,0.9);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.coverActionChip:hover { background: rgba(0,0,0,0.65); }
 
 .coverImg {
   position: absolute;
@@ -97,26 +159,7 @@
   object-fit: cover;
 }
 
-.coverOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 12px;
-  gap: 6px;
-  color: rgba(255,255,255,0.85);
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.coverZone:hover .coverOverlay,
-.coverZone:active .coverOverlay { opacity: 1; }
+
 
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -357,3 +400,54 @@
   flex: 1;
 }
 .tagInput::placeholder { color: var(--text3); }
+
+/* ── З КИМ companions ── */
+.companions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.companion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.companionActive {
+  border-color: var(--accent);
+  background: var(--accent-dim, rgba(180,60,60,0.1));
+}
+.companionAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.companionInitial {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+.companionName {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.companionCheck { color: var(--accent); flex-shrink: 0; }

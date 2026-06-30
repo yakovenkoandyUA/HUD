@@ -1,47 +1,70 @@
 import { create } from 'zustand'
 import { authFetch, getToken } from '../services/api'
-import type { YearbookReport } from '../types/yearbook'
+import type { YearbookReport, YearbookPeriod } from '../types/yearbook'
 
 /**
  * yearbookStore
  * -------------
- * Zustand store для Family Yearbook — backend-backed через /api/yearbook.
- * БЕЗ persist. Звіт кешується на бекенді (MongoDB), не локально.
+ * Zustand store для Yearbook — backend-backed через /api/yearbook.
+ * БЕЗ persist. Звіти кешуються на бекенді (MongoDB).
+ * In-memory кеш по `${year}-${period}` для уникнення зайвих запитів.
+ * 404 → `notGenerated[key] = true`
  */
 interface YearbookState {
-  report: YearbookReport | null
+  reports: Record<string, YearbookReport>
+  notGenerated: Record<string, boolean>
   loading: boolean
-  notGenerated: boolean
-  fetchYearbook: (year: number) => Promise<void>
-  generateYearbook: (year: number) => Promise<void>
+  getReport: (year: number, period: YearbookPeriod) => YearbookReport | null
+  isNotGenerated: (year: number, period: YearbookPeriod) => boolean
+  fetchYearbook: (year: number, period: YearbookPeriod) => Promise<void>
+  generateYearbook: (year: number, period: YearbookPeriod) => Promise<void>
 }
 
-export const useYearbookStore = create<YearbookState>()((set) => ({
-  report: null,
-  loading: false,
-  notGenerated: false,
+const cacheKey = (year: number, period: YearbookPeriod) => `${year}-${period}`
 
-  fetchYearbook: async (year) => {
+export const useYearbookStore = create<YearbookState>()((set, get) => ({
+  reports: {},
+  notGenerated: {},
+  loading: false,
+
+  getReport: (year, period) => get().reports[cacheKey(year, period)] ?? null,
+  isNotGenerated: (year, period) => get().notGenerated[cacheKey(year, period)] ?? false,
+
+  fetchYearbook: async (year, period) => {
     if (!getToken()) return
-    set({ loading: true, notGenerated: false })
+    set({ loading: true })
     try {
-      const res = await authFetch(`/api/yearbook/${year}`)
-      if (res.status === 404) { set({ report: null, loading: false, notGenerated: true }); return }
+      const res = await authFetch(`/api/yearbook/${year}?period=${period}`)
+      if (res.status === 404) {
+        const k = cacheKey(year, period)
+        set(s => ({ loading: false, notGenerated: { ...s.notGenerated, [k]: true } }))
+        return
+      }
       if (!res.ok) { set({ loading: false }); return }
-      const data = await res.json()
-      set({ report: data, loading: false })
+      const data: YearbookReport = await res.json()
+      const k = cacheKey(year, period)
+      set(s => ({
+        reports: { ...s.reports, [k]: data },
+        notGenerated: { ...s.notGenerated, [k]: false },
+        loading: false,
+      }))
     } catch {
       set({ loading: false })
     }
   },
 
-  generateYearbook: async (year) => {
+  generateYearbook: async (year, period) => {
     set({ loading: true })
     try {
-      const res = await authFetch(`/api/yearbook/${year}/generate`, { method: 'POST' })
+      const res = await authFetch(`/api/yearbook/${year}/generate?period=${period}`, { method: 'POST' })
       if (!res.ok) { set({ loading: false }); return }
-      const data = await res.json()
-      set({ report: data, loading: false, notGenerated: false })
+      const data: YearbookReport = await res.json()
+      const k = cacheKey(year, period)
+      set(s => ({
+        reports: { ...s.reports, [k]: data },
+        notGenerated: { ...s.notGenerated, [k]: false },
+        loading: false,
+      }))
     } catch {
       set({ loading: false })
     }

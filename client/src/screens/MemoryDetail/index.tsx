@@ -705,7 +705,9 @@ const MemoryDetailScreen: React.FC = () => {
 								const details    = placeDetails[place.id]
 								const fsq        = details && details !== 'loading' && details !== 'not_found' && details !== 'error' ? details : null
 
+								const hasCoords = !!(place.lat && place.lng)
 								const handleCardClick = () => {
+									if (!hasCoords) return
 									if (isExpanded) { setExpandedPlaceId(null); return }
 									setExpandedPlaceId(place.id)
 									fetchPlaceDetails(place)
@@ -713,7 +715,12 @@ const MemoryDetailScreen: React.FC = () => {
 
 								return (
 									<div key={place.id} className={`${styles.placeCard} ${isExpanded ? styles.placeCardExpanded : ''}`}>
-										<button type="button" className={styles.placeCardMain} onClick={handleCardClick}>
+										<button
+											type="button"
+											className={styles.placeCardMain}
+											onClick={handleCardClick}
+											style={!hasCoords ? { cursor: 'default' } : undefined}
+										>
 											<div className={styles.placeCardPin}>
 												<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
 													<path d="M9 1.5a5.5 5.5 0 015.5 5.5C14.5 11.5 9 16.5 9 16.5S3.5 11.5 3.5 7A5.5 5.5 0 019 1.5Z" stroke="currentColor" strokeWidth="1.4"/>
@@ -726,69 +733,74 @@ const MemoryDetailScreen: React.FC = () => {
 													<span className={styles.placeCardAddr}>{place.address}</span>
 												)}
 											</div>
-											<svg
-												className={`${styles.placeCardChevron} ${isExpanded ? styles.placeCardChevronOpen : ''}`}
-												width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
-											>
-												<path d="M3.5 5.5L7 9l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-											</svg>
+											{hasCoords && (
+												<svg
+													className={`${styles.placeCardChevron} ${isExpanded ? styles.placeCardChevronOpen : ''}`}
+													width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
+												>
+													<path d="M3.5 5.5L7 9l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+												</svg>
+											)}
 										</button>
 
-										{/* Details accordion */}
+										{/* Details accordion — always renders "На карті", FSQ data only when available */}
 										<div className={`${styles.placeDetails} ${isExpanded ? styles.placeDetailsOpen : ''}`}>
-											{details === 'loading' && <span className={styles.placeDetailsLoading}>…</span>}
-
+											{/* FSQ enriched data (shown only when successfully loaded) */}
 											{fsq && (
 												<>
-													<div className={styles.placeDetailsRow}>
-														{fsq.category && <span className={styles.placeDetailsCat}>{fsq.category}</span>}
-														{fsq.openNow !== null && (
-															<span className={`${styles.placeDetailsStatus} ${fsq.openNow ? styles.placeDetailsOpen2 : styles.placeDetailsClosed}`}>
-																{fsq.openNow ? 'ВІДКРИТО' : 'ЗАЧИНЕНО'}
-															</span>
-														)}
-													</div>
-													{fsq.hoursDisplay && <span className={styles.placeDetailsHours}>{fsq.hoursDisplay}</span>}
-													<div className={styles.placeDetailsLinks}>
-														{place.lat && place.lng && (
-															<a href={`https://www.google.com/maps?q=${place.lat},${place.lng}`} target="_blank" rel="noreferrer" className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
-																<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-																	<path d="M6 1a3 3 0 013 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 013-3Z" stroke="currentColor" strokeWidth="1.2"/>
-																</svg>
-																На карті
-															</a>
-														)}
-														{fsq.tel && (
-															<a href={`tel:${fsq.tel}`} className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
-																<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-																	<path d="M2 2.5C2 2 2.5 1.5 3 1.5h1.5l1 2.5L4 5c.8 1.6 2.4 3.2 4 4l1-1.5 2.5 1V10c0 .5-.5 1-1 1C4.7 11 1 7.3 1 3c0-.28.22-.5.5-.5z" stroke="currentColor" strokeWidth="1.1"/>
-																</svg>
-																{fsq.tel}
-															</a>
-														)}
-														{fsq.website && (
-															<a href={fsq.website} target="_blank" rel="noreferrer" className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
-																<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-																	<circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.1"/>
-																	<path d="M6 1.5C6 1.5 4.5 3 4.5 6S6 10.5 6 10.5M6 1.5C6 1.5 7.5 3 7.5 6S6 10.5 6 10.5M1.5 6h9" stroke="currentColor" strokeWidth="1.1"/>
-																</svg>
-																{new URL(fsq.website).hostname.replace('www.', '')}
-															</a>
-														)}
-													</div>
-													{fsq.rating !== null && (
-														<span className={styles.placeDetailsRating}>
-															{fsq.rating.toFixed(1)}
-															<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
-																<path d="M6 1l1.5 3H11L8.5 6.5 9.5 10 6 8l-3.5 2 1-3.5L1 4h3.5z"/>
-															</svg>
-														</span>
+													{(fsq.category || fsq.openNow !== null) && (
+														<div className={styles.placeDetailsRow}>
+															{fsq.category && <span className={styles.placeDetailsCat}>{fsq.category}</span>}
+															{fsq.openNow !== null && (
+																<span className={`${styles.placeDetailsStatus} ${fsq.openNow ? styles.placeDetailsOpen2 : styles.placeDetailsClosed}`}>
+																	{fsq.openNow ? 'ВІДКРИТО' : 'ЗАЧИНЕНО'}
+																</span>
+															)}
+														</div>
 													)}
+													{fsq.hoursDisplay && <span className={styles.placeDetailsHours}>{fsq.hoursDisplay}</span>}
 												</>
 											)}
 
-											{(details === 'not_found' || details === 'error') && (
-												<span className={styles.placeDetailsLoading}>Деталі недоступні</span>
+											{/* Links — always shown when expanded */}
+											<div className={styles.placeDetailsLinks}>
+												{details === 'loading' && <span className={styles.placeDetailsSpinner} />}
+												<a
+													href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
+													target="_blank" rel="noreferrer"
+													className={styles.placeCardMapLink}
+													onClick={e => e.stopPropagation()}
+												>
+													<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+														<path d="M6 1a3 3 0 013 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 013-3Z" stroke="currentColor" strokeWidth="1.2"/>
+													</svg>
+													На карті
+												</a>
+												{fsq?.tel && (
+													<a href={`tel:${fsq.tel}`} className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
+														<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+															<path d="M2 2.5C2 2 2.5 1.5 3 1.5h1.5l1 2.5L4 5c.8 1.6 2.4 3.2 4 4l1-1.5 2.5 1V10c0 .5-.5 1-1 1C4.7 11 1 7.3 1 3c0-.28.22-.5.5-.5z" stroke="currentColor" strokeWidth="1.1"/>
+														</svg>
+														{fsq.tel}
+													</a>
+												)}
+												{fsq?.website && (
+													<a href={fsq.website} target="_blank" rel="noreferrer" className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
+														<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+															<circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.1"/>
+															<path d="M6 1.5C6 1.5 4.5 3 4.5 6S6 10.5 6 10.5M6 1.5C6 1.5 7.5 3 7.5 6S6 10.5 6 10.5M1.5 6h9" stroke="currentColor" strokeWidth="1.1"/>
+														</svg>
+														{new URL(fsq.website).hostname.replace('www.', '')}
+													</a>
+												)}
+											</div>
+											{fsq?.rating !== null && fsq?.rating !== undefined && (
+												<span className={styles.placeDetailsRating}>
+													{fsq.rating.toFixed(1)}
+													<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
+														<path d="M6 1l1.5 3H11L8.5 6.5 9.5 10 6 8l-3.5 2 1-3.5L1 4h3.5z"/>
+													</svg>
+												</span>
 											)}
 										</div>
 

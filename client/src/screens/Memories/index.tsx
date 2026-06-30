@@ -11,6 +11,7 @@ import type { AddMemoryData } from '../../components/memories/AddMemoryModal'
 import type { Memory } from '../../types/memory'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { usePlansStore, type Plan } from '../../store/plansStore'
+import { useFamilyStore } from '../../store/familyStore'
 import { useUiStore } from '../../store/uiStore'
 import { useFinanceStore } from '../../store/financeStore'
 import { authFetch } from '../../services/api'
@@ -48,6 +49,24 @@ function coverSrc(m: Memory): string | null {
   return m.coverUrl || m.photos[0]?.url || null
 }
 
+function titleGradient(title: string): string {
+  let hash = 0
+  for (let i = 0; i < title.length; i++) hash = (hash * 31 + title.charCodeAt(i)) | 0
+  const hue = Math.abs(hash) % 360
+  return `linear-gradient(155deg, hsl(${hue},28%,21%) 0%, hsl(${(hue + 45) % 360},22%,15%) 100%)`
+}
+
+function tripDateLabel(m: Memory): string {
+  if (m.isTrip && m.dateEnd) {
+    const [y1, m1, d1] = m.date.split('-').map(Number)
+    const [y2, m2, d2] = m.dateEnd.split('-').map(Number)
+    const days = Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000) + 1
+    const endDate = new Date(m.dateEnd)
+    return `${d1} — ${d2} ${endDate.toLocaleDateString('uk-UA', { month: 'short' })} · ${days}д`
+  }
+  return new Date(m.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
+}
+
 function yearsAgoLabel(years: number): string {
   const mod100 = years % 100
   const mod10  = years % 10
@@ -66,8 +85,13 @@ const MemoriesScreen: React.FC = () => {
   const navigate    = useNavigate()
   const { memories, fetchMemories, addMemory } = useMemoriesStore()
   const { plans, fetchPlans, addPlan, updatePlan, deletePlan } = usePlansStore()
+  const { accepted, fetchFamily } = useFamilyStore()
   const { showToast } = useUiStore()
   const { transactions } = useFinanceStore()
+
+  const companionMap = useMemo(() =>
+    Object.fromEntries(accepted.map(m => [m.id, m])),
+  [accepted])
 
   const [activeTab,     setActiveTab]     = useState<ActiveTab>('memories')
   const [showAdd,       setShowAdd]       = useState(false)
@@ -81,6 +105,7 @@ const MemoriesScreen: React.FC = () => {
   const [statSheet, setStatSheet]         = useState<'count' | 'photos' | 'locations' | 'distance' | null>(null)
 
   useEffect(() => { fetchMemories() }, [fetchMemories])
+  useEffect(() => { fetchFamily() }, [fetchFamily])
 
   useEffect(() => {
     if (activeTab === 'plans' || activeTab === 'map') fetchPlans()
@@ -181,10 +206,11 @@ const MemoriesScreen: React.FC = () => {
       date:     data.date,
       dateEnd:  data.dateEnd,
       isTrip:   data.isTrip,
-      coverUrl: data.coverUrl,
-      notes:    data.notes,
-      tags:     data.tags,
-      photos:   [],
+      coverUrl:     data.coverUrl,
+      notes:        data.notes,
+      tags:         data.tags,
+      withProfiles: data.withProfiles,
+      photos:       [],
     })
     useAchievementsStore.getState().unlock('first-memory')
     setShowAdd(false)
@@ -367,15 +393,42 @@ const MemoriesScreen: React.FC = () => {
                         {coverSrc(m) ? (
                           <img src={coverSrc(m)!} alt={m.title} className={styles.cardImg} loading="lazy" />
                         ) : (
-                          <div className={styles.cardPlaceholder} />
+                          <div className={styles.cardPlaceholder} style={{ background: titleGradient(m.title) }} />
                         )}
                         <div className={styles.cardGrad} />
                         <div className={styles.cardInfo}>
                           <p className={styles.cardTitle}>{m.title}</p>
-                          <p className={styles.cardDate}>
-                            {new Date(m.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
-                          </p>
+                          <p className={styles.cardDate}>{tripDateLabel(m)}</p>
                         </div>
+                        {m.photos.length > 0 && (
+                          <div className={styles.cardPhotoCount}>
+                            <svg width="9" height="9" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                              <rect x="1.5" y="2.5" width="11" height="9" rx="1.3" stroke="currentColor" strokeWidth="1.3" />
+                              <circle cx="4.7" cy="5.5" r="1" fill="currentColor" />
+                              <path d="M2 9.5l3-3 2 2 2.5-3 2.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            {m.photos.length}
+                          </div>
+                        )}
+                        {m.ownerName && (
+                          <div className={styles.cardOwnerBadge} title={m.ownerName}>
+                            {m.ownerAvatarUrl
+                              ? <img src={m.ownerAvatarUrl} alt={m.ownerName} className={styles.cardOwnerAvatar} />
+                              : <span className={styles.cardOwnerInitial}>{m.ownerName[0]}</span>
+                            }
+                          </div>
+                        )}
+                        {(m.withProfiles ?? []).length > 0 && (
+                          <div className={styles.cardCompanions}>
+                            {(m.withProfiles ?? []).slice(0, 3).map(id => {
+                              const c = companionMap[id]
+                              if (!c) return null
+                              return c.avatarUrl
+                                ? <img key={id} src={c.avatarUrl} alt={c.name} className={styles.cardCompanionAvatar} title={c.name} />
+                                : <span key={id} className={styles.cardCompanionInitial} title={c.name}>{c.name[0]?.toUpperCase()}</span>
+                            })}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
