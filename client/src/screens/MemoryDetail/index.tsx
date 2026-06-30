@@ -2,8 +2,9 @@ import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import CustomDatePicker from '../../components/ui/CustomDatePicker'
 import { useParams, useNavigate } from 'react-router-dom'
 import PhotoViewerModal from '../../components/memories/PhotoViewerModal'
-import ImageUploadButton from '../../components/ui/ImageUploadButton'
 import LocationSearch from '../../components/memories/LocationSearch'
+import UnsplashPicker from '../../components/memories/UnsplashPicker'
+import { useImageUpload } from '../../hooks/useImageUpload'
 import MemoryCard from '../../components/memories/MemoryCard'
 import Modal from '../../components/ui/Modal'
 import { useMemoriesStore } from '../../store/memoriesStore'
@@ -16,7 +17,21 @@ import { useModalHistory } from '../../hooks/useModalHistory'
 import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss'
 import type { Memory, MemoryPhoto, MemoryPlace } from '../../types/memory'
 import type { PlanLocation } from '../../store/plansStore'
+import { authFetch } from '../../services/api'
 import styles from './MemoryDetail.module.css'
+
+interface FsqDetails {
+  fsqId: string
+  openNow: boolean | null
+  hoursDisplay: string | null
+  tel: string | null
+  website: string | null
+  category: string | null
+  rating: number | null
+  price: number | null
+}
+
+type PlaceDetailsState = FsqDetails | 'loading' | 'not_found' | 'error'
 
 const MONTHS_UA_SHORT = [
   'Січ', 'Лют', 'Бер', 'Квіт', 'Трав', 'Черв',
@@ -116,14 +131,14 @@ interface EditMemoryModalProps {
   isTrip: boolean
   coverUrl: string
   onSave: (title: string, location: PlanLocation, date: string, dateEnd: string | null, isTrip: boolean) => void
-  onChangeCover: (url: string) => void
+  onChangeCover: (url: string, attribution?: string) => void
   onClose: () => void
 }
 
 const EDIT_CLOSE_MS = 260
 
 const formatDisplayDate = (iso: string) => {
-  const [y, m, d] = iso.split('-')
+  const [y, m, d] = iso.slice(0, 10).split('-')
   return y && m && d ? `${d}.${m}.${y}` : iso
 }
 
@@ -141,7 +156,11 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   const [isTrip, setIsTrip]       = useState(initIsTrip)
   const [showPicker, setShowPicker]       = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
+  const [showUnsplash, setShowUnsplash]   = useState(false)
   const [visible, setVisible] = useState(false)
+
+  const { trigger: triggerCover, uploading: coverUploading, inputElement: coverInput } =
+    useImageUpload('mimir/memories/covers', (url) => onChangeCover(url))
 
   useEffect(() => {
     requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
@@ -166,6 +185,7 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
         className={`${styles.editSheet} ${visible ? styles.editSheetVisible : styles.editSheetHidden}`}
         onClick={e => e.stopPropagation()}
       >
+        {coverInput}
         <div className={styles.editHandle} />
         <div className={styles.editHeader}>
           <span className={styles.editTitle}>РЕДАГУВАТИ</span>
@@ -173,13 +193,57 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
         </div>
         <div className={styles.editBody}>
           <label className={styles.editLabel}>ОБКЛАДИНКА</label>
-          <ImageUploadButton
-            currentUrl={coverUrl}
-            folder="mimir/memories/covers"
-            onUpload={onChangeCover}
-            placeholder="Обкладинка"
-            variant="wide"
-          />
+          {coverUrl ? (
+            <div className={styles.editCoverZone}>
+              <img src={coverUrl} alt="" className={styles.editCoverImg} />
+              <div className={styles.editCoverOverlayActions}>
+                <button type="button" className={styles.editCoverActionChip} onClick={triggerCover}>
+                  {coverUploading ? (
+                    <span className={styles.editCoverSpinner} />
+                  ) : (
+                    <svg width="13" height="13" viewBox="0 0 18 18" fill="none">
+                      <rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                      <circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.5" />
+                      <path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                  <span>Завантажити</span>
+                </button>
+                <button type="button" className={styles.editCoverActionChip} onClick={() => setShowUnsplash(true)}>
+                  <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+                    <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <span>Unsplash</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.editCoverZone}>
+              {coverUploading ? (
+                <div className={styles.editCoverEmpty}><span className={styles.editCoverSpinner} /></div>
+              ) : (
+                <div className={styles.editCoverActions}>
+                  <button type="button" className={styles.editCoverActionBtn} onClick={triggerCover}>
+                    <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
+                      <rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" />
+                      <circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.3" />
+                      <path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span>Завантажити</span>
+                  </button>
+                  <div className={styles.editCoverDivider} />
+                  <button type="button" className={styles.editCoverActionBtn} onClick={() => setShowUnsplash(true)}>
+                    <svg width="20" height="20" viewBox="0 0 15 15" fill="none">
+                      <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.3" />
+                      <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                    </svg>
+                    <span>Unsplash</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <label className={styles.editLabel}>НАЗВА</label>
           <input
             className={styles.editInput}
@@ -234,6 +298,11 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
     {showEndPicker && (
       <CustomDatePicker value={dateEnd ?? date} onChange={d => { setDateEnd(d); setIsTrip(true) }} onClose={() => setShowEndPicker(false)} />
     )}
+    <UnsplashPicker
+      isOpen={showUnsplash}
+      onSelect={(url, attribution) => { onChangeCover(url, attribution); setShowUnsplash(false) }}
+      onClose={() => setShowUnsplash(false)}
+    />
     </>
   )
 }
@@ -281,6 +350,26 @@ const MemoryDetailScreen: React.FC = () => {
   const [localNotes, setLocalNotes]     = useState('')
   const [addingTag, setAddingTag]       = useState(false)
   const [addingPlace, setAddingPlace]   = useState(false)
+
+  const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null)
+  const [placeDetails, setPlaceDetails] = useState<Record<string, PlaceDetailsState>>({})
+
+  const fetchPlaceDetails = useCallback(async (place: MemoryPlace) => {
+    const key = place.id
+    if (placeDetails[key]) return
+    setPlaceDetails(prev => ({ ...prev, [key]: 'loading' }))
+    try {
+      const res = await authFetch(
+        `/api/places/lookup?name=${encodeURIComponent(place.name)}&lat=${place.lat}&lng=${place.lng}`
+      )
+      if (res.status === 404) { setPlaceDetails(prev => ({ ...prev, [key]: 'not_found' })); return }
+      if (!res.ok) { setPlaceDetails(prev => ({ ...prev, [key]: 'error' })); return }
+      const data: FsqDetails = await res.json()
+      setPlaceDetails(prev => ({ ...prev, [key]: data }))
+    } catch {
+      setPlaceDetails(prev => ({ ...prev, [key]: 'error' }))
+    }
+  }, [placeDetails])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const notesTextareaRef = useRef<HTMLTextAreaElement>(null)
@@ -496,88 +585,230 @@ const MemoryDetailScreen: React.FC = () => {
 				)}
 			</div>
 
-			{/* ── Subheader: note + tags/places (sticky under header) ── */}
+			{/* ── Subheader: note + tags (sticky under header) ── */}
 			<div className={styles.subheader}>
-				{/* Note row */}
+				{/* When note exists: card row + tags row */}
 				{memory.notes ? (
-					<button
-						type="button"
-						className={styles.noteCard}
-						onClick={() => { setLocalNotes(memory.notes ?? ''); setEditingNotes(true) }}
-					>
-						<p className={styles.notesText}>{memory.notes}</p>
-						<svg className={styles.noteEditIcon} width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-							<path d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-						</svg>
-					</button>
+					<>
+						<button
+							type="button"
+							className={styles.noteCard}
+							onClick={() => { setLocalNotes(memory.notes ?? ''); setEditingNotes(true) }}
+						>
+							<p className={styles.notesText}>{memory.notes}</p>
+							<svg className={styles.noteEditIcon} width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+								<path d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+							</svg>
+						</button>
+						<div className={styles.metaChipsRow}>
+							{(memory.tags ?? []).map(tag => (
+								<span key={tag} className={styles.tag}>
+									<span className={styles.tagHash}>#</span>
+									{tag}
+									<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>×</button>
+								</span>
+							))}
+							{addingTag ? (
+								<span className={styles.tagInputWrap}>
+									<span className={styles.tagInputPrefix}>#</span>
+									<input
+										className={styles.tagInput}
+										placeholder="тег"
+										autoFocus
+										onBlur={() => setAddingTag(false)}
+										onKeyDown={e => {
+											if (e.key === 'Enter' || e.key === ',') {
+												e.preventDefault()
+												handleAddTag(e.currentTarget.value)
+												e.currentTarget.value = ''
+											}
+										}}
+									/>
+								</span>
+							) : (
+								<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
+									<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+										<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+									</svg>
+									тег
+								</button>
+							)}
+						</div>
+					</>
 				) : (
-					<button
-						type="button"
-						className={styles.noteCardEmpty}
-						onClick={() => { setLocalNotes(''); setEditingNotes(true) }}
-					>
-						<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-							<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-						</svg>
-						Додати нотатку
-					</button>
+					/* No note: single chips row — note btn + divider + tags */
+					<div className={styles.metaChipsRow}>
+						<button
+							type="button"
+							className={styles.noteCardEmpty}
+							onClick={() => { setLocalNotes(''); setEditingNotes(true) }}
+						>
+							<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+								<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+							</svg>
+							нотатка
+						</button>
+						<span className={styles.chipsDivider} />
+						{(memory.tags ?? []).map(tag => (
+							<span key={tag} className={styles.tag}>
+								<span className={styles.tagHash}>#</span>
+								{tag}
+								<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>×</button>
+							</span>
+						))}
+						{addingTag ? (
+							<span className={styles.tagInputWrap}>
+								<span className={styles.tagInputPrefix}>#</span>
+								<input
+									className={styles.tagInput}
+									placeholder="тег"
+									autoFocus
+									onBlur={() => setAddingTag(false)}
+									onKeyDown={e => {
+										if (e.key === 'Enter' || e.key === ',') {
+											e.preventDefault()
+											handleAddTag(e.currentTarget.value)
+											e.currentTarget.value = ''
+										}
+									}}
+								/>
+							</span>
+						) : (
+							<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
+								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+									<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+								</svg>
+								тег
+							</button>
+						)}
+					</div>
 				)}
+			</div>
 
-				{/* Tags + places chips */}
-				<div className={styles.metaChipsRow}>
-					{(memory.tags ?? []).map(tag => (
-						<span key={tag} className={styles.tag}>
-							<span className={styles.tagHash}>#</span>
-							{tag}
-							<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>×</button>
-						</span>
-					))}
-					{addingTag ? (
-						<span className={styles.tagInputWrap}>
-							<span className={styles.tagInputPrefix}>#</span>
-							<input
-								className={styles.tagInput}
-								placeholder="тег"
-								autoFocus
-								onBlur={() => setAddingTag(false)}
-								onKeyDown={e => {
-									if (e.key === 'Enter' || e.key === ',') {
-										e.preventDefault()
-										handleAddTag(e.currentTarget.value)
-										e.currentTarget.value = ''
-									}
-								}}
-							/>
-						</span>
-					) : (
-						<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
+			{/* ── Places section ── */}
+			{((memory.places ?? []).length > 0 || true) && (
+				<div className={styles.placesSection}>
+					<div className={styles.placesSectionHead}>
+						<span className={styles.placesSectionLabel}>МІСЦЯ</span>
+						<button type="button" className={styles.addPlaceChip} onClick={() => setAddingPlace(true)}>
 							<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
 								<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
 							</svg>
-							тег
+							додати
 						</button>
+					</div>
+
+					{(memory.places ?? []).length > 0 && (
+						<div className={styles.placesScroll}>
+							{(memory.places ?? []).map(place => {
+								const isExpanded = expandedPlaceId === place.id
+								const details    = placeDetails[place.id]
+								const fsq        = details && details !== 'loading' && details !== 'not_found' && details !== 'error' ? details : null
+
+								const handleCardClick = () => {
+									if (isExpanded) { setExpandedPlaceId(null); return }
+									setExpandedPlaceId(place.id)
+									fetchPlaceDetails(place)
+								}
+
+								return (
+									<div key={place.id} className={`${styles.placeCard} ${isExpanded ? styles.placeCardExpanded : ''}`}>
+										<button type="button" className={styles.placeCardMain} onClick={handleCardClick}>
+											<div className={styles.placeCardPin}>
+												<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+													<path d="M9 1.5a5.5 5.5 0 015.5 5.5C14.5 11.5 9 16.5 9 16.5S3.5 11.5 3.5 7A5.5 5.5 0 019 1.5Z" stroke="currentColor" strokeWidth="1.4"/>
+													<circle cx="9" cy="7" r="2.2" fill="currentColor"/>
+												</svg>
+											</div>
+											<div className={styles.placeCardBody}>
+												<span className={styles.placeCardName}>{place.name}</span>
+												{place.address && (
+													<span className={styles.placeCardAddr}>{place.address}</span>
+												)}
+											</div>
+											<svg
+												className={`${styles.placeCardChevron} ${isExpanded ? styles.placeCardChevronOpen : ''}`}
+												width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
+											>
+												<path d="M3.5 5.5L7 9l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+											</svg>
+										</button>
+
+										{/* Details accordion */}
+										<div className={`${styles.placeDetails} ${isExpanded ? styles.placeDetailsOpen : ''}`}>
+											{details === 'loading' && <span className={styles.placeDetailsLoading}>…</span>}
+
+											{fsq && (
+												<>
+													<div className={styles.placeDetailsRow}>
+														{fsq.category && <span className={styles.placeDetailsCat}>{fsq.category}</span>}
+														{fsq.openNow !== null && (
+															<span className={`${styles.placeDetailsStatus} ${fsq.openNow ? styles.placeDetailsOpen2 : styles.placeDetailsClosed}`}>
+																{fsq.openNow ? 'ВІДКРИТО' : 'ЗАЧИНЕНО'}
+															</span>
+														)}
+													</div>
+													{fsq.hoursDisplay && <span className={styles.placeDetailsHours}>{fsq.hoursDisplay}</span>}
+													<div className={styles.placeDetailsLinks}>
+														{place.lat && place.lng && (
+															<a href={`https://www.google.com/maps?q=${place.lat},${place.lng}`} target="_blank" rel="noreferrer" className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
+																<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+																	<path d="M6 1a3 3 0 013 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 013-3Z" stroke="currentColor" strokeWidth="1.2"/>
+																</svg>
+																На карті
+															</a>
+														)}
+														{fsq.tel && (
+															<a href={`tel:${fsq.tel}`} className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
+																<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+																	<path d="M2 2.5C2 2 2.5 1.5 3 1.5h1.5l1 2.5L4 5c.8 1.6 2.4 3.2 4 4l1-1.5 2.5 1V10c0 .5-.5 1-1 1C4.7 11 1 7.3 1 3c0-.28.22-.5.5-.5z" stroke="currentColor" strokeWidth="1.1"/>
+																</svg>
+																{fsq.tel}
+															</a>
+														)}
+														{fsq.website && (
+															<a href={fsq.website} target="_blank" rel="noreferrer" className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
+																<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+																	<circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.1"/>
+																	<path d="M6 1.5C6 1.5 4.5 3 4.5 6S6 10.5 6 10.5M6 1.5C6 1.5 7.5 3 7.5 6S6 10.5 6 10.5M1.5 6h9" stroke="currentColor" strokeWidth="1.1"/>
+																</svg>
+																{new URL(fsq.website).hostname.replace('www.', '')}
+															</a>
+														)}
+													</div>
+													{fsq.rating !== null && (
+														<span className={styles.placeDetailsRating}>
+															{fsq.rating.toFixed(1)}
+															<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
+																<path d="M6 1l1.5 3H11L8.5 6.5 9.5 10 6 8l-3.5 2 1-3.5L1 4h3.5z"/>
+															</svg>
+														</span>
+													)}
+												</>
+											)}
+
+											{(details === 'not_found' || details === 'error') && (
+												<span className={styles.placeDetailsLoading}>Деталі недоступні</span>
+											)}
+										</div>
+
+										<button
+											type="button"
+											className={styles.placeCardRemove}
+											onClick={e => { e.stopPropagation(); handleRemovePlace(place.id) }}
+											aria-label="Видалити місце"
+										>
+											<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+												<path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+											</svg>
+										</button>
+									</div>
+								)
+							})}
+						</div>
 					)}
-
-					<span className={styles.chipsDivider} />
-
-					{(memory.places ?? []).map(place => (
-						<span key={place.id} className={styles.placeChip}>
-							<svg className={styles.placeIcon} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-								<path d="M5 0.5a3 3 0 0 1 3 3c0 2.3-3 6-3 6S2 5.8 2 3.5a3 3 0 0 1 3-3Z" stroke="currentColor" strokeWidth="1.1" />
-								<circle cx="5" cy="3.5" r="1.1" fill="currentColor" />
-							</svg>
-							{place.name}
-							<button type="button" className={styles.placeRemove} onClick={() => handleRemovePlace(place.id)}>×</button>
-						</span>
-					))}
-					<button type="button" className={styles.addPlaceBtn} onClick={() => setAddingPlace(true)}>
-						<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-							<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-						</svg>
-						заклад
-					</button>
 				</div>
-			</div>
+			)}
 
 			{/* ── Bottom action bar: ФОТО + ПОДІЛИТИСЬ ── */}
 			<div className={styles.bottomBar}>
@@ -735,7 +966,10 @@ const MemoryDetailScreen: React.FC = () => {
 							isTrip,
 						})
 					}
-					onChangeCover={url => setCover(id!, url)}
+					onChangeCover={(url, attribution) => {
+                    setCover(id!, url)
+                    if (attribution) updateMemory(id!, { coverAttribution: attribution })
+                  }}
 					onClose={() => setShowEdit(false)}
 				/>
 			)}

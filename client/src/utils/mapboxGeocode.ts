@@ -46,7 +46,7 @@ export async function searchPlaces(query: string, sessionToken: string): Promise
   if (!MAPBOX_TOKEN || query.trim().length < 3) return []
   const params = new URLSearchParams({
     q: query, access_token: MAPBOX_TOKEN, session_token: sessionToken,
-    language: 'uk', limit: '5', country: 'ua',
+    language: 'uk', limit: '10', country: 'ua',
     proximity: getProximity(),
   })
   const r = await fetch(`https://api.mapbox.com/search/searchbox/v1/suggest?${params}`)
