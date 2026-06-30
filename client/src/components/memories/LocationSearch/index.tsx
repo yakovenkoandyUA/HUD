@@ -26,11 +26,15 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
   const [loading,       setLoading]       = useState(false)
   const [pickerOpen,    setPickerOpen]    = useState(false)
   const [lastLocation,  setLastLocation]  = useState<PlanLocation | null>(null)
-  const skipSearch = useRef(initial.length > 0)
+  // true лише якщо юзер сам вводив текст; програматичні зміни query (handlePick,
+  // handleMapPick, clear) скидають в false, тому ефект не запускає пошук при mount
+  // або після вибору результату (надійно працює і в React StrictMode)
+  const userTyped    = useRef(false)
   const sessionToken = useRef(crypto.randomUUID())
 
   useEffect(() => {
-    if (skipSearch.current) { skipSearch.current = false; return }
+    if (!userTyped.current) return
+    userTyped.current = false
     if (query.length < 3) { setResults([]); return }
     let cancelled = false
 
@@ -52,7 +56,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
     if (!loc) return
     onSelect(loc)
     setLastLocation(loc)
-    skipSearch.current = true
+    userTyped.current = false
     setQuery(s.fullAddress)
     setResults([])
   }
@@ -60,7 +64,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
   const handleMapPick = (loc: PlanLocation) => {
     onSelect(loc)
     setLastLocation(loc)
-    skipSearch.current = true
+    userTyped.current = false
     setQuery(loc.address || loc.name || '')
     setResults([])
   }
@@ -77,13 +81,13 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
           className={styles.input}
           placeholder="Пошук місця..."
           value={query}
-          onChange={e => setQuery(e.target.value)}
+          onChange={e => { userTyped.current = true; setQuery(e.target.value) }}
         />
         {query && (
           <button
             type="button"
             className={styles.clear}
-            onClick={() => { setQuery(''); setResults([]); setLastLocation(null) }}
+            onClick={() => { userTyped.current = false; setQuery(''); setResults([]); setLastLocation(null) }}
             aria-label="Очистити"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
