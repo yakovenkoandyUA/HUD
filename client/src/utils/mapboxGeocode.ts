@@ -28,11 +28,26 @@ interface SearchBoxRetrieveFeature {
  * тощо), не лише адреси. `sessionToken` — один UUID на всю серію запитів
  * одного пошуку (suggest...suggest...retrieve), для коректного білінгу.
  */
+let _cachedProximity: string | null = null
+
+function getProximity(): string {
+  if (_cachedProximity) return _cachedProximity
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      pos => { _cachedProximity = `${pos.coords.longitude},${pos.coords.latitude}` },
+      () => { _cachedProximity = '30.5234,50.4501' }, // Kyiv fallback
+      { maximumAge: 600_000, timeout: 5000 },
+    )
+  }
+  return _cachedProximity ?? '30.5234,50.4501'
+}
+
 export async function searchPlaces(query: string, sessionToken: string): Promise<PlaceSuggestion[]> {
   if (!MAPBOX_TOKEN || query.trim().length < 3) return []
   const params = new URLSearchParams({
     q: query, access_token: MAPBOX_TOKEN, session_token: sessionToken,
-    language: 'uk', limit: '5',
+    language: 'uk', limit: '5', country: 'ua',
+    proximity: getProximity(),
   })
   const r = await fetch(`https://api.mapbox.com/search/searchbox/v1/suggest?${params}`)
   if (!r.ok) return []

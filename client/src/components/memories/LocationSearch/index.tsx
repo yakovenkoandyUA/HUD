@@ -26,7 +26,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
   const [loading,       setLoading]       = useState(false)
   const [pickerOpen,    setPickerOpen]    = useState(false)
   const [lastLocation,  setLastLocation]  = useState<PlanLocation | null>(null)
-  const skipSearch = useRef(false)
+  const skipSearch = useRef(initial.length > 0)
   const sessionToken = useRef(crypto.randomUUID())
 
   useEffect(() => {
@@ -136,7 +136,12 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, initial = '' 
                   stroke="currentColor" strokeWidth="1.2"/>
                 <circle cx="6" cy="4" r="1.2" fill="currentColor"/>
               </svg>
-              <span className={styles.resultText}>{s.fullAddress}</span>
+              <div>
+                <div className={styles.resultName}>{s.name}</div>
+                {s.fullAddress !== s.name && (
+                  <div className={styles.resultAddr}>{s.fullAddress}</div>
+                )}
+              </div>
             </button>
           ))}
         </div>

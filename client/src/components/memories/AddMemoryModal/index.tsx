@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
 import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
-import ImageUploadButton from '../../ui/ImageUploadButton'
+import { useImageUpload } from '../../../hooks/useImageUpload'
+import { useUiStore } from '../../../store/uiStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LocationSearch from '../LocationSearch'
 import Button from '../../ui/Button'
@@ -74,6 +75,13 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   const [tags, setTags]         = useState<string[]>([])
   const [showPicker, setShowPicker] = useState(false)
 
+  const { showToast } = useUiStore()
+  const { trigger: triggerCover, uploading: coverUploading, inputElement: coverInput } =
+    useImageUpload('mimir/memories/covers', (url) => {
+      setCoverUrl(url)
+      showToast('Обкладинку завантажено', 'success')
+    })
+
   const reset = () => {
     setTitle('')
     setLocation({ name: null, address: null, lat: null, lng: null })
@@ -122,6 +130,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
       className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`}
       onClick={handleClose}
     >
+      {coverInput}
       <div
         ref={sheetRef}
         className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`}
@@ -131,18 +140,31 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 
         <div className={styles.header}>
           <span className={styles.headerTitle}>НОВА ПОДІЯ</span>
-          <button type="button" className={styles.closeBtn} onClick={handleClose}>×</button>
+          <div className={styles.headerRight}>
+            <button
+              type="button"
+              className={`${styles.coverBtn} ${coverUrl ? styles.coverBtnFilled : ''}`}
+              onClick={triggerCover}
+              aria-label="Додати обкладинку"
+              title="Обкладинка"
+            >
+              {coverUploading ? (
+                <span className={styles.coverSpinner} />
+              ) : coverUrl ? (
+                <img src={coverUrl} alt="" className={styles.coverThumb} />
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                  <rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+                  <circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+            <button type="button" className={styles.closeBtn} onClick={handleClose}>×</button>
+          </div>
         </div>
 
         <div className={styles.body}>
-          <ImageUploadButton
-            currentUrl={coverUrl}
-            folder="mimir/memories/covers"
-            onUpload={setCoverUrl}
-            placeholder="Обкладинка"
-            variant="compact"
-          />
-
           <div className={styles.field}>
             <label className={styles.label}>НАЗВА</label>
             <input

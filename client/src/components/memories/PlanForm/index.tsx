@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useModalHistory } from '../../../hooks/useModalHistory'
 import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import LocationSearch from '../LocationSearch'
@@ -60,6 +60,7 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
   const [showDatePick, setShowDatePick] = useState(false)
   const [photoUrls,    setPhotoUrls]    = useState<string[]>([])
   const [uploading,    setUploading]    = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   const canSubmit = title.trim().length > 0
 
@@ -104,7 +105,31 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
     <div className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`} onClick={handleClose}>
       <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : styles.sheetHidden}`} onClick={e => e.stopPropagation()}>
         <div className={styles.handle} />
-        <h2 className={styles.heading}>Новий план</h2>
+        <div className={styles.headingRow}>
+          <h2 className={styles.heading}>Новий план</h2>
+          <button
+            type="button"
+            className={`${styles.headerPhotoBtn} ${photoUrls.length > 0 ? styles.headerPhotoBtnActive : ''}`}
+            onClick={() => photoInputRef.current?.click()}
+            aria-label="Додати фото"
+            title="Фото"
+          >
+            {uploading ? (
+              <span className={styles.headerPhotoSpinner} />
+            ) : photoUrls.length > 0 ? (
+              <>
+                <img src={photoUrls[photoUrls.length - 1]} alt="" className={styles.headerPhotoThumb} />
+                <span className={styles.headerPhotoBadge}>{photoUrls.length}</span>
+              </>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                <rect x="1" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+                <circle cx="9" cy="10" r="3" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M6 4l1.5-2h3L12 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
+        </div>
 
         <div className={styles.fields}>
           {/* Title */}
@@ -207,6 +232,7 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
                   </>
                 )}
                 <input
+                  ref={photoInputRef}
                   type="file"
                   accept="image/*"
                   className={styles.fileInput}
