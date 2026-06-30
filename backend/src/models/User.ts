@@ -25,6 +25,7 @@ export interface IUser extends Document {
   weekdayLongPressShownCount: number
   swipeDismissShownCount: number
   unlockedAchievements: { id: string; unlockedAt: Date }[]
+  onboardingCompleted: boolean
   createdAt: Date
 }
 
@@ -56,6 +57,7 @@ const schema = new Schema<IUser>({
     type: [{ id: { type: String, required: true }, unlockedAt: { type: Date, default: Date.now } }],
     default: [],
   },
+  onboardingCompleted: { type: Boolean, default: false },
   createdAt:         { type: Date, default: Date.now },
 })
 

@@ -1,0 +1,243 @@
+.root {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 24px 20px env(safe-area-inset-bottom, 0);
+}
+
+.inner {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* ── Steps ── */
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: fadeSlideIn 0.28s ease both;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Step 1 ── */
+
+.logoWrap {
+  margin-bottom: 16px;
+  color: var(--accent);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 36px;
+  letter-spacing: 0.18em;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.tagline {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  margin: 0 0 28px;
+}
+
+.greeting {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+.desc {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.55;
+  margin: 0 0 36px;
+  max-width: 320px;
+}
+
+/* ── Step 2 ── */
+
+.stepTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 6px;
+  letter-spacing: 0.01em;
+}
+
+.stepSub {
+  font-size: 13px;
+  color: var(--text3);
+  margin: 0 0 24px;
+}
+
+.moduleGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 28px;
+}
+
+.moduleTile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 14px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+  text-align: left;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.moduleTile:active {
+  transform: scale(0.97);
+}
+
+.moduleTileOn {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.moduleTileIcon {
+  color: var(--text3);
+  transition: color 0.18s ease;
+  line-height: 0;
+}
+
+.moduleTileOn .moduleTileIcon {
+  color: var(--accent);
+}
+
+.moduleTileLabel {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.moduleTileDesc {
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
+.moduleTileCheck {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.moduleTileCheckOn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* ── Step 3 ── */
+
+.doneIconWrap {
+  margin-bottom: 20px;
+}
+
+.doneTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+.doneDesc {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.55;
+  margin: 0 0 36px;
+  max-width: 300px;
+}
+
+/* ── Primary button ── */
+
+.primaryBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 280px;
+  padding: 14px 24px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  align-self: center;
+}
+
+.primaryBtn:active {
+  transform: scale(0.97);
+  opacity: 0.88;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Progress dots ── */
+
+.dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border2);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.dotActive {
+  background: var(--accent);
+  transform: scale(1.35);
+}
+
+.dotDone {
+  background: color-mix(in srgb, var(--accent) 45%, var(--border2));
+}

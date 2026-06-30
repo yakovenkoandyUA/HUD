@@ -32,16 +32,21 @@ import NotFound from './screens/NotFound'
 import NotesScreen from './screens/Notes'
 import TimelineScreen from './screens/Timeline'
 import YearbookScreen from './screens/Yearbook'
+import OnboardingScreen from './screens/Onboarding'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import './App.css'
 
 const PIN_TIMEOUT_MS = 5 * 60 * 1000 // 5 хв
 const PIN_BG_KEY = 'hud-pin-bg-time'
 
-/** Redirects to /login if no token */
+/** Redirects to /login if no token; to /onboarding if onboarding not yet completed */
 const ProtectedRoute: React.FC = () => {
-  const { token } = useProfileStore()
+  const { token, activeProfile } = useProfileStore()
+  const { pathname } = useLocation()
   if (!token) return <Navigate to="/login" replace />
+  if (activeProfile && activeProfile.onboardingCompleted === false && pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />
+  }
   return <Outlet />
 }
 
@@ -77,6 +82,7 @@ const AnimatedRoutes: React.FC = () => {
 
         {/* Protected — require token */}
         <Route element={<ProtectedRoute />}>
+          <Route path="/onboarding" element={<OnboardingScreen />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/finance" element={<Finance />} />
           <Route path="/sprint" element={<Sprint />} />
@@ -120,6 +126,7 @@ const NavGuard: React.FC = () => {
   if (pathname === '/login') return null
   if (pathname === '/register') return null
   if (pathname === '/profile-select') return null
+  if (pathname === '/onboarding') return null
   return <BottomNav />
 }
 

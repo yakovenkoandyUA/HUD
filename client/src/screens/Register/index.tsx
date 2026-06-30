@@ -45,7 +45,7 @@ const RegisterScreen: React.FC = () => {
     setError(null)
     try {
       await register(email.trim(), password, name.trim(), username.trim())
-      navigate('/', { replace: true })
+      navigate('/onboarding', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Помилка реєстрації')
     } finally {

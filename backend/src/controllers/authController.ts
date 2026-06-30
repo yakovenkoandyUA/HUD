@@ -112,6 +112,8 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
     id: a.id,
     unlockedAt: a.unlockedAt.toISOString(),
   })),
+  // ?? true — existing users without the field should skip onboarding
+  onboardingCompleted: user.onboardingCompleted ?? true,
 })
 
 const COOKIE_NAME = 'rt'
@@ -510,18 +512,20 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
 
 /** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl, name, f1Enabled, salaryDay, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs, unlockedAchievements, sprintTutorialSeen, weekdayLongPressTutorialSeen, swipeDismissTutorialSeen, sprintTutorialShownCount, weekdayLongPressShownCount, swipeDismissShownCount } = req.body as {
+  const { avatarUrl, name, f1Enabled, salaryDay, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs, unlockedAchievements, sprintTutorialSeen, weekdayLongPressTutorialSeen, swipeDismissTutorialSeen, sprintTutorialShownCount, weekdayLongPressShownCount, swipeDismissShownCount, onboardingCompleted } = req.body as {
     avatarUrl?: string; name?: string; f1Enabled?: boolean; salaryDay?: number; username?: string
     city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string
     mediaEnabledTabs?: string[]; unlockedAchievements?: ({ id: string } | string)[]; sprintTutorialSeen?: boolean
     weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean
     sprintTutorialShownCount?: number; weekdayLongPressShownCount?: number; swipeDismissShownCount?: number
+    onboardingCompleted?: boolean
   }
   if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && !username &&
       city === undefined && morningStart === undefined && afternoonStart === undefined && eveningStart === undefined &&
       reportStyle === undefined && mediaEnabledTabs === undefined && unlockedAchievements === undefined &&
       sprintTutorialSeen === undefined && weekdayLongPressTutorialSeen === undefined && swipeDismissTutorialSeen === undefined &&
-      sprintTutorialShownCount === undefined && weekdayLongPressShownCount === undefined && swipeDismissShownCount === undefined) {
+      sprintTutorialShownCount === undefined && weekdayLongPressShownCount === undefined && swipeDismissShownCount === undefined &&
+      onboardingCompleted === undefined) {
     res.status(400).json({ error: 'At least one field required' })
     return
   }
@@ -558,6 +562,7 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
     if (sprintTutorialShownCount !== undefined) update.sprintTutorialShownCount = sprintTutorialShownCount
     if (weekdayLongPressShownCount !== undefined) update.weekdayLongPressShownCount = weekdayLongPressShownCount
     if (swipeDismissShownCount !== undefined) update.swipeDismissShownCount = swipeDismissShownCount
+    if (onboardingCompleted !== undefined) update.onboardingCompleted = onboardingCompleted
     if (Array.isArray(unlockedAchievements)) {
       const incomingIds = unlockedAchievements
         .map(a => (typeof a === 'string' ? a : a?.id))

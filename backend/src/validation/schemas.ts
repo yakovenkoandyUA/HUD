@@ -46,6 +46,7 @@ export const updateMeSchema = z.object({
   sprintTutorialShownCount:      z.number().optional(),
   weekdayLongPressShownCount:    z.number().optional(),
   swipeDismissShownCount:        z.number().optional(),
+  onboardingCompleted:           z.boolean().optional(),
 }).refine(d => Object.values(d).some(v => v !== undefined), { message: 'At least one field required' })
 
 // ── Sprint ────────────────────────────────────────────────────────────────────
