@@ -1,4 +1,5 @@
 import React from 'react'
+import { useSpacesStore } from '../../../store/spacesStore'
 import type { Plan } from '../../../store/plansStore'
 import styles from './PlanCard.module.css'
 
@@ -25,6 +26,7 @@ const STATUS_CONFIG: Record<Plan['status'], { label: string; cls: string }> = {
 
 const PlanCard: React.FC<PlanCardProps> = ({ plan, onClick }) => {
   const cfg = STATUS_CONFIG[plan.status]
+  const space = useSpacesStore(s => plan.spaceId ? s.spaces.find(sp => sp.id === plan.spaceId) : undefined)
 
   return (
     <button type="button" className={styles.card} onClick={onClick}>
@@ -42,6 +44,12 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, onClick }) => {
 
       <div className={styles.content}>
         <span className={`${styles.badge} ${cfg.cls}`}>{cfg.label}</span>
+        {space && (
+          <span className={styles.spaceBadge}>
+            <span className={styles.spaceDot} style={{ background: space.color }} />
+            {space.name}
+          </span>
+        )}
         <h3 className={styles.title}>{plan.title}</h3>
 
         {plan.location?.name && (

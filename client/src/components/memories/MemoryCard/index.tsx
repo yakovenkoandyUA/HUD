@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import DoodleIllustration from '../../ui/DoodleIllustration'
+import { useSpacesStore } from '../../../store/spacesStore'
 import type { Memory } from '../../../types/memory'
 import styles from './MemoryCard.module.css'
 
@@ -38,6 +39,7 @@ const STAR_CONFIGS = [
 const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onClick }) => {
   const [loaded, setLoaded] = useState(false)
   const starIdx = (memory.title.charCodeAt(0) ?? 0) % STAR_CONFIGS.length
+  const space = useSpacesStore(s => memory.spaceId ? s.spaces.find(sp => sp.id === memory.spaceId) : undefined)
 
   return (
     <div className={styles.card} onClick={onClick}>
@@ -81,6 +83,13 @@ const MemoryCard: React.FC<MemoryCardProps> = ({ memory, onClick }) => {
           <path d="M10 2 L11.5 8 L18 10 L11.5 12 L10 18 L8.5 12 L2 10 L8.5 8 Z"/>
         </svg>
       </div>
+
+      {space && (
+        <div className={styles.spaceBadge}>
+          <span className={styles.spaceDot} style={{ background: space.color }} />
+          <span className={styles.spaceName}>{space.name}</span>
+        </div>
+      )}
 
       <div className={styles.overlay}>
         <div className={styles.meta}>
