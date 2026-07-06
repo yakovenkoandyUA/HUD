@@ -210,6 +210,7 @@ const MemoriesScreen: React.FC = () => {
       notes:        data.notes,
       tags:         data.tags,
       withProfiles: data.withProfiles,
+      spaceId:      data.spaceId ?? null,
       photos:       [],
     })
     useAchievementsStore.getState().unlock('first-memory')

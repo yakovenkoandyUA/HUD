@@ -6,6 +6,7 @@ import CustomDatePicker from '../../ui/CustomDatePicker'
 import { formatDateUA } from '../../../utils/formatDate'
 import { uploadToCloudinary } from '../../../utils/uploadToCloudinary'
 import { useFamilyStore } from '../../../store/familyStore'
+import { useSpacesStore } from '../../../store/spacesStore'
 import type { PlanInput, PlanLocation } from '../../../store/plansStore'
 import styles from './PlanForm.module.css'
 
@@ -53,10 +54,13 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
   const [photoUrls,     setPhotoUrls]    = useState<string[]>([])
   const [uploading,     setUploading]    = useState(false)
   const [withProfiles,  setWithProfiles] = useState<string[]>([])
+  const [spaceId,       setSpaceId]      = useState<string | null>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
 
   const { accepted, fetchFamily } = useFamilyStore()
   useEffect(() => { if (accepted.length === 0) fetchFamily() }, [accepted.length, fetchFamily])
+  const { spaces, fetchSpaces } = useSpacesStore()
+  useEffect(() => { if (spaces.length === 0) fetchSpaces() }, [spaces.length, fetchSpaces])
 
   const toggleCompanion = (id: string) =>
     setWithProfiles(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
@@ -95,6 +99,7 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
       plannedDate,
       visitedDate: null,
       memoryId:    null,
+      spaceId:     spaceId || null,
     })
     handleClose()
   }
@@ -209,6 +214,27 @@ const PlanForm: React.FC<PlanFormProps> = ({ onSubmit, onClose }) => {
               rows={3}
             />
           </div>
+
+          {/* Space picker */}
+          {spaces.length > 0 && (
+            <div className={styles.field}>
+              <label className={styles.label}>ПРОСТІР <span className={styles.labelOptional}>(необов'язково)</span></label>
+              <div className={styles.spacePicker}>
+                {spaces.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={styles.spaceChip}
+                    style={spaceId === s.id ? { borderColor: s.color, color: s.color } : undefined}
+                    onClick={() => setSpaceId(prev => prev === s.id ? null : s.id)}
+                  >
+                    <span className={styles.spaceDot} style={{ background: s.color }} />
+                    {s.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Companions — only if family members exist */}
           {accepted.length > 0 && (

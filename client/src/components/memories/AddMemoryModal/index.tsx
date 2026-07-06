@@ -4,6 +4,7 @@ import { useSwipeToDismiss } from '../../../hooks/useSwipeToDismiss'
 import { useImageUpload } from '../../../hooks/useImageUpload'
 import { useUiStore } from '../../../store/uiStore'
 import { useFamilyStore } from '../../../store/familyStore'
+import { useSpacesStore } from '../../../store/spacesStore'
 import CustomDatePicker from '../../ui/CustomDatePicker'
 import LocationSearch from '../LocationSearch'
 import Button from '../../ui/Button'
@@ -34,6 +35,7 @@ export interface AddMemoryData {
   notes?: string
   tags?: string[]
   withProfiles?: string[]
+  spaceId?: string | null
 }
 
 interface AddMemoryModalProps {
@@ -86,9 +88,12 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   const [showPicker, setShowPicker]       = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
   const [withProfiles, setWithProfiles]   = useState<string[]>([])
+  const [spaceId, setSpaceId]             = useState<string | null>(null)
 
   const { showToast } = useUiStore()
   const { accepted, fetchFamily } = useFamilyStore()
+  const { spaces, fetchSpaces } = useSpacesStore()
+  useEffect(() => { if (isOpen && spaces.length === 0) fetchSpaces() }, [isOpen, spaces.length, fetchSpaces])
   useEffect(() => { if (isOpen && accepted.length === 0) fetchFamily() }, [isOpen, accepted.length, fetchFamily])
   const { trigger: triggerCover, uploading: coverUploading, inputElement: coverInput } =
     useImageUpload('mimir/memories/covers', (url) => {
@@ -110,6 +115,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
     setNotes('')
     setTags([])
     setWithProfiles([])
+    setSpaceId(null)
     setShowPicker(false)
     setShowUnsplash(false)
   }
@@ -145,6 +151,7 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
       notes:            notes.trim() || undefined,
       tags:             tags.length ? tags : undefined,
       withProfiles:     withProfiles.length ? withProfiles : undefined,
+      spaceId:          spaceId || null,
     })
     reset()
   }
@@ -307,6 +314,26 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 							<input className={styles.tagInput} placeholder="+ додати тег" onKeyDown={handleTagKeyDown} />
 						</div>
 					</div>
+
+					{spaces.length > 0 && (
+						<div className={styles.field}>
+							<label className={styles.label}>ПРОСТІР <span className={styles.optional}>(необов'язково)</span></label>
+							<div className={styles.spacePicker}>
+								{spaces.map(s => (
+									<button
+										key={s.id}
+										type="button"
+										className={styles.spaceChip}
+										style={spaceId === s.id ? { borderColor: s.color, color: s.color } : undefined}
+										onClick={() => setSpaceId(prev => prev === s.id ? null : s.id)}
+									>
+										<span className={styles.spaceDot} style={{ background: s.color }} />
+										{s.name}
+									</button>
+								))}
+							</div>
+						</div>
+					)}
 
 					{accepted.length > 0 && (
 						<div className={styles.field}>
