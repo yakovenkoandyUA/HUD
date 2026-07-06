@@ -18,8 +18,8 @@ function formatUAH(n: number): string {
 /**
  * YearbookScreen
  * --------------
- * Family Yearbook — кешований річний підсумок (`/yearbook/:year`).
- * Deterministic-статистика з тих самих джерел, що Family Timeline.
+ * Yearbook / Recap — кешований річний підсумок (`/yearbook/:year`).
+ * Deterministic-статистика з тих самих джерел, що Timeline.
  * Генерація — тільки за явним натиском кнопки, ніколи автоматично.
  */
 const YearbookScreen: React.FC = () => {

@@ -92,7 +92,7 @@ const Recipes: React.FC = () => {
 
   const emptyMsg = recipes.length === 0
     ? scope === 'mine'   ? 'Додай свій перший рецепт'
-    : scope === 'family' ? 'У сімейній книзі ще порожньо'
+    : scope === 'family' ? 'У спільній книзі ще порожньо'
     :                      'Спільнота поки мовчить'
     : savedOnly ? 'Немає збережених'
     : selectedCategory ? `Немає рецептів у «${selectedCategory}»`

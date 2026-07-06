@@ -6,7 +6,7 @@ import styles from './Timeline.module.css'
 /**
  * TimelineScreen
  * --------------
- * Повноекранна версія Family Timeline за прямим URL `/timeline`
+ * Повноекранна версія Timeline за прямим URL `/timeline`
  * (наприклад, deep-link). Основний вхід — таб "Хроніка" в Профілі.
  */
 const TimelineScreen: React.FC = () => {

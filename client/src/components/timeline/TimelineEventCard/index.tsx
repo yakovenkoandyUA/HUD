@@ -5,7 +5,7 @@ import styles from './TimelineEventCard.module.css'
 /**
  * TimelineEventCard
  * ------------------
- * Універсальна картка події Family Timeline. Вигляд залежить від `event.type`
+ * Універсальна картка події Timeline. Вигляд залежить від `event.type`
  * (memory/place/media/recipe/mood) — іконка + заголовок + опис + бейдж власника.
  *
  * Props:

@@ -88,8 +88,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'family-linked',
     title: 'Не сам',
-    description: "Зʼєднав профіль із сімейним учасником",
-    hint: "Зʼєднай профіль із сімейним учасником",
+    description: "Зʼєднав профіль із учасником спільного простору",
+    hint: "Зʼєднай профіль із іншим учасником",
     route: '/profile?tab=me&section=family',
     color: 'var(--accent)',
     illustration: 'family',

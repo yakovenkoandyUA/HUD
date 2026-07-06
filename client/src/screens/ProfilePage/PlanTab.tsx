@@ -23,7 +23,7 @@ const FEATURES: PlanFeature[] = [
   { label: 'F1 — прогнози і статистика', free: false,          pro: true,             family: true },
   { label: 'Сканер чеків (AI)',           free: '3 / місяць',   pro: '30 / місяць',    family: '60 / місяць' },
   { label: 'AI-асистент',                 free: false,          pro: '50 запитів/міс', family: '150 запитів/міс' },
-  { label: "Сім'я (FamilyLink)",          free: false,          pro: '1 партнер',      family: 'До 4 профілів' },
+  { label: 'Спільні простори',             free: false,          pro: '1 учасник',      family: 'До 4 учасників' },
   { label: 'Всі теми оформлення',         free: false,          pro: true,             family: true },
   { label: 'Export даних (JSON)',          free: false,          pro: true,             family: true },
 ]
@@ -54,13 +54,13 @@ const PLANS = [
   },
   {
     id: 'family' as PlanId,
-    name: "SІМ'Я",
-    tagline: 'Спільний простір до 4 профілів',
+    name: 'SPACES',
+    tagline: 'Спільні простори до 4 учасників',
     priceMonthly: 249,
     priceAnnual: 179,
     currency: '₴',
     accentClass: styles.cardFamily,
-    ctaLabel: "Перейти на Сім'ю",
+    ctaLabel: 'Перейти на Spaces',
     ctaDisabled: false,
   },
 ]

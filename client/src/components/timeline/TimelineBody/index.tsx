@@ -9,7 +9,7 @@ import styles from './TimelineBody.module.css'
 const SCOPE_OPTIONS: { value: TimelineScope; label: string }[] = [
   { value: 'all',    label: 'Все' },
   { value: 'mine',   label: 'Моє' },
-  { value: 'family', label: "Сім'я" },
+  { value: 'family', label: 'Спільне' },
 ]
 
 const TYPE_OPTIONS: { value: TimelineEventType | 'all'; label: string }[] = [
@@ -40,7 +40,7 @@ function groupByMonth(events: TimelineEvent[]): [string, TimelineEvent[]][] {
 /**
  * TimelineBody
  * ------------
- * Контент Family Timeline (year nav + scope/type chips + згруповані по місяцях
+ * Контент Timeline (year nav + scope/type chips + згруповані по місяцях
  * картки подій) без зовнішньої обгортки-заголовка — рендериться і в `/timeline`,
  * і в таб "Хроніка" на сторінці профілю.
  */

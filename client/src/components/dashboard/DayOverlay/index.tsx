@@ -36,7 +36,7 @@ function getCurrentSlot(): 'morning' | 'afternoon' | 'evening' {
  * DayOverlay
  * ----------
  * Full-screen overlay "Мій день" — звички на сьогодні по слотах,
- * погода, трекер настрою з нотаткою, сімейний настрій, місячний heatmap.
+ * погода, трекер настрою з нотаткою, спільний настрій, місячний heatmap.
  *
  * Props:
  * @prop {() => void} onClose — закрити overlay
@@ -69,7 +69,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
     setNoteValue(todayNote() ?? '')
   }, [logs]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load mood (30 days) + sprint items + family moods
+  // Load mood (30 days) + sprint items + shared moods
   useEffect(() => {
     let cancelled = false
     const load = async () => {

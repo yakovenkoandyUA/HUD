@@ -1,7 +1,7 @@
 /**
  * TimelineEvent
  * -------------
- * Уніфікована подія для Family Timeline — мердж memories/plans/watchlist/recipes/mood
+ * Уніфікована подія для Timeline — мердж memories/plans/watchlist/recipes/mood
  * з backend `/api/timeline`. `payload` форма залежить від `type`.
  */
 export type TimelineEventType = 'memory' | 'place' | 'media' | 'recipe' | 'mood'

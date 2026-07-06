@@ -5,7 +5,7 @@ import type { TimelineEvent, TimelineScope } from '../types/timeline'
 /**
  * timelineStore
  * -------------
- * Zustand store для Family Timeline — backend-backed через /api/timeline.
+ * Zustand store для Timeline — backend-backed через /api/timeline.
  * БЕЗ persist (дані завжди свіжі з backend, як memoriesStore/watchlistStore).
  */
 interface TimelineState {
