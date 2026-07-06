@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useSpacesStore, Space, SpaceType } from '../../store/spacesStore'
+import { useSpacesStore } from '../../store/spacesStore'
+import type { Space, SpaceType } from '../../store/spacesStore'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
 import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss'
@@ -29,7 +30,7 @@ const COLORS = [
  * прив'язуються спогади і плани.
  */
 const SpacesTab: React.FC = () => {
-  const { spaces, loading, fetchSpaces, createSpace, updateSpace, deleteSpace, addMember, removeMember } = useSpacesStore()
+  const { spaces, loading, fetchSpaces, createSpace, deleteSpace, addMember, removeMember } = useSpacesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
 
