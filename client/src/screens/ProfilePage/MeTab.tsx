@@ -110,7 +110,7 @@ const MENU_ITEMS: MenuItemConfig[] = [
  */
 const MeTab: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
-  const { accepted, pendingReceived } = useFamilyStore()
+  const { pendingReceived } = useFamilyStore()
   const { showToast } = useUiStore()
   const [openSection, setOpenSection] = useState<MeSection | null>(null)
   const toggleSection = (id: MeSection) => setOpenSection(prev => prev === id ? null : id)
@@ -185,9 +185,6 @@ const MeTab: React.FC = () => {
   const rank = getRank(activeProfile.unlockedAchievements?.length ?? 0)
 
   const unlockedIds = activeProfile.unlockedAchievements ?? []
-  const achievementsSub = unlockedIds.length === ACHIEVEMENTS.length
-    ? 'Всі бейджі зібрано!'
-    : `${unlockedIds.length}/${ACHIEVEMENTS.length} розблоковано`
 
   return (
     <div className={styles.tabContent}>
