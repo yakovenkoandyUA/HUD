@@ -110,7 +110,7 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 
 ## Моделі — ключові поля
 
-**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `salaryDay: number`
+**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined)
 
 **Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, `source: 'manual'|'monobank'|'csv'`, `tripMemoryId?: string|null` (опційне посилання на trip-спогад для блоку "Витрати в поїздці"), сортувати по `createdAt`
 

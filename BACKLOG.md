@@ -208,7 +208,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 **Залишається відкритим:** історична погода на дату спогаду (wttr.in past dates), stats sheet розширення.
 
 ### 🔵 Стратегічне (Фаза 2+)
-- **Onboarding flow** — welcome 3-4 кроки, empty states з підказками, вибір модулів
+- ~~**Onboarding flow**~~ ✅ Зроблено
 - **Лендінг** — mimir.app або аналог
 - **Web/desktop layout** — зараз mobile-first
 - **Stripe білінг** — Free/Pro/Family підписки
@@ -238,11 +238,11 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 ### ~~5. 📥 Letterboxd імпорт~~ ✅ Зроблено (тільки фільми)
 Деталі в розділі "Що реалізовано" вище. Goodreads/книги — окремо, чекає на books-функціонал (нижче), не просто на CSV-парсер.
 
-### 6. 🚀 Onboarding
-Welcome screen при першому вході (після реєстрації): вибір модулів, перші кроки, empty states з підказками. Передумова для публічного launch. **Поточний стан:** тільки реактивні per-gesture туторіали (sprint swipe, week long-press, modal swipe-dismiss) — це не onboarding, а контекстні підказки на дотик. Проактивного welcome-флоу для нових юзерів і досі немає.
+### ~~6. 🚀 Onboarding~~ ✅ Зроблено
+5-кроковий флоу при першій реєстрації: Welcome (MimirFillIcon) → Фінанси (день поповнення 1–31 grid + категорії витрат) → Звичка (preset chips + custom input) → Перший план (куди мрієш поїхати, skippable) → Done (MimirFillIcon fill-анімація + "Криниця відкрита. Мімір пам'ятає все — тепер і твоє. Твоя хроніка починається."). `onboardingCompleted: boolean` на User модель, `ProtectedRoute` редіректить на `/onboarding` якщо `=== false`, бекенд `updateMe` зберігає після Done.
 
 ### 7. 💳 Stripe білінг
-Free/Pro/Family. Тільки якщо буде рішення про монетизацію.
+Free/Pro/Family. Обмеження доступу до контенту по планах — наступний пріоритет.
 
 ---
 

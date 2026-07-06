@@ -202,7 +202,18 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - SubCategory modal (Modal draggable) — деталі категорії: увімкнути/вимкнути + список підкатегорій + додати підкатегорію
 - Migration modal — при деактивації категорії з транзакціями: перенести в іншу або залишити без категорії
 
-## 13. ProfileSelect (`/profile-select`) — публічний маршрут
+## 13. Onboarding (`/onboarding`)
+- 5-кроковий флоу, показується **тільки новим юзерам** (`onboardingCompleted === false` строго, старі юзери з `undefined` → `?? true` пропускають)
+- `ProtectedRoute` редіректить на `/onboarding` якщо умова, `NavGuard` приховує BottomNav на цьому маршруті
+- **Крок 1 — Welcome**: `MimirFillIcon` size=80 progress=1, wordmark MIMIR, tagline DRINK DEEP, привітання по імені
+- **Крок 2 — Фінанси**: grid 1–31 для "ФІНАНСОВОГО ДНЯ" (7 колонок), категорії витрат-чіпи з `useCategoryStore` (всі pre-selected, тап знімає); `catsFetchRef` + `catsInitRef` запобігають подвійному fetch
+- **Крок 3 — Звичка**: preset chips (Спорт/Читання/Медитація/Вода/Йога/Прогулянка/Сон) + custom input (взаємовиключно); skippable
+- **Крок 4 — План**: текстовий input "Куди мрієш поїхати?" → створює Plan(want); skippable
+- **Крок 5 — Done**: `MimirFillIcon` з fill-анімацією (rAF easeOutCubic 1.4s), "Криниця відкрита. Мімір пам'ятає все — тепер і твоє. Твоя хроніка починається."
+- `handleFinish`: `await updateProfile({ salaryDay, onboardingCompleted: true })` → `Promise.allSettled([deactivate unchecked cats PATCH, POST habit task, POST plan])` → `navigate('/')`
+- Progress dots 5шт внизу всіх кроків
+
+## 14. ProfileSelect (`/profile-select`) — публічний маршрут
 - Сітка профілів (Котька + Коська)
 - Аватар 96px, fallback — перша літера імені
 - Тап → `selectProfile(username)` → JWT → redirect `/`
