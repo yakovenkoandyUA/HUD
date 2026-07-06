@@ -36,6 +36,8 @@ export async function getTimeline(req: Request, res: Response): Promise<void> {
     const year = parseInt(req.query.year as string, 10) || new Date().getFullYear()
     const scope = (req.query.scope as string) ?? 'all'
 
+    const spaceId = req.query.spaceId as string | undefined
+
     const familyIds = await getAcceptedFamilyIds(myId)
     const allIds = [myId, ...familyIds]
     const scopedIds = scope === 'mine' ? [myId] : scope === 'family' ? familyIds : allIds
@@ -56,14 +58,22 @@ export async function getTimeline(req: Request, res: Response): Promise<void> {
     if (wantMine) watchlistOr.push({ userId: myId })
     if (wantFamily) watchlistOr.push({ userId: { $in: familyIds }, watchedWith: myId })
 
+    const memoryQuery = spaceId
+      ? { userId: { $in: scopedIds }, date: { $gte: yearStart, $lte: yearEnd }, spaceId }
+      : { userId: { $in: scopedIds }, date: { $gte: yearStart, $lte: yearEnd } }
+
+    const planQuery = spaceId
+      ? { userId: { $in: scopedIds }, status: 'visited', visitedDate: { $gte: yearStartDate, $lte: yearEndDate }, spaceId }
+      : { userId: { $in: scopedIds }, status: 'visited', visitedDate: { $gte: yearStartDate, $lte: yearEndDate } }
+
     const [memories, plans, watchlistItems, cookLogs, moodLogs, owners] = await Promise.all([
-      Memory.find({ userId: { $in: scopedIds }, date: { $gte: yearStart, $lte: yearEnd } }),
-      Plan.find({ userId: { $in: scopedIds }, status: 'visited', visitedDate: { $gte: yearStartDate, $lte: yearEndDate } }),
-      watchlistOr.length > 0
-        ? WatchlistItem.find({ status: 'watched', addedAt: { $gte: yearStart, $lte: yearEnd }, $or: watchlistOr })
-        : Promise.resolve([]),
-      CookLog.find({ userId: { $in: scopedIds }, date: { $gte: yearStartDate, $lte: yearEndDate } }),
-      MoodLog.find({ userId: { $in: scopedIds }, date: { $gte: yearStart, $lte: yearEnd } }),
+      Memory.find(memoryQuery),
+      Plan.find(planQuery),
+      spaceId || watchlistOr.length === 0
+        ? Promise.resolve([])
+        : WatchlistItem.find({ status: 'watched', addedAt: { $gte: yearStart, $lte: yearEnd }, $or: watchlistOr }),
+      spaceId ? Promise.resolve([]) : CookLog.find({ userId: { $in: scopedIds }, date: { $gte: yearStartDate, $lte: yearEndDate } }),
+      spaceId ? Promise.resolve([]) : MoodLog.find({ userId: { $in: scopedIds }, date: { $gte: yearStart, $lte: yearEnd } }),
       User.find({ _id: { $in: familyIds } }).select('name username avatarUrl'),
     ])
 

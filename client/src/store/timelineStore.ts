@@ -12,9 +12,11 @@ interface TimelineState {
   events: TimelineEvent[]
   year: number
   scope: TimelineScope
+  spaceId: string | null
   loading: boolean
   setYear: (year: number) => void
   setScope: (scope: TimelineScope) => void
+  setSpaceId: (id: string | null) => void
   fetchTimeline: () => Promise<void>
 }
 
@@ -22,6 +24,7 @@ export const useTimelineStore = create<TimelineState>()((set, get) => ({
   events: [],
   year: new Date().getFullYear(),
   scope: 'all',
+  spaceId: null,
   loading: false,
 
   setYear: (year) => {
@@ -34,12 +37,19 @@ export const useTimelineStore = create<TimelineState>()((set, get) => ({
     get().fetchTimeline()
   },
 
+  setSpaceId: (spaceId) => {
+    set({ spaceId })
+    get().fetchTimeline()
+  },
+
   fetchTimeline: async () => {
     if (!getToken()) return
-    const { year, scope } = get()
+    const { year, scope, spaceId } = get()
     set({ loading: true })
     try {
-      const res = await authFetch(`/api/timeline?year=${year}&scope=${scope}`)
+      const params = new URLSearchParams({ year: String(year), scope })
+      if (spaceId) params.set('spaceId', spaceId)
+      const res = await authFetch(`/api/timeline?${params}`)
       if (!res.ok) { set({ loading: false }); return }
       const data = await res.json()
       set({ events: data.events ?? [], loading: false })

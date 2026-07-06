@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import TimelineEventCard from '../TimelineEventCard'
 import DoodleIllustration from '../../ui/DoodleIllustration'
 import { useTimelineStore } from '../../../store/timelineStore'
+import { useSpacesStore } from '../../../store/spacesStore'
 import type { TimelineEvent, TimelineEventType, TimelineScope } from '../../../types/timeline'
 import styles from './TimelineBody.module.css'
 
@@ -46,8 +47,11 @@ function groupByMonth(events: TimelineEvent[]): [string, TimelineEvent[]][] {
  */
 const TimelineBody: React.FC = () => {
   const navigate = useNavigate()
-  const { events, year, scope, loading, setYear, setScope, fetchTimeline } = useTimelineStore()
+  const { events, year, scope, spaceId, loading, setYear, setScope, setSpaceId, fetchTimeline } = useTimelineStore()
+  const { spaces, fetchSpaces } = useSpacesStore()
   const [typeFilter, setTypeFilter] = useState<TimelineEventType | 'all'>('all')
+
+  useEffect(() => { fetchSpaces() }, [fetchSpaces])
 
   useEffect(() => { fetchTimeline() }, [fetchTimeline])
 
@@ -91,6 +95,30 @@ const TimelineBody: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {spaces.length > 0 && (
+        <div className={styles.chipRow}>
+          <button
+            type="button"
+            className={`${styles.chip} ${!spaceId ? styles.chipActive : ''}`}
+            onClick={() => setSpaceId(null)}
+          >
+            Всі простори
+          </button>
+          {spaces.map(s => (
+            <button
+              key={s.id}
+              type="button"
+              className={styles.chip}
+              style={spaceId === s.id ? { borderColor: s.color, color: s.color } : undefined}
+              onClick={() => setSpaceId(spaceId === s.id ? null : s.id)}
+            >
+              <span className={styles.spaceDot} style={{ background: s.color }} />
+              {s.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className={styles.chipRow}>
         {TYPE_OPTIONS.map(o => (
