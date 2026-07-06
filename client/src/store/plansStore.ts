@@ -31,7 +31,7 @@ export interface Plan {
   spaceId:      string | null
 }
 
-export type PlanInput = Omit<Plan, '_id' | 'userId' | 'createdAt'> & { spaceId?: string | null }
+export type PlanInput = Omit<Plan, '_id' | 'userId' | 'createdAt' | 'spaceId'> & { spaceId?: string | null }
 
 interface PlansStore {
   plans:       Plan[]
