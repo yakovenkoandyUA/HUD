@@ -7,9 +7,10 @@ import WalletTab from './WalletTab'
 import PlanTab from './PlanTab'
 import AdminTab from './AdminTab'
 import YearbookTab from './YearbookTab'
+import SpacesTab from './SpacesTab'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'admin'
+type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'admin'
 
 /**
  * ProfilePage
@@ -61,6 +62,7 @@ const ProfilePage: React.FC = () => {
           {activeTab === 'wallet' && <WalletTab />}
           {activeTab === 'plan'   && <PlanTab />}
           {activeTab === 'timeline' && <YearbookTab />}
+          {activeTab === 'spaces' && <SpacesTab />}
           {activeTab === 'admin' && activeProfile.role === 'admin' && <AdminTab />}
         </div>
       </div>
