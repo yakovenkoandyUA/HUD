@@ -40,7 +40,7 @@ interface SpacesStore {
   removeMember: (spaceId: string, userId: string) => Promise<void>
 }
 
-export const useSpacesStore = create<SpacesStore>((set, get) => ({
+export const useSpacesStore = create<SpacesStore>((set) => ({
   spaces:  [],
   loading: false,
 
