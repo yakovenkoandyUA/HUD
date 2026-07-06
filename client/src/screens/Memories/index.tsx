@@ -11,6 +11,7 @@ import type { AddMemoryData } from '../../components/memories/AddMemoryModal'
 import type { Memory } from '../../types/memory'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { usePlansStore, type Plan } from '../../store/plansStore'
+import { useSpacesStore } from '../../store/spacesStore'
 import { useFamilyStore } from '../../store/familyStore'
 import { useUiStore } from '../../store/uiStore'
 import { useFinanceStore } from '../../store/financeStore'
@@ -103,6 +104,10 @@ const MemoriesScreen: React.FC = () => {
   const [pendingNav,  setPendingNav]  = useState<string | null>(null)
   const [showFlashback, setShowFlashback] = useState(false)
   const [statSheet, setStatSheet]         = useState<'count' | 'photos' | 'locations' | 'distance' | null>(null)
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null)
+
+  const { spaces, fetchSpaces } = useSpacesStore()
+  useEffect(() => { fetchSpaces() }, [fetchSpaces])
 
   useEffect(() => { fetchMemories() }, [fetchMemories])
   useEffect(() => { fetchFamily() }, [fetchFamily])
@@ -112,7 +117,16 @@ const MemoriesScreen: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
-  const grouped = useMemo(() => groupByMonth(memories), [memories])
+  const filteredMemories = useMemo(
+    () => selectedSpaceId ? memories.filter(m => m.spaceId === selectedSpaceId) : memories,
+    [memories, selectedSpaceId]
+  )
+  const filteredPlans = useMemo(
+    () => selectedSpaceId ? plans.filter(p => p.spaceId === selectedSpaceId) : plans,
+    [plans, selectedSpaceId]
+  )
+
+  const grouped = useMemo(() => groupByMonth(filteredMemories), [filteredMemories])
 
   const thisDay = useMemo(() => {
     const now   = new Date()
@@ -300,14 +314,39 @@ const MemoriesScreen: React.FC = () => {
         </button>
       </div>
 
+      {/* ── Space filter strip ── */}
+      {spaces.length > 0 && activeTab !== 'map' && (
+        <div className={styles.spaceFilterRow}>
+          <button
+            type="button"
+            className={`${styles.spaceFilterChip} ${!selectedSpaceId ? styles.spaceFilterChipAll : ''}`}
+            onClick={() => setSelectedSpaceId(null)}
+          >
+            Всі
+          </button>
+          {spaces.map(s => (
+            <button
+              key={s.id}
+              type="button"
+              className={styles.spaceFilterChip}
+              style={selectedSpaceId === s.id ? { borderColor: s.color, color: s.color } : undefined}
+              onClick={() => setSelectedSpaceId(prev => prev === s.id ? null : s.id)}
+            >
+              <span className={styles.spaceFilterDot} style={{ background: s.color }} />
+              {s.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── Memories tab ── */}
       {activeTab === 'memories' && (
         <>
-          {memories.length === 0 ? (
+          {filteredMemories.length === 0 ? (
             <div className={styles.empty}>
               <DoodleIllustration variant="memories" size={88} />
-              <p className={styles.emptyTitle}>Ще немає спогадів</p>
-              <p className={styles.emptyHint}>Додай перший!</p>
+              <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі ще немає спогадів' : 'Ще немає спогадів'}</p>
+              <p className={styles.emptyHint}>{selectedSpaceId ? 'Додай перший!' : 'Додай перший!'}</p>
             </div>
           ) : (
             <div className={styles.timeline}>
@@ -461,15 +500,15 @@ const MemoriesScreen: React.FC = () => {
       {/* ── Plans tab ── */}
       {activeTab === 'plans' && (
         <>
-          {plans.length === 0 ? (
+          {filteredPlans.length === 0 ? (
             <div className={styles.empty}>
               <span className={styles.emptyIcon}>🗺️</span>
-              <p className={styles.emptyTitle}>Планів ще немає</p>
+              <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі планів немає' : 'Планів ще немає'}</p>
               <p className={styles.emptyHint}>Додай місце яке хочеш відвідати</p>
             </div>
           ) : (
             <div className={styles.plansGrid}>
-              {plans.map(p => (
+              {filteredPlans.map(p => (
                 <PlanCard
                   key={p._id}
                   plan={p}

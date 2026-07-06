@@ -772,3 +772,46 @@
   min-height: 0;
   overflow: hidden;
 }
+
+/* ── Space filter strip ── */
+.spaceFilterRow {
+  display: flex;
+  gap: 7px;
+  padding: 10px 16px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.spaceFilterRow::-webkit-scrollbar { display: none; }
+
+.spaceFilterChip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.spaceFilterChip:active { transform: scale(0.96); }
+
+.spaceFilterChipAll {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.spaceFilterDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
