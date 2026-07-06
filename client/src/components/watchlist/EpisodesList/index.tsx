@@ -76,7 +76,8 @@ const EpisodesList: React.FC<EpisodesListProps> = ({
     ep => ep.air_date && new Date(ep.air_date) <= new Date()
   )
   const watchedInSeason = watchedEpisodes.filter(w => w.season === activeSeason).length
-  const allWatched = airedEpisodes.length > 0 && watchedInSeason === airedEpisodes.length
+  const isLastSeason = activeSeason === seasonsToShow[seasonsToShow.length - 1]
+  const allWatched = airedEpisodes.length > 0 && watchedInSeason === airedEpisodes.length && isLastSeason
 
   return (
     <div className={styles.wrap}>

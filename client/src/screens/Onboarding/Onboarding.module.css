@@ -4,42 +4,41 @@
   align-items: center;
   justify-content: center;
   background: var(--bg);
-  padding: 24px 20px env(safe-area-inset-bottom, 0);
+  padding: 32px 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
 }
 
 .inner {
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
 
-/* ── Steps ── */
+/* ── Step wrapper ── */
 
 .step {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  animation: fadeSlideIn 0.28s ease both;
+  animation: fadeSlideIn 0.26s ease both;
 }
 
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Step 1 ── */
+/* ── Step 1: Welcome ── */
 
 .logoWrap {
-  margin-bottom: 16px;
-  color: var(--accent);
+  margin-bottom: 14px;
 }
 
 .wordmark {
   font-family: var(--font-display);
-  font-size: 36px;
+  font-size: 34px;
   letter-spacing: 0.18em;
   color: var(--text);
   margin: 0 0 4px;
@@ -50,12 +49,12 @@
   font-size: 11px;
   letter-spacing: 0.3em;
   color: var(--accent);
-  margin: 0 0 28px;
+  margin: 0 0 24px;
 }
 
 .greeting {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
   margin: 0 0 10px;
 }
@@ -63,109 +62,194 @@
 .desc {
   font-size: 14px;
   color: var(--text2);
-  line-height: 1.55;
-  margin: 0 0 36px;
-  max-width: 320px;
+  line-height: 1.6;
+  margin: 0 0 32px;
+  max-width: 310px;
 }
 
-/* ── Step 2 ── */
+/* ── Step headings (steps 2-5) ── */
 
 .stepTitle {
   font-size: 20px;
   font-weight: 700;
   color: var(--text);
   margin: 0 0 6px;
-  letter-spacing: 0.01em;
 }
 
 .stepSub {
   font-size: 13px;
   color: var(--text3);
+  line-height: 1.5;
   margin: 0 0 24px;
+  max-width: 300px;
 }
 
-.moduleGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+/* ── Section inside a step ── */
+
+.section {
   width: 100%;
-  margin-bottom: 28px;
-}
-
-.moduleTile {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 14px 14px 12px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  margin-bottom: 22px;
   text-align: left;
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
 }
 
-.moduleTile:active {
-  transform: scale(0.97);
-}
-
-.moduleTileOn {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-}
-
-.moduleTileIcon {
-  color: var(--text3);
-  transition: color 0.18s ease;
-  line-height: 0;
-}
-
-.moduleTileOn .moduleTileIcon {
-  color: var(--accent);
-}
-
-.moduleTileLabel {
+.sectionLabel {
+  display: block;
   font-family: var(--font-display);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--text);
-  font-weight: 600;
-}
-
-.moduleTileDesc {
-  font-size: 11px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
   color: var(--text3);
-  line-height: 1.4;
+  margin-bottom: 10px;
 }
 
-.moduleTileCheck {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1.5px solid var(--border2);
+/* ── Financial day grid (1–31) ── */
+
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.dayCell {
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: transparent;
-  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.moduleTileCheckOn {
-  background: var(--accent);
+.dayCell:active { transform: scale(0.92); }
+
+.dayCellOn {
   border-color: var(--accent);
-  color: var(--bg);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
 }
 
-/* ── Step 3 ── */
+/* ── Category chips ── */
 
-.doneIconWrap {
-  margin-bottom: 20px;
+.catGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.catChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.catChip:active { transform: scale(0.96); }
+
+.catChipOn {
+  border-color: var(--accent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
+
+.catDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.catSkeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.catSkeletonChip {
+  height: 34px;
+  width: 80px;
+  border-radius: 20px;
+  background: var(--border);
+  animation: shimmer 1.2s ease infinite alternate;
+}
+
+@keyframes shimmer {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+/* ── Habit presets ── */
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.presetChip {
+  padding: 9px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 14px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.presetChip:active { transform: scale(0.96); }
+
+.presetChipOn {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+/* ── Text input (habit custom / plan destination) ── */
+
+.textInput {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+  margin-bottom: 24px;
+}
+
+.textInput::placeholder { color: var(--text3); }
+.textInput:focus { border-color: var(--accent); }
+
+/* ── Step 4 plan icon ── */
+
+.planIconWrap {
+  margin-bottom: 16px;
+}
+
+/* ── Step 5 done ── */
+
+.doneIcon {
+  margin-bottom: 18px;
 }
 
 .doneTitle {
@@ -178,21 +262,19 @@
 .doneDesc {
   font-size: 14px;
   color: var(--text2);
-  line-height: 1.55;
-  margin: 0 0 36px;
-  max-width: 300px;
+  line-height: 1.6;
+  margin: 0 0 32px;
+  max-width: 280px;
 }
 
-/* ── Primary button ── */
+/* ── Buttons ── */
 
 .primaryBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
-  max-width: 280px;
-  padding: 14px 24px;
+  padding: 14px 28px;
   background: var(--accent);
   color: var(--bg);
   border: none;
@@ -203,24 +285,37 @@
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.1s ease;
-  align-self: center;
+  min-width: 130px;
 }
 
-.primaryBtn:active {
-  transform: scale(0.97);
-  opacity: 0.88;
+.primaryBtn:active { transform: scale(0.97); opacity: 0.88; }
+.primaryBtn:disabled { opacity: 0.45; cursor: default; }
+
+.skipBtn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 14px 8px;
+  transition: color 0.15s ease;
 }
 
-.primaryBtn:disabled {
-  opacity: 0.5;
-  cursor: default;
+.skipBtn:hover { color: var(--text2); }
+
+.btnRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
 }
 
 /* ── Progress dots ── */
 
 .dots {
   display: flex;
-  gap: 8px;
+  gap: 7px;
   justify-content: center;
   margin-top: 28px;
 }
@@ -230,14 +325,14 @@
   height: 6px;
   border-radius: 50%;
   background: var(--border2);
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, width 0.2s ease;
 }
 
 .dotActive {
   background: var(--accent);
-  transform: scale(1.35);
+  transform: scale(1.4);
 }
 
 .dotDone {
-  background: color-mix(in srgb, var(--accent) 45%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 40%, var(--border2));
 }

@@ -1,132 +1,174 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '../../store/profileStore'
+import { useCategoryStore } from '../../store/categoryStore'
+import { authFetch } from '../../services/api'
+import MimirFillIcon from '../../components/ui/MimirFillIcon'
 import styles from './Onboarding.module.css'
 
-interface ModuleDef {
-  id: string
-  label: string
-  description: string
-  icon: React.ReactNode
-  defaultOn: boolean
-}
+const TOTAL_STEPS = 5
 
-const FinanceIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <rect x="3" y="7" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="1.6"/>
-    <path d="M3 11h22" stroke="currentColor" strokeWidth="1.6"/>
-    <circle cx="9" cy="17" r="2" stroke="currentColor" strokeWidth="1.5"/>
-  </svg>
-)
-
-const SprintIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <rect x="5" y="4" width="18" height="21" rx="2" stroke="currentColor" strokeWidth="1.6"/>
-    <path d="M9 10h10M9 14h10M9 18h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="20" cy="19" r="4" fill="var(--bg)" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M18.5 19l1 1 2-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
-
-const RecipeIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <path d="M9 4v6c0 2.2 1.8 4 4 4h0c2.2 0 4-1.8 4-4V4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-    <path d="M13 14v10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-    <path d="M10 24h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-    <path d="M5 4v4a3 3 0 003 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-  </svg>
-)
-
-const WatchlistIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <rect x="3" y="6" width="22" height="14" rx="2" stroke="currentColor" strokeWidth="1.6"/>
-    <path d="M10 22h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-    <path d="M12 10l5 4-5 4V10z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
-  </svg>
-)
-
-const MemoriesIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <rect x="3" y="7" width="22" height="17" rx="2" stroke="currentColor" strokeWidth="1.6"/>
-    <circle cx="10" cy="15" r="3" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M3 18l5-4 4 3 5-5 8 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M19 7V5h-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
-
-const F1Icon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <path d="M4 18c2-3 5-5 10-5 3 0 6 1 8 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-    <path d="M3 15l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="8" cy="20" r="2" stroke="currentColor" strokeWidth="1.5"/>
-    <circle cx="20" cy="20" r="2" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M14 6v4M11 7l3-3 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
-
-const MODULES: ModuleDef[] = [
-  { id: 'finance',   label: 'ФІНАНСИ',       description: 'Бюджет, витрати, цілі',      icon: <FinanceIcon />,   defaultOn: true },
-  { id: 'sprint',    label: 'КВЕСТИ',         description: 'Задачі та щоденні звички',   icon: <SprintIcon />,    defaultOn: true },
-  { id: 'recipes',   label: 'РЕЦЕПТИ',        description: 'Страви, меню, список покупок', icon: <RecipeIcon />, defaultOn: true },
-  { id: 'watchlist', label: 'МЕДІА',          description: 'Фільми, серіали, аніме, ігри', icon: <WatchlistIcon />, defaultOn: true },
-  { id: 'memories',  label: 'СПОГАДИ',        description: 'Фото, місця, поїздки',       icon: <MemoriesIcon />,  defaultOn: true },
-  { id: 'f1',        label: 'F1',             description: 'Прогнози і чемпіонат',       icon: <F1Icon />,        defaultOn: false },
-]
-
-const DOT_COUNT = 3
+const HABIT_PRESETS = ['Спорт', 'Читання', 'Медитація', 'Вода', 'Йога', 'Прогулянка', 'Сон']
 
 /**
  * OnboardingScreen
  * ----------------
- * Показується один раз після реєстрації (`onboardingCompleted === false`).
- * 3 кроки: Привітання → Вибір модулів → Готово.
- * По завершенню зберігає `onboardingCompleted: true` + `f1Enabled` і редіректить на Dashboard.
+ * 5-крокове налаштування при першому вході.
+ * Крок 1 — Привітання
+ * Крок 2 — Фінанси: день зарплати + активні категорії витрат
+ * Крок 3 — Перша звичка (preset-чіпи або свій варіант)
+ * Крок 4 — Перший план (куди мрієш поїхати, skippable)
+ * Крок 5 — Готово → зберігає все і переходить на Dashboard
  */
 const OnboardingScreen: React.FC = () => {
   const navigate = useNavigate()
   const { activeProfile, updateProfile } = useProfileStore()
+  const { categories: allCats, fetchCategories, loading: catLoading } = useCategoryStore()
+
   const [step, setStep] = useState(1)
-  const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(MODULES.filter(m => m.defaultOn).map(m => m.id))
-  )
   const [saving, setSaving] = useState(false)
 
-  const firstName = activeProfile?.name?.split(' ')[0] ?? 'друже'
+  // Step 2 — Finance
+  const [salaryDay, setSalaryDay] = useState(activeProfile?.salaryDay ?? 1)
+  const [doneProgress, setDoneProgress] = useState(0)
+  const [selectedCatIds, setSelectedCatIds] = useState<Set<string>>(new Set())
+  const catsInitRef = useRef(false)
+  const catsFetchRef = useRef(false)
 
-  const toggleModule = (id: string) => {
-    setSelected(prev => {
+  // Step 3 — Habit
+  const [habitPreset, setHabitPreset] = useState<string | null>(null)
+  const [habitCustom, setHabitCustom] = useState('')
+
+  // Step 4 — Plan
+  const [planDest, setPlanDest] = useState('')
+
+  const firstName = activeProfile?.name?.split(' ')[0] ?? 'друже'
+  const topLevelCats = allCats.filter(c => !c.parentId)
+
+  // Fetch categories when entering step 2
+  useEffect(() => {
+    if (step !== 2 || catsFetchRef.current) return
+    catsFetchRef.current = true
+    let cancelled = false
+    const load = async () => {
+      if (allCats.length === 0) await fetchCategories()
+      if (!cancelled) { /* categories will trigger the init effect below */ }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [step, allCats.length, fetchCategories])
+
+  // Animate MimirFillIcon when entering done step
+  useEffect(() => {
+    if (step !== 5) return
+    let cancelled = false
+    const load = async () => {
+      const start = performance.now()
+      const duration = 1400
+      const tick = (now: number) => {
+        if (cancelled) return
+        const t = Math.min((now - start) / duration, 1)
+        const eased = 1 - Math.pow(1 - t, 3)
+        if (!cancelled) setDoneProgress(eased)
+        if (t < 1) requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [step])
+
+  // Initialize selected category IDs once categories are loaded
+  useEffect(() => {
+    if (topLevelCats.length === 0 || catsInitRef.current) return
+    let cancelled = false
+    const init = async () => {
+      if (!cancelled) {
+        catsInitRef.current = true
+        setSelectedCatIds(new Set(topLevelCats.map(c => c._id)))
+      }
+    }
+    init()
+    return () => { cancelled = true }
+  }, [topLevelCats])
+
+  const toggleCat = (id: string) => {
+    setSelectedCatIds(prev => {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
       return next
     })
   }
 
+  const selectPreset = (p: string) => {
+    setHabitPreset(prev => prev === p ? null : p)
+    setHabitCustom('')
+  }
+
+  const habitTitle = habitPreset ?? (habitCustom.trim() || null)
+
   const handleFinish = async () => {
     setSaving(true)
     try {
-      await updateProfile({
-        onboardingCompleted: true,
-        f1Enabled: selected.has('f1'),
-      })
+      await updateProfile({ salaryDay, onboardingCompleted: true })
+
+      const tasks: Promise<unknown>[] = []
+
+      // Deactivate unchecked categories
+      topLevelCats
+        .filter(c => !selectedCatIds.has(c._id))
+        .forEach(c => {
+          tasks.push(
+            authFetch(`/api/categories/${c._id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ isActive: false }),
+            })
+          )
+        })
+
+      if (habitTitle) {
+        tasks.push(
+          authFetch('/api/sprint/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: habitTitle, type: 'routine', repeat: 'daily', priority: 'normal' }),
+          })
+        )
+      }
+
+      if (planDest.trim()) {
+        tasks.push(
+          authFetch('/api/plans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: planDest.trim(), status: 'want' }),
+          })
+        )
+      }
+
+      await Promise.allSettled(tasks)
       navigate('/', { replace: true })
     } catch {
       setSaving(false)
     }
   }
 
+  const ChevronRight = () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+
   return (
     <div className={styles.root}>
       <div className={styles.inner}>
 
-        {/* ── Step 1: Welcome ─────────────────── */}
+        {/* ── Step 1: Welcome ───────────────────────────────── */}
         {step === 1 && (
           <div className={styles.step}>
             <div className={styles.logoWrap}>
-              <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-label="MIMIR">
-                <circle cx="32" cy="32" r="30" stroke="var(--accent)" strokeWidth="2"/>
-                <path d="M20 44V22l12 14 12-14v22" stroke="var(--accent)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="32" cy="18" r="3" fill="var(--accent)"/>
-              </svg>
+              <MimirFillIcon size={80} progress={1} />
             </div>
             <h1 className={styles.wordmark}>MIMIR</h1>
             <p className={styles.tagline}>DRINK DEEP</p>
@@ -135,91 +177,178 @@ const OnboardingScreen: React.FC = () => {
               Особистий органайзер для тих, хто цінує кожен момент — фінанси, звички, спогади, все в одному місці.
             </p>
             <button className={styles.primaryBtn} onClick={() => setStep(2)}>
-              Далі
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              Далі <ChevronRight />
             </button>
           </div>
         )}
 
-        {/* ── Step 2: Module selection ─────────── */}
+        {/* ── Step 2: Finance setup ─────────────────────────── */}
         {step === 2 && (
           <div className={styles.step}>
-            <h2 className={styles.stepTitle}>Що тебе цікавить?</h2>
-            <p className={styles.stepSub}>Обери модулі. Завжди можна змінити у профілі.</p>
-            <div className={styles.moduleGrid}>
-              {MODULES.map(mod => {
-                const on = selected.has(mod.id)
-                return (
+            <h2 className={styles.stepTitle}>Налаштуємо фінанси</h2>
+            <p className={styles.stepSub}>Два питання щоб Finance одразу працював на тебе.</p>
+
+            <div className={styles.section}>
+              <span className={styles.sectionLabel}>ФІНАНСОВИЙ ДЕНЬ</span>
+              <div className={styles.dayGrid}>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                   <button
-                    key={mod.id}
+                    key={d}
                     type="button"
-                    className={`${styles.moduleTile} ${on ? styles.moduleTileOn : ''}`}
-                    onClick={() => toggleModule(mod.id)}
-                    aria-pressed={on}
+                    className={`${styles.dayCell} ${salaryDay === d ? styles.dayCellOn : ''}`}
+                    onClick={() => setSalaryDay(d)}
+                    aria-pressed={salaryDay === d}
                   >
-                    <span className={styles.moduleTileIcon}>{mod.icon}</span>
-                    <span className={styles.moduleTileLabel}>{mod.label}</span>
-                    <span className={styles.moduleTileDesc}>{mod.description}</span>
-                    <span className={`${styles.moduleTileCheck} ${on ? styles.moduleTileCheckOn : ''}`}>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </span>
+                    {d}
                   </button>
-                )
-              })}
+                ))}
+              </div>
             </div>
+
+            <div className={styles.section}>
+              <span className={styles.sectionLabel}>ЩО ВІДСТЕЖУВАТИМЕШ?</span>
+              {catLoading && topLevelCats.length === 0 ? (
+                <div className={styles.catSkeleton}>
+                  {[1,2,3,4,5,6].map(i => <span key={i} className={styles.catSkeletonChip} />)}
+                </div>
+              ) : (
+                <div className={styles.catGrid}>
+                  {topLevelCats.map(cat => {
+                    const on = selectedCatIds.has(cat._id)
+                    return (
+                      <button
+                        key={cat._id}
+                        type="button"
+                        className={`${styles.catChip} ${on ? styles.catChipOn : ''}`}
+                        onClick={() => toggleCat(cat._id)}
+                        aria-pressed={on}
+                      >
+                        <span className={styles.catDot} style={{ background: cat.color }} />
+                        {cat.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
             <button className={styles.primaryBtn} onClick={() => setStep(3)}>
-              Далі
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              Далі <ChevronRight />
             </button>
           </div>
         )}
 
-        {/* ── Step 3: Done ─────────────────────── */}
+        {/* ── Step 3: First habit ───────────────────────────── */}
         {step === 3 && (
           <div className={styles.step}>
-            <div className={styles.doneIconWrap}>
-              <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                <circle cx="36" cy="36" r="33" stroke="var(--accent)" strokeWidth="2" opacity="0.3"/>
-                <circle cx="36" cy="36" r="26" stroke="var(--accent)" strokeWidth="1.5" opacity="0.15"/>
-                <path d="M22 37l9 9 19-19" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <h2 className={styles.stepTitle}>Перша звичка</h2>
+            <p className={styles.stepSub}>Обери або напиши свій варіант — одразу з'явиться в щоденнику.</p>
+
+            <div className={styles.presets}>
+              {HABIT_PRESETS.map(p => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`${styles.presetChip} ${habitPreset === p ? styles.presetChipOn : ''}`}
+                  onClick={() => selectPreset(p)}
+                  aria-pressed={habitPreset === p}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+
+            {!habitPreset && (
+              <input
+                className={styles.textInput}
+                type="text"
+                placeholder="або напиши свій варіант…"
+                value={habitCustom}
+                onChange={e => setHabitCustom(e.target.value)}
+                maxLength={60}
+              />
+            )}
+
+            <div className={styles.btnRow}>
+              <button className={styles.skipBtn} onClick={() => setStep(4)}>
+                Пропустити
+              </button>
+              <button
+                className={styles.primaryBtn}
+                onClick={() => setStep(4)}
+                disabled={!habitTitle}
+              >
+                Далі <ChevronRight />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 4: First plan ────────────────────────────── */}
+        {step === 4 && (
+          <div className={styles.step}>
+            <div className={styles.planIconWrap}>
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+                <circle cx="28" cy="28" r="26" stroke="var(--accent)" strokeWidth="1.5" opacity="0.25"/>
+                <path d="M18 32c2-4 5-7 10-7s8 3 10 7" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M14 28c3-7 8-12 14-12s11 5 14 12" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" opacity="0.5"/>
+                <circle cx="28" cy="36" r="3" fill="var(--accent)"/>
               </svg>
             </div>
-            <h2 className={styles.doneTitle}>Все готово!</h2>
+            <h2 className={styles.stepTitle}>Куди мрієш поїхати?</h2>
+            <p className={styles.stepSub}>Збережемо як перший план у розділі Спогади.</p>
+
+            <input
+              className={styles.textInput}
+              type="text"
+              placeholder="Наприклад, Барселона…"
+              value={planDest}
+              onChange={e => setPlanDest(e.target.value)}
+              maxLength={80}
+              autoFocus
+            />
+
+            <div className={styles.btnRow}>
+              <button className={styles.skipBtn} onClick={() => setStep(5)}>
+                Пропустити
+              </button>
+              <button className={styles.primaryBtn} onClick={() => setStep(5)}>
+                Далі <ChevronRight />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 5: Done ──────────────────────────────────── */}
+        {step === 5 && (
+          <div className={styles.step}>
+            <div className={styles.doneIcon}>
+              <MimirFillIcon size={88} progress={doneProgress} />
+            </div>
+            <h2 className={styles.doneTitle}>Криниця відкрита.</h2>
             <p className={styles.doneDesc}>
-              MIMIR налаштовано. Додай перший спогад, плануй звички або перевір баланс — починати можна з будь-чого.
+              Мімір пам'ятає все — тепер і твоє.<br />Твоя хроніка починається.
             </p>
             <button
               className={styles.primaryBtn}
               onClick={handleFinish}
               disabled={saving}
             >
-              {saving ? 'Зберігаємо…' : 'Розпочати'}
-              {!saving && (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
+              {saving ? 'Зберігаємо…' : <>Розпочати <ChevronRight /></>}
             </button>
           </div>
         )}
 
-        {/* ── Progress dots ─────────────────────── */}
-        {step > 1 && (
-          <div className={styles.dots}>
-            {Array.from({ length: DOT_COUNT }, (_, i) => (
-              <span
-                key={i}
-                className={`${styles.dot} ${i + 1 === step ? styles.dotActive : i + 1 < step ? styles.dotDone : ''}`}
-              />
-            ))}
-          </div>
-        )}
+        {/* ── Progress dots (all steps) ─────────────────────── */}
+        <div className={styles.dots}>
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+            <span
+              key={i}
+              className={`${styles.dot} ${i + 1 === step ? styles.dotActive : i + 1 < step ? styles.dotDone : ''}`}
+            />
+          ))}
+        </div>
+
       </div>
     </div>
   )
