@@ -181,7 +181,7 @@ const MeTab: React.FC = () => {
 
   if (!activeProfile) return null
 
-  const familyBadge = accepted.length + pendingReceived.length
+  const familyPending = pendingReceived.length
   const rank = getRank(activeProfile.unlockedAchievements?.length ?? 0)
 
   const unlockedIds = activeProfile.unlockedAchievements ?? []
@@ -287,12 +287,16 @@ const MeTab: React.FC = () => {
               <span className={styles.menuIcon}><item.Icon /></span>
               <span className={styles.menuRowText}>
                 <span className={styles.menuRowLabel}>{item.label}</span>
-                <span className={styles.menuRowSub}>
-                  {item.id === 'achievements' ? achievementsSub : item.sub}
-                </span>
+                <span className={styles.menuRowSub}>{item.sub}</span>
               </span>
-              {item.id === 'family' && familyBadge > 0 && (
-                <span className={styles.menuBadge}>{familyBadge}</span>
+              {item.id === 'family' && familyPending > 0 && (
+                <span className={styles.menuPulseDot} aria-label={`${familyPending} запитів`} />
+              )}
+              {item.id === 'achievements' && (
+                <span className={styles.menuAchBadge}>
+                  <span className={styles.menuAchCount}>{unlockedIds.length}</span>
+                  <span className={styles.menuAchTotal}>/{ACHIEVEMENTS.length}</span>
+                </span>
               )}
               <span className={`${styles.menuChevron} ${isOpen ? styles.menuChevronOpen : ''}`}><ChevronRightIcon /></span>
             </button>

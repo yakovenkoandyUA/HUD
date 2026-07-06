@@ -19,9 +19,6 @@ const MeAchievements: React.FC = () => {
 
   return (
     <div className={styles.cardPadded}>
-      <div className={styles.cardSubTitle}>
-        ПРОГРЕС · {unlocked.length}/{ACHIEVEMENTS.length}
-      </div>
       <div className={styles.achProgressTrack}>
         <div className={styles.achProgressFill} style={{ width: `${pct}%` }} />
       </div>
