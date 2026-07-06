@@ -49,4 +49,5 @@ export interface Memory {
   createdAt: string
   ownerName?: string
   ownerAvatarUrl?: string | null
+  spaceId?: string | null
 }

@@ -28,6 +28,7 @@ export interface Plan {
   visitedDate:  string | null
   memoryId:     string | null
   createdAt:    string
+  spaceId:      string | null
 }
 
 export type PlanInput = Omit<Plan, '_id' | 'userId' | 'createdAt'>

@@ -19,7 +19,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
   if (!plan) { res.status(404).json({ error: 'Not found' }); return }
   const allowed = [
     'title', 'location', 'withProfiles', 'notes',
-    'photos', 'status', 'plannedDate', 'visitedDate', 'memoryId',
+    'photos', 'status', 'plannedDate', 'visitedDate', 'memoryId', 'spaceId',
   ]
   allowed.forEach(k => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

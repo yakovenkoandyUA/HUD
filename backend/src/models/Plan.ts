@@ -24,6 +24,7 @@ export interface IPlan extends Document {
   plannedDate:  Date | null
   visitedDate:  Date | null
   memoryId:     Types.ObjectId | null
+  spaceId:      string | null
 }
 
 const photoSchema = new Schema<IPlanPhoto & Document>({
@@ -50,6 +51,7 @@ const PlanSchema = new Schema<IPlan>({
   plannedDate:  { type: Date, default: null },
   visitedDate:  { type: Date, default: null },
   memoryId:     { type: Schema.Types.ObjectId, ref: 'Memory', default: null },
+  spaceId:      { type: String, default: null, index: true },
 }, { timestamps: true })
 
 export default model<IPlan>('Plan', PlanSchema)

@@ -32,7 +32,8 @@ export interface IMemory extends Document {
   photos: Types.DocumentArray<IMemoryPhoto>
   places: Types.DocumentArray<IMemoryPlace>
   withProfiles: string[]
-  userId: string
+  userId:  string
+  spaceId: string | null
 }
 
 const photoSchema = new Schema<IMemoryPhoto>({
@@ -65,7 +66,8 @@ const schema = new Schema<IMemory>({
   photos:       { type: [photoSchema], default: [] },
   places:       { type: [placeSchema], default: [] },
   withProfiles: [{ type: String }],
-  userId:       { type: String, required: true, index: true },
+  userId:  { type: String, required: true, index: true },
+  spaceId: { type: String, default: null, index: true },
 }, { timestamps: true })
 
 export default model<IMemory>('Memory', schema)
