@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react'
 import { useFamilyStore } from '../../store/familyStore'
 import { useUiStore } from '../../store/uiStore'
+import { useCanUseFeature } from '../../hooks/usePlan'
+import UpgradePrompt from '../../components/ui/UpgradePrompt'
 import styles from './ProfilePage.module.css'
 
 /**
@@ -11,6 +13,7 @@ import styles from './ProfilePage.module.css'
 const FamilyTab: React.FC = () => {
   const { accepted, pendingSent, pendingReceived, searchResults, searchUsers, sendRequest, acceptRequest, removeLink, clearSearch } = useFamilyStore()
   const { showToast } = useUiStore()
+  const canFamily = useCanUseFeature('familyLink')
 
   const [familySearch, setFamilySearch]   = useState('')
   const [familyLoading, setFamilyLoading] = useState(false)
@@ -126,7 +129,8 @@ const FamilyTab: React.FC = () => {
           <p className={styles.sectionHint}>Ще немає сімейних зв'язків. Знайди когось нижче.</p>
         )}
 
-        {/* Search */}
+        {/* Search — gated by familyLink feature */}
+        {canFamily ? (
         <div className={styles.familySearchWrap}>
           <input
             className={styles.familySearchInput}
@@ -165,6 +169,9 @@ const FamilyTab: React.FC = () => {
             <p className={styles.familyNoResults}>Нікого не знайдено</p>
           )}
         </div>
+        ) : (
+          <UpgradePrompt feature="familyLink" message="Сімейні зв'язки доступні з плану Shared Life" />
+        )}
       </section>
     </div>
   )

@@ -114,3 +114,33 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     },
   },
 }
+
+export const PLAN_DISPLAY_NAMES: Record<PlanId, string> = {
+  free:     'Personal Starter',
+  personal: 'Personal Memory',
+  couple:   'Shared Life',
+  family:   'Family Archive',
+}
+
+export function getPlanDisplayName(plan: PlanId): string {
+  return PLAN_DISPLAY_NAMES[plan]
+}
+
+/** Returns the lowest-tier plan that unlocks this feature. */
+export function getRequiredPlanForFeature(feature: Feature): PlanId {
+  const order: PlanId[] = ['personal', 'couple', 'family']
+  for (const planId of order) {
+    if (PLANS[planId].features[feature]) return planId
+  }
+  return 'family'
+}
+
+/** Returns the lowest-tier plan that supports currentCount+1 items for limitKey. */
+export function getRequiredPlanForLimit(limitKey: keyof PlanLimits, currentCount: number): PlanId {
+  const order: PlanId[] = ['personal', 'couple', 'family']
+  for (const planId of order) {
+    const limit = PLANS[planId].limits[limitKey]
+    if (limit === -1 || limit > currentCount) return planId
+  }
+  return 'family'
+}

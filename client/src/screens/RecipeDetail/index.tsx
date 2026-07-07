@@ -11,6 +11,7 @@ import IngredientIcon from '../../components/ui/IngredientIcon'
 import type { Recipe } from '../../types'
 import { normalizeIngredient } from '../../utils/normalizeIngredient'
 import { useAchievementsStore } from '../../store/achievementsStore'
+import { useCanUseFeature } from '../../hooks/usePlan'
 import styles from './RecipeDetail.module.css'
 
 /**
@@ -101,6 +102,7 @@ const RecipeDetailScreen: React.FC = () => {
   const { recipes, wishlistIds, cookStats, toggleWishlist, updateRecipe, deleteRecipe, logCook, fetchCookStats } = useRecipesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
+  const canUseChef = useCanUseFeature('aiChefChat')
   const { addItem: addSprintItem, items: sprintItems } = useSprintStore()
 
   const recipe = recipes.find(r => r.id === id)
@@ -329,6 +331,7 @@ const RecipeDetailScreen: React.FC = () => {
             className={styles.actionBtn}
             onClick={() => {
               if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-шефа', 'error'); return }
+              if (!canUseChef) { navigate('/profile?tab=plan'); return }
               setShowChef(true)
             }}
             aria-label="AI шеф-асистент"

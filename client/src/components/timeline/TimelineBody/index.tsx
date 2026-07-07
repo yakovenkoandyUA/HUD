@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TimelineEventCard from '../TimelineEventCard'
 import DoodleIllustration from '../../ui/DoodleIllustration'
+import UpgradePrompt from '../../ui/UpgradePrompt'
 import { useTimelineStore } from '../../../store/timelineStore'
 import { useSpacesStore } from '../../../store/spacesStore'
+import { usePlan } from '../../../hooks/usePlan'
 import type { TimelineEvent, TimelineEventType, TimelineScope } from '../../../types/timeline'
 import styles from './TimelineBody.module.css'
 
@@ -50,6 +52,9 @@ const TimelineBody: React.FC = () => {
   const { events, year, scope, spaceId, loading, setYear, setScope, setSpaceId, fetchTimeline } = useTimelineStore()
   const { spaces, fetchSpaces } = useSpacesStore()
   const [typeFilter, setTypeFilter] = useState<TimelineEventType | 'all'>('all')
+  const { limits } = usePlan()
+  const currentYear = new Date().getFullYear()
+  const yearLocked = limits.timelineHistoryYears !== -1 && year < currentYear - limits.timelineHistoryYears
 
   useEffect(() => { fetchSpaces() }, [fetchSpaces])
 
@@ -134,14 +139,20 @@ const TimelineBody: React.FC = () => {
       </div>
 
       <div className={styles.list}>
-        {!loading && grouped.length === 0 && (
+        {yearLocked && (
+          <div className={styles.empty}>
+            <UpgradePrompt limitKey="timelineHistoryYears" currentCount={currentYear - year} />
+          </div>
+        )}
+
+        {!yearLocked && !loading && grouped.length === 0 && (
           <div className={styles.empty}>
             <DoodleIllustration variant="memories" size={56} />
             <span className={styles.emptyText}>За {year} рік тут поки нічого немає</span>
           </div>
         )}
 
-        {grouped.map(([month, monthEvents]) => (
+        {!yearLocked && grouped.map(([month, monthEvents]) => (
           <div key={month} className={styles.monthSection}>
             <div className={styles.monthHeader}>
               <span className={styles.monthDot} />

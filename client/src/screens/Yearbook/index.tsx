@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import AppHeader from '../../components/AppHeader'
 import DoodleIllustration from '../../components/ui/DoodleIllustration'
+import UpgradePrompt from '../../components/ui/UpgradePrompt'
 import { useYearbookStore } from '../../store/yearbookStore'
+import { useCanUseFeature } from '../../hooks/usePlan'
 import styles from './Yearbook.module.css'
 
 const MOOD_LABEL: Record<string, string> = {
@@ -29,6 +31,7 @@ const YearbookScreen: React.FC = () => {
   const { loading, getReport, isNotGenerated, fetchYearbook, generateYearbook } = useYearbookStore()
 
   const [generating, setGenerating] = useState(false)
+  const canGenerate = useCanUseFeature('yearbookGenerate')
 
   useEffect(() => { fetchYearbook(year, 'annual') }, [year, fetchYearbook])
 
@@ -58,9 +61,13 @@ const YearbookScreen: React.FC = () => {
         <div className={styles.empty}>
           <DoodleIllustration variant="memories" size={56} />
           <span className={styles.emptyText}>Звіт за {year} ще не згенеровано</span>
-          <button type="button" className={styles.generateBtn} onClick={handleGenerate} disabled={generating}>
-            {generating ? 'Рахуємо…' : 'Згенерувати підсумок'}
-          </button>
+          {canGenerate ? (
+            <button type="button" className={styles.generateBtn} onClick={handleGenerate} disabled={generating}>
+              {generating ? 'Рахуємо…' : 'Згенерувати підсумок'}
+            </button>
+          ) : (
+            <UpgradePrompt feature="yearbookGenerate" />
+          )}
         </div>
       )}
 

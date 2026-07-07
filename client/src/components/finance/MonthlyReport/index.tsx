@@ -4,6 +4,7 @@ import { authFetch } from '../../../services/api'
 import { useCategoryStore } from '../../../store/categoryStore'
 import { useProfileStore } from '../../../store/profileStore'
 import { useUiStore } from '../../../store/uiStore'
+import { useCanUseFeature } from '../../../hooks/usePlan'
 import MimirIcon from '../../ui/MimirIcon'
 import type { Transaction } from '../../../types'
 import styles from './MonthlyReport.module.css'
@@ -113,6 +114,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const { categories } = useCategoryStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
+  const canReport = useCanUseFeature('advancedFinance')
   const now   = new Date()
   const [year,  setYear]  = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
@@ -160,6 +162,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
 
   const generateReport = async () => {
     if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-аналізу', 'error'); return }
+    if (!canReport) { showToast('AI звіт — Personal Memory план', 'error'); window.location.href = '/profile?tab=plan'; return }
     let cancelled = false
     setAiLoading(true)
     setAiError(false)

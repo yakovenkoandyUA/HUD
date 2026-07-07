@@ -1,67 +1,86 @@
 import React, { useState } from 'react'
+import { usePlan } from '../../hooks/usePlan'
+import type { PlanId } from '../../config/plans'
 import styles from './PlanTab.module.css'
 
-type PlanId = 'free' | 'pro' | 'family'
 type BillingCycle = 'monthly' | 'annual'
 
 interface PlanFeature {
   label: string
-  free:   string | boolean
-  pro:    string | boolean
-  family: string | boolean
+  free:     string | boolean
+  personal: string | boolean
+  couple:   string | boolean
+  family:   string | boolean
 }
 
 const FEATURES: PlanFeature[] = [
-  { label: 'Квести, звички, покупки',    free: true,           pro: true,             family: true },
-  { label: 'Транзакції / місяць',         free: '50',           pro: 'Без ліміту',     family: 'Без ліміту' },
-  { label: 'Цілі накопичення',            free: '2',            pro: 'Без ліміту',     family: 'Без ліміту' },
-  { label: 'Рецепти',                     free: '15',           pro: 'Без ліміту',     family: 'Без ліміту' },
-  { label: 'Watchlist',                   free: '30 записів',   pro: 'Без ліміту',     family: 'Без ліміту' },
-  { label: 'Спогади + фото',              free: '10 / 3 фото',  pro: 'Безліміт / 20 фото', family: 'Безліміт / 20 фото' },
-  { label: 'Mood tracker',                free: true,           pro: true,             family: true },
-  { label: 'Push нотифікації',            free: false,          pro: true,             family: true },
-  { label: 'F1 — прогнози і статистика', free: false,          pro: true,             family: true },
-  { label: 'Сканер чеків (AI)',           free: '3 / місяць',   pro: '30 / місяць',    family: '60 / місяць' },
-  { label: 'AI-асистент',                 free: false,          pro: '50 запитів/міс', family: '150 запитів/міс' },
-  { label: 'Спільні простори',             free: false,          pro: '1 учасник',      family: 'До 4 учасників' },
-  { label: 'Всі теми оформлення',         free: false,          pro: true,             family: true },
-  { label: 'Export даних (JSON)',          free: false,          pro: true,             family: true },
+  { label: 'Квести, звички, покупки',    free: true,          personal: true,          couple: true,              family: true },
+  { label: 'Простори',                    free: '2',           personal: '5',           couple: '10',              family: 'Безліміт' },
+  { label: 'Хроніка (роки назад)',        free: '1 рік',       personal: '5 років',     couple: 'Безліміт',        family: 'Безліміт' },
+  { label: 'AI чат-асистент',             free: false,         personal: true,          couple: true,              family: true },
+  { label: 'AI шеф-кухар',               free: false,         personal: true,          couple: true,              family: true },
+  { label: 'Сканер чеків (AI)',           free: false,         personal: true,          couple: true,              family: true },
+  { label: 'AI фінансовий звіт',          free: false,         personal: true,          couple: true,              family: true },
+  { label: 'Щорічний підсумок',           free: false,         personal: true,          couple: true,              family: true },
+  { label: 'Monobank інтеграція',         free: false,         personal: true,          couple: true,              family: true },
+  { label: 'Export даних (JSON)',          free: false,         personal: true,          couple: true,              family: true },
+  { label: "Сімейні зв'язки",             free: false,         personal: false,         couple: true,              family: true },
+  { label: 'Спільні простори',            free: false,         personal: false,         couple: '3 (до 5 учасн.)', family: 'Безліміт' },
 ]
 
-const PLANS = [
+interface PlanDef {
+  id: PlanId
+  name: string
+  tagline: string
+  priceMonthly: number
+  priceAnnual: number
+  currency: string
+  accentClass: string
+  ctaLabel: string
+  badge?: string
+}
+
+const PLAN_DEFS: PlanDef[] = [
   {
-    id: 'free' as PlanId,
-    name: 'FREE',
-    tagline: 'Спробувати MIMIR',
+    id: 'free',
+    name: 'STARTER',
+    tagline: 'Почати з MIMIR',
     priceMonthly: 0,
     priceAnnual: 0,
     currency: '₴',
     accentClass: styles.cardFree,
     ctaLabel: 'Поточний план',
-    ctaDisabled: true,
   },
   {
-    id: 'pro' as PlanId,
-    name: 'PRO',
-    tagline: 'Для активного користувача',
+    id: 'personal',
+    name: 'PERSONAL',
+    tagline: 'Особиста пам\'ять',
     priceMonthly: 149,
     priceAnnual: 99,
     currency: '₴',
-    accentClass: styles.cardPro,
-    ctaLabel: 'Перейти на Pro',
-    ctaDisabled: false,
-    badge: 'НАЙПОПУЛЯРНІШИЙ',
+    accentClass: styles.cardPersonal,
+    ctaLabel: 'Перейти на Personal',
+    badge: 'ПОПУЛЯРНИЙ',
   },
   {
-    id: 'family' as PlanId,
-    name: 'SPACES',
-    tagline: 'Спільні простори до 4 учасників',
+    id: 'couple',
+    name: 'COUPLE',
+    tagline: 'Спільне життя',
     priceMonthly: 249,
     priceAnnual: 179,
     currency: '₴',
+    accentClass: styles.cardCouple,
+    ctaLabel: 'Перейти на Couple',
+  },
+  {
+    id: 'family',
+    name: 'FAMILY',
+    tagline: 'Сімейний архів',
+    priceMonthly: 399,
+    priceAnnual: 279,
+    currency: '₴',
     accentClass: styles.cardFamily,
-    ctaLabel: 'Перейти на Spaces',
-    ctaDisabled: false,
+    ctaLabel: 'Перейти на Family',
   },
 ]
 
@@ -82,15 +101,13 @@ function FeatureValue({ value }: { value: string | boolean }) {
 /**
  * PlanTab
  * -------
- * Вкладка "План" у ProfilePage — відображає тарифні плани MIMIR,
- * поточний план користувача, ранній доступ і таблицю функцій.
+ * Вкладка "План" у ProfilePage — відображає 4 тарифних плани MIMIR,
+ * поточний план користувача з profileStore, і таблицю порівняння функцій.
  */
 const PlanTab: React.FC = () => {
   const [cycle, setCycle] = useState<BillingCycle>('monthly')
   const [expanded, setExpanded] = useState(false)
-
-  // TODO: отримувати з profileStore після впровадження білінгу
-  const currentPlan: PlanId = 'free'
+  const { plan: currentPlan } = usePlan()
 
   const visibleFeatures = expanded ? FEATURES : FEATURES.slice(0, 7)
 
@@ -126,7 +143,7 @@ const PlanTab: React.FC = () => {
 
       {/* ── Plan cards ── */}
       <div className={styles.cards}>
-        {PLANS.map(plan => {
+        {PLAN_DEFS.map(plan => {
           const isCurrent = plan.id === currentPlan
           const price = cycle === 'annual' ? plan.priceAnnual : plan.priceMonthly
           return (
@@ -184,7 +201,7 @@ const PlanTab: React.FC = () => {
       <div className={styles.table}>
         <div className={styles.tableHeader}>
           <span className={styles.tableFeatureCol} />
-          {PLANS.map(p => (
+          {PLAN_DEFS.map(p => (
             <span key={p.id} className={`${styles.tableColLabel} ${p.id === currentPlan ? styles.tableColLabelActive : ''}`}>
               {p.name}
             </span>
@@ -197,8 +214,11 @@ const PlanTab: React.FC = () => {
             <span className={`${styles.tableCell} ${styles.tableCellFree}`}>
               <FeatureValue value={f.free} />
             </span>
-            <span className={`${styles.tableCell} ${styles.tableCellPro}`}>
-              <FeatureValue value={f.pro} />
+            <span className={`${styles.tableCell} ${styles.tableCellPersonal}`}>
+              <FeatureValue value={f.personal} />
+            </span>
+            <span className={`${styles.tableCell} ${styles.tableCellCouple}`}>
+              <FeatureValue value={f.couple} />
             </span>
             <span className={`${styles.tableCell} ${styles.tableCellFamily}`}>
               <FeatureValue value={f.family} />

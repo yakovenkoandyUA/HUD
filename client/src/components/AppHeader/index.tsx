@@ -6,6 +6,7 @@ import AiChatSheet from '../dashboard/AiChatSheet'
 import MimirIcon from '../ui/MimirIcon'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
+import { useCanUseFeature } from '../../hooks/usePlan'
 import { getRank } from '../../data/ranks'
 import styles from './AppHeader.module.css'
 
@@ -33,6 +34,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const navigate = useNavigate()
+  const canUseAI = useCanUseFeature('aiChat')
   const rank = getRank(activeProfile?.unlockedAchievements?.length ?? 0)
 
   useEffect(() => {
@@ -67,11 +69,18 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
             className={styles.aiBtn}
             onClick={() => {
               if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-асистента', 'error'); return }
+              if (!canUseAI) { navigate('/profile?tab=plan'); return }
               setShowChat(true)
             }}
             aria-label="AI асистент"
           >
             <MimirIcon size={16} />
+            {!canUseAI && (
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none" className={styles.aiBtnLock} aria-hidden="true">
+                <rect x="1.5" y="4.5" width="7" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                <path d="M3 4.5V3a2 2 0 0 1 4 0v1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+              </svg>
+            )}
           </button>
           <button
             type="button"

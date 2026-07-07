@@ -5,6 +5,7 @@ import ReceiptScanner from '../ReceiptScanner'
 import { useCategoryStore } from '../../../store/categoryStore'
 import { useProfileStore } from '../../../store/profileStore'
 import { useUiStore } from '../../../store/uiStore'
+import { useCanUseFeature } from '../../../hooks/usePlan'
 import type { Category } from '../../../types'
 import styles from './ExpenseForm.module.css'
 
@@ -37,6 +38,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const { categories, fetchCategories } = useCategoryStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
+  const canScan = useCanUseFeature('receiptScanner')
   const [amount, setAmount]                     = useState('')
   const [description, setDescription]          = useState('')
   const [selectedCatId, setSelectedCatId]       = useState<string | null>(null)
@@ -123,6 +125,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
           <span className={styles.sectionLabel}>Категорія</span>
           <button type="button" className={styles.scanBtn} onClick={() => {
               if (!activeProfile?.isVerified) { showToast('Підтвердіть email для сканування чеків', 'error'); return }
+              if (!canScan) { showToast('Сканер чеків — Personal Memory план', 'error'); window.location.href = '/profile?tab=plan'; return }
               fileInputRef.current?.click()
             }}>
             <CameraIcon />

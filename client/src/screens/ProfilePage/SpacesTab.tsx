@@ -4,6 +4,8 @@ import type { Space, SpaceType } from '../../store/spacesStore'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
 import { useSwipeToDismiss } from '../../hooks/useSwipeToDismiss'
+import { usePlan } from '../../hooks/usePlan'
+import UpgradePrompt from '../../components/ui/UpgradePrompt'
 import styles from './SpacesTab.module.css'
 
 const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
@@ -33,6 +35,7 @@ const SpacesTab: React.FC = () => {
   const { spaces, loading, fetchSpaces, createSpace, deleteSpace, addMember, removeMember } = useSpacesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
+  const { limits, can, isAtLimit } = usePlan()
 
   // ── Sheets state ──
   const [createOpen, setCreateOpen] = useState(false)
@@ -139,13 +142,25 @@ const SpacesTab: React.FC = () => {
 
       {/* ── Header ── */}
       <div className={styles.header}>
-        <span className={styles.title}>ПРОСТОРИ</span>
-        <button type="button" className={styles.addBtn} onClick={openCreate} aria-label="Створити простір">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-          </svg>
-        </button>
+        <span className={styles.title}>
+          ПРОСТОРИ
+          {limits.maxSpaces !== -1 && (
+            <span className={styles.titleCount}> {spaces.length}/{limits.maxSpaces}</span>
+          )}
+        </span>
+        {isAtLimit('maxSpaces', spaces.length) ? (
+          <UpgradePrompt limitKey="maxSpaces" currentCount={spaces.length} compact />
+        ) : (
+          <button type="button" className={styles.addBtn} onClick={openCreate} aria-label="Створити простір">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
       </div>
+      {!can('sharedSpaces') && (
+        <p className={styles.sharedHint}>Спільні простори доступні з плану Shared Life</p>
+      )}
 
       {/* ── Empty state ── */}
       {!loading && spaces.length === 0 && (
