@@ -1,6 +1,10 @@
 import React, { useState } from 'react'
 import { usePlan } from '../../hooks/usePlan'
+import { useProfileStore } from '../../store/profileStore'
+import { useUiStore } from '../../store/uiStore'
+import { createBillingCheckout, submitWayForPayForm } from '../../services/billing'
 import type { PlanId } from '../../config/plans'
+import type { PaidPlanId, BillingInterval } from '../../services/billing'
 import styles from './PlanTab.module.css'
 
 type BillingCycle = 'monthly' | 'annual'
@@ -105,9 +109,28 @@ function FeatureValue({ value }: { value: string | boolean }) {
  * поточний план користувача з profileStore, і таблицю порівняння функцій.
  */
 const PlanTab: React.FC = () => {
-  const [cycle, setCycle] = useState<BillingCycle>('monthly')
-  const [expanded, setExpanded] = useState(false)
-  const { plan: currentPlan } = usePlan()
+  const [cycle, setCycle]           = useState<BillingCycle>('monthly')
+  const [expanded, setExpanded]     = useState(false)
+  const [loadingPlan, setLoadingPlan] = useState<PaidPlanId | null>(null)
+  const { plan: currentPlan }       = usePlan()
+  const { fetchProfiles }           = useProfileStore()
+  const { showToast }               = useUiStore()
+  void fetchProfiles // used in PaymentResult, kept here for store subscription
+
+  const handleUpgrade = async (planId: PaidPlanId) => {
+    if (loadingPlan) return
+    setLoadingPlan(planId)
+    try {
+      const interval: BillingInterval = cycle === 'annual' ? 'year' : 'month'
+      const checkout = await createBillingCheckout(planId, interval)
+      submitWayForPayForm(checkout.payment.actionUrl, checkout.payment.fields)
+      // After submit the browser navigates away — no cleanup needed
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Помилка запиту'
+      showToast(msg, 'error')
+      setLoadingPlan(null)
+    }
+  }
 
   const visibleFeatures = expanded ? FEATURES : FEATURES.slice(0, 7)
 
@@ -182,14 +205,19 @@ const PlanTab: React.FC = () => {
               <button
                 type="button"
                 className={`${styles.cta} ${isCurrent ? styles.ctaCurrent : styles.ctaUpgrade}`}
-                disabled={isCurrent}
+                disabled={isCurrent || plan.id === 'free' || loadingPlan !== null}
                 onClick={() => {
-                  if (!isCurrent) alert('Білінг буде доступний найближчим часом. Слідкуйте за оновленнями!')
+                  if (!isCurrent && plan.id !== 'free') {
+                    void handleUpgrade(plan.id as PaidPlanId)
+                  }
                 }}
               >
-                {isCurrent ? 'Поточний план' : plan.ctaLabel}
-                {!isCurrent && (
-                  <span className={styles.ctaSoon}>НЕЗАБАРОМ</span>
+                {loadingPlan === plan.id ? (
+                  <span className={styles.ctaSpinner} aria-label="Завантаження" />
+                ) : isCurrent ? (
+                  'Поточний план'
+                ) : (
+                  plan.ctaLabel
                 )}
               </button>
             </div>
@@ -243,7 +271,7 @@ const PlanTab: React.FC = () => {
 
       {/* ── Footer note ── */}
       <p className={styles.footerNote}>
-        Платежі будуть оброблятись через Paddle. Скасування підписки — в будь-який момент.
+        Платежі обробляються через WayForPay. Скасування підписки — в будь-який момент.
       </p>
     </div>
   )
