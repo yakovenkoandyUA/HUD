@@ -62,7 +62,7 @@ const SettingsTab: React.FC = () => {
       logout()
       navigate('/login')
     } catch {
-      showToast('Помилка з'єднання. Спробуйте ще раз.', 'error')
+      showToast("Помилка з'єднання. Спробуйте ще раз.", 'error')
     } finally {
       setDeleting(false)
     }

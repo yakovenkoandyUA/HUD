@@ -31,15 +31,20 @@ export interface IUser extends Document {
   unlockedAchievements: { id: string; unlockedAt: Date }[]
   onboardingCompleted: boolean
   createdAt: Date
-  // Subscription fields (Paddle, Phase 2+)
+  // Subscription fields
   plan: PlanId
   subscriptionStatus: SubscriptionStatus
-  billingProvider: 'paddle' | null
+  billingProvider: 'wayforpay' | 'paddle' | null
   paddleCustomerId: string | null
   paddleSubscriptionId: string | null
   currentPeriodEnd: Date | null
   trialEndsAt: Date | null
   earlyBirdLockedPrice: number | null
+  // Provider-neutral billing fields
+  billingInterval: 'month' | 'year' | null
+  billingOrderId: string | null
+  cancelAtPeriodEnd: boolean
+  lastBillingSyncAt: Date | null
   // Account lifecycle
   accountStatus: AccountStatus
   deletedAt: Date | null
@@ -78,12 +83,16 @@ const schema = new Schema<IUser>({
   // Subscription fields — safe defaults, no migration needed
   plan:                   { type: String, enum: ['free', 'personal', 'couple', 'family'], default: 'free' },
   subscriptionStatus:     { type: String, enum: ['none', 'trialing', 'active', 'past_due', 'canceled'], default: 'none' },
-  billingProvider:        { type: String, enum: ['paddle', null], default: null },
+  billingProvider:        { type: String, enum: ['wayforpay', 'paddle', null], default: null },
   paddleCustomerId:       { type: String, default: null },
   paddleSubscriptionId:   { type: String, default: null },
   currentPeriodEnd:       { type: Date, default: null },
   trialEndsAt:            { type: Date, default: null },
   earlyBirdLockedPrice:   { type: Number, default: null },
+  billingInterval:        { type: String, enum: ['month', 'year', null], default: null },
+  billingOrderId:         { type: String, default: null },
+  cancelAtPeriodEnd:      { type: Boolean, default: false },
+  lastBillingSyncAt:      { type: Date, default: null },
   // Account lifecycle — safe defaults, no migration needed
   accountStatus: { type: String, enum: ['active', 'deletion_requested', 'deleted'], default: 'active' },
   deletedAt:     { type: Date, default: null },

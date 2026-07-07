@@ -46,7 +46,7 @@ const TermsPage: React.FC = () => (
 
       <section className={styles.section}>
         <h2 className={styles.h2}>5. Підписка та оплата</h2>
-        <p>Базовий план MIMIR є безкоштовним. Платні плани (Personal Memory, Shared Life, Family Chronicle) будуть доступні найближчим часом через платіжну платформу Paddle.</p>
+        <p>Базовий план MIMIR є безкоштовним. Платні плани (Personal Memory, Shared Life, Family Chronicle) будуть доступні найближчим часом.</p>
         <p>Деталі ціноутворення, умови скасування та повернення коштів будуть описані окремо при запуску білінгу. Підписку можна буде скасувати в будь-який момент.</p>
       </section>
 
