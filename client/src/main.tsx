@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
 import './styles/global.css'
 import App from './App.tsx'
-import { runCacheMigration } from './utils/appCache'
+import { runCacheMigration } from '@/shared/utils/appCache'
 
 Sentry.init({
   dsn: 'https://a9775f0abf0185947b076628bf8b681b@o4511556414603264.ingest.de.sentry.io/4511556432887888',

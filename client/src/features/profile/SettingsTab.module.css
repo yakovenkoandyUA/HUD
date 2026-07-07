@@ -1,0 +1,241 @@
+.root {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--text2);
+}
+
+.sectionTitle {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+  margin: 0;
+}
+
+.sectionDesc {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text3);
+  margin: 0 0 12px;
+}
+
+/* ── Export ── */
+.exportBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.exportBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg2));
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.exportBtn:disabled { opacity: 0.6; cursor: default; }
+
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Legal links ── */
+.legalLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legalRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legalLink {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.legalLink:hover {
+  background: var(--bg2);
+  color: var(--accent);
+}
+
+.legalCheck {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.legalCheck:hover:not(.legalCheckDone) {
+  background: var(--bg2);
+  color: var(--text2);
+}
+.legalCheckDone {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent);
+  cursor: default;
+}
+
+/* ── Danger zone ── */
+.dangerSection {
+  border-color: color-mix(in srgb, var(--negative, #e53935) 25%, var(--border));
+}
+
+.dangerTitle {
+  color: var(--negative, #e53935) !important;
+}
+/* overriding with explicit color since CSS variable may not be --negative */
+.dangerSection .sectionHead { color: #e53935; }
+.dangerSection .sectionTitle { color: #e53935; }
+
+.dangerToggleBtn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, #e53935 35%, transparent);
+  background: color-mix(in srgb, #e53935 8%, var(--surface));
+  color: #e53935;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.dangerToggleBtn:hover {
+  background: color-mix(in srgb, #e53935 14%, var(--surface));
+}
+
+.deleteZone {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deleteWarning {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text2);
+  margin: 0;
+}
+.deleteWarning strong { color: var(--text); font-weight: 600; }
+
+.deleteCode {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--bg2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: #e53935;
+}
+
+.deleteInput {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.deleteInput:focus { border-color: #e53935; }
+
+.deleteActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.deleteCancelBtn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.deleteConfirmBtn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #e53935;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.deleteConfirmBtn:disabled { opacity: 0.4; cursor: default; }

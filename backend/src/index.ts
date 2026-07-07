@@ -69,8 +69,9 @@ app.use(cors({
   credentials: true,
 }))
 
-const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true, legacyHeaders: false })
-const authLimiter    = rateLimit({ windowMs: 15 * 60 * 1000, max: 10,  standardHeaders: true, legacyHeaders: false })
+const isDev = process.env.NODE_ENV !== 'production'
+const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: isDev ? 10000 : 100, standardHeaders: true, legacyHeaders: false })
+const authLimiter    = rateLimit({ windowMs: 15 * 60 * 1000, max: isDev ? 10000 : 10,  standardHeaders: true, legacyHeaders: false })
 
 app.use('/api/auth', authLimiter)
 app.use('/api', generalLimiter)

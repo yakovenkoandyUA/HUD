@@ -1,0 +1,77 @@
+.root {
+  padding: 0 16px;
+}
+
+.title {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  margin: 0 0 8px;
+}
+
+.strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.strip::-webkit-scrollbar { display: none; }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 14px 9px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--space-color, var(--border)) 35%, transparent);
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 8%, var(--surface));
+  flex-shrink: 0;
+  cursor: pointer;
+  min-width: 64px;
+  text-align: center;
+  user-select: none;
+  transition: opacity 0.16s, transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.card:active { opacity: 0.7; transform: scale(0.96); }
+
+.emoji {
+  font-size: 22px;
+  line-height: 1;
+  display: block;
+}
+
+.name {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text2);
+  white-space: nowrap;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* F1 virtual space card */
+.f1Card {
+  --space-color: var(--second);
+  cursor: pointer;
+  transition: opacity 0.16s;
+  -webkit-tap-highlight-color: transparent;
+}
+.f1Card:active { opacity: 0.7; }
+
+.f1Icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--second);
+  width: 22px;
+  height: 22px;
+}

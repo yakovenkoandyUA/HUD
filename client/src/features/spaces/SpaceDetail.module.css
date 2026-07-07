@@ -1,0 +1,276 @@
+.root {
+  min-height: 100dvh;
+  background: var(--bg);
+  padding-bottom: 80px;
+}
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 16px 16px 20px;
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 18%, transparent);
+  overflow: hidden;
+}
+
+.heroAccent {
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--space-color, var(--accent)) 18%, transparent), transparent 70%);
+  pointer-events: none;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.backBtn:active { opacity: 0.5; }
+
+.heroEmoji {
+  font-size: 36px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.heroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heroName {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin: 0;
+}
+
+.heroType {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--space-color, var(--accent));
+  opacity: 0.85;
+}
+
+.heroSkeleton {
+  height: 40px;
+  flex: 1;
+  border-radius: 6px;
+  background: var(--skeleton-bg, color-mix(in srgb, var(--text) 8%, transparent));
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ── Overview ── */
+.overview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 16px 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.overviewItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.overviewNum {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--text);
+}
+
+.overviewLabel {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.overviewDivider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+}
+
+/* ── Quick actions ── */
+.actions {
+  display: flex;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--space-color, var(--accent));
+  color: var(--space-color, var(--accent));
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 8%, transparent);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.actionBtn:active { opacity: 0.65; transform: scale(0.96); }
+
+/* ── Content ── */
+.content {
+  padding: 0 16px;
+}
+
+.section {
+  padding: 20px 0 0;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+/* ── Members ── */
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.memberAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.memberInitial {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 18%, transparent);
+  color: var(--space-color, var(--accent));
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.memberName {
+  font-size: 14px;
+  color: var(--text);
+  flex: 1;
+}
+
+.ownerBadge {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── Memories grid ── */
+.memoriesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ── Plans column ── */
+.plansCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Empty state ── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 0 16px;
+  color: var(--text-secondary);
+}
+
+.empty p {
+  font-size: 13px;
+  text-align: center;
+}
+
+.emptyAction {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  background: transparent;
+  padding: 7px 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.emptyAction:active { opacity: 0.6; }
+
+/* ── Not found ── */
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 24px;
+  color: var(--text-secondary);
+}
+
+/* ── Skeletons ── */
+.skeleton {
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  animation: shimmer 1.4s ease-in-out infinite;
+  height: 160px;
+}
+.skeletonPlan { height: 80px; }
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}

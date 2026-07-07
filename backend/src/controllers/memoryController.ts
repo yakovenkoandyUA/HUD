@@ -8,7 +8,10 @@ export async function getAll(req: Request, res: Response): Promise<void> {
     const familyIds = await getAcceptedFamilyIds(req.userId!)
     const allUserIds = [req.userId!, ...familyIds]
 
-    const items = await Memory.find({ userId: { $in: allUserIds } }).sort({ date: -1 })
+    const filter: Record<string, unknown> = { userId: { $in: allUserIds } }
+    if (req.query.spaceId) filter.spaceId = req.query.spaceId
+
+    const items = await Memory.find(filter).sort({ date: -1 })
 
     // Attach owner info for family memories
     let ownerMap = new Map<string, { name: string; avatarUrl: string | null }>()

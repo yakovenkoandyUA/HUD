@@ -1,0 +1,47 @@
+/* flex-wrap layout (default) */
+.wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+/* grid layout (when columns prop is set) */
+.grid {
+  display: grid;
+  gap: 6px;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.pill:active {
+  transform: scale(0.96);
+}
+
+.pillActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  line-height: 1;
+}

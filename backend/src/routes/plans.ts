@@ -5,7 +5,9 @@ import Plan from '../models/Plan'
 const router = Router()
 
 router.get('/', requireAuth, async (req, res) => {
-  const plans = await Plan.find({ userId: req.userId }).sort({ createdAt: -1 })
+  const filter: Record<string, unknown> = { userId: req.userId }
+  if (req.query.spaceId) filter.spaceId = req.query.spaceId
+  const plans = await Plan.find(filter).sort({ createdAt: -1 })
   res.json(plans)
 })
 

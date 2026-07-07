@@ -33,6 +33,8 @@ components/
 ├── ui/
 │   ├── Button, Card, Input, Badge, ProgressBar
 │   ├── Modal, Toast (ToastContainer)
+│   ├── PillSelector        ← уніфікований pill-вибір між варіантами; активний стан — outline
+│   │                          Props: options (value+label+icon?), value, onChange, columns? (grid)
 │   ├── PriorityBadge       ← ▲◆▽ (urgent/normal/low), не emoji
 │   ├── CustomDatePicker    ← нативний UI замість input[type=date]
 │   ├── ImageUploadButton   ← Cloudinary upload (square/wide варіанти)

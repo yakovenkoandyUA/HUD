@@ -19,10 +19,56 @@
 
 Деталі по розділах:
 - Дизайн-система (теми, змінні, типографіка) → [`client/src/styles/CLAUDE.md`](client/src/styles/CLAUDE.md)
-- Компоненти (правила, структура, JSDoc, 3D) → [`client/src/components/CLAUDE.md`](client/src/components/CLAUDE.md)
-- Екрани (поведінка кожного screen) → [`client/src/screens/CLAUDE.md`](client/src/screens/CLAUDE.md)
-- Стейт (Zustand stores, persist, маппінг) → [`client/src/store/CLAUDE.md`](client/src/store/CLAUDE.md)
+- Компоненти (правила, структура, JSDoc, 3D) → [`client/src/shared/components/CLAUDE.md`](client/src/shared/components/CLAUDE.md)
+- Стейт (Zustand stores, persist, маппінг) → [`client/src/shared/store/CLAUDE.md`](client/src/shared/store/CLAUDE.md)
 - Backend (API, middleware, env, зовнішні API) → [`backend/CLAUDE.md`](backend/CLAUDE.md)
+
+---
+
+## Архітектура фронтенду
+
+```
+client/src/
+├── features/          ← фіча-модулі (один модуль = один домен)
+│   ├── finance/       │  index.tsx          — головний екран
+│   ├── sprint/        │  [sub].tsx          — суб-сторінки
+│   ├── recipes/       │  components/[name]/ — UI тільки цієї фічі
+│   ├── watchlist/     │  store/             — Zustand store(s) фічі
+│   ├── memories/      │  utils/             — утиліти фічі
+│   ├── f1/            │  types/             — типи фічі
+│   ├── dashboard/     │  data/              — статичні дані фічі
+│   ├── profile/       │  hooks/             — хуки фічі
+│   ├── notes/
+│   ├── timeline/
+│   ├── spaces/
+│   └── auth/          ← Login, Register, Onboarding, VerifyEmail, ...
+└── shared/            ← все що використовується 3+ фічами
+    ├── components/
+    │   ├── ui/        — Button, Modal, Input, PillSelector, ...
+    │   └── layout/    — BottomNav, AppHeader
+    ├── store/         — profileStore, uiStore, familyStore, achievementsStore
+    ├── hooks/         — useSwipeToDismiss, usePwaInstall, ...
+    ├── services/      — api.ts (authFetch), cloudinary, push
+    ├── utils/         — дата, формати, геолокація, ...
+    ├── types/         — спільні TypeScript типи
+    ├── data/          — спільні статичні дані
+    └── constants/     — product.ts, ...
+```
+
+### Правила імпортів
+- **Всередині фічі** — відносні шляхи: `./store/financeStore`, `../components/BalanceHero`
+- **Cross-feature або до shared** — абсолютні з `@/`: `@/shared/store/profileStore`, `@/features/sprint/components/sprint/TaskDetailModal`
+- **Ніколи** `../../` з однієї фічі в іншу — тільки через `@/features/...`
+
+### Критерії де розміщувати
+| Де | Умова |
+|----|-------|
+| `features/[name]/` | Логіка, UI, стейт що стосується лише цього домену |
+| `shared/` | Компонент/хук/утиліта що використовується у **3+ фічах** |
+| `shared/store/` | Store що імпортується у **5+ різних фічах** |
+
+### Шлях аліас
+`@/` → `client/src/` (налаштовано у `tsconfig.app.json` + `vite.config.ts`)
 
 ---
 
@@ -204,9 +250,22 @@ useEffect(() => {
 | Завантаження фото | `ImageUploadButton` + `uploadToCloudinary` |
 | Пріоритет | `PriorityBadge` (▲◆▽) |
 | Прогрес-бар | `ProgressBar` |
+| Вибір між варіантами (pill-chips) | `PillSelector` |
 
 - НІКОЛИ `input[type=date]` — тільки `CustomDatePicker`
 - НІКОЛИ нову модалку з нуля — тільки `Modal`
+- НІКОЛИ власні pill-кнопки для вибору варіанту — тільки `PillSelector`
+
+**PillSelector** (`client/src/components/ui/PillSelector`):
+```tsx
+<PillSelector
+  options={[{ value: 'a', label: 'Варіант A', icon: <i className="ti ti-star" /> }]}
+  value={selected}
+  onChange={setSelected}
+  columns={4}   // якщо потрібен grid (н-д 4 колонки); без цього — flex-wrap
+/>
+```
+Активний стан — outline (border + text акцент + легкий тінт), не суцільна заливка.
 
 ### Стилі
 - ЗАВЖДИ `var(--accent)` — ніколи hex
