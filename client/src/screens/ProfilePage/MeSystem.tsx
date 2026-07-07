@@ -21,7 +21,7 @@ const LocateIcon: React.FC = () => (
  */
 const MeSystem: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
-  const { showToast, updateAvailable } = useUiStore()
+  const { showToast } = useUiStore()
   const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushSubscription()
   const { isInstallable, isIOS, promptInstall } = usePwaInstall()
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
@@ -195,18 +195,6 @@ const MeSystem: React.FC = () => {
           {cacheCleared ? '✓ ГОТОВО' : 'ОЧИСТИТИ'}
         </button>
       </div>
-
-      {updateAvailable && (
-        <>
-          <div className={styles.cardDivider} />
-          <div className={styles.cardRow}>
-            <span className={styles.cardRowLabel}>Доступне оновлення</span>
-            <button type="button" className={styles.pinBtn} onClick={() => window.location.reload()}>
-              ОНОВИТИ
-            </button>
-          </div>
-        </>
-      )}
 
       {showInstall && (
         <>

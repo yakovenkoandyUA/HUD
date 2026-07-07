@@ -111,8 +111,29 @@ const MENU_ITEMS: MenuItemConfig[] = [
 const MeTab: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
   const { pendingReceived } = useFamilyStore()
-  const { showToast } = useUiStore()
+  const { showToast, updateAvailable, setUpdateAvailable } = useUiStore()
   const [openSection, setOpenSection] = useState<MeSection | null>(null)
+
+  // Check for SW updates each time MeTab mounts (background check)
+  useEffect(() => {
+    let cancelled = false
+    const checkForUpdate = async () => {
+      if (!('serviceWorker' in navigator)) return
+      try {
+        const reg = await navigator.serviceWorker.getRegistration()
+        if (!cancelled && reg) reg.update().catch(() => {/* silent */})
+      } catch {/* silent */}
+    }
+    checkForUpdate()
+
+    // Also watch for controller change in case it fires while on this tab
+    const onControllerChange = () => { if (!cancelled) setUpdateAvailable(true) }
+    navigator.serviceWorker?.addEventListener('controllerchange', onControllerChange)
+    return () => {
+      cancelled = true
+      navigator.serviceWorker?.removeEventListener('controllerchange', onControllerChange)
+    }
+  }, [setUpdateAvailable])
   const toggleSection = (id: MeSection) => setOpenSection(prev => prev === id ? null : id)
 
   const fileRef = useRef<HTMLInputElement>(null)
@@ -308,6 +329,28 @@ const MeTab: React.FC = () => {
           </div>
         )
       })}
+
+      {/* ── Update banner ── */}
+      {updateAvailable && (
+        <div className={styles.updateBanner}>
+          <span className={styles.updateBannerDot} />
+          <div className={styles.updateBannerText}>
+            <span className={styles.updateBannerTitle}>Доступне оновлення</span>
+            <span className={styles.updateBannerSub}>Нова версія MIMIR готова до встановлення</span>
+          </div>
+          <button
+            type="button"
+            className={styles.updateBannerBtn}
+            onClick={() => window.location.reload()}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2.5A5.5 5.5 0 1 1 7 1.5"/>
+              <path d="M9.5 1.5L7 4l2.5 1.5"/>
+            </svg>
+            ОНОВИТИ
+          </button>
+        </div>
+      )}
 
     </div>
   )
