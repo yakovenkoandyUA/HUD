@@ -1,9 +1,15 @@
 import type { Request, Response } from 'express'
+import mongoose from 'mongoose'
 import BillingOrder from '../models/BillingOrder'
 import ProcessedBillingEvent from '../models/ProcessedBillingEvent'
 import { User } from '../models/User'
 import { getPrice, validatePaidPlan, validateBillingInterval } from '../config/pricing'
-import { generateOrderReference, calculateCurrentPeriodEnd, buildWayForPayEventKey } from '../utils/billing'
+import {
+  generateOrderReference,
+  calculateCurrentPeriodEnd,
+  buildWayForPayEventKey,
+  normalizeWayForPayAmountToKopecks,
+} from '../utils/billing'
 import { getWayForPayConfig } from '../config/wayforpay'
 import {
   buildWayForPayCheckoutPayload,
@@ -137,12 +143,11 @@ export async function handleWayForPayCallback(req: Request, res: Response): Prom
   const { orderReference, transactionStatus, merchantSignature, amount, currency, processingDate } = payload
 
   if (
-    typeof orderReference       !== 'string' ||
-    typeof transactionStatus    !== 'string' ||
-    typeof merchantSignature    !== 'string' ||
-    typeof amount               !== 'number'  ||
-    typeof currency             !== 'string'  ||
-    typeof processingDate       !== 'number'
+    typeof orderReference    !== 'string' ||
+    typeof transactionStatus !== 'string' ||
+    typeof merchantSignature !== 'string' ||
+    typeof currency          !== 'string' ||
+    typeof processingDate    !== 'number'
   ) {
     console.error('[billing/callback] Malformed payload — missing required fields')
     res.status(400).json({ error: 'Malformed callback payload' })
@@ -158,8 +163,19 @@ export async function handleWayForPayCallback(req: Request, res: Response): Prom
 
   console.error('[billing/callback] Received:', orderReference, transactionStatus)
 
-  // ── 3. Check idempotency ──────────────────────────────────────────────────
-  const eventKey = buildWayForPayEventKey(orderReference, transactionStatus, amount, processingDate)
+  // ── 3. Normalize amount to kopecks (handles both number and "149.00" string) ──
+  // WayForPay docs mention amount may arrive as decimal string; we normalize either form.
+  const callbackKopecks = normalizeWayForPayAmountToKopecks(amount)
+  if (callbackKopecks === null) {
+    console.error('[billing/callback] Invalid amount field:', amount)
+    res.status(400).json({ error: 'Invalid amount in callback payload' })
+    return
+  }
+
+  // ── 4. Check idempotency (pre-check outside transaction — fast path) ──────
+  // The unique DB index on (provider, eventKey) is the authoritative guard;
+  // this pre-check just avoids opening a transaction for obvious duplicates.
+  const eventKey = buildWayForPayEventKey(orderReference, transactionStatus, callbackKopecks, processingDate)
   const alreadyProcessed = await ProcessedBillingEvent.findOne({ provider: 'wayforpay', eventKey })
 
   if (alreadyProcessed) {
@@ -168,19 +184,17 @@ export async function handleWayForPayCallback(req: Request, res: Response): Prom
     return
   }
 
-  // ── 4. Find BillingOrder ──────────────────────────────────────────────────
+  // ── 5. Find BillingOrder ──────────────────────────────────────────────────
   const order = await BillingOrder.findOne({ orderReference })
 
   if (!order) {
     console.error('[billing/callback] Unknown orderReference:', orderReference)
-    // Still return 200 with accept to stop WayForPay retrying unknown orders
+    // Return accept to stop WayForPay retrying indefinitely for unknown orders
     res.json(buildWayForPayAcceptResponse(orderReference, config.merchantAccount, config.merchantSecret))
     return
   }
 
-  // ── 5. Amount / currency integrity check ──────────────────────────────────
-  // WayForPay sends amount in UAH decimal; our order.amount is kopecks
-  const callbackKopecks = Math.round(amount * 100)
+  // ── 6. Amount / currency integrity check ──────────────────────────────────
   if (callbackKopecks !== order.amount || currency !== order.currency) {
     console.error(
       '[billing/callback] Amount/currency mismatch:',
@@ -190,60 +204,78 @@ export async function handleWayForPayCallback(req: Request, res: Response): Prom
     return
   }
 
-  // ── 6. Map transactionStatus → BillingOrder.status ───────────────────────
+  // ── 7. Map transactionStatus → BillingOrder.status ───────────────────────
   const newStatus = WFP_STATUS_MAP[transactionStatus] ?? null
 
+  // ── 8. Atomic write: BillingOrder + User + ProcessedBillingEvent ──────────
+  // Uses MongoDB session transaction so all three writes succeed or all fail.
+  // Atlas free tier (M0) supports transactions natively via replica set.
+  const session = await mongoose.startSession()
+
   try {
-    if (transactionStatus === 'Approved') {
-      // ── 6a. Activate subscription ─────────────────────────────────────────
-      const now = new Date()
+    await session.withTransaction(async () => {
+      if (transactionStatus === 'Approved') {
+        const now = new Date()
 
-      order.status             = 'paid'
-      order.paidAt             = now
-      order.rawProviderPayload = payload as Record<string, unknown>
-      await order.save()
+        order.status             = 'paid'
+        order.paidAt             = now
+        order.rawProviderPayload = payload as Record<string, unknown>
+        await order.save({ session })
 
-      await User.findByIdAndUpdate(order.userId, {
-        plan:                     order.planId,
-        subscriptionStatus:       'active',
-        billingProvider:          'wayforpay',
-        billingInterval:          order.interval,
-        billingOrderId:           order.orderReference,
-        currentPeriodEnd:         calculateCurrentPeriodEnd(now, order.interval),
-        lastBillingSyncAt:        now,
-        // Reset reminder flags so next period can send fresh reminders
-        renewalReminder7dSentAt:  null,
-        renewalReminder1dSentAt:  null,
-        downgradedAt:             null,
-      })
+        await User.findByIdAndUpdate(order.userId, {
+          plan:                     order.planId,
+          subscriptionStatus:       'active',
+          billingProvider:          'wayforpay',
+          billingInterval:          order.interval,
+          billingOrderId:           order.orderReference,
+          currentPeriodEnd:         calculateCurrentPeriodEnd(now, order.interval),
+          lastBillingSyncAt:        now,
+          // Reset reminder flags so the next billing cycle sends fresh reminders
+          renewalReminder7dSentAt:  null,
+          renewalReminder1dSentAt:  null,
+          downgradedAt:             null,
+        }, { session })
 
-      console.error('[billing/callback] Activated plan:', order.planId, 'for user:', String(order.userId))
+        console.error('[billing/callback] Activated plan:', order.planId, 'for user:', String(order.userId))
 
-    } else if (newStatus !== null) {
-      // ── 6b. Mark order failed/expired/refunded — do NOT change User.plan ──
-      order.status             = newStatus
-      order.rawProviderPayload = payload as Record<string, unknown>
-      await order.save()
+      } else if (newStatus !== null) {
+        // failed / expired / refunded — update order status only, never change User.plan
+        order.status             = newStatus
+        order.rawProviderPayload = payload as Record<string, unknown>
+        await order.save({ session })
 
-      console.error('[billing/callback] Order marked:', newStatus, 'for:', orderReference)
-    }
-    // else: InProcessing/WaitingAuthComplete — leave order as pending, no action
+        console.error('[billing/callback] Order marked:', newStatus, 'for:', orderReference)
+      }
+      // InProcessing / WaitingAuthComplete: leave order as pending
 
-    // ── 7. Record idempotency event ───────────────────────────────────────
-    await ProcessedBillingEvent.create({
-      provider:       'wayforpay',
-      eventKey,
-      orderReference,
-      eventType:      transactionStatus,
-      relatedUserId:  order.userId,
+      // Record idempotency event — unique index aborts any concurrent duplicate transaction
+      await ProcessedBillingEvent.create([{
+        provider:      'wayforpay',
+        eventKey,
+        orderReference,
+        eventType:     transactionStatus,
+        relatedUserId: order.userId,
+      }], { session })
     })
 
   } catch (err) {
-    console.error('[billing/callback] Processing error:', err)
+    // Duplicate key (code 11000) = race condition — a parallel callback already committed.
+    // Treat as idempotent and return accept rather than letting WayForPay retry.
+    const mongoErr = err as { code?: number }
+    if (mongoErr.code === 11000) {
+      console.error('[billing/callback] Race condition on eventKey, treating as duplicate:', eventKey)
+      res.json(buildWayForPayAcceptResponse(orderReference, config.merchantAccount, config.merchantSecret))
+      return
+    }
+
+    console.error('[billing/callback] Transaction error:', err)
     res.status(500).json({ error: 'Callback processing failed' })
     return
+
+  } finally {
+    await session.endSession()
   }
 
-  // ── 8. Return signed accept response ─────────────────────────────────────
+  // ── 9. Return signed accept response ─────────────────────────────────────
   res.json(buildWayForPayAcceptResponse(orderReference, config.merchantAccount, config.merchantSecret))
 }

@@ -52,6 +52,33 @@ export function getGracePeriodEnd(currentPeriodEnd: Date): Date {
 }
 
 /**
+ * Safely normalizes WayForPay callback amount (UAH) to kopecks.
+ * Accepts number or numeric string (e.g. 149, "149", "149.00", "149.9").
+ * Returns null for empty strings, NaN, negative values, and non-numeric input.
+ * Uses string parsing to avoid float precision issues (149.99 → 14999, not 14998.999...).
+ */
+export function normalizeWayForPayAmountToKopecks(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null
+
+  // Coerce to string for consistent parsing
+  const raw = typeof value === 'number' ? value.toString() : String(value).trim()
+  if (!raw) return null
+
+  // Only allow digits with optional single decimal separator and up to 2 decimal digits
+  if (!/^\d+(\.\d{1,2})?$/.test(raw)) return null
+
+  const parts = raw.split('.')
+  const hryvnias = parseInt(parts[0], 10)
+  // Pad single decimal digit to cents: "9" → "90" → 90 kopecks
+  const kopecks  = parts[1] ? parseInt(parts[1].padEnd(2, '0'), 10) : 0
+
+  const total = hryvnias * 100 + kopecks
+  if (total <= 0) return null   // reject zero/negative
+
+  return total
+}
+
+/**
  * Builds a deterministic idempotency key for a WayForPay callback event.
  * Includes orderReference + transactionStatus + amount + processingDate
  * to distinguish retries from genuine duplicate orders.
