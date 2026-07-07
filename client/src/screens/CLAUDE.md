@@ -187,7 +187,8 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 **MeTab** — hero-картка (аватар, ім'я, username inline edit) + акордеон-меню підрозділів (локальний state `openSection`, один відкритий за раз; клік по рядку — toggle, chevron rotate 90° при відкритті, `.menuAccordionBody`/`.menuAccordionBodyOpen` max-height transition):
 - **MeSecurity** — зміна пароля (вкладений accordion), PIN-код (numpad UI)
 - **MeAppearance** — теми (6 палітр), стиль навігації (Класик/Пілюля/Хаб), закріплені розділи (pinning)
-- **MeSystem** — місто (текст + геолокація через Nominatim reverse geocoding), F1 toggle, push-сповіщення, очищення кешу, оновлення/install PWA
+- **MeSystem** — місто (текст + геолокація через Nominatim reverse geocoding), F1 toggle, push-сповіщення, очищення кешу, install PWA (update row видалено — перенесено в банер нижче)
+- **Update banner** — видимий банер внизу MeTab (поза акордеоном): з'являється коли `uiStore.updateAvailable = true` (SW `controllerchange`); кнопка ОНОВИТИ → `window.location.reload()`
 - **MeMedia** — toggles movie/series/anime/game; книги disabled з бейджем "В РОЗРОБЦІ"; `mediaEnabledTabs: string[]` через `PATCH /api/auth/me`
 - **MeFamily** — пошук юзерів, pending received (прийняти/відхилити), accepted members, pending sent; `useFamilyStore` (fetchFamily() в ProfilePage при mount); бейдж-лічильник у рядку меню "Сім'я"
 - **MeAchievements** — грід бейджів досягнень (косметичний прогрес, не керує доступом до фіч); `ACHIEVEMENTS` з `data/achievements.ts`, `unlockedAchievements` в профілі; `useAchievementsStore.getState().unlock(id)` викликається в місцях першого досягнення (напр. зміна теми, прийняття сімейного запиту)
@@ -197,7 +198,7 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - 4 тири: FREE / PERSONAL (149₴/99₴ річно) / COUPLE (249₴/179₴) / FAMILY (399₴/279₴)
 - Поточний план визначається через `usePlan().plan` з `profileStore` (падає до 'free' для старих юзерів)
 - Billing cycle toggle (Місячно / Річно −33%), Early Bird банер
-- CTA кнопки показують "Поточний план" або "Перейти на X" + badge "НЕЗАБАРОМ" (Paddle checkout — Phase 3)
+- CTA кнопки показують "Поточний план" або "Перейти на X" + badge "НЕЗАБАРОМ" (WayForPay checkout — Phase 4B/4C)
 - Таблиця порівняння: 5-колонковий грід (`1fr 52px 52px 52px 52px`), accordion "Показати всі N функцій"
 - CSS акцент-тини: `cardPersonal` (accent), `cardCouple` (second), `cardFamily` (gold)
 

@@ -272,10 +272,35 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 
 **Phase 2** — frontend soft locks: `PaywallGate` wrapper + `UpgradePrompt` frosted-glass компонент (feature/limit варіанти, compact mode). Гейти: AI-кнопка AppHeader, chef-кнопка RecipeDetail, scan-кнопка ExpenseForm, AI-звіт MonthlyReport, generate-кнопка Yearbook (→ UpgradePrompt замість кнопки), search FamilyTab (PaywallGate), addBtn SpacesTab (UpgradePrompt compact при maxSpaces), TimelineBody locked year (UpgradePrompt). PlanTab переписаний: 4 тири (free/personal/couple/family) з реальним `usePlan().plan` замість хардкоду.
 
-**Наступне:** Phase 3 — Paddle Checkout інтеграція + Phase 4 — Paddle webhooks (оновлення user.plan після оплати).
+**Наступне:** Phase 4B — WayForPay checkout route (backend), Phase 4C — frontend upgrade flow.
 
-### 8. 💳 Білінг Phase 3 — Paddle Checkout
-Paddle.js Inline Checkout, `/api/billing/create-session` endpoint, кнопки "Перейти на X" в PlanTab відкривають Paddle overlay. Тест в sandbox перед релізом.
+### ~~8. 💳 Білінг Phase 3A — Legal + Data Rights~~ ✅ Зроблено
+Деталі вище в розділі "Що реалізовано".
+
+### ~~8а. 💳 Білінг Phase 4A — Provider-neutral billing models~~ ✅ Зроблено (2026-07-07)
+
+Рішення: **WayForPay + українська ФОП** для MVP (замість Paddle). Архітектура provider-neutral — можна замінити провайдера без зміни ентайтлментів.
+
+**Backend:**
+- `backend/src/config/pricing.ts` — ціни в копійках (без float): personal 149/1199 грн, couple 249/1999 грн, family 399/3199 грн за місяць/рік. `getPrice()`, `validatePaidPlan()`, `validateBillingInterval()`
+- `backend/src/models/BillingOrder.ts` — трекінг платіжних спроб: orderReference (opaque: `mimir_{YYYYMMDD}_{16hex}`), status pipeline (pending→paid/failed/refunded/expired), expiresAt індекс для cleanup cron
+- `backend/src/models/ProcessedBillingEvent.ts` — idempotency таблиця (unique compound index `{provider, eventKey}`) для захисту від дублювання callback
+- `backend/src/utils/billing.ts` — `generateOrderReference()` (randomBytes, без userId), `calculateCurrentPeriodEnd()` (calendar-aware, end-of-month clamping), `getGracePeriodEnd()` (+3 дні), `buildWayForPayEventKey()`
+- `User` model розширений: `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean`, `lastBillingSyncAt: Date|null`, `billingProvider` enum додано `'wayforpay'`
+
+**PWA Update Banner** (окрема задача в цьому ж PR):
+- Пульсуюча крапка на аватарі в TopBar (видима з будь-якого екрану)
+- Видимий банер внизу Profile → таб "Я" з кнопкою ОНОВИТИ (`window.location.reload()`)
+- `uiStore.updateAvailable` — сет через `controllerchange` event Service Worker
+
+### 9. 💳 Білінг Phase 4B — WayForPay Checkout (backend)
+`POST /api/billing/checkout` — генерація WayForPay payment URL, HMAC підпис, повертає `{ paymentUrl, orderReference }`. Тест в sandbox перед релізом.
+
+### 10. 💳 Білінг Phase 4C — Frontend Upgrade Flow
+PlanTab реальні кнопки → redirect на WayForPay hosted page. `/payment/result` публічна сторінка з polling статусу замовлення.
+
+### 11. 💳 Білінг Phase 5A — Callback Verification
+`POST /api/billing/wayforpay/callback` (public) — HMAC-MD5 верифікація підпису, idempotency через ProcessedBillingEvent, оновлення BillingOrder + User.plan після успішної оплати.
 
 ---
 

@@ -15,7 +15,13 @@
 - `requireVerified` — 403 якщо `!user.isVerified` (DB-запит по `req.userId`, бо `isVerified` не входить у JWT payload). Навішаний на AI-фічі, що коштують грошей: `router.use` в `routes/ai.ts` (chat + chef-chat), інлайн на `POST /api/finance/report/:month` (тільки генерація, GET кешованого звіту відкритий), `POST /api/receipt/scan`, `POST /api/recipes/generate`
 - `loadUser` — завантажує повний `User` документ у `req.user` (для feature gates). **НЕ** глобальний — тільки на гейтованих роутах (щоб не бити в DB на кожному запиті). `req.user` задекларований в `types/express.d.ts` через inline `import()` (не top-level, щоб файл залишався ambient declaration).
 
-## Entitlements (білінг-архітектура, Phase 1+2)
+## Білінг-архітектура (Phase 1+2+4A)
+
+**`backend/src/config/pricing.ts`** — ціни в копійках: `PRICES[planId][interval]`. `getPrice()`, `validatePaidPlan()`, `validateBillingInterval()`.
+
+**`backend/src/utils/billing.ts`** — `generateOrderReference()` (opaque, без userId), `calculateCurrentPeriodEnd(startDate, interval)` (calendar-aware, end-of-month clamp), `getGracePeriodEnd(currentPeriodEnd)` (+3 дні), `buildWayForPayEventKey()`.
+
+## Entitlements (Phase 1+2)
 
 - `backend/src/config/plans.ts` — single source of truth по планах: features + limits для free/personal/couple/family
 - `backend/src/utils/entitlements.ts`:
@@ -119,11 +125,18 @@ GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 RESEND_API_KEY=...
 MONOBANK_KEY=...        # (якщо є серверний ключ)
+BILLING_ENABLED=false   # 'true' вмикає entitlement gates; поки false — всі no-op
+WAYFORPAY_MERCHANT_LOGIN=...  # (Phase 4B)
+WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 ```
 
 ## Моделі — ключові поля
 
-**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null)
+**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`
+
+**BillingOrder** — `userId`, `provider: 'wayforpay'|'paddle'`, `orderReference` (unique, opaque: `mimir_{YYYYMMDD}_{16hex}`), `planId: 'personal'|'couple'|'family'`, `interval: 'month'|'year'`, `amount` (копійки), `currency: 'UAH'`, `status: 'pending'|'paid'|'failed'|'refunded'|'expired'`, `expiresAt`, `paidAt`, `rawProviderPayload`. Indexes: unique orderReference, `{userId, createdAt: -1}`, `{status, expiresAt}` для cleanup cron
+
+**ProcessedBillingEvent** — idempotency таблиця. `provider`, `eventKey` (composite: `{provider}:{orderRef}:{status}:{amount}:{processingDate}`), `processedAt`. Unique compound index `{provider, eventKey}` — захист від дублювання callbacks
 
 **Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, `source: 'manual'|'monobank'|'csv'`, `tripMemoryId?: string|null` (опційне посилання на trip-спогад для блоку "Витрати в поїздці"), сортувати по `createdAt`
 

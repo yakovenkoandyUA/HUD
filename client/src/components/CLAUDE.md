@@ -46,7 +46,8 @@ components/
 │   │                          currentCount?, message?, compact?); CTA → /profile?tab=plan
 │   └── PaywallGate         ← wrapper: `useCanUseFeature(feature)` → children або fallback/UpgradePrompt
 ├── layout/
-│   ├── TopBar
+│   ├── TopBar              ← пульсуюча крапка `.updateDot` на аватарі + `.avatarBtnUpdate` ring-анімація
+│   │                          коли `uiStore.updateAvailable = true` (SW controllerchange)
 │   ├── BottomNav           ← F1 іконка тільки якщо f1Enabled (boolean feature flag)
 │   │                          3 стилі (`navStyle`): classic (повна панель) / pill (плаваюча, тільки
 │   │                          закріплені) / hub (плаваюча + центральна руна Ансуз — відкриває
