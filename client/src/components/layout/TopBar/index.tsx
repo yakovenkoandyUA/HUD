@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MimirLogo from '../../../assets/mimir-logo.svg?react'
 import { useProfileStore } from '../../../store/profileStore'
+import { useUiStore } from '../../../store/uiStore'
 import styles from './TopBar.module.css'
 
 /**
@@ -27,6 +28,7 @@ function formatTime(d: Date): string {
 const TopBar: React.FC<TopBarProps> = ({ showClock, right }) => {
   const [now, setNow] = useState(new Date())
   const { activeProfile } = useProfileStore()
+  const { updateAvailable } = useUiStore()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -52,17 +54,20 @@ const TopBar: React.FC<TopBarProps> = ({ showClock, right }) => {
           {right}
           <button
             type="button"
-            className={styles.avatarBtn}
+            className={`${styles.avatarBtn} ${updateAvailable ? styles.avatarBtnUpdate : ''}`}
             onClick={() => navigate('/profile')}
-            aria-label="Профіль і налаштування"
+            aria-label={updateAvailable ? 'Доступне оновлення — відкрити профіль' : 'Профіль і налаштування'}
           >
-            {activeProfile?.avatarUrl ? (
-              <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatar} />
-            ) : (
-              <div className={styles.avatarFallback}>
-                {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
-              </div>
-            )}
+            <div className={styles.avatarWrap}>
+              {activeProfile?.avatarUrl ? (
+                <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatar} />
+              ) : (
+                <div className={styles.avatarFallback}>
+                  {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
+              {updateAvailable && <span className={styles.updateDot} aria-hidden="true" />}
+            </div>
           </button>
         </div>
       </header>
