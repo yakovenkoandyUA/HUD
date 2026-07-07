@@ -14,18 +14,18 @@ interface PlanFeature {
 }
 
 const FEATURES: PlanFeature[] = [
-  { label: 'Квести, звички, покупки',    free: true,          personal: true,          couple: true,              family: true },
-  { label: 'Простори',                    free: '2',           personal: '5',           couple: '10',              family: 'Безліміт' },
-  { label: 'Хроніка (роки назад)',        free: '1 рік',       personal: '5 років',     couple: 'Безліміт',        family: 'Безліміт' },
-  { label: 'AI чат-асистент',             free: false,         personal: true,          couple: true,              family: true },
-  { label: 'AI шеф-кухар',               free: false,         personal: true,          couple: true,              family: true },
-  { label: 'Сканер чеків (AI)',           free: false,         personal: true,          couple: true,              family: true },
-  { label: 'AI фінансовий звіт',          free: false,         personal: true,          couple: true,              family: true },
-  { label: 'Щорічний підсумок',           free: false,         personal: true,          couple: true,              family: true },
-  { label: 'Monobank інтеграція',         free: false,         personal: true,          couple: true,              family: true },
-  { label: 'Export даних (JSON)',          free: false,         personal: true,          couple: true,              family: true },
-  { label: "Сімейні зв'язки",             free: false,         personal: false,         couple: true,              family: true },
-  { label: 'Спільні простори',            free: false,         personal: false,         couple: '3 (до 5 учасн.)', family: 'Безліміт' },
+  { label: 'Квести, звички, покупки',       free: true,          personal: true,          couple: true,              family: true },
+  { label: 'Простори життя',                free: '2',           personal: '5',           couple: '10',              family: 'Безліміт' },
+  { label: 'Глибина пам\'яті',              free: '1 рік',       personal: '5 років',     couple: 'Безліміт',        family: 'Безліміт' },
+  { label: 'AI-рефлексія',                  free: false,         personal: true,          couple: true,              family: true },
+  { label: 'AI шеф-кухар',                  free: false,         personal: true,          couple: true,              family: true },
+  { label: 'Сканер чеків (AI)',              free: false,         personal: true,          couple: true,              family: true },
+  { label: 'AI фінансовий звіт',             free: false,         personal: true,          couple: true,              family: true },
+  { label: 'Yearbook / щорічна хроніка',    free: false,         personal: true,          couple: true,              family: true },
+  { label: 'Monobank інтеграція',            free: false,         personal: true,          couple: true,              family: true },
+  { label: 'Архів і експорт даних',          free: false,         personal: true,          couple: true,              family: true },
+  { label: "Сімейні зв'язки",               free: false,         personal: false,         couple: true,              family: true },
+  { label: 'Спільні простори',               free: false,         personal: false,         couple: '3 (до 5 учасн.)', family: 'Безліміт' },
 ]
 
 interface PlanDef {
@@ -43,8 +43,8 @@ interface PlanDef {
 const PLAN_DEFS: PlanDef[] = [
   {
     id: 'free',
-    name: 'STARTER',
-    tagline: 'Почати з MIMIR',
+    name: 'FREE',
+    tagline: 'Почни вести свою хроніку',
     priceMonthly: 0,
     priceAnnual: 0,
     currency: '₴',
@@ -53,34 +53,34 @@ const PLAN_DEFS: PlanDef[] = [
   },
   {
     id: 'personal',
-    name: 'PERSONAL',
-    tagline: 'Особиста пам\'ять',
+    name: 'MEMORY',
+    tagline: 'Повна особиста пам\'ять + AI-рефлексія',
     priceMonthly: 149,
     priceAnnual: 99,
     currency: '₴',
     accentClass: styles.cardPersonal,
-    ctaLabel: 'Перейти на Personal',
+    ctaLabel: 'Перейти на Personal Memory',
     badge: 'ПОПУЛЯРНИЙ',
   },
   {
     id: 'couple',
     name: 'COUPLE',
-    tagline: 'Спільне життя',
+    tagline: 'Одна спільна хроніка на двох',
     priceMonthly: 249,
     priceAnnual: 179,
     currency: '₴',
     accentClass: styles.cardCouple,
-    ctaLabel: 'Перейти на Couple',
+    ctaLabel: 'Перейти на Shared Life',
   },
   {
     id: 'family',
     name: 'FAMILY',
-    tagline: 'Сімейний архів',
+    tagline: 'Спільна хроніка для родини, друзів і ваших просторів',
     priceMonthly: 399,
     priceAnnual: 279,
     currency: '₴',
     accentClass: styles.cardFamily,
-    ctaLabel: 'Перейти на Family',
+    ctaLabel: 'Перейти на Family Chronicle',
   },
 ]
 

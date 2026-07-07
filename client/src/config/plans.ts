@@ -94,7 +94,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
 
   family: {
     id: 'family',
-    label: 'Family Archive',
+    label: 'Family Chronicle',
     limits: {
       maxSpaces: -1,
       maxSharedSpaces: -1,
@@ -119,7 +119,7 @@ export const PLAN_DISPLAY_NAMES: Record<PlanId, string> = {
   free:     'Personal Starter',
   personal: 'Personal Memory',
   couple:   'Shared Life',
-  family:   'Family Archive',
+  family:   'Family Chronicle',
 }
 
 export function getPlanDisplayName(plan: PlanId): string {
