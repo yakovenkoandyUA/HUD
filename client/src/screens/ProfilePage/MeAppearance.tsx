@@ -1,7 +1,7 @@
 import React from 'react'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
-import { ALL_NAV_SECTIONS } from '../../components/layout/BottomNav'
+import { ALL_NAV_SECTIONS, PROFILE_TABS } from '../../components/layout/BottomNav'
 import type { Theme, NavStyle, NavLabelMode } from '../../store/uiStore'
 import { NAV_STYLE_MAX_PINNED } from '../../store/uiStore'
 import { useAchievementsStore } from '../../store/achievementsStore'
@@ -35,7 +35,7 @@ const PALETTES: ThemePalette[] = [
  */
 const MeAppearance: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections } = useUiStore()
+  const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections, pinnedProfileTabs, setPinnedProfileTabs } = useUiStore()
 
   return (
     <>
@@ -167,45 +167,91 @@ const MeAppearance: React.FC = () => {
           ))}
         </div>
 
-        {navStyle === 'hub' && (
-          <div className={styles.navPinSection}>
-            <p className={styles.navPinTitle}>
-              ГОЛОВНЕ МЕНЮ
-              <span className={styles.navPinCount}>
-                {pinnedSections.length}/{NAV_STYLE_MAX_PINNED[navStyle]}
-              </span>
-            </p>
-            {ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || (activeProfile?.f1Enabled ?? false)).map(s => {
-              const isPinned = pinnedSections.includes(s.to)
-              const maxPinned = NAV_STYLE_MAX_PINNED[navStyle]
-              const canAdd = pinnedSections.length < maxPinned
-              return (
-                <div key={s.to} className={styles.navPinRow}>
-                  <s.Icon className={styles.navPinIcon} />
-                  <span className={styles.navPinLabel}>{s.label}</span>
-                  <button
-                    type="button"
-                    className={`${styles.toggle} ${isPinned ? styles.toggleOn : ''}`}
-                    disabled={!isPinned && !canAdd}
-                    onClick={() => {
-                      if (isPinned) {
-                        setPinnedSections(pinnedSections.filter(p => p !== s.to))
-                      } else if (canAdd) {
-                        setPinnedSections([...pinnedSections, s.to])
-                      }
-                    }}
-                    aria-pressed={isPinned}
-                  >
-                    <span className={styles.toggleThumb} />
-                  </button>
-                </div>
-              )
-            })}
-            <p className={styles.sectionHint} style={{ marginTop: 8 }}>
-              Незакріплені розділи відкриваються через кнопку M
-            </p>
-          </div>
-        )}
+        {navStyle === 'hub' && (() => {
+          const isAdmin = activeProfile?.role === 'admin'
+          const visibleProfileTabs = PROFILE_TABS.filter(t => !t.adminOnly || isAdmin)
+          const MAX_PINNED = 4
+
+          return (
+            <>
+              <div className={styles.navPinSection}>
+                <p className={styles.navPinTitle}>
+                  ГОЛОВНА — МЕНЮ
+                  <span className={styles.navPinCount}>
+                    {pinnedSections.length}/{NAV_STYLE_MAX_PINNED[navStyle]}
+                  </span>
+                </p>
+                {ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || (activeProfile?.f1Enabled ?? false)).map(s => {
+                  const isPinned = pinnedSections.includes(s.to)
+                  const maxPinned = NAV_STYLE_MAX_PINNED[navStyle]
+                  const canAdd = pinnedSections.length < maxPinned
+                  return (
+                    <div key={s.to} className={styles.navPinRow}>
+                      <s.Icon className={styles.navPinIcon} />
+                      <span className={styles.navPinLabel}>{s.label}</span>
+                      <button
+                        type="button"
+                        className={`${styles.toggle} ${isPinned ? styles.toggleOn : ''}`}
+                        disabled={!isPinned && !canAdd}
+                        onClick={() => {
+                          if (isPinned) {
+                            setPinnedSections(pinnedSections.filter(p => p !== s.to))
+                          } else if (canAdd) {
+                            setPinnedSections([...pinnedSections, s.to])
+                          }
+                        }}
+                        aria-pressed={isPinned}
+                      >
+                        <span className={styles.toggleThumb} />
+                      </button>
+                    </div>
+                  )
+                })}
+                <p className={styles.sectionHint} style={{ marginTop: 8 }}>
+                  Незакріплені розділи відкриваються через кнопку M
+                </p>
+              </div>
+
+              <div className={styles.navPinSection} style={{ marginTop: 4 }}>
+                <p className={styles.navPinTitle}>
+                  ПРОФІЛЬ — МЕНЮ
+                  <span className={styles.navPinCount}>
+                    {Math.min(pinnedProfileTabs.filter(id => visibleProfileTabs.some(t => t.id === id)).length, MAX_PINNED)}/{MAX_PINNED}
+                  </span>
+                </p>
+                {visibleProfileTabs.map(tab => {
+                  const isPinned = pinnedProfileTabs.includes(tab.id)
+                  const currentCount = pinnedProfileTabs.filter(id => visibleProfileTabs.some(t => t.id === id)).length
+                  const canAdd = currentCount < MAX_PINNED
+                  return (
+                    <div key={tab.id} className={styles.navPinRow}>
+                      <span className={styles.navPinIcon}>{tab.icon}</span>
+                      <span className={styles.navPinLabel}>{tab.label}</span>
+                      <button
+                        type="button"
+                        className={`${styles.toggle} ${isPinned ? styles.toggleOn : ''}`}
+                        disabled={!isPinned && !canAdd}
+                        onClick={() => {
+                          if (isPinned) {
+                            setPinnedProfileTabs(pinnedProfileTabs.filter(id => id !== tab.id))
+                          } else if (canAdd) {
+                            setPinnedProfileTabs([...pinnedProfileTabs, tab.id])
+                          }
+                        }}
+                        aria-pressed={isPinned}
+                      >
+                        <span className={styles.toggleThumb} />
+                      </button>
+                    </div>
+                  )
+                })}
+                <p className={styles.sectionHint} style={{ marginTop: 8 }}>
+                  Незакріплені таби відкриваються через кнопку ᚨ
+                </p>
+              </div>
+            </>
+          )
+        })()}
       </div>
     </>
   )

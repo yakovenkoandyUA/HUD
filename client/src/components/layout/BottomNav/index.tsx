@@ -11,9 +11,9 @@ import MemoriesIcon  from '../../../assets/icons/nav/memories.svg?react'
 import { useProfileStore } from '../../../store/profileStore'
 import { useUiStore } from '../../../store/uiStore'
 
-type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'admin'
+export type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'admin'
 
-const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
+export const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   { id: 'me',       label: 'Профіль',     icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> },
   { id: 'wallet',   label: 'Гаманець',    icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="18" height="13" rx="2"/><path d="M2 10h18"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M6 3l10 0" strokeWidth="1.3"/></svg> },
   { id: 'plan',     label: 'Тарифи',      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 15L5.5 18.5L7.5 12L2 8H8.5L11 2Z"/></svg> },
@@ -91,7 +91,7 @@ function AnsuzRune({ flipped }: { flipped: boolean }) {
  */
 const BottomNav: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  const { navStyle, navLabelMode, pinnedSections } = useUiStore()
+  const { navStyle, navLabelMode, pinnedSections, pinnedProfileTabs } = useUiStore()
   const f1Enabled = activeProfile?.f1Enabled ?? false
   const { pathname } = useLocation()
   const [searchParams] = useSearchParams()
@@ -171,9 +171,10 @@ const BottomNav: React.FC = () => {
       )
     }
 
-    // Hub → floating pill with Ansuz hub button; first 4 tabs in pill, rest in radial
-    const pinnedProfileTabs  = visibleTabs.slice(0, 4)
-    const radialProfileTabs  = visibleTabs.slice(4)
+    // Hub → floating pill with Ansuz hub button; user-configured pinned tabs in pill, rest in radial
+    const hubPinnedTabs = visibleTabs.filter(t => pinnedProfileTabs.includes(t.id)).slice(0, 4)
+    const hubPinnedIds = new Set(hubPinnedTabs.map(t => t.id))
+    const radialProfileTabs = visibleTabs.filter(t => !hubPinnedIds.has(t.id))
     const arcPos = radialProfileTabs.length <= 3 ? ARC_POSITIONS_3
                  : radialProfileTabs.length === 4 ? ARC_POSITIONS_4
                  : ARC_POSITIONS_5
@@ -206,7 +207,7 @@ const BottomNav: React.FC = () => {
         </div>
 
         <nav className={styles.nav}>
-          {pinnedProfileTabs.slice(0, 2).map(profilePillItem)}
+          {hubPinnedTabs.slice(0, 2).map(profilePillItem)}
           <button
             type="button"
             className={`${styles.hubBtn} ${hubOpen ? styles.hubBtnOpen : ''}`}
@@ -215,7 +216,7 @@ const BottomNav: React.FC = () => {
           >
             <AnsuzRune flipped={hubOpen} />
           </button>
-          {pinnedProfileTabs.slice(2, 4).map(profilePillItem)}
+          {hubPinnedTabs.slice(2, 4).map(profilePillItem)}
         </nav>
       </>
     )
