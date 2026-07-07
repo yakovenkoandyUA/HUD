@@ -45,6 +45,10 @@ export interface IUser extends Document {
   billingOrderId: string | null
   cancelAtPeriodEnd: boolean
   lastBillingSyncAt: Date | null
+  // Renewal reminder tracking — null = not sent yet, reset on successful payment
+  renewalReminder7dSentAt: Date | null
+  renewalReminder1dSentAt: Date | null
+  downgradedAt: Date | null
   // Account lifecycle
   accountStatus: AccountStatus
   deletedAt: Date | null
@@ -89,10 +93,13 @@ const schema = new Schema<IUser>({
   currentPeriodEnd:       { type: Date, default: null },
   trialEndsAt:            { type: Date, default: null },
   earlyBirdLockedPrice:   { type: Number, default: null },
-  billingInterval:        { type: String, enum: ['month', 'year', null], default: null },
-  billingOrderId:         { type: String, default: null },
-  cancelAtPeriodEnd:      { type: Boolean, default: false },
-  lastBillingSyncAt:      { type: Date, default: null },
+  billingInterval:           { type: String, enum: ['month', 'year', null], default: null },
+  billingOrderId:            { type: String, default: null },
+  cancelAtPeriodEnd:         { type: Boolean, default: false },
+  lastBillingSyncAt:         { type: Date, default: null },
+  renewalReminder7dSentAt:   { type: Date, default: null },
+  renewalReminder1dSentAt:   { type: Date, default: null },
+  downgradedAt:              { type: Date, default: null },
   // Account lifecycle — safe defaults, no migration needed
   accountStatus: { type: String, enum: ['active', 'deletion_requested', 'deleted'], default: 'active' },
   deletedAt:     { type: Date, default: null },

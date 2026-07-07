@@ -204,13 +204,17 @@ export async function handleWayForPayCallback(req: Request, res: Response): Prom
       await order.save()
 
       await User.findByIdAndUpdate(order.userId, {
-        plan:              order.planId,
-        subscriptionStatus:'active',
-        billingProvider:   'wayforpay',
-        billingInterval:   order.interval,
-        billingOrderId:    order.orderReference,
-        currentPeriodEnd:  calculateCurrentPeriodEnd(now, order.interval),
-        lastBillingSyncAt: now,
+        plan:                     order.planId,
+        subscriptionStatus:       'active',
+        billingProvider:          'wayforpay',
+        billingInterval:          order.interval,
+        billingOrderId:           order.orderReference,
+        currentPeriodEnd:         calculateCurrentPeriodEnd(now, order.interval),
+        lastBillingSyncAt:        now,
+        // Reset reminder flags so next period can send fresh reminders
+        renewalReminder7dSentAt:  null,
+        renewalReminder1dSentAt:  null,
+        downgradedAt:             null,
       })
 
       console.error('[billing/callback] Activated plan:', order.planId, 'for user:', String(order.userId))

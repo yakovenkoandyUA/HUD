@@ -18,6 +18,8 @@ import './jobs/pushJobs'
 import './jobs/routineReminders'
 import './jobs/recurringReminders'
 import './jobs/dayReminder'
+import './jobs/renewalReminder'
+import './jobs/subscriptionExpiry'
 import { errorHandler } from './middleware/errorHandler'
 
 import authRoutes from './routes/auth'
