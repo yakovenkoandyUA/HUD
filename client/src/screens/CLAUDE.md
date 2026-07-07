@@ -193,6 +193,23 @@ draw-path: наступна гонка `stroke: var(--accent)`, пройдені
 - **MeAchievements** — грід бейджів досягнень (косметичний прогрес, не керує доступом до фіч); `ACHIEVEMENTS` з `data/achievements.ts`, `unlockedAchievements` в профілі; `useAchievementsStore.getState().unlock(id)` викликається в місцях першого досягнення (напр. зміна теми, прийняття сімейного запиту)
 - Кожен підекран — окремий файл-компонент у `ProfilePage/`, повертає лише внутрішній контент (без власної `settingsCard`-обгортки — її дає `MeTab` на рівень акордеон-картки), читає потрібні Zustand stores напряму (без prop drilling)
 
+**PlanTab** (`?tab=plan`):
+- 4 тири: FREE / PERSONAL (149₴/99₴ річно) / COUPLE (249₴/179₴) / FAMILY (399₴/279₴)
+- Поточний план визначається через `usePlan().plan` з `profileStore` (падає до 'free' для старих юзерів)
+- Billing cycle toggle (Місячно / Річно −33%), Early Bird банер
+- CTA кнопки показують "Поточний план" або "Перейти на X" + badge "НЕЗАБАРОМ" (Paddle checkout — Phase 3)
+- Таблиця порівняння: 5-колонковий грід (`1fr 52px 52px 52px 52px`), accordion "Показати всі N функцій"
+- CSS акцент-тини: `cardPersonal` (accent), `cardCouple` (second), `cardFamily` (gold)
+
+**FamilyTab** (або підрозділ МeFamily):
+- Search section (пошук + надсилання запитів) захований `UpgradePrompt feature="familyLink"` для free/personal планів
+- Accepted/pending члени лишаються видимими незалежно від плану
+
+**SpacesTab:**
+- Лічильник просторів у заголовку (N/max) якщо `limits.maxSpaces !== -1`
+- `UpgradePrompt compact` замість кнопки "+" коли `isAtLimit('maxSpaces', spaces.length)`
+- Підказка про sharedSpaces для free/personal планів
+
 **WalletTab:**
 - Три settingsCard: РАХУНКИ / ДЕНЬ ЗАРПЛАТИ / КАТЕГОРІЇ
 - Salary stepper — compact inline (28px кнопки, mono число, debounce 800ms)

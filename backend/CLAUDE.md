@@ -13,6 +13,17 @@
 - `requireAuth` — перевіряє JWT, додає `req.userId`, `req.userRole`
 - `requireAdmin` — 403 якщо `req.userRole !== 'admin'`
 - `requireVerified` — 403 якщо `!user.isVerified` (DB-запит по `req.userId`, бо `isVerified` не входить у JWT payload). Навішаний на AI-фічі, що коштують грошей: `router.use` в `routes/ai.ts` (chat + chef-chat), інлайн на `POST /api/finance/report/:month` (тільки генерація, GET кешованого звіту відкритий), `POST /api/receipt/scan`, `POST /api/recipes/generate`
+- `loadUser` — завантажує повний `User` документ у `req.user` (для feature gates). **НЕ** глобальний — тільки на гейтованих роутах (щоб не бити в DB на кожному запиті). `req.user` задекларований в `types/express.d.ts` через inline `import()` (не top-level, щоб файл залишався ambient declaration).
+
+## Entitlements (білінг-архітектура, Phase 1+2)
+
+- `backend/src/config/plans.ts` — single source of truth по планах: features + limits для free/personal/couple/family
+- `backend/src/utils/entitlements.ts`:
+  - `assertFeature(user, feature)` — кидає `{ status:403, code:'PLAN_GATE', feature }` якщо фіча недоступна (no-op поки `BILLING_ENABLED !== "true"`)
+  - `assertLimit(user, limitKey, currentCount)` — кидає `{ status:403, code:'PLAN_LIMIT', limitKey, limit }` (no-op аналогічно)
+  - `requireFeature(feature)` — Express middleware factory, передає помилку в `next(err)`
+- `errorHandler.ts` — обробляє `PLAN_GATE` → `{ error, code, feature }` і `PLAN_LIMIT` → `{ error, code, limitKey, limit }`
+- Guards навішані: `requireFeature('aiChat'/'aiChefChat')` у `routes/ai.ts`, `requireFeature('receiptScanner')` у `routes/receipt.ts`, `requireFeature('yearbookGenerate')` у `routes/yearbook.ts`, `requireFeature('familyLink')` у `routes/family.ts`, `requireFeature('advancedFinance')` у `routes/finance.ts`, `assertLimit(maxSpaces/sharedSpaces)` у `spaceController.ts`, timeline history у `timelineController.ts`
 
 ## API ендпоінти
 

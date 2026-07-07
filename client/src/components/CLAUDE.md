@@ -41,7 +41,10 @@ components/
 │   │                          default export — самостійний bottom sheet; `TimeWheelRow` (named export) —
 │   │                          ті ж барабани без обгортки-шіта, для вбудовування в DeadlineSheet
 │   ├── AchievementUnlockedModal ← non-blocking slide-down toast при розблокуванні ачівки/рангу
-│   └── PwaInstallBanner    ← банер встановлення PWA
+│   ├── PwaInstallBanner    ← банер встановлення PWA
+│   ├── UpgradePrompt       ← frosted-glass картка апгрейду плану (props: feature?, limitKey?,
+│   │                          currentCount?, message?, compact?); CTA → /profile?tab=plan
+│   └── PaywallGate         ← wrapper: `useCanUseFeature(feature)` → children або fallback/UpgradePrompt
 ├── layout/
 │   ├── TopBar
 │   ├── BottomNav           ← F1 іконка тільки якщо f1Enabled (boolean feature flag)

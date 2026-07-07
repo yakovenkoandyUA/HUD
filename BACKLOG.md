@@ -241,8 +241,18 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 ### ~~6. 🚀 Onboarding~~ ✅ Зроблено
 5-кроковий флоу при першій реєстрації: Welcome (MimirFillIcon) → Фінанси (день поповнення 1–31 grid + категорії витрат) → Звичка (preset chips + custom input) → Перший план (куди мрієш поїхати, skippable) → Done (MimirFillIcon fill-анімація + "Криниця відкрита. Мімір пам'ятає все — тепер і твоє. Твоя хроніка починається."). `onboardingCompleted: boolean` на User модель, `ProtectedRoute` редіректить на `/onboarding` якщо `=== false`, бекенд `updateMe` зберігає після Done.
 
-### 7. 💳 Білінг (Paddle)
-Free / Personal 149₴ / Couple 249₴ / Family 399₴. Сітка затверджена. Наступний пріоритет: `plan: 'free'|'personal'|'couple'|'family'` на User-моделі, Paddle Checkout, webhook → user.plan, feature gates на AI-фічах і FamilyLink.
+### ~~7. 💳 Білінг Phase 1 + 2~~ ✅ Зроблено (архітектура без Paddle)
+
+**Phase 1A** — `plan` / `subscriptionStatus` / Paddle-поля на User-моделі (safe defaults, не Breaking change). `backend/src/config/plans.ts` — single source of truth (features + limits). `entitlements.ts` — `assertFeature`/`assertLimit`/`requireFeature` (no-ops поки `BILLING_ENABLED !== "true"`). `loadUser` middleware (тільки на гейтованих роутах). `plan` + `subscriptionStatus` у профільній відповіді. Фронтенд `client/src/config/plans.ts` + `usePlan()` / `useCanUseFeature()` hooks.
+
+**Phase 1B** — backend guards навішані: `requireFeature('aiChat'/'aiChefChat')` на `/api/ai/*`, `requireFeature('receiptScanner')` на `/api/receipt/scan`, `requireFeature('yearbookGenerate')` на `POST /api/yearbook/:year/generate`, `requireFeature('familyLink')` на `POST /api/family/request`, `requireFeature('advancedFinance')` на `POST /api/finance/report/:month`, `assertLimit(maxSpaces/maxMembersPerSharedSpace/sharedSpaces)` в SpaceController, timeline history year check в `timelineController`. Централізована обробка `PLAN_GATE`/`PLAN_LIMIT` в `errorHandler.ts`.
+
+**Phase 2** — frontend soft locks: `PaywallGate` wrapper + `UpgradePrompt` frosted-glass компонент (feature/limit варіанти, compact mode). Гейти: AI-кнопка AppHeader, chef-кнопка RecipeDetail, scan-кнопка ExpenseForm, AI-звіт MonthlyReport, generate-кнопка Yearbook (→ UpgradePrompt замість кнопки), search FamilyTab (PaywallGate), addBtn SpacesTab (UpgradePrompt compact при maxSpaces), TimelineBody locked year (UpgradePrompt). PlanTab переписаний: 4 тири (free/personal/couple/family) з реальним `usePlan().plan` замість хардкоду.
+
+**Наступне:** Phase 3 — Paddle Checkout інтеграція + Phase 4 — Paddle webhooks (оновлення user.plan після оплати).
+
+### 8. 💳 Білінг Phase 3 — Paddle Checkout
+Paddle.js Inline Checkout, `/api/billing/create-session` endpoint, кнопки "Перейти на X" в PlanTab відкривають Paddle overlay. Тест в sandbox перед релізом.
 
 ---
 

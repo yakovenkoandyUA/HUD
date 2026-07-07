@@ -5,6 +5,8 @@
 ```
 store/
 ├── profileStore.ts        — token, activeProfile, profiles, f1Enabled
+│                            Profile включає: plan ('free'|'personal'|'couple'|'family'),
+│                            subscriptionStatus ('none'|'trialing'|'active'|'past_due'|'canceled')
 │                            persist: token+profile (ключ: profile-storage)
 ├── financeStore.ts        — balance, transactions
 │                            БЕЗ persist (backend-only)
