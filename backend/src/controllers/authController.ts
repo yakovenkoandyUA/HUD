@@ -257,6 +257,11 @@ export async function loginEmail(req: Request, res: Response): Promise<void> {
       return
     }
 
+    if (user.accountStatus === 'deletion_requested' || user.accountStatus === 'deleted') {
+      res.status(403).json({ error: 'Цей акаунт позначений для видалення. Зверніться до підтримки.' })
+      return
+    }
+
     const userId = (user._id as { toString(): string }).toString()
     await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user))
   } catch {
@@ -595,6 +600,13 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 
     const user = await User.findById(stored.userId)
     if (!user) { res.status(401).json({ error: 'User not found' }); return }
+
+    if (user.accountStatus === 'deletion_requested' || user.accountStatus === 'deleted') {
+      await stored.deleteOne()
+      res.clearCookie('rt', { httpOnly: true, secure: true, sameSite: 'none', path: '/' })
+      res.status(403).json({ error: 'Акаунт позначений для видалення.' })
+      return
+    }
 
     // Rotate: delete old, issue new
     await stored.deleteOne()

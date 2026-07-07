@@ -2,6 +2,7 @@ import { Schema, model, Document } from 'mongoose'
 
 export type PlanId = 'free' | 'personal' | 'couple' | 'family'
 export type SubscriptionStatus = 'none' | 'trialing' | 'active' | 'past_due' | 'canceled'
+export type AccountStatus = 'active' | 'deletion_requested' | 'deleted'
 
 export interface IUser extends Document {
   name: string
@@ -39,6 +40,9 @@ export interface IUser extends Document {
   currentPeriodEnd: Date | null
   trialEndsAt: Date | null
   earlyBirdLockedPrice: number | null
+  // Account lifecycle
+  accountStatus: AccountStatus
+  deletedAt: Date | null
 }
 
 const schema = new Schema<IUser>({
@@ -80,6 +84,9 @@ const schema = new Schema<IUser>({
   currentPeriodEnd:       { type: Date, default: null },
   trialEndsAt:            { type: Date, default: null },
   earlyBirdLockedPrice:   { type: Number, default: null },
+  // Account lifecycle — safe defaults, no migration needed
+  accountStatus: { type: String, enum: ['active', 'deletion_requested', 'deleted'], default: 'active' },
+  deletedAt:     { type: Date, default: null },
 })
 
 export const User = model<IUser>('User', schema)

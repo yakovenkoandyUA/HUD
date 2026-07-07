@@ -50,6 +50,7 @@ import timelineRouter from './routes/timeline'
 import yearbookRouter from './routes/yearbook'
 import placesRouter from './routes/places'
 import spacesRouter from './routes/spaces'
+import userRouter from './routes/user'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -105,6 +106,7 @@ app.use('/api/timeline', timelineRouter)
 app.use('/api/yearbook', yearbookRouter)
 app.use('/api/places', placesRouter)
 app.use('/api/spaces', spacesRouter)
+app.use('/api/user', userRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

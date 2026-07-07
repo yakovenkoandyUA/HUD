@@ -33,6 +33,8 @@ import NotesScreen from './screens/Notes'
 import TimelineScreen from './screens/Timeline'
 import YearbookScreen from './screens/Yearbook'
 import OnboardingScreen from './screens/Onboarding'
+import TermsPage from './screens/TermsPage'
+import PrivacyPage from './screens/PrivacyPage'
 import ErrorBoundary from './components/ui/ErrorBoundary'
 import './App.css'
 
@@ -78,6 +80,8 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/register" element={<RegisterScreen />} />
         <Route path="/verify" element={<VerifyEmail />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/profile-select" element={<Navigate to="/login" replace />} />
 
         {/* Protected — require token */}

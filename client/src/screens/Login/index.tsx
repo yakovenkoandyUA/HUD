@@ -190,6 +190,12 @@ const LoginScreen: React.FC = () => {
           Ще немає акаунту?{' '}
           <Link to="/register" className={styles.link}>Зареєструватись</Link>
         </p>
+
+        <p className={styles.legalFooter}>
+          <Link to="/terms" className={styles.legalLink}>Умови</Link>
+          <span className={styles.legalSep}>·</span>
+          <Link to="/privacy" className={styles.legalLink}>Конфіденційність</Link>
+        </p>
       </div>
     </div>
   )

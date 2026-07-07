@@ -188,3 +188,25 @@
 .link:hover {
   opacity: 0.8;
 }
+
+.legalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.legalLink {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.legalLink:hover { color: var(--accent); }
+
+.legalSep {
+  font-size: 10px;
+  color: var(--text3);
+}
