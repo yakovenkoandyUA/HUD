@@ -207,6 +207,12 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 
 **Залишається відкритим:** історична погода на дату спогаду (wttr.in past dates), stats sheet розширення.
 
+### ✅ UX polish — аудит-фідбек (2026-07-07)
+
+- **BottomNav: labels** — classic стиль отримав підписи під всіма іконками. Pill/hub стиль: label тільки для активного item (item розширюється з круглого 46px в mini-pill форму).
+- **Life Spaces strip на Dashboard** — новий компонент `SpacesStrip`: горизонтальний скрол просторів між `TodayHabits` і calendar wrap. Прихований якщо 0 spaces і f1Enabled=false. F1 virtual card (некліка́бельні space-карти поки немає detail route; F1 card → /f1).
+- **MemoryDetail context block** — нова секція "З КИМ" + "НАСТРІЙ" над секцією МІСЦЯ. З КИМ: chips з аватарами/ініціалами з familyStore, mapped з `withProfiles[]`. Настрій: fetch `/api/mood/history?month=`, кольоровий dot 1–5 + score/5.
+
 ### 🔵 Стратегічне (Фаза 2+)
 - ~~**Onboarding flow**~~ ✅ Зроблено
 - **Лендінг** — mimir.app або аналог

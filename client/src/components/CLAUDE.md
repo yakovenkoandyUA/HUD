@@ -51,6 +51,8 @@ components/
 │   │                          3 стилі (`navStyle`): classic (повна панель) / pill (плаваюча, тільки
 │   │                          закріплені) / hub (плаваюча + центральна руна Ансуз — відкриває
 │   │                          радіальне меню решти розділів, rotate 180° при відкритті).
+│   │                          Classic: label під кожною іконкою (завжди). Pill/hub: label тільки для
+│   │                          активного item (item розширюється в mini-pill з текстом).
 │   │                          На `/profile` завжди повна панель табів незалежно від navStyle
 │   └── ThemePicker         ← теми + профіль + install PWA + кеш
 ├── finance/
@@ -154,6 +156,9 @@ components/
     ├── RaceHeroCard        ← F1 блок в Dashboard (тільки якщо f1Enabled)
     ├── RaceCountdownStrip  ← стрічка відліку до наступної гонки
     ├── GreetingBlock       ← привітання + дата (компактніша версія)
+    ├── SpacesStrip         ← горизонтальна стрічка Life Spaces на Dashboard; прихована якщо 0 spaces
+    │                          і f1Enabled=false; F1 virtual card → /f1; реальні Space-карти поки
+    │                          некліка́бельні (немає Space detail route)
     ├── DayOverlay          ← fullscreen "МІЙ ДЕНЬ" (mood, звички по слотах — RoutineRing в
     │                          деталізованому вигляді, погода)
     └── SprintMini, LessonsMini, TodosMini
