@@ -121,7 +121,23 @@ const BottomNav: React.FC = () => {
     const isAdmin = activeProfile?.role === 'admin'
     const visibleTabs = PROFILE_TABS.filter(t => !t.adminOnly || isAdmin)
 
-    const profileNav = (tab: typeof PROFILE_TABS[number]) => {
+    const profilePillItem = (tab: typeof PROFILE_TABS[number]) => {
+      const isActive = activeTab === tab.id
+      const showLabel = navLabelMode !== 'never' && isActive
+      return (
+        <button
+          key={tab.id}
+          type="button"
+          className={`${styles.item} ${isActive ? styles.active : ''} ${showLabel ? styles.itemWithLabel : ''}`}
+          onClick={() => navigate(`/profile?tab=${tab.id}`, { replace: true })}
+        >
+          <span className={styles.icon}>{tab.icon}</span>
+          {showLabel && <span className={styles.navItemLabel}>{tab.label}</span>}
+        </button>
+      )
+    }
+
+    const profileClassicItem = (tab: typeof PROFILE_TABS[number]) => {
       const isActive = activeTab === tab.id
       const showLabel = navLabelMode === 'always' || (navLabelMode === 'active' && isActive)
       return (
@@ -137,19 +153,71 @@ const BottomNav: React.FC = () => {
       )
     }
 
-    // Classic/hub → full-width tab bar (hub radial doesn't apply to fixed profile tabs)
-    // Pill → floating pill with profile tabs
-    if (navStyle === 'pill') {
+    // Classic → full-width tab bar
+    if (navStyle === 'classic') {
       return (
-        <nav className={styles.nav}>
-          {visibleTabs.map(profileNav)}
+        <nav className={`${styles.nav} ${styles.navProfile}`}>
+          {visibleTabs.map(profileClassicItem)}
         </nav>
       )
     }
+
+    // Pill → floating pill, all profile tabs
+    if (navStyle === 'pill') {
+      return (
+        <nav className={styles.nav}>
+          {visibleTabs.map(profilePillItem)}
+        </nav>
+      )
+    }
+
+    // Hub → floating pill with Ansuz hub button; first 4 tabs in pill, rest in radial
+    const pinnedProfileTabs  = visibleTabs.slice(0, 4)
+    const radialProfileTabs  = visibleTabs.slice(4)
+    const arcPos = radialProfileTabs.length <= 3 ? ARC_POSITIONS_3
+                 : radialProfileTabs.length === 4 ? ARC_POSITIONS_4
+                 : ARC_POSITIONS_5
+
     return (
-      <nav className={`${styles.nav} ${styles.navProfile}`}>
-        {visibleTabs.map(profileNav)}
-      </nav>
+      <>
+        {hubOpen && <div className={styles.backdrop} onClick={() => setHubOpen(false)} />}
+
+        <div className={styles.pillsAnchor}>
+          {radialProfileTabs.map((tab, i) => {
+            const pos = arcPos[i] ?? arcPos[arcPos.length - 1]
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                className={`${styles.pill} ${hubOpen ? styles.pillVisible : ''} ${isActive ? styles.pillActive : ''}`}
+                style={{
+                  '--px': `${pos.x}px`,
+                  '--py': `${pos.y}px`,
+                  transitionDelay: hubOpen ? `${i * 35}ms` : `${(radialProfileTabs.length - 1 - i) * 25}ms`,
+                } as React.CSSProperties}
+                onClick={() => { setHubOpen(false); navigate(`/profile?tab=${tab.id}`, { replace: true }) }}
+              >
+                <span className={styles.pillIcon}>{tab.icon}</span>
+                <span className={styles.pillLabel}>{tab.label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <nav className={styles.nav}>
+          {pinnedProfileTabs.slice(0, 2).map(profilePillItem)}
+          <button
+            type="button"
+            className={`${styles.hubBtn} ${hubOpen ? styles.hubBtnOpen : ''}`}
+            onClick={() => setHubOpen(o => !o)}
+            aria-label="Всі розділи профілю"
+          >
+            <AnsuzRune flipped={hubOpen} />
+          </button>
+          {pinnedProfileTabs.slice(2, 4).map(profilePillItem)}
+        </nav>
+      </>
     )
   }
 
