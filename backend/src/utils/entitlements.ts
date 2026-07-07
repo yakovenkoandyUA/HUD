@@ -1,3 +1,4 @@
+import type { Request, Response, NextFunction } from 'express'
 import { PLANS, type Feature, type PlanLimits } from '../config/plans'
 import type { IUser } from '../models/User'
 
@@ -33,6 +34,22 @@ export function assertFeature(user: IUser, feature: Feature): void {
     err.code = 'PLAN_GATE'
     err.feature = feature
     throw err
+  }
+}
+
+/**
+ * Express middleware factory — calls next(err) with PLAN_GATE error when billing
+ * is enabled and the user's plan doesn't include the feature.
+ * Requires loadUser to run before this middleware (so req.user is populated).
+ */
+export function requireFeature(feature: Feature) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    try {
+      assertFeature(req.user!, feature)
+      next()
+    } catch (err) {
+      next(err)
+    }
   }
 }
 

@@ -1,6 +1,7 @@
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
 import { Space } from '../models/Space'
 import { User } from '../models/User'
+import { assertLimit } from '../utils/entitlements'
 
 function memberPublic(u: InstanceType<typeof User>, role: string) {
   return {
@@ -44,12 +45,17 @@ export async function getSpaces(req: Request, res: Response): Promise<void> {
 }
 
 /** POST /api/spaces — створити новий простір */
-export async function createSpace(req: Request, res: Response): Promise<void> {
+export async function createSpace(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { name, type, color, emoji } = req.body as {
       name?: string; type?: string; color?: string; emoji?: string
     }
     if (!name?.trim()) { res.status(400).json({ error: 'Name required' }); return }
+
+    if (req.user) {
+      const count = await Space.countDocuments({ ownerId: req.userId })
+      assertLimit(req.user, 'maxSpaces', count)
+    }
 
     const space = await Space.create({
       name:    name.trim(),
@@ -63,7 +69,7 @@ export async function createSpace(req: Request, res: Response): Promise<void> {
     const me = await User.findById(req.userId)
     res.status(201).json(serializeSpace(space, me ? [me] : []))
   } catch (err) {
-    res.status(500).json({ error: 'Server error' })
+    next(err)
   }
 }
 
@@ -116,7 +122,7 @@ export async function deleteSpace(req: Request, res: Response): Promise<void> {
 }
 
 /** POST /api/spaces/:id/members — додати учасника по username (тільки власник) */
-export async function addMember(req: Request, res: Response): Promise<void> {
+export async function addMember(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const space = await Space.findOne({ _id: req.params.id, ownerId: req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
@@ -132,6 +138,11 @@ export async function addMember(req: Request, res: Response): Promise<void> {
       res.status(409).json({ error: 'Already a member' }); return
     }
 
+    if (req.user) {
+      // members count excludes owner (index 0), so current non-owner members = space.members.length - 1
+      assertLimit(req.user, 'maxMembersPerSharedSpace', space.members.length - 1)
+    }
+
     space.members.push({ userId: uid, role: 'member' })
     await space.save()
 
@@ -139,7 +150,7 @@ export async function addMember(req: Request, res: Response): Promise<void> {
     const users = await User.find({ _id: { $in: userIds } })
     res.json(serializeSpace(space, users))
   } catch (err) {
-    res.status(500).json({ error: 'Server error' })
+    next(err)
   }
 }
 

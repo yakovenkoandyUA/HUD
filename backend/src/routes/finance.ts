@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { requireVerified } from '../middleware/requireVerified'
+import { loadUser } from '../middleware/loadUser'
+import { requireFeature } from '../utils/entitlements'
 import Transaction from '../models/Transaction'
 import FinancialReport from '../models/FinancialReport'
 import { User } from '../models/User'
@@ -131,7 +133,7 @@ router.get('/report/:month', async (req: Request, res: Response): Promise<void> 
 })
 
 /** POST /api/finance/report/:month — generate (or regenerate) report */
-router.post('/report/:month', requireVerified, async (req: Request, res: Response): Promise<void> => {
+router.post('/report/:month', requireVerified, loadUser, requireFeature('advancedFinance'), async (req: Request, res: Response): Promise<void> => {
   const { month } = req.params
   if (!/^\d{4}-\d{2}$/.test(month)) { res.status(400).json({ error: 'Invalid month format' }); return }
 

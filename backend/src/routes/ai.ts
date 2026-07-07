@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { requireVerified } from '../middleware/requireVerified'
+import { loadUser } from '../middleware/loadUser'
+import { requireFeature } from '../utils/entitlements'
 import Transaction from '../models/Transaction'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
@@ -11,6 +13,7 @@ import { User } from '../models/User'
 const router = Router()
 router.use(requireAuth)
 router.use(requireVerified)
+router.use(loadUser)
 
 // ── Domain detection ─────────────────────────────────────────────────────────
 
@@ -89,7 +92,7 @@ ${recipes.map(r => `• ${r.title} (${r.category ?? '—'}, ${r.cookTime ?? '?'}
 
 // ── POST /api/ai/chat (SSE streaming) ────────────────────────────────────────
 
-router.post('/chat', async (req: Request, res: Response): Promise<void> => {
+router.post('/chat', requireFeature('aiChat'), async (req: Request, res: Response): Promise<void> => {
   const { message } = req.body as { message?: string }
   if (!message?.trim()) { res.status(400).json({ error: 'message required' }); return }
 
@@ -198,7 +201,7 @@ ${ingredients}
 ${steps}`
 }
 
-router.post('/chef-chat', async (req: Request, res: Response): Promise<void> => {
+router.post('/chef-chat', requireFeature('aiChefChat'), async (req: Request, res: Response): Promise<void> => {
   const { message, recipe } = req.body as { message?: string; recipe?: ChefRecipe }
   if (!message?.trim()) { res.status(400).json({ error: 'message required' }); return }
   if (!recipe?.title) { res.status(400).json({ error: 'recipe required' }); return }
