@@ -28,6 +28,7 @@ import { calcDailyBudget } from './helpers'
 import { useAchievementsStore } from '../../store/achievementsStore'
 import AchievementTeaser from '../../components/dashboard/AchievementTeaser'
 import type { ExpenseCategory } from '../../types'
+import SpacesStrip from '../../components/dashboard/SpacesStrip'
 import DayOverlay from '../../components/dashboard/DayOverlay'
 import styles from './Dashboard.module.css'
 
@@ -131,6 +132,8 @@ const Dashboard: React.FC = () => {
           onToggle={toggleItem}
           onOpenDay={() => setShowDay(true)}
         />
+
+        <SpacesStrip onF1Click={() => navigate('/f1')} />
 
         <div className={styles.calendarWrap}>
           {raceThisWeek ? (

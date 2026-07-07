@@ -269,3 +269,25 @@
   line-height: 1;
   white-space: nowrap;
 }
+
+/* ── Active-tab label for pill / hub styles ── */
+.item.itemWithLabel {
+  width: auto;
+  min-width: 46px;
+  height: auto;
+  padding: 5px 11px 6px;
+  border-radius: 20px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItemLabel {
+  font-family: var(--font-ui);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  color: inherit;
+}

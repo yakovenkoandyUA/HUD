@@ -10,6 +10,7 @@ import Modal from '../../components/ui/Modal'
 import { useMemoriesStore } from '../../store/memoriesStore'
 import { useUiStore } from '../../store/uiStore'
 import { useFinanceStore } from '../../store/financeStore'
+import { useFamilyStore } from '../../store/familyStore'
 import { uploadToCloudinary } from '../../utils/uploadToCloudinary'
 import { generateMemoryPosterBlob } from '../../utils/generateMemoryPoster'
 import { useLongPress } from '../../hooks/useLongPress'
@@ -322,9 +323,11 @@ const MemoryDetailScreen: React.FC = () => {
     useMemoriesStore()
   const { showToast } = useUiStore()
   const { transactions } = useFinanceStore()
+  const { accepted, fetchFamily } = useFamilyStore()
 
   const memory = memories.find(m => m.id === id)
   const [related, setRelated] = useState<Memory[]>([])
+  const [moodScore, setMoodScore] = useState<number | null>(null)
 
   // Deep-link entry (e.g. from Timeline) can land here before memoriesStore was ever populated.
   useEffect(() => {
@@ -337,6 +340,37 @@ const MemoryDetailScreen: React.FC = () => {
     fetchRelated(id).then(r => { if (!cancelled) setRelated(r) })
     return () => { cancelled = true }
   }, [id, fetchRelated])
+
+  // Load mood for memory date + family members (for withProfiles chips)
+  useEffect(() => {
+    if (!memory) return
+    let cancelled = false
+
+    const load = async () => {
+      // Mood for this date
+      try {
+        const month = memory.date.slice(0, 7)
+        const res = await authFetch(`/api/mood/history?month=${month}`)
+        if (res.ok) {
+          const history = await res.json() as Record<string, number | { score: number }>
+          const entry = history[memory.date]
+          if (!cancelled && entry !== undefined) {
+            const score = typeof entry === 'number' ? entry : (entry as { score: number }).score
+            setMoodScore(score ?? null)
+          }
+        }
+      } catch { /* offline */ }
+
+      // Family members for withProfiles mapping
+      if ((memory.withProfiles ?? []).length > 0 && accepted.length === 0) {
+        fetchFamily()
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memory?.id])
 
   const [viewerIndex, setViewerIndex]   = useState<number | null>(null)
   const [uploading, setUploading]       = useState(false)
@@ -684,6 +718,41 @@ const MemoryDetailScreen: React.FC = () => {
 					</div>
 				)}
 			</div>
+
+			{/* ── Context block: people + mood ── */}
+			{((memory.withProfiles ?? []).length > 0 || moodScore !== null) && (
+				<div className={styles.contextBlock}>
+					{(memory.withProfiles ?? []).length > 0 && (
+						<div className={styles.contextSection}>
+							<span className={styles.contextLabel}>З КИМ</span>
+							<div className={styles.contextChips}>
+								{(memory.withProfiles ?? []).map(uid => {
+									const member = accepted.find(a => a.id === uid)
+									if (!member) return null
+									return (
+										<span key={uid} className={styles.personChip}>
+											{member.avatarUrl
+												? <img src={member.avatarUrl} alt={member.name} className={styles.personAvatar} />
+												: <span className={styles.personInitial}>{member.name[0]}</span>
+											}
+											<span className={styles.personName}>{member.name.split(' ')[0]}</span>
+										</span>
+									)
+								})}
+							</div>
+						</div>
+					)}
+					{moodScore !== null && (
+						<div className={styles.contextSection}>
+							<span className={styles.contextLabel}>НАСТРІЙ</span>
+							<span className={styles.moodChip} data-score={moodScore}>
+								<span className={styles.moodDot} />
+								<span className={styles.moodScore}>{moodScore}/5</span>
+							</span>
+						</div>
+					)}
+				</div>
+			)}
 
 			{/* ── Places section ── */}
 			{((memory.places ?? []).length > 0 || true) && (

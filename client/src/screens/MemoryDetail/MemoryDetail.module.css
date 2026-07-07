@@ -1297,6 +1297,104 @@
 }
 
 @keyframes placeSpinAnim { to { transform: rotate(360deg); } }
+
+/* ── Context block: people + mood ── */
+.contextBlock {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	padding: 4px 16px 12px;
+}
+
+.contextSection {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.contextLabel {
+	font-family: var(--font-ui);
+	font-size: 8.5px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	color: var(--text3);
+}
+
+.contextChips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.personChip {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 9px 3px 4px;
+	border-radius: 100px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+}
+
+.personAvatar {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex-shrink: 0;
+}
+
+.personInitial {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: var(--accent);
+	color: var(--bg);
+	font-family: var(--font-ui);
+	font-size: 9px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.personName {
+	font-family: var(--font-ui);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text2);
+}
+
+.moodChip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px 4px 8px;
+	border-radius: 100px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+}
+
+.moodDot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.moodChip[data-score="1"] .moodDot { background: #e53935; }
+.moodChip[data-score="2"] .moodDot { background: #f57c00; }
+.moodChip[data-score="3"] .moodDot { background: #fbc02d; }
+.moodChip[data-score="4"] .moodDot { background: #7cb342; }
+.moodChip[data-score="5"] .moodDot { background: var(--accent); }
+
+.moodScore {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text2);
+}
 .placeDetailsSpinner {
 	display: inline-block;
 	width: 10px;

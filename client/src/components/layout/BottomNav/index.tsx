@@ -150,6 +150,7 @@ const BottomNav: React.FC = () => {
             }
           >
             <s.Icon className={styles.icon} />
+            <span className={styles.classicLabel}>{s.label}</span>
           </NavLink>
         ))}
       </nav>
@@ -167,9 +168,16 @@ const BottomNav: React.FC = () => {
         key={s.to}
         to={s.to}
         end={s.to === '/'}
-        className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+        className={({ isActive }) =>
+          `${styles.item} ${isActive ? styles.active : ''} ${isActive ? styles.itemWithLabel : ''}`
+        }
       >
-        <s.Icon className={styles.icon} />
+        {({ isActive }) => (
+          <>
+            <s.Icon className={styles.icon} />
+            {isActive && <span className={styles.navItemLabel}>{s.label}</span>}
+          </>
+        )}
       </NavLink>
     )
 
@@ -240,9 +248,16 @@ const BottomNav: React.FC = () => {
             key={s.to}
             to={s.to}
             end={s.to === '/'}
-            className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+            className={({ isActive }) =>
+              `${styles.item} ${isActive ? styles.active : ''} ${isActive ? styles.itemWithLabel : ''}`
+            }
           >
-            <s.Icon className={styles.icon} />
+            {({ isActive }) => (
+              <>
+                <s.Icon className={styles.icon} />
+                {isActive && <span className={styles.navItemLabel}>{s.label}</span>}
+              </>
+            )}
           </NavLink>
         ))}
 
@@ -260,9 +275,16 @@ const BottomNav: React.FC = () => {
             key={s.to}
             to={s.to}
             end={s.to === '/'}
-            className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+            className={({ isActive }) =>
+              `${styles.item} ${isActive ? styles.active : ''} ${isActive ? styles.itemWithLabel : ''}`
+            }
           >
-            <s.Icon className={styles.icon} />
+            {({ isActive }) => (
+              <>
+                <s.Icon className={styles.icon} />
+                {isActive && <span className={styles.navItemLabel}>{s.label}</span>}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
