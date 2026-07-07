@@ -1,5 +1,8 @@
 import { Schema, model, Document } from 'mongoose'
 
+export type PlanId = 'free' | 'personal' | 'couple' | 'family'
+export type SubscriptionStatus = 'none' | 'trialing' | 'active' | 'past_due' | 'canceled'
+
 export interface IUser extends Document {
   name: string
   username: string
@@ -27,6 +30,15 @@ export interface IUser extends Document {
   unlockedAchievements: { id: string; unlockedAt: Date }[]
   onboardingCompleted: boolean
   createdAt: Date
+  // Subscription fields (Paddle, Phase 2+)
+  plan: PlanId
+  subscriptionStatus: SubscriptionStatus
+  billingProvider: 'paddle' | null
+  paddleCustomerId: string | null
+  paddleSubscriptionId: string | null
+  currentPeriodEnd: Date | null
+  trialEndsAt: Date | null
+  earlyBirdLockedPrice: number | null
 }
 
 const schema = new Schema<IUser>({
@@ -57,8 +69,17 @@ const schema = new Schema<IUser>({
     type: [{ id: { type: String, required: true }, unlockedAt: { type: Date, default: Date.now } }],
     default: [],
   },
-  onboardingCompleted: { type: Boolean, default: false },
-  createdAt:         { type: Date, default: Date.now },
+  onboardingCompleted:    { type: Boolean, default: false },
+  createdAt:              { type: Date, default: Date.now },
+  // Subscription fields — safe defaults, no migration needed
+  plan:                   { type: String, enum: ['free', 'personal', 'couple', 'family'], default: 'free' },
+  subscriptionStatus:     { type: String, enum: ['none', 'trialing', 'active', 'past_due', 'canceled'], default: 'none' },
+  billingProvider:        { type: String, enum: ['paddle', null], default: null },
+  paddleCustomerId:       { type: String, default: null },
+  paddleSubscriptionId:   { type: String, default: null },
+  currentPeriodEnd:       { type: Date, default: null },
+  trialEndsAt:            { type: Date, default: null },
+  earlyBirdLockedPrice:   { type: Number, default: null },
 })
 
 export const User = model<IUser>('User', schema)

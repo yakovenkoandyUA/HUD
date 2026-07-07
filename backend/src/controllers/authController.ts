@@ -114,6 +114,8 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   })),
   // ?? true — existing users without the field should skip onboarding
   onboardingCompleted: user.onboardingCompleted ?? true,
+  plan: user.plan ?? 'free',
+  subscriptionStatus: user.subscriptionStatus ?? 'none',
 })
 
 const COOKIE_NAME = 'rt'

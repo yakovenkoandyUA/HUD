@@ -15,6 +15,9 @@ const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').tr
  * Persist key: 'profile-storage' (token + activeProfile).
  */
 
+export type PlanId = 'free' | 'personal' | 'couple' | 'family'
+export type SubscriptionStatus = 'none' | 'trialing' | 'active' | 'past_due' | 'canceled'
+
 export interface Profile {
   id: string
   name: string
@@ -40,6 +43,8 @@ export interface Profile {
   weekdayLongPressShownCount: number
   swipeDismissShownCount: number
   onboardingCompleted: boolean
+  plan?: PlanId
+  subscriptionStatus?: SubscriptionStatus
 }
 
 interface ProfileState {
