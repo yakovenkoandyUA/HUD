@@ -137,16 +137,17 @@ const BottomNav: React.FC = () => {
       )
     }
 
-    // Classic → full-width tab bar; pill/hub → floating pill (hub radial doesn't apply to fixed profile tabs)
-    if (navStyle === 'classic') {
+    // Classic/hub → full-width tab bar (hub radial doesn't apply to fixed profile tabs)
+    // Pill → floating pill with profile tabs
+    if (navStyle === 'pill') {
       return (
-        <nav className={`${styles.nav} ${styles.navProfile}`}>
+        <nav className={styles.nav}>
           {visibleTabs.map(profileNav)}
         </nav>
       )
     }
     return (
-      <nav className={styles.nav}>
+      <nav className={`${styles.nav} ${styles.navProfile}`}>
         {visibleTabs.map(profileNav)}
       </nav>
     )
