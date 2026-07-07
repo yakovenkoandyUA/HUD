@@ -2,7 +2,7 @@ import React from 'react'
 import { useProfileStore } from '../../store/profileStore'
 import { useUiStore } from '../../store/uiStore'
 import { ALL_NAV_SECTIONS } from '../../components/layout/BottomNav'
-import type { Theme, NavStyle } from '../../store/uiStore'
+import type { Theme, NavStyle, NavLabelMode } from '../../store/uiStore'
 import { NAV_STYLE_MAX_PINNED } from '../../store/uiStore'
 import { useAchievementsStore } from '../../store/achievementsStore'
 import styles from './ProfilePage.module.css'
@@ -35,7 +35,7 @@ const PALETTES: ThemePalette[] = [
  */
 const MeAppearance: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  const { theme, setTheme, navStyle, setNavStyle, pinnedSections, setPinnedSections } = useUiStore()
+  const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections } = useUiStore()
 
   return (
     <>
@@ -127,6 +127,39 @@ const MeAppearance: React.FC = () => {
                     <span className={styles.navPreviewDot} />
                   </div>
                 )}
+              </div>
+              <span className={styles.navStyleLabel}>{opt.label}</span>
+              <span className={styles.navStyleHint}>{opt.hint}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.cardDivider} style={{ margin: '16px 0 12px' }} />
+        <div className={styles.cardSubTitle}>ПІДПИСИ</div>
+        <div className={styles.navStyleGrid}>
+          {([
+            { id: 'always', label: 'Завжди',   hint: 'Підпис під кожною іконкою' },
+            { id: 'active', label: 'Активна',  hint: 'Тільки поточна сторінка'   },
+            { id: 'never',  label: 'Вимкнути', hint: 'Тільки іконки'             },
+          ] as { id: NavLabelMode; label: string; hint: string }[]).map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`${styles.navStyleCard} ${navLabelMode === opt.id ? styles.navStyleCardActive : ''}`}
+              onClick={() => setNavLabelMode(opt.id)}
+              aria-pressed={navLabelMode === opt.id}
+            >
+              <div className={styles.navPreview}>
+                <div className={styles.navPreviewClassic}>
+                  {[0, 1, 2].map(i => (
+                    <span key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <span className={`${styles.navPreviewDot} ${opt.id === 'active' && i === 1 ? styles.navPreviewHub : ''}`} />
+                      {(opt.id === 'always' || (opt.id === 'active' && i === 1)) && (
+                        <span style={{ width: 12, height: 2, borderRadius: 1, background: 'currentColor', opacity: opt.id === 'active' && i === 1 ? 0.9 : 0.4 }} />
+                      )}
+                    </span>
+                  ))}
+                </div>
               </div>
               <span className={styles.navStyleLabel}>{opt.label}</span>
               <span className={styles.navStyleHint}>{opt.hint}</span>

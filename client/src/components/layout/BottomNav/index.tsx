@@ -91,7 +91,7 @@ function AnsuzRune({ flipped }: { flipped: boolean }) {
  */
 const BottomNav: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  const { navStyle, pinnedSections } = useUiStore()
+  const { navStyle, navLabelMode, pinnedSections } = useUiStore()
   const f1Enabled = activeProfile?.f1Enabled ?? false
   const { pathname } = useLocation()
   const [searchParams] = useSearchParams()
@@ -115,24 +115,39 @@ const BottomNav: React.FC = () => {
   // Pinned sections (ordered by ALL_NAV_SECTIONS order, filtered to available)
   const pinnedAvailable = availableSections.filter(s => pinnedSections.includes(s.to))
 
-  // ── Profile mode ─────────────────────────────────────────────
+  // ── Profile mode — respects navStyle for consistency (live preview when changing style) ──
   if (isProfile) {
     const activeTab = (searchParams.get('tab') as ProfileTab | null) ?? 'me'
     const isAdmin = activeProfile?.role === 'admin'
     const visibleTabs = PROFILE_TABS.filter(t => !t.adminOnly || isAdmin)
+
+    const profileNav = (tab: typeof PROFILE_TABS[number]) => {
+      const isActive = activeTab === tab.id
+      const showLabel = navLabelMode === 'always' || (navLabelMode === 'active' && isActive)
+      return (
+        <button
+          key={tab.id}
+          type="button"
+          className={`${styles.item} ${styles.profileItem} ${isActive ? styles.active : ''} ${isActive && navLabelMode !== 'never' ? styles.itemWithLabel : ''}`}
+          onClick={() => navigate(`/profile?tab=${tab.id}`, { replace: true })}
+        >
+          <span className={styles.icon}>{tab.icon}</span>
+          {showLabel && <span className={styles.tabLabel}>{tab.label}</span>}
+        </button>
+      )
+    }
+
+    // Classic → full-width tab bar; pill/hub → floating pill (hub radial doesn't apply to fixed profile tabs)
+    if (navStyle === 'classic') {
+      return (
+        <nav className={`${styles.nav} ${styles.navProfile}`}>
+          {visibleTabs.map(profileNav)}
+        </nav>
+      )
+    }
     return (
-      <nav className={`${styles.nav} ${styles.navProfile}`}>
-        {visibleTabs.map(tab => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`${styles.item} ${styles.profileItem} ${activeTab === tab.id ? styles.active : ''}`}
-            onClick={() => navigate(`/profile?tab=${tab.id}`, { replace: true })}
-          >
-            <span className={styles.icon}>{tab.icon}</span>
-            <span className={styles.tabLabel}>{tab.label}</span>
-          </button>
-        ))}
+      <nav className={styles.nav}>
+        {visibleTabs.map(profileNav)}
       </nav>
     )
   }
@@ -150,8 +165,14 @@ const BottomNav: React.FC = () => {
               `${styles.classicItem} ${isActive ? styles.active : ''}`
             }
           >
-            <s.Icon className={styles.icon} />
-            <span className={styles.classicLabel}>{s.label}</span>
+            {({ isActive }) => (
+              <>
+                <s.Icon className={styles.icon} />
+                {(navLabelMode === 'always' || (navLabelMode === 'active' && isActive)) && (
+                  <span className={styles.classicLabel}>{s.label}</span>
+                )}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -170,13 +191,13 @@ const BottomNav: React.FC = () => {
         to={s.to}
         end={s.to === '/'}
         className={({ isActive }) =>
-          `${styles.item} ${isActive ? styles.active : ''} ${isActive ? styles.itemWithLabel : ''}`
+          `${styles.item} ${isActive ? styles.active : ''} ${isActive && navLabelMode !== 'never' ? styles.itemWithLabel : ''}`
         }
       >
         {({ isActive }) => (
           <>
             <s.Icon className={styles.icon} />
-            {isActive && <span className={styles.navItemLabel}>{s.label}</span>}
+            {isActive && navLabelMode !== 'never' && <span className={styles.navItemLabel}>{s.label}</span>}
           </>
         )}
       </NavLink>
@@ -250,13 +271,13 @@ const BottomNav: React.FC = () => {
             to={s.to}
             end={s.to === '/'}
             className={({ isActive }) =>
-              `${styles.item} ${isActive ? styles.active : ''} ${isActive ? styles.itemWithLabel : ''}`
+              `${styles.item} ${isActive ? styles.active : ''} ${isActive && navLabelMode !== 'never' ? styles.itemWithLabel : ''}`
             }
           >
             {({ isActive }) => (
               <>
                 <s.Icon className={styles.icon} />
-                {isActive && <span className={styles.navItemLabel}>{s.label}</span>}
+                {isActive && navLabelMode !== 'never' && <span className={styles.navItemLabel}>{s.label}</span>}
               </>
             )}
           </NavLink>
@@ -277,13 +298,13 @@ const BottomNav: React.FC = () => {
             to={s.to}
             end={s.to === '/'}
             className={({ isActive }) =>
-              `${styles.item} ${isActive ? styles.active : ''} ${isActive ? styles.itemWithLabel : ''}`
+              `${styles.item} ${isActive ? styles.active : ''} ${isActive && navLabelMode !== 'never' ? styles.itemWithLabel : ''}`
             }
           >
             {({ isActive }) => (
               <>
                 <s.Icon className={styles.icon} />
-                {isActive && <span className={styles.navItemLabel}>{s.label}</span>}
+                {isActive && navLabelMode !== 'never' && <span className={styles.navItemLabel}>{s.label}</span>}
               </>
             )}
           </NavLink>

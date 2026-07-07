@@ -9,6 +9,7 @@ interface Toast {
 
 export type Theme = 'velvet' | 'japan' | 'cyber' | 'noir' | 'pixel' | 'arctic'
 export type NavStyle = 'classic' | 'pill' | 'hub'
+export type NavLabelMode = 'always' | 'active' | 'never'
 
 export const DEFAULT_PINNED_SECTIONS = ['/', '/finance', '/sprint', '/watchlist']
 export const NAV_STYLE_MAX_PINNED: Record<NavStyle, number> = { classic: 8, pill: 7, hub: 4 }
@@ -18,6 +19,7 @@ interface UiState {
   activeModal: string | null
   theme: Theme
   navStyle: NavStyle
+  navLabelMode: NavLabelMode
   pinnedSections: string[]
   updateAvailable: boolean
   showToast: (message: string, type?: Toast['type']) => void
@@ -26,6 +28,7 @@ interface UiState {
   closeModal: () => void
   setTheme: (theme: Theme) => void
   setNavStyle: (style: NavStyle) => void
+  setNavLabelMode: (mode: NavLabelMode) => void
   setPinnedSections: (sections: string[]) => void
   setUpdateAvailable: (v: boolean) => void
 }
@@ -37,6 +40,7 @@ export const useUiStore = create<UiState>()(
       activeModal: null,
       theme: 'velvet',
       navStyle: 'hub',
+      navLabelMode: 'always',
       pinnedSections: DEFAULT_PINNED_SECTIONS,
       updateAvailable: false,
 
@@ -59,13 +63,14 @@ export const useUiStore = create<UiState>()(
       },
 
       setNavStyle: (navStyle) => set({ navStyle }),
+      setNavLabelMode: (navLabelMode) => set({ navLabelMode }),
       setPinnedSections: (pinnedSections) => set({ pinnedSections }),
 
       setUpdateAvailable: (v) => set({ updateAvailable: v }),
     }),
     {
       name: 'hud-ui',
-      partialize: (s) => ({ theme: s.theme, navStyle: s.navStyle, pinnedSections: s.pinnedSections }),
+      partialize: (s) => ({ theme: s.theme, navStyle: s.navStyle, navLabelMode: s.navLabelMode, pinnedSections: s.pinnedSections }),
     }
   )
 )
