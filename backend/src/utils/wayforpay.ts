@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 import type { IBillingOrder } from '../models/BillingOrder'
 import type { IUser } from '../models/User'
 import type { WayForPayConfig } from '../config/wayforpay'
@@ -103,4 +103,80 @@ export function buildWayForPayCheckoutPayload(
   }
 
   return { actionUrl: WAYFORPAY_ACTION_URL, fields }
+}
+
+// ── Callback verification ─────────────────────────────────────────────────────
+
+export interface WayForPayCallbackPayload {
+  merchantAccount:    string
+  orderReference:     string
+  merchantSignature:  string
+  amount:             number      // UAH decimal, e.g. 149
+  currency:           string
+  authCode:           string
+  cardPan:            string
+  transactionStatus:  string      // 'Approved' | 'Declined' | 'Expired' | 'Refunded' | 'Voided' | 'InProcessing' | 'WaitingAuthComplete'
+  reasonCode:         number
+  reason:             string
+  createdDate:        number      // Unix timestamp
+  processingDate:     number      // Unix timestamp
+  cardType?:          string
+  issuerBankCountry?: string
+  issuerBankName?:    string
+  fee?:               number
+  paymentSystem?:     string
+  [key: string]:      unknown
+}
+
+/**
+ * Verifies WayForPay callback signature using constant-time comparison.
+ * Signature fields order per WayForPay docs:
+ * merchantAccount;orderReference;amount;currency;authCode;cardPan;transactionStatus;reasonCode
+ */
+export function verifyWayForPayCallback(
+  payload: WayForPayCallbackPayload,
+  merchantSecret: string,
+): boolean {
+  const signatureFields = [
+    payload.merchantAccount,
+    payload.orderReference,
+    String(payload.amount),
+    payload.currency,
+    payload.authCode   ?? '',
+    payload.cardPan    ?? '',
+    payload.transactionStatus,
+    String(payload.reasonCode ?? ''),
+  ]
+  const expected = signWayForPayRequest(signatureFields, merchantSecret)
+  const provided  = payload.merchantSignature ?? ''
+
+  // timingSafeEqual requires same-length buffers
+  if (expected.length !== provided.length) return false
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(provided))
+}
+
+export interface WayForPayAcceptResponse {
+  orderReference: string
+  status:         'accept'
+  time:           number
+  signature:      string
+}
+
+/**
+ * Builds the signed accept response that WayForPay requires after a processed callback.
+ * Without this response WayForPay will retry the callback for up to 4 days.
+ * Signature fields: merchantAccount;orderReference;status;time
+ */
+export function buildWayForPayAcceptResponse(
+  orderReference: string,
+  merchantAccount: string,
+  merchantSecret:  string,
+): WayForPayAcceptResponse {
+  const time      = Math.floor(Date.now() / 1000)
+  const status    = 'accept' as const
+  const signature = signWayForPayRequest(
+    [merchantAccount, orderReference, status, String(time)],
+    merchantSecret,
+  )
+  return { orderReference, status, time, signature }
 }
