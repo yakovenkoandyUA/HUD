@@ -103,6 +103,8 @@
 | `/api/books/search` | GET (proxy Google Books, кеш 10хв) |
 | `/api/f1/predictions` | GET, POST, PATCH |
 | `/api/weather` | GET ?city= — проксі до wttr.in (Cache-Control 30хв) |
+| `/api/user/export` | GET — requireAuth; JSON export всіх даних юзера (без passwordHash/pinHash/tokens/Paddle fields) |
+| `/api/user/me` | DELETE — soft delete; вимагає `{ confirmation: 'DELETE' }`; видаляє RefreshTokens, очищає cookie |
 
 ## Env
 
@@ -121,7 +123,7 @@ MONOBANK_KEY=...        # (якщо є серверний ключ)
 
 ## Моделі — ключові поля
 
-**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined)
+**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null)
 
 **Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, `source: 'manual'|'monobank'|'csv'`, `tripMemoryId?: string|null` (опційне посилання на trip-спогад для блоку "Витрати в поїздці"), сортувати по `createdAt`
 

@@ -213,6 +213,23 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - **Life Spaces strip на Dashboard** — новий компонент `SpacesStrip`: горизонтальний скрол просторів між `TodayHabits` і calendar wrap. Прихований якщо 0 spaces і f1Enabled=false. F1 virtual card (некліка́бельні space-карти поки немає detail route; F1 card → /f1).
 - **MemoryDetail context block** — нова секція "З КИМ" + "НАСТРІЙ" над секцією МІСЦЯ. З КИМ: chips з аватарами/ініціалами з familyStore, mapped з `withProfiles[]`. Настрій: fetch `/api/mood/history?month=`, кольоровий dot 1–5 + score/5.
 
+### ✅ Phase 3A — Billing Readiness: Legal + Data Rights (2026-07-07)
+
+**Backend:**
+- `User` model: `accountStatus: 'active'|'deletion_requested'|'deleted'` + `deletedAt: Date | null` (safe defaults)
+- `GET /api/user/export` — JSON export всіх даних юзера: memories, plans, transactions, categories, goals, recurring, tasks, todos, recipes, watchlist, moods, notes, financialReports, spaces. Виключені: passwordHash, pinHash, verificationToken, paddleCustomerId, paddleSubscriptionId, billingProvider
+- `DELETE /api/user/me` — soft delete: `accountStatus: 'deletion_requested'`, `deletedAt`, видалення всіх RefreshToken, очищення cookie. Вимагає `{ confirmation: 'DELETE' }` у body
+- `authController`: блокує login і refresh для `deletion_requested`/`deleted` акаунтів (403)
+
+**Frontend:**
+- `/terms` і `/privacy` — публічні сторінки (без auth, без BottomNav), standalone layout з draft-банером. Охоплюють: що таке MIMIR, відповідальність, контент, AI-функції, підписка (placeholder), GDPR-права, треті сторони (MongoDB/Cloudinary/Mapbox/Anthropic/Resend/Monobank/Vercel/Railway/Paddle)
+- Профіль → таб "Дані" (`SettingsTab`): Export JSON + Danger Zone (введи `DELETE` → видалити акаунт → logout → /login)
+- `BottomNav` profile tabs: доданий таб "Дані" (налаштування/export/delete)
+- Login + Register: legal footer links (Умови · Конфіденційність)
+
+**Пропущено:** AI-чати (немає persistent storage); GameLog/CookLog/WatchlistComment (внутрішні, не власний контент)
+**Не реалізовано:** hard delete cascade, реальне автоматичне видалення через 30 днів (потребує cron job)
+
 ### 🔵 Стратегічне (Фаза 2+)
 - ~~**Onboarding flow**~~ ✅ Зроблено
 - **Лендінг** — mimir.app або аналог
