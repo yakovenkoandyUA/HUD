@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import MimirLogo from '../../assets/mimir-logo.svg?react'
+import MimirLogo from '@/assets/mimir-logo.svg?react'
 import VerificationBanner from '@/shared/components/ui/VerificationBanner'
 import AiChatSheet from '@/features/dashboard/components/dashboard/AiChatSheet'
 import MimirIcon from '@/shared/components/ui/MimirIcon'

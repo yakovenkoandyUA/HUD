@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import MimirLogo from '../../../assets/mimir-logo.svg?react'
+import MimirLogo from '@/assets/mimir-logo.svg?react'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import styles from './TopBar.module.css'

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import MimirFace from '../../../assets/mimir-face-detailed.svg?react'
+import MimirFace from '@/assets/mimir-face-detailed.svg?react'
 import styles from './MimirFillIcon.module.css'
 
 /**

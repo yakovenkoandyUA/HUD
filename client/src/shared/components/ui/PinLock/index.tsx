@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { useProfileStore } from '@/shared/store/profileStore'
-import MimirFace from '../../../assets/mimir-face.svg?react'
+import MimirFace from '@/assets/mimir-face.svg?react'
 import styles from './PinLock.module.css'
 
 const PIN_LENGTH = 4
