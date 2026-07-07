@@ -7,6 +7,7 @@ import Recipe from '../models/Recipe'
 import MoodLog from '../models/MoodLog'
 import { User } from '../models/User'
 import { getAcceptedFamilyIds } from './familyController'
+import { getPlanLimits, isBillingEnforcementEnabled } from '../utils/entitlements'
 
 type TimelineEvent = {
   id: string
@@ -35,8 +36,21 @@ export async function getTimeline(req: Request, res: Response): Promise<void> {
     const myId = req.userId as string
     const year = parseInt(req.query.year as string, 10) || new Date().getFullYear()
     const scope = (req.query.scope as string) ?? 'all'
-
     const spaceId = req.query.spaceId as string | undefined
+
+    if (req.user && isBillingEnforcementEnabled()) {
+      const { timelineHistoryYears } = getPlanLimits(req.user)
+      const currentYear = new Date().getFullYear()
+      if (timelineHistoryYears !== -1 && year < currentYear - timelineHistoryYears) {
+        res.status(403).json({
+          error: 'Plan limit reached',
+          code: 'PLAN_LIMIT',
+          limitKey: 'timelineHistoryYears',
+          limit: timelineHistoryYears,
+        })
+        return
+      }
+    }
 
     const familyIds = await getAcceptedFamilyIds(myId)
     const allIds = [myId, ...familyIds]

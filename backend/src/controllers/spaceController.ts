@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { Space } from '../models/Space'
 import { User } from '../models/User'
-import { assertLimit } from '../utils/entitlements'
+import { assertLimit, assertFeature } from '../utils/entitlements'
 
 function memberPublic(u: InstanceType<typeof User>, role: string) {
   return {
@@ -55,6 +55,10 @@ export async function createSpace(req: Request, res: Response, next: NextFunctio
     if (req.user) {
       const count = await Space.countDocuments({ ownerId: req.userId })
       assertLimit(req.user, 'maxSpaces', count)
+      const resolvedType = (type ?? 'shared') as string
+      if (resolvedType !== 'personal') {
+        assertFeature(req.user, 'sharedSpaces')
+      }
     }
 
     const space = await Space.create({
