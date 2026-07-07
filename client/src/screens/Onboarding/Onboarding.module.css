@@ -263,8 +263,15 @@
   font-size: 14px;
   color: var(--text2);
   line-height: 1.6;
-  margin: 0 0 32px;
+  margin: 0 0 16px;
   max-width: 280px;
+}
+
+.doneHint {
+  font-size: 11px;
+  color: var(--text3);
+  margin: 0 0 28px;
+  letter-spacing: 0.02em;
 }
 
 /* ── Buttons ── */

@@ -329,6 +329,9 @@ const OnboardingScreen: React.FC = () => {
             <p className={styles.doneDesc}>
               Мімір пам'ятає все — тепер і твоє.<br />Твоя хроніка починається.
             </p>
+            <p className={styles.doneHint}>
+              Вигляд і навігацію можна змінити у Профіль → Вигляд
+            </p>
             <button
               className={styles.primaryBtn}
               onClick={handleFinish}

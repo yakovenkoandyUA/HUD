@@ -39,7 +39,7 @@ export const useUiStore = create<UiState>()(
       toasts: [],
       activeModal: null,
       theme: 'velvet',
-      navStyle: 'hub',
+      navStyle: 'classic',
       navLabelMode: 'always',
       pinnedSections: DEFAULT_PINNED_SECTIONS,
       updateAvailable: false,
