@@ -193,7 +193,7 @@ const SpaceDetailScreen: React.FC = () => {
   const navigate = useNavigate()
   const { spaceId } = useParams<{ spaceId: string }>()
   const { spaces, fetchSpaces, updateSpace, deleteSpace, addMember, removeMember } = useSpacesStore()
-  const myId = useProfileStore(s => s.activeProfile?._id ?? '')
+  const myId = useProfileStore(s => s.activeProfile?.id ?? '')
   const { showToast } = useUiStore()
   const { addMemory }  = useMemoriesStore()
   const { addPlan }    = usePlansStore()
