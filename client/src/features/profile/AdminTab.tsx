@@ -230,7 +230,7 @@ const AdminTab: React.FC = () => {
         {users.length === 0 && <p className={styles.adminEmpty}>Немає користувачів</p>}
 
         <div className={styles.adminList}>
-          {items.map((item, i) => {
+          {items.map((item) => {
             if (item.type === 'user') return renderUserCard(item.user)
             return (
               <div key={item.groupId} className={styles.adminFamilyGroup}>
