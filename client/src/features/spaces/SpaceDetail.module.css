@@ -80,6 +80,26 @@
   opacity: 0.85;
 }
 
+/* Edit button in hero — top-right, owner only */
+.editBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: auto;
+  align-self: flex-start;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+.editBtn:active { opacity: 0.45; }
+
 .heroSkeleton {
   height: 40px;
   flex: 1;
@@ -194,6 +214,68 @@
   transition: opacity 0.15s;
 }
 .sectionAddBtn:active { opacity: 0.45; }
+
+/* ── Members management ── */
+.memberMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+}
+
+.memberUsername {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.removeMemberBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.removeMemberBtn:active { opacity: 1; }
+
+.addMemberRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.addMemberInput {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+.addMemberInput:focus { border-color: var(--space-color, var(--accent)); }
+
+.addMemberBtn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--space-color, var(--accent));
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 10%, transparent);
+  color: var(--space-color, var(--accent));
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.addMemberBtn:disabled { opacity: 0.4; cursor: default; }
 
 /* ── Members ── */
 .members {
@@ -404,6 +486,160 @@
   transition: opacity 0.15s;
 }
 .spaceNoteDelete:active { opacity: 1; }
+
+/* ── Edit bottom sheet ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.editSheet {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 40px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheetHandle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 0 auto 20px;
+}
+
+.sheetTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin: 0 0 20px;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+.fieldLabel:first-of-type { margin-top: 0; }
+
+.fieldInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+.fieldInput:focus { border-color: var(--space-color, var(--accent)); }
+
+.fieldInputEmoji {
+  font-size: 22px;
+  max-width: 80px;
+  text-align: center;
+}
+
+.colorRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.colorDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.colorDotOn { border-color: var(--text); transform: scale(1.15); }
+
+.saveBtn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  border-radius: 12px;
+  border: none;
+  background: var(--space-color, var(--accent));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.saveBtn:disabled { opacity: 0.45; cursor: default; }
+
+.deleteDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0 16px;
+}
+
+.deleteSpaceBtn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid var(--error, #e74c3c);
+  background: transparent;
+  color: var(--error, #e74c3c);
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.deleteSpaceBtn:active { opacity: 1; }
+
+.deleteConfirmRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.deleteConfirmText {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.deleteConfirmYes {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--error, #e74c3c);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.deleteConfirmNo {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
 
 /* ── Not found ── */
 .notFound {
