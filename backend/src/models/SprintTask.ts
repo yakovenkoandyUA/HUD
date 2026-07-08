@@ -28,6 +28,7 @@ export interface ISprintTask extends Document {
   deletedAt?: Date | null
   userId: string
   assignedTo?: string[]
+  spaceId?: string | null
 }
 
 const schema = new Schema<ISprintTask>({
@@ -58,6 +59,7 @@ const schema = new Schema<ISprintTask>({
   deletedAt:  { type: Date, default: null, index: { expireAfterSeconds: 86400 } },
   userId:     { type: String, required: true, index: true },
   assignedTo: { type: [String], default: [] },
+  spaceId:    { type: String, default: null, index: true },
 }, { timestamps: true })
 
 export default model<ISprintTask>('SprintTask', schema)

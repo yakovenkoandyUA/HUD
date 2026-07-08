@@ -8,7 +8,7 @@ const TASK_ALLOWED = [
   'title', 'done', 'priority', 'category', 'labels', 'dueDate', 'dueTime', 'description',
   'checklist', 'order', 'tag', 'weekStart', 'weekNumber', 'year',
   'repeat', 'nextDue', 'repeatDay', 'repeatConfig', 'repeatStartDate',
-  'completionHistory', 'reminder', 'isPinned', 'assignedTo', 'timeOfDay',
+  'completionHistory', 'reminder', 'isPinned', 'assignedTo', 'timeOfDay', 'spaceId',
 ]
 
 // Зміна дедлайну/часу/повторення/нагадування скидає прапорець "вже надіслано" — щоб нагадування пересчиталось
@@ -24,6 +24,7 @@ export async function getTasks(req: Request, res: Response): Promise<void> {
   const myFilter: Record<string, unknown> = { userId: myId, deletedAt: null }
   if (week) myFilter.weekNumber = Number(week)
   if (year) myFilter.year = Number(year)
+  if (req.query.spaceId) myFilter.spaceId = req.query.spaceId
 
   const myTasks = await SprintTask.find(myFilter).sort({ createdAt: 1 })
 

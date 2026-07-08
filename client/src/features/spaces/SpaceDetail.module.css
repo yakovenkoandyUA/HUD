@@ -641,6 +641,95 @@
   cursor: pointer;
 }
 
+/* ── Tasks section ── */
+.taskInputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.taskInput {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--space-color, var(--accent));
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 5%, var(--surface));
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  outline: none;
+}
+.taskInput::placeholder { color: var(--text-secondary); opacity: 0.6; }
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spaceTask {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: opacity 0.15s;
+}
+
+.spaceTaskDone {
+  opacity: 0.55;
+}
+
+.taskCheckbox {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.spaceTaskDone .taskCheckbox {
+  background: var(--space-color, var(--accent));
+  border-color: var(--space-color, var(--accent));
+  color: #fff;
+}
+
+.taskTitle {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.4;
+}
+.spaceTaskDone .taskTitle {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.taskDeleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.taskDeleteBtn:active { opacity: 1; }
+
 /* ── Not found ── */
 .notFound {
   display: flex;

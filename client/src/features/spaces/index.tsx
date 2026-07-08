@@ -40,92 +40,111 @@ const COLORS = [
 // ── Context config ─────────────────────────────────────────────────────────
 
 interface SpaceCtx {
-  typeLabel:      string
-  description:    string
-  memBtnLabel:    string
-  planBtnLabel:   string
-  noteBtnLabel:   string
-  memEmptyTitle:  string
-  memEmptyDesc:   string
-  planEmptyTitle: string
-  planEmptyDesc:  string
-  noteEmptyTitle: string
-  noteEmptyDesc:  string
+  typeLabel:       string
+  description:     string
+  memBtnLabel:     string
+  planBtnLabel:    string
+  noteBtnLabel:    string
+  taskBtnLabel:    string
+  memEmptyTitle:   string
+  memEmptyDesc:    string
+  planEmptyTitle:  string
+  planEmptyDesc:   string
+  noteEmptyTitle:  string
+  noteEmptyDesc:   string
+  taskEmptyTitle:  string
+  taskEmptyDesc:   string
+}
+
+interface SpaceTask {
+  _id: string
+  title: string
+  done: boolean
+  createdAt: string
 }
 
 const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   personal: {
-    typeLabel:      'Особисте',
-    description:    'Твій особистий простір — спогади, плани й думки тільки для тебе.',
-    memBtnLabel:    '+ Спогад',      planBtnLabel:   '+ План',          noteBtnLabel:   '+ Нотатка',
-    memEmptyTitle:  'Спогадів ще немає',  memEmptyDesc:   'Додай особистий момент — щось що хочеш запам\'ятати.',
-    planEmptyTitle: 'Планів ще немає',    planEmptyDesc:  'Запиши ціль або щось що хочеш зробити.',
-    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc:  'Записуй думки, ідеї або що хочеш не забути.',
+    typeLabel: 'Особисте', description: 'Твій особистий простір — спогади, плани й думки тільки для тебе.',
+    memBtnLabel: '+ Спогад', planBtnLabel: '+ План', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай особистий момент — щось що хочеш запам\'ятати.',
+    planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши ціль або щось що хочеш зробити.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Записуй думки, ідеї або що хочеш не забути.',
+    taskEmptyTitle: 'Задач ще немає',     taskEmptyDesc: 'Додай що хочеш зробити в цьому просторі.',
   },
   shared: {
-    typeLabel:      'Спільне',
-    description:    'Спільний простір для людей, речей і планів що вас об\'єднують.',
-    memBtnLabel:    '+ Спільний спогад',  planBtnLabel:   '+ Спільний план',  noteBtnLabel: '+ Нотатка',
-    memEmptyTitle:  'Спогадів ще немає',  memEmptyDesc:   'Додай перший спільний момент.',
-    planEmptyTitle: 'Планів ще немає',    planEmptyDesc:  'Запиши першу спільну ідею або план.',
-    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc:  'Залишай короткі записи для спільного контексту.',
+    typeLabel: 'Спільне', description: 'Спільний простір для людей, речей і планів що вас об\'єднують.',
+    memBtnLabel: '+ Спільний спогад', planBtnLabel: '+ Спільний план', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай перший спільний момент.',
+    planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши першу спільну ідею або план.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Залишай короткі записи для спільного контексту.',
+    taskEmptyTitle: 'Задач ще немає',     taskEmptyDesc: 'Додай спільне завдання або чекліст.',
   },
   trip: {
-    typeLabel:      'Поїздка',
-    description:    'Збирай тут плани, спогади, місця й враження цієї поїздки — до, під час і після.',
-    memBtnLabel:    '+ Момент поїздки',   planBtnLabel:   '+ Ідея маршруту',  noteBtnLabel: '+ Нотатка',
-    memEmptyTitle:  'Спогадів ще немає',  memEmptyDesc:   'Додай перший момент з цієї поїздки: фото, коротку історію або місце.',
-    planEmptyTitle: 'Планів ще немає',    planEmptyDesc:  'Запиши маршрут, ідею, бронювання або щось що хочеш не забути.',
-    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc:  'Адреси, рекомендації, що подивитись, де поїсти — все тут.',
+    typeLabel: 'Поїздка', description: 'Збирай тут плани, спогади, місця й враження цієї поїздки — до, під час і після.',
+    memBtnLabel: '+ Момент поїздки', planBtnLabel: '+ Ідея маршруту', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Що зробити',
+    memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай перший момент з цієї поїздки: фото, коротку історію або місце.',
+    planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши маршрут, ідею, бронювання або щось що хочеш не забути.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Адреси, рекомендації, що подивитись, де поїсти — все тут.',
+    taskEmptyTitle: 'Чекліст порожній',   taskEmptyDesc: 'Купити квитки, забронювати готель, що взяти — записуй тут.',
   },
   family: {
-    typeLabel:      'Сім\'я',
-    description:    'Спільний простір для сімейних спогадів, планів і важливих моментів.',
-    memBtnLabel:    '+ Сімейний спогад',  planBtnLabel:   '+ Сімейний план',  noteBtnLabel: '+ Нотатка',
-    memEmptyTitle:  'Спогадів ще немає',  memEmptyDesc:   'Додай перший сімейний момент — фото, подія або просто що трапилось.',
-    planEmptyTitle: 'Планів ще немає',    planEmptyDesc:  'Запиши ідею для спільного часу — поїздка, вечеря, традиція.',
-    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc:  'Сімейні нотатки, нагадування, списки — що завгодно.',
+    typeLabel: 'Сім\'я', description: 'Спільний простір для сімейних спогадів, планів і важливих моментів.',
+    memBtnLabel: '+ Сімейний спогад', planBtnLabel: '+ Сімейний план', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай перший сімейний момент — фото, подія або просто що трапилось.',
+    planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши ідею для спільного часу — поїздка, вечеря, традиція.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Сімейні нотатки, нагадування, списки — що завгодно.',
+    taskEmptyTitle: 'Задач ще немає',     taskEmptyDesc: 'Додай сімейне завдання або що треба зробити разом.',
   },
   friends: {
-    typeLabel:      'Друзі',
-    description:    'Збирай тут спільні моменти, плани і що ще хочете зробити разом.',
-    memBtnLabel:    '+ Спогад з друзями', planBtnLabel:   '+ Планую разом',    noteBtnLabel: '+ Нотатка',
-    memEmptyTitle:  'Спогадів ще немає',  memEmptyDesc:   'Збережи перший момент з цими людьми.',
-    planEmptyTitle: 'Планів ще немає',    planEmptyDesc:  'Запиши що хочете зробити разом — куди піти, що спробувати.',
-    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc:  'Ідеї, адреси, посилання — щоб нічого не загубити.',
+    typeLabel: 'Друзі', description: 'Збирай тут спільні моменти, плани і що ще хочете зробити разом.',
+    memBtnLabel: '+ Спогад з друзями', planBtnLabel: '+ Планую разом', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Що зробити разом',
+    memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Збережи перший момент з цими людьми.',
+    planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши що хочете зробити разом — куди піти, що спробувати.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Ідеї, адреси, посилання — щоб нічого не загубити.',
+    taskEmptyTitle: 'Задач ще немає',     taskEmptyDesc: 'Куди піти, що спробувати, що замовити — фіксуй тут.',
   },
   hobby: {
-    typeLabel:      'Хобі',
-    description:    'Простір для занять, прогресу й важливих моментів із цього хобі.',
-    memBtnLabel:    '+ Подія',            planBtnLabel:   '+ Ціль',            noteBtnLabel: '+ Нотатка',
-    memEmptyTitle:  'Подій ще немає',     memEmptyDesc:   'Додай перший момент з цього хобі — тренування, виступ, досягнення.',
-    planEmptyTitle: 'Цілей ще немає',     planEmptyDesc:  'Постав ціль або заплануй наступний крок у цьому хобі.',
-    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc:  'Ідеї, референси, налаштування — фіксуй все що важливо.',
+    typeLabel: 'Хобі', description: 'Простір для занять, прогресу й важливих моментів із цього хобі.',
+    memBtnLabel: '+ Подія', planBtnLabel: '+ Ціль', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Активність',
+    memEmptyTitle: 'Подій ще немає',      memEmptyDesc: 'Додай перший момент з цього хобі — тренування, виступ, досягнення.',
+    planEmptyTitle: 'Цілей ще немає',     planEmptyDesc: 'Постав ціль або заплануй наступний крок у цьому хобі.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Ідеї, референси, налаштування — фіксуй все що важливо.',
+    taskEmptyTitle: 'Активностей ще немає', taskEmptyDesc: 'Додай що плануєш зробити або спробувати.',
   },
   sports: {
-    typeLabel:      'Спорт',
-    description:    'Тренування, змагання, результати — всі спортивні моменти тут.',
-    memBtnLabel:    '+ Результат',        planBtnLabel:   '+ Тренування',      noteBtnLabel: '+ Нотатка',
-    memEmptyTitle:  'Результатів ще немає', memEmptyDesc: 'Додай перше тренування, змагання або досягнення.',
-    planEmptyTitle: 'Тренувань ще немає', planEmptyDesc:  'Заплануй наступне тренування або постав спортивну ціль.',
-    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc:  'Програми, техніки, PR-и — записуй що важливо.',
+    typeLabel: 'Спорт', description: 'Тренування, змагання, результати — всі спортивні моменти тут.',
+    memBtnLabel: '+ Результат', planBtnLabel: '+ Тренування', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Тренування',
+    memEmptyTitle: 'Результатів ще немає', memEmptyDesc: 'Додай перше тренування, змагання або досягнення.',
+    planEmptyTitle: 'Тренувань ще немає', planEmptyDesc: 'Заплануй наступне тренування або постав спортивну ціль.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Програми, техніки, PR-и — записуй що важливо.',
+    taskEmptyTitle: 'Тренувань ще немає', taskEmptyDesc: 'Додай наступне тренування або спортивну задачу.',
   },
   project: {
-    typeLabel:      'Проєкт',
-    description:    'Збирай тут задачі, нотатки й прогрес цього проєкту.',
-    memBtnLabel:    '+ Milestone',        planBtnLabel:   '+ Задача',          noteBtnLabel: '+ Нотатка',
-    memEmptyTitle:  'Досягнень ще немає', memEmptyDesc:   'Фіксуй ключові моменти та досягнення проєкту.',
-    planEmptyTitle: 'Задач ще немає',     planEmptyDesc:  'Запиши першу задачу або ціль цього проєкту.',
-    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc:  'Рішення, думки, лінки, референси — все тут.',
+    typeLabel: 'Проєкт', description: 'Збирай тут задачі, нотатки й прогрес цього проєкту.',
+    memBtnLabel: '+ Milestone', planBtnLabel: '+ Задача', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    memEmptyTitle: 'Досягнень ще немає',  memEmptyDesc: 'Фіксуй ключові моменти та досягнення проєкту.',
+    planEmptyTitle: 'Задач ще немає',     planEmptyDesc: 'Запиши першу задачу або ціль цього проєкту.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Рішення, думки, лінки, референси — все тут.',
+    taskEmptyTitle: 'Задач ще немає',     taskEmptyDesc: 'Починай з першої задачі — великий проєкт складається з малих кроків.',
   },
 }
 
 const DEFAULT_CTX: SpaceCtx = {
   typeLabel: '', description: '',
-  memBtnLabel: '+ Спогад', planBtnLabel: '+ План', noteBtnLabel: '+ Нотатка',
+  memBtnLabel: '+ Спогад', planBtnLabel: '+ План', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
   memEmptyTitle: 'Спогадів ще немає', memEmptyDesc: 'Додай перший спогад у цей простір.',
   planEmptyTitle: 'Планів ще немає',  planEmptyDesc: 'Запиши перший план або ціль.',
   noteEmptyTitle: 'Нотаток ще немає', noteEmptyDesc: 'Залишай короткі записи в цьому просторі.',
+  taskEmptyTitle: 'Задач ще немає',   taskEmptyDesc: 'Додай першу задачу в цей простір.',
+}
+
+function getCurrentWeekStart(): string {
+  const d = new Date()
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  d.setDate(d.getDate() + diff)
+  return d.toISOString().slice(0, 10)
 }
 
 function formatNoteDate(iso: string): string {
@@ -156,17 +175,21 @@ const SpaceDetailScreen: React.FC = () => {
   const { addNote, deleteNote } = useNotesStore()
 
   // ── Content state ──
-  const [space, setSpace]           = useState<Space | null>(null)
-  const [memories, setMemories]     = useState<Memory[]>([])
-  const [plans, setPlans]           = useState<Plan[]>([])
-  const [spaceNotes, setSpaceNotes] = useState<Note[]>([])
-  const [loading, setLoading]       = useState(true)
+  const [space, setSpace]             = useState<Space | null>(null)
+  const [memories, setMemories]       = useState<Memory[]>([])
+  const [plans, setPlans]             = useState<Plan[]>([])
+  const [spaceNotes, setSpaceNotes]   = useState<Note[]>([])
+  const [spaceTasks, setSpaceTasks]   = useState<SpaceTask[]>([])
+  const [loading, setLoading]         = useState(true)
 
-  // ── Modals ──
-  const [addMemOpen, setAddMemOpen]     = useState(false)
-  const [addPlanOpen, setAddPlanOpen]   = useState(false)
+  // ── Modals / Inputs ──
+  const [addMemOpen, setAddMemOpen]       = useState(false)
+  const [addPlanOpen, setAddPlanOpen]     = useState(false)
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [noteText, setNoteText]           = useState('')
+  const [showTaskInput, setShowTaskInput] = useState(false)
+  const [taskInputText, setTaskInputText] = useState('')
+  const [savingTask, setSavingTask]       = useState(false)
 
   // ── Edit sheet ──
   const [editOpen, setEditOpen]     = useState(false)
@@ -182,6 +205,8 @@ const SpaceDetailScreen: React.FC = () => {
   const [addingMember, setAddingMember] = useState(false)
 
   // ── Refs ──
+  const taskInputRef     = useRef<HTMLInputElement>(null)
+  const tasksSectionRef  = useRef<HTMLElement>(null)
   const noteTextareaRef  = useRef<HTMLTextAreaElement>(null)
   const notesSectionRef  = useRef<HTMLElement>(null)
   const editOverlayRef   = useRef<HTMLDivElement>(null)
@@ -199,15 +224,17 @@ const SpaceDetailScreen: React.FC = () => {
       }
       if (!cancelled) setSpace(found)
 
-      const [memRes, planRes, noteRes] = await Promise.all([
+      const [memRes, planRes, noteRes, taskRes] = await Promise.all([
         authFetch(`/api/memories?spaceId=${spaceId}`),
         authFetch(`/api/plans?spaceId=${spaceId}`),
         authFetch(`/api/notes?spaceId=${spaceId}`),
+        authFetch(`/api/sprint/tasks?spaceId=${spaceId}`),
       ])
       if (!cancelled) {
         if (memRes.ok) setMemories(await parseMemories(memRes))
         if (planRes.ok) setPlans(await planRes.json() as Plan[])
         if (noteRes.ok) setSpaceNotes(await noteRes.json() as Note[])
+        if (taskRes.ok) setSpaceTasks(await taskRes.json() as SpaceTask[])
         setLoading(false)
       }
     }
@@ -226,6 +253,10 @@ const SpaceDetailScreen: React.FC = () => {
   useEffect(() => {
     if (showNoteInput) noteTextareaRef.current?.focus()
   }, [showNoteInput])
+
+  useEffect(() => {
+    if (showTaskInput) taskInputRef.current?.focus()
+  }, [showTaskInput])
 
   // Populate edit form when opening
   const openEdit = () => {
@@ -291,6 +322,57 @@ const SpaceDetailScreen: React.FC = () => {
   const handleNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveNote() }
     if (e.key === 'Escape') { setShowNoteInput(false); setNoteText('') }
+  }
+
+  const handleOpenTaskInput = () => {
+    setShowTaskInput(true)
+    setTimeout(() => tasksSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+  }
+
+  const handleSaveTask = useCallback(async () => {
+    const title = taskInputText.trim()
+    if (!title || savingTask) return
+    let cancelled = false
+    const save = async () => {
+      setSavingTask(true)
+      try {
+        const weekStart = getCurrentWeekStart()
+        const res = await authFetch('/api/sprint/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, spaceId, weekStart, type: 'task' }),
+        })
+        if (!cancelled && res.ok) {
+          const created = await res.json() as SpaceTask
+          setSpaceTasks(prev => [...prev, created])
+          setTaskInputText('')
+          setShowTaskInput(false)
+        }
+      } finally {
+        if (!cancelled) setSavingTask(false)
+      }
+    }
+    save()
+    return () => { cancelled = true }
+  }, [taskInputText, spaceId, savingTask])
+
+  const handleToggleTask = async (task: SpaceTask) => {
+    setSpaceTasks(prev => prev.map(t => t._id === task._id ? { ...t, done: !t.done } : t))
+    await authFetch(`/api/sprint/tasks/${task._id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done: !task.done }),
+    })
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    setSpaceTasks(prev => prev.filter(t => t._id !== taskId))
+    await authFetch(`/api/sprint/tasks/${taskId}`, { method: 'DELETE' })
+  }
+
+  const handleTaskKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { e.preventDefault(); handleSaveTask() }
+    if (e.key === 'Escape') { setShowTaskInput(false); setTaskInputText('') }
   }
 
   const handleSaveEdit = async () => {
@@ -404,7 +486,7 @@ const SpaceDetailScreen: React.FC = () => {
         {[
           { num: memories.length,    label: 'спогадів'  },
           { num: plans.length,       label: 'планів'    },
-          { num: spaceNotes.length,  label: 'нотаток'   },
+          { num: spaceTasks.length,  label: 'задач'     },
           { num: space?.members.length ?? 0, label: 'учасників' },
         ].map((item, i, arr) => (
           <React.Fragment key={item.label}>
@@ -430,6 +512,10 @@ const SpaceDetailScreen: React.FC = () => {
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={handleOpenNoteInput}>
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
           Нотатка
+        </button>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={handleOpenTaskInput}>
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+          {ctx.taskBtnLabel.replace('+ ', '')}
         </button>
       </div>
 
@@ -590,6 +676,80 @@ const SpaceDetailScreen: React.FC = () => {
                       </svg>
                     </button>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+        {/* ── Tasks ── */}
+        <section className={styles.section} ref={tasksSectionRef}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>ЗАДАЧІ</h2>
+            {!showTaskInput && (
+              <button type="button" className={styles.sectionAddBtn} style={colorVar} onClick={handleOpenTaskInput} aria-label="Додати задачу">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+              </button>
+            )}
+          </div>
+
+          {showTaskInput && (
+            <div className={styles.taskInputRow}>
+              <input
+                ref={taskInputRef}
+                className={styles.taskInput}
+                placeholder="Нова задача…"
+                value={taskInputText}
+                onChange={e => setTaskInputText(e.target.value)}
+                onKeyDown={handleTaskKeyDown}
+                maxLength={200}
+              />
+              <button type="button" className={styles.noteInputCancel} onClick={() => { setShowTaskInput(false); setTaskInputText('') }}>Скас.</button>
+              <button type="button" className={styles.noteInputSave} style={colorVar} onClick={handleSaveTask} disabled={!taskInputText.trim() || savingTask}>
+                {savingTask ? '…' : 'OK'}
+              </button>
+            </div>
+          )}
+
+          {loading ? (
+            <div className={styles.plansCol}>{[1, 2].map(i => <div key={i} className={`${styles.skeleton} ${styles.skeletonNote}`} />)}</div>
+          ) : spaceTasks.length === 0 && !showTaskInput ? (
+            <div className={styles.empty}>
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" aria-hidden="true">
+                <rect x="6" y="6" width="20" height="20" rx="3"/>
+                <path d="M11 16l3 3 7-7"/>
+              </svg>
+              <p className={styles.emptyTitle}>{ctx.taskEmptyTitle}</p>
+              <p className={styles.emptyDesc}>{ctx.taskEmptyDesc}</p>
+              <button type="button" className={styles.emptyAction} style={colorVar} onClick={handleOpenTaskInput}>{ctx.taskBtnLabel}</button>
+            </div>
+          ) : (
+            <div className={styles.tasksList}>
+              {spaceTasks.map(t => (
+                <div key={t._id} className={`${styles.spaceTask} ${t.done ? styles.spaceTaskDone : ''}`}>
+                  <button
+                    type="button"
+                    className={styles.taskCheckbox}
+                    style={t.done ? { '--space-color': space?.color ?? 'var(--accent)' } as React.CSSProperties : undefined}
+                    onClick={() => handleToggleTask(t)}
+                    aria-label={t.done ? 'Позначити незроблено' : 'Позначити зроблено'}
+                  >
+                    {t.done && (
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1.5 5l2.5 2.5 4.5-4"/>
+                      </svg>
+                    )}
+                  </button>
+                  <span className={styles.taskTitle}>{t.title}</span>
+                  <button
+                    type="button"
+                    className={styles.taskDeleteBtn}
+                    onClick={() => handleDeleteTask(t._id)}
+                    aria-label="Видалити задачу"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
                 </div>
               ))}
             </div>
