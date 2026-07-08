@@ -730,6 +730,84 @@
 }
 .taskDeleteBtn:active { opacity: 1; }
 
+/* ── Transactions section ── */
+.txSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 30%, transparent);
+  margin-bottom: 10px;
+}
+
+.txSummaryLabel {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.txSummaryAmount {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--space-color, var(--accent));
+}
+
+.txList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spaceTx {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.txLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.txTitle {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txDate {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.65;
+}
+
+.txAmount {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.spaceTxIncome .txAmount {
+  color: #2ecc71;
+}
+
 /* ── Not found ── */
 .notFound {
   display: flex;

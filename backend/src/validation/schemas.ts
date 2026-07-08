@@ -94,6 +94,7 @@ export const createTransactionSchema = z.object({
   categoryId:  z.string().optional(),
   title:       z.string().max(200).optional(),
   recurringId: z.string().optional(),
+  spaceId:     z.string().nullable().optional(),
 })
 
 // ── Notes ─────────────────────────────────────────────────────────────────────

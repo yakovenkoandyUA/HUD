@@ -46,6 +46,8 @@ interface SpaceCtx {
   planBtnLabel:    string
   noteBtnLabel:    string
   taskBtnLabel:    string
+  txEmptyTitle:    string
+  txEmptyDesc:     string
   memEmptyTitle:   string
   memEmptyDesc:    string
   planEmptyTitle:  string
@@ -63,10 +65,21 @@ interface SpaceTask {
   createdAt: string
 }
 
+interface SpaceTx {
+  _id: string
+  type: 'income' | 'expense'
+  amount: number
+  desc: string
+  title?: string
+  category?: string
+  date: string
+}
+
 const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   personal: {
     typeLabel: 'Особисте', description: 'Твій особистий простір — спогади, плани й думки тільки для тебе.',
     memBtnLabel: '+ Спогад', planBtnLabel: '+ План', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    txEmptyTitle: 'Транзакцій ще немає',  txEmptyDesc: 'Витрати пов\'язані з цим простором з\'являться тут.',
     memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай особистий момент — щось що хочеш запам\'ятати.',
     planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши ціль або щось що хочеш зробити.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Записуй думки, ідеї або що хочеш не забути.',
@@ -75,6 +88,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   shared: {
     typeLabel: 'Спільне', description: 'Спільний простір для людей, речей і планів що вас об\'єднують.',
     memBtnLabel: '+ Спільний спогад', planBtnLabel: '+ Спільний план', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    txEmptyTitle: 'Транзакцій ще немає',  txEmptyDesc: 'Спільні витрати в цьому просторі з\'являться тут.',
     memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай перший спільний момент.',
     planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши першу спільну ідею або план.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Залишай короткі записи для спільного контексту.',
@@ -83,6 +97,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   trip: {
     typeLabel: 'Поїздка', description: 'Збирай тут плани, спогади, місця й враження цієї поїздки — до, під час і після.',
     memBtnLabel: '+ Момент поїздки', planBtnLabel: '+ Ідея маршруту', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Що зробити',
+    txEmptyTitle: 'Витрат ще немає',      txEmptyDesc: 'Додай витрати поїздки — готель, транспорт, розваги.',
     memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай перший момент з цієї поїздки: фото, коротку історію або місце.',
     planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши маршрут, ідею, бронювання або щось що хочеш не забути.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Адреси, рекомендації, що подивитись, де поїсти — все тут.',
@@ -91,6 +106,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   family: {
     typeLabel: 'Сім\'я', description: 'Спільний простір для сімейних спогадів, планів і важливих моментів.',
     memBtnLabel: '+ Сімейний спогад', planBtnLabel: '+ Сімейний план', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    txEmptyTitle: 'Транзакцій ще немає',  txEmptyDesc: 'Сімейні витрати, підписки, спільні покупки — все тут.',
     memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай перший сімейний момент — фото, подія або просто що трапилось.',
     planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши ідею для спільного часу — поїздка, вечеря, традиція.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Сімейні нотатки, нагадування, списки — що завгодно.',
@@ -99,6 +115,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   friends: {
     typeLabel: 'Друзі', description: 'Збирай тут спільні моменти, плани і що ще хочете зробити разом.',
     memBtnLabel: '+ Спогад з друзями', planBtnLabel: '+ Планую разом', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Що зробити разом',
+    txEmptyTitle: 'Транзакцій ще немає',  txEmptyDesc: 'Спільні витрати з цими людьми з\'являться тут.',
     memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Збережи перший момент з цими людьми.',
     planEmptyTitle: 'Планів ще немає',    planEmptyDesc: 'Запиши що хочете зробити разом — куди піти, що спробувати.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Ідеї, адреси, посилання — щоб нічого не загубити.',
@@ -107,6 +124,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   hobby: {
     typeLabel: 'Хобі', description: 'Простір для занять, прогресу й важливих моментів із цього хобі.',
     memBtnLabel: '+ Подія', planBtnLabel: '+ Ціль', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Активність',
+    txEmptyTitle: 'Витрат ще немає',      txEmptyDesc: 'Витрати на обладнання, курси, матеріали — все тут.',
     memEmptyTitle: 'Подій ще немає',      memEmptyDesc: 'Додай перший момент з цього хобі — тренування, виступ, досягнення.',
     planEmptyTitle: 'Цілей ще немає',     planEmptyDesc: 'Постав ціль або заплануй наступний крок у цьому хобі.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Ідеї, референси, налаштування — фіксуй все що важливо.',
@@ -115,6 +133,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   sports: {
     typeLabel: 'Спорт', description: 'Тренування, змагання, результати — всі спортивні моменти тут.',
     memBtnLabel: '+ Результат', planBtnLabel: '+ Тренування', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Тренування',
+    txEmptyTitle: 'Витрат ще немає',      txEmptyDesc: 'Абонемент, форма, змагання — фіксуй спортивні витрати.',
     memEmptyTitle: 'Результатів ще немає', memEmptyDesc: 'Додай перше тренування, змагання або досягнення.',
     planEmptyTitle: 'Тренувань ще немає', planEmptyDesc: 'Заплануй наступне тренування або постав спортивну ціль.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Програми, техніки, PR-и — записуй що важливо.',
@@ -123,6 +142,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
   project: {
     typeLabel: 'Проєкт', description: 'Збирай тут задачі, нотатки й прогрес цього проєкту.',
     memBtnLabel: '+ Milestone', planBtnLabel: '+ Задача', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    txEmptyTitle: 'Витрат ще немає',      txEmptyDesc: 'Витрати на інфраструктуру, інструменти, послуги — тут.',
     memEmptyTitle: 'Досягнень ще немає',  memEmptyDesc: 'Фіксуй ключові моменти та досягнення проєкту.',
     planEmptyTitle: 'Задач ще немає',     planEmptyDesc: 'Запиши першу задачу або ціль цього проєкту.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Рішення, думки, лінки, референси — все тут.',
@@ -133,10 +153,15 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
 const DEFAULT_CTX: SpaceCtx = {
   typeLabel: '', description: '',
   memBtnLabel: '+ Спогад', planBtnLabel: '+ План', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
-  memEmptyTitle: 'Спогадів ще немає', memEmptyDesc: 'Додай перший спогад у цей простір.',
-  planEmptyTitle: 'Планів ще немає',  planEmptyDesc: 'Запиши перший план або ціль.',
-  noteEmptyTitle: 'Нотаток ще немає', noteEmptyDesc: 'Залишай короткі записи в цьому просторі.',
-  taskEmptyTitle: 'Задач ще немає',   taskEmptyDesc: 'Додай першу задачу в цей простір.',
+  txEmptyTitle: 'Транзакцій ще немає', txEmptyDesc: 'Витрати пов\'язані з цим простором з\'являться тут.',
+  memEmptyTitle: 'Спогадів ще немає',  memEmptyDesc: 'Додай перший спогад у цей простір.',
+  planEmptyTitle: 'Планів ще немає',   planEmptyDesc: 'Запиши перший план або ціль.',
+  noteEmptyTitle: 'Нотаток ще немає',  noteEmptyDesc: 'Залишай короткі записи в цьому просторі.',
+  taskEmptyTitle: 'Задач ще немає',    taskEmptyDesc: 'Додай першу задачу в цей простір.',
+}
+
+function formatTxAmount(amount: number): string {
+  return amount.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
 function getCurrentWeekStart(): string {
@@ -180,6 +205,7 @@ const SpaceDetailScreen: React.FC = () => {
   const [plans, setPlans]             = useState<Plan[]>([])
   const [spaceNotes, setSpaceNotes]   = useState<Note[]>([])
   const [spaceTasks, setSpaceTasks]   = useState<SpaceTask[]>([])
+  const [spaceTxs, setSpaceTxs]       = useState<SpaceTx[]>([])
   const [loading, setLoading]         = useState(true)
 
   // ── Modals / Inputs ──
@@ -224,17 +250,19 @@ const SpaceDetailScreen: React.FC = () => {
       }
       if (!cancelled) setSpace(found)
 
-      const [memRes, planRes, noteRes, taskRes] = await Promise.all([
+      const [memRes, planRes, noteRes, taskRes, txRes] = await Promise.all([
         authFetch(`/api/memories?spaceId=${spaceId}`),
         authFetch(`/api/plans?spaceId=${spaceId}`),
         authFetch(`/api/notes?spaceId=${spaceId}`),
         authFetch(`/api/sprint/tasks?spaceId=${spaceId}`),
+        authFetch(`/api/transactions?spaceId=${spaceId}`),
       ])
       if (!cancelled) {
         if (memRes.ok) setMemories(await parseMemories(memRes))
         if (planRes.ok) setPlans(await planRes.json() as Plan[])
         if (noteRes.ok) setSpaceNotes(await noteRes.json() as Note[])
         if (taskRes.ok) setSpaceTasks(await taskRes.json() as SpaceTask[])
+        if (txRes.ok) setSpaceTxs(await txRes.json() as SpaceTx[])
         setLoading(false)
       }
     }
@@ -753,6 +781,46 @@ const SpaceDetailScreen: React.FC = () => {
                 </div>
               ))}
             </div>
+          )}
+        </section>
+
+        {/* ── Transactions ── */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>ВИТРАТИ</h2>
+
+          {loading ? (
+            <div className={styles.plansCol}>{[1, 2].map(i => <div key={i} className={`${styles.skeleton} ${styles.skeletonNote}`} />)}</div>
+          ) : spaceTxs.length === 0 ? (
+            <div className={styles.empty}>
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" aria-hidden="true">
+                <rect x="4" y="8" width="24" height="18" rx="3"/>
+                <path d="M4 14h24M10 20h4"/>
+              </svg>
+              <p className={styles.emptyTitle}>{ctx.txEmptyTitle}</p>
+              <p className={styles.emptyDesc}>{ctx.txEmptyDesc}</p>
+            </div>
+          ) : (
+            <>
+              <div className={styles.txSummary} style={colorVar}>
+                <span className={styles.txSummaryLabel}>Разом витрат</span>
+                <span className={styles.txSummaryAmount}>
+                  ₴{formatTxAmount(spaceTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0))}
+                </span>
+              </div>
+              <div className={styles.txList}>
+                {spaceTxs.map(t => (
+                  <div key={t._id} className={`${styles.spaceTx} ${t.type === 'income' ? styles.spaceTxIncome : ''}`}>
+                    <div className={styles.txLeft}>
+                      <span className={styles.txTitle}>{t.title || t.desc || t.category || '—'}</span>
+                      <span className={styles.txDate}>{t.date.slice(0, 10)}</span>
+                    </div>
+                    <span className={styles.txAmount}>
+                      {t.type === 'income' ? '+' : '−'}₴{formatTxAmount(t.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </section>
       </div>

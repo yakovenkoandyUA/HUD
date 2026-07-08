@@ -15,6 +15,7 @@ export interface ITransaction extends Document {
   incomeCategory?: string | null
   mcc?: number | null
   tripMemoryId?: string | null
+  spaceId?: string | null
 }
 
 const schema = new Schema<ITransaction>({
@@ -32,6 +33,7 @@ const schema = new Schema<ITransaction>({
   incomeCategory: { type: String, default: null },
   mcc:            { type: Number, default: null },
   tripMemoryId:   { type: String, default: null },
+  spaceId:        { type: String, default: null, index: true },
 }, { timestamps: true })
 
 schema.index({ userId: 1, date: -1 })

@@ -2,9 +2,10 @@ import { Request, Response } from 'express'
 import Transaction from '../models/Transaction'
 
 export async function getAll(req: Request, res: Response): Promise<void> {
-  const { month } = req.query as { month?: string }
+  const { month, spaceId } = req.query as { month?: string; spaceId?: string }
   const query: Record<string, unknown> = { userId: req.userId }
   if (month) query.date = { $regex: `^${month}` }
+  if (spaceId) query.spaceId = spaceId
   const items = await Transaction.find(query).sort({ date: -1 }).limit(1000)
   res.json(items)
 }
