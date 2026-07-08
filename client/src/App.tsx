@@ -24,6 +24,7 @@ import ShoppingListScreen from '@/features/sprint/shoppingList'
 import Watchlist from '@/features/watchlist'
 import MemoriesScreen from '@/features/memories'
 import MemoryDetailScreen from '@/features/memories/detail'
+import SpaceDetailScreen from '@/features/spaces'
 import LoginScreen from '@/features/auth/Login'
 import RegisterScreen from '@/features/auth/Register'
 import ProfilePage from '@/features/profile'
@@ -99,6 +100,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/memories" element={<MemoriesScreen />} />
           <Route path="/memories/:id" element={<MemoryDetailScreen />} />
+          <Route path="/spaces/:spaceId" element={<SpaceDetailScreen />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/notes" element={<NotesScreen />} />
           <Route path="/timeline" element={<TimelineScreen />} />
@@ -126,6 +128,7 @@ const NavGuard: React.FC = () => {
   if (/^\/f1\/\d+$/.test(pathname)) return null
   if (pathname === '/f1/my-season') return null
   if (/^\/memories\/.+/.test(pathname)) return null
+  if (/^\/spaces\/.+/.test(pathname)) return null
   if (pathname === '/recipes/planner') return null
   if (/^\/recipes\/.+/.test(pathname)) return null
   if (pathname === '/shopping') return null
