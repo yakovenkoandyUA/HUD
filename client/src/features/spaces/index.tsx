@@ -14,22 +14,117 @@ import type { AddMemoryData } from '@/features/memories/components/memories/AddM
 import type { PlanInput } from '@/features/memories/store/plansStore'
 import styles from './SpaceDetail.module.css'
 
-const SPACE_TYPE_LABELS: Record<string, string> = {
-  personal: 'Особисте',
-  shared:   'Спільне',
-  trip:     'Поїздка',
-  family:   'Сім\'я',
-  friends:  'Друзі',
-  hobby:    'Хобі',
-  sports:   'Спорт',
-  project:  'Проєкт',
+interface SpaceCtx {
+  typeLabel: string
+  description: string
+  memBtnLabel: string
+  planBtnLabel: string
+  memEmptyTitle: string
+  memEmptyDesc: string
+  planEmptyTitle: string
+  planEmptyDesc: string
+}
+
+const SPACE_CONTEXT: Record<string, SpaceCtx> = {
+  personal: {
+    typeLabel:      'Особисте',
+    description:    'Твій особистий простір — спогади, плани й думки тільки для тебе.',
+    memBtnLabel:    '+ Спогад',
+    planBtnLabel:   '+ План',
+    memEmptyTitle:  'Спогадів ще немає',
+    memEmptyDesc:   'Додай особистий момент — щось що хочеш запам\'ятати.',
+    planEmptyTitle: 'Планів ще немає',
+    planEmptyDesc:  'Запиши ціль або щось що хочеш зробити.',
+  },
+  shared: {
+    typeLabel:      'Спільне',
+    description:    'Спільний простір для людей, речей і планів що вас об\'єднують.',
+    memBtnLabel:    '+ Спільний спогад',
+    planBtnLabel:   '+ Спільний план',
+    memEmptyTitle:  'Спогадів ще немає',
+    memEmptyDesc:   'Додай перший спільний момент.',
+    planEmptyTitle: 'Планів ще немає',
+    planEmptyDesc:  'Запиши першу спільну ідею або план.',
+  },
+  trip: {
+    typeLabel:      'Поїздка',
+    description:    'Збирай тут плани, спогади, місця й враження цієї поїздки — до, під час і після.',
+    memBtnLabel:    '+ Момент поїздки',
+    planBtnLabel:   '+ Ідея маршруту',
+    memEmptyTitle:  'Спогадів ще немає',
+    memEmptyDesc:   'Додай перший момент з цієї поїздки: фото, коротку історію або місце.',
+    planEmptyTitle: 'Планів ще немає',
+    planEmptyDesc:  'Запиши маршрут, ідею, бронювання або щось що хочеш не забути.',
+  },
+  family: {
+    typeLabel:      'Сім\'я',
+    description:    'Спільний простір для сімейних спогадів, планів і важливих моментів.',
+    memBtnLabel:    '+ Сімейний спогад',
+    planBtnLabel:   '+ Сімейний план',
+    memEmptyTitle:  'Спогадів ще немає',
+    memEmptyDesc:   'Додай перший сімейний момент — фото, подія або просто що трапилось.',
+    planEmptyTitle: 'Планів ще немає',
+    planEmptyDesc:  'Запиши ідею для спільного часу — поїздка, вечеря, традиція.',
+  },
+  friends: {
+    typeLabel:      'Друзі',
+    description:    'Збирай тут спільні моменти, плани і що ще хочете зробити разом.',
+    memBtnLabel:    '+ Спогад з друзями',
+    planBtnLabel:   '+ Планую разом',
+    memEmptyTitle:  'Спогадів ще немає',
+    memEmptyDesc:   'Збережи перший момент з цими людьми.',
+    planEmptyTitle: 'Планів ще немає',
+    planEmptyDesc:  'Запиши що хочете зробити разом — куди піти, що спробувати.',
+  },
+  hobby: {
+    typeLabel:      'Хобі',
+    description:    'Простір для занять, прогресу й важливих моментів із цього хобі.',
+    memBtnLabel:    '+ Подія',
+    planBtnLabel:   '+ Ціль',
+    memEmptyTitle:  'Подій ще немає',
+    memEmptyDesc:   'Додай перший момент з цього хобі — тренування, виступ, досягнення.',
+    planEmptyTitle: 'Цілей ще немає',
+    planEmptyDesc:  'Постав ціль або заплануй наступний крок у цьому хобі.',
+  },
+  sports: {
+    typeLabel:      'Спорт',
+    description:    'Тренування, змагання, результати — всі спортивні моменти тут.',
+    memBtnLabel:    '+ Результат',
+    planBtnLabel:   '+ Тренування',
+    memEmptyTitle:  'Результатів ще немає',
+    memEmptyDesc:   'Додай перше тренування, змагання або досягнення.',
+    planEmptyTitle: 'Тренувань ще немає',
+    planEmptyDesc:  'Заплануй наступне тренування або постав спортивну ціль.',
+  },
+  project: {
+    typeLabel:      'Проєкт',
+    description:    'Збирай тут задачі, нотатки й прогрес цього проєкту.',
+    memBtnLabel:    '+ Milestone',
+    planBtnLabel:   '+ Задача',
+    memEmptyTitle:  'Досягнень ще немає',
+    memEmptyDesc:   'Фіксуй ключові моменти та досягнення проєкту.',
+    planEmptyTitle: 'Задач ще немає',
+    planEmptyDesc:  'Запиши першу задачу або ціль цього проєкту.',
+  },
+}
+
+const DEFAULT_CTX: SpaceCtx = {
+  typeLabel:      '',
+  description:    '',
+  memBtnLabel:    '+ Спогад',
+  planBtnLabel:   '+ План',
+  memEmptyTitle:  'Спогадів ще немає',
+  memEmptyDesc:   'Додай перший спогад у цей простір.',
+  planEmptyTitle: 'Планів ще немає',
+  planEmptyDesc:  'Запиши перший план або ціль.',
 }
 
 /**
  * SpaceDetailScreen
  * -----------------
- * Сторінка деталей простору: хедер, overview counts, учасники,
- * пов'язані спогади та плани. Quick actions → + Спогад / + План.
+ * Сторінка деталей простору: hero з описом, overview counts, учасники,
+ * пов'язані спогади та плани. Quick actions — контекстні мітки per type.
+ * Empty states — контекстний copy per type.
  */
 const SpaceDetailScreen: React.FC = () => {
   const navigate = useNavigate()
@@ -45,12 +140,10 @@ const SpaceDetailScreen: React.FC = () => {
   const [addMemOpen, setAddMemOpen]   = useState(false)
   const [addPlanOpen, setAddPlanOpen] = useState(false)
 
-  // Fetch space + linked content
   useEffect(() => {
     if (!spaceId) return
     let cancelled = false
     const load = async () => {
-      // Space: try store first, fallback to API
       let found = spaces.find(s => s.id === spaceId) ?? null
       if (!found) {
         await fetchSpaces()
@@ -58,7 +151,6 @@ const SpaceDetailScreen: React.FC = () => {
       }
       if (!cancelled) setSpace(found)
 
-      // Memories & plans by spaceId
       const [memRes, planRes] = await Promise.all([
         authFetch(`/api/memories?spaceId=${spaceId}`),
         authFetch(`/api/plans?spaceId=${spaceId}`),
@@ -99,9 +191,7 @@ const SpaceDetailScreen: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaceId])
 
-  const handleAddMemory = async (data: AddMemoryData) => {
-    await addMemory({ ...data, photos: [], spaceId: spaceId ?? null })
-    // Refresh memories
+  const refreshMemories = async () => {
     const res = await authFetch(`/api/memories?spaceId=${spaceId}`)
     if (res.ok) {
       const raw = await res.json() as Record<string, unknown>[]
@@ -115,6 +205,11 @@ const SpaceDetailScreen: React.FC = () => {
         spaceId: (d.spaceId as string | null) ?? null, withProfiles: (d.withProfiles as string[]) ?? [],
       })))
     }
+  }
+
+  const handleAddMemory = async (data: AddMemoryData) => {
+    await addMemory({ ...data, photos: [], spaceId: spaceId ?? null })
+    await refreshMemories()
     setAddMemOpen(false)
   }
 
@@ -137,16 +232,17 @@ const SpaceDetailScreen: React.FC = () => {
     )
   }
 
+  const ctx = SPACE_CONTEXT[space?.type ?? ''] ?? DEFAULT_CTX
   const colorVar = { '--space-color': space?.color ?? 'var(--accent)' } as React.CSSProperties
 
   return (
     <div className={styles.root}>
       <AppHeader />
 
-      {/* ── Hero header ── */}
+      {/* ── Hero ── */}
       <div className={styles.hero} style={colorVar}>
         <div className={styles.heroAccent} />
-        <button type="button" className={styles.backBtn} onClick={() => navigate(-1)}>
+        <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 4l-5 5 5 5"/>
           </svg>
@@ -159,8 +255,11 @@ const SpaceDetailScreen: React.FC = () => {
             <div className={styles.heroInfo}>
               <h1 className={styles.heroName}>{space?.name}</h1>
               <span className={styles.heroType} style={colorVar}>
-                {SPACE_TYPE_LABELS[space?.type ?? ''] ?? space?.type}
+                {ctx.typeLabel || (SPACE_CONTEXT[space?.type ?? '']?.typeLabel ?? space?.type)}
               </span>
+              {ctx.description && (
+                <p className={styles.heroDesc}>{ctx.description}</p>
+              )}
             </div>
           </>
         )}
@@ -187,16 +286,16 @@ const SpaceDetailScreen: React.FC = () => {
       {/* ── Quick actions ── */}
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M7 2v10M2 7h10"/>
           </svg>
-          Спогад
+          {ctx.memBtnLabel}
         </button>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddPlanOpen(true)}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M7 2v10M2 7h10"/>
           </svg>
-          План
+          {ctx.planBtnLabel}
         </button>
       </div>
 
@@ -230,12 +329,15 @@ const SpaceDetailScreen: React.FC = () => {
             </div>
           ) : memories.length === 0 ? (
             <div className={styles.empty}>
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" aria-hidden="true">
                 <circle cx="16" cy="12" r="5"/><path d="M6 28c0-5.5 4.5-10 10-10s10 4.5 10 10"/>
                 <path d="M22 7l2-2M10 7L8 5"/>
               </svg>
-              <p>Немає спогадів у цьому просторі</p>
-              <button type="button" className={styles.emptyAction} onClick={() => setAddMemOpen(true)}>Додати спогад</button>
+              <p className={styles.emptyTitle}>{ctx.memEmptyTitle}</p>
+              <p className={styles.emptyDesc}>{ctx.memEmptyDesc}</p>
+              <button type="button" className={styles.emptyAction} style={colorVar} onClick={() => setAddMemOpen(true)}>
+                {ctx.memBtnLabel}
+              </button>
             </div>
           ) : (
             <div className={styles.memoriesGrid}>
@@ -255,13 +357,16 @@ const SpaceDetailScreen: React.FC = () => {
             </div>
           ) : plans.length === 0 ? (
             <div className={styles.empty}>
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3">
-                <circle cx="16" cy="16" r="12"/>
-                <path d="M10 16c2-4 5-7 10-7"/>
-                <circle cx="16" cy="22" r="2" fill="currentColor" stroke="none"/>
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" aria-hidden="true">
+                <rect x="6" y="8" width="20" height="18" rx="3"/>
+                <path d="M11 14h10M11 19h7"/>
+                <path d="M20 4v8M12 4v8"/>
               </svg>
-              <p>Немає планів у цьому просторі</p>
-              <button type="button" className={styles.emptyAction} onClick={() => setAddPlanOpen(true)}>Додати план</button>
+              <p className={styles.emptyTitle}>{ctx.planEmptyTitle}</p>
+              <p className={styles.emptyDesc}>{ctx.planEmptyDesc}</p>
+              <button type="button" className={styles.emptyAction} style={colorVar} onClick={() => setAddPlanOpen(true)}>
+                {ctx.planBtnLabel}
+              </button>
             </div>
           ) : (
             <div className={styles.plansCol}>
