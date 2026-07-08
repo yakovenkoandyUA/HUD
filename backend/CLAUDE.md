@@ -69,6 +69,9 @@
 | `/api/watchlist` | GET, POST |
 | `/api/watchlist/:id` | PATCH, DELETE |
 | `/api/watchlist/:id/comments` | GET, POST |
+| `/api/watchlist/import/parse` | POST (multipart) — парсинг CSV/XLSX, повертає headers + rows + suggestedMapping |
+| `/api/watchlist/import/confirm` | POST JSON — bulk insert з TMDB-збагаченням; `{ rows, mapping }` → `{ imported, skipped, duplicates, errors }` |
+| `/api/watchlist/import/parse-ai` | POST (multipart) — AI-розпізнавання PDF/зображень через Anthropic Vision |
 | `/api/recipes` | GET, POST |
 | `/api/recipes/generate` | POST — AI-генерація рецепту (Anthropic) |
 | `/api/recipes/cook-stats` | GET — `{ [recipeId]: { count, lastCooked } }` (MUST be before /:id) |

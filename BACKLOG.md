@@ -119,8 +119,12 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - `verifyPIN` тепер використовує `authFetch` замість сирого `fetch` — токен автоматично рефреститься якщо протух (раніше 401 від `requireAuth` помилково трактувався як "невірний PIN")
 - `PinGuard` блокує при кожному свіжому завантаженні через `sessionStorage['hud-pin-session']` (раніше при refresh `pinLocked` скидався і PIN не показувався)
 
-### ✅ Letterboxd імпорт — зроблено (тільки фільми)
-`ImportLetterboxdModal` (client/src/components/watchlist/) + `parseCsv.ts` — клієнтський RFC4180 CSV-парсер, без бекенд-роута (реюзає `POST /api/watchlist` на кожен фільм). TMDB lookup по title+year з throttle 280мс, дублікат-детекція, конвертація рейтингу 0-10→0-20, прогрес N/M. Кнопка імпорту тільки в таб "Фільми" Watchlist.
+### ✅ Універсальний Watchlist імпорт — зроблено (CSV / XLSX / PDF / зображення)
+`ImportWatchlistModal` замінила стару `ImportLetterboxdModal`. Кроки: upload → mapping → preview → confirm → done.
+- **Backend**: `POST /api/watchlist/import/parse` (multer + xlsx/csv-парсер) → headers + rows + suggestedMapping. `POST /api/watchlist/import/confirm` (TMDB lookup батчами по 20 + bulk insertMany). `POST /api/watchlist/import/parse-ai` (Anthropic Vision/текст для PDF та зображень).
+- **Frontend**: `importWatchlistStore` (Zustand), `ColumnMappingStep` (таблиця відповідності з дропдаунами), `ImportPreviewTable` (перші 10 рядків з бейджами статусів, warning для нерозпізнаних), done-summary з лічильниками.
+- Автомапінг колонок за ключовими словами укр/рос/англ. Словник статусів `statusMappingDictionary.ts`. Дублікат-детекція по tmdbId і title. Кнопка імпорту доступна у всіх медіа-табах (movie/series/anime).
+- Підтримувані сервіси: MyShows, Letterboxd, Trakt, IMDb, Кінопошук та будь-який CSV/XLSX-експорт.
 
 ### 🟡 Не починалось (продуктові фічі)
 - **Goodreads імпорт** — books-таб у Watchlist взагалі "В РОЗРОБЦІ" (нижче), тож імпорт книг чекає на сам books-функціонал, не тільки на парсер

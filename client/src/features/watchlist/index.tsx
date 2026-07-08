@@ -9,7 +9,7 @@ import GameCard from './games/games/GameCard'
 import GameDetail from './games/games/GameDetail'
 import GameHero from './games/games/GameHero'
 import WatchlistStatsSheet from './components/watchlist/WatchlistStatsSheet'
-import ImportLetterboxdModal from './components/watchlist/ImportLetterboxdModal'
+import ImportWatchlistModal from './components/watchlist/ImportWatchlistModal'
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore'
 import { useGamesStore } from '@/features/watchlist/store/gamesStore'
 import { useUiStore } from '@/shared/store/uiStore'
@@ -424,13 +424,13 @@ const Watchlist: React.FC = () => {
 
             <div className={styles.searchWrap}>
               <WatchlistSearch category={tab as WatchlistCategory} onAdd={handleAdd} />
-              {tab === 'movie' && (
+              {(tab === 'movie' || tab === 'series' || tab === 'anime') && (
                 <button
                   type="button"
                   className={styles.sortBtn}
                   onClick={() => setImportOpen(true)}
-                  aria-label="Імпорт з Letterboxd"
-                  title="Імпорт з Letterboxd"
+                  aria-label="Імпорт"
+                  title="Імпорт зі стороннього сервісу"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path d="M8 2v8M8 10l-3-3M8 10l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -663,12 +663,10 @@ const Watchlist: React.FC = () => {
         onAdd={handleAddGame}
       />
 
-      {/* ── Letterboxd import ── */}
-      <ImportLetterboxdModal
+      {/* ── Universal watchlist import ── */}
+      <ImportWatchlistModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        existingItems={items}
-        onAdd={item => { addItem(item); useAchievementsStore.getState().unlock('first-watchlist') }}
       />
     </div>
   )
