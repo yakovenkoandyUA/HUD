@@ -98,7 +98,8 @@ export const createTransactionSchema = z.object({
 // ── Notes ─────────────────────────────────────────────────────────────────────
 
 export const createNoteSchema = z.object({
-  text: z.string().min(1, 'Текст нотатки обов\'язковий').max(5000),
+  text:    z.string().min(1, 'Текст нотатки обов\'язковий').max(5000),
+  spaceId: z.string().optional().nullable(),
 })
 
 export const updateNoteSchema = z.object({

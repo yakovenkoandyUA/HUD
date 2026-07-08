@@ -5,6 +5,7 @@ import { useAchievementsStore } from '@/shared/store/achievementsStore'
 export interface Note {
   _id: string
   text: string
+  spaceId?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -13,7 +14,7 @@ interface NotesState {
   notes: Note[]
   loading: boolean
   fetchNotes: () => Promise<void>
-  addNote: (text: string) => Promise<void>
+  addNote: (text: string, spaceId?: string | null) => Promise<void>
   updateNote: (id: string, text: string) => Promise<void>
   deleteNote: (id: string) => Promise<void>
 }
@@ -34,13 +35,13 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
     }
   },
 
-  addNote: async (text: string) => {
+  addNote: async (text: string, spaceId?: string | null) => {
     const tempId = `temp-${Date.now()}`
-    const optimistic: Note = { _id: tempId, text, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    const optimistic: Note = { _id: tempId, text, spaceId: spaceId ?? null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     set(s => ({ notes: [optimistic, ...s.notes] }))
     useAchievementsStore.getState().unlock('first-note')
     try {
-      const res = await authFetch('/api/notes', { method: 'POST', body: JSON.stringify({ text }) })
+      const res = await authFetch('/api/notes', { method: 'POST', body: JSON.stringify({ text, spaceId: spaceId ?? null }) })
       if (!res.ok) { set(s => ({ notes: s.notes.filter(n => n._id !== tempId) })); return }
       const created: Note = await res.json()
       set(s => ({ notes: s.notes.map(n => n._id === tempId ? created : n) }))

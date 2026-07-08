@@ -10,7 +10,9 @@ router.use(requireAuth)
 
 router.get('/', async (req, res) => {
   try {
-    const notes = await Note.find({ userId: req.userId }).sort({ createdAt: -1 })
+    const filter: Record<string, unknown> = { userId: req.userId }
+    if (req.query.spaceId) filter.spaceId = req.query.spaceId
+    const notes = await Note.find(filter).sort({ createdAt: -1 })
     res.json(notes)
   } catch {
     res.status(500).json({ error: 'Server error' })
@@ -19,8 +21,8 @@ router.get('/', async (req, res) => {
 
 router.post('/', validate(createNoteSchema), async (req, res) => {
   try {
-    const { text } = req.body as { text: string }
-    const note = await Note.create({ text: text.trim(), userId: req.userId })
+    const { text, spaceId } = req.body as { text: string; spaceId?: string | null }
+    const note = await Note.create({ text: text.trim(), userId: req.userId, spaceId: spaceId ?? null })
     res.status(201).json(note)
   } catch {
     res.status(500).json({ error: 'Server error' })
