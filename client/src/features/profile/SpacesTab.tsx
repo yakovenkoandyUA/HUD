@@ -55,8 +55,8 @@ const SpacesTab: React.FC = () => {
   // ── Swipe to dismiss ──
   const createOverlayRef = useRef<HTMLDivElement>(null)
   const detailOverlayRef = useRef<HTMLDivElement>(null)
-  useSwipeToDismiss(() => setCreateOpen(false), { enabled: createOpen, overlayRef: createOverlayRef })
-  useSwipeToDismiss(() => setDetailSpace(null),  { enabled: !!detailSpace, overlayRef: detailOverlayRef })
+  const createSheetRef = useSwipeToDismiss(() => setCreateOpen(false), { enabled: createOpen, overlayRef: createOverlayRef })
+  const detailSheetRef = useSwipeToDismiss(() => setDetailSpace(null),  { enabled: !!detailSpace, overlayRef: detailOverlayRef })
 
   useEffect(() => { fetchSpaces() }, [fetchSpaces])
 
@@ -200,7 +200,7 @@ const SpacesTab: React.FC = () => {
       {/* ══ Create Sheet ══ */}
       {createOpen && (
         <div className={styles.overlay} ref={createOverlayRef} onClick={() => setCreateOpen(false)}>
-          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+          <div className={styles.sheet} ref={createSheetRef} onClick={e => e.stopPropagation()}>
             <div className={styles.sheetHandle} />
             <h2 className={styles.sheetTitle}>Новий простір</h2>
 
@@ -251,7 +251,7 @@ const SpacesTab: React.FC = () => {
       {/* ══ Detail Sheet ══ */}
       {detailSpace && (
         <div className={styles.overlay} ref={detailOverlayRef} onClick={() => setDetailSpace(null)}>
-          <div className={styles.sheet} onClick={e => e.stopPropagation()}>
+          <div className={styles.sheet} ref={detailSheetRef} onClick={e => e.stopPropagation()}>
             <div className={styles.sheetHandle} />
 
             <div className={styles.detailHeader}>
