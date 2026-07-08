@@ -216,6 +216,11 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - **BottomNav: labels** — classic стиль отримав підписи під всіма іконками. Pill/hub стиль: label тільки для активного item (item розширюється з круглого 46px в mini-pill форму).
 - **Life Spaces strip на Dashboard** — новий компонент `SpacesStrip`: горизонтальний скрол просторів між `TodayHabits` і calendar wrap. Прихований якщо 0 spaces і f1Enabled=false. F1 virtual card (некліка́бельні space-карти поки немає detail route; F1 card → /f1).
 - **MemoryDetail context block** — нова секція "З КИМ" + "НАСТРІЙ" над секцією МІСЦЯ. З КИМ: chips з аватарами/ініціалами з familyStore, mapped з `withProfiles[]`. Настрій: fetch `/api/mood/history?month=`, кольоровий dot 1–5 + score/5.
+- **SpacesStrip chip → context-card** — мінімальний чіп замінений на ширшу контекстну картку (200–260px): emoji, повна назва без обрізання, тип + кількість учасників, "відкрити →" футер. F1 virtual card (`--space-color: #e10600`).
+- **SpaceDetail self-sufficient** — екран `/spaces/:spaceId` більше не потребує ProfilePage для редагування: edit bottom sheet (назва/emoji/тип/колір/delete з підтвердженням), управління учасниками (додати за username, видалити) — все inline в SpaceDetail. SPACE_CONTEXT config per-type для 8 типів просторів.
+- **S2A Notes in Spaces** — `Note` model: `spaceId` поле; `GET /api/notes?spaceId=`, `POST /api/notes` приймає `spaceId`; `notesStore.addNote(text, spaceId?)`; SpaceDetail: inline textarea + список нотаток з датою і видаленням.
+- **S2B SprintTask in Spaces** — `SprintTask` model: `spaceId` поле з індексом; `GET /api/sprint/tasks?spaceId=` filter; TASK_ALLOWED + updateTaskSchema; SpaceDetail: inline task creation (Enter=save/Escape=cancel), checkbox toggle, delete; задача отримує поточний weekStart → видна і у Sprint-екрані.
+- **S2C Transactions in Spaces** — `Transaction` model: `spaceId` поле з індексом; `GET /api/transactions?spaceId=` filter; `createTransactionSchema` + `Transaction` type (frontend); SpaceDetail: секція ВИТРАТИ — summary chip (загальна сума витрат) + хронологічний список (read-only, додавати транзакції через Finance з вибором простору).
 
 ### ✅ Phase 3A — Billing Readiness: Legal + Data Rights (2026-07-07)
 
