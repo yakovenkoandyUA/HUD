@@ -2032,6 +2032,143 @@
   flex-shrink: 0;
 }
 
+/* ── Admin: plan badge ── */
+.adminPlanBadge {
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  border-radius: 4px;
+  padding: 1px 5px;
+  border: 1px solid currentColor;
+}
+.plan_free     { color: var(--text3); }
+.plan_personal { color: var(--accent); }
+.plan_couple   { color: #2ecc71; }
+.plan_family   { color: #f39c12; }
+
+/* ── Admin: expand toggle ── */
+.adminExpandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+  align-self: flex-start;
+  margin-top: 6px;
+}
+.adminExpandBtnOpen { transform: rotate(180deg); }
+
+/* ── Admin: expanded section ── */
+.adminExpanded {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adminPlanRow {
+  display: flex;
+  gap: 6px;
+}
+
+.adminPlanBtn {
+  flex: 1;
+  padding: 6px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.adminPlanBtnActive {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.adminPlanBtn:disabled { opacity: 0.5; cursor: default; }
+
+.adminDeleteBtn {
+  padding: 7px;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+.adminDeleteBtn:active { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+.adminConfirmRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adminConfirmText {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text3);
+}
+.adminConfirmYes {
+  padding: 5px 12px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.adminConfirmNo {
+  padding: 5px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ── Admin: family group ── */
+.adminFamilyGroup {
+  position: relative;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: 12px;
+  padding: 8px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.adminFamilyLabel {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  background: var(--bg-profile, var(--bg));
+  padding: 0 4px;
+  opacity: 0.7;
+}
+.adminFamilyGroup .adminUserRow {
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+}
+.adminFamilyGroup .adminUserRow:hover {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
 /* ── My Day settings ── */
 .fieldRow {
   display: flex;

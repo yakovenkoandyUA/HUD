@@ -28,6 +28,7 @@ export function canUseFeature(user: IUser, feature: Feature): boolean {
  */
 export function assertFeature(user: IUser, feature: Feature): void {
   if (!isBillingEnforcementEnabled()) return
+  if (user.role === 'admin') return
   if (!canUseFeature(user, feature)) {
     const err = new Error('Plan upgrade required') as Error & { status: number; code: string; feature: string }
     err.status = 403
@@ -59,6 +60,7 @@ export function requireFeature(feature: Feature) {
  */
 export function assertLimit(user: IUser, limitKey: keyof PlanLimits, currentCount: number): void {
   if (!isBillingEnforcementEnabled()) return
+  if (user.role === 'admin') return
   const limit = getPlanLimits(user)[limitKey]
   if (limit !== -1 && currentCount >= limit) {
     const err = new Error(`Limit reached: ${limitKey}`) as Error & { status: number; code: string; limitKey: string; limit: number }

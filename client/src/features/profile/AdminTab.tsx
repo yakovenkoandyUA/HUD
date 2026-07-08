@@ -10,18 +10,62 @@ interface AdminUser {
   role: 'admin' | 'user'
   avatarUrl: string | null
   createdAt: string
+  plan: 'free' | 'personal' | 'couple' | 'family'
+  subscriptionStatus: string
+  familyIds: string[]
+}
+
+const PLAN_LABELS: Record<AdminUser['plan'], string> = {
+  free:     'FREE',
+  personal: 'PRO',
+  couple:   'DUO',
+  family:   'FAM',
+}
+
+const PLAN_OPTIONS: AdminUser['plan'][] = ['free', 'personal', 'couple', 'family']
+
+/** BFS connected components — returns userId → groupId (only for users with family links) */
+function buildFamilyGroups(users: AdminUser[]): Map<string, string> {
+  const userIds = new Set(users.map(u => u.id))
+  const adj = new Map<string, string[]>()
+  for (const u of users) {
+    adj.set(u.id, u.familyIds.filter(id => userIds.has(id)))
+  }
+
+  const visited = new Set<string>()
+  const groupMap = new Map<string, string>()
+  let idx = 0
+
+  for (const u of users) {
+    if (visited.has(u.id) || (adj.get(u.id)?.length ?? 0) === 0) continue
+    const groupId = `g${idx++}`
+    const queue = [u.id]
+    while (queue.length) {
+      const curr = queue.shift()!
+      if (visited.has(curr)) continue
+      visited.add(curr)
+      groupMap.set(curr, groupId)
+      for (const nb of adj.get(curr) ?? []) {
+        if (!visited.has(nb)) queue.push(nb)
+      }
+    }
+  }
+  return groupMap
 }
 
 /**
  * AdminTab
  * --------
- * Вкладка "Адміністрування" — список усіх зареєстрованих користувачів.
- * Доступна тільки для role === 'admin'.
+ * Адмін-панель: список юзерів з планом, сімейними групами,
+ * ручною зміною підписки та видаленням акаунту.
  */
 const AdminTab: React.FC = () => {
-  const [users, setUsers]     = useState<AdminUser[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [users, setUsers]         = useState<AdminUser[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState<string | null>(null)
+  const [expandedId, setExpandedId]   = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [savingPlan, setSavingPlan]   = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -41,9 +85,138 @@ const AdminTab: React.FC = () => {
     return () => { cancelled = true }
   }, [])
 
-  const formatDate = (iso: string) => {
-    const d = new Date(iso)
-    return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })
+  const handleSetPlan = async (userId: string, plan: AdminUser['plan']) => {
+    let cancelled = false
+    setSavingPlan(userId)
+    try {
+      const res = await authFetch(`/api/auth/admin/users/${userId}/plan`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, subscriptionStatus: plan === 'free' ? 'none' : 'active' }),
+      })
+      if (!res.ok) throw new Error()
+      if (!cancelled) {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, plan, subscriptionStatus: plan === 'free' ? 'none' : 'active' } : u))
+        setExpandedId(null)
+      }
+    } catch {
+      // silent — plan didn't change
+    } finally {
+      if (!cancelled) setSavingPlan(null)
+    }
+    return () => { cancelled = true }
+  }
+
+  const handleDelete = async (userId: string) => {
+    let cancelled = false
+    try {
+      const res = await authFetch(`/api/auth/admin/users/${userId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      if (!cancelled) {
+        setUsers(prev => prev.filter(u => u.id !== userId))
+        setConfirmDelete(null)
+      }
+    } catch {
+      if (!cancelled) setConfirmDelete(null)
+    }
+    return () => { cancelled = true }
+  }
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })
+
+  if (loading) return <div className={styles.tabContent}><p className={styles.adminEmpty}>Завантаження...</p></div>
+  if (error)   return <div className={styles.tabContent}><p className={styles.adminEmpty}>{error}</p></div>
+
+  const groupMap = buildFamilyGroups(users)
+
+  // Build ordered list: collect groups together, singletons stay in order
+  const groupOrder: string[] = []
+  const seenGroups = new Set<string>()
+  type Item = { type: 'user'; user: AdminUser } | { type: 'group'; groupId: string; members: AdminUser[] }
+  const items: Item[] = []
+
+  for (const u of users) {
+    const gid = groupMap.get(u.id)
+    if (!gid) {
+      items.push({ type: 'user', user: u })
+    } else if (!seenGroups.has(gid)) {
+      seenGroups.add(gid)
+      groupOrder.push(gid)
+      const members = users.filter(x => groupMap.get(x.id) === gid)
+      items.push({ type: 'group', groupId: gid, members })
+    }
+  }
+
+  const renderUserCard = (u: AdminUser) => {
+    const isExpanded = expandedId === u.id
+    const isConfirming = confirmDelete === u.id
+    const isSaving = savingPlan === u.id
+
+    return (
+      <div key={u.id} className={styles.adminUserRow}>
+        {u.avatarUrl ? (
+          <img src={u.avatarUrl} alt={u.name} className={styles.adminAvatar} width={40} height={40} />
+        ) : (
+          <div className={styles.adminAvatarInitial}>
+            {(u.name || u.username || '?')[0].toUpperCase()}
+          </div>
+        )}
+
+        <div className={styles.adminUserInfo}>
+          <div className={styles.adminUserTop}>
+            <span className={styles.adminUserName}>{u.name || u.username}</span>
+            {u.role === 'admin' && <span className={styles.adminBadge}>ADMIN</span>}
+            <span className={`${styles.adminPlanBadge} ${styles[`plan_${u.plan}`]}`}>
+              {PLAN_LABELS[u.plan]}
+            </span>
+          </div>
+          <span className={styles.adminUserSub}>@{u.username}{u.email ? ` · ${u.email}` : ''}</span>
+          <span className={styles.adminUserDate}>{formatDate(u.createdAt)}</span>
+
+          {/* Expanded: plan picker + delete */}
+          {isExpanded && (
+            <div className={styles.adminExpanded}>
+              <div className={styles.adminPlanRow}>
+                {PLAN_OPTIONS.map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    disabled={isSaving}
+                    className={`${styles.adminPlanBtn} ${u.plan === p ? styles.adminPlanBtnActive : ''}`}
+                    onClick={() => handleSetPlan(u.id, p)}
+                  >
+                    {PLAN_LABELS[p]}
+                  </button>
+                ))}
+              </div>
+              {isConfirming ? (
+                <div className={styles.adminConfirmRow}>
+                  <span className={styles.adminConfirmText}>Видалити акаунт?</span>
+                  <button type="button" className={styles.adminConfirmYes} onClick={() => handleDelete(u.id)}>Так</button>
+                  <button type="button" className={styles.adminConfirmNo} onClick={() => setConfirmDelete(null)}>Ні</button>
+                </div>
+              ) : (
+                <button type="button" className={styles.adminDeleteBtn} onClick={() => setConfirmDelete(u.id)}>
+                  Видалити акаунт
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className={`${styles.adminExpandBtn} ${isExpanded ? styles.adminExpandBtnOpen : ''}`}
+          onClick={() => setExpandedId(isExpanded ? null : u.id)}
+          aria-label={isExpanded ? 'Згорнути' : 'Розгорнути'}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -51,51 +224,22 @@ const AdminTab: React.FC = () => {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionTitle}>КОРИСТУВАЧІ</span>
-          {!loading && !error && (
-            <span className={styles.sectionCount}>{users.length}</span>
-          )}
+          <span className={styles.sectionCount}>{users.length}</span>
         </div>
 
-        {loading && <p className={styles.adminEmpty}>Завантаження...</p>}
-        {error   && <p className={styles.adminEmpty}>{error}</p>}
+        {users.length === 0 && <p className={styles.adminEmpty}>Немає користувачів</p>}
 
-        {!loading && !error && users.length === 0 && (
-          <p className={styles.adminEmpty}>Немає користувачів</p>
-        )}
-
-        {!loading && !error && users.length > 0 && (
-          <div className={styles.adminList}>
-            {users.map(u => (
-              <div key={u.id} className={styles.adminUserRow}>
-                {u.avatarUrl ? (
-                  <img
-                    src={u.avatarUrl}
-                    alt={u.name}
-                    className={styles.adminAvatar}
-                    width={40}
-                    height={40}
-                  />
-                ) : (
-                  <div className={styles.adminAvatarInitial}>
-                    {(u.name || u.username || '?')[0].toUpperCase()}
-                  </div>
-                )}
-                <div className={styles.adminUserInfo}>
-                  <div className={styles.adminUserTop}>
-                    <span className={styles.adminUserName}>{u.name || u.username}</span>
-                    {u.role === 'admin' && (
-                      <span className={styles.adminBadge}>admin</span>
-                    )}
-                  </div>
-                  <span className={styles.adminUserSub}>
-                    @{u.username}{u.email ? ` · ${u.email}` : ''}
-                  </span>
-                  <span className={styles.adminUserDate}>{formatDate(u.createdAt)}</span>
-                </div>
+        <div className={styles.adminList}>
+          {items.map((item, i) => {
+            if (item.type === 'user') return renderUserCard(item.user)
+            return (
+              <div key={item.groupId} className={styles.adminFamilyGroup}>
+                <span className={styles.adminFamilyLabel}>СІМ'Я</span>
+                {item.members.map(u => renderUserCard(u))}
               </div>
-            ))}
-          </div>
-        )}
+            )
+          })}
+        </div>
       </section>
     </div>
   )

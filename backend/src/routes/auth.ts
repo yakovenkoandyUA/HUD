@@ -4,7 +4,7 @@ import {
   verify, me, getProfiles, selectProfile, updateMe, changePassword,
   setPin, removePin, verifyPin,
   verifyEmail, resendVerification,
-  getAllUsers, refresh, logout,
+  getAllUsers, adminSetPlan, adminDeleteUser, refresh, logout,
 } from '../controllers/authController'
 import { requireAuth } from '../middleware/auth'
 import { requireAdmin } from '../middleware/requireAdmin'
@@ -38,7 +38,9 @@ router.patch('/me', requireAuth, validate(updateMeSchema), updateMe)
 router.post('/change-password', requireAuth, validate(changePasswordSchema), changePassword)
 
 // Admin
-router.get('/admin/users', requireAuth, requireAdmin, getAllUsers)
+router.get('/admin/users',              requireAuth, requireAdmin, getAllUsers)
+router.patch('/admin/users/:id/plan',  requireAuth, requireAdmin, adminSetPlan)
+router.delete('/admin/users/:id',      requireAuth, requireAdmin, adminDeleteUser)
 
 // Multi-profile legacy
 router.get('/profiles', getProfiles)

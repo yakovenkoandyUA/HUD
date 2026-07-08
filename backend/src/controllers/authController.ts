@@ -6,6 +6,7 @@ import { OAuth2Client } from 'google-auth-library'
 import { Resend } from 'resend'
 import { User } from '../models/User'
 import { RefreshToken } from '../models/RefreshToken'
+import { FamilyLink } from '../models/FamilyLink'
 import { seedCategoriesForUser } from '../scripts/seedCategories'
 
 const CLIENT_URL = process.env.CLIENT_URL ?? 'https://hud-murex.vercel.app'
@@ -475,21 +476,74 @@ export async function getProfiles(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** GET /auth/admin/users — admin-only list of all registered users */
+/** GET /auth/admin/users — admin-only list of all registered users with plan + family groups */
 export async function getAllUsers(req: Request, res: Response): Promise<void> {
   try {
-    const users = await User.find({}, { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1 }).sort({ createdAt: -1 })
-    res.json(users.map(u => ({
-      id: (u._id as { toString(): string }).toString(),
-      name: u.name,
-      username: u.username,
-      email: u.email ?? null,
-      role: u.role,
-      avatarUrl: u.avatarUrl ?? null,
-      createdAt: u.createdAt,
-    })))
+    const users = await User.find(
+      {},
+      { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1, plan: 1, subscriptionStatus: 1 },
+    ).sort({ createdAt: -1 })
+
+    const links = await FamilyLink.find({ status: 'accepted' }, { requester: 1, recipient: 1 })
+    const familyMap = new Map<string, string[]>()
+    for (const link of links) {
+      const a = link.requester.toString()
+      const b = link.recipient.toString()
+      if (!familyMap.has(a)) familyMap.set(a, [])
+      if (!familyMap.has(b)) familyMap.set(b, [])
+      familyMap.get(a)!.push(b)
+      familyMap.get(b)!.push(a)
+    }
+
+    res.json(users.map(u => {
+      const id = (u._id as { toString(): string }).toString()
+      return {
+        id,
+        name: u.name,
+        username: u.username,
+        email: u.email ?? null,
+        role: u.role,
+        avatarUrl: u.avatarUrl ?? null,
+        createdAt: u.createdAt,
+        plan: u.plan ?? 'free',
+        subscriptionStatus: u.subscriptionStatus ?? 'none',
+        familyIds: familyMap.get(id) ?? [],
+      }
+    }))
   } catch {
     res.status(500).json({ error: 'Failed to fetch users' })
+  }
+}
+
+/** PATCH /auth/admin/users/:id/plan — set plan + subscriptionStatus manually */
+export async function adminSetPlan(req: Request, res: Response): Promise<void> {
+  const { plan, subscriptionStatus } = req.body as { plan?: string; subscriptionStatus?: string }
+  const validPlans = ['free', 'personal', 'couple', 'family']
+  const validStatuses = ['none', 'trialing', 'active', 'past_due', 'canceled']
+  if (plan && !validPlans.includes(plan)) { res.status(400).json({ error: 'Invalid plan' }); return }
+  if (subscriptionStatus && !validStatuses.includes(subscriptionStatus)) { res.status(400).json({ error: 'Invalid status' }); return }
+  try {
+    const user = await User.findById(req.params.id)
+    if (!user) { res.status(404).json({ error: 'Not found' }); return }
+    if (plan) user.plan = plan as 'free' | 'personal' | 'couple' | 'family'
+    if (subscriptionStatus) user.subscriptionStatus = subscriptionStatus as 'none' | 'trialing' | 'active' | 'past_due' | 'canceled'
+    await user.save()
+    res.json({ id: req.params.id, plan: user.plan, subscriptionStatus: user.subscriptionStatus })
+  } catch {
+    res.status(500).json({ error: 'Failed to update plan' })
+  }
+}
+
+/** DELETE /auth/admin/users/:id — hard-delete user (admin only) */
+export async function adminDeleteUser(req: Request, res: Response): Promise<void> {
+  if (req.params.id === req.userId) { res.status(400).json({ error: 'Cannot delete yourself' }); return }
+  try {
+    const user = await User.findByIdAndDelete(req.params.id)
+    if (!user) { res.status(404).json({ error: 'Not found' }); return }
+    await RefreshToken.deleteMany({ userId: req.params.id })
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Failed to delete user' })
   }
 }
 
