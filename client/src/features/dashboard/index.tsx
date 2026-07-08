@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import GreetingBlock from './components/dashboard/GreetingBlock'
 import HeroCard from './components/dashboard/HeroCard'
 import RaceHeroCard from './components/dashboard/RaceHeroCard'

@@ -1,5 +1,5 @@
 import React from 'react'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import TimelineBody from './components/timeline/TimelineBody'
 import styles from './Timeline.module.css'
 

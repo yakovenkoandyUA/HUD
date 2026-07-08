@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import { useNotesStore } from '@/features/notes/notesStore'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import styles from './Notes.module.css'

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import UpgradePrompt from '@/shared/components/ui/UpgradePrompt'
 import { useYearbookStore } from '@/features/profile/store/yearbookStore'

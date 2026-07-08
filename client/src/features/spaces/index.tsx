@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import { useSpacesStore, type Space } from '@/features/memories/store/spacesStore'
 import { authFetch } from '@/shared/services/api'
 import MemoryCard from '@/features/memories/components/memories/MemoryCard'

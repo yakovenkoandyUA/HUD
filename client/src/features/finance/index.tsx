@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import BalanceHero from './components/finance/BalanceHero'
 import GoalsList from './components/finance/GoalsList'
 import TopupForm from './components/finance/TopupForm'

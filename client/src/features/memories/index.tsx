@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import AddMemoryModal from './components/memories/AddMemoryModal'
 import PlanCard from './components/memories/PlanCard'
 import PlanForm from './components/memories/PlanForm'

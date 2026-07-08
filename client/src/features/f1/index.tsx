@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import { authFetch } from '@/shared/services/api'
 import NextRaceCard from './components/f1/NextRaceCard'
 import RaceCalendarList from './components/f1/RaceCalendarList'

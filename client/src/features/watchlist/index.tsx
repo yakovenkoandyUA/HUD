@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react'
-import AppHeader from '@/shared/components/AppHeader'
+import AppHeader from '@/shared/components/layout/AppHeader'
 import WatchlistHero from './components/watchlist/WatchlistHero'
 import WatchlistSearch from './components/watchlist/WatchlistSearch'
 import WatchlistGrid from './components/watchlist/WatchlistGrid'
