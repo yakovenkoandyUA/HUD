@@ -93,6 +93,8 @@ const Dashboard: React.FC = () => {
   const routineItems = allRoutines.filter(t => isRoutineDueOnDay(t, todayDate))
 
   const activeQuests  = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping' && !t.done).length
+  const totalQuests   = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping').length
+  const mimirPose = (totalQuests > 0 && activeQuests === 0) ? 'success' : 'idle' as const
   const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
   const latestNote    = notes[0]?.text.split('\n')[0] ?? ''
 
@@ -137,7 +139,7 @@ const Dashboard: React.FC = () => {
 
         <SpacesStrip onF1Click={() => navigate('/f1')} />
 
-        <MimirHint />
+        <MimirHint pose={mimirPose} />
 
         <div className={styles.calendarWrap}>
           {raceThisWeek ? (

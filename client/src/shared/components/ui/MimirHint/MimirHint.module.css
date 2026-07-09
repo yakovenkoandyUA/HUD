@@ -12,13 +12,99 @@
   gap: 12px;
 }
 
+/* ── Avatar base ── */
 .avatar {
-  width: 72px;
-  height: auto;
+  width: auto;
+  height: 120px;
   flex-shrink: 0;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.35));
   user-select: none;
+  will-change: transform, filter;
+}
+
+/* ── Pose: idle — slow float, subtle default shadow ── */
+.poseIdle {
+  animation:
+    mimirEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    mimirFloat 4s ease-in-out infinite 0.55s;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45));
+}
+
+/* ── Pose: writing — medium float, warm amber glow ── */
+.poseWriting {
+  animation:
+    mimirEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    mimirFloat 3s ease-in-out infinite 0.55s,
+    writingGlow 3s ease-in-out infinite;
+}
+
+/* ── Pose: thinking — faster float, pulsing cyan eye glow ── */
+.poseThinking {
+  animation:
+    mimirEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    mimirFloat 2.4s ease-in-out infinite 0.55s,
+    eyeGlow 1.8s ease-in-out infinite;
+}
+
+/* ── Pose: success — relaxed float, golden glow on rune ── */
+.poseSuccess {
+  animation:
+    mimirEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    mimirFloat 3.8s ease-in-out infinite 0.55s,
+    successGlow 2.6s ease-in-out infinite;
+}
+
+/* ── Keyframes ── */
+
+@keyframes mimirEnter {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+
+@keyframes mimirFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes eyeGlow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0  5px rgba(0, 210, 255, 0.15));
+  }
+  50% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0 14px rgba(0, 210, 255, 0.85))
+      drop-shadow(0 0 30px rgba(0, 210, 255, 0.35));
+  }
+}
+
+@keyframes successGlow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0  5px rgba(255, 185, 0, 0.2));
+  }
+  50% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0 16px rgba(255, 185, 0, 0.75))
+      drop-shadow(0 0 32px rgba(255, 185, 0, 0.25));
+  }
+}
+
+@keyframes writingGlow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0  4px rgba(200, 150, 0, 0.15));
+  }
+  50% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0 10px rgba(200, 150, 0, 0.55));
+  }
 }
 
 /* ── Speech bubble ── */
@@ -29,13 +115,14 @@
   border-radius: 14px 14px 14px 4px;
   padding: 12px 14px 10px;
   flex: 1;
+  animation: bubbleIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.18s both;
 }
 
 .bubble::before {
   content: '';
   position: absolute;
   left: -7px;
-  bottom: 10px;
+  bottom: 12px;
   width: 0;
   height: 0;
   border-top: 6px solid transparent;
@@ -47,7 +134,7 @@
   content: '';
   position: absolute;
   left: -6px;
-  bottom: 11px;
+  bottom: 13px;
   width: 0;
   height: 0;
   border-top: 5px solid transparent;
@@ -55,9 +142,14 @@
   border-right: 6px solid var(--surface);
 }
 
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateX(-10px) scale(0.94); }
+  to   { opacity: 1; transform: translateX(0)      scale(1);   }
+}
+
 .text {
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--text);
   margin: 0 0 6px;
   font-style: italic;
@@ -75,7 +167,7 @@
 .modes {
   display: flex;
   gap: 6px;
-  padding-left: 84px;
+  padding-left: 72px;
 }
 
 .modeBtn {

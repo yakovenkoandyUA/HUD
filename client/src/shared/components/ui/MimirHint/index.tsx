@@ -49,7 +49,7 @@ function getDailyHint(hints: string[]): string {
   return hints[Math.abs(hash) % hints.length]
 }
 
-// ── Pose selection ─────────────────────────────────────────────────────────
+// ── Pose ───────────────────────────────────────────────────────────────────
 
 export type MimirPose = 'idle' | 'writing' | 'thinking' | 'success'
 
@@ -58,6 +58,13 @@ const POSE_SRC: Record<MimirPose, string> = {
   writing:  '/mimir-writing.png',
   thinking: '/mimir-thinking.png',
   success:  '/mimir-success.png',
+}
+
+const POSE_CLASS: Record<MimirPose, string> = {
+  idle:     styles.poseIdle,
+  writing:  styles.poseWriting,
+  thinking: styles.poseThinking,
+  success:  styles.poseSuccess,
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -90,10 +97,11 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey }) => {
         <img
           src={POSE_SRC[pose]}
           alt="Mimir"
-          className={styles.avatar}
+          className={`${styles.avatar} ${POSE_CLASS[pose]}`}
           draggable={false}
         />
-        <div className={styles.bubble}>
+        {/* key forces re-mount → bubble entrance animation fires on mode change */}
+        <div key={mimirMode} className={styles.bubble}>
           <p className={styles.text}>{hint}</p>
           <span className={styles.signature}>— Мімір</span>
         </div>

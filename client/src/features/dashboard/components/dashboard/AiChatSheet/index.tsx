@@ -5,6 +5,8 @@ import { getToken } from '@/shared/services/api'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
 import styles from './AiChatSheet.module.css'
 
+const MIMIR_THINKING_SRC = '/mimir-thinking.png'
+
 /**
  * AiChatSheet
  * -----------
@@ -179,7 +181,7 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
         <div ref={bodyRef} className={styles.body}>
           {messages.length === 0 ? (
             <div className={styles.empty}>
-              <div className={styles.emptyIcon}><MimirIcon size={28} /></div>
+              <img src={MIMIR_THINKING_SRC} alt="Mimir" className={styles.emptyMimir} draggable={false} />
               <p className={styles.emptyText}>Запитай мене про свої фінанси,<br/>задачі, рецепти або watchlist.</p>
               <div className={styles.suggestions}>
                 {SUGGESTIONS.map(s => (
@@ -200,7 +202,10 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
                 key={msg.id}
                 className={`${styles.bubble} ${msg.role === 'user' ? styles.bubbleUser : styles.bubbleAi}`}
               >
-                {msg.text || (msg.streaming ? <span className={styles.cursor} /> : '')}
+                {msg.streaming && !msg.text
+                  ? <img src={MIMIR_THINKING_SRC} alt="думає…" className={styles.thinkingMimir} draggable={false} />
+                  : msg.text || ''
+                }
                 {msg.streaming && msg.text && <span className={styles.cursor} />}
               </div>
             ))
