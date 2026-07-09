@@ -49,7 +49,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 0 8px;
+  padding: 20px 0 4px;
   gap: 2px;
 }
 
@@ -74,62 +74,23 @@
   margin-top: 2px;
 }
 
-/* ── Category breakdown ── */
-.breakdown {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 16px 20px;
-}
-
-.breakItem {
-  flex: 1;
-  max-width: 140px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 8px;
-  border-radius: var(--radius-lg, 16px);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-}
-
-.breakIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.breakIconAccent { color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--bg2)); }
-.breakIconSecond { color: var(--second); background: color-mix(in srgb, var(--second) 18%, var(--bg2)); }
-.breakIconGold    { color: var(--gold);   background: color-mix(in srgb, var(--gold) 18%, var(--bg2)); }
-
-.breakNum {
-  font-family: var(--font-mono);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-}
-
-.breakLbl {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  letter-spacing: 0.05em;
+/* ── Compact summary row ── */
+.summary {
+  font-family: var(--font-body);
+  font-size: 13px;
   color: var(--text3);
   text-align: center;
+  margin: 0;
+  padding: 8px 24px 20px;
+  letter-spacing: 0.02em;
 }
 
-/* ── Divider ── */
+/* ── Section divider ── */
 .divider {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 24px 20px;
+  padding: 0 24px 16px;
 }
 
 .divider::before,
@@ -143,59 +104,105 @@
 .dividerLabel {
   font-family: var(--font-ui);
   font-size: 10px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--text3);
   white-space: nowrap;
 }
 
-/* ── Comparisons ── */
-.compList {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin: 0 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-@keyframes compRowIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.compRow {
+/* ── Genre donut ── */
+.genreWrap {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  animation: compRowIn 0.3s ease both;
+  padding: 0 20px 24px;
 }
-.compRow:last-child { border-bottom: none; }
 
-.compIcon {
+.pieContainer {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.donutLegend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.legendRow {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.legendDot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legendName {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 12px;
   color: var(--text2);
-  background: color-mix(in srgb, var(--text2) 12%, var(--bg2));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.compIconJoke {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 16%, var(--bg2));
+.legendPct {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  flex-shrink: 0;
 }
 
-.compText {
+/* ── Bar charts ── */
+.barWrap {
+  padding: 0 16px 24px;
+  height: 140px;
+}
+
+/* ── Tooltip ── */
+.tooltip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tooltipDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tooltipName {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.tooltipVal {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ── Empty state ── */
+.chartEmpty {
   font-family: var(--font-body);
   font-size: 13px;
-  color: var(--text2);
-  line-height: 1.4;
+  color: var(--text3);
+  text-align: center;
+  padding: 8px 24px 24px;
+  margin: 0;
 }
 
 /* ── Footer note ── */
@@ -204,7 +211,7 @@
   font-size: 11px;
   color: var(--text3);
   text-align: center;
-  padding: 16px 24px 8px;
+  padding: 0 24px 16px;
   margin: 0;
   line-height: 1.5;
 }

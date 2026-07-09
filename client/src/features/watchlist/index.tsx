@@ -19,6 +19,7 @@ import { getToken } from '@/shared/services/api'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus, GameItem, GameStatus } from '@/shared/types'
 import { openmojiUrl } from './utils/openmojiUrl'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { useSwipeTabs } from '@/shared/hooks/useSwipeTabs'
 import styles from './Watchlist.module.css'
 
 type Tab = WatchlistCategory | 'game' | 'book'
@@ -296,6 +297,17 @@ const Watchlist: React.FC = () => {
   const isBook = tab === 'book'
   const isMedia = !isGame && !isBook
 
+  const tabIndex = TABS.findIndex(t => t.id === tab)
+  const swipeRef = useSwipeTabs({
+    count: TABS.length,
+    activeIndex: tabIndex >= 0 ? tabIndex : 0,
+    onChange: i => {
+      setTab(TABS[i].id)
+      setActiveStatus(null)
+      setActiveGenres(new Set())
+    },
+  })
+
   useEffect(() => {
     if (!enabledTabIds.includes(tab)) {
       const first = ALL_TABS.find(t => enabledTabIds.includes(t.id))
@@ -304,7 +316,7 @@ const Watchlist: React.FC = () => {
   }, [enabledTabIds, tab])
 
   return (
-    <div className={styles.screen}>
+    <div ref={swipeRef} className={styles.screen}>
       <AppHeader />
 
       {/* ── Stats row — hidden on games and book tabs ── */}

@@ -21,6 +21,7 @@ import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import FabHint from '@/shared/components/ui/FabHint'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { haversineKm } from './utils/geo'
+import { useSwipeTabs } from '@/shared/hooks/useSwipeTabs'
 import styles from './Memories.module.css'
 
 interface TripSheetData {
@@ -31,6 +32,7 @@ interface TripSheetData {
 }
 
 type ActiveTab = 'memories' | 'plans' | 'map'
+const TAB_ORDER: ActiveTab[] = ['memories', 'plans', 'map']
 
 function groupByMonth(memories: Memory[]): [string, Memory[]][] {
   const groups: Record<string, Memory[]> = {}
@@ -108,6 +110,14 @@ const MemoriesScreen: React.FC = () => {
 
   const { spaces, fetchSpaces } = useSpacesStore()
   useEffect(() => { fetchSpaces() }, [fetchSpaces])
+
+  const swipeRef = useSwipeTabs({
+    count: TAB_ORDER.length,
+    activeIndex: TAB_ORDER.indexOf(activeTab),
+    onChange: i => setActiveTab(TAB_ORDER[i]),
+    // Map tab has its own pan gesture — disable swipe to avoid conflict
+    enabled: activeTab !== 'map',
+  })
 
   useEffect(() => { fetchMemories() }, [fetchMemories])
   useEffect(() => { fetchFamily() }, [fetchFamily])
@@ -286,7 +296,7 @@ const MemoriesScreen: React.FC = () => {
   }
 
   return (
-    <div className={styles.screen}>
+    <div ref={swipeRef} className={styles.screen}>
       <AppHeader />
 
       {/* ── Tab bar ── */}

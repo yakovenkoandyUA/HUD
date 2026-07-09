@@ -180,8 +180,8 @@
 .tab:hover { color: var(--text2); }
 
 .tabActive {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  color: var(--gold);
+  border-bottom-color: var(--gold);
 }
 
 .tabIcon {

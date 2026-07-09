@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useSwipeTabs } from '@/shared/hooks/useSwipeTabs'
 import RecipeCard from './components/recipes/RecipeCard'
 import RecipeForm from './components/recipes/RecipeForm'
 import RecipeGeneratorModal from './components/recipes/RecipeGeneratorModal'
@@ -19,10 +20,12 @@ import styles from './Recipes.module.css'
 const GHOST_COUNT = 6
 
 const SCOPE_TABS: { value: RecipeScope; label: string }[] = [
-  { value: 'mine',   label: 'МОЄ'        },
-  { value: 'family', label: "СІМ'Я"      },
-  { value: 'all',    label: 'СПІЛЬНОТА'  },
+  { value: 'mine',   label: 'МОЄ'       },
+  { value: 'family', label: "СІМ'Я"     },
+  { value: 'all',    label: 'СПІЛЬНОТА' },
 ]
+
+const SCOPE_ORDER: RecipeScope[] = ['mine', 'family', 'all']
 
 /**
  * Recipes
@@ -43,6 +46,13 @@ const Recipes: React.FC = () => {
   const [savedOnly, setSavedOnly]         = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showIngredientSearch, setShowIngredientSearch] = useState(false)
+
+  const scopeIndex = SCOPE_ORDER.indexOf(scope)
+  const swipeRef = useSwipeTabs({
+    count: SCOPE_ORDER.length,
+    activeIndex: scopeIndex,
+    onChange: i => handleScopeChange(SCOPE_ORDER[i]),
+  })
 
   useEffect(() => { fetchRecipes() }, [fetchRecipes])
 
@@ -99,57 +109,55 @@ const Recipes: React.FC = () => {
     : 'Нічого не знайдено'
 
   return (
-    <div className={styles.screen}>
+    <div ref={swipeRef} className={styles.screen}>
       <AppHeader />
 
-      <div className={styles.content}>
-        {/* ── Scope tabs ── */}
-        <div className={styles.scopeRow}>
-          <div className={styles.tabs}>
-            {SCOPE_TABS.map(t => (
-              <button
-                key={t.value}
-                type="button"
-                className={`${styles.tabBtn} ${scope === t.value && !savedOnly ? styles.tabActive : ''}`}
-                onClick={() => handleScopeChange(t.value)}
-              >
-                {t.label}
-                {t.value === scope && recipes.length > 0 && !savedOnly && (
-                  <span className={styles.tabCount}>{recipes.length}</span>
-                )}
-              </button>
-            ))}
-          </div>
-          <div className={styles.scopeActions}>
-            {visibleRecipes.length > 1 && (
-              <button
-                type="button"
-                className={styles.randomBtn}
-                onClick={handleRandom}
-                aria-label="Що приготувати?"
-                title="Що приготувати?"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
-                </svg>
-              </button>
-            )}
+      {/* ── Tab row — sticky, outside scrollable content ── */}
+      <div className={styles.tabRow}>
+        <div className={styles.tabs}>
+          {SCOPE_TABS.map(t => (
+            <button
+              key={t.value}
+              type="button"
+              className={`${styles.tab} ${scope === t.value && !savedOnly ? styles.tabActive : ''}`}
+              onClick={() => handleScopeChange(t.value)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className={styles.tabActions}>
+          {visibleRecipes.length > 1 && (
             <button
               type="button"
-              className={`${styles.savedBtn} ${savedOnly ? styles.savedBtnActive : ''}`}
-              onClick={handleSavedToggle}
-              aria-label="Збережені"
+              className={styles.randomBtn}
+              onClick={handleRandom}
+              aria-label="Що приготувати?"
+              title="Що приготувати?"
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path d="M8 13.5S2 9.5 2 5.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 14 5.5c0 4-6 8-6 8Z"
-                  stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
-                  fill={savedOnly ? 'currentColor' : 'none'}
-                />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
               </svg>
-              {wishlistIds.length > 0 && <span className={styles.savedCount}>{wishlistIds.length}</span>}
             </button>
-          </div>
+          )}
+          <button
+            type="button"
+            className={`${styles.savedBtn} ${savedOnly ? styles.savedBtnActive : ''}`}
+            onClick={handleSavedToggle}
+            aria-label="Збережені"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 13.5S2 9.5 2 5.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 14 5.5c0 4-6 8-6 8Z"
+                stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
+                fill={savedOnly ? 'currentColor' : 'none'}
+              />
+            </svg>
+            {wishlistIds.length > 0 && <span className={styles.savedCount}>{wishlistIds.length}</span>}
+          </button>
         </div>
+      </div>
+
+      <div className={styles.content}>
 
         {/* ── Categories slider ── */}
         {baseRecipes.length > 0 && (
