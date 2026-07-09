@@ -110,6 +110,20 @@
   cursor: pointer;
 }
 
+.typeInput {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+  padding: 0;
+  caret-color: var(--accent);
+}
+
 .doneBtn {
   display: block;
   width: calc(100% - 32px);

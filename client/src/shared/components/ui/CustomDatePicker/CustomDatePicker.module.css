@@ -24,49 +24,38 @@
   to   { transform: translateY(0) }
 }
 
+/* ── Handle ── */
+.handle {
+  width: 32px;
+  height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
 /* ── Header ── */
 .header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px 0 12px;
+  justify-content: space-between;
+  padding: 14px 0 12px;
+  border-bottom: 1px solid var(--border);
 }
 
-.navBtn {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  background: var(--surface);
-  border: none;
-  border-radius: 8px;
-  color: var(--text2);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-}
-.navBtn:hover { background: var(--surface2); color: var(--text); }
-
-.monthLabel {
-  flex: 1;
-  text-align: center;
+.title {
   font-family: var(--font-ui);
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text);
+  letter-spacing: 0.1em;
+  color: var(--text2);
 }
 
 .closeBtn {
-  flex-shrink: 0;
   background: none;
   border: none;
   color: var(--text3);
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
   padding: 4px 2px;
@@ -74,86 +63,19 @@
 }
 .closeBtn:hover { color: var(--text); }
 
-/* ── Weekday labels ── */
-.weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 4px;
-}
-
-.weekday {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text3);
-  text-align: center;
-  padding: 4px 0;
-}
-
-/* ── Calendar grid ── */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
-
-.cell {
-  aspect-ratio: 1;
+/* ── Wheels ── */
+.wheels {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--text2);
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  gap: 4px;
+  padding: 18px 0;
 }
-.cell:hover { background: var(--surface); }
-.cell:active { background: var(--surface2); }
-
-.cellOtherMonth {
-  color: var(--text3);
-  opacity: 0.4;
-}
-
-.cellPast {
-  opacity: 0.4;
-}
-
-.cellToday {
-  color: var(--text);
-  position: relative;
-}
-.cellToday::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 16px;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 1px;
-}
-
-.cellSelected {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  opacity: 1 !important;
-}
-.cellSelected:hover { background: var(--accent-dim) !important; }
 
 /* ── Confirm button ── */
 .confirmBtn {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 4px;
   padding: 14px;
   background: var(--accent);
   color: var(--bg);
@@ -167,5 +89,4 @@
   cursor: pointer;
   transition: opacity 0.15s;
 }
-.confirmBtn:hover   { opacity: 0.88; }
-.confirmBtn:disabled { opacity: 0.4; cursor: default; }
+.confirmBtn:hover { opacity: 0.88; }

@@ -4,26 +4,53 @@ import styles from './TimeWheelPicker.module.css'
 const ITEM_HEIGHT = 36
 const VISIBLE_COUNT = 5
 const PAD = Math.floor(VISIBLE_COUNT / 2)
+const TOUCH_DAMPING = 0.48
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
 const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
 
-interface WheelColumnProps {
+export interface WheelColumnProps {
   values: string[]
   index: number
   onChange: (index: number) => void
+  /** Width override in px (default 76) */
+  width?: number
+  /** Allow tapping the center item to type a value manually */
+  enableInput?: boolean
 }
 
 /**
  * WheelColumn
  * -----------
- * Один прокручуваний барабан значень (iOS-style time wheel), з snap по центру
- * і fade/scale сусідніх рядків залежно від відстані до центру.
+ * Один прокручуваний барабан значень (iOS-style wheel), з snap по центру,
+ * fade/scale сусідніх рядків, демпфованим touch-скролом і tap-to-type по центру.
+ *
+ * Props:
+ * @prop {string[]}  values       — масив рядкових значень
+ * @prop {number}    index        — поточний обраний індекс
+ * @prop {Function}  onChange     — колбек при зміні індексу
+ * @prop {number}    width        — ширина колонки (дефолт 76px)
+ * @prop {boolean}   enableInput  — тап на центр відкриває поле вводу
  */
-const WheelColumn: React.FC<WheelColumnProps> = ({ values, index, onChange }) => {
+export const WheelColumn: React.FC<WheelColumnProps> = ({
+  values,
+  index,
+  onChange,
+  width,
+  enableInput = false,
+}) => {
   const ref = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const settleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [scrollTop, setScrollTop] = useState(index * ITEM_HEIGHT)
+  const [typing, setTyping] = useState(false)
+  const [typedValue, setTypedValue] = useState('')
+
+  // Keep latest props in refs so touch handlers (set up once) stay current
+  const valuesRef = useRef(values)
+  valuesRef.current = values
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
 
   useEffect(() => {
     const el = ref.current
@@ -31,6 +58,48 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ values, index, onChange }) =>
     el.scrollTop = index * ITEM_HEIGHT
     setScrollTop(index * ITEM_HEIGHT)
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Damped touch scroll — replaces native momentum to slow down mobile scroll
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    let startY = 0
+    let startScrollTop = 0
+
+    const onTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY
+      startScrollTop = el.scrollTop
+      if (settleRef.current) clearTimeout(settleRef.current)
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const dy = (startY - e.touches[0].clientY) * TOUCH_DAMPING
+      el.scrollTop = startScrollTop + dy
+      setScrollTop(el.scrollTop)
+    }
+
+    const onTouchEnd = () => {
+      const h = ITEM_HEIGHT
+      const len = valuesRef.current.length
+      settleRef.current = setTimeout(() => {
+        const nextIdx = Math.max(0, Math.min(len - 1, Math.round(el.scrollTop / h)))
+        el.scrollTo({ top: nextIdx * h, behavior: 'smooth' })
+        onChangeRef.current(nextIdx)
+      }, 60)
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+    }
   }, [])
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
@@ -48,6 +117,7 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ values, index, onChange }) =>
 
   const viewCenter = scrollTop + (ITEM_HEIGHT * VISIBLE_COUNT) / 2
   const maxDist = ITEM_HEIGHT * PAD
+  const centerIndex = Math.max(0, Math.min(values.length - 1, Math.round(scrollTop / ITEM_HEIGHT)))
 
   const selectIndex = (i: number) => {
     const el = ref.current
@@ -57,8 +127,34 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ values, index, onChange }) =>
     onChange(i)
   }
 
+  const handleItemClick = (i: number) => {
+    if (enableInput && i === centerIndex) {
+      setTyping(true)
+      setTypedValue('')
+      setTimeout(() => inputRef.current?.focus(), 30)
+    } else {
+      selectIndex(i)
+    }
+  }
+
+  const commitTyped = () => {
+    const trimmed = typedValue.trim()
+    if (trimmed) {
+      const num = parseInt(trimmed, 10)
+      if (!isNaN(num)) {
+        const idx = values.findIndex(v => parseInt(v, 10) === num)
+        if (idx >= 0) selectIndex(idx)
+      }
+    }
+    setTyping(false)
+    setTypedValue('')
+  }
+
   return (
-    <div className={styles.wheel} style={{ height: ITEM_HEIGHT * VISIBLE_COUNT }}>
+    <div
+      className={styles.wheel}
+      style={{ height: ITEM_HEIGHT * VISIBLE_COUNT, ...(width !== undefined ? { width } : {}) }}
+    >
       <div className={styles.highlight} style={{ height: ITEM_HEIGHT, top: ITEM_HEIGHT * PAD }} />
       <div
         ref={ref}
@@ -69,14 +165,29 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ values, index, onChange }) =>
         {values.map((v, i) => {
           const itemCenter = i * ITEM_HEIGHT + ITEM_HEIGHT / 2
           const ratio = Math.min(1, Math.abs(itemCenter - viewCenter) / maxDist)
+          const isCenter = i === centerIndex
           return (
             <div
               key={v}
               className={styles.item}
               style={{ height: ITEM_HEIGHT, opacity: 1 - ratio * 0.75, transform: `scale(${1 - ratio * 0.22})` }}
-              onClick={() => selectIndex(i)}
+              onClick={() => handleItemClick(i)}
             >
-              {v}
+              {typing && isCenter
+                ? (
+                  <input
+                    ref={inputRef}
+                    className={styles.typeInput}
+                    value={typedValue}
+                    onChange={e => setTypedValue(e.target.value)}
+                    onBlur={commitTyped}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitTyped() } }}
+                    maxLength={4}
+                    inputMode="numeric"
+                  />
+                )
+                : v
+              }
             </div>
           )
         })}
@@ -107,9 +218,9 @@ export const TimeWheelRow: React.FC<TimeWheelRowProps> = ({ value, onChange }) =
 
   return (
     <div className={styles.body}>
-      <WheelColumn values={HOURS} index={hourIndex} onChange={i => { setHourIndex(i); update(i, minuteIndex) }} />
+      <WheelColumn values={HOURS} index={hourIndex} onChange={i => { setHourIndex(i); update(i, minuteIndex) }} enableInput />
       <span className={styles.colon}>:</span>
-      <WheelColumn values={MINUTES} index={minuteIndex} onChange={i => { setMinuteIndex(i); update(hourIndex, i) }} />
+      <WheelColumn values={MINUTES} index={minuteIndex} onChange={i => { setMinuteIndex(i); update(hourIndex, i) }} enableInput />
     </div>
   )
 }
@@ -146,9 +257,9 @@ const TimeWheelPicker: React.FC<TimeWheelPickerProps> = ({ value, title = 'Ча�
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">✕</button>
         </div>
         <div className={styles.body}>
-          <WheelColumn values={HOURS} index={hourIndex} onChange={setHourIndex} />
+          <WheelColumn values={HOURS} index={hourIndex} onChange={setHourIndex} enableInput />
           <span className={styles.colon}>:</span>
-          <WheelColumn values={MINUTES} index={minuteIndex} onChange={setMinuteIndex} />
+          <WheelColumn values={MINUTES} index={minuteIndex} onChange={setMinuteIndex} enableInput />
         </div>
         <button
           type="button"
