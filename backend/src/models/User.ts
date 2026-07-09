@@ -30,6 +30,7 @@ export interface IUser extends Document {
   swipeDismissShownCount: number
   unlockedAchievements: { id: string; unlockedAt: Date }[]
   onboardingCompleted: boolean
+  mimirSeenHints: string[]
   createdAt: Date
   // Subscription fields
   plan: PlanId
@@ -83,6 +84,7 @@ const schema = new Schema<IUser>({
     default: [],
   },
   onboardingCompleted:    { type: Boolean, default: false },
+  mimirSeenHints:         { type: [String], default: [] },
   createdAt:              { type: Date, default: Date.now },
   // Subscription fields — safe defaults, no migration needed
   plan:                   { type: String, enum: ['free', 'personal', 'couple', 'family'], default: 'free' },
