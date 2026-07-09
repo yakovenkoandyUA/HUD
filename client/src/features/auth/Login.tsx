@@ -59,6 +59,7 @@ const LoginScreen: React.FC = () => {
           weekdayLongPressShownCount: user.weekdayLongPressShownCount ?? 0,
           swipeDismissShownCount: user.swipeDismissShownCount ?? 0,
           onboardingCompleted: (user as { onboardingCompleted?: boolean }).onboardingCompleted ?? true,
+          mimirSeenHints: (user as { mimirSeenHints?: string[] }).mimirSeenHints ?? [],
         },
         pinLocked: false,
       })
