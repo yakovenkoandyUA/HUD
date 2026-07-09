@@ -1227,3 +1227,15 @@
   transition: background 0.15s;
 }
 .mealChip:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+
+/* ── Infinite scroll sentinel ── */
+.sentinel { height: 1px; }
+
+.allLoaded {
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  padding: 8px 0 4px;
+  letter-spacing: 0.04em;
+}

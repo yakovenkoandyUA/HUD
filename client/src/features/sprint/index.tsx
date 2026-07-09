@@ -75,7 +75,9 @@ const Sprint: React.FC = () => {
 	const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
 	const [weekExpanded, setWeekExpanded] = useState(false)
 	const [binHidden, setBinHidden]       = useState(true)
-	const binTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const [doneVisibleCount, setDoneVisibleCount] = useState(20)
+	const binTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const doneSentinelRef  = useRef<HTMLDivElement>(null)
 	const handleSwipeTutorialDone = () => {
 		updateProfile({ sprintTutorialSeen: true })
 	}
@@ -166,25 +168,34 @@ const Sprint: React.FC = () => {
 	const dayHasAnyItems = isDayToday
 		|| items.some(t => !isRecurring(t) && t.dueDate === selectedDay)
 
-	const dayQuests = [...rawDayQuests].sort((a: UnifiedTodo, b: UnifiedTodo) => {
-		// 1. Pinned
-		if (a.isPinned && !b.isPinned) return -1
-		if (!a.isPinned && b.isPinned) return 1
-		// 2. Assigned to current user
-		const aAssigned = myUserId ? (a.assignedTo?.includes(myUserId) ?? false) : false
-		const bAssigned = myUserId ? (b.assignedTo?.includes(myUserId) ?? false) : false
-		if (aAssigned && !bAssigned) return -1
-		if (!aAssigned && bAssigned) return 1
-		// 3. Deadline urgency (exponential)
-		const ua = a.dueDate ? deadlineUrgency(a.dueDate, todayStr) : 0
-		const ub = b.dueDate ? deadlineUrgency(b.dueDate, todayStr) : 0
-		if (ua !== ub) return ub - ua
-		// 4. Family tasks (ownerName) above solo tasks
-		if (a.ownerName && !b.ownerName) return -1
-		if (!a.ownerName && b.ownerName) return 1
-		// 5. Newest first
-		return b.createdAt.localeCompare(a.createdAt)
-	})
+	const dayQuests = filterStatus === 'done'
+		? [...rawDayQuests].sort((a, b) => {
+			const tA = a.completedAt ? new Date(a.completedAt).getTime() : new Date(a.createdAt).getTime()
+			const tB = b.completedAt ? new Date(b.completedAt).getTime() : new Date(b.createdAt).getTime()
+			return tB - tA
+		})
+		: [...rawDayQuests].sort((a: UnifiedTodo, b: UnifiedTodo) => {
+			// 1. Pinned
+			if (a.isPinned && !b.isPinned) return -1
+			if (!a.isPinned && b.isPinned) return 1
+			// 2. Assigned to current user
+			const aAssigned = myUserId ? (a.assignedTo?.includes(myUserId) ?? false) : false
+			const bAssigned = myUserId ? (b.assignedTo?.includes(myUserId) ?? false) : false
+			if (aAssigned && !bAssigned) return -1
+			if (!aAssigned && bAssigned) return 1
+			// 3. Deadline urgency (exponential)
+			const ua = a.dueDate ? deadlineUrgency(a.dueDate, todayStr) : 0
+			const ub = b.dueDate ? deadlineUrgency(b.dueDate, todayStr) : 0
+			if (ua !== ub) return ub - ua
+			// 4. Family tasks (ownerName) above solo tasks
+			if (a.ownerName && !b.ownerName) return -1
+			if (!a.ownerName && b.ownerName) return 1
+			// 5. Newest first
+			return b.createdAt.localeCompare(a.createdAt)
+		})
+
+	const doneHasMore      = filterStatus === 'done' && doneVisibleCount < dayQuests.length
+	const visibleDayQuests = filterStatus === 'done' ? dayQuests.slice(0, doneVisibleCount) : dayQuests
 
 	const showSwipeGhost = ghostHintEligible && !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
 
@@ -196,6 +207,21 @@ const Sprint: React.FC = () => {
 			binTimerRef.current = setTimeout(() => setBinHidden(false), 0)
 		}
 	}, [dayQuests.length, showSwipeGhost])
+
+	useEffect(() => {
+		if (filterStatus === 'done') setDoneVisibleCount(20)
+	}, [filterStatus, selectedDay])
+
+	useEffect(() => {
+		const el = doneSentinelRef.current
+		if (!el || !doneHasMore) return
+		const observer = new IntersectionObserver(
+			([entry]) => { if (entry.isIntersecting) setDoneVisibleCount(c => c + 20) },
+			{ threshold: 0.1 },
+		)
+		observer.observe(el)
+		return () => observer.disconnect()
+	}, [doneHasMore, doneVisibleCount])
 
 	const handleDayLongPress = (day: Date) => {
 		const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
@@ -292,19 +318,25 @@ const Sprint: React.FC = () => {
 							</p>
 						</div>
 					) : (
-						<ul className={styles.list}>
-							{showSwipeGhost && (
-								<TaskCard
-									item={SWIPE_GHOST_TASK}
-									onToggle={() => {}}
-									onDelete={handleSwipeTutorialDone}
-									onOpenDetail={() => {}}
-								/>
+						<>
+							<ul className={styles.list}>
+								{showSwipeGhost && (
+									<TaskCard
+										item={SWIPE_GHOST_TASK}
+										onToggle={() => {}}
+										onDelete={handleSwipeTutorialDone}
+										onOpenDetail={() => {}}
+									/>
+								)}
+								{visibleDayQuests.map(t => (
+									<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
+								))}
+							</ul>
+							{doneHasMore && <div ref={doneSentinelRef} className={styles.sentinel} />}
+							{!doneHasMore && filterStatus === 'done' && dayQuests.length > 20 && (
+								<p className={styles.allLoaded}>Всі {dayQuests.length} завершених</p>
 							)}
-							{dayQuests.map(t => (
-								<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
-							))}
-						</ul>
+						</>
 					)}
 				</div>
 

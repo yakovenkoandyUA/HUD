@@ -1,50 +1,71 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .categoryLabel {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-family: var(--font-ui);
+  font-size: 12px;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--text3);
-  margin-bottom: -4px;
 }
 
-.pills {
-  display: flex;
-  flex-wrap: wrap;
+.catGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
 }
 
-.pill {
+.catCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 6px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.catCell:active { opacity: 0.75; }
+
+.catCellActive {
+  border-color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 12%, var(--bg3));
+}
+
+.catCellIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  justify-content: center;
+  background: color-mix(in srgb, var(--cat-color) 15%, var(--bg3));
+  transition: background 0.15s;
+}
+.catCellIcon i {
+  font-size: 14px;
+  color: var(--cat-color);
+}
+.catCellActive .catCellIcon {
+  background: color-mix(in srgb, var(--cat-color) 25%, var(--bg3));
+}
+
+.catCellName {
+  font-family: var(--font-ui);
+  font-size: 9px;
   color: var(--text2);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
-
-.pill .ti {
-  font-size: 13px;
-}
-
-.pill:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.pillActive {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+.catCellActive .catCellName {
+  color: var(--cat-color);
+  font-weight: 700;
 }

@@ -16,6 +16,7 @@ export interface PlanLimits {
   maxSharedSpaces: number            // 0 = disabled, -1 = unlimited
   maxMembersPerSharedSpace: number   // 0 = disabled, -1 = unlimited
   timelineHistoryYears: number       // -1 = unlimited
+  maxTaskImages: number              // images per quest/shopping item
 }
 
 export interface PlanConfig {
@@ -34,6 +35,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxSharedSpaces: 0,
       maxMembersPerSharedSpace: 0,
       timelineHistoryYears: 1,
+      maxTaskImages: 1,
     },
     features: {
       aiChat: false,
@@ -56,6 +58,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxSharedSpaces: 0,
       maxMembersPerSharedSpace: 0,
       timelineHistoryYears: 5,
+      maxTaskImages: 5,
     },
     features: {
       aiChat: true,
@@ -78,6 +81,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxSharedSpaces: 3,
       maxMembersPerSharedSpace: 5,
       timelineHistoryYears: -1,
+      maxTaskImages: 5,
     },
     features: {
       aiChat: true,
@@ -100,6 +104,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxSharedSpaces: -1,
       maxMembersPerSharedSpace: -1,
       timelineHistoryYears: -1,
+      maxTaskImages: 5,
     },
     features: {
       aiChat: true,

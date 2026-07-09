@@ -4,6 +4,8 @@ import { useModalHistory } from '@/shared/hooks/useModalHistory'
 import { authFetch } from '@/shared/services/api'
 import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
+import { usePlan } from '@/shared/hooks/usePlan'
+import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import TimeWheelPicker from '@/shared/components/ui/TimeWheelPicker'
 import ReminderFields, { type ReminderUnit } from '../ReminderFields'
@@ -111,6 +113,8 @@ function formatReminderLabel(reminder: { amount: number; unit: string }): string
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
   const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem, deleteItem } = useSprintStore()
   const { accepted, fetchFamily } = useFamilyStore()
+  const { limits } = usePlan()
+  const maxImages = limits.maxTaskImages
 
   useEffect(() => {
     if (taskId && accepted.length === 0) fetchFamily()
@@ -143,9 +147,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const assignDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isFirstAssignRender = useRef(true)
 
-  const titleRef      = useRef<HTMLTextAreaElement>(null)
-  const descRef       = useRef<HTMLTextAreaElement>(null)
-  const checkInputRef = useRef<HTMLInputElement>(null)
+  const titleRef        = useRef<HTMLTextAreaElement>(null)
+  const descRef         = useRef<HTMLTextAreaElement>(null)
+  const checkInputRef   = useRef<HTMLInputElement>(null)
+  const imageInputRef   = useRef<HTMLInputElement>(null)
+  const [imageUploading, setImageUploading] = useState(false)
 
   const sheetRef   = useRef<HTMLDivElement>(null)
   const bodyRef    = useRef<HTMLDivElement>(null)
@@ -274,6 +280,41 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     if (descDraft === (task.description ?? '')) return
     updateTask(task.id, { description: descDraft })
   }, [task, descDraft, updateTask])
+
+  const handleImageAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!task) return
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+    e.target.value = ''
+    const currentCount = task.imageUrls?.length ?? 0
+    const slots = maxImages - currentCount
+    const toUpload = files.slice(0, slots)
+    setImageUploading(true)
+    try {
+      const results = await Promise.all(toUpload.map(f => uploadToCloudinaryFull(f, 'sprint')))
+      const newUrls = [...(task.imageUrls ?? []), ...results.map(r => r.url)]
+      const newIds  = [...(task.imagePublicIds ?? []), ...results.map(r => r.publicId)]
+      updateTask(task.id, { imageUrls: newUrls, imagePublicIds: newIds })
+    } catch {
+      // toast shown by parent if needed
+    } finally {
+      setImageUploading(false)
+    }
+  }
+
+  const handleImageRemove = (idx: number) => {
+    if (!task) return
+    const removedId = task.imagePublicIds?.[idx]
+    const newUrls = (task.imageUrls ?? []).filter((_, i) => i !== idx)
+    const newIds  = (task.imagePublicIds ?? []).filter((_, i) => i !== idx)
+    updateTask(task.id, { imageUrls: newUrls, imagePublicIds: newIds })
+    if (removedId) {
+      authFetch('/api/sprint/images/rollback', {
+        method: 'POST',
+        body: JSON.stringify({ publicIds: [removedId] }),
+      }).catch(() => {})
+    }
+  }
 
   const handleCheckboxClick = () => {
     if (task?.done) {
@@ -826,6 +867,59 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                 </div>
               )
             })()}
+
+            {/* ── ЗОБРАЖЕННЯ (non-routine only) ── */}
+            {!recurring && (
+              <div className={styles.section}>
+                <p className={styles.sectionLabel}>Зображення</p>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={handleImageAdd}
+                />
+                {(task.imageUrls?.length ?? 0) > 0 && (
+                  <div className={styles.imageGrid}>
+                    {(task.imageUrls ?? []).map((url, i) => (
+                      <div key={i} className={styles.imageGridThumb}>
+                        <img
+                          src={url}
+                          alt=""
+                          onClick={() => window.open(url, '_blank')}
+                        />
+                        <button
+                          type="button"
+                          className={styles.imageGridRemove}
+                          onClick={() => handleImageRemove(i)}
+                          aria-label="Видалити"
+                        >
+                          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                            <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {(task.imageUrls?.length ?? 0) < maxImages && (
+                  <button
+                    type="button"
+                    className={styles.imageAddBtn}
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={imageUploading}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <rect x="0.5" y="1.5" width="11" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                      <circle cx="4" cy="5.5" r="1" stroke="currentColor" strokeWidth="1.2"/>
+                      <path d="M0.5 8.5l3-3 2 2 2-2 4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    {imageUploading ? 'Завантаження...' : 'Додати фото'}
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* ── ОПИС ── */}
             <div className={`${styles.section} ${styles.sectionLast}`}>

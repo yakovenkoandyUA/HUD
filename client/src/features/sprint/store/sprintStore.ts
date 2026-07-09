@@ -167,7 +167,7 @@ interface TodoState {
   fetchTrash: () => Promise<void>
   fetchLabels: () => Promise<void>
   migrateFromLocalStorage: () => Promise<void>
-  addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>) => void
+  addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>, rollbackImagePublicIds?: string[]) => void
   addItems: (dataList: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>[]) => void
   toggleItem: (id: string, date?: string) => void
   deleteItem: (id: string) => void
@@ -405,7 +405,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   // ── Add item ─────────────────────────────────────────────────────────────────
 
-  addItem: (data) => {
+  addItem: (data, rollbackImagePublicIds) => {
     const item: UnifiedTodo = {
       id: crypto.randomUUID(),
       done: false,
@@ -438,7 +438,15 @@ export const useSprintStore = create<TodoState>((set, get) => ({
       .then((created: { _id: string }) => set(s => ({
         items: s.items.map(i => i.id === item.id ? { ...i, id: created._id } : i),
       })))
-      .catch(() => get().fetchItems())
+      .catch(() => {
+        if (rollbackImagePublicIds?.length) {
+          authFetch('/api/sprint/images/rollback', {
+            method: 'POST',
+            body: JSON.stringify({ publicIds: rollbackImagePublicIds }),
+          }).catch(() => {})
+        }
+        get().fetchItems()
+      })
   },
 
   addItems: (dataList) => {

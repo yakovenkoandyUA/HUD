@@ -20,6 +20,7 @@ import './jobs/recurringReminders'
 import './jobs/dayReminder'
 import './jobs/renewalReminder'
 import './jobs/subscriptionExpiry'
+import { startCleanupSprintImages } from './jobs/cleanupSprintImages'
 import { errorHandler } from './middleware/errorHandler'
 
 import authRoutes from './routes/auth'
@@ -122,6 +123,7 @@ async function start() {
   await connectDB()
   initWebPush()
   startF1Scheduler()
+  startCleanupSprintImages()
   app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`))
 }
 

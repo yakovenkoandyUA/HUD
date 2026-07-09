@@ -29,6 +29,8 @@ export interface ISprintTask extends Document {
   userId: string
   assignedTo?: string[]
   spaceId?: string | null
+  imageUrls?: string[]
+  imagePublicIds?: string[]
 }
 
 const schema = new Schema<ISprintTask>({
@@ -58,8 +60,10 @@ const schema = new Schema<ISprintTask>({
   isPinned:   { type: Boolean, default: false },
   deletedAt:  { type: Date, default: null, index: { expireAfterSeconds: 86400 } },
   userId:     { type: String, required: true, index: true },
-  assignedTo: { type: [String], default: [] },
-  spaceId:    { type: String, default: null, index: true },
+  assignedTo:     { type: [String], default: [] },
+  spaceId:        { type: String, default: null, index: true },
+  imageUrls:      { type: [String], default: [] },
+  imagePublicIds: { type: [String], default: [] },
 }, { timestamps: true })
 
 export default model<ISprintTask>('SprintTask', schema)

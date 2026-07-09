@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import Input from '@/shared/components/ui/Input'
 import Button from '@/shared/components/ui/Button'
-import PillSelector from '@/shared/components/ui/PillSelector'
 import { INCOME_CATEGORIES } from '../../../constants'
 import styles from './TopupForm.module.css'
 
@@ -9,6 +8,7 @@ import styles from './TopupForm.module.css'
  * TopupForm
  * ---------
  * Форма поповнення балансу з вибором категорії доходу.
+ * Відображає категорії у 3-колонковому grid (catCell-стиль, єдиний з ExpenseForm).
  *
  * Props:
  * @prop {(amount: number, description: string, category: string) => void} onTopup
@@ -41,16 +41,27 @@ const TopupForm: React.FC<TopupFormProps> = ({ onTopup }) => {
         onChange={setAmount}
         placeholder="0"
       />
-      <div className={styles.categoryLabel}>Категорія</div>
-      <PillSelector
-        options={INCOME_CATEGORIES.map(cat => ({
-          value: cat.id,
-          label: cat.label,
-          icon: <i className={`ti ${cat.icon}`} />,
-        }))}
-        value={category}
-        onChange={setCategory}
-      />
+
+      <div>
+        <div className={styles.categoryLabel}>Категорія</div>
+        <div className={styles.catGrid}>
+          {INCOME_CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              type="button"
+              className={`${styles.catCell} ${category === cat.id ? styles.catCellActive : ''}`}
+              style={{ '--cat-color': cat.color } as React.CSSProperties}
+              onClick={() => setCategory(cat.id)}
+            >
+              <div className={styles.catCellIcon}>
+                <i className={`ti ${cat.icon}`} />
+              </div>
+              <span className={styles.catCellName}>{cat.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Input
         label="Опис (необов'язково)"
         value={description}

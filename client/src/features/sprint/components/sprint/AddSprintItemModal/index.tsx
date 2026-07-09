@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Modal from '@/shared/components/ui/Modal'
 import Button from '@/shared/components/ui/Button'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
@@ -9,6 +9,9 @@ import RepeatConfigScreen from '../RepeatConfigScreen'
 import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { usePlan } from '@/shared/hooks/usePlan'
+import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
+import { authFetch } from '@/shared/services/api'
 import type { TodoPriority, SprintLabel, RepeatConfig } from '@/shared/types'
 import styles from './AddSprintItemModal.module.css'
 
@@ -113,6 +116,8 @@ interface Props {
 const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, initialDate }) => {
   const { addItem } = useSprintStore()
   const { showToast } = useUiStore()
+  const { limits } = usePlan()
+  const maxImages = limits.maxTaskImages
 
   const [newType, setNewType]                   = useState<ItemType>(defaultType ?? 'todo')
   const [newTitle, setNewTitle]                 = useState('')
@@ -133,6 +138,9 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   const [quickAddDate, setQuickAddDate]         = useState<string | null>(null)
   const [quickAddTime, setQuickAddTime]         = useState<string | null>(null)
   const [showDeadlineSheet, setShowDeadlineSheet] = useState(false)
+  const [pendingImages, setPendingImages]       = useState<File[]>([])
+  const [imageUploading, setImageUploading]     = useState(false)
+  const imageInputRef                           = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -161,6 +169,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     setQuickAddDate(null)
     setQuickAddTime(null)
     setShowDeadlineSheet(false)
+    setPendingImages([])
   }
 
   const handleClose = () => {
@@ -168,9 +177,30 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     onClose()
   }
 
-  const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!newTitle.trim()) return
+
+    const isRoutine = newType === 'todo' && newRepeat !== 'none'
+
+    // Upload images (only for non-routines)
+    let imageUrls: string[] = []
+    let imagePublicIds: string[] = []
+    if (pendingImages.length > 0 && !isRoutine) {
+      setImageUploading(true)
+      try {
+        const results = await Promise.all(
+          pendingImages.map(f => uploadToCloudinaryFull(f, 'sprint'))
+        )
+        imageUrls = results.map(r => r.url)
+        imagePublicIds = results.map(r => r.publicId)
+      } catch {
+        showToast('Помилка завантаження зображень', 'error')
+        setImageUploading(false)
+        return
+      }
+      setImageUploading(false)
+    }
 
     const hasStartDate = newRepeat !== 'none' && newRepeat !== 'daily' && newRepeat !== 'custom'
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0, 0, 0, 0)
@@ -196,11 +226,13 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
         ...(hasStartDate ? { repeatStartDate } : {}),
         ...(newReminder ? { reminder: newReminder } : {}),
       } : {}),
-    })
+      ...(imageUrls.length > 0 ? { imageUrls, imagePublicIds } : {}),
+    },
+    // Rollback images if backend save fails
+    imagePublicIds.length > 0 ? imagePublicIds : undefined)
 
     if (newType !== 'shopping') useAchievementsStore.getState().unlock('first-quest')
 
-    const isRoutine = newType === 'todo' && newRepeat !== 'none'
     const msg = isRoutine ? `Звичку «${newTitle.trim()}» додано` : newType === 'shopping' ? 'Покупку додано' : 'Квест додано'
     showToast(msg, 'success')
     reset()
@@ -468,8 +500,65 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
             </div>
           )}
 
-          <Button type="submit" fullWidth>
-            Додати
+          {/* ── Image attachments (non-routine only) ── */}
+          {newRepeat === 'none' && (
+            <div>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={e => {
+                  const files = Array.from(e.target.files ?? [])
+                  if (!files.length) return
+                  e.target.value = ''
+                  setPendingImages(prev => {
+                    const combined = [...prev, ...files]
+                    return combined.slice(0, maxImages)
+                  })
+                }}
+              />
+              {pendingImages.length > 0 && (
+                <div className={styles.imagePreviews}>
+                  {pendingImages.map((f, i) => (
+                    <div key={i} className={styles.imageThumb}>
+                      <img src={URL.createObjectURL(f)} alt="" />
+                      <button
+                        type="button"
+                        className={styles.imageRemoveBtn}
+                        onClick={() => setPendingImages(prev => prev.filter((_, j) => j !== i))}
+                        aria-label="Видалити"
+                      >
+                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                          <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {pendingImages.length < maxImages && (
+                <button
+                  type="button"
+                  className={styles.imageAddBtn}
+                  onClick={() => imageInputRef.current?.click()}
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <rect x="0.5" y="1.5" width="11" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                    <circle cx="4" cy="5.5" r="1" stroke="currentColor" strokeWidth="1.2"/>
+                    <path d="M0.5 8.5l3-3 2 2 2-2 4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {pendingImages.length === 0
+                    ? 'Додати фото'
+                    : `Ще ${maxImages - pendingImages.length}`}
+                </button>
+              )}
+            </div>
+          )}
+
+          <Button type="submit" fullWidth disabled={imageUploading}>
+            {imageUploading ? 'Завантаження...' : 'Додати'}
           </Button>
         </form>
       </Modal>

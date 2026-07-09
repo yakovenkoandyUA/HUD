@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import {
   getTasks, createTask, updateTask, removeTask, getTrash, restoreTask, purgeTask,
-  getTodos, createTodo, updateTodo, removeTodo,
+  getTodos, createTodo, updateTodo, removeTodo, rollbackImages,
 } from '../controllers/sprintController'
 import { requireAuth } from '../middleware/auth'
 import { validate } from '../middleware/validate'
@@ -18,6 +18,8 @@ router.patch('/tasks/:id', validate(updateTaskSchema), updateTask)
 router.delete('/tasks/:id', removeTask)
 router.post('/tasks/:id/restore', restoreTask)
 router.delete('/tasks/:id/purge', purgeTask)
+
+router.post('/images/rollback', rollbackImages)
 
 router.get('/todos', getTodos)
 router.post('/todos', createTodo)

@@ -3,12 +3,14 @@ import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
 import { User } from '../models/User'
 import { sendPushToUser } from '../services/webpush'
+import { destroyImages } from '../utils/cloudinary'
 
 const TASK_ALLOWED = [
   'title', 'done', 'priority', 'category', 'labels', 'dueDate', 'dueTime', 'description',
   'checklist', 'order', 'tag', 'weekStart', 'weekNumber', 'year',
   'repeat', 'nextDue', 'repeatDay', 'repeatConfig', 'repeatStartDate',
   'completionHistory', 'reminder', 'isPinned', 'assignedTo', 'timeOfDay', 'spaceId',
+  'imageUrls', 'imagePublicIds',
 ]
 
 // Зміна дедлайну/часу/повторення/нагадування скидає прапорець "вже надіслано" — щоб нагадування пересчиталось
@@ -148,7 +150,21 @@ export async function restoreTask(req: Request, res: Response): Promise<void> {
 }
 
 export async function purgeTask(req: Request, res: Response): Promise<void> {
-  await SprintTask.findOneAndDelete({ _id: req.params.id, userId: req.userId, deletedAt: { $ne: null } })
+  const task = await SprintTask.findOneAndDelete({ _id: req.params.id, userId: req.userId, deletedAt: { $ne: null } })
+  if (task?.imagePublicIds?.length) {
+    destroyImages(task.imagePublicIds).catch(() => {})
+  }
+  res.status(204).end()
+}
+
+export async function rollbackImages(req: Request, res: Response): Promise<void> {
+  const { publicIds } = req.body as { publicIds?: unknown }
+  if (!Array.isArray(publicIds) || publicIds.length === 0) {
+    res.status(400).json({ error: 'publicIds array required' })
+    return
+  }
+  const ids = (publicIds as unknown[]).filter((id): id is string => typeof id === 'string')
+  await destroyImages(ids)
   res.status(204).end()
 }
 

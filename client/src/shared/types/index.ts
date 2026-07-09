@@ -139,6 +139,8 @@ export interface UnifiedTodo {
   assigneeNames?: string[]
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | null
   spaceId?: string | null
+  imageUrls?: string[]
+  imagePublicIds?: string[]
 }
 
 export interface RepeatConfig {
