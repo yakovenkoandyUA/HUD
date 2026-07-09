@@ -97,7 +97,7 @@ interface MonthBin {
   count: number
   fullLabel: string   // "Липень 2025" — для tooltip
   isCurrent: boolean
-  [key: string]: unknown
+  [key: string]: string | number | boolean
 }
 
 function computeMonthly(items: WatchlistItem[]): MonthBin[] {
