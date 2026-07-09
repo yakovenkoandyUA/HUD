@@ -7,7 +7,7 @@ import { PLANS, type Feature, type PlanLimits } from '@/shared/config/plans'
  */
 export function usePlan() {
   const profile = useProfileStore(s => s.activeProfile)
-  const planId = profile?.plan ?? 'free'
+  const planId = profile?.role === 'admin' ? 'family' : (profile?.plan ?? 'free')
   const config = PLANS[planId]
 
   return {
