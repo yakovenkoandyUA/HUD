@@ -10,6 +10,7 @@ interface Toast {
 export type Theme = 'velvet' | 'japan' | 'cyber' | 'noir' | 'pixel' | 'arctic'
 export type NavStyle = 'classic' | 'pill' | 'hub'
 export type NavLabelMode = 'always' | 'active' | 'never'
+export type MimirMode = 'wise' | 'witty' | 'dark'
 
 export const DEFAULT_PINNED_SECTIONS = ['/', '/finance', '/sprint', '/watchlist']
 export const DEFAULT_PINNED_PROFILE_TABS = ['me', 'wallet', 'plan', 'timeline']
@@ -24,6 +25,8 @@ interface UiState {
   pinnedSections: string[]
   pinnedProfileTabs: string[]
   updateAvailable: boolean
+  mimirMode: MimirMode
+  setMimirMode: (mode: MimirMode) => void
   showToast: (message: string, type?: Toast['type']) => void
   dismissToast: (id: string) => void
   openModal: (name: string) => void
@@ -47,6 +50,8 @@ export const useUiStore = create<UiState>()(
       pinnedSections: DEFAULT_PINNED_SECTIONS,
       pinnedProfileTabs: DEFAULT_PINNED_PROFILE_TABS,
       updateAvailable: false,
+      mimirMode: 'wise',
+      setMimirMode: (mimirMode) => set({ mimirMode }),
 
       showToast: (message, type = 'info') =>
         set((s) => {
@@ -75,7 +80,7 @@ export const useUiStore = create<UiState>()(
     }),
     {
       name: 'hud-ui',
-      partialize: (s) => ({ theme: s.theme, navStyle: s.navStyle, navLabelMode: s.navLabelMode, pinnedSections: s.pinnedSections, pinnedProfileTabs: s.pinnedProfileTabs }),
+      partialize: (s) => ({ theme: s.theme, navStyle: s.navStyle, navLabelMode: s.navLabelMode, pinnedSections: s.pinnedSections, pinnedProfileTabs: s.pinnedProfileTabs, mimirMode: s.mimirMode }),
     }
   )
 )

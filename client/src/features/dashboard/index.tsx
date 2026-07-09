@@ -30,6 +30,7 @@ import AchievementTeaser from './components/dashboard/AchievementTeaser'
 import type { ExpenseCategory } from '@/shared/types'
 import SpacesStrip from './components/dashboard/SpacesStrip'
 import DayOverlay from './components/dashboard/DayOverlay'
+import MimirHint from '@/shared/components/ui/MimirHint'
 import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
@@ -135,6 +136,8 @@ const Dashboard: React.FC = () => {
         />
 
         <SpacesStrip onF1Click={() => navigate('/f1')} />
+
+        <MimirHint />
 
         <div className={styles.calendarWrap}>
           {raceThisWeek ? (
