@@ -19,6 +19,7 @@ interface PlanFeature {
 
 const FEATURES: PlanFeature[] = [
   { label: 'Квести, звички, покупки',       free: true,          personal: true,          couple: true,              family: true },
+  { label: 'Мімір AI (живий асистент)',      free: false,         personal: true,          couple: true,              family: true },
   { label: 'Простори життя',                free: '2',           personal: '5',           couple: '10',              family: 'Безліміт' },
   { label: 'Глибина пам\'яті',              free: '1 рік',       personal: '5 років',     couple: 'Безліміт',        family: 'Безліміт' },
   { label: 'AI-рефлексія',                  free: false,         personal: true,          couple: true,              family: true },

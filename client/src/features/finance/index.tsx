@@ -187,7 +187,7 @@ const Finance: React.FC = () => {
 							onDismiss={markFinanceWelcomeSeen}
 						/>
 					) : (
-						<MimirHint pose="writing" />
+						<MimirHint pose={transactions.length === 0 ? 'sleeping' : 'writing'} />
 					)}
 				</div>
 

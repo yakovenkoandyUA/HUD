@@ -17,7 +17,6 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { authFetch } from '@/shared/services/api'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
-import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import FabHint from '@/shared/components/ui/FabHint'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { haversineKm } from './utils/geo'
@@ -354,7 +353,7 @@ const MemoriesScreen: React.FC = () => {
         <>
           {filteredMemories.length === 0 ? (
             <div className={styles.empty}>
-              <DoodleIllustration variant="memories" size={88} />
+              <img src="/mimir/mimir-empty-memories.png" alt="" className={styles.emptyMimir} draggable={false} />
               <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі ще немає спогадів' : 'Ще немає спогадів'}</p>
               <p className={styles.emptyHint}>{selectedSpaceId ? 'Додай перший!' : 'Додай перший!'}</p>
             </div>

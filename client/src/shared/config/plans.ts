@@ -10,6 +10,7 @@ export type Feature =
   | 'advancedFinance'
   | 'familyLink'
   | 'sharedSpaces'
+  | 'mimirAi'
 
 export interface PlanLimits {
   maxSpaces: number                  // -1 = unlimited
@@ -47,6 +48,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedFinance: false,
       familyLink: false,
       sharedSpaces: false,
+      mimirAi: false,
     },
   },
 
@@ -70,6 +72,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedFinance: true,
       familyLink: false,
       sharedSpaces: false,
+      mimirAi: true,
     },
   },
 
@@ -93,6 +96,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedFinance: true,
       familyLink: true,
       sharedSpaces: true,
+      mimirAi: true,
     },
   },
 
@@ -116,6 +120,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedFinance: true,
       familyLink: true,
       sharedSpaces: true,
+      mimirAi: true,
     },
   },
 }

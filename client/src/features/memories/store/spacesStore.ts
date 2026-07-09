@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { authFetch } from '@/shared/services/api'
 
-export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project'
+export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle'
 
 export interface SpaceMember {
   userId:    string
@@ -11,15 +11,28 @@ export interface SpaceMember {
   avatarUrl: string | null
 }
 
+export interface VehicleProfile {
+  make:           string
+  model:          string
+  year:           number | null
+  plateNumber:    string
+  vin:            string
+  currentMileage: number | null
+  fuelType:       string
+  purchaseDate:   string | null
+  photoUrl:       string
+}
+
 export interface Space {
-  id:        string
-  name:      string
-  type:      SpaceType
-  color:     string
-  emoji:     string
-  ownerId:   string
-  members:   SpaceMember[]
-  createdAt: string
+  id:             string
+  name:           string
+  type:           SpaceType
+  color:          string
+  emoji:          string
+  ownerId:        string
+  members:        SpaceMember[]
+  vehicleProfile: VehicleProfile | null
+  createdAt:      string
 }
 
 export interface SpaceInput {

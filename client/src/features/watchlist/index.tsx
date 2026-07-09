@@ -606,12 +606,7 @@ const Watchlist: React.FC = () => {
             <div key={`game-${gameStatusFilter}-${gameGenreFilter ?? ''}-${gameSortBy}`} className={styles.contentAnimated}>
               {filteredGames.length === 0 ? (
                 <div className={styles.emptyGames}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="6" width="20" height="12" rx="5"/>
-                    <path d="M6 12h4M8 10v4"/>
-                    <circle cx="15" cy="11.5" r="1" fill="currentColor" stroke="none"/>
-                    <circle cx="18" cy="13.5" r="1" fill="currentColor" stroke="none"/>
-                  </svg>
+                  <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyMimirImg} draggable={false} />
                   <p className={styles.emptyText}>
                     {gameGenreFilter
                       ? 'Немає ігор цього жанру'

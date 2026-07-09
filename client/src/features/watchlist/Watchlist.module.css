@@ -442,8 +442,21 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 64px 24px;
+  padding: 40px 24px 64px;
   color: var(--text3);
+}
+
+.emptyMimirImg {
+  width: 160px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
+  animation: emptyMimirFloat 4s ease-in-out infinite;
+}
+
+@keyframes emptyMimirFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
 }
 
 .emptyText {

@@ -346,7 +346,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
       {/* ── List ── */}
       <div className={`${styles.transactionList} ${isAnimating ? styles.fadeOut : styles.fadeIn}`}>
       {displayedList.length === 0 ? (
-        <p className={styles.empty}>Транзакцій немає</p>
+        <div className={styles.emptyState}>
+          <img src="/mimir/mimir-empty-finance.png" alt="" className={styles.emptyImg} draggable={false} />
+          <p className={styles.emptyText}>Транзакцій немає</p>
+        </div>
       ) : (
         <ul className={styles.list}>
           {displayedList.map((t) => {

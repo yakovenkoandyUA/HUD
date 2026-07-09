@@ -17,6 +17,7 @@ import { useNotesStore, type Note } from '@/features/notes/notesStore'
 import type { Memory } from '@/features/memories/types/memory'
 import type { AddMemoryData } from '@/features/memories/components/memories/AddMemoryModal'
 import type { PlanInput } from '@/features/memories/store/plansStore'
+import VehicleSpaceView from './components/VehicleSpaceView'
 import styles from './SpaceDetail.module.css'
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
   { value: 'hobby',    label: 'Хобі'      },
   { value: 'sports',   label: 'Спорт'     },
   { value: 'project',  label: 'Проект'    },
+  { value: 'vehicle',  label: 'Авто'      },
 ]
 
 const COLORS = [
@@ -147,6 +149,15 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
     planEmptyTitle: 'Задач ще немає',     planEmptyDesc: 'Запиши першу задачу або ціль цього проєкту.',
     noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Рішення, думки, лінки, референси — все тут.',
     taskEmptyTitle: 'Задач ще немає',     taskEmptyDesc: 'Починай з першої задачі — великий проєкт складається з малих кроків.',
+  },
+  vehicle: {
+    typeLabel: 'Авто', description: 'Хроніка автомобіля — заправки, ТО, документи й витрати в одному місці.',
+    memBtnLabel: '+ Подія', planBtnLabel: '+ Нотатка', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    txEmptyTitle: 'Витрат ще немає',    txEmptyDesc: 'Витрати на пальне, ТО і ремонти з\'являться тут.',
+    memEmptyTitle: 'Подій ще немає',    memEmptyDesc: 'Додай першу подію — заправку або ТО.',
+    planEmptyTitle: 'Нотаток ще немає', planEmptyDesc: 'Записуй важливі думки про автомобіль.',
+    noteEmptyTitle: 'Нотаток ще немає', noteEmptyDesc: 'Записуй важливі думки про автомобіль.',
+    taskEmptyTitle: 'Задач ще немає',   taskEmptyDesc: 'Що потрібно зробити з автомобілем.',
   },
 }
 
@@ -527,7 +538,13 @@ const SpaceDetailScreen: React.FC = () => {
         ))}
       </div>
 
-      {/* ── Quick actions ── */}
+      {/* ── Vehicle view (replaces generic content) ── */}
+      {space?.type === 'vehicle' && (
+        <VehicleSpaceView spaceId={spaceId!} color={space.color} />
+      )}
+
+      {/* ── Quick actions (generic spaces only) ── */}
+      {space?.type !== 'vehicle' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
@@ -546,7 +563,9 @@ const SpaceDetailScreen: React.FC = () => {
           {ctx.taskBtnLabel.replace('+ ', '')}
         </button>
       </div>
+      )}
 
+      {space?.type !== 'vehicle' && (
       <div className={styles.content}>
 
         {/* ── Members ── */}
@@ -824,6 +843,8 @@ const SpaceDetailScreen: React.FC = () => {
           )}
         </section>
       </div>
+
+      )}
 
       {/* ── Modals ── */}
       <AddMemoryModal isOpen={addMemOpen} onClose={() => setAddMemOpen(false)} onCreate={handleAddMemory} initialSpaceId={spaceId} />

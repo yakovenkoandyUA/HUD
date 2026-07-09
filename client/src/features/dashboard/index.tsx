@@ -30,21 +30,23 @@ import AchievementTeaser from './components/dashboard/AchievementTeaser'
 import type { ExpenseCategory } from '@/shared/types'
 import SpacesStrip from './components/dashboard/SpacesStrip'
 import DayOverlay from './components/dashboard/DayOverlay'
-import MimirHint from '@/shared/components/ui/MimirHint'
+import MimirHint, { type MimirPose } from '@/shared/components/ui/MimirHint'
 import { useMimirHint } from '@/shared/hooks/useMimirHint'
+import { useMimirAiHint } from '@/shared/hooks/useMimirAiHint'
 import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const { items: sprintItems, toggleItem, fetchItems } = useSprintStore()
-  const { showToast, mimirMode } = useUiStore()
+  const { showToast } = useUiStore()
   const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
   const { notes, fetchNotes } = useNotesStore()
   const { seen: welcomeSeen, markSeen: markWelcomeSeen } = useMimirHint('dashboard-welcome')
+  const { hint: aiHint, markShown: markAiShown } = useMimirAiHint()
 
   const [showDay, setShowDay]           = useState(false)
   const [showExpense, setShowExpense]   = useState(false)
@@ -100,11 +102,7 @@ const Dashboard: React.FC = () => {
     !isRecurring(t) && t.type !== 'shopping' && !t.done &&
     !!t.dueDate && t.dueDate < today
   ).length
-  const mimirPose = (() => {
-    if (totalQuests > 0 && activeQuests === 0) return 'success' as const
-    if (mimirMode === 'dark' || overdueQuests > 0) return 'skeptical' as const
-    return null
-  })()
+  const allHabitsDoneToday = routineItems.length > 0 && routineItems.every(t => isDoneToday(t))
   const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
   const latestNote    = notes[0]?.text.split('\n')[0] ?? ''
 
@@ -138,14 +136,19 @@ const Dashboard: React.FC = () => {
     <div className={styles.screen}>
       <AppHeader />
       <div ref={contentRef} className={styles.content}>
-        <GreetingBlock onWeatherClick={(d) => { setWeatherData(d); setWeatherOpen(true) }} />
-
-        <TodayHabits
-          routineItems={routineItems}
-          isDoneToday={isDoneToday}
-          onToggle={toggleItem}
-          onOpenDay={() => setShowDay(true)}
+        <GreetingBlock
+          onWeatherClick={(d) => { setWeatherData(d); setWeatherOpen(true) }}
+          onOpenDay={routineItems.length === 0 ? () => setShowDay(true) : undefined}
         />
+
+        {routineItems.length > 0 && (
+          <TodayHabits
+            routineItems={routineItems}
+            isDoneToday={isDoneToday}
+            onToggle={toggleItem}
+            onOpenDay={() => setShowDay(true)}
+          />
+        )}
 
         <SpacesStrip onF1Click={() => navigate('/f1')} />
 
@@ -158,11 +161,17 @@ const Dashboard: React.FC = () => {
               onDismiss={markWelcomeSeen}
             />
           </div>
-        ) : mimirPose && (
+        ) : aiHint ? (
           <div className={styles.mimirFloat}>
-            <MimirHint pose={mimirPose} />
+            <MimirHint
+              pose={aiHint.pose as MimirPose}
+              textKey={aiHint.text}
+              oneTime
+              onDismiss={markAiShown}
+              showUpgrade={!aiHint.isAi}
+            />
           </div>
-        )}
+        ) : null}
 
         <div className={styles.calendarWrap}>
           {raceThisWeek ? (

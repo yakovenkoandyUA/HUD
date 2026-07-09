@@ -3,8 +3,8 @@
 	overflow: hidden;
 	background: var(--surface);
 	border: 1px solid var(--border);
-	padding: 10px 16px;
-	min-height: 56px;
+	padding: 14px 16px;
+	min-height: 90px;
 	display: flex;
 	align-items: center;
 }
@@ -154,3 +154,34 @@
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
 }
+
+/* ── "Детальніше" overlay (when no habits) ── */
+
+.bottomGrad {
+	display: none;
+}
+
+.detailBtn {
+	position: absolute;
+	bottom: 10px;
+	right: 12px;
+	z-index: 2;
+	background: color-mix(in srgb, var(--bg) 60%, transparent);
+	backdrop-filter: blur(8px) saturate(1.2);
+	-webkit-backdrop-filter: blur(8px) saturate(1.2);
+	border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+	border-radius: 20px;
+	font-family: var(--font-ui);
+	font-size: 11px;
+	color: var(--text);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px 10px;
+	letter-spacing: 0.04em;
+	-webkit-tap-highlight-color: transparent;
+	transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.detailBtn:active { opacity: 0.7; }

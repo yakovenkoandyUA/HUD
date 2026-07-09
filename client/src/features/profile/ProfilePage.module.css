@@ -1583,6 +1583,31 @@
   opacity: 1;
 }
 
+/* ── Mimir mode cards — image-first layout ── */
+
+.mimirModeImgWrap {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.mimirModeImg {
+  height: 96px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.mimirModeImgActive {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
 .navPreviewClassic {
   display: flex;
   align-items: center;
@@ -1861,6 +1886,14 @@
   overflow: visible;
   opacity: 1;
   border-top: 1px solid var(--border);
+}
+
+.mimirRowAvatar {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
 }
 
 .menuIcon {

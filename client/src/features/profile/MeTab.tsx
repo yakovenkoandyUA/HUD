@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
-import { useUiStore } from '@/shared/store/uiStore'
+import { useUiStore, type MimirMode, type MimirFrequency } from '@/shared/store/uiStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import { authFetch } from '@/shared/services/api'
@@ -20,7 +20,19 @@ import { getRank } from '@/shared/data/ranks'
 import { ACHIEVEMENTS } from '@/shared/data/achievements'
 import styles from './ProfilePage.module.css'
 
-type MeSection = 'security' | 'appearance' | 'system' | 'media' | 'family' | 'achievements'
+type MeSection = 'mimir' | 'security' | 'appearance' | 'system' | 'media' | 'family' | 'achievements'
+
+const MIMIR_MODES: { id: MimirMode; label: string; hint: string; img: string }[] = [
+  { id: 'wise',  label: 'МУДРИЙ',  hint: 'Поради та цитати',  img: '/mimir/mimir-wise.png'     },
+  { id: 'witty', label: 'БАЛАГУР', hint: 'Жарти і сарказм',   img: '/mimir/mimir-balaghur.png' },
+  { id: 'dark',  label: 'ЦИНИК',   hint: 'Похмура мудрість',  img: '/mimir/mimir-cynical.png'  },
+]
+
+const MIMIR_FREQUENCY: { id: MimirFrequency; label: string; hint: string }[] = [
+  { id: 'active',   label: 'Активний',      hint: 'Часто з"являється' },
+  { id: 'balanced', label: 'Збалансований', hint: 'Зрідка і до речі'  },
+  { id: 'silent',   label: 'Тихий',         hint: 'Тільки важливе'    },
+]
 
 const CameraIcon: React.FC = () => (
   <svg width="12" height="12" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -120,7 +132,7 @@ const MeTab: React.FC = () => {
   const navigate = useNavigate()
   const { activeProfile, updateProfile, logout } = useProfileStore()
   const { pendingReceived } = useFamilyStore()
-  const { showToast, updateAvailable, setUpdateAvailable } = useUiStore()
+  const { showToast, updateAvailable, setUpdateAvailable, mimirMode, setMimirMode, mimirFrequency, setMimirFrequency } = useUiStore()
   const [openSection, setOpenSection] = useState<MeSection | null>(null)
 
   const [legalOpen, setLegalOpen]             = useState<'terms' | 'privacy' | null>(null)
@@ -359,6 +371,74 @@ const MeTab: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* ── Mimir акордеон ── */}
+      {(() => {
+        const isOpen   = openSection === 'mimir'
+        const current  = MIMIR_MODES.find(m => m.id === mimirMode) ?? MIMIR_MODES[0]
+        const freqCurr = MIMIR_FREQUENCY.find(f => f.id === mimirFrequency) ?? MIMIR_FREQUENCY[1]
+        return (
+          <div className={styles.settingsCard}>
+            <button
+              type="button"
+              className={styles.menuRow}
+              onClick={() => toggleSection('mimir')}
+              aria-expanded={isOpen}
+            >
+              <img src={current.img} alt="Mimir" className={styles.mimirRowAvatar} />
+              <span className={styles.menuRowText}>
+                <span className={styles.menuRowLabel}>Мімір</span>
+                <span className={styles.menuRowSub}>{current.label} · {freqCurr.label}</span>
+              </span>
+              <span className={`${styles.menuChevron} ${isOpen ? styles.menuChevronOpen : ''}`}><ChevronRightIcon /></span>
+            </button>
+            <div className={`${styles.menuAccordionBody} ${isOpen ? styles.menuAccordionBodyOpen : ''}`}>
+              <div className={styles.cardPadded}>
+                <div className={styles.cardSubTitle}>ХАРАКТЕР</div>
+                <div className={styles.navStyleGrid}>
+                  {MIMIR_MODES.map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`${styles.navStyleCard} ${mimirMode === m.id ? styles.navStyleCardActive : ''}`}
+                      onClick={() => setMimirMode(m.id)}
+                      aria-pressed={mimirMode === m.id}
+                    >
+                      <div className={styles.mimirModeImgWrap}>
+                        <img
+                          src={m.img}
+                          alt={m.label}
+                          className={`${styles.mimirModeImg} ${mimirMode === m.id ? styles.mimirModeImgActive : ''}`}
+                          draggable={false}
+                        />
+                      </div>
+                      <span className={styles.navStyleLabel}>{m.label}</span>
+                      <span className={styles.navStyleHint}>{m.hint}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className={styles.cardDivider} style={{ margin: '4px 0 14px' }} />
+                <div className={styles.cardSubTitle}>АКТИВНІСТЬ</div>
+                <div className={styles.navStyleGrid}>
+                  {MIMIR_FREQUENCY.map(f => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      className={`${styles.navStyleCard} ${mimirFrequency === f.id ? styles.navStyleCardActive : ''}`}
+                      onClick={() => setMimirFrequency(f.id)}
+                      aria-pressed={mimirFrequency === f.id}
+                    >
+                      <span className={styles.navStyleLabel}>{f.label}</span>
+                      <span className={styles.navStyleHint}>{f.hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Акордеон-меню підрозділів ── */}
       {MENU_ITEMS.map(item => {

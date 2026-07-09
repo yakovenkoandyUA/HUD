@@ -114,6 +114,10 @@
 | `/api/weather` | GET ?city= — проксі до wttr.in (Cache-Control 30хв) |
 | `/api/user/export` | GET — requireAuth; JSON export всіх даних юзера (без passwordHash/pinHash/tokens/Paddle fields) |
 | `/api/user/me` | DELETE — soft delete; вимагає `{ confirmation: 'DELETE' }`; видаляє RefreshTokens, очищає cookie |
+| `/api/spaces/:id/vehicle/profile` | GET, PATCH — vehicleProfile sub-document (make/model/year/plate/vin/mileage/fuelType/purchaseDate/photoUrl) |
+| `/api/spaces/:id/vehicle/events` | GET (`?type=&limit=`), POST — VehicleEvent CRUD |
+| `/api/spaces/:id/vehicle/events/:eventId` | PATCH, DELETE |
+| `/api/spaces/:id/vehicle/stats` | GET — totalCostMonth/Year, avgFuelConsumption, costPerKm, currentMileage, expiringDocs |
 
 ## Env
 
@@ -160,6 +164,10 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 **SavingsGoal** — `deposits[]` subdocument array (amount + date), `currentAmount` = сума deposits
 
 **RecurringPayment** — `amountForeign` + `currency: 'UAH'|'USD'|'EUR'` для валютних платежів
+
+**Space** — `name`, `type: 'personal'|'shared'|'trip'|'family'|'friends'|'hobby'|'sports'|'project'|'vehicle'`, `color`, `emoji`, `ownerId`, `members[]`, `vehicleProfile` (sub-document, null якщо не vehicle-тип): `{make, model, year, plateNumber, vin, currentMileage, fuelType, purchaseDate, photoUrl}`
+
+**VehicleEvent** — `spaceId`, `userId`, `type: 'fuel'|'maintenance'|'repair'|'inspection'|'insurance'|'tire_change'|'document'|'note'`, `date`, `mileage`, `cost`, `currency`, `vendor`, `notes`, `attachments: string[]` (Cloudinary URLs), `liters` (fuel), `fuelType` (fuel), `docType` (document), `docExpiresAt` (document)
 
 **BankConnection** — `userId`, `bank: 'monobank'`, `encryptedToken` (AES-256-GCM), `accountId`, `lastSync`
 

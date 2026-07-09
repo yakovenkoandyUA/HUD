@@ -11,7 +11,7 @@ import MemoriesIcon  from '@/assets/icons/nav/memories.svg?react'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 
-export type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'admin'
+export type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'mimir' | 'admin'
 
 export const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   { id: 'me',       label: 'Профіль',     icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="7" r="4"/><path d="M3 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> },
@@ -19,6 +19,7 @@ export const PROFILE_TABS: { id: ProfileTab; label: string; icon: React.ReactNod
   { id: 'plan',     label: 'Тарифи',      icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 2L13.5 8H20L14.5 12L16.5 18.5L11 15L5.5 18.5L7.5 12L2 8H8.5L11 2Z"/></svg> },
   { id: 'timeline', label: 'Хроніка',     icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M11 6.5V11l3.5 2"/></svg> },
   { id: 'spaces',   label: 'Простори',    icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="8" height="8" rx="1.5"/><rect x="12" y="2" width="8" height="8" rx="1.5"/><rect x="2" y="12" width="8" height="8" rx="1.5"/><rect x="12" y="12" width="8" height="8" rx="1.5"/></svg> },
+  { id: 'mimir',    label: 'Мімір',       icon: <svg width="22" height="22" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 L13 6 L7 11 L1 6 Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><line x1="3.5" y1="9.5" x2="3.5" y2="13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><line x1="10.5" y1="9.5" x2="10.5" y2="13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="7" cy="6.5" r="1.2" fill="currentColor"/></svg> },
   { id: 'admin',    label: 'Адмін',       adminOnly: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.93 4.93l1.41 1.41M15.66 15.66l1.41 1.41M4.93 17.07l1.41-1.41M15.66 6.34l1.41-1.41"/></svg> },
 ]
 

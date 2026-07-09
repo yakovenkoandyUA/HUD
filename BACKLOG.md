@@ -311,6 +311,42 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 ### 11. 💳 Білінг Phase 5A — Callback Verification
 `POST /api/billing/wayforpay/callback` (public) — HMAC-MD5 верифікація підпису, idempotency через ProcessedBillingEvent, оновлення BillingOrder + User.plan після успішної оплати.
 
+### 12. 🚗 Vehicle Space MVP
+
+**Концепція (розроблена з Джонні):** Автомобіль — не окремий модуль, а спеціалізований тип Space. Формула: `MIMIR Space → Vehicle Space → Profile + Timeline + Expenses + Documents + Reminders + AI Insights`.
+
+**Phase 12A — Backend**
+
+- `Space.type` розширити: `"general" | "vehicle"` (і далі інші типи — property, pet тощо)
+- `VehicleProfile` sub-document на `Space` моделі: `make`, `model`, `year`, `plateNumber`, `vin`, `currentMileage`, `fuelType`, `purchaseDate`, `photoUrl`
+- Нова модель `VehicleEvent`: `spaceId`, `type` (`"fuel"|"maintenance"|"repair"|"inspection"|"insurance"|"tire_change"|"document"|"note"`), `date`, `mileage`, `cost`, `currency`, `vendor`, `notes`, `attachments: string[]` (Cloudinary URLs)
+- CRUD: `GET|POST /api/spaces/:id/vehicle/events`, `PATCH|DELETE /api/spaces/:id/vehicle/events/:eventId`
+- `GET /api/spaces/:id/vehicle/profile`, `PATCH /api/spaces/:id/vehicle/profile`
+
+**Phase 12B — Frontend**
+
+- `SpaceDetail` для `type === 'vehicle'` рендерить `VehicleSpaceView` замість generic view
+- `VehicleHeader`: фото авто, `Make Model Year · XXX xxx km`
+- 4 quick action кнопки: `+ Заправка`, `+ ТО / ремонт`, `+ Документ`, `+ Нотатка`
+- Форми (bottom sheets):
+  - **Заправка:** дата, пробіг, літри, сума, АЗС, тип пального
+  - **ТО:** дата, пробіг, що зроблено, сума, сервіс, фото/чек (Cloudinary)
+  - **Документ:** тип, дата закінчення, файл/фото, нагадати
+  - **Нотатка:** вільний текст + дата
+- `VehicleTimeline` — хронологічна стрічка подій з іконками по типах
+- `VehicleStats` — базова статистика:
+  - Витрати цього місяця / за рік
+  - Середня витрата пального (л/100 км, якщо є літри + пробіг між заправками)
+  - Вартість 1 км
+  - Поточний пробіг (останній запис)
+  - Документи, що закінчуються скоро (< 30 днів)
+- `vehicleStore` (Zustand) — profile + events, оптимістичні оновлення
+- `CreateSpaceSheet` — додати вибір типу (`general` / `vehicle`) при створенні простору; при `vehicle` — крок профілю авто після назви
+
+**Що НЕ робити в MVP:** OBD-інтеграція, AI-сканер чеків, garage dashboard, порівняння АЗС, кілька авто в одному просторі.
+
+**Наступне після MVP:** нагадування по пробігу (наст. ТО через N км), push-сповіщення для документів що закінчуються, AI-інсайти по витратах.
+
 ---
 
 ## Технічний борг — залишок

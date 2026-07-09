@@ -332,6 +332,34 @@
   padding: 24px 0;
 }
 
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 24px;
+}
+
+.emptyImg {
+  width: 180px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
+  animation: emptyFloat 4s ease-in-out infinite;
+}
+
+@keyframes emptyFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+.emptyText {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text3);
+  margin: 10px 0 0;
+  letter-spacing: 0.02em;
+}
+
 /* ── Receipt detail modal ── */
 .receiptModal {
   display: flex;

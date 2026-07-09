@@ -1,6 +1,5 @@
 import React from 'react'
 import WatchlistCard from '../WatchlistCard'
-import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import styles from './WatchlistGrid.module.css'
 import type { WatchlistItem } from '@/shared/types'
 
@@ -22,7 +21,7 @@ const WatchlistGrid: React.FC<WatchlistGridProps> = ({ items, onTap }) => {
   if (!items.length) {
     return (
       <div className={styles.empty}>
-        <DoodleIllustration variant="watchlist" size={84} />
+        <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyImg} draggable={false} />
         <p className={styles.emptyText}>Список порожній</p>
         <p className={styles.emptyHint}>Знайди щось цікаве через пошук вище</p>
       </div>

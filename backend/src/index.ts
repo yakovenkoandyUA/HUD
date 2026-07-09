@@ -20,6 +20,7 @@ import './jobs/recurringReminders'
 import './jobs/dayReminder'
 import './jobs/renewalReminder'
 import './jobs/subscriptionExpiry'
+import './jobs/vehicleDocReminders'
 import { startCleanupSprintImages } from './jobs/cleanupSprintImages'
 import { errorHandler } from './middleware/errorHandler'
 
@@ -55,6 +56,7 @@ import placesRouter from './routes/places'
 import spacesRouter from './routes/spaces'
 import userRouter from './routes/user'
 import billingRouter from './routes/billing'
+import mimirRouter from './routes/mimir'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -113,6 +115,7 @@ app.use('/api/places', placesRouter)
 app.use('/api/spaces', spacesRouter)
 app.use('/api/user', userRouter)
 app.use('/api/billing', billingRouter)
+app.use('/api/mimir', mimirRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

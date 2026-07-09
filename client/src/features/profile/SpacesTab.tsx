@@ -18,6 +18,7 @@ const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
   { value: 'hobby',    label: 'Хобі'      },
   { value: 'sports',   label: 'Спорт'     },
   { value: 'project',  label: 'Проект'    },
+  { value: 'vehicle',  label: 'Авто'      },
 ]
 
 const COLORS = [

@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useUiStore, type MimirMode } from '@/shared/store/uiStore'
 import styles from './MimirHint.module.css'
 
@@ -52,30 +53,34 @@ function getDailyHint(hints: string[]): string {
 
 // ── Pose ───────────────────────────────────────────────────────────────────
 
-export type MimirPose = 'idle' | 'writing' | 'thinking' | 'success' | 'skeptical' | 'pointing' | 'shrug' | 'excited' | 'alarmed'
+export type MimirPose = 'idle' | 'writing' | 'thinking' | 'success' | 'skeptical' | 'pointing' | 'shrug' | 'excited' | 'alarmed' | 'sleeping' | 'celebrating'
 
 const POSE_SRC: Record<MimirPose, string> = {
-  idle:      '/mimir/mimir-idle.png',
-  writing:   '/mimir/mimir-writing.png',
-  thinking:  '/mimir/mimir-thinking.png',
-  success:   '/mimir/mimir-success.png',
-  skeptical: '/mimir/mimir-skeptical.png',
-  pointing:  '/mimir/mimir-pointing.png',
-  shrug:     '/mimir/mimir-shrug.png',
-  excited:   '/mimir/mimir-excited.png',
-  alarmed:   '/mimir/mimir-alarmed.png',
+  idle:        '/mimir/mimir-idle.png',
+  writing:     '/mimir/mimir-writing.png',
+  thinking:    '/mimir/mimir-thinking.png',
+  success:     '/mimir/mimir-success.png',
+  skeptical:   '/mimir/mimir-skeptical.png',
+  pointing:    '/mimir/mimir-pointing.png',
+  shrug:       '/mimir/mimir-shrug.png',
+  excited:     '/mimir/mimir-excited.png',
+  alarmed:     '/mimir/mimir-alarmed.png',
+  sleeping:    '/mimir/mimir-sleeping.png',
+  celebrating: '/mimir/mimir-celebrating.png',
 }
 
 const POSE_CLASS: Record<MimirPose, string> = {
-  idle:      styles.poseIdle,
-  writing:   styles.poseWriting,
-  thinking:  styles.poseThinking,
-  success:   styles.poseSuccess,
-  skeptical: styles.poseSkeptical,
-  pointing:  styles.posePointing,
-  shrug:     styles.poseShrug,
-  excited:   styles.poseExcited,
-  alarmed:   styles.poseAlarmed,
+  idle:        styles.poseIdle,
+  writing:     styles.poseWriting,
+  thinking:    styles.poseThinking,
+  success:     styles.poseSuccess,
+  skeptical:   styles.poseSkeptical,
+  pointing:    styles.posePointing,
+  shrug:       styles.poseShrug,
+  excited:     styles.poseExcited,
+  alarmed:     styles.poseAlarmed,
+  sleeping:    styles.poseSleeping,
+  celebrating: styles.poseCelebrating,
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -86,19 +91,22 @@ const POSE_CLASS: Record<MimirPose, string> = {
  * Маскот Мімір з підказкою дня. Три режими задаються в Профіль → Вигляд.
  * Підказка ротується щодня. Завжди рендериться абсолютно (не займає layout).
  *
- * @param pose      - яку позу показати (default: 'idle')
- * @param textKey   - override тексту замість щоденної підказки
- * @param onDismiss - викликається після анімації закриття (напр. для markSeen)
- * @param oneTime   - режим одноразового хінту: без sessionStorage, тільки локальний стан
+ * @param pose        - яку позу показати (default: 'idle')
+ * @param textKey     - override тексту замість щоденної підказки
+ * @param onDismiss   - викликається після анімації закриття (напр. для markSeen)
+ * @param oneTime     - режим одноразового хінту: без sessionStorage, тільки локальний стан
+ * @param showUpgrade - показати промпт "Оживити Міміра" (коли hint є статичним fallback)
  */
 interface MimirHintProps {
   pose?: MimirPose
   textKey?: string
   onDismiss?: () => void
   oneTime?: boolean
+  showUpgrade?: boolean
 }
 
-const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss, oneTime = false }) => {
+const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss, oneTime = false, showUpgrade = false }) => {
+  const navigate = useNavigate()
   const { mimirMode } = useUiStore()
   // oneTime хінти не залежать від sessionStorage — показуються завжди до dismiss
   const [dismissed, setDismissed] = useState(() => oneTime ? false : isDismissedToday())
@@ -157,7 +165,18 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
         <div key={mimirMode} className={styles.bubble}>
           <p className={styles.text}>{hint}</p>
           <span className={styles.signature}>— Мімір</span>
-          <span className={styles.dismissHint}>торкніться, щоб сховати</span>
+          {showUpgrade ? (
+            <button
+              type="button"
+              className={styles.upgradeLink}
+              onClick={(e) => { e.stopPropagation(); navigate('/profile?tab=plan') }}
+            >
+              Мімір говорить з пам'яті — оживи його
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 5h6M5.5 2.5L8 5l-2.5 2.5"/></svg>
+            </button>
+          ) : (
+            <span className={styles.dismissHint}>торкніться, щоб сховати</span>
+          )}
         </div>
       </div>
     </div>

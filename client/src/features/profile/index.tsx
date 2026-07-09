@@ -8,9 +8,10 @@ import PlanTab from './PlanTab'
 import AdminTab from './AdminTab'
 import YearbookTab from './YearbookTab'
 import SpacesTab from './SpacesTab'
+import MeMimir from './MeMimir'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'admin'
+type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'mimir' | 'admin'
 
 /**
  * ProfilePage
@@ -63,6 +64,7 @@ const ProfilePage: React.FC = () => {
           {activeTab === 'plan'   && <PlanTab />}
           {activeTab === 'timeline' && <YearbookTab />}
           {activeTab === 'spaces'   && <SpacesTab />}
+          {activeTab === 'mimir'    && <MeMimir />}
           {activeTab === 'admin'    && activeProfile.role === 'admin' && <AdminTab />}
         </div>
       </div>

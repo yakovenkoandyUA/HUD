@@ -388,7 +388,7 @@ const OnboardingScreen: React.FC = () => {
         {step === 7 && (
           <div className={styles.step}>
             <img
-              src="/mimir/mimir-success.png"
+              src="/mimir/mimir-celebrating.png"
               alt="Mimir"
               className={`${styles.mimirAvatar} ${styles.mimirAvatarLg}`}
               draggable={false}

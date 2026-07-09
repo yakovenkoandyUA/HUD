@@ -13,21 +13,19 @@ import styles from './GreetingBlock.module.css'
  * дата+погода — головний рядок, бо це єдине, що реально варто глянути зранку.
  * При натисканні на погоду — викликає onWeatherClick з даними погоди.
  *
+ * Коли на сьогодні немає звичок, секція "СЬОГОДНІ" зникає — замість неї
+ * "детальніше" вбудовується в нижній край картки з градієнтом.
+ *
  * Props:
  * @prop {(weather: WeatherData) => void} [onWeatherClick] — callback при тапі на погоду
+ * @prop {() => void}                     [onOpenDay]      — відкрити DayOverlay (коли немає звичок)
  */
 interface GreetingBlockProps {
   onWeatherClick?: (weather: WeatherData) => void
+  onOpenDay?: () => void
 }
 
 const DAYS_SHORT = ['Нд','Пн','Вт','Ср','Чт','Пт','Сб']
-
-function greeting(h: number): string {
-  if (h < 6)  return 'Добраніч'
-  if (h < 12) return 'Доброго ранку'
-  if (h < 18) return 'Добрий день'
-  return 'Добрий вечір'
-}
 
 // Числовий формат — "Пн · 29.06" замість "Понеділок · 29 червня": вдвічі коротше,
 // не вгортається навіть на вузьких екранах, а погода тепер на своєму рядку нижче
@@ -48,7 +46,7 @@ const THEME_PHOTOS: Partial<Record<string, string>> = {
   arctic: '/theme/arctic.webp',
 }
 
-const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick }) => {
+const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay }) => {
   const profile = useProfileStore(s => s.activeProfile)
   const theme   = useUiStore(s => s.theme)
   const weather = useWeather(profile?.city)
@@ -59,7 +57,6 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick }) => {
     return () => clearInterval(id)
   }, [])
 
-  const greet    = greeting(now.getHours())
   const dateStr  = formatDate(now)
   const photoUrl = THEME_PHOTOS[theme]
 
@@ -72,11 +69,9 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick }) => {
         <div className={styles.illustration} aria-hidden />
       )}
 
-      <div className={styles.content}>
-        <span className={styles.greetLine}>
-          {greet}, <span className={styles.name}>{profile?.name ?? ''}</span>
-        </span>
+      {onOpenDay && <div className={styles.bottomGrad} aria-hidden />}
 
+      <div className={styles.content}>
         <span className={styles.date}>{dateStr}</span>
 
         {weather && (
@@ -92,6 +87,15 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick }) => {
           </button>
         )}
       </div>
+
+      {onOpenDay && (
+        <button type="button" className={styles.detailBtn} onClick={onOpenDay}>
+          детальніше
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
