@@ -198,7 +198,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
     return { movieWatched, seriesCount, animeCount, seriesEp, animeEp, totalH, root, watchedCount, monthBins }
   }, [items])
 
-  const { totalH, movieWatched, seriesCount, animeCount, seriesEp, animeEp, root, watchedCount, monthBins } = stats
+  const { totalH, movieWatched, seriesCount, animeCount, seriesEp, animeEp, root, monthBins } = stats
 
   if (!mounted) return null
 
@@ -251,7 +251,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                     data={root}
                     value="value"
                     id="name"
-                    colors={(node) => (node.data as GenreBubble).color ?? '#3a4260'}
+                    colors={(node) => (node.data as unknown as GenreBubble).color ?? '#3a4260'}
                     childColor={{ from: 'color', modifiers: [['brighter', 0.3]] }}
                     padding={6}
                     enableLabels={true}
@@ -263,7 +263,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                     animate={true}
                     motionConfig="gentle"
                     tooltip={({ id, value, data }) => {
-                      const d = data as GenreBubble
+                      const d = data as unknown as GenreBubble
                       return (
                         <div className={styles.tooltip}>
                           <span className={styles.tooltipDot} style={{ background: d.color }} />
