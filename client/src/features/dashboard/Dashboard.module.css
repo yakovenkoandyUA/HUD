@@ -22,6 +22,15 @@
   margin-top: 10px;
 }
 
+/* Mimir floats over content — no layout space consumed */
+.mimirFloat {
+  position: relative;
+  height: 0;
+  overflow: visible;
+  z-index: 3;
+  pointer-events: none;
+}
+
 /* ── Staggered card entrance ────────────────────────────────── */
 
 @keyframes dashSlideUp {

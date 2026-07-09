@@ -2,7 +2,7 @@ import React from 'react'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { ALL_NAV_SECTIONS, PROFILE_TABS } from '@/shared/components/layout/BottomNav'
-import type { Theme, NavStyle, NavLabelMode } from '@/shared/store/uiStore'
+import type { Theme, NavStyle, NavLabelMode, MimirMode } from '@/shared/store/uiStore'
 import { NAV_STYLE_MAX_PINNED } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import styles from './ProfilePage.module.css'
@@ -35,7 +35,7 @@ const PALETTES: ThemePalette[] = [
  */
 const MeAppearance: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections, pinnedProfileTabs, setPinnedProfileTabs } = useUiStore()
+  const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections, pinnedProfileTabs, setPinnedProfileTabs, mimirMode, setMimirMode } = useUiStore()
 
   return (
     <>
@@ -79,6 +79,35 @@ const MeAppearance: React.FC = () => {
               </button>
             )
           })}
+        </div>
+      </div>
+      <div className={styles.cardDivider} />
+      <div className={styles.cardPadded}>
+        <div className={styles.cardSubTitle}>МІМІР — СТИЛЬ</div>
+        <div className={styles.navStyleGrid}>
+          {([
+            { id: 'wise',  label: 'Мудрий',   hint: 'Поради та цитати' },
+            { id: 'witty', label: 'Дотепний',  hint: 'Саркастичний тон' },
+            { id: 'dark',  label: 'Темний',    hint: 'Похмура мудрість' },
+          ] as { id: MimirMode; label: string; hint: string }[]).map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`${styles.navStyleCard} ${mimirMode === opt.id ? styles.navStyleCardActive : ''}`}
+              onClick={() => setMimirMode(opt.id)}
+              aria-pressed={mimirMode === opt.id}
+            >
+              <div className={styles.navPreview}>
+                <img
+                  src={`/mimir/mimir-${opt.id === 'wise' ? 'idle' : opt.id === 'witty' ? 'writing' : 'skeptical'}.png`}
+                  alt={opt.label}
+                  style={{ height: 36, width: 'auto', objectFit: 'contain', opacity: mimirMode === opt.id ? 1 : 0.45 }}
+                />
+              </div>
+              <span className={styles.navStyleLabel}>{opt.label}</span>
+              <span className={styles.navStyleHint}>{opt.hint}</span>
+            </button>
+          ))}
         </div>
       </div>
       <div className={styles.cardDivider} />

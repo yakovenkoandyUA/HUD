@@ -64,24 +64,124 @@
   font-weight: 700;
 }
 
-.select {
+/* ── Custom select trigger ── */
+.selectRoot {
+  position: relative;
+  width: 100%;
+}
+
+.selectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
   background: var(--surface);
   color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 6px 8px;
   font-size: 12px;
   font-family: inherit;
-  width: 100%;
   cursor: pointer;
-  appearance: auto;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.select:focus {
-  outline: none;
+.selectTrigger:hover {
+  border-color: var(--text-secondary);
+}
+
+.selectTriggerOpen {
   border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
 }
 
+.selectTriggerPlaceholder .selectTriggerLabel {
+  color: var(--text-secondary);
+}
+
+.selectTriggerLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectChevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: transform 0.15s ease;
+}
+
+.selectChevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown panel (rendered in portal, position: fixed) ── */
+.selectDropdown {
+  position: fixed;
+  z-index: 9999;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow-y: auto;
+  max-height: 260px;
+  padding: 4px;
+  overscroll-behavior: contain;
+}
+
+.selectOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.selectOption:hover:not(.selectOptionDisabled):not(.selectOptionActive) {
+  background: var(--surface-2);
+}
+
+.selectOptionActive {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+}
+
+.selectOptionActive:hover {
+  opacity: 0.9;
+}
+
+.selectOptionDisabled {
+  color: var(--text-secondary);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.selectOptionIconGap {
+  display: inline-block;
+  width: 12px;
+  flex-shrink: 0;
+}
+
+.selectSeparator {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 2px;
+}
+
+/* ── Footer actions ── */
 .actions {
   display: flex;
   gap: 8px;

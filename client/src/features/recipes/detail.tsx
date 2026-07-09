@@ -168,8 +168,8 @@ const RecipeDetailScreen: React.FC = () => {
         return { id: crypto.randomUUID(), title: label || String(raw), done: false }
       }),
     })
-    showToast(`«${recipe.title}» додано до квестів`, 'success')
-    navigate('/sprint')
+    showToast(`«${recipe.title}» додано до покупок`, 'success')
+    navigate('/sprint', { state: { filterType: 'shopping' } })
   }
 
   const handleAddToShopping = () => {

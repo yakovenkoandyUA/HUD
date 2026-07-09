@@ -109,57 +109,44 @@
   white-space: nowrap;
 }
 
-/* ── Genre donut ── */
-.genreWrap {
+/* ── Circle pack ── */
+.bubbleContainer {
+  height: 280px;
+  padding: 0 16px;
+}
+
+.bubbleLegend {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px 24px;
   gap: 12px;
-  padding: 0 20px 24px;
 }
 
-.pieContainer {
-  width: 160px;
-  height: 160px;
-  flex-shrink: 0;
+.legendHint {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--text3);
 }
 
-.donutLegend {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  min-width: 0;
-}
-
-.legendRow {
+.ratingScale {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 0;
+  gap: 6px;
 }
 
-.legendDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.legendName {
-  flex: 1;
+.scaleLabel {
   font-family: var(--font-body);
-  font-size: 12px;
-  color: var(--text2);
+  font-size: 10px;
+  color: var(--text3);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.legendPct {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text3);
-  flex-shrink: 0;
+.scaleGradient {
+  width: 60px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #3a4260, #4a5a8a, #d4a017);
 }
 
 /* ── Bar charts ── */
@@ -168,11 +155,22 @@
   height: 140px;
 }
 
+.barWrapTall {
+  padding: 0 16px 24px;
+  height: 180px;
+}
+
 /* ── Tooltip ── */
 .tooltip {
   display: flex;
   align-items: center;
   gap: 8px;
+  background: #1e2235;
+  border: 1px solid #4a5280;
+  border-radius: 10px;
+  padding: 8px 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  pointer-events: none;
 }
 
 .tooltipDot {
@@ -182,17 +180,31 @@
   flex-shrink: 0;
 }
 
-.tooltipName {
-  font-family: var(--font-body);
-  font-size: 12px;
-  color: var(--text2);
+.tooltipBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.tooltipVal {
+.tooltipName {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.tooltipSub {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text);
-  font-weight: 700;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.tooltipMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  white-space: nowrap;
 }
 
 /* ── Empty state ── */

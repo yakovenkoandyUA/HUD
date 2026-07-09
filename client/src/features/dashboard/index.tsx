@@ -37,7 +37,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const { items: sprintItems, toggleItem, fetchItems } = useSprintStore()
-  const { showToast } = useUiStore()
+  const { showToast, mimirMode } = useUiStore()
   const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
@@ -94,7 +94,15 @@ const Dashboard: React.FC = () => {
 
   const activeQuests  = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping' && !t.done).length
   const totalQuests   = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping').length
-  const mimirPose = (totalQuests > 0 && activeQuests === 0) ? 'success' : 'idle' as const
+  const overdueQuests = sprintItems.filter(t =>
+    !isRecurring(t) && t.type !== 'shopping' && !t.done &&
+    !!t.dueDate && t.dueDate < today
+  ).length
+  const mimirPose = (() => {
+    if (totalQuests > 0 && activeQuests === 0) return 'success' as const
+    if (mimirMode === 'dark' || overdueQuests > 0) return 'skeptical' as const
+    return 'idle' as const
+  })()
   const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
   const latestNote    = notes[0]?.text.split('\n')[0] ?? ''
 
@@ -139,7 +147,9 @@ const Dashboard: React.FC = () => {
 
         <SpacesStrip onF1Click={() => navigate('/f1')} />
 
-        <MimirHint pose={mimirPose} />
+        <div className={styles.mimirFloat}>
+          <MimirHint pose={mimirPose} />
+        </div>
 
         <div className={styles.calendarWrap}>
           {raceThisWeek ? (

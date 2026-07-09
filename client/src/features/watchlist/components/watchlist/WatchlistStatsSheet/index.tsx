@@ -19,15 +19,31 @@ function countEpisodes(item: WatchlistItem): number {
 
 // ── Chart data ─────────────────────────────────────────────────────────────────
 
-// Колір бульбашки: сірий (немає рейтингу) → gold (5★)
-function ratingToColor(avgRating: number | null): string {
-  if (avgRating === null) return '#3a4260'
-  const t = (avgRating - 1) / 4  // 0..1
-  // lerp: #4a5a8a → #d4a017
-  const r = Math.round(0x4a + t * (0xd4 - 0x4a))
-  const g = Math.round(0x5a + t * (0xa0 - 0x5a))
-  const b = Math.round(0x8a + t * (0x17 - 0x8a))
-  return `rgb(${r},${g},${b})`
+// Curated палітра: кожен жанр — свій hue [h, s%, l%], без кислотних відтінків
+const GENRE_BASE: [number, number, number][] = [
+  [202, 60, 42],  // steel blue
+  [258, 52, 42],  // purple
+  [22,  65, 44],  // orange
+  [340, 55, 42],  // rose
+  [43,  65, 42],  // gold
+  [185, 52, 38],  // teal
+  [275, 50, 40],  // violet
+  [320, 55, 42],  // pink
+  [55,  60, 42],  // amber
+  [163, 42, 36],  // jade (muted, not neon)
+]
+
+function genreColor(index: number, avgRating: number | null): string {
+  const [h, s, l] = GENRE_BASE[index % GENRE_BASE.length]
+  if (avgRating === null) return `hsl(${h}, 14%, 26%)`
+  const t = (avgRating - 1) / 4
+  const rs = Math.round(s * (0.45 + 0.55 * t))
+  const rl = Math.round(l * (0.82 + 0.18 * t))
+  return `hsl(${h}, ${rs}%, ${rl}%)`
+}
+
+function genreTextColor(avgRating: number | null): string {
+  return avgRating !== null && avgRating >= 3.5 ? '#1a120a' : '#c8b890'
 }
 
 interface GenreBubble {
@@ -35,6 +51,7 @@ interface GenreBubble {
   value: number
   avgRating: number | null
   color: string
+  textColor: string
 }
 
 interface CirclePackRoot {
@@ -61,9 +78,9 @@ function computeCirclePack(items: WatchlistItem[]): { root: CirclePackRoot; watc
   const children: GenreBubble[] = Object.entries(genreMap)
     .sort((a, b) => b[1].count - a[1].count)
     .slice(0, 10)
-    .map(([name, { count, ratingSum, ratingCount }]) => {
+    .map(([name, { count, ratingSum, ratingCount }], i) => {
       const avgRating = ratingCount > 0 ? ratingSum / ratingCount : null
-      return { name, value: count, avgRating, color: ratingToColor(avgRating) }
+      return { name, value: count, avgRating, color: genreColor(i, avgRating), textColor: genreTextColor(avgRating) }
     })
 
   return {
@@ -73,12 +90,26 @@ function computeCirclePack(items: WatchlistItem[]): { root: CirclePackRoot; watc
 }
 
 const UA_MONTHS = ['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру']
+const UA_MONTHS_FULL = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень']
 
-function computeMonthly(items: WatchlistItem[]) {
+interface MonthBin {
+  month: string
+  count: number
+  fullLabel: string   // "Липень 2025" — для tooltip
+  isCurrent: boolean
+}
+
+function computeMonthly(items: WatchlistItem[]): MonthBin[] {
   const now = new Date()
-  const bins = Array.from({ length: 12 }, (_, i) => {
+  const bins: MonthBin[] = Array.from({ length: 12 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1)
-    return { month: UA_MONTHS[d.getMonth()], count: 0 }
+    const isCurrent = i === 11
+    return {
+      month: UA_MONTHS[d.getMonth()],
+      fullLabel: `${UA_MONTHS_FULL[d.getMonth()]} ${d.getFullYear()}`,
+      count: 0,
+      isCurrent,
+    }
   })
   items.forEach(item => {
     const d = new Date(item.addedAt)
@@ -94,18 +125,18 @@ const nivoTheme = {
   background: 'transparent',
   tooltip: {
     container: {
-      background: '#252a40',
-      border: '1px solid #3a4260',
-      borderRadius: 8,
-      padding: '6px 10px',
-      fontSize: 12,
+      background: '#1e2235',
+      border: '1px solid #4a5280',
+      borderRadius: 10,
+      padding: '8px 14px',
+      fontSize: 13,
       fontFamily: 'var(--font-body)',
       color: '#e8d5a0',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
     },
   },
   axis: {
-    ticks: { text: { fill: '#6a5830', fontSize: 10, fontFamily: 'var(--font-body)' } },
+    ticks: { text: { fill: '#7a6840', fontSize: 11, fontFamily: 'var(--font-body)' } },
     domain: { line: { stroke: 'transparent' } },
   },
   grid: { line: { stroke: '#2e3450', strokeDasharray: '3 3' } },
@@ -258,20 +289,22 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                     label={(node) => node.id}
                     labelsFilter={(n) => n.node.depth === 1 && n.node.radius > 22}
                     labelsSkipRadius={22}
-                    labelTextColor="#e8d5a0"
+                    labelTextColor={(node) => (node.data as unknown as GenreBubble).textColor ?? '#c8b890'}
                     theme={nivoTheme}
                     animate={true}
                     motionConfig="gentle"
                     tooltip={({ id, value, data }) => {
+                      if (id === 'root') return null
                       const d = data as unknown as GenreBubble
                       return (
                         <div className={styles.tooltip}>
                           <span className={styles.tooltipDot} style={{ background: d.color }} />
-                          <span className={styles.tooltipName}>{id}</span>
-                          <span className={styles.tooltipMeta}>
-                            {value} тайт.
-                            {d.avgRating != null && <> · {'★'.repeat(Math.round(d.avgRating))}</>}
-                          </span>
+                          <div className={styles.tooltipBody}>
+                            <span className={styles.tooltipName}>{id}</span>
+                            <span className={styles.tooltipSub}>
+                              {value} у жанрі{d.avgRating != null ? ` · ${'★'.repeat(Math.round(d.avgRating))}` : ''}
+                            </span>
+                          </div>
                         </div>
                       )
                     }}
@@ -296,26 +329,33 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
             </div>
 
             {hasActivity ? (
-              <div className={styles.barWrap}>
+              <div className={styles.barWrapTall}>
                 <ResponsiveBar
                   data={monthBins}
                   keys={['count']}
                   indexBy="month"
-                  colors={['#6a4fc8']}
+                  colors={(bar) => {
+                    const d = bar.data as MonthBin
+                    return d.isCurrent ? '#d4a017' : '#6a4fc8'
+                  }}
                   borderRadius={4}
-                  padding={0.25}
+                  padding={0.3}
                   theme={nivoTheme}
                   enableLabel={false}
+                  margin={{ top: 8, right: 8, bottom: 32, left: 8 }}
                   axisBottom={{ tickSize: 0, tickPadding: 8 }}
-                  axisLeft={{ tickSize: 0, tickPadding: 6, tickValues: 3 }}
-                  gridYValues={3}
+                  axisLeft={null}
+                  enableGridY={false}
                   enableGridX={false}
-                  tooltip={({ indexValue, value }) => (
-                    <div className={styles.tooltip}>
-                      <span className={styles.tooltipName}>{indexValue}</span>
-                      <span className={styles.tooltipMeta}>{value}</span>
-                    </div>
-                  )}
+                  tooltip={({ data, value }) => {
+                    const d = data as MonthBin
+                    return (
+                      <div className={styles.tooltip}>
+                        <span className={styles.tooltipName}>{d.fullLabel}</span>
+                        <span className={styles.tooltipMeta}>{value} тайт.</span>
+                      </div>
+                    )
+                  }}
                   animate={true}
                   motionConfig="gentle"
                 />

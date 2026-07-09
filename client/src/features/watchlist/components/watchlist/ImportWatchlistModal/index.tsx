@@ -2,6 +2,7 @@ import React, { useRef, useCallback } from 'react'
 import Modal from '@/shared/components/ui/Modal'
 import { authFetch } from '@/shared/services/api'
 import { useImportWatchlistStore } from '../../../store/importWatchlistStore'
+import { CONST_PREFIX } from '../ColumnMappingStep'
 import { useWatchlistStore } from '../../../store/watchlistStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import ColumnMappingStep from '../ColumnMappingStep'
@@ -94,14 +95,21 @@ const ImportWatchlistModal: React.FC<ImportWatchlistModalProps> = ({ isOpen, onC
     store.setStep('confirming')
     store.setError(null)
 
+    // Transform __const_movie__ / __const_series__ into a synthetic column
+    let rows = store.parsedData.rows
+    let mapping = store.columnMapping
+    if (mapping.category?.startsWith(CONST_PREFIX)) {
+      const constValue = mapping.category.replace(CONST_PREFIX, '')
+      const syntheticCol = '__category__'
+      rows = rows.map(r => ({ ...r, [syntheticCol]: constValue }))
+      mapping = { ...mapping, category: syntheticCol }
+    }
+
     try {
       const res = await authFetch('/api/watchlist/import/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rows:    store.parsedData.rows,
-          mapping: store.columnMapping,
-        }),
+        body: JSON.stringify({ rows, mapping }),
       })
 
       if (!res.ok) {
