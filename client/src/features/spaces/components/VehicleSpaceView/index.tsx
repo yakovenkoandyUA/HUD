@@ -424,7 +424,7 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
         <h3 className={styles.sheetTitle}>Заправка</h3>
 
         <label className={styles.fieldLabel}>ДАТА</label>
-        <CustomDatePicker value={date} onChange={setDate} />
+        <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
 
         <div className={styles.twoCol}>
           <div>
@@ -506,7 +506,7 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => 
         <h3 className={styles.sheetTitle}>ТО / Ремонт</h3>
 
         <label className={styles.fieldLabel}>ДАТА</label>
-        <CustomDatePicker value={date} onChange={setDate} />
+        <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
 
         <div className={styles.twoCol}>
           <div>
@@ -600,10 +600,10 @@ const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
         )}
 
         <label className={styles.fieldLabel}>ДАТА ВИДАЧІ / ПОДІЇ</label>
-        <CustomDatePicker value={date} onChange={setDate} />
+        <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
 
         <label className={styles.fieldLabel}>ДІЙСНИЙ ДО</label>
-        <CustomDatePicker value={expiresAt} onChange={setExpiresAt} />
+        <CustomDatePicker value={expiresAt} onChange={setExpiresAt} onClose={() => {}} />
 
         <label className={styles.fieldLabel}>ФОТО ДОКУМЕНТА</label>
         <AttachmentsField value={attachments} onChange={setAttachments} />
@@ -654,7 +654,7 @@ const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
         <h3 className={styles.sheetTitle}>Нотатка</h3>
 
         <label className={styles.fieldLabel}>ДАТА</label>
-        <CustomDatePicker value={date} onChange={setDate} />
+        <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
 
         <label className={styles.fieldLabel}>НОТАТКА</label>
         <textarea

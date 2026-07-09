@@ -97,11 +97,6 @@ const Dashboard: React.FC = () => {
   const routineItems = allRoutines.filter(t => isRoutineDueOnDay(t, todayDate))
 
   const activeQuests  = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping' && !t.done).length
-  const totalQuests   = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping').length
-  const overdueQuests = sprintItems.filter(t =>
-    !isRecurring(t) && t.type !== 'shopping' && !t.done &&
-    !!t.dueDate && t.dueDate < today
-  ).length
   const allHabitsDoneToday = routineItems.length > 0 && routineItems.every(t => isDoneToday(t))
   const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
   const latestNote    = notes[0]?.text.split('\n')[0] ?? ''
