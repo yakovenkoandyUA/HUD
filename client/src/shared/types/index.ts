@@ -122,6 +122,7 @@ export interface UnifiedTodo {
   recipeImageUrl?: string
   recipeId?: string
   repeat?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
+  completedAt?: string | null
   repeatDay?: number
   nextDue?: string
   repeatConfig?: RepeatConfig
