@@ -97,6 +97,7 @@ interface MonthBin {
   count: number
   fullLabel: string   // "Липень 2025" — для tooltip
   isCurrent: boolean
+  [key: string]: unknown
 }
 
 function computeMonthly(items: WatchlistItem[]): MonthBin[] {
@@ -294,7 +295,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                     animate={true}
                     motionConfig="gentle"
                     tooltip={({ id, value, data }) => {
-                      if (id === 'root') return null
+                      if (id === 'root') return <></>
                       const d = data as unknown as GenreBubble
                       return (
                         <div className={styles.tooltip}>
@@ -335,7 +336,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                   keys={['count']}
                   indexBy="month"
                   colors={(bar) => {
-                    const d = bar.data as MonthBin
+                    const d = bar.data as unknown as MonthBin
                     return d.isCurrent ? '#d4a017' : '#6a4fc8'
                   }}
                   borderRadius={4}
@@ -348,7 +349,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                   enableGridY={false}
                   enableGridX={false}
                   tooltip={({ data, value }) => {
-                    const d = data as MonthBin
+                    const d = data as unknown as MonthBin
                     return (
                       <div className={styles.tooltip}>
                         <span className={styles.tooltipName}>{d.fullLabel}</span>
