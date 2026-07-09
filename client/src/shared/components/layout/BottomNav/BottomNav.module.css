@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 6px 12px;
+  padding: 3px 12px;
   border-radius: 100px;
 
   background: color-mix(in srgb, var(--bg2) 88%, transparent);

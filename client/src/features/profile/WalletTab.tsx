@@ -415,7 +415,7 @@ const WalletTab: React.FC = () => {
       {/* ── Salary day ── */}
       <div className={styles.settingsCard}>
         <div className={styles.cardTitle}>
-          ДЕНЬ ЗАРПЛАТИ
+          ДЕНЬ НАДХОДЖЕНЬ
           {savingSalary && <span className={styles.pushSub} style={{ marginLeft: 8, textTransform: 'none', fontFamily: 'var(--font-ui)' }}>Зберігаю...</span>}
         </div>
         <div className={styles.cardRow}>

@@ -83,35 +83,6 @@ const MeAppearance: React.FC = () => {
       </div>
       <div className={styles.cardDivider} />
       <div className={styles.cardPadded}>
-        <div className={styles.cardSubTitle}>МІМІР — СТИЛЬ</div>
-        <div className={styles.navStyleGrid}>
-          {([
-            { id: 'wise',  label: 'Мудрий',   hint: 'Поради та цитати' },
-            { id: 'witty', label: 'Дотепний',  hint: 'Саркастичний тон' },
-            { id: 'dark',  label: 'Темний',    hint: 'Похмура мудрість' },
-          ] as { id: MimirMode; label: string; hint: string }[]).map(opt => (
-            <button
-              key={opt.id}
-              type="button"
-              className={`${styles.navStyleCard} ${mimirMode === opt.id ? styles.navStyleCardActive : ''}`}
-              onClick={() => setMimirMode(opt.id)}
-              aria-pressed={mimirMode === opt.id}
-            >
-              <div className={styles.navPreview}>
-                <img
-                  src={`/mimir/mimir-${opt.id === 'wise' ? 'idle' : opt.id === 'witty' ? 'writing' : 'skeptical'}.png`}
-                  alt={opt.label}
-                  style={{ height: 36, width: 'auto', objectFit: 'contain', opacity: mimirMode === opt.id ? 1 : 0.45 }}
-                />
-              </div>
-              <span className={styles.navStyleLabel}>{opt.label}</span>
-              <span className={styles.navStyleHint}>{opt.hint}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className={styles.cardDivider} />
-      <div className={styles.cardPadded}>
         <div className={styles.cardSubTitle}>НАВІГАЦІЯ</div>
         <div className={styles.navStyleGrid}>
           {([
@@ -281,6 +252,35 @@ const MeAppearance: React.FC = () => {
             </>
           )
         })()}
+      </div>
+      <div className={styles.cardDivider} />
+      <div className={styles.cardPadded}>
+        <div className={styles.cardSubTitle}>МІМІР — СТИЛЬ</div>
+        <div className={styles.navStyleGrid}>
+          {([
+            { id: 'wise',  label: 'Мудрий',   hint: 'Поради та цитати' },
+            { id: 'witty', label: 'Дотепний',  hint: 'Саркастичний тон' },
+            { id: 'dark',  label: 'Темний',    hint: 'Похмура мудрість' },
+          ] as { id: MimirMode; label: string; hint: string }[]).map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`${styles.navStyleCard} ${mimirMode === opt.id ? styles.navStyleCardActive : ''}`}
+              onClick={() => setMimirMode(opt.id)}
+              aria-pressed={mimirMode === opt.id}
+            >
+              <div className={styles.mimirPreview}>
+                <img
+                  src={`/mimir/mimir-${opt.id === 'wise' ? 'idle' : opt.id === 'witty' ? 'writing' : 'skeptical'}.png`}
+                  alt={opt.label}
+                  className={`${styles.mimirPreviewImg} ${mimirMode === opt.id ? styles.mimirPreviewImgActive : ''}`}
+                />
+              </div>
+              <span className={styles.navStyleLabel}>{opt.label}</span>
+              <span className={styles.navStyleHint}>{opt.hint}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </>
   )

@@ -1563,6 +1563,26 @@
   width: 100%;
 }
 
+.mimirPreview {
+  height: 64px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+}
+
+.mimirPreviewImg {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.mimirPreviewImgActive {
+  opacity: 1;
+}
+
 .navPreviewClassic {
   display: flex;
   align-items: center;

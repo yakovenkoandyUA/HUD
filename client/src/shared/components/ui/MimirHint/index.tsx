@@ -52,7 +52,7 @@ function getDailyHint(hints: string[]): string {
 
 // ── Pose ───────────────────────────────────────────────────────────────────
 
-export type MimirPose = 'idle' | 'writing' | 'thinking' | 'success' | 'skeptical'
+export type MimirPose = 'idle' | 'writing' | 'thinking' | 'success' | 'skeptical' | 'pointing' | 'shrug' | 'excited'
 
 const POSE_SRC: Record<MimirPose, string> = {
   idle:      '/mimir/mimir-idle.png',
@@ -60,6 +60,9 @@ const POSE_SRC: Record<MimirPose, string> = {
   thinking:  '/mimir/mimir-thinking.png',
   success:   '/mimir/mimir-success.png',
   skeptical: '/mimir/mimir-skeptical.png',
+  pointing:  '/mimir/mimir-pointing.png',
+  shrug:     '/mimir/mimir-shrug.png',
+  excited:   '/mimir/mimir-excited.png',
 }
 
 const POSE_CLASS: Record<MimirPose, string> = {
@@ -68,6 +71,9 @@ const POSE_CLASS: Record<MimirPose, string> = {
   thinking:  styles.poseThinking,
   success:   styles.poseSuccess,
   skeptical: styles.poseSkeptical,
+  pointing:  styles.posePointing,
+  shrug:     styles.poseShrug,
+  excited:   styles.poseExcited,
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -78,17 +84,22 @@ const POSE_CLASS: Record<MimirPose, string> = {
  * Маскот Мімір з підказкою дня. Три режими задаються в Профіль → Вигляд.
  * Підказка ротується щодня. Завжди рендериться абсолютно (не займає layout).
  *
- * @param pose    - яку позу показати (default: 'idle')
- * @param textKey - override тексту замість щоденної підказки
+ * @param pose      - яку позу показати (default: 'idle')
+ * @param textKey   - override тексту замість щоденної підказки
+ * @param onDismiss - викликається після анімації закриття (напр. для markSeen)
+ * @param oneTime   - режим одноразового хінту: без sessionStorage, тільки локальний стан
  */
 interface MimirHintProps {
   pose?: MimirPose
   textKey?: string
+  onDismiss?: () => void
+  oneTime?: boolean
 }
 
-const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey }) => {
+const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss, oneTime = false }) => {
   const { mimirMode } = useUiStore()
-  const [dismissed, setDismissed] = useState(isDismissedToday)
+  // oneTime хінти не залежать від sessionStorage — показуються завжди до dismiss
+  const [dismissed, setDismissed] = useState(() => oneTime ? false : isDismissedToday())
   const [hiding, setHiding] = useState(false)
 
   const hint = useMemo(() => {
@@ -100,10 +111,11 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey }) => {
     if (hiding) return
     setHiding(true)
     setTimeout(() => {
-      setDismissedToday()
+      if (!oneTime) setDismissedToday()
       setDismissed(true)
+      onDismiss?.()
     }, 320)
-  }, [hiding])
+  }, [hiding, oneTime, onDismiss])
 
   // Tap anywhere on the page dismisses Mimir
   useEffect(() => {

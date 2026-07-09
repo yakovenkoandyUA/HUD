@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { authFetch } from '@/shared/services/api'
-import MimirFillIcon from '@/shared/components/ui/MimirFillIcon'
 import styles from './Onboarding.module.css'
 
 const TOTAL_STEPS = 5
@@ -30,7 +29,6 @@ const OnboardingScreen: React.FC = () => {
 
   // Step 2 — Finance
   const [salaryDay, setSalaryDay] = useState(activeProfile?.salaryDay ?? 1)
-  const [doneProgress, setDoneProgress] = useState(0)
   const [selectedCatIds, setSelectedCatIds] = useState<Set<string>>(new Set())
   const catsInitRef = useRef(false)
   const catsFetchRef = useRef(false)
@@ -57,26 +55,6 @@ const OnboardingScreen: React.FC = () => {
     load()
     return () => { cancelled = true }
   }, [step, allCats.length, fetchCategories])
-
-  // Animate MimirFillIcon when entering done step
-  useEffect(() => {
-    if (step !== 5) return
-    let cancelled = false
-    const load = async () => {
-      const start = performance.now()
-      const duration = 1400
-      const tick = (now: number) => {
-        if (cancelled) return
-        const t = Math.min((now - start) / duration, 1)
-        const eased = 1 - Math.pow(1 - t, 3)
-        if (!cancelled) setDoneProgress(eased)
-        if (t < 1) requestAnimationFrame(tick)
-      }
-      requestAnimationFrame(tick)
-    }
-    load()
-    return () => { cancelled = true }
-  }, [step])
 
   // Initialize selected category IDs once categories are loaded
   useEffect(() => {
@@ -167,9 +145,12 @@ const OnboardingScreen: React.FC = () => {
         {/* ── Step 1: Welcome ───────────────────────────────── */}
         {step === 1 && (
           <div className={styles.step}>
-            <div className={styles.logoWrap}>
-              <MimirFillIcon size={80} progress={1} />
-            </div>
+            <img
+              src="/mimir/mimir-excited.png"
+              alt="Mimir"
+              className={`${styles.mimirAvatar} ${styles.mimirAvatarLg}`}
+              draggable={false}
+            />
             <h1 className={styles.wordmark}>MIMIR</h1>
             <p className={styles.tagline}>DRINK DEEP</p>
             <p className={styles.greeting}>Привіт, {firstName}!</p>
@@ -185,11 +166,17 @@ const OnboardingScreen: React.FC = () => {
         {/* ── Step 2: Finance setup ─────────────────────────── */}
         {step === 2 && (
           <div className={styles.step}>
+            <img
+              src="/mimir/mimir-pointing.png"
+              alt="Mimir"
+              className={`${styles.mimirAvatar} ${styles.mimirAvatarMd}`}
+              draggable={false}
+            />
             <h2 className={styles.stepTitle}>Налаштуємо фінанси</h2>
             <p className={styles.stepSub}>Два питання щоб Finance одразу працював на тебе.</p>
 
             <div className={styles.section}>
-              <span className={styles.sectionLabel}>ФІНАНСОВИЙ ДЕНЬ</span>
+              <span className={styles.sectionLabel}>ДЕНЬ НАДХОДЖЕНЬ</span>
               <div className={styles.dayGrid}>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                   <button
@@ -206,7 +193,7 @@ const OnboardingScreen: React.FC = () => {
             </div>
 
             <div className={styles.section}>
-              <span className={styles.sectionLabel}>ЩО ВІДСТЕЖУВАТИМЕШ?</span>
+              <span className={styles.sectionLabel}>НА ЩО ВИТРАЧАЄШ?</span>
               {catLoading && topLevelCats.length === 0 ? (
                 <div className={styles.catSkeleton}>
                   {[1,2,3,4,5,6].map(i => <span key={i} className={styles.catSkeletonChip} />)}
@@ -241,6 +228,12 @@ const OnboardingScreen: React.FC = () => {
         {/* ── Step 3: First habit ───────────────────────────── */}
         {step === 3 && (
           <div className={styles.step}>
+            <img
+              src="/mimir/mimir-writing.png"
+              alt="Mimir"
+              className={`${styles.mimirAvatar} ${styles.mimirAvatarMd}`}
+              draggable={false}
+            />
             <h2 className={styles.stepTitle}>Перша звичка</h2>
             <p className={styles.stepSub}>Обери або напиши свій варіант — одразу з'явиться в щоденнику.</p>
 
@@ -287,14 +280,12 @@ const OnboardingScreen: React.FC = () => {
         {/* ── Step 4: First plan ────────────────────────────── */}
         {step === 4 && (
           <div className={styles.step}>
-            <div className={styles.planIconWrap}>
-              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-                <circle cx="28" cy="28" r="26" stroke="var(--accent)" strokeWidth="1.5" opacity="0.25"/>
-                <path d="M18 32c2-4 5-7 10-7s8 3 10 7" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round"/>
-                <path d="M14 28c3-7 8-12 14-12s11 5 14 12" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" opacity="0.5"/>
-                <circle cx="28" cy="36" r="3" fill="var(--accent)"/>
-              </svg>
-            </div>
+            <img
+              src="/mimir/mimir-thinking.png"
+              alt="Mimir"
+              className={`${styles.mimirAvatar} ${styles.mimirAvatarMd}`}
+              draggable={false}
+            />
             <h2 className={styles.stepTitle}>Куди мрієш поїхати?</h2>
             <p className={styles.stepSub}>Збережемо як перший план у розділі Спогади.</p>
 
@@ -322,9 +313,12 @@ const OnboardingScreen: React.FC = () => {
         {/* ── Step 5: Done ──────────────────────────────────── */}
         {step === 5 && (
           <div className={styles.step}>
-            <div className={styles.doneIcon}>
-              <MimirFillIcon size={88} progress={doneProgress} />
-            </div>
+            <img
+              src="/mimir/mimir-success.png"
+              alt="Mimir"
+              className={`${styles.mimirAvatar} ${styles.mimirAvatarLg}`}
+              draggable={false}
+            />
             <h2 className={styles.doneTitle}>Криниця відкрита.</h2>
             <p className={styles.doneDesc}>
               Мімір пам'ятає все — тепер і твоє.<br />Твоя хроніка починається.

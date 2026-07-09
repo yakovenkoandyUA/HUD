@@ -17,6 +17,8 @@ import { useBankStore } from '@/features/finance/store/bankStore'
 import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart } from './utils/finance'
 import { getToken } from '@/shared/services/api'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import MimirHint from '@/shared/components/ui/MimirHint'
+import { useMimirHint } from '@/shared/hooks/useMimirHint'
 import styles from './Finance.module.css'
 
 const IconExpense: React.FC = () => (
@@ -36,6 +38,7 @@ const Finance: React.FC = () => {
   const { showToast } = useUiStore()
   const salaryDay = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const { connection, syncing, importing, fetchStatus, sync, importCsv, recategorize } = useBankStore()
+  const { seen: financeWelcomeSeen, markSeen: markFinanceWelcomeSeen } = useMimirHint('finance-welcome')
 
   const [showTopup, setShowTopup]     = useState(false)
   const [showExpense, setShowExpense] = useState(false)
@@ -174,6 +177,16 @@ const Finance: React.FC = () => {
 					daysLeft={daysLeft}
 					todaySpent={todaySpent}
 				/>
+
+				{/* Finance welcome hint (one-time, pointing) */}
+				{!financeWelcomeSeen && transactions.length === 0 && (
+					<MimirHint
+						pose="pointing"
+						oneTime
+						textKey="Почни з поповнення — встанови поточний баланс. Потім записуй витрати стрілкою вниз."
+						onDismiss={markFinanceWelcomeSeen}
+					/>
+				)}
 
 				{/* 2. Швидкі дії */}
 				<div className={styles.actions}>

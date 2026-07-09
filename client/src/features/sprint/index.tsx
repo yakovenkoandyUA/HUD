@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import FabHint from '@/shared/components/ui/FabHint'
+import MimirHint from '@/shared/components/ui/MimirHint'
+import { useMimirHint } from '@/shared/hooks/useMimirHint'
 import AppHeader from '@/shared/components/layout/AppHeader'
 import TrashBin from './components/sprint/TrashBin'
 import WeekHeader, { addWeeks } from './components/sprint/WeekHeader'
@@ -69,6 +71,7 @@ const Sprint: React.FC = () => {
 	// лічильника в фоні одразу ховав би підказку реактивно (миготіння в той же сеанс).
 	const [ghostHintEligible]     = useState(() => !sprintTutorialSeen && sprintTutorialShownCount < GHOST_HINT_LIMIT)
 	const [longPressHintEligible] = useState(() => !weekdayLongPressTutorialSeen && weekdayLongPressShownCount < LONGPRESS_HINT_LIMIT)
+	const { seen: sprintEmptySeen, markSeen: markSprintEmptySeen } = useMimirHint('sprint-empty')
 
 	const [showAdd, setShowAdd]           = useState(false)
 	const [quickAddDate, setQuickAddDate] = useState<string | null>(null)
@@ -305,6 +308,17 @@ const Sprint: React.FC = () => {
 						</div>
 					)}
 				</div>
+
+				{/* ── Sprint empty hint (one-time, pointing) ── */}
+				{!sprintEmptySeen && isCurrentWeek && filterType === 'task' && filterStatus === 'active'
+				 && !loading && items.filter(t => !isRecurring(t) && t.type !== 'shopping').length === 0 && (
+					<MimirHint
+						pose="pointing"
+						oneTime
+						textKey="Тижневий спринт порожній. Натисни + щоб додати першу задачу — вона з'явиться тут."
+						onDismiss={markSprintEmptySeen}
+					/>
+				)}
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>

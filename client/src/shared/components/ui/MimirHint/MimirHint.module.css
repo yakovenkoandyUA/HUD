@@ -72,6 +72,30 @@
     skepticalGlow 4s ease-in-out infinite;
 }
 
+/* ── Pose: pointing — slightly tilted, warm directing glow ── */
+.posePointing {
+  animation:
+    mimirEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    mimirFloat 3.5s ease-in-out infinite 0.55s,
+    pointingGlow 3s ease-in-out infinite;
+}
+
+/* ── Pose: shrug — gentle lazy sway, muted neutral glow ── */
+.poseShrug {
+  animation:
+    mimirEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    mimirSway 5.5s ease-in-out infinite 0.55s;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35)) saturate(0.8);
+}
+
+/* ── Pose: excited — quick bounce, vibrant accent burst ── */
+.poseExcited {
+  animation:
+    mimirEnter 0.45s cubic-bezier(0.34, 1.8, 0.64, 1) both,
+    mimirBounce 0.7s ease-in-out infinite 0.45s,
+    excitedGlow 1.2s ease-in-out infinite;
+}
+
 /* ── Keyframes ── */
 
 @keyframes mimirEnter {
@@ -136,6 +160,45 @@
     filter:
       drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
       drop-shadow(0 0 10px rgba(200, 150, 0, 0.55));
+  }
+}
+
+@keyframes pointingGlow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0  4px rgba(var(--accent-rgb, 120, 160, 255), 0.15));
+  }
+  50% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0 14px rgba(var(--accent-rgb, 120, 160, 255), 0.6))
+      drop-shadow(0 0 28px rgba(var(--accent-rgb, 120, 160, 255), 0.2));
+  }
+}
+
+@keyframes mimirSway {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50%       { transform: rotate(2deg)  translateY(-4px); }
+}
+
+@keyframes mimirBounce {
+  0%, 100% { transform: translateY(0)    scale(1);    }
+  40%       { transform: translateY(-9px) scale(1.03); }
+  70%       { transform: translateY(-3px) scale(0.98); }
+}
+
+@keyframes excitedGlow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4))
+      drop-shadow(0 0  6px rgba(255, 200, 60, 0.2));
+  }
+  50% {
+    filter:
+      drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4))
+      drop-shadow(0 0 18px rgba(255, 200, 60, 0.8))
+      drop-shadow(0 0 36px rgba(255, 200, 60, 0.3));
   }
 }
 

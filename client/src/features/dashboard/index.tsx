@@ -31,6 +31,7 @@ import type { ExpenseCategory } from '@/shared/types'
 import SpacesStrip from './components/dashboard/SpacesStrip'
 import DayOverlay from './components/dashboard/DayOverlay'
 import MimirHint from '@/shared/components/ui/MimirHint'
+import { useMimirHint } from '@/shared/hooks/useMimirHint'
 import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
@@ -43,6 +44,7 @@ const Dashboard: React.FC = () => {
   const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
   const { notes, fetchNotes } = useNotesStore()
+  const { seen: welcomeSeen, markSeen: markWelcomeSeen } = useMimirHint('dashboard-welcome')
 
   const [showDay, setShowDay]           = useState(false)
   const [showExpense, setShowExpense]   = useState(false)
@@ -147,7 +149,16 @@ const Dashboard: React.FC = () => {
 
         <SpacesStrip onF1Click={() => navigate('/f1')} />
 
-        {mimirPose && (
+        {!welcomeSeen ? (
+          <div className={styles.mimirFloat}>
+            <MimirHint
+              pose="excited"
+              oneTime
+              textKey="Криниця мудрості відкрита. Я Мімір — твій особистий охоронець порядку. Переглянь розділи знизу."
+              onDismiss={markWelcomeSeen}
+            />
+          </div>
+        ) : mimirPose && (
           <div className={styles.mimirFloat}>
             <MimirHint pose={mimirPose} />
           </div>

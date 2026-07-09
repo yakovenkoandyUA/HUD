@@ -4,7 +4,6 @@ import styles from './TimeWheelPicker.module.css'
 const ITEM_HEIGHT = 36
 const VISIBLE_COUNT = 5
 const PAD = Math.floor(VISIBLE_COUNT / 2)
-const TOUCH_DAMPING = 0.48
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
 const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
@@ -46,60 +45,12 @@ export const WheelColumn: React.FC<WheelColumnProps> = ({
   const [typing, setTyping] = useState(false)
   const [typedValue, setTypedValue] = useState('')
 
-  // Keep latest props in refs so touch handlers (set up once) stay current
-  const valuesRef = useRef(values)
-  valuesRef.current = values
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
-
   useEffect(() => {
     const el = ref.current
     if (!el) return
     el.scrollTop = index * ITEM_HEIGHT
     setScrollTop(index * ITEM_HEIGHT)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Damped touch scroll — replaces native momentum to slow down mobile scroll
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-
-    let startY = 0
-    let startScrollTop = 0
-
-    const onTouchStart = (e: TouchEvent) => {
-      startY = e.touches[0].clientY
-      startScrollTop = el.scrollTop
-      if (settleRef.current) clearTimeout(settleRef.current)
-    }
-
-    const onTouchMove = (e: TouchEvent) => {
-      e.preventDefault()
-      const dy = (startY - e.touches[0].clientY) * TOUCH_DAMPING
-      el.scrollTop = startScrollTop + dy
-      setScrollTop(el.scrollTop)
-    }
-
-    const onTouchEnd = () => {
-      const h = ITEM_HEIGHT
-      const len = valuesRef.current.length
-      settleRef.current = setTimeout(() => {
-        const nextIdx = Math.max(0, Math.min(len - 1, Math.round(el.scrollTop / h)))
-        el.scrollTo({ top: nextIdx * h, behavior: 'smooth' })
-        onChangeRef.current(nextIdx)
-      }, 60)
-    }
-
-    el.addEventListener('touchstart', onTouchStart, { passive: true })
-    el.addEventListener('touchmove', onTouchMove, { passive: false })
-    el.addEventListener('touchend', onTouchEnd, { passive: true })
-
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart)
-      el.removeEventListener('touchmove', onTouchMove)
-      el.removeEventListener('touchend', onTouchEnd)
-    }
   }, [])
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
