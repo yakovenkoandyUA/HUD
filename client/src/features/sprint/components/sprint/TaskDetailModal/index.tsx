@@ -585,50 +585,67 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                 <div className={styles.metaRow}>
                   <div className={styles.metaLeft}>
                     <p className={styles.sectionLabel}>Мітки</p>
-                    <div className={styles.labelsRow}>
-                      {taskLabels.map(l => (
-                        <button key={l.id} type="button" className={styles.labelPill} style={{ background: l.color }} onClick={() => setLabelPickerOpen(true)}>
-                          {l.title && <span className={styles.labelPillText}>{l.title}</span>}
-                        </button>
-                      ))}
-                      <button type="button" className={styles.addLabelChip} onClick={() => setLabelPickerOpen(true)}>+ Додати</button>
-                    </div>
+                    {taskLabels.length === 0 ? (
+                      <button type="button" className={styles.deadlineAddBtn} onClick={() => setLabelPickerOpen(true)}>
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                        Додати
+                      </button>
+                    ) : (
+                      <div className={styles.labelsBadge} onClick={() => setLabelPickerOpen(true)}>
+                        {taskLabels.map(l => (
+                          <span key={l.id} className={styles.labelPill} style={{ background: l.color }}>
+                            {l.title && <span className={styles.labelPillText}>{l.title}</span>}
+                          </span>
+                        ))}
+                        <span className={styles.labelsBadgeAdd}>+</span>
+                      </div>
+                    )}
                   </div>
                   <div className={styles.metaRight}>
                     <p className={styles.sectionLabel}>Дедлайн</p>
-                    <div className={styles.deadlineCompact}>
-                      <button type="button" className={styles.deadlineCompactBtn} onClick={() => setShowDatePicker(true)}>
+                    {!task.dueDate ? (
+                      <button type="button" className={styles.deadlineAddBtn} onClick={() => setShowDatePicker(true)}>
                         <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                           <rect x="1" y="2.5" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/>
                           <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2"/>
                           <path d="M4 1v3M10 1v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                         </svg>
-                        {task.dueDate ? (
-                          <span style={{ color: getDueDateColor(task.dueDate) }}>{formatDueDateHuman(task.dueDate)}</span>
-                        ) : (
-                          <span className={styles.deadlinePlaceholder}>Додати</span>
-                        )}
+                        Додати
                       </button>
-                      {task.dueDate && (
-                        <button type="button" className={styles.deadlineClear} onClick={() => updateTask(task.id, { dueDate: undefined, dueTime: undefined })} aria-label="Скинути дату">×</button>
-                      )}
-                    </div>
-                    {task.dueDate && (
-                      <div className={styles.deadlineCompact}>
-                        <button type="button" className={styles.deadlineCompactBtn} onClick={() => setShowTimePicker(true)}>
-                          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                            <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
-                            <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    ) : (
+                      <div className={styles.deadlineBadge}>
+                        <div className={styles.deadlineBadgeStack}>
+                          <button type="button" className={styles.deadlineBadgePart} onClick={() => setShowDatePicker(true)}>
+                            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                              <rect x="1" y="2.5" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                              <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2"/>
+                              <path d="M4 1v3M10 1v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                            </svg>
+                            <span style={{ color: getDueDateColor(task.dueDate) }}>{formatDueDateHuman(task.dueDate)}</span>
+                          </button>
+                          <button type="button" className={styles.deadlineBadgePart} onClick={() => setShowTimePicker(true)}>
+                            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                              <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
+                              <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            {task.dueTime
+                              ? <span>{task.dueTime}</span>
+                              : <span className={styles.deadlineBadgeTimePlaceholder}>додати час</span>
+                            }
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className={styles.deadlineBadgeClear}
+                          onClick={() => updateTask(task.id, { dueDate: undefined, dueTime: undefined })}
+                          aria-label="Скинути дедлайн"
+                        >
+                          <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                            <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                           </svg>
-                          {task.dueTime ? (
-                            <span>{task.dueTime}</span>
-                          ) : (
-                            <span className={styles.deadlinePlaceholder}>Час</span>
-                          )}
                         </button>
-                        {task.dueTime && (
-                          <button type="button" className={styles.deadlineClear} onClick={() => updateTask(task.id, { dueTime: undefined })} aria-label="Скинути час">×</button>
-                        )}
                       </div>
                     )}
                   </div>
