@@ -97,7 +97,6 @@ interface MonthBin {
   count: number
   fullLabel: string   // "Липень 2025" — для tooltip
   isCurrent: boolean
-  [key: string]: string | number | boolean
 }
 
 function computeMonthly(items: WatchlistItem[]): MonthBin[] {
@@ -332,7 +331,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
             {hasActivity ? (
               <div className={styles.barWrapTall}>
                 <ResponsiveBar
-                  data={monthBins}
+                  data={monthBins as unknown as import('@nivo/bar').BarDatum[]}
                   keys={['count']}
                   indexBy="month"
                   colors={(bar) => {
