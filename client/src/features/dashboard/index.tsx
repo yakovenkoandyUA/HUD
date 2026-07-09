@@ -101,7 +101,7 @@ const Dashboard: React.FC = () => {
   const mimirPose = (() => {
     if (totalQuests > 0 && activeQuests === 0) return 'success' as const
     if (mimirMode === 'dark' || overdueQuests > 0) return 'skeptical' as const
-    return 'idle' as const
+    return null
   })()
   const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
   const latestNote    = notes[0]?.text.split('\n')[0] ?? ''
@@ -147,9 +147,11 @@ const Dashboard: React.FC = () => {
 
         <SpacesStrip onF1Click={() => navigate('/f1')} />
 
-        <div className={styles.mimirFloat}>
-          <MimirHint pose={mimirPose} />
-        </div>
+        {mimirPose && (
+          <div className={styles.mimirFloat}>
+            <MimirHint pose={mimirPose} />
+          </div>
+        )}
 
         <div className={styles.calendarWrap}>
           {raceThisWeek ? (
