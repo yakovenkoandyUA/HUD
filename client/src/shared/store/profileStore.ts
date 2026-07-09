@@ -55,7 +55,7 @@ interface ProfileState {
   pinLocked: boolean
 
   fetchProfiles: () => Promise<void>
-  loginWithEmail: (email: string, password: string) => Promise<void>
+  loginWithEmail: (username: string, password: string) => Promise<void>
   register: (email: string, password: string, name: string, username: string) => Promise<void>
   selectProfile: (username: string) => Promise<void>
   logout: () => void
@@ -126,8 +126,8 @@ export const useProfileStore = create<ProfileState>()(
         } catch { /* offline — use cached */ }
       },
 
-      loginWithEmail: async (email: string, password: string) => {
-        const res = await apiPost('/api/auth/login', { email, password })
+      loginWithEmail: async (username: string, password: string) => {
+        const res = await apiPost('/api/auth/login', { username, password })
         if (!res.ok) {
           const data = await res.json() as { error?: string }
           throw new Error(data.error ?? 'Помилка входу')

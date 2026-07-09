@@ -8,7 +8,6 @@ import styles from './Login.module.css'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) ?? ''
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
  * LoginScreen
@@ -20,7 +19,7 @@ const LoginScreen: React.FC = () => {
   const navigate = useNavigate()
   const { loginWithEmail } = useProfileStore()
 
-  const [email, setEmail]       = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading]   = useState(false)
@@ -104,15 +103,11 @@ const LoginScreen: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim() || !password) return
-    if (!EMAIL_RE.test(email.trim())) {
-      setError('Невірний формат email')
-      return
-    }
+    if (!username.trim() || !password) return
     setLoading(true)
     setError(null)
     try {
-      await loginWithEmail(email.trim(), password)
+      await loginWithEmail(username.trim().toLowerCase(), password)
       navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Помилка входу')
@@ -132,7 +127,7 @@ const LoginScreen: React.FC = () => {
         <div className={styles.header}>
           <MimirFillIcon
             size={88}
-            progress={[email.trim().length > 0, password.length > 0].filter(Boolean).length / 2}
+            progress={[username.trim().length > 0, password.length > 0].filter(Boolean).length / 2}
           />
           <h1 className={styles.title}>MIMIR</h1>
           <p className={styles.subtitle}>HEADS UP DISPLAY</p>
@@ -142,12 +137,12 @@ const LoginScreen: React.FC = () => {
           <div className={styles.inputWrap}>
             <input
               className={styles.input}
-              type="email"
-              placeholder="EMAIL"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              type="text"
+              placeholder="НІКНЕЙМ"
+              value={username}
+              onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
               autoFocus
-              autoComplete="email"
+              autoComplete="username"
               disabled={loading}
               required
             />
@@ -172,7 +167,7 @@ const LoginScreen: React.FC = () => {
           <button
             className={styles.button}
             type="submit"
-            disabled={loading || !email.trim() || !password}
+            disabled={loading || !username.trim() || !password}
           >
             {loading ? '▪▪▪' : 'УВІЙТИ'}
           </button>

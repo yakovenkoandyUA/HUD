@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react'
+import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import { useUiStore, type MimirMode } from '@/shared/store/uiStore'
 import styles from './MimirHint.module.css'
 
@@ -52,7 +52,7 @@ function getDailyHint(hints: string[]): string {
 
 // ── Pose ───────────────────────────────────────────────────────────────────
 
-export type MimirPose = 'idle' | 'writing' | 'thinking' | 'success' | 'skeptical' | 'pointing' | 'shrug' | 'excited'
+export type MimirPose = 'idle' | 'writing' | 'thinking' | 'success' | 'skeptical' | 'pointing' | 'shrug' | 'excited' | 'alarmed'
 
 const POSE_SRC: Record<MimirPose, string> = {
   idle:      '/mimir/mimir-idle.png',
@@ -63,6 +63,7 @@ const POSE_SRC: Record<MimirPose, string> = {
   pointing:  '/mimir/mimir-pointing.png',
   shrug:     '/mimir/mimir-shrug.png',
   excited:   '/mimir/mimir-excited.png',
+  alarmed:   '/mimir/mimir-alarmed.png',
 }
 
 const POSE_CLASS: Record<MimirPose, string> = {
@@ -74,6 +75,7 @@ const POSE_CLASS: Record<MimirPose, string> = {
   pointing:  styles.posePointing,
   shrug:     styles.poseShrug,
   excited:   styles.poseExcited,
+  alarmed:   styles.poseAlarmed,
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -101,6 +103,17 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
   // oneTime хінти не залежать від sessionStorage — показуються завжди до dismiss
   const [dismissed, setDismissed] = useState(() => oneTime ? false : isDismissedToday())
   const [hiding, setHiding] = useState(false)
+
+  // For oneTime hints: navigating away without explicit dismiss still marks as seen
+  const dismissedRef = useRef(dismissed)
+  dismissedRef.current = dismissed
+  const onDismissRef = useRef(onDismiss)
+  onDismissRef.current = onDismiss
+  useEffect(() => {
+    if (!oneTime) return
+    return () => { if (!dismissedRef.current) onDismissRef.current?.() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const hint = useMemo(() => {
     if (textKey) return textKey

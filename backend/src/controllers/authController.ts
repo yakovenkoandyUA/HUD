@@ -8,6 +8,7 @@ import { User } from '../models/User'
 import { RefreshToken } from '../models/RefreshToken'
 import { FamilyLink } from '../models/FamilyLink'
 import { seedCategoriesForUser } from '../scripts/seedCategories'
+import { validateEmailDomain } from '../utils/emailValidation'
 
 const CLIENT_URL = process.env.CLIENT_URL ?? 'https://hud-murex.vercel.app'
 
@@ -159,7 +160,7 @@ async function sendAuthResponse(res: Response, userId: string, role: string, use
 /** POST /auth/register — { email, password, name, username } → JWT + user
  *  If username exists but has no passwordHash → claims the existing account.
  */
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/
 
 export async function register(req: Request, res: Response): Promise<void> {
@@ -175,6 +176,13 @@ export async function register(req: Request, res: Response): Promise<void> {
     res.status(400).json({ error: 'Невірний формат email' })
     return
   }
+
+  const domainError = await validateEmailDomain(email.trim())
+  if (domainError) {
+    res.status(400).json({ error: domainError })
+    return
+  }
+
   if (!USERNAME_RE.test(username.trim().toLowerCase())) {
     res.status(400).json({ error: 'Нікнейм: 3-20 символів, тільки латиниця, цифри і "_"' })
     return
@@ -238,24 +246,24 @@ export async function register(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** POST /auth/login — { email, password } → JWT + user */
+/** POST /auth/login — { username, password } → JWT + user */
 export async function loginEmail(req: Request, res: Response): Promise<void> {
-  const { email, password } = req.body as { email?: string; password?: string }
-  if (!email || !password) {
-    res.status(400).json({ error: 'Вкажіть email і пароль' })
+  const { username, password } = req.body as { username?: string; password?: string }
+  if (!username || !password) {
+    res.status(400).json({ error: 'Вкажіть нікнейм і пароль' })
     return
   }
 
   try {
-    const user = await User.findOne({ email: email.toLowerCase().trim() })
+    const user = await User.findOne({ username: username.toLowerCase().trim() })
     if (!user?.passwordHash) {
-      res.status(401).json({ error: 'Неправильний email або пароль' })
+      res.status(401).json({ error: 'Неправильний нікнейм або пароль' })
       return
     }
 
     const match = await bcrypt.compare(password, user.passwordHash)
     if (!match) {
-      res.status(401).json({ error: 'Неправильний email або пароль' })
+      res.status(401).json({ error: 'Неправильний нікнейм або пароль' })
       return
     }
 

@@ -10,7 +10,7 @@ export const registerSchema = z.object({
 })
 
 export const loginSchema = z.object({
-  email:    z.string().email('Невалідний email'),
+  username: z.string().min(1, 'Вкажіть нікнейм'),
   password: z.string().min(1, 'Пароль обов\'язковий'),
 })
 

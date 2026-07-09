@@ -5,19 +5,24 @@ import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { authFetch } from '@/shared/services/api'
 import styles from './Onboarding.module.css'
 
-const TOTAL_STEPS = 5
+// Steps 1–3: fullscreen intro/permission slides (no dots)
+// Steps 4–7: setup slides (dots shown, count 1–4)
+const SETUP_STEPS = 4
+const SETUP_STEP_OFFSET = 3 // first setup step is step 4
 
 const HABIT_PRESETS = ['Спорт', 'Читання', 'Медитація', 'Вода', 'Йога', 'Прогулянка', 'Сон']
 
 /**
  * OnboardingScreen
  * ----------------
- * 5-крокове налаштування при першому вході.
- * Крок 1 — Привітання
- * Крок 2 — Фінанси: день зарплати + активні категорії витрат
- * Крок 3 — Перша звичка (preset-чіпи або свій варіант)
- * Крок 4 — Перший план (куди мрієш поїхати, skippable)
- * Крок 5 — Готово → зберігає все і переходить на Dashboard
+ * 7-крокове налаштування при першому вході.
+ * Крок 1 — Welcome (fullscreen, mimir-welcome)
+ * Крок 2 — Location permission (fullscreen, mimir-location)
+ * Крок 3 — Notifications permission (fullscreen, mimir-notifications)
+ * Крок 4 — Фінанси: день зарплати + категорії витрат
+ * Крок 5 — Перша звичка (preset-чіпи або свій варіант)
+ * Крок 6 — Перший план (куди мрієш поїхати, skippable)
+ * Крок 7 — Готово → зберігає все і переходить на Dashboard
  */
 const OnboardingScreen: React.FC = () => {
   const navigate = useNavigate()
@@ -27,25 +32,25 @@ const OnboardingScreen: React.FC = () => {
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
 
-  // Step 2 — Finance
+  // Step 4 — Finance
   const [salaryDay, setSalaryDay] = useState(activeProfile?.salaryDay ?? 1)
   const [selectedCatIds, setSelectedCatIds] = useState<Set<string>>(new Set())
   const catsInitRef = useRef(false)
   const catsFetchRef = useRef(false)
 
-  // Step 3 — Habit
+  // Step 5 — Habit
   const [habitPreset, setHabitPreset] = useState<string | null>(null)
   const [habitCustom, setHabitCustom] = useState('')
 
-  // Step 4 — Plan
+  // Step 6 — Plan
   const [planDest, setPlanDest] = useState('')
 
   const firstName = activeProfile?.name?.split(' ')[0] ?? 'друже'
   const topLevelCats = allCats.filter(c => !c.parentId)
 
-  // Fetch categories when entering step 2
+  // Fetch categories when entering step 4
   useEffect(() => {
-    if (step !== 2 || catsFetchRef.current) return
+    if (step !== 4 || catsFetchRef.current) return
     catsFetchRef.current = true
     let cancelled = false
     const load = async () => {
@@ -84,6 +89,18 @@ const OnboardingScreen: React.FC = () => {
   }
 
   const habitTitle = habitPreset ?? (habitCustom.trim() || null)
+
+  const handleGeoPermission = () => {
+    navigator.geolocation?.getCurrentPosition(() => {}, () => {})
+    setStep(3)
+  }
+
+  const handleNotifPermission = async () => {
+    if ('Notification' in window) {
+      await Notification.requestPermission().catch(() => {})
+    }
+    setStep(4)
+  }
 
   const handleFinish = async () => {
     setSaving(true)
@@ -138,33 +155,90 @@ const OnboardingScreen: React.FC = () => {
     </svg>
   )
 
+  // Dots only for setup steps (4–7)
+  const setupDotIndex = step > SETUP_STEP_OFFSET ? step - SETUP_STEP_OFFSET : null
+
   return (
     <div className={styles.root}>
       <div className={styles.inner}>
 
-        {/* ── Step 1: Welcome ───────────────────────────────── */}
+        {/* ── Step 1: Welcome (fullscreen) ──────────────────── */}
         {step === 1 && (
-          <div className={styles.step}>
+          <div className={styles.slideHero}>
             <img
-              src="/mimir/mimir-excited.png"
+              src="/mimir/mimir-welcome.png"
               alt="Mimir"
-              className={`${styles.mimirAvatar} ${styles.mimirAvatarLg}`}
+              className={styles.slideHeroImg}
               draggable={false}
             />
-            <h1 className={styles.wordmark}>MIMIR</h1>
-            <p className={styles.tagline}>DRINK DEEP</p>
-            <p className={styles.greeting}>Привіт, {firstName}!</p>
-            <p className={styles.desc}>
-              Особистий органайзер для тих, хто цінує кожен момент — фінанси, звички, спогади, все в одному місці.
-            </p>
-            <button className={styles.primaryBtn} onClick={() => setStep(2)}>
-              Далі <ChevronRight />
+            <div className={styles.slideCopy}>
+              <h1 className={styles.wordmark}>MIMIR</h1>
+              <p className={styles.tagline}>DRINK DEEP</p>
+              <p className={styles.greeting}>Привіт, {firstName}!</p>
+              <p className={styles.desc}>
+                Особистий органайзер для тих, хто цінує кожен момент — фінанси, звички, спогади, все в одному місці.
+              </p>
+            </div>
+            <button className={`${styles.primaryBtn} ${styles.primaryBtnFull}`} onClick={() => setStep(2)}>
+              Розпочати <ChevronRight />
             </button>
           </div>
         )}
 
-        {/* ── Step 2: Finance setup ─────────────────────────── */}
+        {/* ── Step 2: Location permission (fullscreen) ──────── */}
         {step === 2 && (
+          <div className={styles.slideHero}>
+            <img
+              src="/mimir/mimir-location.png"
+              alt="Mimir"
+              className={styles.slideHeroImg}
+              draggable={false}
+            />
+            <div className={styles.slideCopy}>
+              <h2 className={styles.slideTitle}>Погода по-твоєму</h2>
+              <p className={styles.slideDesc}>
+                Мімір використовує геолокацію щоб показувати погоду для твого міста. Без реклами, без збору даних.
+              </p>
+            </div>
+            <div className={styles.slideActions}>
+              <button className={styles.slideSkipBtn} onClick={() => setStep(3)}>
+                Пропустити
+              </button>
+              <button className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`} onClick={handleGeoPermission}>
+                Дозволити <ChevronRight />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 3: Notifications permission (fullscreen) ─── */}
+        {step === 3 && (
+          <div className={styles.slideHero}>
+            <img
+              src="/mimir/mimir-notifications.png"
+              alt="Mimir"
+              className={styles.slideHeroImg}
+              draggable={false}
+            />
+            <div className={styles.slideCopy}>
+              <h2 className={styles.slideTitle}>Нагадує коли треба</h2>
+              <p className={styles.slideDesc}>
+                Дозволь Міміру надсилати нагадування про задачі і звички. Можна вимкнути будь-коли.
+              </p>
+            </div>
+            <div className={styles.slideActions}>
+              <button className={styles.slideSkipBtn} onClick={() => setStep(4)}>
+                Пропустити
+              </button>
+              <button className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`} onClick={handleNotifPermission}>
+                Увімкнути <ChevronRight />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 4: Finance setup ─────────────────────────── */}
+        {step === 4 && (
           <div className={styles.step}>
             <img
               src="/mimir/mimir-pointing.png"
@@ -176,7 +250,7 @@ const OnboardingScreen: React.FC = () => {
             <p className={styles.stepSub}>Два питання щоб Finance одразу працював на тебе.</p>
 
             <div className={styles.section}>
-              <span className={styles.sectionLabel}>ДЕНЬ НАДХОДЖЕНЬ</span>
+              <span className={styles.sectionLabel}>ДЕНЬ ЗАРПЛАТИ</span>
               <div className={styles.dayGrid}>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                   <button
@@ -219,14 +293,14 @@ const OnboardingScreen: React.FC = () => {
               )}
             </div>
 
-            <button className={styles.primaryBtn} onClick={() => setStep(3)}>
+            <button className={styles.primaryBtn} onClick={() => setStep(5)}>
               Далі <ChevronRight />
             </button>
           </div>
         )}
 
-        {/* ── Step 3: First habit ───────────────────────────── */}
-        {step === 3 && (
+        {/* ── Step 5: First habit ───────────────────────────── */}
+        {step === 5 && (
           <div className={styles.step}>
             <img
               src="/mimir/mimir-writing.png"
@@ -263,12 +337,12 @@ const OnboardingScreen: React.FC = () => {
             )}
 
             <div className={styles.btnRow}>
-              <button className={styles.skipBtn} onClick={() => setStep(4)}>
+              <button className={styles.skipBtn} onClick={() => setStep(6)}>
                 Пропустити
               </button>
               <button
                 className={styles.primaryBtn}
-                onClick={() => setStep(4)}
+                onClick={() => setStep(6)}
                 disabled={!habitTitle}
               >
                 Далі <ChevronRight />
@@ -277,8 +351,8 @@ const OnboardingScreen: React.FC = () => {
           </div>
         )}
 
-        {/* ── Step 4: First plan ────────────────────────────── */}
-        {step === 4 && (
+        {/* ── Step 6: First plan ────────────────────────────── */}
+        {step === 6 && (
           <div className={styles.step}>
             <img
               src="/mimir/mimir-thinking.png"
@@ -300,18 +374,18 @@ const OnboardingScreen: React.FC = () => {
             />
 
             <div className={styles.btnRow}>
-              <button className={styles.skipBtn} onClick={() => setStep(5)}>
+              <button className={styles.skipBtn} onClick={() => setStep(7)}>
                 Пропустити
               </button>
-              <button className={styles.primaryBtn} onClick={() => setStep(5)}>
+              <button className={styles.primaryBtn} onClick={() => setStep(7)}>
                 Далі <ChevronRight />
               </button>
             </div>
           </div>
         )}
 
-        {/* ── Step 5: Done ──────────────────────────────────── */}
-        {step === 5 && (
+        {/* ── Step 7: Done ──────────────────────────────────── */}
+        {step === 7 && (
           <div className={styles.step}>
             <img
               src="/mimir/mimir-success.png"
@@ -336,15 +410,17 @@ const OnboardingScreen: React.FC = () => {
           </div>
         )}
 
-        {/* ── Progress dots (all steps) ─────────────────────── */}
-        <div className={styles.dots}>
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <span
-              key={i}
-              className={`${styles.dot} ${i + 1 === step ? styles.dotActive : i + 1 < step ? styles.dotDone : ''}`}
-            />
-          ))}
-        </div>
+        {/* ── Progress dots — тільки для setup steps 4–7 ────── */}
+        {setupDotIndex !== null && (
+          <div className={styles.dots}>
+            {Array.from({ length: SETUP_STEPS }, (_, i) => (
+              <span
+                key={i}
+                className={`${styles.dot} ${i + 1 === setupDotIndex ? styles.dotActive : i + 1 < setupDotIndex ? styles.dotDone : ''}`}
+              />
+            ))}
+          </div>
+        )}
 
       </div>
     </div>

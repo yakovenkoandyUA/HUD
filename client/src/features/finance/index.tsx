@@ -178,15 +178,18 @@ const Finance: React.FC = () => {
 					todaySpent={todaySpent}
 				/>
 
-				{/* Finance welcome hint (one-time, pointing) */}
-				{!financeWelcomeSeen && transactions.length === 0 && (
-					<MimirHint
-						pose="pointing"
-						oneTime
-						textKey="Почни з поповнення — встанови поточний баланс. Потім записуй витрати стрілкою вниз."
-						onDismiss={markFinanceWelcomeSeen}
-					/>
-				)}
+				<div className={styles.mimirFloat}>
+					{!financeWelcomeSeen && transactions.length === 0 ? (
+						<MimirHint
+							pose="pointing"
+							oneTime
+							textKey="Почни з поповнення — встанови поточний баланс. Потім записуй витрати стрілкою вниз."
+							onDismiss={markFinanceWelcomeSeen}
+						/>
+					) : (
+						<MimirHint pose="writing" />
+					)}
+				</div>
 
 				{/* 2. Швидкі дії */}
 				<div className={styles.actions}>

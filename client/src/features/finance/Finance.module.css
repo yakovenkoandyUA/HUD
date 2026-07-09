@@ -216,3 +216,12 @@
   cursor: default;
   pointer-events: none;
 }
+
+
+.mimirFloat {
+  position: relative;
+  height: 0;
+  overflow: visible;
+  z-index: 3;
+  pointer-events: none;
+}

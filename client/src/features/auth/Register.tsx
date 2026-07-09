@@ -5,7 +5,7 @@ import MimirFillIcon from '@/shared/components/ui/MimirFillIcon'
 import PasswordToggleButton from '@/shared/components/ui/PasswordToggleButton'
 import styles from './Register.module.css'
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/
 
 /**

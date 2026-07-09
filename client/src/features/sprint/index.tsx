@@ -309,16 +309,20 @@ const Sprint: React.FC = () => {
 					)}
 				</div>
 
-				{/* ── Sprint empty hint (one-time, pointing) ── */}
-				{!sprintEmptySeen && isCurrentWeek && filterType === 'task' && filterStatus === 'active'
-				 && !loading && items.filter(t => !isRecurring(t) && t.type !== 'shopping').length === 0 && (
-					<MimirHint
-						pose="pointing"
-						oneTime
-						textKey="Тижневий спринт порожній. Натисни + щоб додати першу задачу — вона з'явиться тут."
-						onDismiss={markSprintEmptySeen}
-					/>
-				)}
+				{/* ── Sprint Mimir: one-time empty hint, then daily rotating ── */}
+				<div className={styles.mimirFloat}>
+					{!sprintEmptySeen && isCurrentWeek && filterType === 'task' && filterStatus === 'active'
+					 && !loading && items.filter(t => !isRecurring(t) && t.type !== 'shopping').length === 0 ? (
+						<MimirHint
+							pose="pointing"
+							oneTime
+							textKey="Тижневий спринт порожній. Натисни + щоб додати першу задачу — вона з'явиться тут."
+							onDismiss={markSprintEmptySeen}
+						/>
+					) : (
+						<MimirHint pose="thinking" />
+					)}
+				</div>
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>

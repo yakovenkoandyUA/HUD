@@ -1239,3 +1239,11 @@
   padding: 8px 0 4px;
   letter-spacing: 0.04em;
 }
+
+.mimirFloat {
+  position: relative;
+  height: 0;
+  overflow: visible;
+  z-index: 3;
+  pointer-events: none;
+}
