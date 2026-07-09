@@ -79,12 +79,15 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
     } catch { /* malformed token, proceed */ }
   }
 
+  // Don't set Content-Type for FormData — browser must set it with the multipart boundary
+  const isFormData = options.body instanceof FormData
+
   const makeRequest = (t: string | null) =>
     fetch(`${BASE_URL}${url}`, {
       ...options,
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(t ? { Authorization: `Bearer ${t}` } : {}),
         ...(options.headers as Record<string, string> | undefined),
       },
