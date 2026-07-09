@@ -11,7 +11,6 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { usePlan } from '@/shared/hooks/usePlan'
 import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
-import { authFetch } from '@/shared/services/api'
 import type { TodoPriority, SprintLabel, RepeatConfig } from '@/shared/types'
 import styles from './AddSprintItemModal.module.css'
 
