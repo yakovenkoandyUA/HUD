@@ -7,6 +7,7 @@ import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { usePlan } from '@/shared/hooks/usePlan'
 import UpgradePrompt from '@/shared/components/ui/UpgradePrompt'
 import PillSelector from '@/shared/components/ui/PillSelector'
+import { SPACE_TEMPLATES } from './spaceTemplates'
 import styles from './SpacesTab.module.css'
 
 const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
@@ -45,6 +46,7 @@ const SpacesTab: React.FC = () => {
 
   // ── Sheets state ──
   const [createOpen, setCreateOpen] = useState(false)
+  const [createStep, setCreateStep] = useState<'template' | 'form'>('template')
   const [detailSpace, setDetailSpace] = useState<Space | null>(null)
 
   // ── Create form ──
@@ -78,7 +80,17 @@ const SpacesTab: React.FC = () => {
 
   const openCreate = () => {
     setNewName(''); setNewType('shared'); setNewColor(COLORS[0])
+    setCreateStep('template')
     setCreateOpen(true)
+  }
+
+  const pickTemplate = (tpl: typeof SPACE_TEMPLATES[number] | null) => {
+    if (tpl) {
+      setNewName(tpl.defaultName)
+      setNewType(tpl.type)
+      setNewColor(tpl.color)
+    }
+    setCreateStep('form')
   }
 
   const toggleArchived = () => {
@@ -298,48 +310,91 @@ const SpacesTab: React.FC = () => {
         <div className={styles.overlay} ref={createOverlayRef} onClick={() => setCreateOpen(false)}>
           <div className={styles.sheet} ref={createSheetRef} onClick={e => e.stopPropagation()}>
             <div className={styles.sheetHandle} />
-            <h2 className={styles.sheetTitle}>Новий простір</h2>
 
-            <label className={styles.fieldLabel}>НАЗВА</label>
-            <input
-              className={styles.input}
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              placeholder="Наприклад, Japan Trip 2027…"
-              maxLength={60}
-              autoFocus
-            />
+            {createStep === 'template' ? (
+              <>
+                <h2 className={styles.sheetTitle}>Який простір?</h2>
+                <div className={styles.templateGrid}>
+                  {SPACE_TEMPLATES.map(tpl => (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      className={styles.templateCard}
+                      onClick={() => pickTemplate(tpl)}
+                    >
+                      <span className={styles.templateDot} style={{ background: tpl.color }} />
+                      <span className={styles.templateLabel}>{tpl.label}</span>
+                      <span className={styles.templateDesc}>{tpl.description}</span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className={`${styles.templateCard} ${styles.templateCardBlank}`}
+                    onClick={() => pickTemplate(null)}
+                  >
+                    <span className={styles.templateDotBlank}>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                      </svg>
+                    </span>
+                    <span className={styles.templateLabel}>Порожній</span>
+                    <span className={styles.templateDesc}>Почати з нуля</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={styles.formBack}>
+                  <button type="button" className={styles.formBackBtn} onClick={() => setCreateStep('template')}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                  <h2 className={styles.sheetTitle} style={{ margin: 0 }}>Новий простір</h2>
+                </div>
 
-            <label className={styles.fieldLabel}>ТИП</label>
-            <PillSelector
-              options={TYPE_OPTIONS}
-              value={newType}
-              onChange={setNewType}
-              className={styles.typePicker}
-            />
-
-            <label className={styles.fieldLabel}>КОЛІР</label>
-            <div className={styles.colorRow}>
-              {COLORS.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`${styles.colorDot} ${newColor === c ? styles.colorDotOn : ''}`}
-                  style={{ background: c }}
-                  onClick={() => setNewColor(c)}
-                  aria-label={c}
+                <label className={styles.fieldLabel}>НАЗВА</label>
+                <input
+                  className={styles.input}
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  placeholder="Наприклад, Japan Trip 2027…"
+                  maxLength={60}
+                  autoFocus
                 />
-              ))}
-            </div>
 
-            <button
-              type="button"
-              className={styles.primaryBtn}
-              onClick={handleCreate}
-              disabled={creating || !newName.trim()}
-            >
-              {creating ? 'Створюємо…' : 'Створити'}
-            </button>
+                <label className={styles.fieldLabel}>ТИП</label>
+                <PillSelector
+                  options={TYPE_OPTIONS}
+                  value={newType}
+                  onChange={setNewType}
+                  className={styles.typePicker}
+                />
+
+                <label className={styles.fieldLabel}>КОЛІР</label>
+                <div className={styles.colorRow}>
+                  {COLORS.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`${styles.colorDot} ${newColor === c ? styles.colorDotOn : ''}`}
+                      style={{ background: c }}
+                      onClick={() => setNewColor(c)}
+                      aria-label={c}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.primaryBtn}
+                  onClick={handleCreate}
+                  disabled={creating || !newName.trim()}
+                >
+                  {creating ? 'Створюємо…' : 'Створити'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
