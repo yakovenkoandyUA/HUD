@@ -349,6 +349,30 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 
 ---
 
+## 13. 🚗 Spaces — 3-раундний спринт покращень
+
+> Стартуємо після Vehicle Space MVP (✅). Мета: глибина Vehicle + utility для всіх Spaces + universal AI.
+
+### ✅ Раунд 1 — Vehicle (2026-07-10)
+
+- [x] **Хронологія в Timeline/Yearbook** — `VehicleEvent` мерджиться в `timelineController` (`type: 'vehicle'`, payload: eventType/vehicleLabel/cost/vendor); нова секція АВТО в `YearbookTab` (умовна, тільки якщо є дані); `YearbookReport` отримав `vehicleStats`; frontend `TimelineEventCard` — car icon + `VEHICLE_EVENT_LABELS`
+- [x] **Вартість поїздки** — калькулятор в `VehicleStats`: поле "відстань (км)" → рахує ліво/100км × ціна/літр (з останньої заправки з known liters+cost); результат показується inline без бекенду
+- [x] **Нагадування по пробігу** — `nextServiceMileage: number | null` в `VehicleProfile` (бекенд: `Space.ts` + `vehicleController`; фронтенд: `spacesStore.ts` тип + поле в EditProfileSheet); бейдж в `VehicleHeader`: "ТО через N км" (accent color) або "Час на ТО!" (red) коли пробіг ≥ порогу
+
+### Раунд 2 — всі Spaces
+
+- [ ] **Space архівування** — `archived: boolean` на `Space` моделі; фільтр "показати архівні" у SpacesList; swipe-to-archive в SpacesStrip; `PATCH /api/spaces/:id` вже є — додати `archived`
+- [ ] **Space обкладинка** — `coverUrl: string | null` на `Space` моделі; Unsplash picker (той самий `UnsplashPicker` що Memories) в `EditSpaceSheet`; відображається як blur-фон або header в `SpaceDetail`
+- [ ] **Space бюджет** — `budget: number | null` + `budgetCurrency` на `Space` моделі; прогрес-бар сума витрат / ліміт у `SpaceDetail`; бейдж стану (норма/увага/перевищено)
+
+### Раунд 3 — складніше
+
+- [ ] **Space шаблони** — при створенні `vehicle`/`trip`/`project` space показувати модальний вибір шаблону зі starter-задачами та нотатками; статичний `data/spaceTemplates.ts` (без бекенду)
+- [ ] **Space тижневий дайджест** — backend cron (щонеділі) → push нотифікація: "Japan Trip: 3 задачі, 2 спогади, 12 000₴ витрат цього тижня"
+- [ ] **ШІ-асистент per Space** — кнопка в хедері `SpaceDetail` → bottom sheet → SSE чат; `POST /api/ai/space-chat` приймає `spaceId` + `messages[]`; system prompt залежить від `space.type` (vehicle → механік, trip → travel planner, project → PM); Claude Haiku; контекст: назва/тип + останні 5 подій/задач/нотаток
+
+---
+
 ## Технічний борг — залишок
 
 | Задача | Статус |

@@ -7,6 +7,8 @@ import CookLog from '../models/CookLog'
 import MoodLog from '../models/MoodLog'
 import Transaction from '../models/Transaction'
 import F1Prediction from '../models/F1Prediction'
+import { Space } from '../models/Space'
+import { VehicleEvent } from '../models/VehicleEvent'
 import { getAcceptedFamilyIds } from './familyController'
 
 // ── Period helpers ─────────────────────────────────────────────────────────────
@@ -68,7 +70,7 @@ async function buildSections(userId: string, year: number, dateStart: string, da
   const dateStartObj = new Date(`${dateStart}T00:00:00Z`)
   const dateEndObj   = new Date(`${dateEnd}T23:59:59Z`)
 
-  const [memories, plans, watchlistItems, cookLogs, moodLogs, transactions, f1Predictions] = await Promise.all([
+  const [memories, plans, watchlistItems, cookLogs, moodLogs, transactions, f1Predictions, myVehicleSpaces] = await Promise.all([
     Memory.find({ userId: { $in: sharedIds }, date: { $gte: dateStart, $lte: dateEnd } }),
     Plan.find({ userId: { $in: sharedIds }, status: 'visited', visitedDate: { $gte: dateStartObj, $lte: dateEndObj } }),
     WatchlistItem.find({ userId: { $in: sharedIds }, status: 'watched', addedAt: { $gte: dateStart, $lte: dateEnd } }),
@@ -76,7 +78,13 @@ async function buildSections(userId: string, year: number, dateStart: string, da
     MoodLog.find({ userId: { $in: sharedIds }, date: { $gte: dateStart, $lte: dateEnd } }),
     Transaction.find({ userId, type: 'expense', date: { $gte: dateStart, $lte: dateEnd } }),
     F1Prediction.find({ userId, raceId: { $regex: `^${year}-` } }),
+    Space.find({ type: 'vehicle', 'members.userId': userId }).select('_id'),
   ])
+
+  const vehicleSpaceIds = myVehicleSpaces.map(s => s._id.toString())
+  const vehicleEvents = vehicleSpaceIds.length > 0
+    ? await VehicleEvent.find({ spaceId: { $in: vehicleSpaceIds }, date: { $gte: dateStart, $lte: dateEnd } })
+    : []
 
   const placeNames = [
     ...memories.map(m => m.location).filter((l): l is string => !!l?.trim()),
@@ -99,6 +107,15 @@ async function buildSections(userId: string, year: number, dateStart: string, da
 
   const f1Points = f1Predictions.reduce((sum, p) => sum + (p.result?.points ?? 0), 0)
 
+  let vehicleStats: { totalCost: number; eventsCount: number; topEventType: string | null } | null = null
+  if (vehicleEvents.length > 0) {
+    const totalCost = vehicleEvents.reduce((sum, v) => sum + (v.cost ?? 0), 0)
+    const typeCounts = new Map<string, number>()
+    for (const v of vehicleEvents) typeCounts.set(v.type, (typeCounts.get(v.type) ?? 0) + 1)
+    const topEventType = [...typeCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+    vehicleStats = { totalCost, eventsCount: vehicleEvents.length, topEventType }
+  }
+
   return {
     memoriesCount: memories.length,
     placesVisitedCount: plans.filter(p => !p.memoryId).length,
@@ -112,6 +129,7 @@ async function buildSections(userId: string, year: number, dateStart: string, da
     totalSpent,
     topExpenseCategories,
     f1: f1Predictions.length > 0 ? { points: f1Points, predictionsCount: f1Predictions.length } : null,
+    vehicleStats,
   }
 }
 
@@ -120,6 +138,7 @@ function snapshotHash(sections: Awaited<ReturnType<typeof buildSections>>): stri
     sections.memoriesCount, sections.placesVisitedCount, sections.moviesWatched,
     sections.seriesWatched, sections.animeWatched, sections.recipesCookedCount,
     sections.totalSpent, sections.f1?.predictionsCount ?? 0,
+    sections.vehicleStats?.eventsCount ?? 0,
   ].join('-')
 }
 

@@ -23,6 +23,10 @@
   margin: 0;
 }
 
+.truncatedNote {
+  color: #f39c12;
+}
+
 .warning {
   display: flex;
   align-items: center;

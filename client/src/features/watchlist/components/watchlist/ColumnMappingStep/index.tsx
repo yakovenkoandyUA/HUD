@@ -147,6 +147,16 @@ function buildOptions(
     )
   }
 
+  if (field === 'status') {
+    opts.push(
+      { value: '__sep__', label: '', separator: true },
+      { value: `${CONST_PREFIX}watched`,  label: 'Переглянув (всі записи)' },
+      { value: `${CONST_PREFIX}want`,     label: 'Хочу подивитись (всі записи)' },
+      { value: `${CONST_PREFIX}watching`, label: 'Дивлюся (всі записи)' },
+      { value: `${CONST_PREFIX}dropped`,  label: 'Кинув (всі записи)' },
+    )
+  }
+
   return opts
 }
 

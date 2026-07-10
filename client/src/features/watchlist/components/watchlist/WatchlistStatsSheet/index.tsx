@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react'
-import { ResponsiveCirclePacking } from '@nivo/circle-packing'
 import { ResponsiveBar } from '@nivo/bar'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { useModalHistory } from '@/shared/hooks/useModalHistory'
@@ -58,6 +57,58 @@ interface CirclePackRoot {
   name: string
   color: string
   children: GenreBubble[]
+}
+
+// ── Treemap layout ─────────────────────────────────────────────────────────────
+
+interface TreemapNode {
+  x: number; y: number; w: number; h: number
+  genre: GenreBubble
+}
+
+function tmPlace(
+  items: GenreBubble[],
+  total: number,
+  x: number, y: number, w: number, h: number,
+  out: TreemapNode[],
+): void {
+  if (!items.length) return
+  if (items.length === 1) { out.push({ x, y, w, h, genre: items[0] }); return }
+
+  let bestSplit = 1, bestAR = Infinity, cumSum = 0
+  for (let i = 1; i < items.length; i++) {
+    cumSum += items[i - 1].value
+    const frac = cumSum / total
+    let ar: number
+    if (w >= h) {
+      const lw = w * frac, rw = w - lw
+      ar = Math.max(lw / h, h / lw, rw / h, h / rw)
+    } else {
+      const th = h * frac, bh = h - th
+      ar = Math.max(w / th, th / w, w / bh, bh / w)
+    }
+    if (ar < bestAR) { bestAR = ar; bestSplit = i }
+  }
+
+  const leftSum = items.slice(0, bestSplit).reduce((s, g) => s + g.value, 0)
+  const frac = leftSum / total
+  if (w >= h) {
+    const lw = w * frac
+    tmPlace(items.slice(0, bestSplit), leftSum, x, y, lw, h, out)
+    tmPlace(items.slice(bestSplit), total - leftSum, x + lw, y, w - lw, h, out)
+  } else {
+    const th = h * frac
+    tmPlace(items.slice(0, bestSplit), leftSum, x, y, w, th, out)
+    tmPlace(items.slice(bestSplit), total - leftSum, x, y + th, w, h - th, out)
+  }
+}
+
+function layoutTreemap(genres: GenreBubble[], w: number, h: number): TreemapNode[] {
+  if (!genres.length) return []
+  const total = genres.reduce((s, g) => s + g.value, 0)
+  const out: TreemapNode[] = []
+  tmPlace(genres, total, 0, 0, w, h, out)
+  return out
 }
 
 function computeCirclePack(items: WatchlistItem[]): { root: CirclePackRoot; watchedCount: number } {
@@ -276,50 +327,81 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
             </div>
 
             {hasBubbles ? (
-              <>
-                <div className={styles.bubbleContainer}>
-                  <ResponsiveCirclePacking
-                    data={root}
-                    value="value"
-                    id="name"
-                    colors={(node) => (node.data as unknown as GenreBubble).color ?? '#3a4260'}
-                    childColor={{ from: 'color', modifiers: [['brighter', 0.3]] }}
-                    padding={6}
-                    enableLabels={true}
-                    label={(node) => node.id}
-                    labelsFilter={(n) => n.node.depth === 1 && n.node.radius > 22}
-                    labelsSkipRadius={22}
-                    labelTextColor={(node) => (node.data as unknown as GenreBubble).textColor ?? '#c8b890'}
-                    theme={nivoTheme}
-                    animate={true}
-                    motionConfig="gentle"
-                    tooltip={({ id, value, data }) => {
-                      if (id === 'root') return <></>
-                      const d = data as unknown as GenreBubble
-                      return (
-                        <div className={styles.tooltip}>
-                          <span className={styles.tooltipDot} style={{ background: d.color }} />
-                          <div className={styles.tooltipBody}>
-                            <span className={styles.tooltipName}>{id}</span>
-                            <span className={styles.tooltipSub}>
-                              {value} у жанрі{d.avgRating != null ? ` · ${'★'.repeat(Math.round(d.avgRating))}` : ''}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    }}
-                  />
-                </div>
-
-                <div className={styles.bubbleLegend}>
-                  <span className={styles.legendHint}>розмір = кількість тайтлів</span>
-                  <div className={styles.ratingScale}>
-                    <span className={styles.scaleLabel}>без оцінки</span>
-                    <div className={styles.scaleGradient} />
-                    <span className={styles.scaleLabel}>5★</span>
-                  </div>
-                </div>
-              </>
+              <div className={styles.treemapWrap}>
+                {(() => {
+                  const TW = 340, TH = 220
+                  const nodes = layoutTreemap(root.children, TW, TH)
+                  const GAP = 3
+                  return (
+                    <svg
+                      viewBox={`0 0 ${TW} ${TH}`}
+                      className={styles.treemapSvg}
+                      aria-label="Жанри"
+                    >
+                      {nodes.map(({ x, y, w, h, genre }) => {
+                        const rx = x + GAP, ry = y + GAP
+                        const rw = w - GAP * 2, rh = h - GAP * 2
+                        if (rw <= 0 || rh <= 0) return null
+                        const big    = rw >= 46 && rh >= 44  // name + count + rating
+                        const medium = rw >= 32 && rh >= 28  // name only
+                        const small  = rw >= 20 && rh >= 16  // abbreviated name
+                        const tc = 'rgba(255,255,255,0.88)'
+                        const tcDim = 'rgba(255,255,255,0.5)'
+                        const nameStr = genre.name.length > 14 ? genre.name.slice(0, 13) + '…' : genre.name
+                        const abbrStr = genre.name.slice(0, 5)
+                        return (
+                          <g key={genre.name}>
+                            <rect x={rx} y={ry} width={rw} height={rh} rx={6} fill={genre.color} />
+                            {big && (
+                              <text x={rx + 7} y={ry + 13}
+                                style={{ fontFamily: 'var(--font-body)', fontSize: 11, fill: tc, opacity: 0.8 }}>
+                                {nameStr}
+                              </text>
+                            )}
+                            {big && (
+                              <text x={rx + rw / 2} y={ry + rh / 2 + 6}
+                                textAnchor="middle" dominantBaseline="middle"
+                                style={{ fontFamily: 'var(--font-display)', fontSize: Math.min(rh * 0.38, 34), fill: tc }}>
+                                {genre.value}
+                              </text>
+                            )}
+                            {big && genre.avgRating != null && (
+                              <text x={rx + rw - 6} y={ry + rh - 7}
+                                textAnchor="end"
+                                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fill: tcDim }}>
+                                {(genre.avgRating / 2).toFixed(1)}★
+                              </text>
+                            )}
+                            {!big && medium && (
+                              <>
+                                <text x={rx + rw / 2} y={ry + rh / 2 - (rh >= 38 ? 7 : 0)}
+                                  textAnchor="middle" dominantBaseline="middle"
+                                  style={{ fontFamily: 'var(--font-body)', fontSize: 10, fill: tc, opacity: 0.8 }}>
+                                  {nameStr}
+                                </text>
+                                {rh >= 38 && (
+                                  <text x={rx + rw / 2} y={ry + rh / 2 + 10}
+                                    textAnchor="middle" dominantBaseline="middle"
+                                    style={{ fontFamily: 'var(--font-display)', fontSize: Math.min(rh * 0.3, 18), fill: tc }}>
+                                    {genre.value}
+                                  </text>
+                                )}
+                              </>
+                            )}
+                            {!big && !medium && small && (
+                              <text x={rx + rw / 2} y={ry + rh / 2}
+                                textAnchor="middle" dominantBaseline="middle"
+                                style={{ fontFamily: 'var(--font-body)', fontSize: 8, fill: tcDim }}>
+                                {abbrStr}
+                              </text>
+                            )}
+                          </g>
+                        )
+                      })}
+                    </svg>
+                  )
+                })()}
+              </div>
             ) : (
               <p className={styles.chartEmpty}>Немає даних</p>
             )}

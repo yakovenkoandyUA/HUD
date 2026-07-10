@@ -104,6 +104,22 @@ const MeMimir: React.FC = () => {
   }, [])
 
   const current = MODES.find(m => m.id === mimirMode) ?? MODES[0]
+  const currentIdx = MODES.findIndex(m => m.id === mimirMode)
+
+  const [animClass, setAnimClass] = useState('')
+
+  const switchMode = (newMode: MimirMode) => {
+    if (newMode === mimirMode || animClass) return
+    setAnimClass(styles.heroExiting)
+    setTimeout(() => {
+      setMimirMode(newMode)
+      setAnimClass(styles[`heroEnter_${newMode}` as keyof typeof styles])
+      setTimeout(() => setAnimClass(''), 450)
+    }, 160)
+  }
+
+  const prevMode = () => switchMode(MODES[(currentIdx - 1 + MODES.length) % MODES.length].id)
+  const nextMode = () => switchMode(MODES[(currentIdx + 1) % MODES.length].id)
 
   const handleResetHints = async () => {
     if (resetting) return
@@ -135,11 +151,26 @@ const MeMimir: React.FC = () => {
       {/* ── Hero (portrait only, bg is fixed portal) ── */}
       <div ref={heroRef} className={styles.hero}>
         
-        <div className={styles.heroContent}>
+        <div className={`${styles.heroContent} ${animClass}`}>
           <img src={current.img} alt="Мімір" className={styles.portraitImg} />
           <div className={styles.portraitMeta}>
             <span className={styles.portraitName}>МІМІР</span>
-            <span className={styles.portraitMode}>{current.label}</span>
+            <div className={styles.modeSwitcher}>
+              <button type="button" className={styles.modeArrow} onClick={prevMode} aria-label="Попередній режим">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M8 2L4 6l4 4"/>
+                </svg>
+              </button>
+              <div className={styles.modeSwitcherLabel}>
+                <span className={styles.portraitMode}>{current.label}</span>
+                <span className={styles.portraitModeHint}>{current.hint}</span>
+              </div>
+              <button type="button" className={styles.modeArrow} onClick={nextMode} aria-label="Наступний режим">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M4 2l4 4-4 4"/>
+                </svg>
+              </button>
+            </div>
           </div>
           <div className={styles.sampleBubble}>
             <p className={styles.sampleText}>«{current.sample}»</p>
@@ -148,39 +179,9 @@ const MeMimir: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Mode selector ── */}
+      {/* ── Frequency + AI — one block ── */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>ХАРАКТЕР</h2>
-        <div className={styles.modeGrid}>
-          {MODES.map(opt => (
-            <button
-              key={opt.id}
-              type="button"
-              className={`${styles.modeCard} ${mimirMode === opt.id ? styles.modeCardActive : ''}`}
-              onClick={() => setMimirMode(opt.id)}
-              aria-pressed={mimirMode === opt.id}
-            >
-              <div className={styles.modeImgWrap}>
-                <img
-                  src={opt.img}
-                  alt={opt.label}
-                  className={`${styles.modeImg} ${mimirMode === opt.id ? styles.modeImgActive : ''}`}
-                  draggable={false}
-                />
-              </div>
-              <div className={styles.modeMeta}>
-                <span className={styles.modeLabel}>{opt.label}</span>
-                <span className={styles.modeHint}>{opt.hint}</span>
-              </div>
-              {mimirMode === opt.id && <span className={styles.modeActiveDot} />}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Frequency selector ── */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>АКТИВНІСТЬ</h2>
+        <h2 className={styles.sectionTitle}>ЧАСТОТА</h2>
         <PillSelector
           options={FREQ_OPTIONS.map(f => ({ value: f.value, label: f.label }))}
           value={mimirFrequency}
@@ -189,42 +190,43 @@ const MeMimir: React.FC = () => {
         <p className={styles.freqDesc}>
           {FREQ_OPTIONS.find(f => f.value === mimirFrequency)?.desc}
         </p>
-      </section>
 
-      {/* ── AI status card ── */}
-      <div className={`${styles.aiCard} ${hasAi ? styles.aiCardActive : ''}`}>
-        <div className={styles.aiCardIcon}>
-          {hasAi ? (
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M9 1L11 6.5H17L12 10.5L14 16L9 12.5L4 16L6 10.5L1 6.5H7L9 1Z"/>
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="4" y="8" width="10" height="8" rx="1.5"/>
-              <path d="M6.5 8V5.5a2.5 2.5 0 0 1 5 0V8"/>
-            </svg>
+        <div className={styles.sectionDivider} />
+
+        <div className={`${styles.aiInner} ${hasAi ? styles.aiInnerActive : ''}`}>
+          <div className={styles.aiCardIcon}>
+            {hasAi ? (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 1L11 6.5H17L12 10.5L14 16L9 12.5L4 16L6 10.5L1 6.5H7L9 1Z"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="4" y="8" width="10" height="8" rx="1.5"/>
+                <path d="M6.5 8V5.5a2.5 2.5 0 0 1 5 0V8"/>
+              </svg>
+            )}
+          </div>
+          <div className={styles.aiCardBody}>
+            <span className={styles.aiCardTitle}>
+              {hasAi ? 'Криниця відкрита' : 'Живий Мімір'}
+            </span>
+            <span className={styles.aiCardDesc}>
+              {hasAi
+                ? 'Мімір читає твій день цілком — задачі, витрати, настрій. Говорить не шаблоном, а тим що дізнався про тебе.'
+                : 'З підпискою Мімір знатиме твій день і говоритиме не шаблонами.'}
+            </span>
+          </div>
+          {!hasAi && (
+            <button
+              type="button"
+              className={styles.aiCardCta}
+              onClick={() => navigate('/profile?tab=plan')}
+            >
+              Тарифи
+            </button>
           )}
         </div>
-        <div className={styles.aiCardBody}>
-          <span className={styles.aiCardTitle}>
-            {hasAi ? 'Мімір AI активний' : 'Живий Мімір'}
-          </span>
-          <span className={styles.aiCardDesc}>
-            {hasAi
-              ? 'Мімір аналізує твої задачі, настрій і фінанси — і говорить живою мовою'
-              : 'З підпискою Мімір знатиме твій день і говоритиме не шаблонами'}
-          </span>
-        </div>
-        {!hasAi && (
-          <button
-            type="button"
-            className={styles.aiCardCta}
-            onClick={() => navigate('/profile?tab=plan')}
-          >
-            Тарифи
-          </button>
-        )}
-      </div>
+      </section>
 
       {/* ── Reset hints ── */}
       <section className={styles.section}>

@@ -158,6 +158,72 @@
   margin-bottom: 6px;
 }
 
+/* ── Service badge ── */
+.vehicleServiceBadge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 12%, var(--surface));
+  color: var(--space-color, var(--accent));
+  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 30%, transparent);
+}
+
+.vehicleServiceBadgeDue {
+  background: color-mix(in srgb, #e74c3c 12%, var(--surface));
+  color: #e74c3c;
+  border-color: color-mix(in srgb, #e74c3c 30%, transparent);
+}
+
+/* ── Trip cost calculator ── */
+.tripCalc {
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.tripCalcRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.tripCalcInput {
+  flex: 1;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.tripCalcInput:focus { border-color: var(--space-color, var(--accent)); }
+.tripCalcInput::placeholder { color: var(--text3); }
+
+.tripCalcResult {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--space-color, var(--accent));
+  white-space: nowrap;
+}
+
+.tripCalcHint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
 /* ── Actions ── */
 .actions {
   display: grid;

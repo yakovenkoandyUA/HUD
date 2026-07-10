@@ -177,6 +177,14 @@ const VehicleHeader: React.FC<HeaderProps> = ({ profile, color, spaceId }) => {
                 )}
               </div>
               {profile.fuelType && <span className={styles.vehicleFuelType}>{profile.fuelType}</span>}
+              {profile.nextServiceMileage != null && profile.currentMileage != null && (
+                <span className={`${styles.vehicleServiceBadge} ${profile.currentMileage >= profile.nextServiceMileage ? styles.vehicleServiceBadgeDue : ''}`}>
+                  {profile.currentMileage >= profile.nextServiceMileage
+                    ? 'Час на ТО!'
+                    : `ТО через ${(profile.nextServiceMileage - profile.currentMileage).toLocaleString('uk-UA')} км`
+                  }
+                </span>
+              )}
             </>
           ) : (
             <span className={styles.vehicleEmpty}>Заповни профіль авто</span>
@@ -240,6 +248,15 @@ const VehicleHeader: React.FC<HeaderProps> = ({ profile, color, spaceId }) => {
               placeholder="Бензин / Дизель / Гібрид / Електро"
             />
 
+            <label className={styles.fieldLabel}>НАСТУПНЕ ТО (км)</label>
+            <input
+              className={styles.fieldInput}
+              type="number"
+              value={form.nextServiceMileage ?? ''}
+              onChange={e => setForm(p => ({ ...p, nextServiceMileage: e.target.value ? Number(e.target.value) : null }))}
+              placeholder="150 000"
+            />
+
             <button
               type="button"
               className={styles.primaryBtn}
@@ -264,7 +281,9 @@ interface StatsProps {
 }
 
 const VehicleStats: React.FC<StatsProps> = ({ spaceId, color }) => {
-  const stats = useVehicleStore(s => s.statsBySpace[spaceId])
+  const stats  = useVehicleStore(s => s.statsBySpace[spaceId])
+  const events = useVehicleStore(s => s.eventsBySpace[spaceId] ?? [])
+  const [tripKm, setTripKm] = useState('')
   const colorVar = { '--space-color': color } as React.CSSProperties
 
   if (!stats) return null
@@ -276,7 +295,21 @@ const VehicleStats: React.FC<StatsProps> = ({ spaceId, color }) => {
     { label: 'Вартість км',      value: stats.costPerKm != null ? `₴${stats.costPerKm}` : null },
   ].filter(i => i.value != null)
 
-  if (items.length === 0 && stats.expiringDocs.length === 0) return null
+  // Price per liter from most recent fuel event with both cost and liters
+  const lastFuelWithPrice = [...events]
+    .filter(e => e.type === 'fuel' && e.liters != null && e.liters > 0 && e.cost != null && e.cost > 0)
+    .sort((a, b) => b.date.localeCompare(a.date))[0]
+  const pricePerLiter = lastFuelWithPrice
+    ? lastFuelWithPrice.cost! / lastFuelWithPrice.liters!
+    : null
+
+  const canCalculate = stats.avgFuelConsumption != null && pricePerLiter != null
+  const km = parseFloat(tripKm)
+  const tripCost = canCalculate && !isNaN(km) && km > 0
+    ? Math.round((km * stats.avgFuelConsumption! / 100) * pricePerLiter!)
+    : null
+
+  if (items.length === 0 && stats.expiringDocs.length === 0 && !canCalculate) return null
 
   return (
     <div className={styles.statsBlock}>
@@ -289,6 +322,31 @@ const VehicleStats: React.FC<StatsProps> = ({ spaceId, color }) => {
               <span className={styles.statLabel}>{item.label}</span>
             </div>
           ))}
+        </div>
+      )}
+      {canCalculate && (
+        <div className={styles.tripCalc}>
+          <label className={styles.fieldLabel}>ВАРТІСТЬ ПОЇЗДКИ</label>
+          <div className={styles.tripCalcRow}>
+            <input
+              className={styles.tripCalcInput}
+              type="number"
+              min="1"
+              placeholder="Відстань (км)"
+              value={tripKm}
+              onChange={e => setTripKm(e.target.value)}
+            />
+            {tripCost != null && (
+              <span className={styles.tripCalcResult} style={colorVar}>
+                ≈ ₴{tripCost.toLocaleString('uk-UA')}
+              </span>
+            )}
+          </div>
+          {pricePerLiter != null && (
+            <span className={styles.tripCalcHint}>
+              {stats.avgFuelConsumption} л/100 км · ₴{pricePerLiter.toFixed(2)}/л
+            </span>
+          )}
         </div>
       )}
       {stats.expiringDocs.length > 0 && (

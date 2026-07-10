@@ -17,6 +17,7 @@ export interface YearbookSections {
   totalSpent: number
   topExpenseCategories: { name: string; total: number }[]
   f1: { points: number; predictionsCount: number } | null
+  vehicleStats: { totalCost: number; eventsCount: number; topEventType: string | null } | null
 }
 
 /** 'annual' | 'spring' | 'summer' | 'autumn' | 'winter' | '01'..'12' */

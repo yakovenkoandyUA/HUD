@@ -34,6 +34,7 @@ export interface ParsedImportData {
   suggestedMapping: ColumnMapping
   totalRows: number
   aiParsed?: boolean
+  truncated?: boolean
 }
 
 export interface ImportResult {
@@ -41,6 +42,7 @@ export interface ImportResult {
   skipped: number
   duplicates: number
   errors: string[]
+  notFoundInTmdb: string[]
 }
 
 export type ImportStep = 'upload' | 'mapping' | 'preview' | 'confirming' | 'done'

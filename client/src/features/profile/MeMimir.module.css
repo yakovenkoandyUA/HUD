@@ -70,11 +70,52 @@
   color: var(--text);
 }
 
+.modeSwitcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modeSwitcherLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 90px;
+}
+
+.modeArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: color-mix(in srgb, var(--bg) 50%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: 50%;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.modeArrow:active { opacity: 0.6; }
+
 .portraitMode {
   font-family: var(--font-ui);
   font-size: 11px;
   letter-spacing: 0.1em;
   color: var(--accent);
+}
+
+.portraitModeHint {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: var(--text3);
 }
 
 .sampleBubble {
@@ -102,6 +143,55 @@
   font-size: 10px;
   color: var(--text3);
   letter-spacing: 0.04em;
+}
+
+/* ── Hero mode animations ── */
+
+@keyframes heroExiting {
+  to { opacity: 0; transform: translateY(-6px) scale(0.97); }
+}
+
+/* МУДРИЙ — туман розсіюється, постать виступає з мороку */
+@keyframes heroEnterWise {
+  0%   { opacity: 0.2; filter: blur(10px) sepia(0.6) brightness(1.4); }
+  40%  { opacity: 0.7; filter: blur(5px) sepia(0.3) brightness(1.15); }
+  100% { opacity: 1;   filter: blur(0) sepia(0) brightness(1); }
+}
+
+/* БАЛАГУР — глітч-телепорт, з'явився не там і скоригував */
+@keyframes heroEnterWitty {
+  0%   { opacity: 0; transform: translateX(0) skewX(0deg); }
+  10%  { opacity: 1; transform: translateX(-8px) skewX(-6deg); }
+  22%  { transform: translateX(6px) skewX(4deg); }
+  36%  { transform: translateX(-4px) skewX(-2deg); }
+  50%  { transform: translateX(3px) skewX(1.5deg); }
+  68%  { transform: translateX(-1px) skewX(-0.5deg); }
+  100% { transform: translateX(0) skewX(0deg); }
+}
+
+/* ЦИНИК — розвертається на кріслі зі спинки, 3D поворот по Y */
+@keyframes heroEnterDark {
+  0%   { transform: perspective(500px) rotateY(-82deg); opacity: 0.2; }
+  65%  { transform: perspective(500px) rotateY(6deg);  opacity: 1; }
+  82%  { transform: perspective(500px) rotateY(-2deg); }
+  100% { transform: perspective(500px) rotateY(0deg); }
+}
+
+.heroExiting {
+  animation: heroExiting 160ms ease-in forwards;
+  pointer-events: none;
+}
+
+.heroEnter_wise {
+  animation: heroEnterWise 600ms ease-out both;
+}
+
+.heroEnter_witty {
+  animation: heroEnterWitty 480ms linear both;
+}
+
+.heroEnter_dark {
+  animation: heroEnterDark 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ── Section ── */
@@ -215,6 +305,31 @@
   color: var(--text3);
   letter-spacing: 0.01em;
   line-height: 1.3;
+}
+
+/* ── Section divider ── */
+
+.sectionDivider {
+  height: 1px;
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+  margin: 0 -16px;
+}
+
+/* ── AI inline (inside section) ── */
+
+.aiInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aiInnerActive .aiCardIcon {
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg));
+  color: var(--accent);
+}
+
+.aiInnerActive .aiCardTitle {
+  color: var(--accent);
 }
 
 /* ── Frequency ── */

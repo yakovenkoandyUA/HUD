@@ -112,14 +112,19 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
   const [dismissed, setDismissed] = useState(() => oneTime ? false : isDismissedToday())
   const [hiding, setHiding] = useState(false)
 
-  // For oneTime hints: navigating away without explicit dismiss still marks as seen
   const dismissedRef = useRef(dismissed)
   dismissedRef.current = dismissed
   const onDismissRef = useRef(onDismiss)
   onDismissRef.current = onDismiss
+  const mountTimeRef = useRef(Date.now())
+
+  // For oneTime hints: mark as seen on unmount only if visible for ≥ 3s (user had time to read it)
   useEffect(() => {
     if (!oneTime) return
-    return () => { if (!dismissedRef.current) onDismissRef.current?.() }
+    return () => {
+      if (!dismissedRef.current && Date.now() - mountTimeRef.current > 3000)
+        onDismissRef.current?.()
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

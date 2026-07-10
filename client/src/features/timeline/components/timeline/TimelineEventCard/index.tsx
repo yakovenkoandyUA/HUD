@@ -49,6 +49,14 @@ const ICONS: Record<TimelineEvent['type'], React.ReactNode> = {
       <circle cx="10" cy="6.5" r="0.7" fill="currentColor"/>
     </svg>
   ),
+  vehicle: (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M2.5 8.5L4 4.5h8l1.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <rect x="1.5" y="8.5" width="13" height="3.5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+      <circle cx="4.5" cy="12.5" r="1.2" stroke="currentColor" strokeWidth="1.1"/>
+      <circle cx="11.5" cy="12.5" r="1.2" stroke="currentColor" strokeWidth="1.1"/>
+    </svg>
+  ),
 }
 
 const MONTHS_UA = [
@@ -59,6 +67,17 @@ const MONTHS_UA = [
 function formatShortDate(iso: string): string {
   const [, m, d] = iso.split('-').map(Number)
   return `${d} ${MONTHS_UA[m - 1]}`
+}
+
+const VEHICLE_EVENT_LABELS: Record<string, string> = {
+  fuel:        'Заправка',
+  maintenance: 'ТО',
+  repair:      'Ремонт',
+  inspection:  'Огляд',
+  insurance:   'Страховка',
+  tire_change: 'Шини',
+  document:    'Документ',
+  note:        'Нотатка',
 }
 
 function titleFor(event: TimelineEvent): string {
@@ -73,6 +92,11 @@ function titleFor(event: TimelineEvent): string {
       if (trend === 'up') return 'Настрій покращився'
       if (trend === 'down') return 'Настрій знизився'
       return 'Настрій стабільний'
+    }
+    case 'vehicle': {
+      const label = VEHICLE_EVENT_LABELS[p.eventType as string] ?? 'Авто'
+      const vehicle = (p.vehicleLabel as string) || (p.spaceName as string) || ''
+      return vehicle ? `${label} · ${vehicle}` : label
     }
   }
 }
@@ -92,6 +116,12 @@ function subtitleFor(event: TimelineEvent): string | null {
       return 'Приготовлено'
     case 'mood':
       return null
+    case 'vehicle': {
+      const parts: string[] = []
+      if (p.cost != null) parts.push(`${p.cost} ${p.currency ?? '₴'}`)
+      if (p.vendor) parts.push(p.vendor as string)
+      return parts.join(' · ') || null
+    }
   }
 }
 

@@ -369,6 +369,17 @@
 }
 
 /* ── Фінанси — red + teal + noise (mesher.app, static) ── */
+/* ── Авто — graphite + electric blue + noise ── */
+.sectionVehicle {
+  background-color: hsla(220,15%,18%,1);
+  background-image:
+    var(--noise),
+    radial-gradient(circle at 15% 85%, hsla(210,100%,50%,1) 0%, transparent 40%),
+    radial-gradient(circle at 85% 20%, hsla(190,100%,45%,1) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, hsla(220,15%,10%,1)  0%, transparent 60%);
+  background-blend-mode: overlay, normal, normal, normal;
+}
+
 .sectionFinance {
   background-color: hsla(359,100%,50%,1);
   background-image:

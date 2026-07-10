@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react'
+import React, { useRef, useCallback, useState } from 'react'
 import Modal from '@/shared/components/ui/Modal'
 import { authFetch } from '@/shared/services/api'
 import { useImportWatchlistStore } from '../../../store/importWatchlistStore'
@@ -9,7 +9,13 @@ import ColumnMappingStep from '../ColumnMappingStep'
 import ImportPreviewTable from '../ImportPreviewTable'
 import styles from './ImportWatchlistModal.module.css'
 
-const SUPPORTED_EXTENSIONS = ['.csv', '.xlsx', '.xls', '.pdf', '.png', '.jpg', '.jpeg', '.webp']
+const SUPPORTED_EXTENSIONS = [
+  '.csv', 'text/csv',
+  '.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.xls', 'application/vnd.ms-excel',
+  '.pdf', 'application/pdf',
+  '.png', '.jpg', '.jpeg', '.webp', 'image/*',
+]
 const AI_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg', '.webp']
 
 function isAiFile(name: string): boolean {
@@ -34,6 +40,7 @@ interface ImportWatchlistModalProps {
 const ImportWatchlistModal: React.FC<ImportWatchlistModalProps> = ({ isOpen, onClose }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
+  const [notFoundOpen, setNotFoundOpen] = useState(false)
 
   const store = useImportWatchlistStore()
   const { fetchWatchlist } = useWatchlistStore()
@@ -41,6 +48,7 @@ const ImportWatchlistModal: React.FC<ImportWatchlistModalProps> = ({ isOpen, onC
 
   const handleClose = useCallback(() => {
     store.reset()
+    setNotFoundOpen(false)
     onClose()
   }, [store, onClose])
 
@@ -95,7 +103,7 @@ const ImportWatchlistModal: React.FC<ImportWatchlistModalProps> = ({ isOpen, onC
     store.setStep('confirming')
     store.setError(null)
 
-    // Transform __const_movie__ / __const_series__ into a synthetic column
+    // Transform __const_* values into synthetic columns
     let rows = store.parsedData.rows
     let mapping = store.columnMapping
     if (mapping.category?.startsWith(CONST_PREFIX)) {
@@ -103,6 +111,12 @@ const ImportWatchlistModal: React.FC<ImportWatchlistModalProps> = ({ isOpen, onC
       const syntheticCol = '__category__'
       rows = rows.map(r => ({ ...r, [syntheticCol]: constValue }))
       mapping = { ...mapping, category: syntheticCol }
+    }
+    if (mapping.status?.startsWith(CONST_PREFIX)) {
+      const constValue = mapping.status.replace(CONST_PREFIX, '')
+      const syntheticCol = '__status__'
+      rows = rows.map(r => ({ ...r, [syntheticCol]: constValue }))
+      mapping = { ...mapping, status: syntheticCol }
     }
 
     try {
@@ -266,6 +280,39 @@ const ImportWatchlistModal: React.FC<ImportWatchlistModalProps> = ({ isOpen, onC
                 </div>
               )}
             </div>
+
+            {store.parsedData?.truncated && (
+              <p className={styles.truncatedWarn}>
+                Файл містить більше 1000 рядків — імпортовано перші 1000
+              </p>
+            )}
+
+            {store.importResult.notFoundInTmdb.length > 0 && (
+              <div className={styles.notFoundSection}>
+                <button
+                  type="button"
+                  className={styles.notFoundToggle}
+                  onClick={() => setNotFoundOpen(v => !v)}
+                >
+                  <span>Не знайдено в TMDB (додано без постера)</span>
+                  <span className={styles.notFoundCount}>{store.importResult.notFoundInTmdb.length}</span>
+                  <svg
+                    className={`${styles.notFoundChevron} ${notFoundOpen ? styles.notFoundChevronOpen : ''}`}
+                    width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
+                  >
+                    <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <div className={`${styles.notFoundList} ${notFoundOpen ? styles.notFoundListOpen : ''}`}>
+                  <div className={styles.notFoundScroll}>
+                    <p className={styles.notFoundHint}>Ці тайтли збережено, але без постера і метаданих</p>
+                    {store.importResult.notFoundInTmdb.map((title, i) => (
+                      <div key={i} className={styles.notFoundItem}>{title}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button type="button" className={styles.doneBtn} onClick={handleClose}>
               Готово

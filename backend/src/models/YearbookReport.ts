@@ -13,6 +13,7 @@ interface IYearbookSections {
   totalSpent: number
   topExpenseCategories: { name: string; total: number }[]
   f1: { points: number; predictionsCount: number } | null
+  vehicleStats: { totalCost: number; eventsCount: number; topEventType: string | null } | null
 }
 
 export interface IYearbookReport extends Document {
@@ -42,6 +43,7 @@ const schema = new Schema<IYearbookReport>({
     totalSpent:           { type: Number, default: 0 },
     topExpenseCategories: { type: [{ name: String, total: Number }], default: [] },
     f1:                   { type: Schema.Types.Mixed, default: null },
+    vehicleStats:         { type: Schema.Types.Mixed, default: null },
   },
   sourceSnapshotHash: { type: String, required: true },
   generatedAt:         { type: Date, default: Date.now },

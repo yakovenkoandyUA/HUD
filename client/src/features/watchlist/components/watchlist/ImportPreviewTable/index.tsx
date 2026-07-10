@@ -77,6 +77,7 @@ const ImportPreviewTable: React.FC<ImportPreviewTableProps> = ({ onConfirm, onBa
 
       <p className={styles.counter}>
         Показано перших <b>{preview.length}</b> з <b>{totalRows}</b> записів
+        {parsedData?.truncated && <span className={styles.truncatedNote}> · імпортується макс. 1000</span>}
       </p>
 
       {unknownStatusCount > 0 && (

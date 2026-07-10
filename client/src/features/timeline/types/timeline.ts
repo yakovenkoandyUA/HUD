@@ -4,7 +4,7 @@
  * Уніфікована подія для Timeline — мердж memories/plans/watchlist/recipes/mood
  * з backend `/api/timeline`. `payload` форма залежить від `type`.
  */
-export type TimelineEventType = 'memory' | 'place' | 'media' | 'recipe' | 'mood'
+export type TimelineEventType = 'memory' | 'place' | 'media' | 'recipe' | 'mood' | 'vehicle'
 
 export interface TimelineEvent {
   id: string

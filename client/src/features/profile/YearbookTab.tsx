@@ -42,6 +42,17 @@ function formatUAH(n: number): string {
   return Math.round(n).toLocaleString('uk-UA')
 }
 
+const VEHICLE_TYPE_LABELS: Record<string, string> = {
+  fuel:        'заправки',
+  maintenance: 'ТО',
+  repair:      'ремонти',
+  inspection:  'огляди',
+  insurance:   'страховки',
+  tire_change: 'шини',
+  document:    'документи',
+  note:        'нотатки',
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 /**
@@ -263,7 +274,26 @@ const YearbookTab: React.FC = () => {
             </div>
           </div>
 
-          {/* ── 5. Фінанси ── */}
+          {/* ── 5. Авто (conditional) ── */}
+          {s.vehicleStats && (
+            <div className={`${styles.section} ${styles.sectionVehicle}`}>
+              <div className={styles.sectionInner}>
+                <span className={styles.eyebrow}>АВТО</span>
+                <div className={styles.statBlock}>
+                  <span className={`${styles.statNum} ${styles.statNumUah}`}>{formatUAH(s.vehicleStats.totalCost)}</span>
+                  <span className={styles.statUnit}>₴ ВИТРАТ</span>
+                </div>
+                <div className={styles.subStats}>
+                  <span>{s.vehicleStats.eventsCount} подій</span>
+                  {s.vehicleStats.topEventType && (
+                    <span>переважно {VEHICLE_TYPE_LABELS[s.vehicleStats.topEventType] ?? s.vehicleStats.topEventType}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── 6. Фінанси ── */}
           <div className={`${styles.section} ${styles.sectionFinance} ${styles.sectionLast}`}>
             <div className={styles.sectionInner}>
               <span className={styles.eyebrow}>ФІНАНСИ</span>

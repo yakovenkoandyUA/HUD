@@ -109,44 +109,17 @@
   white-space: nowrap;
 }
 
-/* ── Circle pack ── */
-.bubbleContainer {
-  height: 280px;
-  padding: 0 16px;
+/* ── Treemap ── */
+.treemapWrap {
+  padding: 0 16px 24px;
 }
 
-.bubbleLegend {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 20px 24px;
-  gap: 12px;
-}
-
-.legendHint {
-  font-family: var(--font-body);
-  font-size: 10px;
-  color: var(--text3);
-}
-
-.ratingScale {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.scaleLabel {
-  font-family: var(--font-body);
-  font-size: 10px;
-  color: var(--text3);
-  white-space: nowrap;
-}
-
-.scaleGradient {
-  width: 60px;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right, #3a4260, #4a5a8a, #d4a017);
+.treemapSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 /* ── Bar charts ── */

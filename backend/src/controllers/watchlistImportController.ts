@@ -22,6 +22,7 @@ interface ParsedImportData {
   rows: Record<string, string>[]
   suggestedMapping: ColumnMapping
   totalRows: number
+  truncated?: boolean
 }
 
 interface ConfirmRow {
@@ -192,14 +193,15 @@ export async function parseImportFile(req: Request, res: Response): Promise<void
   }
 
   const headers = Object.keys(allRows[0])
-  const preview = allRows.slice(0, 50)
   const suggestedMapping = suggestMapping(headers)
+  const MAX_ROWS = 1000
 
   const response: ParsedImportData = {
     headers,
-    rows: preview,
+    rows: allRows.slice(0, MAX_ROWS),
     suggestedMapping,
     totalRows: allRows.length,
+    truncated: allRows.length > MAX_ROWS,
   }
 
   res.json(response)
@@ -246,6 +248,7 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
   let skipped  = 0
   let duplicates = 0
   const errors: string[] = []
+  const notFoundInTmdb: string[] = []
 
   // TMDB lookup in parallel batches of 20
   const BATCH = 20
@@ -265,7 +268,7 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
         category = 'anime'
       }
 
-      const internalStatus = row.status ? (mapStatus(row.status) ?? 'want') : 'want'
+      const internalStatus = row.status ? (mapStatus(row.status) ?? 'watched') : 'watched'
 
       const rawRating = parseFloat(row.rating ?? '')
       let rating: number | null = null
@@ -279,9 +282,29 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
 
       const tmdbResult = await searchTmdb(row.title, row.year ?? '', category)
 
+      // addedAt: use year from file or TMDB release date for chronological ordering
+      const addedAt = (() => {
+        const rawYear = row.year?.trim()
+        if (rawYear && /^\d{4}$/.test(rawYear)) {
+          const y = parseInt(rawYear, 10)
+          if (y >= 1900 && y <= new Date().getFullYear()) {
+            return new Date(y, 6, 1).toISOString() // July 1 of that year
+          }
+        }
+        return new Date().toISOString()
+      })()
+
       if (tmdbResult) {
         if (existingTmdbIds.has(tmdbResult.id)) { duplicates++; return }
         existingTmdbIds.add(tmdbResult.id)
+
+        const tmdbYear = (tmdbResult.release_date ?? tmdbResult.first_air_date ?? '').slice(0, 4)
+        const resolvedAddedAt = addedAt !== new Date().toISOString() ? addedAt : (() => {
+          if (tmdbYear && /^\d{4}$/.test(tmdbYear)) {
+            return new Date(parseInt(tmdbYear, 10), 6, 1).toISOString()
+          }
+          return addedAt
+        })()
 
         toInsert.push({
           tmdbId:        tmdbResult.id,
@@ -292,12 +315,13 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
           posterPath:    tmdbResult.poster_path ?? '',
           backdropPath:  tmdbResult.backdrop_path ?? '',
           overview:      tmdbResult.overview ?? '',
-          year:          (tmdbResult.release_date ?? tmdbResult.first_air_date ?? '').slice(0, 4),
+          year:          tmdbYear,
           genres:        [],
           rating,
           currentEpisode: row.currentEpisode ? (parseInt(row.currentEpisode, 10) || null) : null,
           totalEpisodes:  row.totalEpisodes  ? (parseInt(row.totalEpisodes,  10) || null) : null,
           currentSeason:  row.currentSeason  ? (parseInt(row.currentSeason,  10) || null) : null,
+          addedAt:       resolvedAddedAt,
           userId,
         })
       } else {
@@ -305,6 +329,7 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
         const titleLower = row.title.toLowerCase()
         if (existingTitles.has(titleLower)) { duplicates++; return }
         existingTitles.add(titleLower)
+        notFoundInTmdb.push(row.title)
 
         toInsert.push({
           tmdbId:        0,
@@ -321,6 +346,7 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
           currentEpisode: row.currentEpisode ? (parseInt(row.currentEpisode, 10) || null) : null,
           totalEpisodes:  row.totalEpisodes  ? (parseInt(row.totalEpisodes,  10) || null) : null,
           currentSeason:  row.currentSeason  ? (parseInt(row.currentSeason,  10) || null) : null,
+          addedAt,
           userId,
         })
       }
@@ -342,7 +368,7 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
     }
   }
 
-  res.json({ imported, skipped, duplicates, errors })
+  res.json({ imported, skipped, duplicates, errors, notFoundInTmdb })
 }
 
 // ── AI parse endpoint (images and PDF text) ───────────────────────────────────

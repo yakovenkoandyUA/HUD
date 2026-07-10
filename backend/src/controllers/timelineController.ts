@@ -6,12 +6,14 @@ import CookLog from '../models/CookLog'
 import Recipe from '../models/Recipe'
 import MoodLog from '../models/MoodLog'
 import { User } from '../models/User'
+import { Space } from '../models/Space'
+import { VehicleEvent } from '../models/VehicleEvent'
 import { getAcceptedFamilyIds } from './familyController'
 import { getPlanLimits, isBillingEnforcementEnabled } from '../utils/entitlements'
 
 type TimelineEvent = {
   id: string
-  type: 'memory' | 'place' | 'media' | 'recipe' | 'mood'
+  type: 'memory' | 'place' | 'media' | 'recipe' | 'mood' | 'vehicle'
   date: string
   userId: string
   ownerName?: string
@@ -80,7 +82,7 @@ export async function getTimeline(req: Request, res: Response): Promise<void> {
       ? { userId: { $in: scopedIds }, status: 'visited', visitedDate: { $gte: yearStartDate, $lte: yearEndDate }, spaceId }
       : { userId: { $in: scopedIds }, status: 'visited', visitedDate: { $gte: yearStartDate, $lte: yearEndDate } }
 
-    const [memories, plans, watchlistItems, cookLogs, moodLogs, owners] = await Promise.all([
+    const [memories, plans, watchlistItems, cookLogs, moodLogs, owners, vehicleSpaces] = await Promise.all([
       Memory.find(memoryQuery),
       Plan.find(planQuery),
       spaceId || watchlistOr.length === 0
@@ -89,7 +91,20 @@ export async function getTimeline(req: Request, res: Response): Promise<void> {
       spaceId ? Promise.resolve([]) : CookLog.find({ userId: { $in: scopedIds }, date: { $gte: yearStartDate, $lte: yearEndDate } }),
       spaceId ? Promise.resolve([]) : MoodLog.find({ userId: { $in: scopedIds }, date: { $gte: yearStart, $lte: yearEnd } }),
       User.find({ _id: { $in: familyIds } }).select('name username avatarUrl'),
+      Space.find({ type: 'vehicle', 'members.userId': { $in: scopedIds } }).select('name vehicleProfile members'),
     ])
+
+    const vehicleSpaceIds = vehicleSpaces.map(s => s._id.toString())
+    const vehicleSpaceQuery = spaceId
+      ? { spaceId, date: { $gte: yearStart, $lte: yearEnd } }
+      : vehicleSpaceIds.length > 0
+        ? { spaceId: { $in: vehicleSpaceIds }, date: { $gte: yearStart, $lte: yearEnd } }
+        : null
+    const vehicleEvents = vehicleSpaceQuery ? await VehicleEvent.find(vehicleSpaceQuery) : []
+    const vehicleSpaceMap = new Map(vehicleSpaces.map(s => [
+      s._id.toString(),
+      { name: s.name, vehicle: s.vehicleProfile },
+    ]))
 
     const ownerMap = new Map(owners.map(u => [u._id.toString(), { name: u.name || u.username, avatarUrl: (u as { avatarUrl?: string | null }).avatarUrl ?? null }]))
     const ownerInfo = (userId: string) => userId === myId ? undefined : ownerMap.get(userId)
@@ -178,6 +193,32 @@ export async function getTimeline(req: Request, res: Response): Promise<void> {
         ownerName: owner?.name,
         ownerAvatarUrl: owner?.avatarUrl,
         payload: { month, trend },
+      })
+    }
+
+    for (const v of vehicleEvents) {
+      const space = vehicleSpaceMap.get(v.spaceId)
+      const vp = space?.vehicle
+      const vehicleLabel = vp
+        ? `${vp.make} ${vp.model}${vp.year ? ` ${vp.year}` : ''}`.trim()
+        : (space?.name ?? '')
+      events.push({
+        id: v._id.toString(),
+        type: 'vehicle',
+        date: v.date,
+        userId: v.userId,
+        payload: {
+          eventType:    v.type,
+          spaceName:    space?.name,
+          vehicleLabel,
+          cost:         v.cost,
+          currency:     v.currency,
+          vendor:       v.vendor,
+          notes:        v.notes,
+          liters:       v.liters,
+          fuelType:     v.fuelType,
+          docType:      v.docType,
+        },
       })
     }
 
