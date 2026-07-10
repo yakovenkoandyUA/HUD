@@ -22,6 +22,7 @@ function serializeSpace(space: InstanceType<typeof Space>, memberUsers: Instance
     color:     space.color,
     emoji:     space.emoji,
     ownerId:   space.ownerId,
+    archived:  space.archived ?? false,
     members:   space.members
       .map(m => {
         const u = userMap.get(m.userId)
@@ -32,10 +33,15 @@ function serializeSpace(space: InstanceType<typeof Space>, memberUsers: Instance
   }
 }
 
-/** GET /api/spaces — всі простори де я власник або учасник */
+/** GET /api/spaces — всі простори де я власник або учасник
+ *  ?archived=true — повернути тільки архівні; без параметру — тільки активні */
 export async function getSpaces(req: Request, res: Response): Promise<void> {
   try {
-    const spaces = await Space.find({ 'members.userId': req.userId })
+    const showArchived = req.query.archived === 'true'
+    const spaces = await Space.find({
+      'members.userId': req.userId,
+      archived: showArchived ? true : { $ne: true },
+    })
     const allUserIds = [...new Set(spaces.flatMap(s => s.members.map(m => m.userId)))]
     const users = await User.find({ _id: { $in: allUserIds } })
     res.json(spaces.map(s => serializeSpace(s, users)))
@@ -100,7 +106,7 @@ export async function updateSpace(req: Request, res: Response): Promise<void> {
     const space = await Space.findOne({ _id: req.params.id, ownerId: req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
 
-    const allowed = ['name', 'type', 'color', 'emoji'] as const
+    const allowed = ['name', 'type', 'color', 'emoji', 'archived'] as const
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (space as unknown as Record<string, unknown>)[key] = req.body[key]
     })

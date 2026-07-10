@@ -8,15 +8,16 @@ export interface ISpaceMember {
 }
 
 export interface IVehicleProfile {
-  make:          string
-  model:         string
-  year:          number | null
-  plateNumber:   string
-  vin:           string
-  currentMileage: number | null
-  fuelType:      string
-  purchaseDate:  string | null
-  photoUrl:      string
+  make:               string
+  model:              string
+  year:               number | null
+  plateNumber:        string
+  vin:                string
+  currentMileage:     number | null
+  fuelType:           string
+  purchaseDate:       string | null
+  photoUrl:           string
+  nextServiceMileage: number | null
 }
 
 export interface ISpace extends Document {
@@ -27,6 +28,7 @@ export interface ISpace extends Document {
   ownerId:        string
   members:        ISpaceMember[]
   vehicleProfile: IVehicleProfile | null
+  archived:       boolean
   createdAt:      Date
 }
 
@@ -43,8 +45,9 @@ const vehicleProfileSchema = new Schema<IVehicleProfile>({
   vin:            { type: String, default: '' },
   currentMileage: { type: Number, default: null },
   fuelType:       { type: String, default: '' },
-  purchaseDate:   { type: String, default: null },
-  photoUrl:       { type: String, default: '' },
+  purchaseDate:       { type: String, default: null },
+  photoUrl:           { type: String, default: '' },
+  nextServiceMileage: { type: Number, default: null },
 }, { _id: false })
 
 const schema = new Schema<ISpace>({
@@ -55,6 +58,7 @@ const schema = new Schema<ISpace>({
   ownerId:        { type: String, required: true, index: true },
   members:        { type: [memberSchema], default: [] },
   vehicleProfile: { type: vehicleProfileSchema, default: null },
+  archived:       { type: Boolean, default: false },
 }, { timestamps: true })
 
 schema.index({ 'members.userId': 1 })

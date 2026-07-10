@@ -12,15 +12,16 @@ export interface SpaceMember {
 }
 
 export interface VehicleProfile {
-  make:           string
-  model:          string
-  year:           number | null
-  plateNumber:    string
-  vin:            string
-  currentMileage: number | null
-  fuelType:       string
-  purchaseDate:   string | null
-  photoUrl:       string
+  make:               string
+  model:              string
+  year:               number | null
+  plateNumber:        string
+  vin:                string
+  currentMileage:     number | null
+  fuelType:           string
+  purchaseDate:       string | null
+  photoUrl:           string
+  nextServiceMileage: number | null
 }
 
 export interface Space {
@@ -32,30 +33,37 @@ export interface Space {
   ownerId:        string
   members:        SpaceMember[]
   vehicleProfile: VehicleProfile | null
+  archived:       boolean
   createdAt:      string
 }
 
 export interface SpaceInput {
-  name:   string
-  type?:  SpaceType
-  color?: string
-  emoji?: string
+  name:      string
+  type?:     SpaceType
+  color?:    string
+  emoji?:    string
+  archived?: boolean
 }
 
 interface SpacesStore {
-  spaces:       Space[]
-  loading:      boolean
-  fetchSpaces:  () => Promise<void>
-  createSpace:  (data: SpaceInput) => Promise<Space>
-  updateSpace:  (id: string, changes: Partial<SpaceInput>) => Promise<void>
-  deleteSpace:  (id: string) => Promise<void>
-  addMember:    (spaceId: string, username: string) => Promise<void>
-  removeMember: (spaceId: string, userId: string) => Promise<void>
+  spaces:        Space[]
+  archivedSpaces: Space[]
+  loading:       boolean
+  fetchSpaces:   () => Promise<void>
+  fetchArchived: () => Promise<void>
+  createSpace:   (data: SpaceInput) => Promise<Space>
+  updateSpace:   (id: string, changes: Partial<SpaceInput>) => Promise<void>
+  archiveSpace:  (id: string) => Promise<void>
+  unarchiveSpace:(id: string) => Promise<void>
+  deleteSpace:   (id: string) => Promise<void>
+  addMember:     (spaceId: string, username: string) => Promise<void>
+  removeMember:  (spaceId: string, userId: string) => Promise<void>
 }
 
-export const useSpacesStore = create<SpacesStore>((set) => ({
-  spaces:  [],
-  loading: false,
+export const useSpacesStore = create<SpacesStore>((set, get) => ({
+  spaces:         [],
+  archivedSpaces: [],
+  loading:        false,
 
   fetchSpaces: async () => {
     set({ loading: true })
@@ -67,6 +75,13 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
     } finally {
       set({ loading: false })
     }
+  },
+
+  fetchArchived: async () => {
+    const res = await authFetch('/api/spaces?archived=true')
+    if (!res.ok) return
+    const data: Space[] = await res.json()
+    set({ archivedSpaces: data })
   },
 
   createSpace: async (data) => {
@@ -92,9 +107,41 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
     set(s => ({ spaces: s.spaces.map(sp => sp.id === id ? updated : sp) }))
   },
 
+  archiveSpace: async (id) => {
+    const res = await authFetch(`/api/spaces/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archived: true }),
+    })
+    if (!res.ok) return
+    const archived: Space = await res.json()
+    // optimistic: remove from active, add to archived list
+    set(s => ({
+      spaces:         s.spaces.filter(sp => sp.id !== id),
+      archivedSpaces: [archived, ...s.archivedSpaces],
+    }))
+  },
+
+  unarchiveSpace: async (id) => {
+    const res = await authFetch(`/api/spaces/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archived: false }),
+    })
+    if (!res.ok) return
+    const active: Space = await res.json()
+    set(s => ({
+      archivedSpaces: s.archivedSpaces.filter(sp => sp.id !== id),
+      spaces:         [active, ...s.spaces],
+    }))
+  },
+
   deleteSpace: async (id) => {
     await authFetch(`/api/spaces/${id}`, { method: 'DELETE' })
-    set(s => ({ spaces: s.spaces.filter(sp => sp.id !== id) }))
+    set(s => ({
+      spaces:         s.spaces.filter(sp => sp.id !== id),
+      archivedSpaces: s.archivedSpaces.filter(sp => sp.id !== id),
+    }))
   },
 
   addMember: async (spaceId, username) => {

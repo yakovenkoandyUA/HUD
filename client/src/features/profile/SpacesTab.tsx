@@ -34,7 +34,11 @@ const COLORS = [
  * прив'язуються спогади і плани.
  */
 const SpacesTab: React.FC = () => {
-  const { spaces, loading, fetchSpaces, createSpace, deleteSpace, addMember, removeMember } = useSpacesStore()
+  const {
+    spaces, archivedSpaces, loading,
+    fetchSpaces, fetchArchived, createSpace, deleteSpace,
+    addMember, removeMember, archiveSpace, unarchiveSpace,
+  } = useSpacesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const { limits, can, isAtLimit } = usePlan()
@@ -52,6 +56,10 @@ const SpacesTab: React.FC = () => {
   // ── Detail / members ──
   const [memberInput, setMemberInput]   = useState('')
   const [addingMember, setAddingMember] = useState(false)
+
+  // ── Archived accordion ──
+  const [archivedOpen, setArchivedOpen] = useState(false)
+  const archivedFetchedRef = useRef(false)
 
   // ── Swipe to dismiss ──
   const createOverlayRef = useRef<HTMLDivElement>(null)
@@ -71,6 +79,15 @@ const SpacesTab: React.FC = () => {
   const openCreate = () => {
     setNewName(''); setNewType('shared'); setNewColor(COLORS[0])
     setCreateOpen(true)
+  }
+
+  const toggleArchived = () => {
+    const next = !archivedOpen
+    setArchivedOpen(next)
+    if (next && !archivedFetchedRef.current) {
+      archivedFetchedRef.current = true
+      fetchArchived()
+    }
   }
 
   const handleCreate = async () => {
@@ -129,6 +146,39 @@ const SpacesTab: React.FC = () => {
       try {
         await deleteSpace(space.id)
         if (!cancelled) { setDetailSpace(null); showToast('Простір видалено', 'success') }
+      } catch {
+        if (!cancelled) showToast('Помилка', 'error')
+      }
+    }
+    submit()
+    return () => { cancelled = true }
+  }
+
+  const handleArchive = async (space: Space) => {
+    let cancelled = false
+    const submit = async () => {
+      try {
+        await archiveSpace(space.id)
+        if (!cancelled) {
+          setDetailSpace(null)
+          showToast('Простір архівовано', 'success')
+          // refresh archived list if open
+          if (archivedOpen) fetchArchived()
+        }
+      } catch {
+        if (!cancelled) showToast('Помилка архівування', 'error')
+      }
+    }
+    submit()
+    return () => { cancelled = true }
+  }
+
+  const handleUnarchive = async (spaceId: string) => {
+    let cancelled = false
+    const submit = async () => {
+      try {
+        await unarchiveSpace(spaceId)
+        if (!cancelled) showToast('Простір відновлено', 'success')
       } catch {
         if (!cancelled) showToast('Помилка', 'error')
       }
@@ -196,6 +246,51 @@ const SpacesTab: React.FC = () => {
             </svg>
           </button>
         ))}
+      </div>
+
+      {/* ── Archived accordion ── */}
+      <button type="button" className={styles.archivedToggle} onClick={toggleArchived}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <rect x="1" y="4" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+          <path d="M1 6.5h12" stroke="currentColor" strokeWidth="1.4"/>
+          <path d="M4 1.5h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          <path d="M5.5 3h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+        </svg>
+        <span>Архів</span>
+        <svg
+          width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
+          className={`${styles.archivedChevron} ${archivedOpen ? styles.archivedChevronOpen : ''}`}
+        >
+          <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      <div className={`${styles.archivedList} ${archivedOpen ? styles.archivedListOpen : ''}`}>
+        {archivedSpaces.length === 0 ? (
+          <p className={styles.archivedEmpty}>Архівованих просторів немає</p>
+        ) : (
+          archivedSpaces.map(space => (
+            <div key={space.id} className={styles.archivedCard}>
+              <span className={styles.spaceColor} style={{ background: space.color }} />
+              <span className={styles.spaceInfo}>
+                <span className={styles.spaceName}>{space.name}</span>
+                <span className={styles.spaceMeta}>
+                  {TYPE_OPTIONS.find(t => t.value === space.type)?.label ?? space.type}
+                </span>
+              </span>
+              <button
+                type="button"
+                className={styles.unarchiveBtn}
+                onClick={() => handleUnarchive(space.id)}
+                aria-label="Відновити простір"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M7 11V3M4 6l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          ))
+        )}
       </div>
 
       {/* ══ Create Sheet ══ */}
@@ -323,15 +418,30 @@ const SpacesTab: React.FC = () => {
               </>
             )}
 
-            {/* Delete (owner only) */}
+            {/* Archive + Delete (owner only) */}
             {detailSpace.ownerId === myId && (
-              <button
-                type="button"
-                className={styles.deleteBtn}
-                onClick={() => handleDelete(detailSpace)}
-              >
-                Видалити простір
-              </button>
+              <div className={styles.ownerActions}>
+                <button
+                  type="button"
+                  className={styles.archiveBtn}
+                  onClick={() => handleArchive(detailSpace)}
+                >
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                    <rect x="1" y="4.5" width="13" height="9.5" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+                    <path d="M1 7.5h13" stroke="currentColor" strokeWidth="1.4"/>
+                    <path d="M4.5 1.5h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                    <path d="M6 3h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                  </svg>
+                  Архівувати
+                </button>
+                <button
+                  type="button"
+                  className={styles.deleteBtn}
+                  onClick={() => handleDelete(detailSpace)}
+                >
+                  Видалити
+                </button>
+              </div>
             )}
           </div>
         </div>

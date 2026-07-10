@@ -358,10 +358,32 @@
 .addMemberBtn:disabled { opacity: 0.45; cursor: default; }
 .addMemberBtn:active { background: var(--border); }
 
-/* ── Delete button ── */
-.deleteBtn {
+/* ── Owner actions row (archive + delete) ── */
+.ownerActions {
+  display: flex;
+  gap: 10px;
   margin-top: 24px;
-  width: 100%;
+}
+
+.archiveBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 13px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.archiveBtn:active { background: var(--border); }
+
+.deleteBtn {
+  flex: 1;
   padding: 13px;
   background: none;
   border: 1.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
@@ -374,3 +396,72 @@
 .deleteBtn:active {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
+
+/* ── Archived accordion ── */
+.archivedToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  margin-top: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.archivedToggle:active { color: var(--text2); }
+.archivedToggle span { flex: 1; }
+
+.archivedChevron {
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+.archivedChevronOpen { transform: rotate(180deg); }
+
+.archivedList {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 280ms ease-in-out, opacity 220ms ease-in-out;
+}
+.archivedListOpen {
+  max-height: 600px;
+  opacity: 1;
+}
+
+.archivedEmpty {
+  font-size: 13px;
+  color: var(--text3);
+  padding: 12px 20px 16px;
+  margin: 0;
+}
+
+.archivedCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  opacity: 0.65;
+}
+
+.unarchiveBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.unarchiveBtn:active { background: var(--border); }
