@@ -1,3 +1,15 @@
+/* ── Fixed parallax background (rendered via portal into <body>) ── */
+
+.fixedBg {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center 72%;
+  z-index: 0;
+  pointer-events: none;
+  will-change: background-position;
+}
+
 /* ── Root ── */
 
 .root {
@@ -5,34 +17,37 @@
   flex-direction: column;
   gap: 20px;
   padding-bottom: 32px;
+  position: relative;
+  z-index: 1;
 }
 
-/* ── Portrait ── */
+/* ── Hero (transparent — bg comes from portal) ── */
 
-.portrait {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+.hero {
+  margin: -16px -16px 0;
+  height: 340px;
   position: relative;
   overflow: hidden;
 }
 
-.portrait::before {
-  content: '';
+
+.heroContent {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
-  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px 20px;
+  gap: 6px;
+  z-index: 1;
 }
 
 .portraitImg {
   width: auto;
-  height: 200px;
+  height: 160px;
   object-fit: contain;
-  position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 6px 24px color-mix(in srgb, var(--accent) 25%, transparent));
+  filter: drop-shadow(0 8px 28px color-mix(in srgb, var(--accent) 30%, transparent));
   animation: portraitFloat 4s ease-in-out infinite;
 }
 
@@ -46,8 +61,6 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  position: relative;
-  z-index: 1;
 }
 
 .portraitName {
@@ -65,14 +78,14 @@
 }
 
 .sampleBubble {
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   border-radius: 10px;
   padding: 10px 14px;
   width: 100%;
   max-width: 300px;
-  position: relative;
-  z-index: 1;
 }
 
 .sampleText {
@@ -94,8 +107,10 @@
 /* ── Section ── */
 
 .section {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
   border-radius: 14px;
   padding: 16px;
   display: flex;
@@ -128,9 +143,9 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
   border: none;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   cursor: pointer;
   text-align: left;
   transition: background 0.15s;
@@ -142,7 +157,7 @@
 .modeCard:active { background: color-mix(in srgb, var(--accent) 5%, var(--bg)); }
 
 .modeCardActive {
-  background: color-mix(in srgb, var(--accent) 7%, var(--bg));
+  background: color-mix(in srgb, var(--accent) 10%, color-mix(in srgb, var(--bg) 70%, transparent));
 }
 
 .modeImgWrap {
@@ -219,8 +234,10 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
   border-radius: 14px;
 }
 
@@ -324,8 +341,8 @@
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 65%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   border-radius: 8px;
   font-family: var(--font-ui);
   font-size: 12px;

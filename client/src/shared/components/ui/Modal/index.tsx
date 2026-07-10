@@ -104,6 +104,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
     const shownCount = profile?.swipeDismissShownCount ?? 0
     if (shownCount >= SWIPE_DISMISS_HINT_LIMIT) return
 
+    // Skip hint for tall modals (>55% of viewport) — it overlaps content and feels wrong
+    const modalHeight = modalRef.current?.getBoundingClientRect().height ?? 0
+    if (modalHeight > window.innerHeight * 0.55) return
+
     const hint = document.createElement('div')
     hint.className = hintStyles.hint
     hint.textContent = '↓ Свайпни вниз щоб закрити'

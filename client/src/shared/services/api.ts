@@ -50,11 +50,18 @@ async function tryRefresh(): Promise<string | null> {
         useProfileStore.getState().logout()
         return null
       }
-      const { token, refreshToken: newRt } = await res.json() as { token: string; refreshToken?: string }
-      if (newRt) saveRefreshToken(newRt)
+      const data = await res.json() as { token: string; refreshToken?: string; user?: Record<string, unknown> }
+      if (data.refreshToken) saveRefreshToken(data.refreshToken)
       const { useProfileStore } = await import('@/shared/store/profileStore')
-      useProfileStore.setState(s => ({ ...s, token }))
-      return token
+      // Merge fresh user data (plan, subscriptionStatus, etc.) so entitlement checks stay current
+      useProfileStore.setState(s => ({
+        ...s,
+        token: data.token,
+        activeProfile: s.activeProfile && data.user
+          ? { ...s.activeProfile, ...data.user }
+          : s.activeProfile,
+      }))
+      return data.token
     } catch {
       return null
     } finally {

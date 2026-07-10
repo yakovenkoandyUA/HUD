@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useUiStore, type MimirMode, type MimirFrequency } from '@/shared/store/uiStore'
 import { useProfileStore } from '@/shared/store/profileStore'
@@ -73,6 +74,35 @@ const MeMimir: React.FC = () => {
 
   const [resetting, setResetting] = useState(false)
 
+  const heroRef = useRef<HTMLDivElement>(null)
+  const bgRef   = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const bg   = bgRef.current
+    const hero = heroRef.current
+    if (!bg || !hero) return
+
+    // walk up from hero to find the scroll container
+    let scrollEl: HTMLElement = document.documentElement
+    let el: HTMLElement | null = hero.parentElement
+    while (el) {
+      const { overflowY } = window.getComputedStyle(el)
+      if (overflowY === 'auto' || overflowY === 'scroll') { scrollEl = el; break }
+      el = el.parentElement
+    }
+
+    const onScroll = () => {
+      const top = scrollEl === document.documentElement ? window.scrollY : scrollEl.scrollTop
+      // shift backgroundPositionY for subtle parallax on fixed element
+      bg.style.backgroundPositionY = `calc(72% + ${top * 0.12}px)`
+    }
+
+    const target: EventTarget = scrollEl === document.documentElement ? window : scrollEl
+    target.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => target.removeEventListener('scroll', onScroll)
+  }, [])
+
   const current = MODES.find(m => m.id === mimirMode) ?? MODES[0]
 
   const handleResetHints = async () => {
@@ -91,22 +121,30 @@ const MeMimir: React.FC = () => {
   const seenCount = activeProfile?.mimirSeenHints?.length ?? 0
 
   return (
+    <>
+    {createPortal(
+      <div
+        ref={bgRef}
+        className={styles.fixedBg}
+        style={{ backgroundImage: "url('/mimir/mimir-paralax.png')" }}
+      />,
+      document.body
+    )}
     <div className={styles.root}>
 
-      {/* ── Portrait ── */}
-      <div className={styles.portrait}>
-        <img
-          src={current.img}
-          alt="Mimir"
-          className={styles.portraitImg}
-        />
-        <div className={styles.portraitMeta}>
-          <span className={styles.portraitName}>МІМІР</span>
-          <span className={styles.portraitMode}>{current.label}</span>
-        </div>
-        <div className={styles.sampleBubble}>
-          <p className={styles.sampleText}>«{current.sample}»</p>
-          <span className={styles.sampleSig}>— Мімір</span>
+      {/* ── Hero (portrait only, bg is fixed portal) ── */}
+      <div ref={heroRef} className={styles.hero}>
+        
+        <div className={styles.heroContent}>
+          <img src={current.img} alt="Мімір" className={styles.portraitImg} />
+          <div className={styles.portraitMeta}>
+            <span className={styles.portraitName}>МІМІР</span>
+            <span className={styles.portraitMode}>{current.label}</span>
+          </div>
+          <div className={styles.sampleBubble}>
+            <p className={styles.sampleText}>«{current.sample}»</p>
+            <span className={styles.sampleSig}>— Мімір</span>
+          </div>
         </div>
       </div>
 
@@ -219,6 +257,7 @@ const MeMimir: React.FC = () => {
       </section>
 
     </div>
+    </>
   )
 }
 

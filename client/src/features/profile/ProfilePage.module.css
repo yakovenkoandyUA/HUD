@@ -51,6 +51,17 @@
   flex-shrink: 0;
 }
 
+.pageMimir {
+  background: transparent;
+}
+
+.headerMimir {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom-color: color-mix(in srgb, var(--border) 50%, transparent);
+}
+
 /* ── Content ── */
 .content {
   flex: 1;

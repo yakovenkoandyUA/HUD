@@ -144,7 +144,7 @@ const Dashboard: React.FC = () => {
           />
         )}
 
-        <SpacesStrip onF1Click={() => navigate('/f1')} />
+        <SpacesStrip />
 
         {!welcomeSeen ? (
           <div className={styles.mimirFloat}>
