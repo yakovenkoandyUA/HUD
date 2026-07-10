@@ -17,6 +17,7 @@ import { useNotesStore, type Note } from '@/features/notes/notesStore'
 import type { Memory } from '@/features/memories/types/memory'
 import type { AddMemoryData } from '@/features/memories/components/memories/AddMemoryModal'
 import type { PlanInput } from '@/features/memories/store/plansStore'
+import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import VehicleSpaceView from './components/VehicleSpaceView'
 import styles from './SpaceDetail.module.css'
 
@@ -230,11 +231,12 @@ const SpaceDetailScreen: React.FC = () => {
 
   // ── Edit sheet ──
   const [editOpen, setEditOpen]     = useState(false)
-  const [editName, setEditName]     = useState('')
-  const [editEmoji, setEditEmoji]   = useState('')
-  const [editColor, setEditColor]   = useState(COLORS[0])
-  const [editType, setEditType]     = useState<SpaceType>('shared')
-  const [editSaving, setEditSaving] = useState(false)
+  const [editName, setEditName]       = useState('')
+  const [editEmoji, setEditEmoji]     = useState('')
+  const [editColor, setEditColor]     = useState(COLORS[0])
+  const [editType, setEditType]       = useState<SpaceType>('shared')
+  const [editCoverUrl, setEditCoverUrl] = useState('')
+  const [editSaving, setEditSaving]   = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   // ── Members ──
@@ -304,6 +306,7 @@ const SpaceDetailScreen: React.FC = () => {
     setEditEmoji(space.emoji ?? '')
     setEditColor(space.color)
     setEditType(space.type)
+    setEditCoverUrl(space.coverUrl ?? '')
     setConfirmDelete(false)
     setEditOpen(true)
   }
@@ -421,10 +424,11 @@ const SpaceDetailScreen: React.FC = () => {
       setEditSaving(true)
       try {
         await updateSpace(space.id, {
-          name:  editName.trim(),
-          emoji: editEmoji.trim() || undefined,
-          color: editColor,
-          type:  editType,
+          name:     editName.trim(),
+          emoji:    editEmoji.trim() || undefined,
+          color:    editColor,
+          type:     editType,
+          coverUrl: editCoverUrl,
         })
         if (!cancelled) { setEditOpen(false); showToast('Збережено', 'success') }
       } catch {
@@ -490,8 +494,16 @@ const SpaceDetailScreen: React.FC = () => {
       <AppHeader />
 
       {/* ── Hero ── */}
-      <div className={styles.hero} style={colorVar}>
-        <div className={styles.heroAccent} />
+      <div
+        className={`${styles.hero} ${space?.coverUrl ? styles.heroCovered : ''}`}
+        style={space?.coverUrl ? undefined : colorVar}
+      >
+        {space?.coverUrl
+          ? <img src={space.coverUrl} alt="" className={styles.heroCoverImg} aria-hidden="true" />
+          : <div className={styles.heroAccent} />
+        }
+        <div className={styles.heroCoverOverlay} style={space?.coverUrl ? undefined : colorVar} />
+
         <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 4l-5 5 5 5"/>
@@ -501,13 +513,13 @@ const SpaceDetailScreen: React.FC = () => {
           <div className={styles.heroSkeleton} />
         ) : (
           <>
-            <span className={styles.heroEmoji}>{space?.emoji || '🌐'}</span>
+            {!space?.coverUrl && <span className={styles.heroEmoji}>{space?.emoji || '🌐'}</span>}
             <div className={styles.heroInfo}>
-              <h1 className={styles.heroName}>{space?.name}</h1>
+              <h1 className={`${styles.heroName} ${space?.coverUrl ? styles.heroNameCovered : ''}`}>{space?.name}</h1>
               <span className={styles.heroType} style={colorVar}>
                 {ctx.typeLabel || space?.type}
               </span>
-              {ctx.description && <p className={styles.heroDesc}>{ctx.description}</p>}
+              {ctx.description && !space?.coverUrl && <p className={styles.heroDesc}>{ctx.description}</p>}
             </div>
             {isOwner && (
               <button type="button" className={styles.editBtn} onClick={openEdit} aria-label="Редагувати простір">
@@ -895,6 +907,15 @@ const SpaceDetailScreen: React.FC = () => {
                 />
               ))}
             </div>
+
+            <label className={styles.fieldLabel}>ОБКЛАДИНКА</label>
+            <ImageUploadButton
+              currentUrl={editCoverUrl || undefined}
+              folder="spaces"
+              onUpload={setEditCoverUrl}
+              placeholder="Завантажити обкладинку"
+              variant="wide"
+            />
 
             <button
               type="button"

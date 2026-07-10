@@ -25,6 +25,7 @@ export interface ISpace extends Document {
   type:           SpaceType
   color:          string
   emoji:          string
+  coverUrl:       string
   ownerId:        string
   members:        ISpaceMember[]
   vehicleProfile: IVehicleProfile | null
@@ -55,6 +56,7 @@ const schema = new Schema<ISpace>({
   type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle'], default: 'shared' },
   color:          { type: String, default: '#9b59b6' },
   emoji:          { type: String, default: '' },
+  coverUrl:       { type: String, default: '' },
   ownerId:        { type: String, required: true, index: true },
   members:        { type: [memberSchema], default: [] },
   vehicleProfile: { type: vehicleProfileSchema, default: null },

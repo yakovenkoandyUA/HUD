@@ -16,6 +16,48 @@
   overflow: hidden;
 }
 
+.heroCovered {
+  min-height: 200px;
+  background: transparent;
+  border-bottom: none;
+}
+
+.heroCoverImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.heroCoverOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* color tint when no cover */
+.hero:not(.heroCovered) .heroCoverOverlay {
+  display: none;
+}
+
+/* gradient when cover exists */
+.heroCovered .heroCoverOverlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.08) 0%,
+    rgba(0,0,0,0.55) 100%
+  );
+}
+
+/* all hero children need to sit above the cover/overlay layers */
+.hero > *:not(.heroCoverImg):not(.heroCoverOverlay) {
+  position: relative;
+  z-index: 2;
+}
+
 .heroAccent {
   position: absolute;
   top: -60px;
@@ -44,6 +86,26 @@
 }
 .backBtn:active { opacity: 0.5; }
 
+.heroCovered .backBtn {
+  background: rgba(0,0,0,0.32);
+  color: #fff;
+  opacity: 1;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.heroCovered .editBtn {
+  background: rgba(0,0,0,0.32);
+  color: #fff;
+  opacity: 1;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.heroCovered .heroType {
+  color: rgba(255,255,255,0.75);
+}
+
 .heroEmoji {
   font-size: 36px;
   line-height: 1;
@@ -62,6 +124,11 @@
   letter-spacing: 0.04em;
   color: var(--text);
   margin: 0;
+}
+
+.heroNameCovered {
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 
 .heroType {

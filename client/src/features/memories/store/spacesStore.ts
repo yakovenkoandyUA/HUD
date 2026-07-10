@@ -30,6 +30,7 @@ export interface Space {
   type:           SpaceType
   color:          string
   emoji:          string
+  coverUrl:       string
   ownerId:        string
   members:        SpaceMember[]
   vehicleProfile: VehicleProfile | null
@@ -42,6 +43,7 @@ export interface SpaceInput {
   type?:     SpaceType
   color?:    string
   emoji?:    string
+  coverUrl?: string
   archived?: boolean
 }
 
