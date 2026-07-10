@@ -18,6 +18,7 @@ import type { Memory } from '@/features/memories/types/memory'
 import type { AddMemoryData } from '@/features/memories/components/memories/AddMemoryModal'
 import type { PlanInput } from '@/features/memories/store/plansStore'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
+import ProgressBar from '@/shared/components/ui/ProgressBar'
 import VehicleSpaceView from './components/VehicleSpaceView'
 import styles from './SpaceDetail.module.css'
 
@@ -235,8 +236,10 @@ const SpaceDetailScreen: React.FC = () => {
   const [editEmoji, setEditEmoji]     = useState('')
   const [editColor, setEditColor]     = useState(COLORS[0])
   const [editType, setEditType]       = useState<SpaceType>('shared')
-  const [editCoverUrl, setEditCoverUrl] = useState('')
-  const [editSaving, setEditSaving]   = useState(false)
+  const [editCoverUrl, setEditCoverUrl]           = useState('')
+  const [editBudget, setEditBudget]               = useState('')
+  const [editBudgetCurrency, setEditBudgetCurrency] = useState('UAH')
+  const [editSaving, setEditSaving]               = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   // ── Members ──
@@ -307,6 +310,8 @@ const SpaceDetailScreen: React.FC = () => {
     setEditColor(space.color)
     setEditType(space.type)
     setEditCoverUrl(space.coverUrl ?? '')
+    setEditBudget(space.budget != null ? String(space.budget) : '')
+    setEditBudgetCurrency(space.budgetCurrency ?? 'UAH')
     setConfirmDelete(false)
     setEditOpen(true)
   }
@@ -423,12 +428,15 @@ const SpaceDetailScreen: React.FC = () => {
     const save = async () => {
       setEditSaving(true)
       try {
+        const budgetVal = editBudget.trim() ? parseFloat(editBudget) : null
         await updateSpace(space.id, {
-          name:     editName.trim(),
-          emoji:    editEmoji.trim() || undefined,
-          color:    editColor,
-          type:     editType,
-          coverUrl: editCoverUrl,
+          name:           editName.trim(),
+          emoji:          editEmoji.trim() || undefined,
+          color:          editColor,
+          type:           editType,
+          coverUrl:       editCoverUrl,
+          budget:         isNaN(budgetVal as number) ? null : budgetVal,
+          budgetCurrency: editBudgetCurrency,
         })
         if (!cancelled) { setEditOpen(false); showToast('Збережено', 'success') }
       } catch {
@@ -549,6 +557,32 @@ const SpaceDetailScreen: React.FC = () => {
           </React.Fragment>
         ))}
       </div>
+
+      {/* ── Budget bar ── */}
+      {space?.budget != null && (() => {
+        const spent = spaceTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+        const pct   = Math.min(100, (spent / space.budget) * 100)
+        const sym   = space.budgetCurrency === 'USD' ? '$' : space.budgetCurrency === 'EUR' ? '€' : '₴'
+        const barColor: 'green' | 'gold' | 'red' = pct < 80 ? 'green' : pct < 100 ? 'gold' : 'red'
+        return (
+          <div className={styles.budgetBar} style={colorVar}>
+            <div className={styles.budgetRow}>
+              <span className={styles.budgetLabel}>БЮДЖЕТ</span>
+              <span className={styles.budgetAmounts}>
+                <span className={`${styles.budgetSpent} ${styles[`budgetSpent_${barColor}`]}`}>
+                  {sym}{formatTxAmount(spent)}
+                </span>
+                <span className={styles.budgetSep}>/</span>
+                <span className={styles.budgetTotal}>{sym}{formatTxAmount(space.budget)}</span>
+              </span>
+            </div>
+            <ProgressBar value={spent} max={space.budget} color={barColor} />
+            {pct >= 100 && (
+              <span className={styles.budgetOver}>Бюджет перевищено</span>
+            )}
+          </div>
+        )
+      })()}
 
       {/* ── Vehicle view (replaces generic content) ── */}
       {space?.type === 'vehicle' && (
@@ -916,6 +950,31 @@ const SpaceDetailScreen: React.FC = () => {
               placeholder="Завантажити обкладинку"
               variant="wide"
             />
+
+            <label className={styles.fieldLabel}>БЮДЖЕТ</label>
+            <div className={styles.budgetInputRow}>
+              <input
+                type="number"
+                className={`${styles.fieldInput} ${styles.budgetInput}`}
+                value={editBudget}
+                onChange={e => setEditBudget(e.target.value)}
+                placeholder="Не встановлено"
+                min={0}
+              />
+              <div className={styles.currencyPills}>
+                {(['UAH', 'USD', 'EUR'] as const).map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`${styles.currencyPill} ${editBudgetCurrency === c ? styles.currencyPillOn : ''}`}
+                    onClick={() => setEditBudgetCurrency(c)}
+                    style={editBudgetCurrency === c ? colorVar : undefined}
+                  >
+                    {c === 'UAH' ? '₴' : c === 'USD' ? '$' : '€'}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <button
               type="button"

@@ -31,6 +31,8 @@ export interface Space {
   color:          string
   emoji:          string
   coverUrl:       string
+  budget:         number | null
+  budgetCurrency: string
   ownerId:        string
   members:        SpaceMember[]
   vehicleProfile: VehicleProfile | null
@@ -39,12 +41,14 @@ export interface Space {
 }
 
 export interface SpaceInput {
-  name:      string
-  type?:     SpaceType
-  color?:    string
-  emoji?:    string
-  coverUrl?: string
-  archived?: boolean
+  name:            string
+  type?:           SpaceType
+  color?:          string
+  emoji?:          string
+  coverUrl?:       string
+  budget?:         number | null
+  budgetCurrency?: string
+  archived?:       boolean
 }
 
 interface SpacesStore {

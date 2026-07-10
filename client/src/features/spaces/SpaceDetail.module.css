@@ -212,6 +212,61 @@
   background: var(--border);
 }
 
+/* ── Budget bar ── */
+.budgetBar {
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.budgetRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.budgetLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+}
+
+.budgetAmounts {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.budgetSpent {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+}
+.budgetSpent_green { color: #2ecc71; }
+.budgetSpent_gold  { color: #f39c12; }
+.budgetSpent_red   { color: var(--accent); }
+
+.budgetSep {
+  font-size: 13px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.budgetTotal {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.budgetOver {
+  display: block;
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+}
+
 /* ── Quick actions ── */
 .actions {
   display: flex;
@@ -898,4 +953,41 @@
 @keyframes shimmer {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+/* ── Budget edit fields ── */
+.budgetInputRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.budgetInput {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+.currencyPills {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.currencyPill {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.currencyPillOn {
+  border-color: var(--space-color, var(--accent));
+  color: var(--space-color, var(--accent));
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 8%, transparent);
 }

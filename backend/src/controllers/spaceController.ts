@@ -21,8 +21,10 @@ function serializeSpace(space: InstanceType<typeof Space>, memberUsers: Instance
     type:      space.type,
     color:     space.color,
     emoji:     space.emoji,
-    coverUrl:  space.coverUrl ?? '',
-    ownerId:   space.ownerId,
+    coverUrl:       space.coverUrl ?? '',
+    budget:         space.budget ?? null,
+    budgetCurrency: space.budgetCurrency ?? 'UAH',
+    ownerId:        space.ownerId,
     archived:  space.archived ?? false,
     members:   space.members
       .map(m => {
@@ -107,7 +109,7 @@ export async function updateSpace(req: Request, res: Response): Promise<void> {
     const space = await Space.findOne({ _id: req.params.id, ownerId: req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
 
-    const allowed = ['name', 'type', 'color', 'emoji', 'coverUrl', 'archived'] as const
+    const allowed = ['name', 'type', 'color', 'emoji', 'coverUrl', 'budget', 'budgetCurrency', 'archived'] as const
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (space as unknown as Record<string, unknown>)[key] = req.body[key]
     })
