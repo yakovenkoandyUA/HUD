@@ -118,7 +118,7 @@ const VehicleHeader: React.FC<HeaderProps> = ({ profile, color, spaceId }) => {
   const [saving, setSaving]       = useState(false)
   const { showToast }             = useUiStore()
   const { updateProfile }         = useVehicleStore()
-  const { updateSpace }           = useSpacesStore()
+  const { updateSpace, setVehicleProfile } = useSpacesStore()
   const overlayRef                = useRef<HTMLDivElement>(null)
   const sheetRef = useSwipeToDismiss(() => setEditOpen(false), { enabled: editOpen, overlayRef })
   const colorVar = { '--space-color': color } as React.CSSProperties
@@ -133,7 +133,8 @@ const VehicleHeader: React.FC<HeaderProps> = ({ profile, color, spaceId }) => {
     const save = async () => {
       setSaving(true)
       try {
-        await updateProfile(spaceId, form)
+        const saved = await updateProfile(spaceId, form)
+        if (!cancelled) setVehicleProfile(spaceId, saved)
         // also update Space emoji if make+model changed
         if (form.make || form.model) {
           const name = [form.make, form.model, form.year].filter(Boolean).join(' ')
@@ -275,6 +276,8 @@ const VehicleHeader: React.FC<HeaderProps> = ({ profile, color, spaceId }) => {
 
 // ── VehicleStats ───────────────────────────────────────────────────────────
 
+const EMPTY_VEHICLE_EVENTS: VehicleEvent[] = []
+
 interface StatsProps {
   spaceId: string
   color:   string
@@ -282,7 +285,7 @@ interface StatsProps {
 
 const VehicleStats: React.FC<StatsProps> = ({ spaceId, color }) => {
   const stats  = useVehicleStore(s => s.statsBySpace[spaceId])
-  const events = useVehicleStore(s => s.eventsBySpace[spaceId] ?? [])
+  const events = useVehicleStore(s => s.eventsBySpace[spaceId] ?? EMPTY_VEHICLE_EVENTS)
   const [tripKm, setTripKm] = useState('')
   const colorVar = { '--space-color': color } as React.CSSProperties
 
@@ -435,16 +438,17 @@ interface SheetProps {
 }
 
 const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
-  const [date, setDate]       = useState(todayISO())
-  const [mileage, setMileage] = useState('')
-  const [liters, setLiters]   = useState('')
-  const [cost, setCost]       = useState('')
-  const [vendor, setVendor]   = useState('')
+  const [date, setDate]         = useState(todayISO())
+  const [dateOpen, setDateOpen] = useState(false)
+  const [mileage, setMileage]   = useState('')
+  const [liters, setLiters]     = useState('')
+  const [cost, setCost]         = useState('')
+  const [vendor, setVendor]     = useState('')
   const [fuelType, setFuelType] = useState('')
-  const [saving, setSaving]   = useState(false)
-  const { createEvent }       = useVehicleStore()
-  const { showToast }         = useUiStore()
-  const overlayRef            = useRef<HTMLDivElement>(null)
+  const [saving, setSaving]     = useState(false)
+  const { createEvent }         = useVehicleStore()
+  const { showToast }           = useUiStore()
+  const overlayRef              = useRef<HTMLDivElement>(null)
   const sheetRef = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
   const colorVar = { '--space-color': color } as React.CSSProperties
 
@@ -482,7 +486,10 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
         <h3 className={styles.sheetTitle}>Заправка</h3>
 
         <label className={styles.fieldLabel}>ДАТА</label>
-        <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
+        <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>
+          {fmtDate(date)}
+        </button>
+        {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
 
         <div className={styles.twoCol}>
           <div>
@@ -518,13 +525,14 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
 }
 
 const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
-  const [date, setDate]             = useState(todayISO())
-  const [mileage, setMileage]       = useState('')
-  const [cost, setCost]             = useState('')
-  const [vendor, setVendor]         = useState('')
-  const [notes, setNotes]           = useState('')
+  const [date, setDate]               = useState(todayISO())
+  const [dateOpen, setDateOpen]       = useState(false)
+  const [mileage, setMileage]         = useState('')
+  const [cost, setCost]               = useState('')
+  const [vendor, setVendor]           = useState('')
+  const [notes, setNotes]             = useState('')
   const [attachments, setAttachments] = useState<string[]>([])
-  const [saving, setSaving]         = useState(false)
+  const [saving, setSaving]           = useState(false)
   const { createEvent }             = useVehicleStore()
   const { showToast }               = useUiStore()
   const overlayRef                  = useRef<HTMLDivElement>(null)
@@ -564,7 +572,10 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => 
         <h3 className={styles.sheetTitle}>ТО / Ремонт</h3>
 
         <label className={styles.fieldLabel}>ДАТА</label>
-        <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
+        <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>
+          {fmtDate(date)}
+        </button>
+        {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
 
         <div className={styles.twoCol}>
           <div>
@@ -596,8 +607,10 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => 
 
 const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
   const [date, setDate]               = useState(todayISO())
-  const [docType, setDocType]         = useState('')
+  const [dateOpen, setDateOpen]       = useState(false)
   const [expiresAt, setExpiresAt]     = useState('')
+  const [expiresOpen, setExpiresOpen] = useState(false)
+  const [docType, setDocType]         = useState('')
   const [notes, setNotes]             = useState('')
   const [attachments, setAttachments] = useState<string[]>([])
   const [saving, setSaving]           = useState(false)
@@ -658,10 +671,16 @@ const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
         )}
 
         <label className={styles.fieldLabel}>ДАТА ВИДАЧІ / ПОДІЇ</label>
-        <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
+        <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>
+          {date ? fmtDate(date) : 'Вибрати дату'}
+        </button>
+        {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
 
         <label className={styles.fieldLabel}>ДІЙСНИЙ ДО</label>
-        <CustomDatePicker value={expiresAt} onChange={setExpiresAt} onClose={() => {}} />
+        <button type="button" className={styles.dateField} onClick={() => setExpiresOpen(true)}>
+          {expiresAt ? fmtDate(expiresAt) : 'Не вказано'}
+        </button>
+        {expiresOpen && <CustomDatePicker value={expiresAt} onChange={d => { setExpiresAt(d); setExpiresOpen(false) }} onClose={() => setExpiresOpen(false)} />}
 
         <label className={styles.fieldLabel}>ФОТО ДОКУМЕНТА</label>
         <AttachmentsField value={attachments} onChange={setAttachments} />
@@ -678,9 +697,10 @@ const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
 }
 
 const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
-  const [date, setDate]     = useState(todayISO())
-  const [notes, setNotes]   = useState('')
-  const [saving, setSaving] = useState(false)
+  const [date, setDate]         = useState(todayISO())
+  const [dateOpen, setDateOpen] = useState(false)
+  const [notes, setNotes]       = useState('')
+  const [saving, setSaving]     = useState(false)
   const { createEvent }     = useVehicleStore()
   const { showToast }       = useUiStore()
   const overlayRef          = useRef<HTMLDivElement>(null)
@@ -712,7 +732,10 @@ const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
         <h3 className={styles.sheetTitle}>Нотатка</h3>
 
         <label className={styles.fieldLabel}>ДАТА</label>
-        <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
+        <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>
+          {fmtDate(date)}
+        </button>
+        {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
 
         <label className={styles.fieldLabel}>НОТАТКА</label>
         <textarea

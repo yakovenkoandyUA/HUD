@@ -58,8 +58,9 @@ interface SpacesStore {
   fetchSpaces:   () => Promise<void>
   fetchArchived: () => Promise<void>
   createSpace:   (data: SpaceInput) => Promise<Space>
-  updateSpace:   (id: string, changes: Partial<SpaceInput>) => Promise<void>
-  archiveSpace:  (id: string) => Promise<void>
+  updateSpace:          (id: string, changes: Partial<SpaceInput>) => Promise<void>
+  setVehicleProfile:    (id: string, profile: VehicleProfile) => void
+  archiveSpace:         (id: string) => Promise<void>
   unarchiveSpace:(id: string) => Promise<void>
   deleteSpace:   (id: string) => Promise<void>
   addMember:     (spaceId: string, username: string) => Promise<void>
@@ -111,6 +112,12 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
     if (!res.ok) return
     const updated: Space = await res.json()
     set(s => ({ spaces: s.spaces.map(sp => sp.id === id ? updated : sp) }))
+  },
+
+  setVehicleProfile: (id, profile) => {
+    set(s => ({
+      spaces: s.spaces.map(sp => sp.id === id ? { ...sp, vehicleProfile: profile } : sp),
+    }))
   },
 
   archiveSpace: async (id) => {
