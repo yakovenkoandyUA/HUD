@@ -1,6 +1,6 @@
 import { Schema, model, Document } from 'mongoose'
 
-export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle'
+export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle' | 'home' | 'pet'
 
 export interface ISpaceMember {
   userId: string
@@ -20,6 +20,34 @@ export interface IVehicleProfile {
   nextServiceMileage: number | null
 }
 
+export interface IHomeProfile {
+  addressLabel:  string
+  ownershipType: 'rent' | 'own' | 'mortgage'
+  area:          number | null
+  floor:         number | null
+  moveInDate:    string | null
+  photoUrl:      string
+}
+
+export interface IPetProfile {
+  name:           string
+  species:        string
+  breed:          string
+  birthDate:      string | null
+  weight:         number | null
+  photoUrl:       string
+  chipNumber:     string
+  passportNumber: string
+}
+
+export interface ITripProfile {
+  destination: string
+  startDate:   string | null
+  endDate:     string | null
+  travelers:   number | null
+  status:      'planning' | 'ongoing' | 'completed'
+}
+
 export interface ISpace extends Document {
   name:           string
   type:           SpaceType
@@ -31,6 +59,9 @@ export interface ISpace extends Document {
   ownerId:        string
   members:        ISpaceMember[]
   vehicleProfile: IVehicleProfile | null
+  homeProfile:    IHomeProfile | null
+  petProfile:     IPetProfile | null
+  tripProfile:    ITripProfile | null
   archived:       boolean
   createdAt:      Date
 }
@@ -53,9 +84,37 @@ const vehicleProfileSchema = new Schema<IVehicleProfile>({
   nextServiceMileage: { type: Number, default: null },
 }, { _id: false })
 
+const homeProfileSchema = new Schema<IHomeProfile>({
+  addressLabel:  { type: String, default: '' },
+  ownershipType: { type: String, enum: ['rent', 'own', 'mortgage'], default: 'rent' },
+  area:          { type: Number, default: null },
+  floor:         { type: Number, default: null },
+  moveInDate:    { type: String, default: null },
+  photoUrl:      { type: String, default: '' },
+}, { _id: false })
+
+const petProfileSchema = new Schema<IPetProfile>({
+  name:           { type: String, default: '' },
+  species:        { type: String, default: '' },
+  breed:          { type: String, default: '' },
+  birthDate:      { type: String, default: null },
+  weight:         { type: Number, default: null },
+  photoUrl:       { type: String, default: '' },
+  chipNumber:     { type: String, default: '' },
+  passportNumber: { type: String, default: '' },
+}, { _id: false })
+
+const tripProfileSchema = new Schema<ITripProfile>({
+  destination: { type: String, default: '' },
+  startDate:   { type: String, default: null },
+  endDate:     { type: String, default: null },
+  travelers:   { type: Number, default: null },
+  status:      { type: String, enum: ['planning', 'ongoing', 'completed'], default: 'planning' },
+}, { _id: false })
+
 const schema = new Schema<ISpace>({
   name:           { type: String, required: true, trim: true, maxlength: 60 },
-  type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle'], default: 'shared' },
+  type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle','home','pet'], default: 'shared' },
   color:          { type: String, default: '#9b59b6' },
   emoji:          { type: String, default: '' },
   coverUrl:       { type: String, default: '' },
@@ -64,6 +123,9 @@ const schema = new Schema<ISpace>({
   ownerId:        { type: String, required: true, index: true },
   members:        { type: [memberSchema], default: [] },
   vehicleProfile: { type: vehicleProfileSchema, default: null },
+  homeProfile:    { type: homeProfileSchema,    default: null },
+  petProfile:     { type: petProfileSchema,     default: null },
+  tripProfile:    { type: tripProfileSchema,    default: null },
   archived:       { type: Boolean, default: false },
 }, { timestamps: true })
 

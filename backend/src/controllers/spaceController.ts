@@ -32,6 +32,10 @@ function serializeSpace(space: InstanceType<typeof Space>, memberUsers: Instance
         return u ? memberPublic(u, m.role) : null
       })
       .filter(Boolean),
+    vehicleProfile: space.vehicleProfile ?? null,
+    homeProfile:    space.homeProfile    ?? null,
+    petProfile:     space.petProfile     ?? null,
+    tripProfile:    space.tripProfile    ?? null,
     createdAt: space.createdAt,
   }
 }

@@ -21,6 +21,16 @@ export const SPACE_TEMPLATES: SpaceTemplate[] = [
     description: 'ТО, заправки, документи',
   },
   {
+    id: 'home', label: 'Дім', type: 'home', color: '#795548',
+    defaultName: 'Наш дім',
+    description: 'Ремонти, оплати, документи',
+  },
+  {
+    id: 'pet', label: 'Улюбленець', type: 'pet', color: '#ff7043',
+    defaultName: 'Мій улюбленець',
+    description: 'Ветеринар, щеплення, догляд',
+  },
+  {
     id: 'family', label: "Сім'я", type: 'family', color: '#9b59b6',
     defaultName: "Сім'я",
     description: 'Спільні спогади й плани',

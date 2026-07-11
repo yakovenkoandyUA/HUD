@@ -20,6 +20,9 @@ import type { PlanInput } from '@/features/memories/store/plansStore'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import ProgressBar from '@/shared/components/ui/ProgressBar'
 import VehicleSpaceView from './components/VehicleSpaceView'
+import HomeSpaceView from './components/HomeSpaceView'
+import PetSpaceView from './components/PetSpaceView'
+import TripSpaceView from './components/TripSpaceView'
 import SpaceChatSheet from './components/SpaceChatSheet'
 import styles from './SpaceDetail.module.css'
 
@@ -35,6 +38,8 @@ const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
   { value: 'sports',   label: 'Спорт'     },
   { value: 'project',  label: 'Проект'    },
   { value: 'vehicle',  label: 'Авто'      },
+  { value: 'home',     label: 'Дім'       },
+  { value: 'pet',      label: 'Улюбленець'},
 ]
 
 const COLORS = [
@@ -206,7 +211,7 @@ function formatNoteDate(iso: string): string {
 const SpaceDetailScreen: React.FC = () => {
   const navigate = useNavigate()
   const { spaceId } = useParams<{ spaceId: string }>()
-  const { spaces, fetchSpaces, updateSpace, deleteSpace, addMember, removeMember } = useSpacesStore()
+  const { spaces, fetchSpaces, updateSpace, deleteSpace, addMember, removeMember, setHomeProfile, setPetProfile, setTripProfile } = useSpacesStore()
   const myId = useProfileStore(s => s.activeProfile?.id ?? '')
   const { showToast } = useUiStore()
   const { addMemory }  = useMemoriesStore()
@@ -586,13 +591,37 @@ const SpaceDetailScreen: React.FC = () => {
         )
       })()}
 
-      {/* ── Vehicle view (replaces generic content) ── */}
+      {/* ── Typed views (replace generic content) ── */}
       {space?.type === 'vehicle' && (
         <VehicleSpaceView spaceId={spaceId!} color={space.color} />
       )}
+      {space?.type === 'home' && (
+        <HomeSpaceView
+          spaceId={spaceId!}
+          color={space.color}
+          profile={space.homeProfile}
+          onProfileUpdate={p => setHomeProfile(space.id, p)}
+        />
+      )}
+      {space?.type === 'pet' && (
+        <PetSpaceView
+          spaceId={spaceId!}
+          color={space.color}
+          profile={space.petProfile}
+          onProfileUpdate={p => setPetProfile(space.id, p)}
+        />
+      )}
+      {space?.type === 'trip' && (
+        <TripSpaceView
+          spaceId={spaceId!}
+          color={space.color}
+          profile={space.tripProfile}
+          onProfileUpdate={p => setTripProfile(space.id, p)}
+        />
+      )}
 
       {/* ── Quick actions (generic spaces only) ── */}
-      {space?.type !== 'vehicle' && (
+      {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
@@ -620,7 +649,7 @@ const SpaceDetailScreen: React.FC = () => {
       </div>
       )}
 
-      {space?.type !== 'vehicle' && (
+      {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && (
       <div className={styles.content}>
 
         {/* ── Members ── */}

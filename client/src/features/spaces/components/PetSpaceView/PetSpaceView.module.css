@@ -1,0 +1,114 @@
+.root { padding-bottom: 40px; }
+
+.profileCard {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 16px 14px;
+  background: color-mix(in srgb, var(--space-color) 8%, var(--bg-card));
+  border-bottom: 1px solid var(--border); position: relative;
+}
+.profilePhoto { width: 64px; height: 64px; object-fit: cover; border-radius: 50%; flex-shrink: 0; }
+.profilePhotoPlaceholder {
+  width: 64px; height: 64px; border-radius: 50%; background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; border: 1px solid var(--border);
+}
+.profileInfo { flex: 1; min-width: 0; }
+.profileName {
+  font-family: var(--font-ui); font-size: 1rem; font-weight: 700;
+  color: var(--text); margin: 0 0 4px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.speciesBadge {
+  display: inline-block; font-family: var(--font-ui); font-size: 0.65rem;
+  font-weight: 700; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 4px;
+  background: color-mix(in srgb, var(--space-color) 15%, transparent);
+  color: var(--space-color);
+  border: 1px solid color-mix(in srgb, var(--space-color) 30%, transparent);
+  margin-bottom: 3px;
+}
+.profileMeta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.metaItem { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text3); }
+.profileEditBtn {
+  position: absolute; top: 12px; right: 12px; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--bg2);
+  color: var(--text3); cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.profileEditBtn:hover { color: var(--text); border-color: var(--border2); }
+
+.actions {
+  display: flex; gap: 6px; padding: 12px 16px;
+  border-bottom: 1px solid var(--border); overflow-x: auto;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.actions::-webkit-scrollbar { display: none; }
+.actionBtn {
+  display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px;
+  border: 1px solid var(--border); border-radius: 20px; background: var(--bg2);
+  color: var(--text2); font-family: var(--font-ui); font-size: 0.72rem;
+  font-weight: 600; white-space: nowrap; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.actionBtn:active { border-color: var(--space-color); color: var(--space-color); }
+
+.section { padding: 16px 16px 0; }
+.sectionTitle {
+  font-family: var(--font-ui); font-size: 0.62rem; font-weight: 800;
+  letter-spacing: 0.1em; color: var(--text3); margin: 0 0 12px;
+}
+
+.loadingRow { display: flex; justify-content: center; padding: 24px 0; }
+.loadingDot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+.empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 32px 0; }
+.emptyIcon { color: var(--text3); opacity: 0.45; }
+.emptyText { font-family: var(--font-ui); font-size: 0.8rem; color: var(--text3); text-align: center; line-height: 1.6; margin: 0; }
+
+.eventList { display: flex; flex-direction: column; gap: 0; }
+.eventRow { display: flex; align-items: flex-start; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.eventRow:last-child { border-bottom: none; }
+.eventIcon { flex-shrink: 0; margin-top: 2px; opacity: 0.8; }
+.eventMain { flex: 1; min-width: 0; }
+.eventTitle { font-family: var(--font-ui); font-size: 0.83rem; font-weight: 600; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eventMeta { display: flex; align-items: center; gap: 4px; font-family: var(--font-ui); font-size: 0.7rem; color: var(--text3); flex-wrap: wrap; }
+.eventType { color: var(--space-color); opacity: 0.8; }
+.eventMetaDot { opacity: 0.5; }
+.eventNotes { margin-top: 3px; font-family: var(--font-ui); font-size: 0.7rem; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eventRight { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+.eventDate { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text3); }
+.eventCost { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color: var(--text); }
+.deleteBtn { flex-shrink: 0; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 6px; background: none; color: var(--text3); cursor: pointer; transition: color 0.15s, border-color 0.15s; margin-top: 1px; }
+.deleteBtn:hover { color: var(--accent); }
+.deleteBtnConfirm { color: #e74c3c; border-color: #e74c3c; }
+
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; opacity: 0; transition: opacity 0.28s ease; display: flex; align-items: flex-end; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.overlayVisible { opacity: 1; }
+.sheet { width: 100%; max-height: 88dvh; background: var(--bg2); border-radius: 18px 18px 0 0; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; overflow: hidden; }
+.sheetVisible { transform: translateY(0); }
+.handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border2); margin: 10px auto 0; flex-shrink: 0; }
+.sheetHeader { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.sheetTitle { font-family: var(--font-ui); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; color: var(--space-color); }
+.closeBtn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: none; background: none; color: var(--text3); cursor: pointer; border-radius: 6px; transition: color 0.15s; }
+.closeBtn:hover { color: var(--text); }
+.sheetBody { flex: 1; overflow-y: auto; padding: 16px 16px 8px; display: flex; flex-direction: column; gap: 14px; -webkit-overflow-scrolling: touch; }
+.sheetFooter { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); flex-shrink: 0; }
+.saveBtn { width: 100%; padding: 13px; border: none; border-radius: 12px; color: #fff; font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.15s; }
+.saveBtn:disabled { opacity: 0.45; cursor: default; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.fieldRow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fieldLabel { font-family: var(--font-ui); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; color: var(--text3); }
+.fieldInput { padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); font-family: var(--font-ui); font-size: 0.9rem; outline: none; transition: border-color 0.15s; }
+.fieldInput:focus { border-color: var(--space-color); }
+.dateField { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); font-family: var(--font-ui); font-size: 0.9rem; text-align: left; cursor: pointer; transition: border-color 0.15s; }
+.dateField:hover { border-color: var(--space-color); }
+.fieldTextarea { resize: none; line-height: 1.5; }
+.costRow { display: flex; gap: 8px; align-items: center; }
+.costInput { flex: 1; }
+.currencyPills { display: flex; gap: 4px; }
+.currencyPill { padding: 6px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text2); font-family: var(--font-mono); font-size: 0.7rem; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+.currencyPillOn { border-color: var(--space-color); color: var(--space-color); background: color-mix(in srgb, var(--space-color) 10%, var(--bg2)); }
+
+.photoRow { display: flex; align-items: center; gap: 12px; }
+.profilePhotoPreview { width: 56px; height: 56px; object-fit: cover; border-radius: 50%; border: 1px solid var(--border); flex-shrink: 0; }

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { authFetch } from '@/shared/services/api'
 
-export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle'
+export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle' | 'home' | 'pet'
 
 export interface SpaceMember {
   userId:    string
@@ -24,6 +24,34 @@ export interface VehicleProfile {
   nextServiceMileage: number | null
 }
 
+export interface HomeProfile {
+  addressLabel:  string
+  ownershipType: 'rent' | 'own' | 'mortgage'
+  area:          number | null
+  floor:         number | null
+  moveInDate:    string | null
+  photoUrl:      string
+}
+
+export interface PetProfile {
+  name:           string
+  species:        string
+  breed:          string
+  birthDate:      string | null
+  weight:         number | null
+  photoUrl:       string
+  chipNumber:     string
+  passportNumber: string
+}
+
+export interface TripProfile {
+  destination: string
+  startDate:   string | null
+  endDate:     string | null
+  travelers:   number | null
+  status:      'planning' | 'ongoing' | 'completed'
+}
+
 export interface Space {
   id:             string
   name:           string
@@ -36,6 +64,9 @@ export interface Space {
   ownerId:        string
   members:        SpaceMember[]
   vehicleProfile: VehicleProfile | null
+  homeProfile:    HomeProfile | null
+  petProfile:     PetProfile | null
+  tripProfile:    TripProfile | null
   archived:       boolean
   createdAt:      string
 }
@@ -60,6 +91,9 @@ interface SpacesStore {
   createSpace:   (data: SpaceInput) => Promise<Space>
   updateSpace:          (id: string, changes: Partial<SpaceInput>) => Promise<void>
   setVehicleProfile:    (id: string, profile: VehicleProfile) => void
+  setHomeProfile:       (id: string, profile: HomeProfile) => void
+  setPetProfile:        (id: string, profile: PetProfile) => void
+  setTripProfile:       (id: string, profile: TripProfile) => void
   archiveSpace:         (id: string) => Promise<void>
   unarchiveSpace:(id: string) => Promise<void>
   deleteSpace:   (id: string) => Promise<void>
@@ -117,6 +151,24 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
   setVehicleProfile: (id, profile) => {
     set(s => ({
       spaces: s.spaces.map(sp => sp.id === id ? { ...sp, vehicleProfile: profile } : sp),
+    }))
+  },
+
+  setHomeProfile: (id, profile) => {
+    set(s => ({
+      spaces: s.spaces.map(sp => sp.id === id ? { ...sp, homeProfile: profile } : sp),
+    }))
+  },
+
+  setPetProfile: (id, profile) => {
+    set(s => ({
+      spaces: s.spaces.map(sp => sp.id === id ? { ...sp, petProfile: profile } : sp),
+    }))
+  },
+
+  setTripProfile: (id, profile) => {
+    set(s => ({
+      spaces: s.spaces.map(sp => sp.id === id ? { ...sp, tripProfile: profile } : sp),
     }))
   },
 
