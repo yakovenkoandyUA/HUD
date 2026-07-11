@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { F1Race } from '@/features/f1/data/f1Season2026'
+import { useUiStore } from '@/shared/store/uiStore'
 import styles from './RaceCountdownStrip.module.css'
+
+const LIGHT_THEMES = new Set(['pixel', 'arctic'])
 
 /**
  * RaceCountdownStrip
@@ -41,6 +44,8 @@ function getWeekendDates(raceDate: string): string {
 
 const RaceCountdownStrip: React.FC<RaceCountdownStripProps> = ({ race }) => {
   const navigate = useNavigate()
+  const theme = useUiStore(s => s.theme)
+  const bannerUrl = LIGHT_THEMES.has(theme) ? '/banner-f1-light.png' : '/banner-f1-dark.png'
   const [cd, setCd] = useState<Cd | null>(() => getCountdown(race.date))
 
   useEffect(() => {
@@ -54,12 +59,12 @@ const RaceCountdownStrip: React.FC<RaceCountdownStripProps> = ({ race }) => {
   return (
     <button
       type="button"
-      className={styles.strip}
+      className={`${styles.strip} ${LIGHT_THEMES.has(theme) ? styles.stripLight : ''}`}
       onClick={() => navigate(`/f1/${race.round}`)}
       aria-label={`${fullName}, ${weekendDates}`}
     >
       {/* Banner image */}
-      <div className={styles.banner} aria-hidden="true" />
+      <div className={styles.banner} style={{ backgroundImage: `url('${bannerUrl}')` }} aria-hidden="true" />
       {/* Gradient overlay */}
       <div className={styles.overlay} aria-hidden="true" />
 

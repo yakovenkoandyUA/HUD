@@ -18,7 +18,6 @@
 .banner {
   position: absolute;
   inset: 0;
-  background-image: url('/banner-f1.png');
   background-size: cover;
   background-position: center right;
   opacity: 0.55;
@@ -45,7 +44,7 @@
   /* align-items: center; */
   justify-content: space-between;
   gap: 14px;
-  padding: 14px 16px;
+  padding: 8px 16px;
 }
 
 /* F1 logo sits beside the text block, vertically centered */
@@ -54,7 +53,7 @@
   width: auto;
   flex-shrink: 0;
   color: #e10600;
-  align-self: center;
+  margin-top: 5px;
 }
 
 .left {
@@ -63,6 +62,7 @@
   gap: 5px;
   min-width: 0;
   flex: 1;
+  align-items: flex-start;
 }
 
 /* ── Name row ── */
@@ -100,7 +100,7 @@
 
 .unit {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: #fff;
   line-height: 1;
@@ -145,3 +145,29 @@
   flex-shrink: 0;
   align-self: center;
 }
+
+/* ── Light theme overrides ── */
+
+.stripLight {
+  background: #f0ece4;
+}
+
+.stripLight .banner {
+  opacity: 0.75;
+}
+
+.stripLight .overlay {
+  background: linear-gradient(
+    to right,
+    rgba(240, 236, 228, 0.92) 0%,
+    rgba(240, 236, 228, 0.78) 45%,
+    rgba(240, 236, 228, 0.10) 100%
+  );
+}
+
+.stripLight .name   { color: #111; }
+.stripLight .unit   { color: #111; }
+.stripLight .sub    { color: rgba(0, 0, 0, 0.45); }
+.stripLight .dot    { color: rgba(0, 0, 0, 0.25); }
+.stripLight .dates  { color: rgba(0, 0, 0, 0.45); }
+.stripLight .arrow  { color: rgba(0, 0, 0, 0.35); }
