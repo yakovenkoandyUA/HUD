@@ -359,17 +359,58 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 - [x] **Вартість поїздки** — калькулятор в `VehicleStats`: поле "відстань (км)" → рахує ліво/100км × ціна/літр (з останньої заправки з known liters+cost); результат показується inline без бекенду
 - [x] **Нагадування по пробігу** — `nextServiceMileage: number | null` в `VehicleProfile` (бекенд: `Space.ts` + `vehicleController`; фронтенд: `spacesStore.ts` тип + поле в EditProfileSheet); бейдж в `VehicleHeader`: "ТО через N км" (accent color) або "Час на ТО!" (red) коли пробіг ≥ порогу
 
-### Раунд 2 — всі Spaces
+### ✅ Раунд 2 — всі Spaces (2026-07-10)
 
-- [ ] **Space архівування** — `archived: boolean` на `Space` моделі; фільтр "показати архівні" у SpacesList; swipe-to-archive в SpacesStrip; `PATCH /api/spaces/:id` вже є — додати `archived`
-- [ ] **Space обкладинка** — `coverUrl: string | null` на `Space` моделі; Unsplash picker (той самий `UnsplashPicker` що Memories) в `EditSpaceSheet`; відображається як blur-фон або header в `SpaceDetail`
-- [ ] **Space бюджет** — `budget: number | null` + `budgetCurrency` на `Space` моделі; прогрес-бар сума витрат / ліміт у `SpaceDetail`; бейдж стану (норма/увага/перевищено)
+- [x] **Space архівування** — `archived: boolean` на `Space` моделі; фільтр "показати архівні" у SpacesList; swipe-to-archive в SpacesStrip; `PATCH /api/spaces/:id` вже є — додати `archived`
+- [x] **Space обкладинка** — `coverUrl: string | null` на `Space` моделі; Unsplash picker (той самий `UnsplashPicker` що Memories) в `EditSpaceSheet`; відображається як blur-фон або header в `SpaceDetail`
+- [x] **Space бюджет** — `budget: number | null` + `budgetCurrency` на `Space` моделі; прогрес-бар сума витрат / ліміт у `SpaceDetail`; бейдж стану (норма/увага/перевищено)
 
-### Раунд 3 — складніше
+### ✅ Раунд 3 (часткова реалізація, 2026-07-11)
 
-- [ ] **Space шаблони** — при створенні `vehicle`/`trip`/`project` space показувати модальний вибір шаблону зі starter-задачами та нотатками; статичний `data/spaceTemplates.ts` (без бекенду)
+- [x] **Space шаблони** — при створенні `vehicle`/`trip`/`project` space показувати модальний вибір шаблону зі starter-задачами та нотатками; статичний `data/spaceTemplates.ts` (без бекенду)
 - [ ] **Space тижневий дайджест** — backend cron (щонеділі) → push нотифікація: "Japan Trip: 3 задачі, 2 спогади, 12 000₴ витрат цього тижня"
-- [ ] **ШІ-асистент per Space** — кнопка в хедері `SpaceDetail` → bottom sheet → SSE чат; `POST /api/ai/space-chat` приймає `spaceId` + `messages[]`; system prompt залежить від `space.type` (vehicle → механік, trip → travel planner, project → PM); Claude Haiku; контекст: назва/тип + останні 5 подій/задач/нотаток
+- [x] **ШІ-асистент per Space** — кнопка в хедері `SpaceDetail` → bottom sheet → SSE чат; `POST /api/ai/space-chat` приймає `spaceId` + `messages[]`; system prompt залежить від `space.type` (vehicle → механік, trip → travel planner, project → PM); Claude Haiku; контекст: назва/тип + останні 5 подій/задач/нотаток
+
+### ✅ Типізовані Space-вʼюхи (2026-07-11)
+
+- [x] **Home Space** — `homeProfile` sub-doc (`address/ownership/area/floor/moveInDate/photo`); `HomeEvent` модель (repair/payment/purchase/document/inspection/note/photo); CRUD `/api/spaces/:id/home/(profile|events)`; `HomeSpaceView` — профільна картка + 6 quick actions + хронологія; toggle-пікери дат
+- [x] **Pet Space** — `petProfile` sub-doc (`name/species/breed/birthDate/weight/photo/chip/passport`); `PetEvent` модель (vet_visit/vaccination/medication/grooming/weight/note); CRUD `/api/spaces/:id/pet/(profile|events)`; `PetSpaceView` — профільна картка з круглим фото + 5 quick actions + хронологія
+- [x] **Trip Space** — `tripProfile` sub-doc (`destination/startDate/endDate/travelers/status`); profile routes `/api/spaces/:id/trip/profile`; `TripSpaceView` — картка напрямку, дати/тривалість, статус-бейдж (planning/ongoing/completed)
+- [x] **spacesStore** — `setHomeProfile` / `setPetProfile` / `setTripProfile` локальне оновлення; `homeStore` / `petStore` / `tripStore` Zustand stores; `SpaceDetail` рендерить typed view за `space.type`
+- [x] **Виправлення VehicleSpaceView** — infinite render loop у `VehicleStats` (`?? []` всередині Zustand-селектора → нова reference кожен render; виправлено `EMPTY_VEHICLE_EVENTS` const поза компонентом); форма профілю не скидалась після збереження (додано `setVehicleProfile` action); date-picker кнопки одразу відкривали календар (виправлено toggle-state + conditional render паттерн в усіх 4 шитах)
+
+---
+
+## 14. Design System — аудит тем і семантичні токени
+
+### ✅ Фаза 1 — Контраст, атмосфера, z-index (2026-07-11, за рекомендацією Джонні)
+
+- [x] **velvet** — `--accent: #c99a2e` (потемніло для кращого контрасту), `--gold: #e0b95a`, `--gold-dim`
+- [x] **noir** — явний `--text3: #6a6a6a`, `--border: #303030`, `--border2: #464646`
+- [x] **cyber** — opacity сітки 0.04→0.025, scanline 0.05→0.032 (менш агресивно)
+- [x] **japan** — `body::after` (washi ruled lines), `body::before` (червона пляма зверху)
+- [x] **pixel** — явний `--font-ui: 'JetBrains Mono'`, `--font-body: 'PT Sans'`
+- [x] **Виправлення z-index** — всі `body::before/after` атмосфери: `z-index: 9996-9998` → `z-index: 0`; `#root`: `position: relative; z-index: 1` — гарантує що модалки/тости не перекриваються
+- [x] **japan/pixel tap feedback** — `--tap-bg: rgba(0,0,0,0.05)` для правильних пресс-станів
+
+### ✅ Фаза 2 — Семантичні токени (2026-07-11)
+
+Новий блок CSS-змінних у `global.css` `:root`:
+
+```css
+--panel-danger-bg, --panel-danger-border        /* danger-info-panels */
+--panel-info-bg,   --panel-info-border          /* info-panels */
+--panel-success-bg, --panel-success-border      /* success-panels */
+--tint-danger, --tint-gold, --tint-success      /* transparent tints for buttons/badges */
+--card-bg, --card-border                        /* surfaces (cards vs panels) */
+--nav-bg, --nav-border                          /* bottom nav surface */
+--tap-bg                                        /* press/tap feedback */
+--focus-ring                                    /* keyboard focus outline */
+```
+
+- [x] **Міграція Sprint** — `Sprint.module.css`, `AddSprintItemModal.module.css`, `TaskDetailModal.module.css`, `PriorityBadge.module.css`: всі `color-mix(in srgb, ...)` → семантичні токени
+- [x] **inputError** — `rgba(184,58,45,0.08)` → `var(--panel-danger-bg)` в `global.css`
+- [ ] **Залишок міграції** — ще ~60 CSS файлів мають `color-mix(in srgb, var(--negative)...)` паттерни; мігрувати по мірі редагування файлів
 
 ---
 
@@ -379,4 +420,5 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 |--------|--------|
 | Верифікація email | ✅ Закрито (mimir-hud.tech + Resend) |
 | MongoDB M10+ | 🟢 Некритично поки < 100 юзерів |
+| Семантичні токени (міграція CSS) | 🟡 ~60 файлів ще мають color-mix patterns |
 | Усі інші | ✅ Закрито |
