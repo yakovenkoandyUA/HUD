@@ -79,8 +79,18 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
 
       {/* Bottom: today teaser row */}
       <div className={styles.todayRow}>
-        <div className={styles.todayTop}>
-          <span className={styles.todayLabel}>СЬОГОДНІ</span>
+        <span className={styles.todayLabel}>СЬОГОДНІ</span>
+        <div className={styles.todayBottom}>
+          {todayTeaser ? (
+            <div className={styles.todayItem}>
+              <span className={styles.todayDot} aria-hidden="true" />
+              <span className={styles.todayText}>{todayTeaser}</span>
+            </div>
+          ) : (
+            <div className={styles.todayItem}>
+              <span className={`${styles.todayText} ${styles.todayEmpty}`}>відкрити мій день</span>
+            </div>
+          )}
           <button type="button" className={styles.todayLink} onClick={onOpenDay}>
             детальніше
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -88,16 +98,6 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
             </svg>
           </button>
         </div>
-        {todayTeaser ? (
-          <div className={styles.todayItem}>
-            <span className={styles.todayDot} aria-hidden="true" />
-            <span className={styles.todayText}>{todayTeaser}</span>
-          </div>
-        ) : (
-          <div className={styles.todayItem}>
-            <span className={`${styles.todayText} ${styles.todayEmpty}`}>відкрити мій день</span>
-          </div>
-        )}
       </div>
     </div>
   )

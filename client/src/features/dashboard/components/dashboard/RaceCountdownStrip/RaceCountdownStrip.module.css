@@ -1,35 +1,96 @@
 .strip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: block;
   width: 100%;
-  padding: 10px 16px;
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--border);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 12px);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s;
+  /* overflow: hidden; */
+  position: relative;
+  background: #0a0a0a;
+  transition: opacity 0.12s;
 }
-.strip:active { background: var(--surface); }
+.strip:active { opacity: 0.85; }
 
-.flag {
-  font-size: 18px;
-  line-height: 1;
+/* ── Banner image ── */
+
+.banner {
+  position: absolute;
+  inset: 0;
+  background-image: url('/banner-f1.png');
+  background-size: cover;
+  background-position: center right;
+  opacity: 0.55;
+}
+
+/* Gradient: solid dark on left → transparent on right */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.72) 40%,
+    rgba(0, 0, 0, 0.20) 100%
+  );
+}
+
+/* ── Content ── */
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  /* align-items: center; */
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+/* F1 logo sits beside the text block, vertically centered */
+.f1Logo {
+  height: 16px;
+  width: auto;
   flex-shrink: 0;
+  color: #e10600;
+  align-self: center;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* ── Name row ── */
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .name {
   font-family: var(--font-display);
   font-size: 13px;
-  color: var(--text2);
+  font-weight: 700;
+  color: #fff;
   letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flag {
+  font-size: 15px;
+  line-height: 1;
   flex-shrink: 0;
 }
 
-.sep {
-  flex: 1;
-}
+/* ── Countdown ── */
 
 .countdown {
   display: flex;
@@ -39,35 +100,48 @@
 
 .unit {
   font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
   line-height: 1;
 }
 
 .sub {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
-  color: var(--text3);
+  color: rgba(255, 255, 255, 0.55);
   letter-spacing: 0.04em;
   margin-left: 1px;
 }
 
 .dot {
-  font-size: 11px;
-  color: var(--border2);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
   line-height: 1;
 }
 
 .raceDay {
   font-family: var(--font-display);
-  font-size: 13px;
-  color: var(--accent);
+  font-size: 15px;
+  color: #e10600;
+  letter-spacing: 0.08em;
+  font-weight: 700;
 }
 
+/* ── Dates ── */
+
+.dates {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
+}
+
+/* ── Arrow ── */
+
 .arrow {
-  color: var(--text3);
+  color: rgba(255, 255, 255, 0.4);
   flex-shrink: 0;
-  margin-left: 2px;
+  align-self: center;
 }

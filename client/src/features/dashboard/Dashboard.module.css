@@ -43,10 +43,29 @@
 .content > *:nth-child(6) { animation-delay: 0.25s; }
 .content > *:nth-child(7) { animation-delay: 0.28s; }
 
-/* ── Status tiles wrapper: full-bleed ────────────────────────── */
+/* ── Today section: label + list ────────────────────────────── */
+
+.todaySection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.todaySectionLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+/* ── Status tiles wrapper ──────────────────────────────────── */
 
 .tilesWrap {
-  margin: 0 -16px;
+  border-radius: var(--radius, 12px);
+  overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 /* ── Section wrapper (Finance etc.) ─────────────────────────── */

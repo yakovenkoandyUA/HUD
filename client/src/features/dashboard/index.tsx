@@ -161,14 +161,17 @@ const Dashboard: React.FC = () => {
           </div>
         ) : null}
 
-        {/* 3 — Today habits: compact vertical list */}
+        {/* 3 — Today habits: section label + compact vertical list */}
         {routineItems.length > 0 && (
-          <TodayHabits
-            routineItems={routineItems}
-            isDoneToday={isDoneToday}
-            onToggle={toggleItem}
-            onOpenDay={() => setShowDay(true)}
-          />
+          <div className={styles.todaySection}>
+            <span className={styles.todaySectionLabel}>СЬОГОДНІ</span>
+            <TodayHabits
+              routineItems={routineItems}
+              isDoneToday={isDoneToday}
+              onToggle={toggleItem}
+              onOpenDay={() => setShowDay(true)}
+            />
+          </div>
         )}
 
         {/* 4 — Status tiles: 2×2 grid */}

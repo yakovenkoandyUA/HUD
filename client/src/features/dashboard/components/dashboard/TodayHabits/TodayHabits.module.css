@@ -30,12 +30,6 @@
   border-bottom: none;
 }
 
-.itemDone .itemTitle {
-  color: var(--text3);
-  text-decoration: line-through;
-  text-decoration-color: var(--border2);
-  font-weight: 400;
-}
 
 /* ── Dot indicator ── */
 
@@ -53,10 +47,17 @@
   border-color: var(--positive);
 }
 
-/* ── Title ── */
+/* ── Body: title + subtitle ── */
+
+.itemBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
 
 .itemTitle {
-  flex: 1;
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 600;
@@ -67,7 +68,29 @@
   transition: color 0.15s;
 }
 
-/* ── Time icon ── */
+.itemSub {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemDone .itemTitle { color: var(--text3); font-weight: 400; }
+.itemDone .itemSub   { opacity: 0.5; }
+
+/* ── Time ── */
+
+.itemTime {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Time icon fallback ── */
 
 .timeIcon {
   display: flex;

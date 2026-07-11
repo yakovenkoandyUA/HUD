@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0 8px;
+  margin-bottom: 8px;
 }
 
 .title {
@@ -36,73 +36,93 @@
 }
 .seeAll:hover, .seeAll:active { color: var(--accent); }
 
-/* ── Horizontal scroll strip ── */
+/* ── 4-column grid ── */
 
-.strip {
-  display: flex;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  /* bleed into parent padding for scroll continuity */
-  margin: 0 -16px;
-  padding-left: 16px;
-  padding-right: 16px;
 }
-.strip::-webkit-scrollbar { display: none; }
 
-/* ── Compact chip card ── */
+/* ── Space card ── */
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 110px;
-  max-width: 140px;
-  flex-shrink: 0;
-  padding: 10px 12px 9px;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 8px 10px;
   border-radius: 12px;
   background: color-mix(in srgb, var(--space-color, var(--accent)) 10%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 28%, transparent);
   cursor: pointer;
   text-align: left;
+  overflow: hidden;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.14s ease, opacity 0.14s ease, background 0.14s ease;
+  min-height: 96px;
 }
 .card:hover {
   background: color-mix(in srgb, var(--space-color, var(--accent)) 16%, var(--surface));
 }
 .card:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
   opacity: 0.85;
 }
 
-.emoji {
-  font-size: 20px;
-  line-height: 1.1;
+/* ── Icon wrapper ── */
+
+.iconWrap {
+  color: var(--space-color, var(--accent));
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
+/* ── Name ── */
+
 .name {
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text);
   line-height: 1.2;
-  white-space: nowrap;
+  word-break: break-word;
+  hyphens: auto;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  width: 100%;
+  text-align: center;
 }
 
+/* ── Meta: dot + text ── */
+
 .meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 9px;
+  font-weight: 600;
   color: var(--text3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+  margin-top: auto;
+  /* left-align meta inside centered card */
+  align-self: flex-start;
+}
+
+.metaDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--space-color, var(--accent));
+  flex-shrink: 0;
 }
 
 /* ── Add card ── */
@@ -114,17 +134,23 @@
   color: var(--text3);
   align-items: center;
   justify-content: center;
-  min-width: 72px;
-  max-width: 72px;
   gap: 4px;
+}
+.addCard .iconWrap {
+  color: var(--text3);
+}
+.addCard .name {
+  color: var(--text3);
+  font-size: 10px;
+  text-align: center;
+  word-break: normal;
 }
 .addCard:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
   border-color: var(--accent);
   color: var(--accent);
 }
-.addCard .name {
-  font-size: 10px;
-  font-weight: 600;
-  color: inherit;
+.addCard:hover .iconWrap,
+.addCard:hover .name {
+  color: var(--accent);
 }

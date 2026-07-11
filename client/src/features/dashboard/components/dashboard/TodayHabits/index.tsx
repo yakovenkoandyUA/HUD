@@ -67,12 +67,17 @@ const TodayHabits: React.FC<TodayHabitsProps> = ({ routineItems, isDoneToday, on
             onClick={() => onToggle(r.id)}
           >
             <span className={`${styles.dot} ${done ? styles.dotDone : ''}`} aria-hidden="true" />
-            <span className={styles.itemTitle}>{r.title}</span>
-            {TimeIcon && (
-              <span className={styles.timeIcon}>
-                <TimeIcon />
-              </span>
-            )}
+            <span className={styles.itemBody}>
+              <span className={styles.itemTitle}>{r.title}</span>
+              {r.description && (
+                <span className={styles.itemSub}>{r.description}</span>
+              )}
+            </span>
+            {r.dueTime ? (
+              <span className={styles.itemTime}>{r.dueTime}</span>
+            ) : TimeIcon ? (
+              <span className={styles.timeIcon}><TimeIcon /></span>
+            ) : null}
           </button>
         )
       })}

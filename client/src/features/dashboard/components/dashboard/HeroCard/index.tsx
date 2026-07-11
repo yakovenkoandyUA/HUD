@@ -5,7 +5,8 @@ import styles from './HeroCard.module.css'
 /**
  * HeroCard
  * --------
- * Баланс-картка Dashboard з анімованим лічильником та sparkline витрат.
+ * Фінансова картка Dashboard: баланс, денний бюджет, інсайт, спарклайн.
+ * Layout: ліво — баланс + статистика; право — компактний sparkline.
  *
  * Props:
  * @prop {number}   balance       — поточний баланс (грн)
@@ -21,8 +22,8 @@ interface HeroCardProps {
 }
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-const CHART_H = 48
-const SEG_PAD_X = 10
+const CHART_H = 56
+const SEG_PAD_X = 8
 
 function getSparkDays(): string[] {
   const today = new Date()
@@ -33,16 +34,6 @@ function getSparkDays(): string[] {
   })
 }
 
-/**
- * SparklineChart
- * --------------
- * 7-денний інтерактивний графік витрат.
- * Тап/hover на день → tooltip з сумою.
- *
- * Props:
- * @prop {number[]} data — витрати за 7 днів (oldest→newest)
- * @prop {string[]} days — мітки днів тижня
- */
 interface SparklineChartProps {
   data: number[]
   days: string[]
@@ -51,7 +42,7 @@ interface SparklineChartProps {
 const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
   const [activeIdx, setActiveIdx] = useState<number | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
-  const [w, setW] = useState(280)
+  const [w, setW] = useState(130)
   const dismissRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -64,7 +55,6 @@ const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
     return () => obs.disconnect()
   }, [])
 
-  /* Auto-dismiss tooltip after 2s on touch */
   useEffect(() => {
     if (activeIdx === null) return
     if (dismissRef.current) clearTimeout(dismissRef.current)
@@ -82,15 +72,12 @@ const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
   }))
 
   const polyPts = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-
   const areaPath =
     `M ${pts[0].x.toFixed(1)},${CHART_H} ` +
     pts.map(p => `L ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') +
     ` L ${pts[pts.length - 1].x.toFixed(1)},${CHART_H} Z`
 
-  const handleTap = (i: number) => {
-    setActiveIdx(prev => (prev === i ? null : i))
-  }
+  const handleTap = (i: number) => setActiveIdx(prev => (prev === i ? null : i))
 
   return (
     <div
@@ -98,7 +85,6 @@ const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
       className={styles.sparkWrap}
       onMouseLeave={() => setActiveIdx(null)}
     >
-      {/* Tooltip */}
       {activeIdx !== null && (
         <div
           className={styles.sparkTip}
@@ -123,11 +109,7 @@ const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
             <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
           </linearGradient>
         </defs>
-
-        {/* Area fill */}
         <path d={areaPath} fill="url(#sparkAreaGrad)" />
-
-        {/* Line */}
         <polyline
           points={polyPts}
           fill="none"
@@ -136,22 +118,18 @@ const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
           strokeLinejoin="round"
           strokeLinecap="round"
         />
-
-        {/* Dots */}
         {pts.map((p, i) => (
           <circle
             key={i}
             cx={p.x}
             cy={p.y}
-            r={activeIdx === i ? 4.5 : 2.5}
+            r={activeIdx === i ? 4 : 2.5}
             fill={activeIdx === i ? 'currentColor' : 'var(--bg2)'}
             stroke="currentColor"
             strokeWidth="1.5"
             style={{ transition: 'r 0.12s ease' }}
           />
         ))}
-
-        {/* Invisible tap columns */}
         {pts.map((p, i) => {
           const halfSeg = segW / 2
           const x = i === 0 ? 0 : p.x - halfSeg
@@ -172,7 +150,6 @@ const SparklineChart: React.FC<SparklineChartProps> = ({ data, days }) => {
         })}
       </svg>
 
-      {/* Day labels */}
       <div className={styles.sparkDays}>
         {days.map((d, i) => (
           <span
@@ -194,7 +171,6 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, s
   const hasAnimated = useRef(false)
   const rafRef = useRef<number | undefined>(undefined)
 
-  /* Animate balance counter once on first non-zero value */
   useEffect(() => {
     let cancelled = false
     const animate = async () => {
@@ -234,9 +210,20 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, s
   const hasSparkline = sparklineData && sparklineData.length === 7 && sparklineData.some(v => v > 0)
   const sparkDays = hasSparkline ? getSparkDays() : []
 
+  // Peak spending insight
+  const peakInsight = (() => {
+    if (!sparklineData || !sparklineData.some(v => v > 0)) return null
+    const max = Math.max(...sparklineData)
+    if (max === 0) return null
+    const idx = sparklineData.lastIndexOf(max)
+    const days = getSparkDays()
+    return `Пік витрат у ${days[idx].toLowerCase()}: ${fmt(max)} ₴`
+  })()
+
   return (
     <div className={styles.balanceCard}>
-      <div className={styles.topRow}>
+      <div className={styles.row}>
+        {/* Left: balance info */}
         <div className={styles.balanceLeft}>
           <span className={styles.balanceAmount}>
             {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
@@ -244,18 +231,26 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, s
           <span className={styles.balanceToday}>
             Сьогодні: {fmt(todaySpent)} / {fmt(dailyBudget)} ₴
           </span>
+          {peakInsight && (
+            <span className={styles.peakInsight}>
+              <span className={styles.peakDot} aria-hidden="true" />
+              {peakInsight}
+            </span>
+          )}
+          <div className={styles.balanceBar}>
+            <div
+              className={`${styles.balanceBarFill} ${overBudget ? styles.barOver : ''}`}
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
         </div>
-      </div>
 
-      {hasSparkline && (
-        <SparklineChart data={sparklineData!} days={sparkDays} />
-      )}
-
-      <div className={styles.balanceBar}>
-        <div
-          className={`${styles.balanceBarFill} ${overBudget ? styles.barOver : ''}`}
-          style={{ width: `${progressPct}%` }}
-        />
+        {/* Right: sparkline */}
+        {hasSparkline && (
+          <div className={styles.sparkCol}>
+            <SparklineChart data={sparklineData!} days={sparkDays} />
+          </div>
+        )}
       </div>
     </div>
   )

@@ -163,10 +163,11 @@
   gap: 4px;
 }
 
-.todayTop {
+/* Bottom sub-row: item + "детальніше" on same line */
+.todayBottom {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
 }
 
 .todayLabel {
@@ -201,6 +202,8 @@
 .todayLink:active { opacity: 0.7; }
 
 .todayItem {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 7px;
