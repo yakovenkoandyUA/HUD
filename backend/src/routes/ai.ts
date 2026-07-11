@@ -8,6 +8,8 @@ import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
 import Recipe from '../models/Recipe'
 import WatchlistItem from '../models/WatchlistItem'
+import Memory from '../models/Memory'
+import { Space } from '../models/Space'
 import { User } from '../models/User'
 
 const router = Router()
@@ -258,6 +260,117 @@ ${buildRecipeContext(recipe)}`
             res.write(`data: ${JSON.stringify(parsed.delta.text)}\n\n`)
           }
         } catch { /* skip malformed */ }
+      }
+    }
+
+    res.write('data: [DONE]\n\n')
+    res.end()
+  } catch (err) {
+    res.write(`data: [ERROR] ${String(err)}\n\n`)
+    res.end()
+  }
+})
+
+// ── POST /api/ai/space-chat (SSE streaming, контекст конкретного простору) ────
+
+router.post('/space-chat', requireFeature('aiChat'), async (req: Request, res: Response): Promise<void> => {
+  const { message, spaceId } = req.body as { message?: string; spaceId?: string }
+  if (!message?.trim()) { res.status(400).json({ error: 'message required' }); return }
+  if (!spaceId)         { res.status(400).json({ error: 'spaceId required' }); return }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) { res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' }); return }
+
+  const userId = req.userId as string
+
+  // Verify user is a member of the space
+  const space = await Space.findOne({ _id: spaceId, 'members.userId': userId })
+  if (!space) { res.status(404).json({ error: 'Space not found' }); return }
+
+  const today     = new Date()
+  const monthAgo  = new Date(today); monthAgo.setDate(today.getDate() - 30)
+  const monthAgoIso = monthAgo.toISOString().slice(0, 10)
+  const todayIso  = today.toISOString().slice(0, 10)
+
+  const [tasks, memories, expenses] = await Promise.all([
+    SprintTask.find({ spaceId, done: false }).sort({ createdAt: -1 }).limit(15).lean(),
+    Memory.find({ spaceId }).sort({ createdAt: -1 }).limit(5).lean(),
+    Transaction.find({ spaceId, type: 'expense', date: { $gte: monthAgoIso } }).lean(),
+  ])
+
+  const totalSpent = expenses.reduce((s, t) => s + (t.amount ?? 0), 0)
+  const budgetLine = space.budget != null
+    ? `Бюджет: ${space.budget} ${space.budgetCurrency}. Витрачено: ${Math.round(totalSpent)} ${space.budgetCurrency}.`
+    : `Витрачено за 30 днів: ${Math.round(totalSpent)} ₴.`
+
+  const membersLine = space.members.map(m => m.role === 'owner' ? `${m.userId} (власник)` : m.userId).join(', ')
+
+  const context = [
+    `Простір: «${space.name}» (тип: ${space.type})`,
+    `Учасники: ${space.members.length} осіб.`,
+    budgetLine,
+    tasks.length > 0
+      ? `Активні задачі (${tasks.length}):\n${tasks.map(t => `• ${t.title}${t.dueDate ? ` (до ${t.dueDate})` : ''}`).join('\n')}`
+      : 'Активних задач немає.',
+    memories.length > 0
+      ? `Останні спогади:\n${memories.map(m => `• ${(m as { title?: string }).title ?? '—'} (${(m as { date?: string }).date?.slice(0, 10) ?? ''})`).join('\n')}`
+      : 'Спогадів ще немає.',
+    expenses.length > 0
+      ? `Витрати за 30 днів: ${expenses.length} транзакцій на ${Math.round(totalSpent)} ₴.`
+      : 'Витрат за 30 днів немає.',
+  ].join('\n\n')
+
+  const systemPrompt = `Ти MIMIR — персональний AI-асистент для простору «${space.name}».
+Відповідай лаконічно, конкретно, по-людськи, українською. Допомагай із задачами, плануванням, аналізом витрат і спогадами цього простору. Без загальних банальних порад.
+Сьогодні: ${todayIso}. Учасники: ${membersLine}.
+
+Дані простору:
+${context}`
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+
+  try {
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        stream: true,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: message.trim() }],
+      }),
+    })
+
+    if (!anthropicRes.ok || !anthropicRes.body) {
+      res.write(`data: [ERROR] Anthropic error ${anthropicRes.status}\n\n`)
+      res.end(); return
+    }
+
+    const reader  = anthropicRes.body.getReader()
+    const decoder = new TextDecoder()
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const raw = decoder.decode(value, { stream: true })
+      for (const line of raw.split('\n')) {
+        if (!line.startsWith('data: ')) continue
+        const payload = line.slice(6).trim()
+        if (!payload || payload === '[DONE]') continue
+        try {
+          const parsed = JSON.parse(payload) as { type: string; delta?: { type: string; text?: string } }
+          if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+            res.write(`data: ${JSON.stringify(parsed.delta.text)}\n\n`)
+          }
+        } catch { /* skip */ }
       }
     }
 

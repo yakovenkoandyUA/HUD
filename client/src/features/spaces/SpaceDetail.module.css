@@ -292,6 +292,11 @@
 }
 .actionBtn:active { opacity: 0.65; transform: scale(0.96); }
 
+.actionBtnMimir {
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 14%, transparent);
+  font-weight: 600;
+}
+
 /* ── Content ── */
 .content {
   padding: 0 16px;

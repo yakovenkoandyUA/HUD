@@ -20,6 +20,7 @@ import type { PlanInput } from '@/features/memories/store/plansStore'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import ProgressBar from '@/shared/components/ui/ProgressBar'
 import VehicleSpaceView from './components/VehicleSpaceView'
+import SpaceChatSheet from './components/SpaceChatSheet'
 import styles from './SpaceDetail.module.css'
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -231,6 +232,7 @@ const SpaceDetailScreen: React.FC = () => {
   const [savingTask, setSavingTask]       = useState(false)
 
   // ── Edit sheet ──
+  const [chatOpen, setChatOpen]     = useState(false)
   const [editOpen, setEditOpen]     = useState(false)
   const [editName, setEditName]       = useState('')
   const [editEmoji, setEditEmoji]     = useState('')
@@ -608,6 +610,13 @@ const SpaceDetailScreen: React.FC = () => {
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
           {ctx.taskBtnLabel.replace('+ ', '')}
         </button>
+        <button type="button" className={`${styles.actionBtn} ${styles.actionBtnMimir}`} style={colorVar} onClick={() => setChatOpen(true)}>
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M7 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"/>
+            <path d="M4.5 5.5h5M4.5 8h3"/>
+          </svg>
+          Мімір
+        </button>
       </div>
       )}
 
@@ -895,6 +904,7 @@ const SpaceDetailScreen: React.FC = () => {
       {/* ── Modals ── */}
       <AddMemoryModal isOpen={addMemOpen} onClose={() => setAddMemOpen(false)} onCreate={handleAddMemory} initialSpaceId={spaceId} />
       {addPlanOpen && <PlanForm onClose={() => setAddPlanOpen(false)} onSubmit={handleAddPlan} initialSpaceId={spaceId} />}
+      {space && <SpaceChatSheet isOpen={chatOpen} onClose={() => setChatOpen(false)} space={space} />}
 
       {/* ══ Edit Sheet ══ */}
       {editOpen && (
