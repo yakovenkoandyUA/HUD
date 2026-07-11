@@ -35,16 +35,17 @@
   --border:     #2e3450;
   --border2:    #3a4260;
 
-  --accent:      #d4a017;
-  --accent-dim:  #9a7010;
-  --accent-glow: rgba(212, 160, 23, 0.30);
-  --accent-soft: rgba(212, 160, 23, 0.12);
+  --accent:      #c99a2e;
+  --accent-dim:  #8f6b1d;
+  --accent-glow: rgba(201, 154, 46, 0.30);
+  --accent-soft: rgba(201, 154, 46, 0.12);
 
   --second:      #6a4fc8;
   --second-soft: rgba(106, 79, 200, 0.20);
 
-  --gold:        #d4a017;
-  --gold-dim:    rgba(212, 160, 23, 0.15);
+  /* gold — окремо від accent: Мімір / мудрість / досягнення / premuim */
+  --gold:        #e0b95a;
+  --gold-dim:    rgba(224, 185, 90, 0.16);
 
   --task-quest:    var(--accent);
   --task-shopping: var(--second);
@@ -107,6 +108,35 @@
   --negative-soft: rgba(200, 16, 46, 0.08);
 
   --font-display: 'Cormorant Garamond', 'Bebas Neue', serif;
+}
+
+/* Japan: washi paper ruled lines + ink accent top stripe */
+[data-theme="japan"] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 27px,
+    rgba(139, 115, 85, 0.10) 28px
+  );
+}
+
+[data-theme="japan"] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 70%);
+  opacity: 0.55;
 }
 
 /* Texture/atmosphere effects off on pages with their own bg */
@@ -185,7 +215,10 @@
 
   --text:   #ebebeb;
   --text2:  #909090;
-  --text3:  #565656;
+  --text3:  #6a6a6a;
+
+  --border:     #303030;
+  --border2:    #464646;
 
   --f1-back: #000;
 
@@ -247,7 +280,11 @@
   --negative:      #d42020;
   --negative-soft: rgba(212, 32, 32, 0.10);
 
+  /* Press Start 2P — ТІЛЬКИ для display: лого, заголовки, короткі hero-числа.
+     UI і body залишаються читабельними шрифтами. */
   --font-display: 'Press Start 2P', monospace;
+  --font-ui:      'JetBrains Mono', monospace;
+  --font-body:    'PT Sans', sans-serif;
 }
 
 
@@ -257,7 +294,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 0;
   background: repeating-linear-gradient(
     0deg,
     transparent,
@@ -328,7 +365,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9996;
+  z-index: 0;
   opacity: 0.07;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cg stroke='%2388c0d0' stroke-width='1.5' stroke-linecap='round' fill='none'%3E%3Cg transform='translate(30,30) rotate(-12)'%3E%3Cline x1='0' y1='0' x2='0' y2='44'/%3E%3Cline x1='0' y1='10' x2='16' y2='2'/%3E%3Cline x1='0' y1='22' x2='16' y2='14'/%3E%3C/g%3E%3Cg transform='translate(230,65) rotate(8)'%3E%3Cline x1='0' y1='0' x2='0' y2='44'/%3E%3Cline x1='0' y1='0' x2='-14' y2='14'/%3E%3Cline x1='0' y1='0' x2='14' y2='14'/%3E%3C/g%3E%3Cg transform='translate(55,230) rotate(-8)'%3E%3Cline x1='0' y1='0' x2='0' y2='44'/%3E%3Cline x1='0' y1='0' x2='14' y2='8'/%3E%3Cline x1='14' y1='8' x2='0' y2='22'/%3E%3Cline x1='0' y1='22' x2='14' y2='32'/%3E%3Cline x1='14' y1='32' x2='0' y2='44'/%3E%3C/g%3E%3Cg transform='translate(240,235) rotate(12)'%3E%3Cline x1='0' y1='0' x2='0' y2='44'/%3E%3Cline x1='0' y1='10' x2='16' y2='22'/%3E%3Cline x1='16' y1='22' x2='0' y2='34'/%3E%3Cline x1='0' y1='10' x2='-16' y2='22'/%3E%3Cline x1='-16' y1='22' x2='0' y2='34'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   background-size: 320px 320px;
@@ -349,7 +386,7 @@
   right: -20%;
   height: 40vh;
   pointer-events: none;
-  z-index: 9997;
+  z-index: 0;
   background: radial-gradient(
     ellipse at 50% -10%,
     rgba(136, 192, 208, 0.14) 0%,
@@ -368,7 +405,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 0;
   background-image: repeating-linear-gradient(
     -45deg,
     transparent 0px,
@@ -391,10 +428,10 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9997;
+  z-index: 0;
   background-image:
-    linear-gradient(rgba(0, 200, 240, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 200, 240, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(0, 200, 240, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 200, 240, 0.025) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
@@ -407,8 +444,8 @@
   top: -200px;
   height: 200px;
   pointer-events: none;
-  z-index: 9998;
-  background: linear-gradient(transparent, rgba(0, 200, 240, 0.05), transparent);
+  z-index: 0;
+  background: linear-gradient(transparent, rgba(0, 200, 240, 0.032), transparent);
   animation: cyberscan 9s linear infinite;
 }
 
@@ -451,6 +488,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
+  position: relative;
+  z-index: 1;
 }
 
 a {
