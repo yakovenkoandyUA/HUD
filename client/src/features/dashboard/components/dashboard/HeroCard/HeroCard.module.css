@@ -1,11 +1,10 @@
 /* ── Balance card ───────────────────────────────────────────── */
 
 .balanceCard {
-  background: linear-gradient(135deg, rgb(224 16 46 / 0%) 0%, var(--surface) 80%);
-  /* border-top: 1px solid var(--border); */
+  background: var(--surface);
+  border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  /* border-left: 3px solid var(--gold); */
-  padding: 12px 14px;
+  padding: 12px 16px;
 }
 
 .topRow {
@@ -48,7 +47,7 @@
 
 .sparkWrap {
   position: relative;
-  margin: 10px -14px 6px;
+  margin: 10px -16px 6px;
   padding: 0 0 2px;
   color: var(--accent);
 }

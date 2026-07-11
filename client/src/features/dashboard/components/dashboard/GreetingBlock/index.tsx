@@ -6,36 +6,30 @@ import type { WeatherData } from '@/shared/hooks/useWeather'
 import styles from './GreetingBlock.module.css'
 
 /**
- * GreetingBlock
- * -------------
- * Компактний вітальний рядок з тематичною ілюстрацією на фоні.
- * Привітання+ім'я — дрібний підпис (вже відомі юзеру, не несуть інформації);
- * дата+погода — головний рядок, бо це єдине, що реально варто глянути зранку.
- * При натисканні на погоду — викликає onWeatherClick з даними погоди.
- *
- * Коли на сьогодні немає звичок, секція "СЬОГОДНІ" зникає — замість неї
- * "детальніше" вбудовується в нижній край картки з градієнтом.
+ * GreetingBlock (Daily Banner)
+ * ----------------------------
+ * Компактний банер з темовим фоном, датою/погодою та першою дією дня.
+ * Верхня частина: дата + погода (тап → WeatherModal).
+ * Нижня частина: СЬОГОДНІ label + teaser першої звички + "детальніше >".
  *
  * Props:
  * @prop {(weather: WeatherData) => void} [onWeatherClick] — callback при тапі на погоду
- * @prop {() => void}                     [onOpenDay]      — відкрити DayOverlay (коли немає звичок)
+ * @prop {() => void}                     onOpenDay        — відкрити DayOverlay
+ * @prop {string}                         [todayTeaser]    — назва першої звички/дії дня
  */
 interface GreetingBlockProps {
   onWeatherClick?: (weather: WeatherData) => void
-  onOpenDay?: () => void
+  onOpenDay: () => void
+  todayTeaser?: string
 }
 
-const DAYS_SHORT = ['Нд','Пн','Вт','Ср','Чт','Пт','Сб']
+const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 
-// Числовий формат — "Пн · 29.06" замість "Понеділок · 29 червня": вдвічі коротше,
-// не вгортається навіть на вузьких екранах, а погода тепер на своєму рядку нижче
 function formatDate(d: Date): string {
   const dd = String(d.getDate()).padStart(2, '0')
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   return `${DAYS_SHORT[d.getDay()]} · ${dd}.${mm}`
 }
-
-/* ── Component ───────────────────────────────────────────── */
 
 const THEME_PHOTOS: Partial<Record<string, string>> = {
   velvet: '/theme/lunar.webp',
@@ -46,7 +40,7 @@ const THEME_PHOTOS: Partial<Record<string, string>> = {
   arctic: '/theme/arctic.webp',
 }
 
-const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay }) => {
+const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay, todayTeaser }) => {
   const profile = useProfileStore(s => s.activeProfile)
   const theme   = useUiStore(s => s.theme)
   const weather = useWeather(profile?.city)
@@ -65,13 +59,8 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
       className={`${styles.card} ${photoUrl ? styles.cardPhoto : ''}`}
       style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}
     >
-      {!photoUrl && (
-        <div className={styles.illustration} aria-hidden />
-      )}
-
-      {onOpenDay && <div className={styles.bottomGrad} aria-hidden />}
-
-      <div className={styles.content}>
+      {/* Top: date + weather */}
+      <div className={styles.topContent}>
         <span className={styles.date}>{dateStr}</span>
 
         {weather && (
@@ -88,14 +77,28 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
         )}
       </div>
 
-      {onOpenDay && (
-        <button type="button" className={styles.detailBtn} onClick={onOpenDay}>
-          детальніше
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
-        </button>
-      )}
+      {/* Bottom: today teaser row */}
+      <div className={styles.todayRow}>
+        <div className={styles.todayTop}>
+          <span className={styles.todayLabel}>СЬОГОДНІ</span>
+          <button type="button" className={styles.todayLink} onClick={onOpenDay}>
+            детальніше
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
+        {todayTeaser ? (
+          <div className={styles.todayItem}>
+            <span className={styles.todayDot} aria-hidden="true" />
+            <span className={styles.todayText}>{todayTeaser}</span>
+          </div>
+        ) : (
+          <div className={styles.todayItem}>
+            <span className={`${styles.todayText} ${styles.todayEmpty}`}>відкрити мій день</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

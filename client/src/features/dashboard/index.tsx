@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import AppHeader from '@/shared/components/layout/AppHeader'
 import GreetingBlock from './components/dashboard/GreetingBlock'
 import HeroCard from './components/dashboard/HeroCard'
-import RaceHeroCard from './components/dashboard/RaceHeroCard'
 import RaceCountdownStrip from './components/dashboard/RaceCountdownStrip'
 import DaySummaryCard from './components/dashboard/DaySummaryCard'
 import TodayHabits from './components/dashboard/TodayHabits'
-import WeekHeader from '@/features/sprint/components/sprint/WeekHeader'
 import Modal from '@/shared/components/ui/Modal'
 import ExpenseForm from '@/features/finance/components/finance/ExpenseForm'
 import AddSprintItemModal from '@/features/sprint/components/sprint/AddSprintItemModal'
@@ -21,8 +19,8 @@ import { useMealPlanStore } from '@/features/recipes/store/mealPlanStore'
 import { useRecipesStore } from '@/features/recipes/store/recipesStore'
 import { useNotesStore } from '@/features/notes/notesStore'
 import { F1_SEASON_2026 } from '@/features/f1/data/f1Season2026'
-import { getNextRace, getRaceThisWeek } from '@/features/f1/utils/f1'
-import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from '@/features/sprint/utils/sprint'
+import { getNextRace } from '@/features/f1/utils/f1'
+import { isRecurring, isRoutineDueOnDay } from '@/features/sprint/utils/sprint'
 import { usePullToRefresh } from '@/shared/hooks/usePullToRefresh'
 import { calcDailyBudget } from './helpers'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
@@ -78,23 +76,20 @@ const Dashboard: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler)
   }, [fabOpen])
 
-  const nextRace      = f1Enabled ? getNextRace(F1_SEASON_2026) : null
-  const raceThisWeek  = f1Enabled ? getRaceThisWeek(F1_SEASON_2026) : null
-  const weekStart     = getCurrentWeekStart()
-  const dailyBudget   = calcDailyBudget(balance, salaryDay)
-  const today         = new Date().toISOString().split('T')[0]
-  const todaySpent    = transactions
+  const nextRace    = f1Enabled ? getNextRace(F1_SEASON_2026) : null
+  const dailyBudget = calcDailyBudget(balance, salaryDay)
+  const today       = new Date().toISOString().split('T')[0]
+  const todayDate   = new Date()
+  const todaySpent  = transactions
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))
     .reduce((sum, t) => sum + t.amount, 0)
 
-  const todayDate = new Date()
-  const todayIso  = today
-
   const isDoneToday = (t: (typeof sprintItems)[number]) =>
-    isRecurring(t) ? !!(t.completionLog?.some(d => d >= todayIso)) : t.done
+    isRecurring(t) ? !!(t.completionLog?.some(d => d >= today)) : t.done
 
-  const allRoutines  = sprintItems.filter(t => isRecurring(t))
-  const routineItems = allRoutines.filter(t => isRoutineDueOnDay(t, todayDate))
+  const routineItems = sprintItems
+    .filter(t => isRecurring(t))
+    .filter(t => isRoutineDueOnDay(t, todayDate))
 
   const activeQuests  = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping' && !t.done).length
   const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
@@ -126,26 +121,25 @@ const Dashboard: React.FC = () => {
     setFabOpen(false)
   }
 
+  const todayTeaser = routineItems.find(r => !isDoneToday(r))?.title
+    ?? (routineItems.length > 0 ? routineItems[0].title : undefined)
+
   return (
     <div className={styles.screen}>
       <AppHeader />
       <div ref={contentRef} className={styles.content}>
+
+        {/* 1 — Daily Banner: date + weather + today teaser */}
         <GreetingBlock
           onWeatherClick={(d) => { setWeatherData(d); setWeatherOpen(true) }}
-          onOpenDay={routineItems.length === 0 ? () => setShowDay(true) : undefined}
+          onOpenDay={() => setShowDay(true)}
+          todayTeaser={todayTeaser}
         />
 
-        {routineItems.length > 0 && (
-          <TodayHabits
-            routineItems={routineItems}
-            isDoneToday={isDoneToday}
-            onToggle={toggleItem}
-            onOpenDay={() => setShowDay(true)}
-          />
-        )}
-
+        {/* 2 — Spaces: compact horizontal strip */}
         <SpacesStrip />
 
+        {/* Mimir hint (height:0, floats over content) */}
         {!welcomeSeen ? (
           <div className={styles.mimirFloat}>
             <MimirHint
@@ -167,47 +161,59 @@ const Dashboard: React.FC = () => {
           </div>
         ) : null}
 
-        <div className={styles.calendarWrap}>
-          {raceThisWeek ? (
-            <RaceHeroCard race={raceThisWeek} onClick={() => navigate(`/f1/${raceThisWeek.round}`)} />
-          ) : (
-            <WeekHeader
-              weekStart={weekStart}
-              hideTitle
-              routineItems={allRoutines}
-              onDaySelect={(iso) => navigate('/sprint', { state: { selectedDay: iso } })}
-            />
-          )}
-        </div>
-
-        {f1Enabled && nextRace && !raceThisWeek && (
-          <RaceCountdownStrip race={nextRace} />
+        {/* 3 — Today habits: compact vertical list */}
+        {routineItems.length > 0 && (
+          <TodayHabits
+            routineItems={routineItems}
+            isDoneToday={isDoneToday}
+            onToggle={toggleItem}
+            onOpenDay={() => setShowDay(true)}
+          />
         )}
 
-        <DaySummaryCard
-          activeQuests={activeQuests}
-          shoppingCount={shoppingCount}
-          meals={todayMeals.map(r => r.title)}
-          notesCount={notes.length}
-          latestNote={latestNote}
-          onQuestsClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'task' } })}
-          onShoppingClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'shopping' } })}
-          onMealsClick={() => todayMeals.length === 1
-            ? navigate(`/recipes/${todayMeals[0].id}`)
-            : navigate('/recipes/planner')
-          }
-          onNotesClick={() => navigate('/notes')}
-        />
+        {/* 4 — Status tiles: 2×2 grid */}
+        <div className={styles.tilesWrap}>
+          <DaySummaryCard
+            activeQuests={activeQuests}
+            shoppingCount={shoppingCount}
+            meals={todayMeals.map(r => r.title)}
+            notesCount={notes.length}
+            latestNote={latestNote}
+            onQuestsClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'task' } })}
+            onShoppingClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'shopping' } })}
+            onMealsClick={() => todayMeals.length === 1
+              ? navigate(`/recipes/${todayMeals[0].id}`)
+              : navigate('/recipes/planner')
+            }
+            onNotesClick={() => navigate('/notes')}
+          />
+        </div>
 
-        <div>
+        {/* 5 — Finance */}
+        <div className={styles.sectionWrap}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionLabel}>ФІНАНСИ</span>
+            <button type="button" className={styles.sectionLink} onClick={() => navigate('/finance')}>
+              детальніше
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
           <HeroCard
             balance={balance}
             dailyBudget={dailyBudget}
             todaySpent={todaySpent}
             sparklineData={sparklineData}
           />
-          <AchievementTeaser />
         </div>
+
+        {/* 6 — F1 countdown strip */}
+        {f1Enabled && nextRace && (
+          <RaceCountdownStrip race={nextRace} />
+        )}
+
+        <AchievementTeaser />
 
       </div>
 

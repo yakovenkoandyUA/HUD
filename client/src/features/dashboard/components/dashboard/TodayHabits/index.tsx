@@ -26,19 +26,14 @@ const TIME_ICONS: Record<string, React.FC> = {
   evening:   MoonIcon,
 }
 
+const VISIBLE_LIMIT = 3
+
 /**
  * TodayHabits
  * -----------
- * Заголовок "СЬОГОДНІ" + чіпи звичок на сьогодні — окремо від навігаційного
- * гріда (DaySummaryCard), бо логічно йде одразу під привітанням/погодою:
- * "детальніше" відкриває DayOverlay (настрій + погода + звички по слотах),
- * той самий контекст що й привітання, а не навігація до інших модулів.
- *
- * Мінімалістичний вигляд — крапка (не квадрат-чекбокс) + назва, виконано →
- * крапка заливається кольором, назва тьмяніє (text3, тонший шрифт) — як
- * виконаний пункт у списку справ. Головний екран і так щільний; багатший
- * вигляд (RoutineRing, % виконання за тиждень) лишився у детальному
- * календарі (WeekExpandedView), де на це є місце.
+ * Компактний вертикальний список звичок на сьогодні.
+ * Показує максимум 3 елементи + "ще N" якщо більше.
+ * Заголовок "СЬОГОДНІ" вже винесений у DailyBanner.
  *
  * Props:
  * @prop {UnifiedTodo[]} routineItems — звички що заплановані на сьогодні
@@ -53,39 +48,46 @@ interface TodayHabitsProps {
   onOpenDay: () => void
 }
 
-const TodayHabits: React.FC<TodayHabitsProps> = ({ routineItems, isDoneToday, onToggle, onOpenDay }) => (
-  <div className={styles.root}>
-    <div className={styles.header}>
-      <span className={styles.headerLabel}>Сьогодні</span>
-      <button type="button" className={styles.openBtn} onClick={onOpenDay}>
-        детальніше
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
-      </button>
-    </div>
+const TodayHabits: React.FC<TodayHabitsProps> = ({ routineItems, isDoneToday, onToggle, onOpenDay }) => {
+  const visible = routineItems.slice(0, VISIBLE_LIMIT)
+  const remaining = routineItems.length - VISIBLE_LIMIT
 
-    {routineItems.length > 0 && (
-      <div className={styles.chipsRow}>
-        {routineItems.map(r => {
-          const done = isDoneToday(r)
-          const TimeIcon = r.timeOfDay ? TIME_ICONS[r.timeOfDay] : null
-          return (
-            <button
-              key={r.id}
-              type="button"
-              className={`${styles.chip} ${done ? styles.chipDone : ''}`}
-              onClick={() => onToggle(r.id)}
-            >
-              <span className={styles.chipDot} />
-              {TimeIcon && <span className={styles.chipTimeIcon}><TimeIcon /></span>}
-              {r.title}
-            </button>
-          )
-        })}
-      </div>
-    )}
-  </div>
-)
+  return (
+    <div className={styles.root}>
+      {visible.map((r, idx) => {
+        const done = isDoneToday(r)
+        const TimeIcon = r.timeOfDay ? TIME_ICONS[r.timeOfDay] : null
+        const isLast = idx === visible.length - 1 && remaining <= 0
+
+        return (
+          <button
+            key={r.id}
+            type="button"
+            className={`${styles.item} ${done ? styles.itemDone : ''} ${isLast ? styles.itemLast : ''}`}
+            onClick={() => onToggle(r.id)}
+          >
+            <span className={`${styles.dot} ${done ? styles.dotDone : ''}`} aria-hidden="true" />
+            <span className={styles.itemTitle}>{r.title}</span>
+            {TimeIcon && (
+              <span className={styles.timeIcon}>
+                <TimeIcon />
+              </span>
+            )}
+          </button>
+        )
+      })}
+
+      {remaining > 0 && (
+        <button type="button" className={`${styles.item} ${styles.moreBtn}`} onClick={onOpenDay}>
+          <span className={styles.moreDot} aria-hidden="true" />
+          <span className={styles.moreText}>ще {remaining} {remaining === 1 ? 'звичка' : remaining < 5 ? 'звички' : 'звичок'}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.moreArrow} aria-hidden="true">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      )}
+    </div>
+  )
+}
 
 export default TodayHabits
