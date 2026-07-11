@@ -24,6 +24,45 @@
   --orange-s: rgba(230, 126, 34, 0.12);
 }
 
+/* ── Semantic tokens ────────────────────────────────────────────────────────
+   Визначаються через базові токени теми — автоматично адаптуються.
+   Компоненти читають ці змінні замість inline color-mix().
+   Теми можуть перевизначити будь-який токен якщо потрібна специфічна поведінка.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ── Cards ── */
+  --card-bg:       var(--surface);
+  --card-bg-hover: var(--surface2);
+  --card-border:   var(--border);
+
+  /* ── Status panels ── */
+  --panel-danger-bg:      color-mix(in srgb, var(--negative)  8%, var(--surface));
+  --panel-danger-border:  color-mix(in srgb, var(--negative) 22%, transparent);
+  --panel-success-bg:     color-mix(in srgb, var(--positive)  8%, var(--surface));
+  --panel-success-border: color-mix(in srgb, var(--positive) 22%, transparent);
+  --panel-warning-bg:     color-mix(in srgb, var(--orange)    8%, var(--surface));
+  --panel-warning-border: color-mix(in srgb, var(--orange)   22%, transparent);
+  --panel-accent-bg:      var(--accent-soft);
+  --panel-accent-border:  color-mix(in srgb, var(--accent)   22%, transparent);
+  --panel-muted-bg:       var(--bg2);
+  --panel-muted-border:   var(--border);
+
+  /* ── Navigation ── */
+  --nav-bg:     var(--bg2);
+  --nav-border: var(--border);
+
+  /* ── Tints (transparent base — для chips, badges, кнопок-станів) ── */
+  --tint-danger:  color-mix(in srgb, var(--negative) 12%, transparent);
+  --tint-success: color-mix(in srgb, var(--positive) 14%, transparent);
+  --tint-accent:  color-mix(in srgb, var(--accent)   12%, transparent);
+  --tint-warning: color-mix(in srgb, var(--orange)   12%, transparent);
+  --tint-gold:    color-mix(in srgb, var(--gold)     12%, transparent);
+
+  /* ── Interaction ── */
+  --tap-bg:    rgba(255, 255, 255, 0.05);
+  --focus-ring: var(--accent);
+}
+
 
 /* ── CASTLE 🏰 ─────────────────────────────────────────────────────────────── */
 [data-theme="velvet"] {
@@ -108,6 +147,8 @@
   --negative-soft: rgba(200, 16, 46, 0.08);
 
   --font-display: 'Cormorant Garamond', 'Bebas Neue', serif;
+
+  --tap-bg: rgba(0, 0, 0, 0.05);
 }
 
 /* Japan: washi paper ruled lines + ink accent top stripe */
@@ -285,6 +326,8 @@
   --font-display: 'Press Start 2P', monospace;
   --font-ui:      'JetBrains Mono', monospace;
   --font-body:    'PT Sans', sans-serif;
+
+  --tap-bg: rgba(0, 0, 0, 0.05);
 }
 
 
@@ -515,7 +558,7 @@ input, textarea, select {
 /* ── Form validation ── */
 .inputError {
   border-color: var(--negative) !important;
-  background: rgba(184, 58, 45, 0.08) !important;
+  background: var(--panel-danger-bg) !important;
 }
 
 .errorMsg {

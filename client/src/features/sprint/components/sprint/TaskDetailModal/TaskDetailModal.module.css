@@ -172,8 +172,8 @@
   width: 100%;
   padding: 12px;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--negative) 40%, transparent);
-  background: color-mix(in srgb, var(--negative) 8%, transparent);
+  border: 1px solid var(--panel-danger-border);
+  background: var(--tint-danger);
   color: var(--negative);
   font-family: var(--font-ui);
   font-size: 13px;
@@ -182,7 +182,7 @@
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.deleteRoutineBtn:active { background: color-mix(in srgb, var(--negative) 18%, transparent); }
+.deleteRoutineBtn:active { background: var(--panel-danger-bg); }
 
 /* ── Section ── */
 .section {

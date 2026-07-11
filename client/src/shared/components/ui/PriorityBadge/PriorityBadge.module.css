@@ -44,6 +44,6 @@
 
 .low {
   color: var(--positive);
-  background: color-mix(in srgb, var(--positive) 15%, transparent);
+  background: var(--tint-success);
   border-color: var(--positive);
 }

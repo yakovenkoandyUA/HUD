@@ -200,9 +200,9 @@
 .priSymbol { font-size: 9px; line-height: 1; }
 .priLabel  { font-size: 10px; }
 
-.priBtnActiveUrgent { color: var(--negative); background: color-mix(in srgb, var(--negative) 12%, transparent); border-color: var(--negative); }
-.priBtnActiveNormal { color: var(--gold);     background: var(--gold-dim);    border-color: var(--gold);     }
-.priBtnActiveLow    { color: var(--positive); background: color-mix(in srgb, var(--positive) 15%, transparent); border-color: var(--positive); }
+.priBtnActiveUrgent { color: var(--negative); background: var(--tint-danger);  border-color: var(--negative); }
+.priBtnActiveNormal { color: var(--gold);     background: var(--tint-gold);   border-color: var(--gold);     }
+.priBtnActiveLow    { color: var(--positive); background: var(--tint-success); border-color: var(--positive); }
 
 .todoInput {
   background: var(--bg3);
