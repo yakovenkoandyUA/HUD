@@ -34,8 +34,7 @@
 }
 
 .badgeImg {
-  width: 52px;
-  height: 52px;
+  width: 85px;
   object-fit: contain;
   user-select: none;
 }
@@ -44,23 +43,26 @@
 
 .badgeRuneWrap {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 52px;
   height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.badgeRuneWrapUnlocked {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .badgeRuneImg {
-  display: block;
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 62px;
+  height: 62px;
+  object-fit: cover;
   user-select: none;
-}
-
-.badgeRuneImgUnlocked {
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 60%, transparent));
 }
 
 .badgeRuneImgDim {

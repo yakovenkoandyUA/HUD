@@ -168,16 +168,25 @@
   height: 58px;
 }
 
-.runeImg {
-  display: block;
-  width: 58px;
-  height: 58px;
-  object-fit: contain;
-  user-select: none;
+.runeClip {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
-.runeImgUnlocked {
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 60%, transparent));
+.runeClipUnlocked {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.runeImg {
+  display: block;
+  width: 62px;
+  height: 62px;
+  margin: -5px;
+  object-fit: cover;
+  user-select: none;
 }
 
 .runeImgDim {
@@ -186,9 +195,9 @@
 
 .arcOverlay {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: -2px;
+  left: 7px;
+  width: 75%;
   pointer-events: none;
   overflow: visible;
 }

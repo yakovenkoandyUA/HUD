@@ -3,11 +3,11 @@ import type { AchievementWithStatus } from '../../types'
 import styles from './index.module.css'
 
 const RUNE_SRC: Record<string, string> = {
-  memory:    '/achive/rune-memory.png',
-  spaces:    '/achive/rune-spaces.png',
-  finance:   '/achive/rune-finance.png',
-  sprint:    '/achive/rune-sprint.png',
-  watchlist: '/achive/rune-watchlist.png',
+  memory:    '/achive/mimir-runes-transparent/rune-memory.png',
+  spaces:    '/achive/mimir-runes-transparent/rune-spaces.png',
+  finance:   '/achive/mimir-runes-transparent/rune-finance.png',
+  sprint:    '/achive/mimir-runes-transparent/rune-sprint.png',
+  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.png',
 }
 
 const RING_R_CARD = 20
@@ -57,8 +57,8 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
             <img src="/achive/achive-block.png" alt="" className={styles.badgeImg} draggable={false} />
           </div>
         ) : isUnlocked ? (
-          <div className={styles.badgeRuneWrap}>
-            <img src={runeSrc} alt="" className={`${styles.badgeRuneImg} ${styles.badgeRuneImgUnlocked}`} draggable={false} />
+          <div className={`${styles.badgeRuneWrap} ${styles.badgeRuneWrapUnlocked}`}>
+            <img src={runeSrc} alt="" className={styles.badgeRuneImg} draggable={false} />
           </div>
         ) : (
           <div className={styles.badgeRuneWrap}>

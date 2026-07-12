@@ -10,11 +10,11 @@ const RING_W   = 3    // stroke width
 const CIRC     = 2 * Math.PI * RING_R
 
 const RUNE_SRC: Record<string, string> = {
-  memory:    '/achive/rune-memory.png',
-  spaces:    '/achive/rune-spaces.png',
-  finance:   '/achive/rune-finance.png',
-  sprint:    '/achive/rune-sprint.png',
-  watchlist: '/achive/rune-watchlist.png',
+  memory:    '/achive/mimir-runes-transparent/rune-memory.png',
+  spaces:    '/achive/mimir-runes-transparent/rune-spaces.png',
+  finance:   '/achive/mimir-runes-transparent/rune-finance.png',
+  sprint:    '/achive/mimir-runes-transparent/rune-sprint.png',
+  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.png',
 }
 
 interface AchievementNodeProps {
