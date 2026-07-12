@@ -48,9 +48,15 @@
 /* ── Info tooltip ── */
 
 .infoTooltip {
-  margin: 0 0 4px;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 10;
   padding: 10px 14px;
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
   border-radius: 10px;
   animation: fadeIn 0.15s ease;
@@ -75,7 +81,7 @@
   position: relative;
   width: 100%;
   padding-bottom: 140%;  /* aspect ratio ~1:1.1 */
-  overflow: hidden;
+  overflow: visible;
 }
 
 .treeImg {
@@ -147,8 +153,7 @@
 
 .badgeImg {
   display: block;
-  width: 58px;
-  height: 58px;
+  width: 75px;
   object-fit: contain;
   user-select: none;
 }
@@ -164,28 +169,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 58px;
-  height: 58px;
-}
-
-.runeClip {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.runeClipUnlocked {
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent);
+  width: 75px;
+  height: 75px;
 }
 
 .runeImg {
   display: block;
-  width: 62px;
-  height: 62px;
-  margin: -5px;
-  object-fit: cover;
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
   user-select: none;
 }
 
@@ -195,9 +187,9 @@
 
 .arcOverlay {
   position: absolute;
-  top: -2px;
-  left: 7px;
-  width: 75%;
+  inset: 0;
+  top: 7px;
+  width: 100%;
   pointer-events: none;
   overflow: visible;
 }
@@ -209,24 +201,91 @@
 }
 
 .ringArc {
-  stroke: var(--accent);
+  stroke: var(--gold);
 }
 
 /* ── Selected pulse ring ── */
 
 .nodePulse {
   position: absolute;
-  inset: -6px;
+  inset: 0;
   border-radius: 50%;
-  border: 2px solid var(--accent);
-  opacity: 0.5;
-  animation: pulse 1.8s ease-in-out infinite;
   pointer-events: none;
+  animation: nodePulseAnim 2.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50%       { transform: scale(1.12); opacity: 0.2; }
+@keyframes nodePulseAnim {
+  0%   { box-shadow: 0 0 0 0px  color-mix(in srgb, var(--accent) 45%, transparent); }
+  60%  { box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent)  8%, transparent); }
+  100% { box-shadow: 0 0 0 16px color-mix(in srgb, var(--accent)  0%, transparent); }
+}
+
+/* ── Floating node popup ── */
+
+.nodePopup {
+  position: absolute;
+  z-index: 10;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 65%;
+  max-width: 220px;
+  pointer-events: none;
+  animation: nodePopupIn 0.22s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+@keyframes nodePopupIn {
+  from { opacity: 0; scale: 0.88; }
+  to   { opacity: 1; scale: 1; }
+}
+
+.nodePopupTitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.nodePopupDesc {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.nodePopupProgress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.nodePopupTrack {
+  flex: 1;
+  height: 3px;
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.nodePopupFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.nodePopupLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ── "Криниця мовчить" ── */

@@ -55,17 +55,13 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
 
       {status === 'unlocked' && (
         <div className={styles.runeWrap}>
-          <div className={`${styles.runeClip} ${styles.runeClipUnlocked}`}>
-            <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
-          </div>
+          <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
         </div>
       )}
 
       {status === 'in_progress' && (
         <div className={styles.runeWrap}>
-          <div className={styles.runeClip}>
-            <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgDim}`} draggable={false} />
-          </div>
+          <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgDim}`} draggable={false} />
           <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} className={styles.arcOverlay} aria-hidden="true">
             <circle cx={cx} cy={cy} r={RING_R} fill="none" className={styles.ringTrack} strokeWidth={RING_W} />
             <circle cx={cx} cy={cy} r={RING_R} fill="none" className={styles.ringArc}
@@ -138,16 +134,16 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
         </button>
       </div>
 
-      {showInfo && (
-        <div className={styles.infoTooltip}>
-          <p className={styles.infoTooltipText}>
-            Кожен вузол — досягнення. Відкривай руни, щоб прокладати шлях до глибини криниці. Золоті вузли пробуджені, кам'яні — в процесі, чорні — ще заблоковані.
-          </p>
-        </div>
-      )}
-
       <div className={styles.canvas}>
         <img src={treeSrc} alt="" className={`${styles.treeImg} ${isDark ? styles.treeImgDark : styles.treeImgLight}`} draggable={false} />
+
+        {showInfo && (
+          <div className={styles.infoTooltip}>
+            <p className={styles.infoTooltipText}>
+              Кожен вузол — досягнення. Відкривай руни, щоб прокладати шлях до глибини криниці. Золоті вузли пробуджені, кам'яні — в процесі, чорні — ще заблоковані.
+            </p>
+          </div>
+        )}
 
         {/* Connection lines */}
         <svg className={styles.connectionsSvg} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -184,6 +180,42 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
             />
           )
         })}
+
+        {/* Floating node detail popup */}
+        {selectedId && (() => {
+          const ach  = byId[selectedId]
+          const node = nodes.find(n => n.id === selectedId)
+          if (!ach || !node || ach.status === 'hidden') return null
+          const showAbove = node.y > 55
+          return (
+            <div
+              className={styles.nodePopup}
+              style={{
+                left: '50%',
+                top: showAbove
+                  ? `calc(${node.y}% - 38px)`
+                  : `calc(${node.y}% + 38px)`,
+                transform: showAbove
+                  ? 'translate(-50%, -100%)'
+                  : 'translate(-50%, 0)',
+              }}
+            >
+              <span className={styles.nodePopupTitle}>{ach.title}</span>
+              <p className={styles.nodePopupDesc}>{ach.description}</p>
+              {ach.status === 'in_progress' && (
+                <div className={styles.nodePopupProgress}>
+                  <div className={styles.nodePopupTrack}>
+                    <div
+                      className={styles.nodePopupFill}
+                      style={{ width: `${(ach.progress / ach.target) * 100}%` }}
+                    />
+                  </div>
+                  <span className={styles.nodePopupLabel}>{ach.progress} / {ach.target}</span>
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Hidden label */}
         {nodes.some(n => byId[n.id]?.status === 'hidden') && (
