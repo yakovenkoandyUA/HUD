@@ -56,15 +56,15 @@ export function useAchievementProgress(): AchievementWithStatus[] {
       'first-pattern':     transactions.length >= 10 ? 1 : 0,
 
       // Sprint
-      'first-quest':       sprintItems.filter(i => i.type === 'sprint' || i.type === 'quest').length,
+      'first-quest':       sprintItems.filter(i => i.type === 'sprint' || i.type === 'todo').length,
       'first-step':        sprintItems.filter(i => i.done).length,
-      'completed-path':    sprintItems.filter(i => i.done && (i.type === 'sprint' || i.type === 'quest')).length,
+      'completed-path':    sprintItems.filter(i => i.done && (i.type === 'sprint' || i.type === 'todo')).length,
       'seven-days-fire':   0, // streak - complex, will add later
       'return-after-fail': 0, // complex, will add later
 
       // Watchlist
       'first-watchlist':   watchItems.length,
-      'watched-completed': watchItems.filter(i => i.status === 'watched' || i.status === 'completed').length,
+      'watched-completed': watchItems.filter(i => i.status === 'watched' || i.status === 'dropped').length,
       'not-just-list':     watchItems.filter(i => i.rating !== null && i.rating !== undefined).length,
       'taste-archive':     watchItems.length,
     }
@@ -108,7 +108,7 @@ export function useAchievementScore(): { earned: number; max: number } {
 // Re-export for external unlock calls (auto-unlock when progress >= target)
 export function useAutoUnlock() {
   const all = useAchievementProgress()
-  const { activeProfile, updateProfile } = useProfileStore()
+  const { activeProfile } = useProfileStore()
 
   return useMemo(() => {
     const unlocked = new Set((activeProfile?.unlockedAchievements ?? []).map(u => u.id))
