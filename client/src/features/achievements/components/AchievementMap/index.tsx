@@ -55,13 +55,17 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
 
       {status === 'unlocked' && (
         <div className={styles.runeWrap}>
-          <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgUnlocked}`} draggable={false} />
+          <div className={`${styles.runeClip} ${styles.runeClipUnlocked}`}>
+            <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
+          </div>
         </div>
       )}
 
       {status === 'in_progress' && (
         <div className={styles.runeWrap}>
-          <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgDim}`} draggable={false} />
+          <div className={styles.runeClip}>
+            <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgDim}`} draggable={false} />
+          </div>
           <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} className={styles.arcOverlay} aria-hidden="true">
             <circle cx={cx} cy={cy} r={RING_R} fill="none" className={styles.ringTrack} strokeWidth={RING_W} />
             <circle cx={cx} cy={cy} r={RING_R} fill="none" className={styles.ringArc}

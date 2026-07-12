@@ -43,7 +43,7 @@ export function useAchievementProgress(): AchievementWithStatus[] {
 
       // Spaces
       'first-space':    spaces.length,
-      'space-with-name': spaces.filter(s => s.description || s.coverUrl).length,
+      'space-with-name': spaces.filter(s => s.coverUrl).length,
       'three-spaces':   spaces.length,
       'living-space':   spaces.length, // simplified: at least 3 spaces
       'first-auto':     spaces.filter(s => s.type === 'vehicle').length,
