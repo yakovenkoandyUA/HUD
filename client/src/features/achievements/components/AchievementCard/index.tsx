@@ -57,8 +57,8 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
             <img src="/achive/achive-block.png" alt="" className={styles.badgeImg} draggable={false} />
           </div>
         ) : isUnlocked ? (
-          <div className={`${styles.badgeRuneWrap} ${styles.badgeRuneWrapUnlocked}`}>
-            <img src={runeSrc} alt="" className={styles.badgeRuneImg} draggable={false} />
+          <div className={styles.badgeRuneWrap}>
+            <img src={runeSrc} alt="" className={`${styles.badgeRuneImg} ${styles.badgeRuneImgUnlocked}`} draggable={false} />
           </div>
         ) : (
           <div className={styles.badgeRuneWrap}>

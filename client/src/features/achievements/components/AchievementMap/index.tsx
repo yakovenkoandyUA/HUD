@@ -5,8 +5,8 @@ import type { AchievementWithStatus } from '../../types'
 import styles from './index.module.css'
 
 // SVG arc progress ring dimensions
-const RING_R   = 24
-const RING_W   = 3
+const RING_R   = 24   // radius of the progress arc
+const RING_W   = 3    // stroke width
 const CIRC     = 2 * Math.PI * RING_R
 
 const RUNE_SRC: Record<string, string> = {
@@ -19,8 +19,8 @@ const RUNE_SRC: Record<string, string> = {
 
 interface AchievementNodeProps {
   achievement: AchievementWithStatus
-  x: number
-  y: number
+  x: number   // % of container
+  y: number   // % of container
   onClick: () => void
   selected: boolean
 }
@@ -55,13 +55,17 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
 
       {status === 'unlocked' && (
         <div className={styles.runeWrap}>
-          <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgUnlocked}`} draggable={false} />
+          <div className={`${styles.runeClip} ${styles.runeClipUnlocked}`}>
+            <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
+          </div>
         </div>
       )}
 
       {status === 'in_progress' && (
         <div className={styles.runeWrap}>
-          <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgDim}`} draggable={false} />
+          <div className={styles.runeClip}>
+            <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgDim}`} draggable={false} />
+          </div>
           <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} className={styles.arcOverlay} aria-hidden="true">
             <circle cx={cx} cy={cy} r={RING_R} fill="none" className={styles.ringTrack} strokeWidth={RING_W} />
             <circle cx={cx} cy={cy} r={RING_R} fill="none" className={styles.ringArc}
@@ -72,6 +76,10 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
             />
           </svg>
         </div>
+      )}
+
+      {selected && status !== 'hidden' && (
+        <span className={styles.nodePulse} />
       )}
     </button>
   )
@@ -88,7 +96,7 @@ interface AchievementMapProps {
  * AchievementMap
  * --------------
  * Tree visualization — background PNG + absolutely positioned achievement nodes.
- * Selected node shows an inline info card directly below the node inside the canvas.
+ * Shows key nodes per category tab; connections drawn as SVG lines.
  *
  * Props:
  * @prop {AchievementWithStatus[]} achievements — full list with computed status
@@ -111,9 +119,6 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
   const connections = TREE_CONNECTIONS[category] ?? TREE_CONNECTIONS.all
 
   const byId = Object.fromEntries(achievements.map(a => [a.id, a]))
-
-  const selectedNode = selectedId ? nodes.find(n => n.id === selectedId) : null
-  const selectedAch  = selectedId ? byId[selectedId] : null
 
   return (
     <div className={styles.card}>
@@ -141,7 +146,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
         </div>
       )}
 
-      <div className={styles.canvas} onClick={e => { if (e.target === e.currentTarget) onNodeClick('') }}>
+      <div className={styles.canvas}>
         <img src={treeSrc} alt="" className={`${styles.treeImg} ${isDark ? styles.treeImgDark : styles.treeImgLight}`} draggable={false} />
 
         {/* Connection lines */}
@@ -180,23 +185,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
           )
         })}
 
-        {/* Inline node card */}
-        {selectedNode && selectedAch && selectedAch.status !== 'hidden' && (
-          <div
-            className={styles.nodeCard}
-            style={{ left: `clamp(22%, ${selectedNode.x}%, 78%)`, top: `calc(${selectedNode.y}% + 34px)` }}
-          >
-            <span className={styles.nodeCardTitle}>{selectedAch.title}</span>
-            <p className={styles.nodeCardDesc}>{selectedAch.description}</p>
-            {selectedAch.status === 'in_progress' && (
-              <div className={styles.nodeCardBar}>
-                <div className={styles.nodeCardFill} style={{ width: `${(selectedAch.progress / selectedAch.target) * 100}%` }} />
-                <span className={styles.nodeCardProgress}>{selectedAch.progress} / {selectedAch.target}</span>
-              </div>
-            )}
-          </div>
-        )}
-
+        {/* Hidden label */}
         {nodes.some(n => byId[n.id]?.status === 'hidden') && (
           <p className={styles.wellText}>Криниця мовчить</p>
         )}
