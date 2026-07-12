@@ -1,12 +1,12 @@
 .root {
-  margin-top: 10px;
+  /* no extra margin — parent gap handles spacing */
 }
 
 .headerRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .title {
@@ -36,23 +36,30 @@
 }
 .seeAll:hover, .seeAll:active { color: var(--accent); }
 
-/* ── 4-column grid ── */
+/* ── Horizontal scroll row ── */
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-direction: row;
   gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.grid::-webkit-scrollbar {
+  display: none;
 }
 
-/* ── Space card ── */
+/* ── Space card — horizontal layout ── */
 
 .card {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 5px;
-  padding: 12px 8px 10px;
-  border-radius: 12px;
+  gap: 10px;
+  padding: 10px 14px 10px 10px;
+  border-radius: var(--radius, 12px);
   background: color-mix(in srgb, var(--space-color, var(--accent)) 10%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 28%, transparent);
   cursor: pointer;
@@ -61,41 +68,68 @@
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.14s ease, opacity 0.14s ease, background 0.14s ease;
-  min-height: 96px;
+  flex: 0 0 160px;
+  width: 160px;
+  height: 64px;
+  scroll-snap-align: start;
 }
 .card:hover {
   background: color-mix(in srgb, var(--space-color, var(--accent)) 16%, var(--surface));
 }
 .card:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
   opacity: 0.85;
 }
 
-/* ── Icon wrapper ── */
+.cardActive {
+  border-color: color-mix(in srgb, var(--space-color, var(--accent)) 65%, transparent);
+  border-width: 1.5px;
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 14%, var(--surface));
+}
+
+/* First space card slightly wider */
+.grid > button:first-child {
+  flex: 0 0 176px;
+  width: 176px;
+}
+
+/* ── Icon wrapper — colored circle ── */
 
 .iconWrap {
   color: var(--space-color, var(--accent));
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 18%, transparent);
+}
+
+/* ── Text stack ── */
+
+.textStack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
 }
 
 /* ── Name ── */
 
 .name {
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text);
   line-height: 1.2;
-  word-break: break-word;
-  hyphens: auto;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
-  width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 /* ── Meta: dot + text ── */
@@ -103,18 +137,15 @@
 .meta {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 4px;
   font-family: var(--font-ui);
   font-size: 9px;
   font-weight: 600;
-  color: var(--text3);
+  color: var(--space-color, var(--accent));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
-  margin-top: auto;
-  /* left-align meta inside centered card */
-  align-self: flex-start;
 }
 
 .metaDot {
@@ -125,25 +156,41 @@
   flex-shrink: 0;
 }
 
+/* ── Dark themes: lift secondary text ── */
+
+:global([data-theme='velvet']) .title,
+:global([data-theme='cyber'])  .title,
+:global([data-theme='noir'])   .title,
+:global([data-theme='arctic']) .title { color: var(--text2); }
+
+/* meta inherits --space-color — no dark-theme override needed */
+
 /* ── Add card ── */
 
 .addCard {
   --space-color: var(--border2);
+  flex: 0 0 64px;
+  width: 64px;
+  flex-direction: column;
+  gap: 4px;
   background: transparent;
   border: 1px dashed var(--border2);
   color: var(--text3);
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  padding: 10px 8px;
 }
 .addCard .iconWrap {
+  width: 28px;
+  height: 28px;
+  background: none;
   color: var(--text3);
 }
 .addCard .name {
   color: var(--text3);
-  font-size: 10px;
+  font-size: 9px;
   text-align: center;
-  word-break: normal;
+  -webkit-line-clamp: 1;
 }
 .addCard:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
@@ -153,4 +200,58 @@
 .addCard:hover .iconWrap,
 .addCard:hover .name {
   color: var(--accent);
+}
+
+/* ── Empty state card ── */
+
+.emptyCard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: var(--radius, 12px);
+  background: transparent;
+  border: 1px dashed var(--border2);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text3);
+  flex: 0 0 220px;
+  height: 64px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.emptyCard:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.emptyCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.emptyCardTitle {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  color: inherit;
+  text-align: left;
+}
+
+.emptyCardSub {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.7;
+  text-align: left;
+}
+
+/* Light themes: cream SVG icons invisible — darken via filter */
+:global([data-theme="japan"]) .iconWrap img,
+:global([data-theme="pixel"]) .iconWrap img {
+  filter: brightness(0) opacity(0.55);
 }

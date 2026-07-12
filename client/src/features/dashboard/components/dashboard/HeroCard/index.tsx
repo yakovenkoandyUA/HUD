@@ -202,10 +202,10 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, s
     }
   }, [balance])
 
-  const progressPct = dailyBudget > 0
-    ? Math.min(100, Math.round((todaySpent / dailyBudget) * 100))
-    : 0
-  const overBudget = todaySpent > dailyBudget
+  // const progressPct = dailyBudget > 0
+  //   ? Math.min(100, Math.round((todaySpent / dailyBudget) * 100))
+  //   : 0
+  // const overBudget = todaySpent > dailyBudget
 
   const hasSparkline = sparklineData && sparklineData.length === 7 && sparklineData.some(v => v > 0)
   const sparkDays = hasSparkline ? getSparkDays() : []
@@ -237,12 +237,12 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, s
               {peakInsight}
             </span>
           )}
-          <div className={styles.balanceBar}>
+          {/* <div className={styles.balanceBar}>
             <div
               className={`${styles.balanceBarFill} ${overBudget ? styles.barOver : ''}`}
               style={{ width: `${progressPct}%` }}
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Right: sparkline */}

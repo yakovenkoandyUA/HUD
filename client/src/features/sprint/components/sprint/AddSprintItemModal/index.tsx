@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Modal from '@/shared/components/ui/Modal'
 import Button from '@/shared/components/ui/Button'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
@@ -113,7 +114,8 @@ interface Props {
  * Handles todos (with labels, repeat, deadline, reminder) and shopping (with priority, quantity).
  */
 const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, initialDate }) => {
-  const { addItem } = useSprintStore()
+  const navigate = useNavigate()
+  const { addItem, items } = useSprintStore()
   const { showToast } = useUiStore()
   const { limits } = usePlan()
   const maxImages = limits.maxTaskImages
@@ -147,6 +149,16 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
       setQuickAddDate(initialDate ?? null)
     }
   }, [isOpen, defaultType, initialDate])
+
+  const duplicateItem = useMemo(() => {
+    const t = newTitle.trim().toLowerCase()
+    if (t.length < 2) return undefined
+    return items.find(it =>
+      !it.done &&
+      it.title.trim().toLowerCase() === t &&
+      (newType === 'shopping' ? it.type === 'shopping' : it.type !== 'shopping')
+    )
+  }, [newTitle, newType, items])
 
   const reset = () => {
     setNewTitle('')
@@ -278,6 +290,23 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
             placeholder="Назва..."
             autoFocus
           />
+
+          {duplicateItem && (
+            <div className={styles.dupHint}>
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M7 4.5v3M7 9.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+              <span>«{duplicateItem.title}» вже є у списку</span>
+              <button
+                type="button"
+                className={styles.dupHintBtn}
+                onClick={() => { handleClose(); navigate('/sprint') }}
+              >
+                Відкрити
+              </button>
+            </div>
+          )}
 
           {newType === 'shopping' && (
             <>

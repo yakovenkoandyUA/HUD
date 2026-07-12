@@ -8,6 +8,7 @@
   z-index: 0;
   pointer-events: none;
   will-change: background-position;
+  opacity: 0.65;
 }
 
 /* ── Root ── */
@@ -24,8 +25,8 @@
 /* ── Hero (transparent — bg comes from portal) ── */
 
 .hero {
-  margin: -16px -16px 0;
-  height: 340px;
+  margin:  0;
+  height: 365px;
   position: relative;
   overflow: hidden;
 }
@@ -38,14 +39,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 16px 20px;
-  gap: 6px;
+  padding: 0 16px 14px;
+  gap: 4px;
   z-index: 1;
 }
 
 .portraitImg {
   width: auto;
-  height: 160px;
+  height: 190px;
   object-fit: contain;
   filter: drop-shadow(0 8px 28px color-mix(in srgb, var(--accent) 30%, transparent));
   animation: portraitFloat 4s ease-in-out infinite;
@@ -130,8 +131,8 @@
 }
 
 .sampleText {
-  font-family: var(--font-ui);
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
   color: var(--text2);
   line-height: 1.5;
   margin: 0 0 4px;
@@ -139,10 +140,10 @@
 }
 
 .sampleSig {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  color: var(--text3);
-  letter-spacing: 0.04em;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: 0.02em;
 }
 
 /* ── Hero mode animations ── */
@@ -307,6 +308,48 @@
   line-height: 1.3;
 }
 
+/* ── Hero frequency tabs (shown below quote bubble) ── */
+
+.heroPills {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Tab strip */
+.freqTabs {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.freqTab {
+  flex: 1;
+  padding: 6px 4px 9px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: color-mix(in srgb, var(--text3) 80%, transparent);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.freqTabOn {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
 /* ── Section divider ── */
 
 .sectionDivider {
@@ -329,7 +372,7 @@
 }
 
 .aiInnerActive .aiCardTitle {
-  color: var(--accent);
+  color: var(--text);
 }
 
 /* ── Frequency ── */
@@ -337,7 +380,7 @@
 .freqDesc {
   font-family: var(--font-ui);
   font-size: 12px;
-  color: var(--text3);
+  color: var(--text2);
   margin: 0;
   line-height: 1.4;
 }
@@ -401,7 +444,7 @@
 .aiCardDesc {
   font-family: var(--font-ui);
   font-size: 11px;
-  color: var(--text3);
+  color: var(--text2);
   line-height: 1.4;
 }
 
@@ -422,6 +465,56 @@
 }
 
 .aiCardCta:active { opacity: 0.75; }
+
+/* ── Report style grid ── */
+
+.reportGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.reportChip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reportChipActive {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, color-mix(in srgb, var(--bg) 70%, transparent));
+}
+
+.reportChipIcon {
+  display: flex;
+  color: var(--text3);
+  transition: color 0.15s;
+}
+
+.reportChipActive .reportChipIcon {
+  color: var(--accent);
+}
+
+.reportChipLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text2);
+  line-height: 1;
+}
+
+.reportChipActive .reportChipLabel {
+  color: var(--accent);
+}
 
 /* ── Reset hints ── */
 
@@ -454,32 +547,31 @@
 .resetBtn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: color-mix(in srgb, var(--bg) 65%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  border-radius: 8px;
+  gap: 5px;
+  padding: 4px 0;
+  background: none;
+  border: none;
   font-family: var(--font-ui);
-  font-size: 12px;
-  color: var(--text2);
+  font-size: 11px;
+  color: var(--text3);
   cursor: pointer;
   letter-spacing: 0.04em;
-  transition: border-color 0.15s, color 0.15s;
+  transition: color 0.15s;
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
 }
 
-.resetBtn:not(:disabled):active { opacity: 0.7; }
+.resetBtn:not(:disabled):active { color: var(--accent); }
 
 .resetBtn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
 .resetHint {
   font-family: var(--font-ui);
   font-size: 11px;
-  color: var(--text3);
+  color: var(--text2);
   margin: 0;
   line-height: 1.4;
 }

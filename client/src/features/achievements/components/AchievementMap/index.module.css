@@ -1,0 +1,236 @@
+/* ── Card ── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 0;
+}
+
+.cardTitle {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+}
+
+.infoBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text3);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+
+.infoBtn:active { color: var(--accent); }
+
+.infoBtnActive {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* ── Info tooltip ── */
+
+.infoTooltip {
+  margin: 0 0 4px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 10px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.infoTooltipText {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Canvas ── */
+
+.canvas {
+  position: relative;
+  width: 100%;
+  padding-bottom: 140%;  /* aspect ratio ~1:1.1 */
+  overflow: hidden;
+}
+
+.treeImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 0;
+  opacity: 0.85;
+  user-select: none;
+}
+
+.treeImgLight { mix-blend-mode: multiply; }
+.treeImgDark  { filter: invert(1) hue-rotate(180deg) contrast(150%); mix-blend-mode: screen; }
+
+
+/* ── Connection lines SVG ── */
+
+.connectionsSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.connLit {
+  stroke: color-mix(in srgb, var(--accent) 60%, var(--text3));
+  stroke-width: 0.6;
+  opacity: 0.55;
+}
+
+.connDim {
+  stroke: var(--border);
+  stroke-width: 0.4;
+  opacity: 0.3;
+}
+
+/* ── Node button ── */
+
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  line-height: 0;
+}
+
+.node:active {
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+.nodeSelected {
+  z-index: 3;
+}
+
+.badgeImg {
+  display: block;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  user-select: none;
+}
+
+.nodeBlend {
+  /* mix-blend-mode: multiply; */
+}
+
+/* ── Rune image nodes ── */
+
+.runeWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+}
+
+.runeImg {
+  display: block;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  user-select: none;
+}
+
+.runeImgUnlocked {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+
+.runeImgDim {
+  filter: saturate(0.3) brightness(0.65);
+}
+
+.arcOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* ── Arc ring ── */
+
+.ringTrack {
+  stroke: color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.ringArc {
+  stroke: var(--accent);
+}
+
+/* ── Selected pulse ring ── */
+
+.nodePulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0.5;
+  animation: pulse 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50%       { transform: scale(1.12); opacity: 0.2; }
+}
+
+/* ── "Криниця мовчить" ── */
+
+.wellText {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}

@@ -57,6 +57,37 @@
 .todoInput:focus { border-color: var(--accent); }
 .todoInput::placeholder { color: var(--text3); }
 
+/* ── Duplicate warning ── */
+.dupHint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  background: var(--panel-warning-bg);
+  border: 1px solid color-mix(in srgb, var(--orange) 28%, transparent);
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--orange);
+  margin-top: -4px;
+}
+
+.dupHintBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--orange);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* ── Priority buttons ── */
 .priorityRow { display: flex; gap: 6px; }
 

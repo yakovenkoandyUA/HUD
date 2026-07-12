@@ -3,27 +3,53 @@
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  /* 1px gap via background creates divider lines */
-  gap: 1px;
-  background: var(--border);
-  /* corners clipped by parent .tilesWrap overflow:hidden */
+  gap: 8px;
 }
+
+/* ── Cell ──────────────────────────────────────────────────────
+   Surface comes from the theme; only override where the default
+   surface is wrong (e.g. Velvet's blue-purple surface → bg).
+   ─────────────────────────────────────────────────────────────*/
 
 .cell {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding: 10px 12px 11px;
-  background: var(--bg);
-  border: none;
+  padding: 10px 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s;
+  transition: background 0.12s, border-color 0.12s;
   min-width: 0;
-  min-height: 78px;
+  min-height: 76px;
 }
+
+.cell:hover  { background: var(--surface2); }
 .cell:active { background: var(--surface2); }
+
+.cell:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--accent));
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell { transition: none; }
+}
+
+/* Velvet surface override: cells near-black, neutral border */
+:global([data-theme='velvet']) .cell {
+  background: linear-gradient(145deg, rgba(14, 15, 25, 0.98), rgba(10, 11, 19, 0.98));
+  border-color: rgba(75, 82, 115, 0.48);
+}
+:global([data-theme='velvet']) .cell:hover,
+:global([data-theme='velvet']) .cell:active {
+  background: rgba(18, 21, 36, 0.98);
+}
+
+/* ── Cell header row ── */
 
 .cellHeader {
   display: flex;
@@ -43,13 +69,24 @@
   padding-top: 1px;
 }
 
+/* Dark themes: lift heading labels */
+:global([data-theme='cyber'])  .cellLabel,
+:global([data-theme='noir'])   .cellLabel,
+:global([data-theme='arctic']) .cellLabel { color: var(--text2); }
+/* Velvet: neutral grey (not golden --text2) */
+:global([data-theme='velvet']) .cellLabel { color: #b9b9be; }
+
+/* ── Category icons (semantic color — theme-independent) ─────── */
+
 .cellIcon {
   flex-shrink: 0;
-  opacity: 0.3;
+  opacity: 0.85;
 }
-.cellIconAccent { color: var(--accent); }
-.cellIconSecond { color: var(--second); }
-.cellIconText   { color: var(--text2); }
+
+.cellIconQuest { color: var(--cat-quest); }
+.cellIconShop  { color: var(--cat-shop);  }
+.cellIconMeal  { color: var(--cat-meal);  }
+.cellIconNote  { color: var(--cat-note);  }
 
 /* ── Primary value ── */
 
@@ -63,9 +100,30 @@
   text-overflow: ellipsis;
   line-height: 1.1;
 }
-.cellValDim    { color: var(--text3); font-weight: 400; font-size: 13px; }
-.cellValAccent { color: var(--accent); font-size: 22px; }
-.cellValSecond { color: var(--second); font-size: 12px; font-weight: 600; }
+
+/* Dim state: "порожньо", "не заплановано" */
+.cellValDim {
+  color: var(--text3);
+  font-weight: 400;
+  font-size: 13px;
+}
+
+/* Dark themes: lift dim value text for readability */
+:global([data-theme='cyber'])  .cellValDim,
+:global([data-theme='noir'])   .cellValDim,
+:global([data-theme='arctic']) .cellValDim { color: var(--text2); }
+/* Velvet: neutral primary (near-black bg provides contrast, no need to dim) */
+:global([data-theme='velvet']) .cellVal    { color: #f1f1f3; }
+:global([data-theme='velvet']) .cellValDim { color: #f1f1f3; }
+/* Quest accent number must win over the generic cellVal override above */
+:global([data-theme='velvet']) .cellValQuest { font-size: 22px; line-height: 1; }
+
+/* Quest: large coloured number */
+.cellValQuest {
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+}
 
 /* ── Secondary hint ── */
 
@@ -78,5 +136,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.cellSubAccent { color: var(--accent); }
-.cellSubDim    { color: var(--text3); }
+
+/* Dark themes: lift secondary text */
+:global([data-theme='cyber'])  .cellSub,
+:global([data-theme='noir'])   .cellSub,
+:global([data-theme='arctic']) .cellSub { color: var(--text2); }
+/* Velvet: muted neutral (not golden --text2) */
+:global([data-theme='velvet']) .cellSub { color: #96969e; }
+
+/* Functional accent subs — same colours in all themes */
+.cellSubQuest { color: var(--cat-quest); font-weight: 600; }
+.cellSubShop  { color: var(--cat-shop);  font-weight: 500; }
+.cellSubMeal  { color: var(--cat-meal);  font-weight: 500; }
+.cellSubNote  { color: var(--cat-note);  font-weight: 500; }
+
+/* Velvet: accent subs must win over the generic .cellSub override (same specificity, later wins) */
+:global([data-theme='velvet']) .cellSubQuest { color: var(--cat-quest); }
+:global([data-theme='velvet']) .cellSubShop  { color: var(--cat-shop);  }
+:global([data-theme='velvet']) .cellSubMeal  { color: var(--cat-meal);  }
+:global([data-theme='velvet']) .cellSubNote  { color: var(--cat-note);  }
+:global([data-theme='cyber']) .cellSubQuest { color: var(--cat-quest); }
+:global([data-theme='cyber']) .cellSubShop  { color: var(--cat-shop);  }
+:global([data-theme='cyber']) .cellSubMeal  { color: var(--cat-meal);  }
+:global([data-theme='cyber']) .cellSubNote  { color: var(--cat-note);  }

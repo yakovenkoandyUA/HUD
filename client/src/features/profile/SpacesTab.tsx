@@ -8,6 +8,7 @@ import { usePlan } from '@/shared/hooks/usePlan'
 import UpgradePrompt from '@/shared/components/ui/UpgradePrompt'
 import PillSelector from '@/shared/components/ui/PillSelector'
 import { SPACE_TEMPLATES } from './spaceTemplates'
+import { SPACE_TYPE_CONFIG } from '@/features/spaces/data/spaceTypes'
 import styles from './SpacesTab.module.css'
 
 const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
@@ -317,30 +318,39 @@ const SpacesTab: React.FC = () => {
               <>
                 <h2 className={styles.sheetTitle}>Який простір?</h2>
                 <div className={styles.templateGrid}>
-                  {SPACE_TEMPLATES.map(tpl => (
-                    <button
-                      key={tpl.id}
-                      type="button"
-                      className={styles.templateCard}
-                      onClick={() => pickTemplate(tpl)}
-                    >
-                      <span className={styles.templateDot} style={{ background: tpl.color }} />
-                      <span className={styles.templateLabel}>{tpl.label}</span>
-                      <span className={styles.templateDesc}>{tpl.description}</span>
-                    </button>
-                  ))}
+                  {SPACE_TEMPLATES.map(tpl => {
+                    const cfg = SPACE_TYPE_CONFIG[tpl.type]
+                    return (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        className={styles.templateCard}
+                        style={{ '--type-color': cfg?.color ?? '#888' } as React.CSSProperties}
+                        onClick={() => pickTemplate(tpl)}
+                      >
+                        <div className={styles.templateIconZone}>
+                          {cfg && <img src={cfg.iconSrc} width={30} height={30} alt="" aria-hidden="true" />}
+                        </div>
+                        <div className={styles.templateCardBody}>
+                          <span className={styles.templateLabel}>{tpl.label}</span>
+                          <span className={styles.templateDesc}>{tpl.description}</span>
+                        </div>
+                      </button>
+                    )
+                  })}
                   <button
                     type="button"
                     className={`${styles.templateCard} ${styles.templateCardBlank}`}
+                    style={{ '--type-color': '#71717a' } as React.CSSProperties}
                     onClick={() => pickTemplate(null)}
                   >
-                    <span className={styles.templateDotBlank}>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                        <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                      </svg>
-                    </span>
-                    <span className={styles.templateLabel}>Порожній</span>
-                    <span className={styles.templateDesc}>Почати з нуля</span>
+                    <div className={styles.templateIconZone}>
+                      <img src="/mimir_space_icons_svg/blank-plus-dashed.svg" width={30} height={30} alt="" aria-hidden="true" />
+                    </div>
+                    <div className={styles.templateCardBody}>
+                      <span className={styles.templateLabel}>Порожній</span>
+                      <span className={styles.templateDesc}>Почати з нуля</span>
+                    </div>
                   </button>
                 </div>
               </>

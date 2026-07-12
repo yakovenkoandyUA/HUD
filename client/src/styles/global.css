@@ -22,6 +22,13 @@
   /* Neutral utility colors (used in Badge/Toast, consistent across themes) */
   --orange:   #e67e22;
   --orange-s: rgba(230, 126, 34, 0.12);
+
+  /* ── Functional category accents (theme-independent) ── */
+  /* Work on all dark surfaces; see light-theme overrides below */
+  --cat-quest: #e83050;   /* crimson — Квести */
+  --cat-shop:  #8050d8;   /* violet  — Покупки */
+  --cat-meal:  #2880f0;   /* azure   — Страва  */
+  --cat-note:  #48cc2c;   /* lime    — Нотатки */
 }
 
 /* ── Semantic tokens ────────────────────────────────────────────────────────
@@ -330,6 +337,14 @@
   --tap-bg: rgba(0, 0, 0, 0.05);
 }
 
+/* ── Light-theme overrides for --cat-* (WCAG AA on light surfaces) ── */
+[data-theme="japan"],
+[data-theme="pixel"] {
+  --cat-quest: #c01028;
+  --cat-shop:  #5830a8;
+  --cat-meal:  #1060c8;
+  --cat-note:  #208818;
+}
 
 /* Тонкий dither-border ефект на картках */
 [data-theme="pixel"] body::after {

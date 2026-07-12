@@ -1,0 +1,267 @@
+/* ── Root ── */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 0 32px;
+}
+
+/* ── Hero card ── */
+
+.heroCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  position: relative;
+  overflow: clip;
+}
+
+.heroImgWrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.heroImg {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  user-select: none;
+}
+
+.heroBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.heroScore {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1;
+}
+
+.heroScoreEarned {
+  font-family: var(--font-display);
+  font-size:27px;
+  line-height: 1;
+  color: var(--text);
+}
+
+.heroScoreSep {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--text3);
+  margin: 0 2px;
+}
+
+.heroScoreMax {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--text3);
+}
+
+.heroLabel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.heroSub {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.45;
+  margin: 4px 0 0;
+  white-space: pre-line;
+}
+
+.heroRune {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 68px;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ── Category tabs ── */
+
+.tabsWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.tabsWrap::-webkit-scrollbar { display: none; }
+
+.tabs {
+  display: flex;
+  min-width: max-content;
+}
+
+.tab {
+  padding: 8px 14px 10px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tabActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Selected node detail ── */
+
+.nodeDetail {
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nodeDetailTitle {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.nodeDetailDesc {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.nodeDetailProgress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.nodeDetailTrack {
+  flex: 1;
+  height: 3px;
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.nodeDetailFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.nodeDetailLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+/* ── Achievement list ── */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Dark-theme overrides for hero card ── */
+
+:global([data-theme="velvet"]) .heroCard,
+:global([data-theme="cyber"]) .heroCard,
+:global([data-theme="noir"]) .heroCard {
+  background: linear-gradient(135deg, rgba(14, 15, 23, 0.94), rgba(11, 12, 19, 0.90));
+  border-color: rgba(190, 158, 91, 0.18);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+:global([data-theme="velvet"]) .heroImg,
+:global([data-theme="cyber"]) .heroImg,
+:global([data-theme="noir"]) .heroImg {
+  mix-blend-mode: screen;
+  filter: brightness(1.65) contrast(1.08) saturate(1.1);
+  opacity: 0.96;
+}
+
+:global([data-theme="velvet"]) .heroImgWrap::after,
+:global([data-theme="cyber"]) .heroImgWrap::after,
+:global([data-theme="noir"]) .heroImgWrap::after {
+  background: radial-gradient(circle, rgba(255, 184, 52, 0.24), transparent 68%);
+}
+
+
+
+:global([data-theme="velvet"]) .heroScoreEarned,
+:global([data-theme="cyber"]) .heroScoreEarned,
+:global([data-theme="noir"]) .heroScoreEarned {
+  color: #edf2ff;
+}
+
+:global([data-theme="velvet"]) .heroScoreSep,
+:global([data-theme="cyber"]) .heroScoreSep,
+:global([data-theme="noir"]) .heroScoreSep {
+  color: #9c8450;
+}
+
+:global([data-theme="velvet"]) .heroScoreMax,
+:global([data-theme="cyber"]) .heroScoreMax,
+:global([data-theme="noir"]) .heroScoreMax {
+  color: #8fa0b5;
+}
+
+:global([data-theme="velvet"]) .heroLabel,
+:global([data-theme="cyber"]) .heroLabel,
+:global([data-theme="noir"]) .heroLabel {
+  color: #d9a928;
+}
+
+:global([data-theme="velvet"]) .heroSub,
+:global([data-theme="cyber"]) .heroSub,
+:global([data-theme="noir"]) .heroSub {
+  color: rgba(205, 210, 225, 0.68);
+}

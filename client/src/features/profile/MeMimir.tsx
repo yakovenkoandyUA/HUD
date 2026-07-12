@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { useUiStore, type MimirMode, type MimirFrequency } from '@/shared/store/uiStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
-import PillSelector from '@/shared/components/ui/PillSelector'
 import styles from './MeMimir.module.css'
 
 // ── Mode config ───────────────────────────────────────────────────────────────
@@ -52,7 +51,82 @@ interface FreqOption {
 const FREQ_OPTIONS: FreqOption[] = [
   { value: 'active',   label: 'Активний',    desc: 'Вранці, вдень і ввечері' },
   { value: 'balanced', label: 'Збалансований', desc: 'Раз на день' },
-  { value: 'silent',   label: 'Тихий',       desc: 'Тільки коли кликаєш' },
+  { value: 'silent',   label: 'Спокійний',   desc: 'Тільки коли кликаєш' },
+]
+
+// ── Report style config ───────────────────────────────────────────────────────
+
+interface ReportStyleOption {
+  id: string
+  label: string
+  icon: React.ReactNode
+}
+
+const REPORT_STYLES: ReportStyleOption[] = [
+  {
+    id: 'standard',
+    label: 'Стандартний',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="2" y="10" width="3" height="6" rx="1"/>
+        <rect x="7.5" y="6" width="3" height="10" rx="1"/>
+        <rect x="13" y="2" width="3" height="14" rx="1"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'coach',
+    label: 'Тренер',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M10.5 2L5 10h6.5l-2 6L17 7h-6.5l2-5z"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'yoda',
+    label: 'Мудрець',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M9 3C5.5 3 3 6 3 9s2.5 6 6 6 6-3 6-6-2.5-6-6-6z"/>
+        <circle cx="9" cy="9" r="2"/>
+        <path d="M9 3v2M9 13v2M3 9h2M13 9h2"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'kozak',
+    label: 'Козак',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M13.5 2.5L4.5 11.5"/>
+        <path d="M4.5 11.5l-2 4 4-2"/>
+        <path d="M11 5l2 2"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'motivator',
+    label: 'Мотиватор',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M11.5 2C8 2 5 5 4 8.5l5.5 5.5C13 13 16 10 16 6.5c0-2.5-2-4.5-4.5-4.5z"/>
+        <path d="M4 8.5L2 15l6.5-2"/>
+        <circle cx="11" cy="7" r="1" fill="currentColor" stroke="none"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'accountant',
+    label: 'Бухгалтер',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="2" y="2" width="14" height="14" rx="2"/>
+        <line x1="9" y1="2" x2="9" y2="16"/>
+        <line x1="2" y1="9" x2="16" y2="9"/>
+      </svg>
+    ),
+  },
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -67,9 +141,8 @@ const FREQ_OPTIONS: FreqOption[] = [
  */
 const MeMimir: React.FC = () => {
   const navigate = useNavigate()
-  const { mimirMode, setMimirMode, mimirFrequency, setMimirFrequency } = useUiStore()
+  const { mimirMode, setMimirMode, mimirFrequency, setMimirFrequency, theme, showToast } = useUiStore()
   const { activeProfile, updateProfile } = useProfileStore()
-  const { showToast } = useUiStore()
   const hasAi = useCanUseFeature('mimirAi')
 
   const [resetting, setResetting] = useState(false)
@@ -135,6 +208,7 @@ const MeMimir: React.FC = () => {
   }
 
   const seenCount = activeProfile?.mimirSeenHints?.length ?? 0
+  const paralaxImg = (theme === 'japan' || theme === 'pixel') ? '/mimir/mimir-paralax-light.png' : '/mimir/mimir-paralax-dark.png'
 
   return (
     <>
@@ -142,7 +216,7 @@ const MeMimir: React.FC = () => {
       <div
         ref={bgRef}
         className={styles.fixedBg}
-        style={{ backgroundImage: "url('/mimir/mimir-paralax.png')" }}
+        style={{ backgroundImage: `url('${paralaxImg}')` }}
       />,
       document.body
     )}
@@ -179,20 +253,28 @@ const MeMimir: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Frequency + AI — one block ── */}
+      {/* ── Frequency ── */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>ЧАСТОТА</h2>
-        <PillSelector
-          options={FREQ_OPTIONS.map(f => ({ value: f.value, label: f.label }))}
-          value={mimirFrequency}
-          onChange={v => setMimirFrequency(v as MimirFrequency)}
-        />
+        <h2 className={styles.sectionTitle}>ЧАСТОТА ПОЯВИ</h2>
+        <div className={styles.freqTabs}>
+          {FREQ_OPTIONS.map(f => (
+            <button
+              key={f.value}
+              type="button"
+              className={`${styles.freqTab} ${mimirFrequency === f.value ? styles.freqTabOn : ''}`}
+              onClick={() => setMimirFrequency(f.value as MimirFrequency)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
         <p className={styles.freqDesc}>
           {FREQ_OPTIONS.find(f => f.value === mimirFrequency)?.desc}
         </p>
+      </section>
 
-        <div className={styles.sectionDivider} />
-
+      {/* ── AI status ── */}
+      <section className={styles.section}>
         <div className={`${styles.aiInner} ${hasAi ? styles.aiInnerActive : ''}`}>
           <div className={styles.aiCardIcon}>
             {hasAi ? (
@@ -225,6 +307,28 @@ const MeMimir: React.FC = () => {
               Тарифи
             </button>
           )}
+        </div>
+      </section>
+
+      {/* ── Report style ── */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>СТИЛЬ ЗВІТІВ</h2>
+        <p className={styles.freqDesc}>Манера в якій AI подає місячний звіт</p>
+        <div className={styles.reportGrid}>
+          {REPORT_STYLES.map(s => (
+            <button
+              key={s.id}
+              type="button"
+              className={`${styles.reportChip} ${(activeProfile?.reportStyle ?? 'standard') === s.id ? styles.reportChipActive : ''}`}
+              onClick={async () => {
+                if ((activeProfile?.reportStyle ?? 'standard') === s.id) return
+                await updateProfile({ reportStyle: s.id })
+              }}
+            >
+              <span className={styles.reportChipIcon}>{s.icon}</span>
+              <span className={styles.reportChipLabel}>{s.label}</span>
+            </button>
+          ))}
         </div>
       </section>
 

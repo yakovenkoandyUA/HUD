@@ -5,7 +5,6 @@ import GreetingBlock from './components/dashboard/GreetingBlock'
 import HeroCard from './components/dashboard/HeroCard'
 import RaceCountdownStrip from './components/dashboard/RaceCountdownStrip'
 import DaySummaryCard from './components/dashboard/DaySummaryCard'
-import TodayHabits from './components/dashboard/TodayHabits'
 import Modal from '@/shared/components/ui/Modal'
 import ExpenseForm from '@/features/finance/components/finance/ExpenseForm'
 import AddSprintItemModal from '@/features/sprint/components/sprint/AddSprintItemModal'
@@ -36,7 +35,7 @@ import styles from './Dashboard.module.css'
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
-  const { items: sprintItems, toggleItem, fetchItems } = useSprintStore()
+  const { items: sprintItems, fetchItems } = useSprintStore()
   const { showToast } = useUiStore()
   const f1Enabled  = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay  = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
@@ -160,19 +159,6 @@ const Dashboard: React.FC = () => {
             />
           </div>
         ) : null}
-
-        {/* 3 — Today habits: section label + compact vertical list */}
-        {routineItems.length > 0 && (
-          <div className={styles.todaySection}>
-            <span className={styles.todaySectionLabel}>СЬОГОДНІ</span>
-            <TodayHabits
-              routineItems={routineItems}
-              isDoneToday={isDoneToday}
-              onToggle={toggleItem}
-              onOpenDay={() => setShowDay(true)}
-            />
-          </div>
-        )}
 
         {/* 4 — Status tiles: 2×2 grid */}
         <div className={styles.tilesWrap}>

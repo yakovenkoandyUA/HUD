@@ -1,0 +1,21 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.badge img {
+  display: block;
+}
+
+:global([data-theme="pixel"]) .badge {
+  border-radius: 5px;
+}
+
+/* Light themes: cream icon (#E9DCAB) invisible on light bg — darken via filter */
+:global([data-theme="japan"]) .badge img,
+:global([data-theme="pixel"]) .badge img {
+  filter: brightness(0) opacity(0.55);
+}

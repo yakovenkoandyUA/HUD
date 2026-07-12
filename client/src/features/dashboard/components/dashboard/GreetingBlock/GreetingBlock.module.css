@@ -6,7 +6,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius, 12px);
-  min-height: 130px;
+  min-height: 118px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -101,10 +101,10 @@
 .topContent {
   position: relative;
   z-index: 1;
-  padding: 14px 16px 0;
+  padding: 10px 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .date {
@@ -157,10 +157,10 @@
 .todayRow {
   position: relative;
   z-index: 1;
-  padding: 8px 14px 12px;
+  padding: 6px 14px 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 /* Bottom sub-row: item + "детальніше" on same line */
@@ -182,23 +182,24 @@
 .todayLink {
   display: flex;
   align-items: center;
-  gap: 3px;
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
-  backdrop-filter: blur(8px) saturate(1.2);
-  -webkit-backdrop-filter: blur(8px) saturate(1.2);
-  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-  border-radius: 20px;
-  padding: 4px 10px;
+  gap: 2px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 6px;
+  padding: 3px 7px;
   font-family: var(--font-ui);
   font-size: 10px;
-  color: var(--text);
+  color: var(--text2);
   cursor: pointer;
   letter-spacing: 0.04em;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s, background 0.15s;
   -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
+  flex-shrink: 0;
 }
-.todayLink:hover { background: color-mix(in srgb, var(--bg) 75%, transparent); color: var(--accent); }
+.todayLink:hover { color: var(--accent); background: color-mix(in srgb, var(--surface) 75%, transparent); }
 .todayLink:active { opacity: 0.7; }
 
 .todayItem {
@@ -244,6 +245,28 @@
 :global([data-theme='noir']) .weatherDesc {
   color: var(--text2);
 }
+
+/* ── Dark themes — lift dim text inside the banner ───────────── */
+
+:global([data-theme='velvet']) .weatherDesc,
+:global([data-theme='cyber'])  .weatherDesc,
+:global([data-theme='noir'])   .weatherDesc,
+:global([data-theme='arctic']) .weatherDesc { color: var(--text2); }
+
+:global([data-theme='velvet']) .todayLabel,
+:global([data-theme='cyber'])  .todayLabel,
+:global([data-theme='noir'])   .todayLabel,
+:global([data-theme='arctic']) .todayLabel { color: var(--text2); }
+
+:global([data-theme='velvet']) .todayLink,
+:global([data-theme='cyber'])  .todayLink,
+:global([data-theme='noir'])   .todayLink,
+:global([data-theme='arctic']) .todayLink { color: var(--text); }
+
+:global([data-theme='velvet']) .todayEmpty,
+:global([data-theme='cyber'])  .todayEmpty,
+:global([data-theme='noir'])   .todayEmpty,
+:global([data-theme='arctic']) .todayEmpty { color: var(--text2); }
 
 /* ── Velvet — no bright yellow, use gold + opacity ───────────── */
 

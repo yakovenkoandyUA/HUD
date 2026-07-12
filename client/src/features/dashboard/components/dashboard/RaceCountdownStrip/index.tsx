@@ -53,7 +53,7 @@ const RaceCountdownStrip: React.FC<RaceCountdownStripProps> = ({ race }) => {
     return () => clearInterval(id)
   }, [race.date])
 
-  const fullName = race.name.replace(' GP', ' GRAND PRIX').toUpperCase()
+  const fullName = race.name.replace(' Grand Prix', ' GP').toUpperCase()
   const weekendDates = getWeekendDates(race.date)
 
   return (

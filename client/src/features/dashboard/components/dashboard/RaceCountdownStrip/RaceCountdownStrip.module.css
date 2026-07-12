@@ -153,21 +153,21 @@
 }
 
 .stripLight .banner {
-  opacity: 0.75;
+  opacity: 0.65;
 }
 
 .stripLight .overlay {
   background: linear-gradient(
     to right,
-    rgba(240, 236, 228, 0.92) 0%,
-    rgba(240, 236, 228, 0.78) 45%,
-    rgba(240, 236, 228, 0.10) 100%
+    rgba(240, 236, 228, 0.96) 0%,
+    rgba(240, 236, 228, 0.88) 48%,
+    rgba(240, 236, 228, 0.20) 100%
   );
 }
 
 .stripLight .name   { color: #111; }
 .stripLight .unit   { color: #111; }
-.stripLight .sub    { color: rgba(0, 0, 0, 0.45); }
-.stripLight .dot    { color: rgba(0, 0, 0, 0.25); }
-.stripLight .dates  { color: rgba(0, 0, 0, 0.45); }
-.stripLight .arrow  { color: rgba(0, 0, 0, 0.35); }
+.stripLight .sub    { color: rgba(0, 0, 0, 0.52); }
+.stripLight .dot    { color: rgba(0, 0, 0, 0.30); }
+.stripLight .dates  { color: rgba(0, 0, 0, 0.52); }
+.stripLight .arrow  { color: rgba(0, 0, 0, 0.40); }

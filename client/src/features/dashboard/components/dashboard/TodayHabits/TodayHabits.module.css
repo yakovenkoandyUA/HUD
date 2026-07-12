@@ -1,7 +1,7 @@
 .root {
   border: 1px solid var(--border);
   border-radius: var(--radius, 12px);
-  overflow: hidden;
+  /* overflow: hidden; */
   background: var(--surface);
 }
 
@@ -134,3 +134,20 @@
 :global([data-theme='velvet']) .dot {
   border-color: var(--gold);
 }
+
+/* ── Dark themes: lift dim text ── */
+
+:global([data-theme='velvet']) .itemSub,
+:global([data-theme='cyber'])  .itemSub,
+:global([data-theme='noir'])   .itemSub,
+:global([data-theme='arctic']) .itemSub { color: var(--text2); }
+
+:global([data-theme='velvet']) .moreText,
+:global([data-theme='cyber'])  .moreText,
+:global([data-theme='noir'])   .moreText,
+:global([data-theme='arctic']) .moreText { color: var(--text2); }
+
+:global([data-theme='velvet']) .itemTime,
+:global([data-theme='cyber'])  .itemTime,
+:global([data-theme='noir'])   .itemTime,
+:global([data-theme='arctic']) .itemTime { color: var(--text2); }

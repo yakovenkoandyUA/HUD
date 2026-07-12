@@ -10,7 +10,7 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px calc(80px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(120px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -43,34 +43,16 @@
 .content > *:nth-child(6) { animation-delay: 0.25s; }
 .content > *:nth-child(7) { animation-delay: 0.28s; }
 
-/* ── Today section: label + list ────────────────────────────── */
-
-.todaySection {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.todaySectionLabel {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text3);
-}
-
 /* ── Status tiles wrapper ──────────────────────────────────── */
 
 .tilesWrap {
-  border-radius: var(--radius, 12px);
-  border: 1px solid var(--border);
+  /* cells now carry their own border+radius */
 }
 
 /* ── Section wrapper (Finance etc.) ─────────────────────────── */
 
 .sectionWrap {
-  margin: 0 -16px;
+  /* margin: 0 -16px; */
 }
 
 .sectionHeader {
@@ -105,6 +87,18 @@
   -webkit-tap-highlight-color: transparent;
 }
 .sectionLink:hover, .sectionLink:active { color: var(--accent); }
+
+/* ── Dark themes: section labels/links readable ── */
+
+:global([data-theme='velvet']) .sectionLabel,
+:global([data-theme='cyber'])  .sectionLabel,
+:global([data-theme='noir'])   .sectionLabel,
+:global([data-theme='arctic']) .sectionLabel { color: var(--text2); }
+
+:global([data-theme='velvet']) .sectionLink,
+:global([data-theme='cyber'])  .sectionLink,
+:global([data-theme='noir'])   .sectionLink,
+:global([data-theme='arctic']) .sectionLink { color: var(--text2); }
 
 /* ── FAB ────────────────────────────────────────────────────── */
 
