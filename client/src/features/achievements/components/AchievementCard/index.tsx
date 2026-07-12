@@ -10,7 +10,7 @@ const RUNE_SRC: Record<string, string> = {
   watchlist: '/achive/mimir-runes-transparent/rune-watchlist.png',
 }
 
-const RING_R_CARD = 20
+const RING_R_CARD = 36
 const CIRC        = 2 * Math.PI * RING_R_CARD
 
 interface AchievementCardProps {
@@ -37,10 +37,10 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
 
   const fraction  = target > 0 ? progress / target : 0
   const arcFill   = fraction * CIRC
-  const svgSize   = 52
+  const RING_W    = 3
+  const svgSize   = (RING_R_CARD + RING_W) * 2 + 4
   const cx        = svgSize / 2
   const cy        = svgSize / 2
-  const RING_W    = 3
 
   const runeSrc = RUNE_SRC[achievement.category]
 
@@ -57,7 +57,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
             <img src="/achive/achive-block.png" alt="" className={styles.badgeImg} draggable={false} />
           </div>
         ) : isUnlocked ? (
-          <div className={`${styles.badgeRuneWrap} ${styles.badgeRuneWrapUnlocked}`}>
+          <div className={styles.badgeRuneWrap}>
             <img src={runeSrc} alt="" className={styles.badgeRuneImg} draggable={false} />
           </div>
         ) : (
