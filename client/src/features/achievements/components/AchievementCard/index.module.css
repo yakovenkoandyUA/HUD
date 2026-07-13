@@ -34,9 +34,17 @@
 }
 
 .badgeImg {
-	width: 85px;
+	width: 55px;
 	object-fit: contain;
 	user-select: none;
+	filter: brightness(1.6);
+}
+
+:global([data-theme="velvet"]) .badgeImg,
+:global([data-theme="cyber"]) .badgeImg,
+:global([data-theme="noir"]) .badgeImg,
+:global([data-theme="arctic"]) .badgeImg {
+	filter: brightness(1);
 }
 
 /* ── Rune badge (unlocked / in_progress) ── */
