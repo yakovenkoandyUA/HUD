@@ -74,9 +74,6 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
         </div>
       )}
 
-      {selected && status !== 'hidden' && (
-        <span className={styles.nodePulse} />
-      )}
     </button>
   )
 }
