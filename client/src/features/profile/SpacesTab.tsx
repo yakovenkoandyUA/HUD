@@ -35,7 +35,7 @@ const COLORS = [
 const SpacesTab: React.FC = () => {
   const {
     spaces, archivedSpaces, loading,
-    fetchSpaces, fetchArchived, createSpace, deleteSpace,
+    fetchSpaces, fetchArchived, createSpace, updateSpace, deleteSpace,
     addMember, removeMember, archiveSpace, unarchiveSpace,
   } = useSpacesStore()
   const { activeProfile } = useProfileStore()
@@ -56,6 +56,11 @@ const SpacesTab: React.FC = () => {
   // ── Detail / members ──
   const [memberInput, setMemberInput]   = useState('')
   const [addingMember, setAddingMember] = useState(false)
+
+  // ── Inline name edit ──
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput,   setNameInput]   = useState('')
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
   // ── Archived accordion ──
   const [archivedOpen, setArchivedOpen] = useState(false)
@@ -115,6 +120,26 @@ const SpacesTab: React.FC = () => {
       }
     }
     submit()
+    return () => { cancelled = true }
+  }
+
+  const handleSaveName = async () => {
+    if (!detailSpace || !nameInput.trim() || nameInput.trim() === detailSpace.name) {
+      setEditingName(false)
+      return
+    }
+    let cancelled = false
+    const run = async () => {
+      try {
+        await updateSpace(detailSpace.id, { name: nameInput.trim() })
+        if (!cancelled) showToast('Назву змінено', 'success')
+      } catch {
+        if (!cancelled) showToast('Помилка збереження', 'error')
+      } finally {
+        if (!cancelled) setEditingName(false)
+      }
+    }
+    run()
     return () => { cancelled = true }
   }
 
@@ -414,8 +439,38 @@ const SpacesTab: React.FC = () => {
 
             <div className={styles.detailHeader}>
               <span className={styles.detailColor} style={{ background: detailSpace.color }} />
-              <div>
-                <h2 className={styles.sheetTitle} style={{ marginBottom: 2 }}>{detailSpace.name}</h2>
+              <div className={styles.detailTitleWrap}>
+                {editingName ? (
+                  <input
+                    ref={nameInputRef}
+                    className={styles.nameInput}
+                    value={nameInput}
+                    onChange={e => setNameInput(e.target.value)}
+                    onBlur={handleSaveName}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') { e.preventDefault(); handleSaveName() }
+                      if (e.key === 'Escape') setEditingName(false)
+                    }}
+                    autoFocus
+                    maxLength={60}
+                  />
+                ) : (
+                  <div className={styles.nameRow}>
+                    <h2 className={styles.sheetTitle} style={{ marginBottom: 0 }}>{detailSpace.name}</h2>
+                    {detailSpace.ownerId === myId && (
+                      <button
+                        type="button"
+                        className={styles.editNameBtn}
+                        onClick={() => { setEditingName(true); setNameInput(detailSpace.name) }}
+                        aria-label="Редагувати назву"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
                 <span className={styles.detailType}>
                   {TYPE_OPTIONS.find(t => t.value === detailSpace.type)?.label ?? detailSpace.type}
                 </span>
