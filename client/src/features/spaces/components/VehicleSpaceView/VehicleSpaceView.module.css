@@ -889,6 +889,29 @@
   color: var(--text2);
 }
 
+.vehicleHeroBackBtn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vehicleHeroBackBtn:active { opacity: 0.5; }
+
 .vehicleHeroEditBtn {
   position: absolute;
   top: 10px;
@@ -1185,8 +1208,9 @@
 .vehicleEmptyIllustration {
   width: 200px;
   max-width: 80%;
-  height: auto;
+  height: 110px;
   object-fit: contain;
+  object-position: center bottom;
   user-select: none;
   margin-bottom: 2px;
 }
