@@ -16,6 +16,7 @@ interface ApiTransaction {
   recurringId?: string | null
   incomeCategory?: string | null
   tripMemoryId?: string | null
+  spaceId?: string | null
 }
 
 const CACHE_KEY = 'hud-finance-v1'
@@ -76,7 +77,7 @@ interface FinanceState {
 
   fetchTransactions: (month?: string) => Promise<void>
   addTopup: (amount: number, description: string, incomeCategory?: string) => void
-  addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null) => void
+  addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
   patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => void
@@ -138,7 +139,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       .catch(() => set({ syncStatus: 'error' }))
   },
 
-  addExpense: (amount, description, category, tripMemoryId) => {
+  addExpense: (amount, description, category, tripMemoryId, spaceId) => {
     const tx: Transaction = {
       id: crypto.randomUUID(),
       type: 'expense',
@@ -154,7 +155,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       writeCache(transactions, balance)
       return { balance, transactions, syncStatus: 'syncing' }
     })
-    authFetch('/api/transactions', { method: 'POST', body: JSON.stringify({ ...toApiBody(tx), tripMemoryId: tx.tripMemoryId }) })
+    authFetch('/api/transactions', { method: 'POST', body: JSON.stringify({ ...toApiBody(tx), tripMemoryId: tx.tripMemoryId, spaceId: spaceId ?? null }) })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then((created: ApiTransaction) => {
         set(s => {

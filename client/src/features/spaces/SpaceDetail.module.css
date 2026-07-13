@@ -996,3 +996,29 @@
   color: var(--space-color, var(--accent));
   background: color-mix(in srgb, var(--space-color, var(--accent)) 8%, transparent);
 }
+
+.moduleToggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.moduleToggle {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.moduleToggleOn {
+  border-color: var(--space-color, var(--accent));
+  color: var(--space-color, var(--accent));
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 10%, transparent);
+  font-weight: 500;
+}

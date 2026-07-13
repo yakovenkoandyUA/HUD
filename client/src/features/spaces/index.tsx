@@ -246,6 +246,7 @@ const SpaceDetailScreen: React.FC = () => {
   const [editCoverUrl, setEditCoverUrl]           = useState('')
   const [editBudget, setEditBudget]               = useState('')
   const [editBudgetCurrency, setEditBudgetCurrency] = useState('UAH')
+  const [editModules, setEditModules] = useState<string[]>([])
   const [editSaving, setEditSaving]               = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -319,6 +320,7 @@ const SpaceDetailScreen: React.FC = () => {
     setEditCoverUrl(space.coverUrl ?? '')
     setEditBudget(space.budget != null ? String(space.budget) : '')
     setEditBudgetCurrency(space.budgetCurrency ?? 'UAH')
+    setEditModules(space.modules ?? [])
     setConfirmDelete(false)
     setEditOpen(true)
   }
@@ -444,6 +446,7 @@ const SpaceDetailScreen: React.FC = () => {
           coverUrl:       editCoverUrl,
           budget:         isNaN(budgetVal as number) ? null : budgetVal,
           budgetCurrency: editBudgetCurrency,
+          modules:        editModules,
         })
         if (!cancelled) { setEditOpen(false); showToast('Збережено', 'success') }
       } catch {
@@ -601,8 +604,11 @@ const SpaceDetailScreen: React.FC = () => {
           plansCount={plans.length}
           tasksCount={spaceTasks.length}
           membersCount={space.members.length}
+          modules={space.modules ?? []}
+          spaceTxs={spaceTxs}
           isOwner={isOwner}
           onEditSpace={openEdit}
+          onBack={() => navigate(-1)}
         />
       )}
       {space?.type === 'home' && (
@@ -1024,6 +1030,38 @@ const SpaceDetailScreen: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {/* ── Modules (typed spaces only) ── */}
+            {(['vehicle', 'home', 'pet', 'trip'] as const).includes(editType) && (() => {
+              const ALL_MODULES: { key: string; label: string }[] = [
+                { key: 'finance',   label: 'Фінанси' },
+                { key: 'tasks',     label: 'Задачі' },
+                { key: 'memories',  label: 'Спогади' },
+                { key: 'notes',     label: 'Нотатки' },
+              ]
+              const toggleModule = (key: string) =>
+                setEditModules(prev =>
+                  prev.includes(key) ? prev.filter(m => m !== key) : [...prev, key]
+                )
+              return (
+                <>
+                  <label className={styles.fieldLabel}>МОДУЛІ</label>
+                  <div className={styles.moduleToggles}>
+                    {ALL_MODULES.map(m => (
+                      <button
+                        key={m.key}
+                        type="button"
+                        className={`${styles.moduleToggle} ${editModules.includes(m.key) ? styles.moduleToggleOn : ''}`}
+                        style={editModules.includes(m.key) ? colorVar : undefined}
+                        onClick={() => toggleModule(m.key)}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )
+            })()}
 
             <button
               type="button"

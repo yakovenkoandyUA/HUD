@@ -58,6 +58,7 @@ export interface ISpace extends Document {
   budgetCurrency: string
   ownerId:        string
   members:        ISpaceMember[]
+  modules:        string[]
   vehicleProfile: IVehicleProfile | null
   homeProfile:    IHomeProfile | null
   petProfile:     IPetProfile | null
@@ -122,6 +123,7 @@ const schema = new Schema<ISpace>({
   budgetCurrency: { type: String, default: 'UAH' },
   ownerId:        { type: String, required: true, index: true },
   members:        { type: [memberSchema], default: [] },
+  modules:        { type: [String], default: [] },
   vehicleProfile: { type: vehicleProfileSchema, default: null },
   homeProfile:    { type: homeProfileSchema,    default: null },
   petProfile:     { type: petProfileSchema,     default: null },

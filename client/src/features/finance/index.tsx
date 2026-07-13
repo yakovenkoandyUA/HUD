@@ -136,8 +136,8 @@ const Finance: React.FC = () => {
     showToast(`+${amount} ₴ додано`, 'success')
   }
 
-  const handleExpense = (amount: number, description: string, category?: string) => {
-    addExpense(amount, description, category)
+  const handleExpense = (amount: number, description: string, category?: string, spaceId?: string | null) => {
+    addExpense(amount, description, category, null, spaceId)
     useAchievementsStore.getState().unlock('first-transaction')
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')

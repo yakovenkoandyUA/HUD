@@ -44,6 +44,7 @@
   background: linear-gradient(145deg, rgba(14, 15, 25, 0.98), rgba(10, 11, 19, 0.98));
   border-color: rgba(75, 82, 115, 0.48);
 }
+
 :global([data-theme='velvet']) .cell:hover,
 :global([data-theme='velvet']) .cell:active {
   background: rgba(18, 21, 36, 0.98);

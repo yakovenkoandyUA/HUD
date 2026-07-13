@@ -63,6 +63,7 @@ export interface Space {
   budgetCurrency: string
   ownerId:        string
   members:        SpaceMember[]
+  modules:        string[]
   vehicleProfile: VehicleProfile | null
   homeProfile:    HomeProfile | null
   petProfile:     PetProfile | null
@@ -79,6 +80,7 @@ export interface SpaceInput {
   coverUrl?:       string
   budget?:         number | null
   budgetCurrency?: string
+  modules?:        string[]
   archived?:       boolean
 }
 

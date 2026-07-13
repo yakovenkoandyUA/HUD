@@ -32,12 +32,20 @@ function serializeSpace(space: InstanceType<typeof Space>, memberUsers: Instance
         return u ? memberPublic(u, m.role) : null
       })
       .filter(Boolean),
+    modules:        space.modules ?? [],
     vehicleProfile: space.vehicleProfile ?? null,
     homeProfile:    space.homeProfile    ?? null,
     petProfile:     space.petProfile     ?? null,
     tripProfile:    space.tripProfile    ?? null,
     createdAt: space.createdAt,
   }
+}
+
+const DEFAULT_MODULES: Record<string, string[]> = {
+  vehicle: ['finance'],
+  home:    ['finance', 'tasks'],
+  pet:     [],
+  trip:    ['finance', 'memories'],
 }
 
 /** GET /api/spaces — всі простори де я власник або учасник
@@ -65,22 +73,23 @@ export async function createSpace(req: Request, res: Response, next: NextFunctio
     }
     if (!name?.trim()) { res.status(400).json({ error: 'Name required' }); return }
 
+    const resolvedType = type ?? 'shared'
+
     if (req.user) {
       const count = await Space.countDocuments({ ownerId: req.userId })
       assertLimit(req.user, 'maxSpaces', count)
-      const resolvedType = (type ?? 'shared') as string
       if (resolvedType !== 'personal') {
         assertFeature(req.user, 'sharedSpaces')
       }
     }
-
     const space = await Space.create({
       name:    name.trim(),
-      type:    type ?? 'shared',
+      type:    resolvedType,
       color:   color ?? '#9b59b6',
       emoji:   emoji ?? '',
       ownerId: req.userId,
       members: [{ userId: req.userId, role: 'owner' }],
+      modules: DEFAULT_MODULES[resolvedType] ?? [],
     })
 
     const me = await User.findById(req.userId)
@@ -113,7 +122,7 @@ export async function updateSpace(req: Request, res: Response): Promise<void> {
     const space = await Space.findOne({ _id: req.params.id, ownerId: req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
 
-    const allowed = ['name', 'type', 'color', 'emoji', 'coverUrl', 'budget', 'budgetCurrency', 'archived'] as const
+    const allowed = ['name', 'type', 'color', 'emoji', 'coverUrl', 'budget', 'budgetCurrency', 'archived', 'modules'] as const
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (space as unknown as Record<string, unknown>)[key] = req.body[key]
     })

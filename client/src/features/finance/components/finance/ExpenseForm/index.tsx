@@ -6,6 +6,7 @@ import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import type { Category } from '@/shared/types'
 import styles from './ExpenseForm.module.css'
 
@@ -15,13 +16,13 @@ import styles from './ExpenseForm.module.css'
  * Форма запису витрат з 5-колонковим гридом категорій (іконка + колір з бекенду).
  * При виборі категорії з підкатегоріями — показує горизонтальні chips для деталізації.
  * Фінальна категорія: selectedSubCategoryId ?? selectedCategoryId.
- * Прив'язка витрат до поїздки — ретроактивно через TripExpensesSheet (при створенні trip-спогаду).
+ * Необов'язковий вибір простору — прив'язує витрату до простору з увімкненим модулем finance.
  *
  * Props:
- * @prop {(amount: number, description: string, category: string) => void} onExpense — колбек після підтвердження
+ * @prop {(amount: number, description: string, category: string, spaceId?: string | null) => void} onExpense
  */
 interface ExpenseFormProps {
-  onExpense: (amount: number, description: string, category: string) => void
+  onExpense: (amount: number, description: string, category: string, spaceId?: string | null) => void
 }
 
 const CameraIcon: React.FC = () => (
@@ -39,10 +40,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const canScan = useCanUseFeature('receiptScanner')
+  const spaces = useSpacesStore(s => s.spaces)
+  const financeSpaces = spaces.filter(sp => sp.modules.includes('finance'))
   const [amount, setAmount]                     = useState('')
   const [description, setDescription]          = useState('')
   const [selectedCatId, setSelectedCatId]       = useState<string | null>(null)
   const [selectedSubCatId, setSelectedSubCatId] = useState<string | null>(null)
+  const [selectedSpaceId, setSelectedSpaceId]   = useState<string | null>(null)
   const [scannerFile, setScannerFile]           = useState<File | null>(null)
   const [catsExpanded, setCatsExpanded]         = useState(false)
   const fileInputRef                            = useRef<HTMLInputElement>(null)
@@ -73,11 +77,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
     e.preventDefault()
     if (!canSubmit || !finalCat) return
     const desc = description.trim() || finalCat.name
-    onExpense(parseFloat(amount), desc, finalCat.name.toLowerCase())
+    onExpense(parseFloat(amount), desc, finalCat.name.toLowerCase(), selectedSpaceId)
     setAmount('')
     setDescription('')
     setSelectedCatId(null)
     setSelectedSubCatId(null)
+    setSelectedSpaceId(null)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -212,6 +217,27 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
         onChange={setDescription}
         placeholder={finalCat?.name ?? 'Деталі...'}
       />
+
+      {/* ── Space link (shown only if user has spaces with finance module) ── */}
+      {financeSpaces.length > 0 && (
+        <div className={styles.section}>
+          <span className={styles.sectionLabel}>Простір (необов'язково)</span>
+          <div className={styles.spaceChips}>
+            {financeSpaces.map(sp => (
+              <button
+                key={sp.id}
+                type="button"
+                className={`${styles.spaceChip} ${selectedSpaceId === sp.id ? styles.spaceChipActive : ''}`}
+                style={{ '--space-color': sp.color } as React.CSSProperties}
+                onClick={() => setSelectedSpaceId(prev => prev === sp.id ? null : sp.id)}
+              >
+                <span className={styles.spaceChipDot} />
+                {sp.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {finalCat && (
         <div className={styles.selectedInfo}>
