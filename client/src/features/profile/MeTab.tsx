@@ -360,6 +360,13 @@ const MeTab: React.FC = () => {
             <span className={styles.emailLabel}>{activeProfile.email}</span>
           )}
         </div>
+
+        <img
+          src={`/achive/profile/level-${level.level}.png`}
+          alt={level.label}
+          className={styles.levelImg}
+          draggable={false}
+        />
       </div>
 
 
