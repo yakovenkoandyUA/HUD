@@ -54,7 +54,6 @@ const AchievementsTab: React.FC = () => {
           <div className={styles.heroScore}>
             <span className={styles.heroScoreEarned}>РІВЕНЬ {level.level}</span>
           </div>
-          <span className={styles.heroLabel}>{level.label}</span>
           <div className={styles.heroProgressWrap}>
             <div className={styles.heroProgressFill} style={{ width: `${progress}%` }} />
           </div>
@@ -65,7 +64,17 @@ const AchievementsTab: React.FC = () => {
             }
           </p>
         </div>
-        <img src="/achive/achive-hero.png" alt="" className={styles.heroRune} draggable={false} />
+        <div className={styles.heroBadge}>
+          <img
+            src={`/achive/profile/level-${level.level}.png`}
+            alt={level.label}
+            className={styles.heroBadgeImg}
+            draggable={false}
+          />
+          <span className={styles.heroBadgeLabel} style={{ color: level.color, borderColor: level.color }}>
+            {level.label}
+          </span>
+        </div>
       </div>
 
       {/* ── Category tabs ── */}

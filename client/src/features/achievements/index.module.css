@@ -72,15 +72,6 @@
   color: var(--text3);
 }
 
-.heroLabel {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  margin-top: 2px;
-}
-
 .heroSub {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -97,30 +88,54 @@
 
 .heroProgressWrap {
   width: 100%;
-  height: 4px;
+  height: 6px;
   background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
+  border-radius: 3px;
   margin-top: 6px;
+  position: relative;
 }
 
 .heroProgressFill {
   height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 60%, var(--bg)), var(--accent));
+  border-radius: 3px;
   transition: width 0.6s ease;
+  animation: glowPulse 2.4s ease-in-out infinite;
 }
 
-.heroRune {
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent); }
+  50%       { box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 85%, transparent), 0 0 22px color-mix(in srgb, var(--accent) 35%, transparent); }
+}
+
+.heroBadge {
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  width: 48px;
-  height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.heroBadgeImg {
+  width: 60px;
+  height: 60px;
   object-fit: contain;
   user-select: none;
-  pointer-events: none;
+}
+
+.heroBadgeLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border: 1px solid;
+  border-radius: 20px;
+  white-space: nowrap;
 }
 
 /* ── Category tabs ── */
@@ -275,12 +290,6 @@
 :global([data-theme="cyber"]) .heroScoreMax,
 :global([data-theme="noir"]) .heroScoreMax {
   color: #8fa0b5;
-}
-
-:global([data-theme="velvet"]) .heroLabel,
-:global([data-theme="cyber"]) .heroLabel,
-:global([data-theme="noir"]) .heroLabel {
-  color: #d9a928;
 }
 
 :global([data-theme="velvet"]) .heroSub,
