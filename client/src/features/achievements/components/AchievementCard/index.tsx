@@ -1,4 +1,5 @@
 import React from 'react'
+import { useUiStore } from '@/shared/store/uiStore'
 import type { AchievementWithStatus } from '../../types'
 import styles from './index.module.css'
 
@@ -42,7 +43,9 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
   const cx        = svgSize / 2
   const cy        = svgSize / 2
 
-  const runeSrc = RUNE_SRC[achievement.category]
+  const runeSrc  = RUNE_SRC[achievement.category]
+  const isDark   = useUiStore(s => ['velvet','cyber','noir','arctic'].includes(s.theme))
+  const blockSrc = isDark ? '/achive/achive-block-dark.png' : '/achive/achive-block-light.png'
 
   return (
     <div className={`${styles.card} ${isUnlocked ? styles.cardUnlocked : ''}`}>
@@ -54,7 +57,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
           </div>
         ) : isLocked ? (
           <div className={styles.badgeImgWrap}>
-            <img src="/achive/achive-block.png" alt="" className={styles.badgeImg} draggable={false} />
+            <img src={blockSrc} alt="" className={styles.badgeImg} draggable={false} />
           </div>
         ) : isUnlocked ? (
           <div className={`${styles.badgeRuneWrap} ${styles.badgeRuneWrapUnlocked}`}>

@@ -34,8 +34,10 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
   const cx       = svgSize / 2
   const cy       = svgSize / 2
 
-  const blendNode = status === 'locked' || status === 'hidden'
-  const runeSrc   = RUNE_SRC[achievement.category]
+  const blendNode  = status === 'locked' || status === 'hidden'
+  const runeSrc    = RUNE_SRC[achievement.category]
+  const isDarkNode = useUiStore(s => ['velvet','cyber','noir','arctic'].includes(s.theme))
+  const blockSrc   = isDarkNode ? '/achive/achive-block-dark.png' : '/achive/achive-block-light.png'
 
   return (
     <button
@@ -46,7 +48,7 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
       aria-label={achievement.title}
     >
       {status === 'locked' && (
-        <img src="/achive/achive-block.png" alt="" className={styles.badgeImg} draggable={false} />
+        <img src={blockSrc} alt="" className={styles.badgeImg} draggable={false} />
       )}
 
       {status === 'hidden' && (
