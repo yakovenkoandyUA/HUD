@@ -10,6 +10,15 @@ import styles from './VehicleSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+export interface SpaceLinkedTx {
+  _id:      string
+  type:     'income' | 'expense'
+  amount:   number
+  desc:     string
+  category?: string
+  date:     string
+}
+
 interface Props {
   spaceId:       string
   color:         string
@@ -18,6 +27,8 @@ interface Props {
   plansCount:    number
   tasksCount:    number
   membersCount:  number
+  modules:       string[]
+  spaceTxs:      SpaceLinkedTx[]
   isOwner:       boolean
   onEditSpace:   () => void
   onBack:        () => void
@@ -253,7 +264,10 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
         </button>
 
         <div className={styles.vehicleMedallion}>
-          <VehicleMedallion />
+          {profile?.photoUrl
+            ? <img src={profile.photoUrl} alt="авто" className={styles.vehicleMedallionPhoto} />
+            : <VehicleMedallion />
+          }
         </div>
 
         <div className={styles.vehicleHeroInfo}>
@@ -915,13 +929,16 @@ const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spac
  * @prop {string} spaceName
  * @prop {number} memoriesCount
  * @prop {number} plansCount
- * @prop {number} tasksCount
+ * @prop {number} tasksCount — shown only when tasks module enabled
  * @prop {number} membersCount
+ * @prop {string[]} modules — active space modules (e.g. ['finance', 'tasks'])
+ * @prop {SpaceLinkedTx[]} spaceTxs — transactions linked to this space
  * @prop {boolean} isOwner
  * @prop {() => void} onEditSpace — opens parent space edit sheet
  */
 const VehicleSpaceView: React.FC<Props> = ({
-  spaceId, color, spaceName, memoriesCount, plansCount, tasksCount, membersCount, isOwner, onEditSpace: _onEditSpace, onBack,
+  spaceId, color, spaceName, memoriesCount, plansCount, tasksCount, membersCount,
+  modules, spaceTxs, isOwner, onEditSpace: _onEditSpace, onBack,
 }) => {
   const [sheet, setSheet] = useState<SheetType>(null)
   const { fetchEvents, fetchStats, eventsBySpace, loading } = useVehicleStore()
@@ -952,7 +969,10 @@ const VehicleSpaceView: React.FC<Props> = ({
   const onboardingDone  = onboardingSteps.every(Boolean)
   const onboardingCount = onboardingSteps.filter(Boolean).length
 
-  // Stats items
+  const hasFinanceModule = modules.includes('finance')
+  const hasTasksModule   = modules.includes('tasks')
+
+  // Stats items — tasks shown only when tasks module is enabled
   const STATS = [
     {
       num: memoriesCount, label: 'Спогади',
@@ -962,10 +982,10 @@ const VehicleSpaceView: React.FC<Props> = ({
       num: plansCount, label: 'Плани',
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
     },
-    {
+    ...(hasTasksModule ? [{
       num: tasksCount, label: 'Задачі',
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12l2.5 2.5 4-5"/></svg>,
-    },
+    }] : []),
     {
       num: membersCount, label: 'Учасники',
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-4 3.1-7 7-7s7 3 7 7"/><circle cx="17" cy="8" r="3"/><path d="M22 20c0-3-2.1-5.5-5-6"/></svg>,
@@ -1085,6 +1105,38 @@ const VehicleSpaceView: React.FC<Props> = ({
 
       {/* ── Vehicle fuel/cost stats (shows only when has data) ── */}
       <VehicleStats spaceId={spaceId} color={color} />
+
+      {/* ── Finance module — linked transactions ── */}
+      {hasFinanceModule && (
+        <div className={styles.vehicleModuleCard} style={colorVar}>
+          <div className={styles.vehicleModuleHeader}>
+            <h3 className={styles.vehicleModuleTitle}>Витрати</h3>
+            <span className={styles.vehicleModuleCount}>{spaceTxs.length}</span>
+          </div>
+          {spaceTxs.length === 0 ? (
+            <p className={styles.vehicleModuleEmpty}>
+              Прив'яжіть витрати до цього простору при створенні в розділі Фінанси
+            </p>
+          ) : (
+            <div className={styles.vehicleModuleTxList}>
+              {spaceTxs.slice(0, 5).map(tx => (
+                <div key={tx._id} className={styles.vehicleModuleTxItem}>
+                  <div className={styles.vehicleModuleTxLeft}>
+                    <span className={styles.vehicleModuleTxDesc}>{tx.desc}</span>
+                    {tx.category && <span className={styles.vehicleModuleTxCat}>{tx.category}</span>}
+                  </div>
+                  <span className={`${styles.vehicleModuleTxAmount} ${tx.type === 'income' ? styles.vehicleModuleTxIncome : styles.vehicleModuleTxExpense}`}>
+                    {tx.type === 'expense' ? '−' : '+'}₴{tx.amount.toLocaleString('uk-UA')}
+                  </span>
+                </div>
+              ))}
+              {spaceTxs.length > 5 && (
+                <p className={styles.vehicleModuleMore}>Ще {spaceTxs.length - 5} транзакцій</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Timeline ── */}
       <div className={styles.vehicleTimelineCard}>

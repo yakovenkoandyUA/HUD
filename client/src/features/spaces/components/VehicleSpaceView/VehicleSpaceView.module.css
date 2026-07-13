@@ -806,6 +806,14 @@
   opacity: 0.9;
 }
 
+.vehicleMedallionPhoto {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--space-color) 30%, var(--border));
+}
+
 .vehicleHeroInfo {
   flex: 1;
   min-width: 0;
@@ -1206,9 +1214,7 @@
 }
 
 .vehicleEmptyIllustration {
-  width: 200px;
   max-width: 80%;
-  height: 110px;
   object-fit: contain;
   object-position: center bottom;
   user-select: none;
@@ -1285,4 +1291,103 @@
   border: 1px solid var(--border);
   margin-bottom: 6px;
   display: block;
+}
+
+/* ── Module cards (finance, tasks etc.) ── */
+.vehicleModuleCard {
+  background: var(--surface2);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.vehicleModuleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.vehicleModuleTitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+}
+
+.vehicleModuleCount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--space-color, var(--accent));
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 12%, transparent);
+  border-radius: 20px;
+  padding: 1px 8px;
+}
+
+.vehicleModuleEmpty {
+  font-size: 13px;
+  color: var(--text3);
+  line-height: 1.5;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.vehicleModuleTxList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.vehicleModuleTxItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+.vehicleModuleTxItem:last-child {
+  border-bottom: none;
+}
+
+.vehicleModuleTxLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vehicleModuleTxDesc {
+  font-size: 13px;
+  color: var(--text1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vehicleModuleTxCat {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: capitalize;
+}
+
+.vehicleModuleTxAmount {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.vehicleModuleTxExpense { color: var(--danger, #e74c3c); }
+.vehicleModuleTxIncome  { color: var(--success, #27ae60); }
+
+.vehicleModuleMore {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  padding-top: 8px;
 }
