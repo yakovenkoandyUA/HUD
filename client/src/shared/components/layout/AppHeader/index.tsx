@@ -7,7 +7,8 @@ import MimirIcon from '@/shared/components/ui/MimirIcon'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
-import { getRank } from '@/shared/data/ranks'
+import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
+import { getLevel } from '@/features/achievements/levels'
 import styles from './AppHeader.module.css'
 
 /**
@@ -35,7 +36,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const { showToast } = useUiStore()
   const navigate = useNavigate()
   const canUseAI = useCanUseFeature('aiChat')
-  const rank = getRank(activeProfile?.unlockedAchievements?.length ?? 0)
+  const runeScore = useRuneScore()
+  const level = getLevel(runeScore)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
@@ -93,10 +95,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
                 src={activeProfile.avatarUrl}
                 alt={activeProfile.name}
                 className={styles.avatar}
-                style={{ borderColor: rank.color }}
+                style={{ borderColor: level.color }}
               />
             ) : (
-              <div className={styles.avatarFallback} style={{ borderColor: rank.color }}>
+              <div className={styles.avatarFallback} style={{ borderColor: level.color }}>
                 {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}

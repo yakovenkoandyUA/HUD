@@ -177,6 +177,15 @@ export function useAchievementScore(): { earned: number; max: number } {
   }), [all])
 }
 
+/** Lightweight score hook — reads only profileStore, no heavy store subscriptions */
+export function useRuneScore(): number {
+  const unlocked = useProfileStore(s => s.activeProfile?.unlockedAchievements ?? [])
+  return useMemo(
+    () => unlocked.reduce((sum, u) => sum + (ACHIEVEMENT_BY_ID[u.id]?.reward ?? 0), 0),
+    [unlocked],
+  )
+}
+
 export function useAutoUnlock() {
   const all = useAchievementProgress()
   const { activeProfile } = useProfileStore()

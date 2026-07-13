@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { useProfileStore } from './profileStore'
 import { ACHIEVEMENTS_BY_ID, type Achievement } from '@/shared/data/achievements'
-import { getRank, type Rank } from '@/shared/data/ranks'
+import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
+import { getLevel, type Level } from '@/features/achievements/levels'
 
 /**
  * achievementsStore
@@ -11,20 +12,24 @@ import { getRank, type Rank } from '@/shared/data/ranks'
  * ачівки — no-op, тож викликати можна без перевірок "чи це вперше"
  * прямо в місці дії (наприклад, після кожного addTransaction).
  *
- * Якщо unlock підіймає ранг — `pendingRank` ставиться окремо і показується
+ * Якщо unlock підіймає рівень — `pendingLevel` ставиться окремо і показується
  * ПІСЛЯ того як `pending` (картка ачівки) закриється (див. AchievementUnlockedModal).
  */
 interface AchievementsState {
   pending: Achievement | null
-  pendingRank: Rank | null
+  pendingLevel: Level | null
   unlock: (id: string) => void
   dismiss: () => void
-  dismissRank: () => void
+  dismissLevel: () => void
+}
+
+function calcRunes(ids: { id: string }[]): number {
+  return ids.reduce((sum, u) => sum + (ACHIEVEMENT_BY_ID[u.id]?.reward ?? 0), 0)
 }
 
 export const useAchievementsStore = create<AchievementsState>()((set) => ({
   pending: null,
-  pendingRank: null,
+  pendingLevel: null,
 
   unlock: (id) => {
     const achievement = ACHIEVEMENTS_BY_ID[id]
@@ -37,19 +42,19 @@ export const useAchievementsStore = create<AchievementsState>()((set) => ({
 
     const next = [...before, { id, unlockedAt: new Date().toISOString() }]
 
-    const rankBefore = getRank(before.length)
-    const rankAfter  = getRank(next.length)
+    const levelBefore = getLevel(calcRunes(before))
+    const levelAfter  = getLevel(calcRunes(next))
 
     set({
       pending: achievement,
-      pendingRank: rankAfter.id !== rankBefore.id ? rankAfter : null,
+      pendingLevel: levelAfter.level !== levelBefore.level ? levelAfter : null,
     })
 
     updateProfile({ unlockedAchievements: next }).catch(() => {
-      set({ pending: null, pendingRank: null })
+      set({ pending: null, pendingLevel: null })
     })
   },
 
   dismiss: () => set({ pending: null }),
-  dismissRank: () => set({ pendingRank: null }),
+  dismissLevel: () => set({ pendingLevel: null }),
 }))

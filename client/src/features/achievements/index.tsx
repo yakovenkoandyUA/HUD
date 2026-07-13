@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAchievementProgress, useAchievementScore } from './hooks/useAchievementProgress'
 import { ACHIEVEMENT_DEFS } from './data'
+import { getLevel, getNextLevel, getLevelProgress } from './levels'
 import type { AchievementCategory } from './types'
 import AchievementMap from './components/AchievementMap'
 import AchievementCard from './components/AchievementCard'
@@ -32,6 +33,9 @@ const AchievementsTab: React.FC = () => {
 
   const all   = useAchievementProgress()
   const score = useAchievementScore()
+  const level    = getLevel(score.earned)
+  const nextLvl  = getNextLevel(score.earned)
+  const progress = getLevelProgress(score.earned)
 
   const filtered = all.filter(a => a.category === activeTab)
 
@@ -44,17 +48,21 @@ const AchievementsTab: React.FC = () => {
       {/* ── Hero card ── */}
       <div className={styles.heroCard}>
         <div className={styles.heroImgWrap}>
-          <img src="/achive/achive-treaser.png" alt="" className={styles.heroImg} draggable={false} />
+          <img src={`/achive/level-${level.level}.png`} alt="" className={styles.heroImg} draggable={false}
+            onError={(e) => { (e.target as HTMLImageElement).src = '/achive/achive-treaser.png' }}
+          />
         </div>
         <div className={styles.heroBody}>
           <div className={styles.heroScore}>
-            <span className={styles.heroScoreEarned}>{score.earned}</span>
-            <span className={styles.heroScoreSep}>/</span>
-            <span className={styles.heroScoreMax}>{MAX_SCORE}</span>
+            <span className={styles.heroScoreEarned}>РІВЕНЬ {level.level}</span>
           </div>
-          <span className={styles.heroLabel}>ПРОБУДЖЕНИХ РУН</span>
+          <span className={styles.heroLabel}>{level.label}</span>
+          <div className={styles.heroProgressWrap}>
+            <div className={styles.heroProgressFill} style={{ width: `${progress}%` }} />
+          </div>
           <p className={styles.heroSub}>
-            Кожна руна — крок у глибину.{'\n'}Знання живе, коли ти згадуєш.
+            {score.earned} рун
+            {nextLvl ? ` · до рівня ${nextLvl.level}: ${nextLvl.minRunes - score.earned}` : ' · МАКСИМУМ'}
           </p>
         </div>
         <img src="/achive/achive-hero.png" alt="" className={styles.heroRune} draggable={false} />

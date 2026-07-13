@@ -16,7 +16,8 @@ import MeSystem from './MeSystem'
 import MeMedia from './MeMedia'
 import MeFamily from './MeFamily'
 import MeAchievements from './MeAchievements'
-import { getRank } from '@/shared/data/ranks'
+import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
+import { getLevel } from '@/features/achievements/levels'
 import { ACHIEVEMENTS } from '@/shared/data/achievements'
 import styles from './ProfilePage.module.css'
 
@@ -272,7 +273,8 @@ const MeTab: React.FC = () => {
   if (!activeProfile) return null
 
   const familyPending = pendingReceived.length
-  const rank = getRank(activeProfile.unlockedAchievements?.length ?? 0)
+  const runeScore = useRuneScore()
+  const level = getLevel(runeScore)
 
   const unlockedIds = activeProfile.unlockedAchievements ?? []
 
@@ -286,7 +288,7 @@ const MeTab: React.FC = () => {
             <button
               type="button"
               className={styles.avatarBtn}
-              style={{ borderColor: rank.color }}
+              style={{ borderColor: level.color }}
               onClick={() => fileRef.current?.click()}
               disabled={uploadingAvatar}
               aria-label="Змінити аватар"
@@ -302,8 +304,8 @@ const MeTab: React.FC = () => {
             </div>
             <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleAvatarChange} />
           </div>
-          <span className={styles.rankPill} style={{ color: rank.color, borderColor: rank.color }}>
-            {rank.label}
+          <span className={styles.rankPill} style={{ color: level.color, borderColor: level.color }}>
+            {level.label}
           </span>
         </div>
 

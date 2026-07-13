@@ -5,6 +5,8 @@ import { ALL_NAV_SECTIONS, PROFILE_TABS } from '@/shared/components/layout/Botto
 import type { Theme, NavStyle, NavLabelMode } from '@/shared/store/uiStore'
 import { NAV_STYLE_MAX_PINNED } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { useAchievementScore } from '@/features/achievements/hooks/useAchievementProgress'
+import { getUnlockedThemes, THEME_UNLOCK_LEVEL } from '@/features/achievements/levels'
 import styles from './ProfilePage.module.css'
 
 interface ThemePalette {
@@ -33,9 +35,27 @@ const PALETTES: ThemePalette[] = [
  * ------------
  * Підекран "Вигляд" вкладки "Я": теми + стиль навігації + закріплені розділи.
  */
+const LockIcon: React.FC = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+    <rect x="2" y="5.5" width="8" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+    <path d="M4 5.5V3.5a2 2 0 0 1 4 0v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>
+)
+
+/**
+ * MeAppearance
+ * ------------
+ * Підекран "Вигляд" вкладки "Я": теми + стиль навігації + закріплені розділи.
+ * Теми відкриваються за рівнями досягнень: velvet і japan доступні одразу,
+ * решта — за рівнями 3, 5, 7, 9.
+ */
 const MeAppearance: React.FC = () => {
   const { activeProfile } = useProfileStore()
   const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections, pinnedProfileTabs, setPinnedProfileTabs } = useUiStore()
+  const { showToast } = useUiStore()
+  const score = useAchievementScore()
+  const isAdmin = activeProfile?.role === 'admin'
+  const unlockedThemes = isAdmin ? PALETTES.map(p => p.id) : getUnlockedThemes(score.earned)
 
   return (
     <>
@@ -43,17 +63,27 @@ const MeAppearance: React.FC = () => {
         <div className={styles.themeGrid}>
           {PALETTES.map(p => {
             const isActive = theme === p.id
+            const isUnlocked = unlockedThemes.includes(p.id)
+            const unlockLevel = THEME_UNLOCK_LEVEL[p.id] ?? 1
             return (
               <button
                 key={p.id}
                 type="button"
-                className={styles.themeCard}
+                className={`${styles.themeCard} ${!isUnlocked ? styles.themeCardLocked : ''}`}
                 style={{
                   background: p.bg,
                   border: isActive ? `2px solid ${p.accent}` : `1.5px solid ${p.border}`,
                   boxShadow: isActive ? `0 0 16px ${p.accent}44` : 'none',
+                  opacity: isUnlocked ? 1 : 0.45,
                 }}
-                onClick={() => { setTheme(p.id); useAchievementsStore.getState().unlock('theme-changed') }}
+                onClick={() => {
+                  if (!isUnlocked) {
+                    showToast(`Розблокується на рівні ${unlockLevel}`, 'info')
+                    return
+                  }
+                  setTheme(p.id)
+                  useAchievementsStore.getState().unlock('theme-changed')
+                }}
                 aria-pressed={isActive}
               >
                 <span className={styles.themeCardName} style={{ color: p.accent }}>{p.name}</span>
@@ -76,6 +106,12 @@ const MeAppearance: React.FC = () => {
                   </div>
                 </div>
                 {isActive && <span className={styles.themeActiveTick} style={{ color: p.accent }}>✓</span>}
+                {!isUnlocked && (
+                  <span className={styles.themeLockBadge} style={{ color: p.text, background: `${p.bg}cc` }}>
+                    <LockIcon />
+                    {unlockLevel} рівень
+                  </span>
+                )}
               </button>
             )
           })}
