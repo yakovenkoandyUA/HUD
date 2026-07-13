@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useAchievementProgress, useAchievementScore } from './hooks/useAchievementProgress'
-import { ACHIEVEMENT_DEFS } from './data'
 import { getLevel, getNextLevel, getLevelProgress } from './levels'
 import type { AchievementCategory } from './types'
 import AchievementMap from './components/AchievementMap'
