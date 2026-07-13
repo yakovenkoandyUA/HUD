@@ -8,19 +8,19 @@ import styles from './GreetingBlock.module.css'
 /**
  * GreetingBlock (Daily Banner)
  * ----------------------------
- * Компактний банер з темовим фоном, датою/погодою та першою дією дня.
+ * Компактний банер з темовим фоном, датою/погодою та діями дня.
  * Верхня частина: дата + погода (тап → WeatherModal).
- * Нижня частина: СЬОГОДНІ label + teaser першої звички + "детальніше >".
+ * Нижня частина: СЬОГОДНІ label + список рутин + "детальніше >".
  *
  * Props:
  * @prop {(weather: WeatherData) => void} [onWeatherClick] — callback при тапі на погоду
  * @prop {() => void}                     onOpenDay        — відкрити DayOverlay
- * @prop {string}                         [todayTeaser]    — назва першої звички/дії дня
+ * @prop {string[]}                       [todayTeasers]   — назви рутин на сьогодні (до 3)
  */
 interface GreetingBlockProps {
   onWeatherClick?: (weather: WeatherData) => void
   onOpenDay: () => void
-  todayTeaser?: string
+  todayTeasers?: string[]
 }
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
@@ -40,7 +40,7 @@ const THEME_PHOTOS: Partial<Record<string, string>> = {
   arctic: '/theme/arctic.webp',
 }
 
-const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay, todayTeaser }) => {
+const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay, todayTeasers }) => {
   const profile = useProfileStore(s => s.activeProfile)
   const theme   = useUiStore(s => s.theme)
   const weather = useWeather(profile?.city)
@@ -77,27 +77,42 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
         )}
       </div>
 
-      {/* Bottom: today teaser row */}
+      {/* Bottom: today row */}
       <div className={styles.todayRow}>
         <span className={styles.todayLabel}>СЬОГОДНІ</span>
-        <div className={styles.todayBottom}>
-          {todayTeaser ? (
-            <div className={styles.todayItem}>
-              <span className={styles.todayDot} aria-hidden="true" />
-              <span className={styles.todayText}>{todayTeaser}</span>
-            </div>
-          ) : (
+        {todayTeasers && todayTeasers.length > 0 ? (
+          todayTeasers.map((title, i) => {
+            const isLast = i === todayTeasers.length - 1
+            return (
+              <div key={i} className={styles.todayBottom}>
+                <div className={styles.todayItem}>
+                  <span className={styles.todayDot} aria-hidden="true" />
+                  <span className={styles.todayText}>{title}</span>
+                </div>
+                {isLast && (
+                  <button type="button" className={styles.todayLink} onClick={onOpenDay}>
+                    детальніше
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )
+          })
+        ) : (
+          <div className={styles.todayBottom}>
             <div className={styles.todayItem}>
               <span className={`${styles.todayText} ${styles.todayEmpty}`}>відкрити мій день</span>
             </div>
-          )}
-          <button type="button" className={styles.todayLink} onClick={onOpenDay}>
-            детальніше
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
-        </div>
+            <button type="button" className={styles.todayLink} onClick={onOpenDay}>
+              детальніше
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

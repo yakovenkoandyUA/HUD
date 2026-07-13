@@ -1,7 +1,7 @@
 /* ── Balance card ───────────────────────────────────────────── */
 
 .balanceCard {
-  background: var(--accent-dim);
+  background: var(--accent-soft);
   border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   padding: 10px 16px 0;
@@ -46,7 +46,7 @@
 
 .statStrip {
   display: flex;
-  border-top: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .statItem {
@@ -111,39 +111,39 @@
 
 /* ── Pixel: vivid red bg — white text ───────────────────────── */
 
-:global([data-theme='pixel']) .balanceAmount     { color: #fff; }
-:global([data-theme='pixel']) .balanceCurrency   { color: #fff; }
-:global([data-theme='pixel']) .balanceSubLabel   { color: rgba(255,255,255,0.65); }
-:global([data-theme='pixel']) .statValue         { color: #fff; }
-:global([data-theme='pixel']) .statValueAccent   { color: #fff; }
-:global([data-theme='pixel']) .statSub           { color: rgba(255,255,255,0.6); }
-:global([data-theme='pixel']) .statLabel         { color: rgba(255,255,255,0.6); }
+:global([data-theme='pixel']) .balanceAmount     { color: var(--text); }
+:global([data-theme='pixel']) .balanceCurrency   { color: var(--text); }
+:global([data-theme='pixel']) .balanceSubLabel   { color: var(--text3) }
+:global([data-theme='pixel']) .statValue         { color: var(--text); }
+:global([data-theme='pixel']) .statValueAccent   { color: var(--text); }
+:global([data-theme='pixel']) .statSub           { color: var(--text3) }
+:global([data-theme='pixel']) .statLabel         { color: var(--text3) }
 :global([data-theme='pixel']) .statStrip,
-:global([data-theme='pixel']) .statItem + .statItem { border-color: rgba(255,255,255,0.2); }
+:global([data-theme='pixel']) .statItem + .statItem { border-color: color-mix(in srgb, var(--accent) 20%, transparent); }
 
 /* ── Arctic: light accent-dim bg — dark text ────────────────── */
 
 :global([data-theme='arctic']) .balanceAmount    { color: var(--text); }
 :global([data-theme='arctic']) .balanceCurrency  { color: var(--accent); }
-:global([data-theme='arctic']) .balanceSubLabel  { color: var(--text3); }
+:global([data-theme='arctic']) .balanceSubLabel  { color: var(--surface2); }
 :global([data-theme='arctic']) .statValue        { color: var(--text); }
 :global([data-theme='arctic']) .statValueAccent  { color: var(--accent); }
-:global([data-theme='arctic']) .statSub          { color: var(--text3); }
-:global([data-theme='arctic']) .statLabel        { color: var(--text3); }
+:global([data-theme='arctic']) .statSub          { color: var(--surface2); }
+:global([data-theme='arctic']) .statLabel        { color: var(--surface2); }
 
 /* ── Japan: light bg — dark text ───────────────────────────── */
 
 :global([data-theme='japan']) .balanceAmount     { color: var(--text); }
 :global([data-theme='japan']) .balanceCurrency   { color: var(--accent); }
-:global([data-theme='japan']) .balanceSubLabel   { color: var(--text3); }
+:global([data-theme='japan']) .balanceSubLabel   { color: var(--surface2); }
 :global([data-theme='japan']) .statValue         { color: var(--text); }
 :global([data-theme='japan']) .statValueAccent   { color: var(--accent); }
-:global([data-theme='japan']) .statSub           { color: var(--text3); }
-:global([data-theme='japan']) .statLabel         { color: var(--text3); }
+:global([data-theme='japan']) .statSub           { color: var(--surface2); }
+:global([data-theme='japan']) .statLabel         { color: var(--surface2); }
 
 /* ── Cyber: dark neon bg — boost label visibility ───────────── */
 
-:global([data-theme='cyber']) .balanceSubLabel   { color: var(--text2); }
-:global([data-theme='cyber']) .statSub           { color: var(--text2); }
-:global([data-theme='cyber']) .statLabel         { color: var(--text2); }
+:global([data-theme='cyber']) .balanceSubLabel   { color: var(--text); }
+:global([data-theme='cyber']) .statSub           { color: var(--text); }
+:global([data-theme='cyber']) .statLabel         { color: var(--text); }
 :global([data-theme='cyber']) .statValueAccent   { color: var(--accent); }

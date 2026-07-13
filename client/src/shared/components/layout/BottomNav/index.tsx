@@ -125,7 +125,7 @@ const BottomNav: React.FC = () => {
 
     const profilePillItem = (tab: typeof PROFILE_TABS[number]) => {
       const isActive = activeTab === tab.id
-      const showLabel = navLabelMode !== 'never' && isActive
+      const showLabel = navLabelMode === 'always' || (navLabelMode === 'active' && isActive)
       return (
         <button
           key={tab.id}
@@ -166,8 +166,9 @@ const BottomNav: React.FC = () => {
 
     // Pill → floating pill, all profile tabs
     if (navStyle === 'pill') {
+      const allLabelsClass = navLabelMode === 'always' ? styles.navAllLabels : ''
       return (
-        <nav className={styles.nav}>
+        <nav className={`${styles.nav} ${allLabelsClass}`}>
           {visibleTabs.map(profilePillItem)}
         </nav>
       )
@@ -262,16 +263,20 @@ const BottomNav: React.FC = () => {
         key={s.to}
         to={s.to}
         end={s.to === '/'}
-        className={({ isActive }) =>
-          `${styles.item} ${isActive ? styles.active : ''} ${isActive && navLabelMode !== 'never' ? styles.itemWithLabel : ''}`
-        }
+        className={({ isActive }) => {
+          const showLabel = navLabelMode === 'always' || (navLabelMode === 'active' && isActive)
+          return `${styles.item} ${isActive ? styles.active : ''} ${showLabel ? styles.itemWithLabel : ''}`
+        }}
       >
-        {({ isActive }) => (
-          <>
-            <s.Icon className={styles.icon} />
-            {isActive && navLabelMode !== 'never' && <span className={styles.navItemLabel}>{s.label}</span>}
-          </>
-        )}
+        {({ isActive }) => {
+          const showLabel = navLabelMode === 'always' || (navLabelMode === 'active' && isActive)
+          return (
+            <>
+              <s.Icon className={styles.icon} />
+              {showLabel && <span className={styles.navItemLabel}>{s.label}</span>}
+            </>
+          )
+        }}
       </NavLink>
     )
 
@@ -279,9 +284,11 @@ const BottomNav: React.FC = () => {
     const rest = availableSections.filter(s => s.to !== '/')
     const isOdd = availableSections.length % 2 === 1
 
+    const allLabelsClass = navLabelMode === 'always' ? styles.navAllLabels : ''
+
     if (!isOdd) {
       return (
-        <nav className={styles.nav}>
+        <nav className={`${styles.nav} ${allLabelsClass}`}>
           {dashSection && pillLink(dashSection)}
           {rest.map(pillLink)}
         </nav>
@@ -290,7 +297,7 @@ const BottomNav: React.FC = () => {
 
     const half = Math.ceil(rest.length / 2)
     return (
-      <nav className={styles.nav}>
+      <nav className={`${styles.nav} ${allLabelsClass}`}>
         {rest.slice(0, half).map(pillLink)}
         {dashSection && pillLink(dashSection)}
         {rest.slice(half).map(pillLink)}

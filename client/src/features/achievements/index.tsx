@@ -17,7 +17,6 @@ const TABS: { id: CategoryTab; label: string }[] = [
   { id: 'watchlist', label: 'WATCHLIST' },
 ]
 
-const MAX_SCORE = ACHIEVEMENT_DEFS.reduce((s, a) => s + a.reward, 0)
 
 /**
  * AchievementsTab

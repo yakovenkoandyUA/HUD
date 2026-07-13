@@ -6,7 +6,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius, 12px);
-  min-height: 118px;
+  min-height: 130px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -163,7 +163,7 @@
   gap: 3px;
 }
 
-/* Bottom sub-row: item + "детальніше" on same line */
+/* Item sub-row: dot + text + optional "детальніше" button */
 .todayBottom {
   display: flex;
   align-items: center;

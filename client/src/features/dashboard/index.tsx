@@ -120,19 +120,21 @@ const Dashboard: React.FC = () => {
     setFabOpen(false)
   }
 
-  const todayTeaser = routineItems.find(r => !isDoneToday(r))?.title
-    ?? (routineItems.length > 0 ? routineItems[0].title : undefined)
+  const todayTeasers = routineItems
+    .filter(r => !isDoneToday(r))
+    .slice(0, 2)
+    .map(r => r.title)
 
   return (
     <div className={styles.screen}>
       <AppHeader />
       <div ref={contentRef} className={styles.content}>
 
-        {/* 1 — Daily Banner: date + weather + today teaser */}
+        {/* 1 — Daily Banner: date + weather + today teasers */}
         <GreetingBlock
           onWeatherClick={(d) => { setWeatherData(d); setWeatherOpen(true) }}
           onOpenDay={() => setShowDay(true)}
-          todayTeaser={todayTeaser}
+          todayTeasers={todayTeasers}
         />
 
         {/* 2 — Spaces: compact horizontal strip */}

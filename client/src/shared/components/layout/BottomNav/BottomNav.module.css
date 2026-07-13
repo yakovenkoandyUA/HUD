@@ -6,6 +6,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 51;
+  max-width: calc(100vw - 24px);
 
   display: flex;
   align-items: center;
@@ -280,6 +281,22 @@
   border-radius: 20px;
   flex-direction: column;
   gap: 2px;
+}
+
+/* ── All-labels mode: tighten spacing so pill fits on screen ── */
+.navAllLabels {
+  gap: 10px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.navAllLabels .itemWithLabel {
+  padding-left: 5px;
+  padding-right: 5px;
+  min-width: 36px;
+}
+.navAllLabels .navItemLabel {
+  font-size: 7px;
+  letter-spacing: 0.04em;
 }
 
 .navItemLabel {
