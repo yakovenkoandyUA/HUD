@@ -23,17 +23,12 @@ const COLORS = [
 ]
 
 const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
-  { value: 'personal', label: 'Особистий' },
-  { value: 'shared',   label: 'Спільний'  },
-  { value: 'trip',     label: 'Поїздка'   },
-  { value: 'family',   label: "Сім'я"     },
-  { value: 'friends',  label: 'Друзі'     },
-  { value: 'hobby',    label: 'Хобі'      },
-  { value: 'sports',   label: 'Спорт'     },
-  { value: 'project',  label: 'Проект'    },
-  { value: 'vehicle',  label: 'Авто'      },
-  { value: 'home',     label: 'Дім'       },
-  { value: 'pet',      label: 'Улюбленець'},
+  { value: 'trip',    label: 'Поїздка'    },
+  { value: 'vehicle', label: 'Авто'       },
+  { value: 'home',    label: 'Дім'        },
+  { value: 'pet',     label: 'Улюбленець' },
+  { value: 'sports',  label: 'Спорт'      },
+  { value: 'shared',  label: 'Спільний'   },
 ]
 
 const PlusIcon: React.FC = () => (
