@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import type { SpaceType } from '@/features/memories/store/spacesStore'
@@ -163,8 +164,8 @@ const SpacesStrip: React.FC = () => {
         </button>
       </div>
 
-      {/* ── Create space sheet ── */}
-      {open && (
+      {/* ── Create space sheet (portal → body to escape overflow/transform) ── */}
+      {open && createPortal(
         <div className={styles.overlay} ref={overlayRef} onClick={() => setOpen(false)}>
           <div className={styles.sheet} ref={sheetRef} onClick={e => e.stopPropagation()}>
             <div className={styles.sheetHandle} />
@@ -248,7 +249,8 @@ const SpacesStrip: React.FC = () => {
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   )
