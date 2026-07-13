@@ -37,7 +37,8 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
   const blendNode  = status === 'locked' || status === 'hidden'
   const runeSrc    = RUNE_SRC[achievement.category]
   const isDarkNode = useUiStore(s => ['velvet','cyber','noir','arctic'].includes(s.theme))
-  const blockSrc   = isDarkNode ? '/achive/achive-block-light.png' : '/achive/achive-block-dark.png'
+  const blockSrc    = isDarkNode ? '/achive/achive-block-light.png'    : '/achive/achive-block-dark.png'
+  const questionSrc = isDarkNode ? '/achive/achive-question-light.png' : '/achive/achive-question-dark.png'
 
   return (
     <button
@@ -52,7 +53,7 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
       )}
 
       {status === 'hidden' && (
-        <img src="/achive/achive-question.png" alt="" className={styles.badgeImg} draggable={false} />
+        <img src={questionSrc} alt="" className={styles.badgeImg} draggable={false} />
       )}
 
       {status === 'unlocked' && (
@@ -110,7 +111,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
   const [showInfo, setShowInfo] = useState(false)
 
   const isDark  = ['noir', 'cyber', 'velvet', 'arctic'].includes(useUiStore(s => s.theme))
-  const treeSrc = isDark ? '/achive/tree-dark1.png' : '/achive/tree-light.png'
+  const treeSrc = isDark ? '/achive/tree-dark1.png' : '/achive/tree-light1.png'
 
   const nodes       = TREE_NODES[category] ?? TREE_NODES.all
   const connections = TREE_CONNECTIONS[category] ?? TREE_CONNECTIONS.all

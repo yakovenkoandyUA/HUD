@@ -45,7 +45,8 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
 
   const runeSrc  = RUNE_SRC[achievement.category]
   const isDark   = useUiStore(s => ['velvet','cyber','noir','arctic'].includes(s.theme))
-  const blockSrc = isDark ? '/achive/achive-block-light.png' : '/achive/achive-block-dark.png'
+  const blockSrc    = isDark ? '/achive/achive-block-light.png'    : '/achive/achive-block-dark.png'
+  const questionSrc = isDark ? '/achive/achive-question-light.png' : '/achive/achive-question-dark.png'
 
   return (
     <div className={`${styles.card} ${isUnlocked ? styles.cardUnlocked : ''}`}>
@@ -53,7 +54,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
       <div className={styles.badge}>
         {isHidden ? (
           <div className={styles.badgeImgWrap}>
-            <img src="/achive/achive-question.png" alt="" className={styles.badgeImg} draggable={false} />
+            <img src={questionSrc} alt="" className={styles.badgeImg} draggable={false} />
           </div>
         ) : isLocked ? (
           <div className={styles.badgeImgWrap}>
