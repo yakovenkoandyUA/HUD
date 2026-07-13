@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useVehicleStore, type VehicleEvent, type VehicleEventInput, type VehicleEventType } from '../../store/vehicleStore'
 import { useSpacesStore, type VehicleProfile } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
+import { useProfileStore } from '@/shared/store/profileStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { useImageUpload } from '@/shared/hooks/useImageUpload'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
@@ -793,9 +794,19 @@ interface TimelineProps {
   onAddMaintenance: () => void
 }
 
+function useCarIllustration(): string {
+  const theme     = useUiStore(s => s.theme)
+  const f1Enabled = useProfileStore(s => s.profile?.f1Enabled ?? false)
+  if (f1Enabled)          return '/car/car-f1.png'
+  if (theme === 'pixel')  return '/car/car-pixel.png'
+  if (theme === 'cyber')  return '/car/car-cyber.png'
+  return '/car/car-default.png'
+}
+
 const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spaceId, onAddFuel, onAddMaintenance }) => {
   const { deleteEvent } = useVehicleStore()
   const { showToast }   = useUiStore()
+  const carImg          = useCarIllustration()
   const colorVar = { '--space-color': color } as React.CSSProperties
 
   const handleDelete = async (id: string) => {
@@ -814,20 +825,12 @@ const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spac
   if (events.length === 0) {
     return (
       <div className={styles.vehicleEmptyState}>
-        <svg width="180" height="88" viewBox="0 0 180 88" fill="none" className={styles.vehicleEmptyIllustration} aria-hidden="true">
-          {/* Mountains */}
-          <path d="M0 88 L45 24 L90 88 Z" fill="currentColor" opacity="0.06"/>
-          <path d="M55 88 L115 8 L175 88 Z" fill="currentColor" opacity="0.04"/>
-          <path d="M110 88 L155 38 L200 88 Z" fill="currentColor" opacity="0.05"/>
-          {/* Ground */}
-          <line x1="0" y1="72" x2="180" y2="72" stroke="currentColor" strokeWidth="1" opacity="0.1"/>
-          {/* Car silhouette */}
-          <g transform="translate(52,50)" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.35">
-            <path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h11l4 4v4a2 2 0 0 1-2 2h-2"/>
-            <circle cx="7.5" cy="17.5" r="2.5"/>
-            <circle cx="17.5" cy="17.5" r="2.5"/>
-          </g>
-        </svg>
+        <img
+          src={carImg}
+          alt=""
+          className={styles.vehicleEmptyIllustration}
+          draggable={false}
+        />
         <p className={styles.vehicleEmptyTitle}>Простір ще порожній</p>
         <p className={styles.vehicleEmptyDesc}>Додай першу заправку, ТО або документ, щоб почати хроніку.</p>
         <div className={styles.vehicleEmptyCtas}>

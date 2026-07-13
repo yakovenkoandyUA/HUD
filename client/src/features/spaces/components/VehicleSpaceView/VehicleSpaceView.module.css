@@ -1183,7 +1183,11 @@
 }
 
 .vehicleEmptyIllustration {
-  color: var(--text3);
+  width: 200px;
+  max-width: 80%;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
   margin-bottom: 2px;
 }
 
