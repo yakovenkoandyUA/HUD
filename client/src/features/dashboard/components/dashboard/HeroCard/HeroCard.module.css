@@ -1,9 +1,9 @@
 /* ── Balance card ───────────────────────────────────────────── */
 
 .balanceCard {
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  background: var(--accent-dim);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   padding: 10px 16px 0;
   display: flex;
   flex-direction: column;
@@ -29,7 +29,7 @@
 
 .balanceCurrency {
   font-size: 19px;
-  color: var(--gold);
+  color: var(--accent);
   font-family: var(--font-ui);
 }
 
@@ -39,14 +39,14 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: color-mix(in srgb, var(--accent) 70%, var(--text3));
 }
 
 /* ── Stat strip ─────────────────────────────────────────────── */
 
 .statStrip {
   display: flex;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .statItem {
@@ -58,7 +58,7 @@
 }
 
 .statItem + .statItem {
-  border-left: 1px solid var(--border);
+  border-left: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
   padding-left: 12px;
 }
 
@@ -79,7 +79,7 @@
   font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 400;
-  color: var(--text3);
+  color: color-mix(in srgb, var(--accent) 60%, var(--text3));
   letter-spacing: 0;
 }
 
@@ -89,11 +89,32 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: color-mix(in srgb, var(--accent) 55%, var(--text3));
   line-height: 1;
 }
 
-/* ── Theme: peak accent ─────────────────────────────────────── */
+/* ── Velvet: gold tones on accent-dim ───────────────────────── */
 
-:global([data-theme='velvet']) .statValueAccent { color: var(--gold); }
-:global([data-theme='pixel'])  .statValueAccent { color: #e03333; }
+:global([data-theme='velvet']) .balanceCurrency   { color: var(--gold); }
+:global([data-theme='velvet']) .balanceSubLabel   { color: color-mix(in srgb, var(--gold) 70%, var(--text3)); }
+:global([data-theme='velvet']) .statValueAccent   { color: var(--gold); }
+:global([data-theme='velvet']) .statSub           { color: color-mix(in srgb, var(--gold) 55%, var(--text3)); }
+:global([data-theme='velvet']) .statLabel         { color: color-mix(in srgb, var(--gold) 50%, var(--text3)); }
+:global([data-theme='velvet']) .statStrip,
+:global([data-theme='velvet']) .statItem + .statItem {
+  border-color: color-mix(in srgb, var(--gold) 20%, transparent);
+}
+
+/* ── Pixel: vivid red bg — text needs max contrast ──────────── */
+
+:global([data-theme='pixel']) .balanceAmount      { color: #fff; }
+:global([data-theme='pixel']) .balanceCurrency    { color: #fff; }
+:global([data-theme='pixel']) .balanceSubLabel    { color: rgba(255,255,255,0.6); }
+:global([data-theme='pixel']) .statValue          { color: #fff; }
+:global([data-theme='pixel']) .statValueAccent    { color: #fff; }
+:global([data-theme='pixel']) .statSub            { color: rgba(255,255,255,0.55); }
+:global([data-theme='pixel']) .statLabel          { color: rgba(255,255,255,0.55); }
+:global([data-theme='pixel']) .statStrip,
+:global([data-theme='pixel']) .statItem + .statItem {
+  border-color: rgba(255,255,255,0.2);
+}
