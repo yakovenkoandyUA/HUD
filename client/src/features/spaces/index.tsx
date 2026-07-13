@@ -1032,7 +1032,7 @@ const SpaceDetailScreen: React.FC = () => {
             </div>
 
             {/* ── Modules (typed spaces only) ── */}
-            {(['vehicle', 'home', 'pet', 'trip'] as const).includes(editType) && (() => {
+            {(['vehicle', 'home', 'pet', 'trip'] as SpaceType[]).includes(editType) && (() => {
               const ALL_MODULES: { key: string; label: string }[] = [
                 { key: 'finance',   label: 'Фінанси' },
                 { key: 'tasks',     label: 'Задачі' },
