@@ -23,7 +23,7 @@ import { isRecurring, isRoutineDueOnDay } from '@/features/sprint/utils/sprint'
 import { usePullToRefresh } from '@/shared/hooks/usePullToRefresh'
 import { calcDailyBudget } from './helpers'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
-import AchievementTeaser from './components/dashboard/AchievementTeaser'
+
 import type { ExpenseCategory } from '@/shared/types'
 import SpacesStrip from './components/dashboard/SpacesStrip'
 import DayOverlay from './components/dashboard/DayOverlay'
@@ -203,8 +203,6 @@ const Dashboard: React.FC = () => {
         {f1Enabled && nextRace && (
           <RaceCountdownStrip race={nextRace} />
         )}
-
-        <AchievementTeaser />
 
       </div>
 
