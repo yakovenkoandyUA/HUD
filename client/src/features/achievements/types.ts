@@ -6,7 +6,10 @@ export interface AchievementDef {
   id: string
   category: AchievementCategory
   title: string
+  /** Action instruction shown on the card when locked/in_progress */
   description: string
+  /** Poetic flavor text shown in the unlock banner/modal */
+  flavor?: string
   target: number
   reward: number
   rarity: AchievementRarity

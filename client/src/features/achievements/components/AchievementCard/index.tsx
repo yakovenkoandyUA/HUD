@@ -10,7 +10,7 @@ const RUNE_SRC: Record<string, string> = {
   watchlist: '/achive/mimir-runes-transparent/rune-watchlist.png',
 }
 
-const RING_R_CARD = 36
+const RING_R_CARD = 22
 const CIRC        = 2 * Math.PI * RING_R_CARD
 
 interface AchievementCardProps {
@@ -57,7 +57,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
             <img src="/achive/achive-block.png" alt="" className={styles.badgeImg} draggable={false} />
           </div>
         ) : isUnlocked ? (
-          <div className={styles.badgeRuneWrap}>
+          <div className={`${styles.badgeRuneWrap} ${styles.badgeRuneWrapUnlocked}`}>
             <img src={runeSrc} alt="" className={styles.badgeRuneImg} draggable={false} />
           </div>
         ) : (
@@ -82,16 +82,15 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
           {isHidden ? '???' : title}
         </span>
         <span className={styles.desc}>
-          {isHidden ? 'Ще не відкрито' : description}
+          {isHidden
+            ? 'Криниця мовчить.'
+            : isUnlocked && achievement.flavor
+              ? achievement.flavor
+              : description}
         </span>
 
         {isInProgress && (
-          <div className={styles.progressWrap}>
-            <div className={styles.progressTrack}>
-              <div className={styles.progressFill} style={{ width: `${fraction * 100}%` }} />
-            </div>
-            <span className={styles.progressLabel}>{progress} / {target}</span>
-          </div>
+          <span className={styles.progressLabel}>{progress} / {target}</span>
         )}
       </div>
 

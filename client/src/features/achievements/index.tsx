@@ -84,26 +84,6 @@ const AchievementsTab: React.FC = () => {
         selectedId={selectedId}
       />
 
-      {/* ── Selected node detail ── */}
-      {selectedId && (() => {
-        const ach = all.find(a => a.id === selectedId)
-        if (!ach || ach.status === 'hidden') return null
-        return (
-          <div className={styles.nodeDetail}>
-            <span className={styles.nodeDetailTitle}>{ach.title}</span>
-            <p className={styles.nodeDetailDesc}>{ach.description}</p>
-            {ach.status === 'in_progress' && (
-              <div className={styles.nodeDetailProgress}>
-                <div className={styles.nodeDetailTrack}>
-                  <div className={styles.nodeDetailFill} style={{ width: `${(ach.progress / ach.target) * 100}%` }} />
-                </div>
-                <span className={styles.nodeDetailLabel}>{ach.progress} / {ach.target}</span>
-              </div>
-            )}
-          </div>
-        )
-      })()}
-
       {/* ── Achievement list ── */}
       <div className={styles.list}>
         {filtered.map(ach => (

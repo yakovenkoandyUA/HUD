@@ -508,8 +508,8 @@ const SpaceDetailScreen: React.FC = () => {
     <div className={styles.root}>
       <AppHeader />
 
-      {/* ── Hero ── */}
-      <div
+      {/* ── Hero (hidden for vehicle — it renders its own) ── */}
+      {space?.type !== 'vehicle' && <div
         className={`${styles.hero} ${space?.coverUrl ? styles.heroCovered : ''}`}
         style={space?.coverUrl ? undefined : colorVar}
       >
@@ -545,10 +545,10 @@ const SpaceDetailScreen: React.FC = () => {
             )}
           </>
         )}
-      </div>
+      </div>}
 
-      {/* ── Overview ── */}
-      <div className={styles.overview}>
+      {/* ── Overview (hidden for vehicle) ── */}
+      {space?.type !== 'vehicle' && <div className={styles.overview}>
         {[
           { num: memories.length,    label: 'спогадів'  },
           { num: plans.length,       label: 'планів'    },
@@ -563,10 +563,10 @@ const SpaceDetailScreen: React.FC = () => {
             {i < arr.length - 1 && <div className={styles.overviewDivider} />}
           </React.Fragment>
         ))}
-      </div>
+      </div>}
 
-      {/* ── Budget bar ── */}
-      {space?.budget != null && (() => {
+      {/* ── Budget bar (hidden for vehicle) ── */}
+      {space?.type !== 'vehicle' && space?.budget != null && (() => {
         const spent = spaceTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
         const pct   = Math.min(100, (spent / space.budget) * 100)
         const sym   = space.budgetCurrency === 'USD' ? '$' : space.budgetCurrency === 'EUR' ? '€' : '₴'
@@ -593,7 +593,17 @@ const SpaceDetailScreen: React.FC = () => {
 
       {/* ── Typed views (replace generic content) ── */}
       {space?.type === 'vehicle' && (
-        <VehicleSpaceView spaceId={spaceId!} color={space.color} />
+        <VehicleSpaceView
+          spaceId={spaceId!}
+          color={space.color}
+          spaceName={space.name}
+          memoriesCount={memories.length}
+          plansCount={plans.length}
+          tasksCount={spaceTasks.length}
+          membersCount={space.members.length}
+          isOwner={isOwner}
+          onEditSpace={openEdit}
+        />
       )}
       {space?.type === 'home' && (
         <HomeSpaceView

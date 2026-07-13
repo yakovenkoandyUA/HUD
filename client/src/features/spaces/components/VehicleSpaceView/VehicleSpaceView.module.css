@@ -634,6 +634,123 @@
   cursor: not-allowed;
 }
 
+/* ── Vehicle photo picker (in edit sheet) ── */
+.vehiclePhotoPicker {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 140px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px dashed var(--border);
+  background: var(--bg-surface);
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: border-color 0.15s;
+}
+
+.vehiclePhotoPicker:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.vehiclePhotoPicker:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.vehiclePhotoPreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vehiclePhotoPlaceholderPicker {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vehiclePhotoOverlay {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+/* ── VIN row + decode button ── */
+.vinRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vinRow .fieldInput {
+  flex: 1;
+  margin: 0;
+}
+
+.decodeBtn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.decodeBtn:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.decodeBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Quick service buttons ── */
+.quickBtns {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.quickBtn {
+  padding: 5px 10px;
+  border: 1.5px solid color-mix(in srgb, var(--space-color) 40%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--space-color) 8%, transparent);
+  color: var(--space-color);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.quickBtn:hover {
+  background: color-mix(in srgb, var(--space-color) 16%, transparent);
+  border-color: var(--space-color);
+}
+
 .attachSpinner {
   width: 14px;
   height: 14px;
@@ -651,4 +768,493 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
+}
+
+/* ══════════════════════════════════════════
+   NEW VEHICLE SPACE REDESIGN
+   ══════════════════════════════════════════ */
+
+/* ── Root ── */
+.vehicleRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 60px;
+}
+
+/* ── Hero card ── */
+.vehicleHeroCard {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--space-color) 6%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--space-color) 22%, var(--border));
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.vehicleMedallion {
+  flex-shrink: 0;
+  width: 90px;
+  height: 90px;
+  color: var(--space-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+.vehicleHeroInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vehicleHeroName {
+  font-family: var(--font-furore);
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vehicleHeroTypeBadge {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--space-color);
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--space-color) 40%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--space-color) 10%, transparent);
+  width: fit-content;
+}
+
+.vehicleHeroSubtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 1px;
+}
+
+.vehicleHeroDesc {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.vehicleHeroLastEntry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.vehicleHeroLastEntryIcon {
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.vehicleHeroLastEntryInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vehicleHeroLastEntryLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+
+.vehicleHeroLastEntryValue {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text2);
+}
+
+.vehicleHeroEditBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.vehicleHeroEditBtn:hover {
+  color: var(--space-color);
+  border-color: var(--space-color);
+}
+
+/* ── Stats cards (4-grid with counts) ── */
+.vehicleStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.vehicleStatCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.vehicleStatCardIcon {
+  color: var(--text3);
+}
+
+.vehicleStatCardNum {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.vehicleStatCardLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  color: var(--text3);
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+/* ── Onboarding checklist ── */
+.vehicleOnboarding {
+  background: color-mix(in srgb, var(--space-color) 5%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--space-color) 20%, var(--border));
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.vehicleOnboardingHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.vehicleOnboardingTitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: var(--text2);
+  text-transform: uppercase;
+}
+
+.vehicleOnboardingProgressWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.vehicleOnboardingProgressLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.vehicleOnboardingBar {
+  width: 80px;
+  height: 4px;
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vehicleOnboardingFill {
+  height: 100%;
+  background: var(--space-color);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.vehicleOnboardingItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.vehicleOnboardingItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: opacity 0.15s;
+}
+
+.vehicleOnboardingItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.vehicleOnboardingItem:first-child {
+  padding-top: 0;
+}
+
+.vehicleOnboardingItem:disabled {
+  cursor: default;
+}
+
+.vehicleOnboardingCheck {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--surface);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.vehicleOnboardingCheckDone {
+  background: var(--space-color);
+  border-color: var(--space-color);
+}
+
+.vehicleOnboardingItemText {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.vehicleOnboardingItemTextDone {
+  color: var(--text3);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--text3) 50%, transparent);
+}
+
+.vehicleOnboardingChevron {
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Action grid 2×2 ── */
+.vehicleActionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.vehicleActionCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vehicleActionCard:active {
+  background: color-mix(in srgb, var(--space-color) 6%, var(--surface));
+  border-color: color-mix(in srgb, var(--space-color) 40%, var(--border));
+}
+
+.vehicleActionCardIcon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--space-color) 10%, transparent);
+  border-radius: 8px;
+  color: var(--space-color);
+  flex-shrink: 0;
+}
+
+.vehicleActionCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.vehicleActionCardLabel {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.vehicleActionCardDesc {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+/* ── Timeline card ── */
+.vehicleTimelineCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.vehicleTimelineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.vehicleTimelineTitle {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.vehicleTimelineAllLink {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--space-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.85;
+}
+
+/* ── Timeline empty state ── */
+.vehicleEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 0 4px;
+  text-align: center;
+}
+
+.vehicleEmptyIllustration {
+  color: var(--text3);
+  margin-bottom: 2px;
+}
+
+.vehicleEmptyTitle {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+  margin: 0;
+}
+
+.vehicleEmptyDesc {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.4;
+  max-width: 240px;
+  margin: 0;
+}
+
+.vehicleEmptyCtas {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.vehicleEmptyCtaPrimary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 14px;
+  background: var(--space-color);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.vehicleEmptyCtaPrimary:active { opacity: 0.8; }
+
+.vehicleEmptyCtaSecondary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 14px;
+  background: none;
+  border: 1.5px solid color-mix(in srgb, var(--space-color) 40%, var(--border));
+  border-radius: 9px;
+  color: var(--space-color);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.vehicleEmptyCtaSecondary:active {
+  background: color-mix(in srgb, var(--space-color) 8%, transparent);
+}
+
+/* ── vehicle photo in edit sheet (flat img tag) ── */
+.vehiclePhotoPreview {
+  width: 100%;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+  display: block;
 }

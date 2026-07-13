@@ -1,173 +1,157 @@
 /* ── Card ── */
 
 .card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  transition: border-color 0.15s;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 14px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	transition: border-color 0.15s;
 }
 
 .cardUnlocked {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
-  background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+	border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+	background: color-mix(in srgb, var(--accent) 4%, var(--surface));
 }
 
 /* ── Badge ── */
 
 .badge {
-  flex-shrink: 0;
-  width: 85px;
-  height: 85px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	flex-shrink: 0;
+	width: 52px;
+	height: 52px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .badgeImgWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .badgeImg {
-  width: 85px;
-  object-fit: contain;
-  user-select: none;
+	width: 85px;
+	object-fit: contain;
+	user-select: none;
 }
 
 /* ── Rune badge (unlocked / in_progress) ── */
 
 .badgeRuneWrap {
-  position: relative;
-  width: 85px;
-  height: 85px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	border-radius: 50%;
+	flex-shrink: 0;
 }
 
 .badgeRuneImg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 97px;
-  height: 97px;
-  object-fit: cover;
-  user-select: none;
+	display: block;
+	width: 85px;
+	object-fit: contain;
+	user-select: none;
 }
 
 .badgeRuneImgDim {
-  filter: saturate(0.3) brightness(0.65);
+	filter: saturate(0.3) brightness(0.65);
 }
 
 .badgeArcOverlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: visible;
+	position: absolute;
+	inset: 0;
+	left: 11px;
+	top: -2px;
+	width: 75%;
+	height: 100%;
+	pointer-events: none;
+	overflow: visible;
 }
 
-.ringTrack { stroke: color-mix(in srgb, var(--border) 80%, transparent); }
-.ringArc   { stroke: var(--gold); }
+.ringTrack {
+	stroke: color-mix(in srgb, var(--border) 80%, transparent);
+}
+.ringArc {
+	stroke: var(--gold);
+}
 
 /* ── Body ── */
 
 .body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
 
 .title {
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--text2);
+	font-family: var(--font-ui);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	color: var(--text2);
 }
 
-.titleUnlocked { color: var(--text); }
+.titleUnlocked {
+	color: var(--text);
+}
 
 .desc {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  color: var(--text3);
-  line-height: 1.4;
+	font-family: var(--font-ui);
+	font-size: 11px;
+	color: var(--text3);
+	line-height: 1.4;
 }
 
-/* ── Progress bar ── */
-
-.progressWrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.progressTrack {
-  flex: 1;
-  height: 3px;
-  background: color-mix(in srgb, var(--border) 60%, transparent);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
+/* ── Progress count (arc ring is the visual, just show N/M) ── */
 
 .progressLabel {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text3);
-  white-space: nowrap;
-  flex-shrink: 0;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--text3);
+	margin-top: 2px;
 }
 
 /* ── Right side ── */
 
 .right {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 6px;
 }
 
 .reward {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
-  background: color-mix(in srgb, var(--bg) 65%, transparent);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text3);
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	padding: 3px 8px;
+	background: color-mix(in srgb, var(--bg) 65%, transparent);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	font-family: var(--font-ui);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text3);
 }
 
 .rewardUnlocked {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+	color: var(--accent);
+	border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+	background: color-mix(in srgb, var(--accent) 8%, var(--bg));
 }
 
 .check {
-  color: var(--accent);
+	color: var(--accent);
 }
 
 .chevron {
-  color: var(--text3);
+	color: var(--text3);
 }
