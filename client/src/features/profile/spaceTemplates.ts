@@ -31,33 +31,13 @@ export const SPACE_TEMPLATES: SpaceTemplate[] = [
     description: 'Ветеринар, щеплення, догляд',
   },
   {
-    id: 'family', label: "Сім'я", type: 'family', color: '#9b59b6',
-    defaultName: "Сім'я",
-    description: 'Спільні спогади й плани',
-  },
-  {
-    id: 'friends', label: 'Друзі', type: 'friends', color: '#e91e8c',
-    defaultName: 'Друзі',
-    description: 'Плани й спогади разом',
-  },
-  {
-    id: 'project', label: 'Проект', type: 'project', color: '#1abc9c',
-    defaultName: 'Новий проект',
-    description: 'Задачі й мілстоуни',
-  },
-  {
     id: 'sports', label: 'Спорт', type: 'sports', color: '#2ecc71',
     defaultName: 'Тренування',
     description: 'Результати й прогрес',
   },
   {
-    id: 'hobby', label: 'Хобі', type: 'hobby', color: '#f39c12',
-    defaultName: 'Хобі',
-    description: 'Захоплення й прогрес',
-  },
-  {
-    id: 'personal', label: 'Особистий', type: 'personal', color: '#e74c3c',
-    defaultName: 'Особистий простір',
-    description: 'Твоє — тільки для тебе',
+    id: 'shared', label: 'Спільний', type: 'shared', color: '#64748b',
+    defaultName: 'Спільний простір',
+    description: 'Спільний простір',
   },
 ]
