@@ -6,19 +6,19 @@ import styles from './HeroCard.module.css'
 /**
  * HeroCard
  * --------
- * Фінансова картка Dashboard: баланс місяця, сьогодні, 7-day bar chart.
- * Layout: ліво — баланс + за цей місяць + сьогодні; право — bar chart.
+ * Фінансова картка Dashboard: баланс місяця + meta-рядок + повноширокий 7-day bar chart.
+ * Layout: одна колонка — сума → за цей місяць → сьогодні · пік → графік.
  *
  * Props:
  * @prop {number}   balance       — витрачено за поточний місяць (грн)
- * @prop {number}   dailyBudget   — денний бюджет (грн)
+ * @prop {number}   dailyBudget   — денний бюджет (грн, резерв)
  * @prop {number}   todaySpent    — витрачено сьогодні (грн)
  * @prop {number[]} sparklineData — масив витрат за 7 днів (oldest→newest)
  */
 interface HeroCardProps {
-  balance:       number
-  dailyBudget:   number
-  todaySpent:    number
+  balance:        number
+  dailyBudget:    number
+  todaySpent:     number
   sparklineData?: number[]
 }
 
@@ -43,23 +43,22 @@ function getSparkDaysFull(): string[] {
   })
 }
 
-// ── Bar chart ───────────────────────────────────────────────────────────────
+// ── Bar chart (full-width, compact) ─────────────────────────────────────────
 
-const BAR_GAP    = 3
-const CHART_H    = 48  // bar area height
-const LABEL_H    = 14  // space above bars for peak label
-const TOTAL_H    = CHART_H + LABEL_H
+const BAR_GAP = 4
+const CHART_H = 36
 
 interface BarChartProps {
-  data:  number[]
-  days:  string[]
-  theme: string
+  data:    number[]
+  days:    string[]
+  theme:   string
+  peakIdx: number
 }
 
-const BarChart: React.FC<BarChartProps> = ({ data, days, theme }) => {
+const BarChart: React.FC<BarChartProps> = ({ data, days, theme, peakIdx }) => {
   const [hoverId, setHoverId] = useState<number | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
-  const [w, setW] = useState(140)
+  const [w, setW]   = useState(260)
 
   useEffect(() => {
     const el = wrapRef.current
@@ -73,7 +72,6 @@ const BarChart: React.FC<BarChartProps> = ({ data, days, theme }) => {
   const barW   = Math.max(4, Math.floor((w - BAR_GAP * (n - 1)) / n))
   const max    = Math.max(...data, 1)
   const peakV  = Math.max(...data)
-  const peakIdx = peakV > 0 ? data.lastIndexOf(peakV) : -1
   const isPixel = theme === 'pixel'
   const isCyber = theme === 'cyber'
   const rx      = isPixel ? 0 : 2
@@ -82,14 +80,14 @@ const BarChart: React.FC<BarChartProps> = ({ data, days, theme }) => {
     <div ref={wrapRef} className={styles.barWrap}>
       <svg
         width={w}
-        height={TOTAL_H}
+        height={CHART_H}
         className={styles.barSvg}
         xmlns="http://www.w3.org/2000/svg"
       >
         {isCyber && (
           <defs>
             <filter id="hcBarGlow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feGaussianBlur stdDeviation="2" result="blur"/>
               <feMerge>
                 <feMergeNode in="blur"/>
                 <feMergeNode in="SourceGraphic"/>
@@ -99,10 +97,10 @@ const BarChart: React.FC<BarChartProps> = ({ data, days, theme }) => {
         )}
 
         {data.map((v, i) => {
-          const barH   = max > 0 ? Math.max((v / max) * CHART_H, v > 0 ? 4 : 1) : 1
-          const x      = i * (barW + BAR_GAP)
-          const y      = LABEL_H + (CHART_H - barH)
-          const isPeak = i === peakIdx
+          const barH    = max > 0 ? Math.max((v / max) * CHART_H, v > 0 ? 3 : 1) : 1
+          const x       = i * (barW + BAR_GAP)
+          const y       = CHART_H - barH
+          const isPeak  = i === peakIdx
           const isToday = i === n - 1
           const isHov   = hoverId === i
 
@@ -112,29 +110,17 @@ const BarChart: React.FC<BarChartProps> = ({ data, days, theme }) => {
                 x={x} y={y} width={barW} height={barH} rx={rx}
                 className={[
                   styles.barRect,
-                  isPeak   ? styles.barPeak  : '',
-                  isToday && !isPeak ? styles.barToday : '',
+                  isPeak              ? styles.barPeak  : '',
+                  isToday && !isPeak  ? styles.barToday : '',
                 ].join(' ')}
                 filter={isPeak && isCyber ? 'url(#hcBarGlow)' : undefined}
               />
 
-              {/* Peak label */}
-              {isPeak && peakV > 0 && (
+              {/* Hover tooltip */}
+              {isHov && v > 0 && (
                 <text
-                  x={x + barW / 2}
-                  y={LABEL_H - 3}
-                  textAnchor="middle"
-                  className={styles.barPeakLabel}
-                >
-                  {fmt(peakV)} ₴
-                </text>
-              )}
-
-              {/* Hover label for non-peak bars */}
-              {isHov && !isPeak && v > 0 && (
-                <text
-                  x={x + barW / 2}
-                  y={LABEL_H - 3}
+                  x={Math.min(Math.max(x + barW / 2, 20), w - 20)}
+                  y={y - 4}
                   textAnchor="middle"
                   className={styles.barHoverLabel}
                 >
@@ -142,9 +128,9 @@ const BarChart: React.FC<BarChartProps> = ({ data, days, theme }) => {
                 </text>
               )}
 
-              {/* Touch/hover hit area */}
+              {/* Hit area */}
               <rect
-                x={x} y={0} width={barW} height={TOTAL_H}
+                x={x} y={0} width={barW} height={CHART_H}
                 fill="transparent"
                 onMouseEnter={() => setHoverId(i)}
                 onMouseLeave={() => setHoverId(null)}
@@ -164,7 +150,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, days, theme }) => {
             className={[
               styles.barDay,
               i === peakIdx && peakV > 0 ? styles.barDayPeak  : '',
-              i === n - 1                ? styles.barDayToday : '',
+              i === n - 1               ? styles.barDayToday : '',
             ].join(' ')}
           >
             {d}
@@ -195,7 +181,7 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget,
       const tick = () => {
         if (cancelled) return
         const progress = Math.min((Date.now() - startTime) / duration, 1)
-        const eased = 1 - Math.pow(1 - progress, 3)
+        const eased    = 1 - Math.pow(1 - progress, 3)
         if (!cancelled) setDisplayed(Math.round(balance * eased))
         if (progress < 1) rafRef.current = requestAnimationFrame(tick)
       }
@@ -217,36 +203,40 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget,
     if (max === 0) return null
     const idx      = sparklineData.lastIndexOf(max)
     const daysFull = getSparkDaysFull()
-    return { day: daysFull[idx], amount: fmt(max) }
+    return { day: daysFull[idx], amount: fmt(max), idx }
   })()
 
   return (
     <div className={styles.balanceCard}>
-      <div className={styles.row}>
-        {/* Left */}
-        <div className={styles.balanceLeft}>
-          <span className={styles.balanceAmount}>
-            {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
-          </span>
-          <span className={styles.balanceSubLabel}>за цей місяць</span>
-          <span className={styles.balanceToday}>
-            Сьогодні: {fmt(todaySpent)} ₴
-          </span>
-          {peakInsight && (
+      {/* Balance */}
+      <span className={styles.balanceAmount}>
+        {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
+      </span>
+      <span className={styles.balanceSubLabel}>за цей місяць</span>
+
+      {/* Meta row: today · peak */}
+      <div className={styles.balanceMeta}>
+        <span className={styles.balanceToday}>Сьогодні: {fmt(todaySpent)} ₴</span>
+        {peakInsight && (
+          <>
+            <span className={styles.metaSep} aria-hidden="true">·</span>
             <span className={styles.peakInsight}>
               <span className={styles.peakDot} aria-hidden="true" />
-              Пік витрат: {peakInsight.day} · {peakInsight.amount} ₴
+              Пік: {peakInsight.day} {peakInsight.amount} ₴
             </span>
-          )}
-        </div>
-
-        {/* Right: bar chart */}
-        {hasData && (
-          <div className={styles.sparkCol}>
-            <BarChart data={sparklineData!} days={sparkDays} theme={theme} />
-          </div>
+          </>
         )}
       </div>
+
+      {/* Full-width bar chart */}
+      {hasData && (
+        <BarChart
+          data={sparklineData!}
+          days={sparkDays}
+          theme={theme}
+          peakIdx={peakInsight?.idx ?? -1}
+        />
+      )}
     </div>
   )
 }

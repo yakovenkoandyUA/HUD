@@ -4,23 +4,13 @@
   background: var(--surface);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  padding: 10px 16px 10px;
-}
-
-.row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-/* ── Left: balance info ─────────────────────────────────────── */
-
-.balanceLeft {
+  padding: 10px 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 0;
+  gap: 2px;
 }
+
+/* ── Balance amount ─────────────────────────────────────────── */
 
 .balanceAmount {
   font-family: var(--font-display);
@@ -37,22 +27,49 @@
   font-family: var(--font-ui);
 }
 
+/* ── "за цей місяць" label ──────────────────────────────────── */
+
+.balanceSubLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 4px;
+}
+
+/* ── Meta row (today · peak) ────────────────────────────────── */
+
+.balanceMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
 .balanceToday {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text3);
   letter-spacing: 0.02em;
-  margin-top: 2px;
+}
+
+.metaSep {
+  font-size: 10px;
+  color: var(--text3);
+  opacity: 0.5;
+  line-height: 1;
 }
 
 .peakInsight {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-family: var(--font-ui);
   font-size: 10px;
   color: var(--text3);
-  margin-top: 2px;
   letter-spacing: 0.01em;
 }
 
@@ -64,52 +81,15 @@
   flex-shrink: 0;
 }
 
-.balanceBar {
-  height: 3px;
-  background: var(--border);
-  margin-top: 8px;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.balanceBarFill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  transition: width 0.4s ease;
-}
-
-.barOver {
-  background: var(--negative);
-}
-
-/* ── "за цей місяць" label ──────────────────────────────────── */
-
-.balanceSubLabel {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-top: -1px;
-}
-
-/* ── Right: chart column ────────────────────────────────────── */
-
-.sparkCol {
-  flex: 1;
-  min-width: 0;
-}
-
-/* ── Bar chart ──────────────────────────────────────────────── */
+/* ── Bar chart (full-width) ─────────────────────────────────── */
 
 .barWrap {
-  position: relative;
+  width: 100%;
 }
 
 .barSvg {
   display: block;
+  width: 100%;
   overflow: visible;
 }
 
@@ -118,14 +98,7 @@
 .barPeak  { fill: var(--accent); }
 .barToday { fill: color-mix(in srgb, var(--text3) 45%, transparent); }
 
-/* Labels inside SVG */
-.barPeakLabel {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  fill: var(--accent);
-}
-
+/* Hover tooltip */
 .barHoverLabel {
   font-family: var(--font-mono);
   font-size: 9px;
@@ -142,7 +115,7 @@
 .barDays {
   display: flex;
   padding-top: 3px;
-  gap: 3px;
+  gap: 4px;
 }
 
 .barDay {
@@ -162,22 +135,20 @@
 
 /* ── Theme variants ─────────────────────────────────────────── */
 
-/* Velvet — мuted gold peak */
-:global([data-theme='velvet']) .barPeak      { fill: var(--gold); }
-:global([data-theme='velvet']) .barDayPeak   { color: var(--gold); }
-:global([data-theme='velvet']) .barPeakLabel { fill: var(--gold); }
+/* Velvet — gold peak */
+:global([data-theme='velvet']) .barPeak    { fill: var(--gold); }
+:global([data-theme='velvet']) .barDayPeak { color: var(--gold); }
 
-/* Pixel — square bars (handled by rx=0 in JS), red peak */
-:global([data-theme='pixel']) .barPeak      { fill: #e03333; }
-:global([data-theme='pixel']) .barDayPeak   { color: #e03333; }
-:global([data-theme='pixel']) .barPeakLabel { fill: #e03333; }
-:global([data-theme='pixel']) .barRect      { fill: color-mix(in srgb, var(--text3) 35%, transparent); }
+/* Pixel — square bars (rx=0 in JS), red peak */
+:global([data-theme='pixel']) .barPeak    { fill: #e03333; }
+:global([data-theme='pixel']) .barDayPeak { color: #e03333; }
+:global([data-theme='pixel']) .barRect    { fill: color-mix(in srgb, var(--text3) 35%, transparent); }
 
-/* Cyber — neon bars (glow handled by SVG filter in JS) */
+/* Cyber — neon bars */
 :global([data-theme='cyber']) .barRect  { fill: color-mix(in srgb, var(--accent) 25%, transparent); }
 :global([data-theme='cyber']) .barToday { fill: color-mix(in srgb, var(--accent) 35%, transparent); }
 
-/* ── Dark themes: lift secondary text (text3 too faint on dark surfaces) ── */
+/* ── Dark themes: lift secondary text ──────────────────────── */
 
 :global([data-theme='velvet']) .balanceToday,
 :global([data-theme='cyber'])  .balanceToday,
@@ -188,8 +159,3 @@
 :global([data-theme='cyber'])  .peakInsight,
 :global([data-theme='noir'])   .peakInsight,
 :global([data-theme='arctic']) .peakInsight { color: var(--text2); }
-
-:global([data-theme='velvet']) .sparkDay,
-:global([data-theme='cyber'])  .sparkDay,
-:global([data-theme='noir'])   .sparkDay,
-:global([data-theme='arctic']) .sparkDay { color: var(--text2); }
