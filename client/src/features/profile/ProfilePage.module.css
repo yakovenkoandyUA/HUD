@@ -1939,6 +1939,7 @@
 }
 .toggleOn .toggleThumb { transform: translateX(18px); }
 
+
 .wipBadge {
   display: inline-block;
   margin-left: 8px;

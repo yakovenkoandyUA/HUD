@@ -823,7 +823,7 @@ function useCarIllustration(): string {
   const f1Enabled = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   if (f1Enabled)         return '/car/car-f1.png'
   if (theme === 'cyber') return '/car/car-cyber.png'
-  if (theme === 'pixel') return '/car/car-pixel.png'
+  if (theme === 'pixel') return '/car/car-default.png'
   return '/car/car-default.png'
 }
 

@@ -16,6 +16,7 @@ const SPORT_MODULES: { id: string; label: string; sub: string; wip?: boolean }[]
   { id: 'basketball', label: 'Баскетбол',  sub: 'НБА, матчі, рейтинги',          wip: true },
 ]
 
+
 const ChevronIcon: React.FC = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3 5l4 4 4-4"/>
