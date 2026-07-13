@@ -59,8 +59,10 @@ const AchievementsTab: React.FC = () => {
             <div className={styles.heroProgressFill} style={{ width: `${progress}%` }} />
           </div>
           <p className={styles.heroSub}>
-            {score.earned} рун
-            {nextLvl ? ` · до рівня ${nextLvl.level}: ${nextLvl.minRunes - score.earned}` : ' · МАКСИМУМ'}
+            {nextLvl
+              ? <><span className={styles.heroSubCurrent}>{score.earned}</span>{' / '}{nextLvl.minRunes}{' рун'}</>
+              : <><span className={styles.heroSubCurrent}>{score.earned}</span>{' рун · МАКСИМУМ'}</>
+            }
           </p>
         </div>
         <img src="/achive/achive-hero.png" alt="" className={styles.heroRune} draggable={false} />
