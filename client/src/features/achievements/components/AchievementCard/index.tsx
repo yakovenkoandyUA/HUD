@@ -45,7 +45,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
 
   const runeSrc  = RUNE_SRC[achievement.category]
   const isDark   = useUiStore(s => ['velvet','cyber','noir','arctic'].includes(s.theme))
-  const blockSrc = isDark ? '/achive/achive-block-dark.png' : '/achive/achive-block-light.png'
+  const blockSrc = isDark ? '/achive/achive-block-light.png' : '/achive/achive-block-dark.png'
 
   return (
     <div className={`${styles.card} ${isUnlocked ? styles.cardUnlocked : ''}`}>

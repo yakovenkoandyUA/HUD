@@ -37,7 +37,7 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
   const blendNode  = status === 'locked' || status === 'hidden'
   const runeSrc    = RUNE_SRC[achievement.category]
   const isDarkNode = useUiStore(s => ['velvet','cyber','noir','arctic'].includes(s.theme))
-  const blockSrc   = isDarkNode ? '/achive/achive-block-dark.png' : '/achive/achive-block-light.png'
+  const blockSrc   = isDarkNode ? '/achive/achive-block-light.png' : '/achive/achive-block-dark.png'
 
   return (
     <button
