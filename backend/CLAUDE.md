@@ -114,10 +114,22 @@
 | `/api/weather` | GET ?city= — проксі до wttr.in (Cache-Control 30хв) |
 | `/api/user/export` | GET — requireAuth; JSON export всіх даних юзера (без passwordHash/pinHash/tokens/Paddle fields) |
 | `/api/user/me` | DELETE — soft delete; вимагає `{ confirmation: 'DELETE' }`; видаляє RefreshTokens, очищає cookie |
-| `/api/spaces/:id/vehicle/profile` | GET, PATCH — vehicleProfile sub-document (make/model/year/plate/vin/mileage/fuelType/purchaseDate/photoUrl) |
+| `/api/spaces/:id/vehicle/profile` | GET, PATCH — vehicleProfile sub-document (make/model/year/plate/vin/mileage/fuelType/purchaseDate/photoUrl/nextServiceMileage) |
 | `/api/spaces/:id/vehicle/events` | GET (`?type=&limit=`), POST — VehicleEvent CRUD |
 | `/api/spaces/:id/vehicle/events/:eventId` | PATCH, DELETE |
 | `/api/spaces/:id/vehicle/stats` | GET — totalCostMonth/Year, avgFuelConsumption, costPerKm, currentMileage, expiringDocs |
+| `/api/spaces/:id/home/profile` | GET, PATCH — homeProfile sub-document (addressLabel/ownershipType/area/floor/moveInDate/photoUrl) |
+| `/api/spaces/:id/home/events` | GET (`?type=&limit=`), POST — HomeEvent (repair/payment/purchase/document/inspection/note/photo) |
+| `/api/spaces/:id/home/events/:eventId` | PATCH, DELETE |
+| `/api/spaces/:id/pet/profile` | GET, PATCH — petProfile sub-document (name/species/breed/birthDate/weight/photo/chip/passport) |
+| `/api/spaces/:id/pet/events` | GET (`?type=&limit=`), POST — PetEvent (vet_visit/vaccination/medication/grooming/weight/note) |
+| `/api/spaces/:id/pet/events/:eventId` | PATCH, DELETE |
+| `/api/spaces/:id/trip/profile` | GET, PATCH — tripProfile sub-document (destination/startDate/endDate/travelers/status) |
+| `/api/ai/space-chat` | POST — SSE streaming (Claude Haiku), system prompt залежить від space.type (vehicle→механік, trip→travel planner, project→PM); контекст: назва/тип + останні 5 подій/задач/нотаток |
+| `/api/mimir/hint` | GET `?mode=wise\|witty\|dark` — AI-підказка Міміра (requireFeature('mimirAi')) |
+| `/api/billing/checkout` | POST (auth) — генерація WayForPay payment URL, HMAC підпис; повертає `{ paymentUrl, orderReference }` |
+| `/api/billing/wayforpay/callback` | POST (public) — HMAC-MD5 верифікація, idempotency через ProcessedBillingEvent, оновлення BillingOrder + User.plan |
+| `/api/billing/order/:orderReference/status` | GET (auth) — статус BillingOrder для polling |
 
 ## Env
 
@@ -165,9 +177,21 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **RecurringPayment** — `amountForeign` + `currency: 'UAH'|'USD'|'EUR'` для валютних платежів
 
-**Space** — `name`, `type: 'personal'|'shared'|'trip'|'family'|'friends'|'hobby'|'sports'|'project'|'vehicle'`, `color`, `emoji`, `ownerId`, `members[]`, `vehicleProfile` (sub-document, null якщо не vehicle-тип): `{make, model, year, plateNumber, vin, currentMileage, fuelType, purchaseDate, photoUrl}`
+**Space** — `name`, `type: 'personal'|'shared'|'trip'|'family'|'friends'|'hobby'|'sports'|'project'|'vehicle'|'home'|'pet'`, `color`, `emoji`, `ownerId`, `members[]`, `archived: boolean` (default false), `coverUrl: string|null`, `budget: number|null`, `budgetCurrency: string` (default 'UAH'). Sub-documents (null якщо не відповідний тип): `vehicleProfile`, `homeProfile`, `petProfile`, `tripProfile`
+
+**VehicleProfile sub-doc** — `make, model, year, plateNumber, vin, currentMileage, fuelType, purchaseDate, photoUrl, nextServiceMileage: number|null`
 
 **VehicleEvent** — `spaceId`, `userId`, `type: 'fuel'|'maintenance'|'repair'|'inspection'|'insurance'|'tire_change'|'document'|'note'`, `date`, `mileage`, `cost`, `currency`, `vendor`, `notes`, `attachments: string[]` (Cloudinary URLs), `liters` (fuel), `fuelType` (fuel), `docType` (document), `docExpiresAt` (document)
+
+**HomeProfile sub-doc** — `addressLabel, ownershipType: 'rent'|'own'|'mortgage', area: number|null, floor: number|null, moveInDate: string|null, photoUrl`
+
+**HomeEvent** — `spaceId`, `userId`, `type: 'repair'|'payment'|'purchase'|'document'|'inspection'|'note'|'photo'`, `date`, `cost`, `currency`, `vendor`, `notes`, `attachments[]`, `docType`, `docExpiresAt`
+
+**PetProfile sub-doc** — `name, species, breed, birthDate: string|null, weight: number|null, photoUrl, chipNumber, passportNumber`
+
+**PetEvent** — `spaceId`, `userId`, `type: 'vet_visit'|'vaccination'|'medication'|'grooming'|'weight'|'note'`, `date`, `cost`, `currency`, `vendor`, `notes`, `weight` (для weight events), `nextDate: string|null`
+
+**TripProfile sub-doc** — `destination, startDate: string|null, endDate: string|null, travelers: string[], status: 'planning'|'ongoing'|'completed'`
 
 **BankConnection** — `userId`, `bank: 'monobank'`, `encryptedToken` (AES-256-GCM), `accountId`, `lastSync`
 

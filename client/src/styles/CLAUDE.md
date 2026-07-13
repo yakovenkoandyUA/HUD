@@ -1,114 +1,180 @@
-# Дизайн-система HUD
+# Дизайн-система MIMIR
 
 ## Теми
 
-6 тем: **RETRO** (default) / **WARM** / **DARK** / **JAPAN** / **HEROES** / **BERRY**
+6 тем: **velvet** (default) / **japan** / **cyber** / **noir** / **pixel** / **arctic**
 Перемикання через `data-theme` атрибут на `<html>`.
 Зберігається в `uiStore` → `localStorage` (ключ `hud-ui`).
 
 ```tsx
 // uiStore.ts
-theme: 'retro' | 'warm' | 'dark' | 'japan' | 'heroes' | 'berry'
+theme: 'velvet' | 'japan' | 'cyber' | 'noir' | 'pixel' | 'arctic'
 setTheme: (theme) => void
 ```
 
-### RETRO (default)
+### velvet (default)
+Темно-синє з золотом. Середньовічна бібліотека.
 ```css
-[data-theme="retro"] {
-  --bg: #0d0d0d;  --bg2: #141414;  --bg3: #1c1a18;
-  --surface: #201e1b;  --surface2: #272421;
-  --border: #2e2b27;  --border2: #3a3630;
-  --accent: #B83A2D;  --accent-dim: #7a2720;
-  --accent-glow: rgba(184,58,45,0.25);  --accent-soft: rgba(184,58,45,0.12);
-  --second: #4E6851;  --second-soft: rgba(78,104,81,0.15);
-  --gold: #DCC9A9;  --gold-dim: rgba(220,201,169,0.15);
-  --text: #EDE0CC;  --text2: #9a8f82;  --text3: #5c5248;
-  --positive: #4E6851;  --negative: #B83A2D;
+[data-theme="velvet"] {
+  --bg: #0d0f1a;  --surface: #1e2235;  --surface2: #252a40;
+  --accent: #c99a2e;  --accent-dim: #8f6b1d;
+  --gold: #e0b95a;  --gold-dim: rgba(224,185,90,0.16);
+  --text: #e8d5a0;  --text2: #a89060;  --text3: #6a5830;
+  --font-display: 'Cinzel', 'Bebas Neue', serif;
 }
 ```
 
-### WARM
-```css
-[data-theme="warm"] {
-  --bg: #1a2328;  --bg2: #1f2c33;  --bg3: #24343c;
-  --surface: #264653;  --surface2: #2d5060;
-  --border: #2f5a69;  --border2: #386070;
-  --accent: #E76F51;  --accent-dim: #a84e38;
-  --accent-glow: rgba(231,111,81,0.25);  --accent-soft: rgba(231,111,81,0.12);
-  --second: #2A9D8F;  --second-soft: rgba(42,157,143,0.15);
-  --gold: #E9C46A;  --gold-dim: rgba(233,196,106,0.15);
-  --text: #f0ece8;  --text2: #9ab0b8;  --text3: #5a7a82;
-  --positive: #2A9D8F;  --negative: #E76F51;
-}
-```
-
-### DARK
-```css
-[data-theme="dark"] {
-  --bg: #0a0a0a;  --bg2: #111111;  --bg3: #1a1a1a;
-  --surface: #1e1e1e;  --surface2: #252525;
-  --border: #2a2a2a;  --border2: #333333;
-  --accent: #c8102e;  --accent-dim: #8b0b1f;
-  --second: #2ecc71;  --second-soft: rgba(46,204,113,0.12);
-  --gold: #d4a017;  --gold-dim: rgba(212,160,23,0.15);
-  --text: #f0ece8;  --text2: #9a9490;  --text3: #5a5652;
-  --positive: #2ecc71;  --negative: #c8102e;
-}
-```
-
-### JAPAN
+### japan
+Світлий пергамент, червоний акцент. Японська рукопис.
 ```css
 [data-theme="japan"] {
-  --bg: #F5F0EB;  --bg2: #EDE8E2;  --bg3: #E5DED6;
-  --surface: #EDE8E2;  --surface2: #E0D9D0;
-  --border: #D5CEC5;  --border2: #C8C0B6;
+  --bg: #F5F0EB;  --surface: #D8D0C4;  --surface2: #CEC6BA;
   --accent: #C8102E;  --accent-dim: #8b0b1f;
-  --second: #1a1a1a;  --second-soft: rgba(26,26,26,0.08);
-  --gold: #8B7355;  --gold-dim: rgba(139,115,85,0.15);
-  --text: #1a1a1a;  --text2: #6b6560;  --text3: #a09890;
-  --positive: #2d6a4f;  --negative: #C8102E;
-  --font-display: 'Cormorant Garamond', 'Furore', serif;
+  --gold: #8B7355;
+  --text: #1a1a1a;  --text2: #5a5450;  --text3: #8a8480;
+  --font-display: 'Cormorant Garamond', 'Bebas Neue', serif;
 }
+/* body::after — washi ruled lines; body::before — червона пляма зверху */
+```
+F1 banner: **light** (`LIGHT_THEMES = new Set(['pixel', 'japan'])`)
+
+### cyber
+Темно-синій неон, рожевий акцент. Кіберпанк.
+```css
+[data-theme="cyber"] {
+  --bg: #06080e;  --surface: #131a2c;  --surface2: #182036;
+  --accent: #ff2060;  --accent-dim: #c01848;
+  --gold: #f0a020;
+  --text: #d8eaf8;  --text2: #5888a8;  --text3: #304858;
+}
+/* body::before — CRT scanlines; body::after — grid overlay */
 ```
 
-### HEROES
+### noir
+Чисто чорний, нейтрально-сірий акцент. Мінімалізм.
 ```css
-[data-theme="heroes"] {
-  --bg: #0d0f1a;  --bg2: #111420;  --bg3: #161928;
-  --surface: #1e2235;  --surface2: #242840;
-  --border: #2e3450;  --border2: #353c5e;
-  --accent: #d4a017;  --accent-dim: #9b7510;
-  --second: #6a4fc8;  --second-soft: rgba(106,79,200,0.15);
-  --gold: #d4a017;  --gold-dim: rgba(212,160,23,0.15);
-  --text: #e8d5a0;  --text2: #9a8f70;  --text3: #5c5240;
-  --positive: #4a9e5c;  --negative: #c8102e;
+[data-theme="noir"] {
+  --bg: #080808;  --surface: #1a1a1a;
+  --accent: #d0d0d0;  --accent-dim: #888888;
+  --gold: #c8c8c8;
+  --text: #ebebeb;  --text3: #6a6a6a;
+  --border: #303030;  --border2: #464646;
 }
+```
+Finance block: `background: var(--surface)` замість `var(--accent-soft)` (окремий override).
+
+### pixel
+Кремовий фон, ретро піксельна типографіка.
+```css
+[data-theme="pixel"] {
+  --bg: #f4efe0;  --surface: #faf6ea;
+  --accent: #d42020;  --accent-dim: #a01818;
+  --gold: #e8a020;
+  --text: #181028;
+  --font-display: 'Press Start 2P', monospace;
+  --font-ui: 'JetBrains Mono', monospace;
+  --font-body: 'PT Sans', sans-serif;
+}
+/* body::after — scanlines поверх */
+```
+Іконки SVG у SpacesStrip: `filter: brightness(0) opacity(0.55)` (кремові іконки невидимі).
+F1 banner: **light** (`LIGHT_THEMES = new Set(['pixel', 'japan'])`)
+
+### arctic
+Темно-синій + блакитний акцент. Холодна ніч.
+```css
+[data-theme="arctic"] {
+  --bg: #1e2330;  --surface: #313a4e;
+  --accent: #88c0d0;  --accent-dim: #5e8fa0;
+  --gold: #ebcb8b;
+  --text: #eceff4;
+  --font-display: 'Philosopher', serif;
+}
+/* body::after — aurora borealis overlay */
+```
+F1 banner: **dark** (arctic — світлий акцент на темному тлі, але banner використовує темну версію)
+
+---
+
+## Типографіка
+
+```css
+--font-display: 'Furore', 'Oswald', 'Barlow Condensed', sans-serif  /* overridden per-theme */
+--font-ui:      'Manrope', 'Oswald', 'Barlow Condensed', sans-serif
+--font-body:    'PT Sans', 'Barlow', sans-serif
+--font-mono:    'JetBrains Mono', monospace
+```
+
+### Призначення шрифтів
+- **Furore / per-theme override** — логотип MIMIR, великі заголовки hero-числа
+- **Manrope** — весь UI текст: кнопки, лейбли, картки, навігація
+- **₴** — Barlow Condensed (Furore не підтримує гривню → `var(--font-ui)`)
+- **JetBrains Mono** — числові значення, дати, технічні рядки (`var(--font-mono)`)
+
+### Per-theme font-display overrides
+| Тема | font-display |
+|------|--------------|
+| velvet | `'Cinzel', 'Bebas Neue', serif` |
+| japan | `'Cormorant Garamond', 'Bebas Neue', serif` |
+| pixel | `'Press Start 2P', monospace` |
+| arctic | `'Philosopher', serif` |
+| cyber, noir | успадковує `:root` (`Furore`) |
+
+### Кирилиця
+`Furore`, `Barlow Condensed` та `Barlow` — **без кириличних гліфів** (перевірено по cmap). Будь-який текст фолбекав на system sans-serif. Тому в стеках стоять `Oswald` і `PT Sans` (повний кириличний набір, включно з і/ї/є/ґ). `JetBrains Mono` і `Manrope` кирилицю підтримують самі.
+
+---
+
+## Семантичні токени
+
+Всі ці змінні визначені в `:root` у `global.css` і перевизначаються в темах де потрібно:
+
+```css
+/* Панелі */
+--panel-danger-bg, --panel-danger-border
+--panel-success-bg, --panel-success-border
+--panel-warning-bg, --panel-warning-border
+--panel-accent-bg, --panel-accent-border
+--panel-muted-bg
+
+/* Поверхні */
+--card-bg, --card-bg-hover   /* cards */
+--nav-bg, --nav-border       /* bottom nav */
+
+/* Tints (прозорі) */
+--tint-accent, --tint-gold
+
+/* Взаємодія */
+--tap-bg       /* press/tap feedback — rgba(0,0,0,0.05) для світлих тем */
+--focus-ring   /* keyboard focus outline = var(--accent) */
+```
+
+Завжди використовуй семантичні токени замість `color-mix()` в нових компонентах:
+```css
+/* ❌ старий патерн — мігруємо по мірі редагування */
+background: color-mix(in srgb, var(--negative) 8%, var(--surface));
+/* ✅ новий */
+background: var(--panel-danger-bg);
 ```
 
 ---
 
-## Кросбраузерність — обов'язкові правила
+## Кросбраузерність
 
 ### backdrop-filter — ЗАВЖДИ з `-webkit-` префіксом (Safari/iOS)
 ```css
-/* ✅ ПРАВИЛЬНО */
 -webkit-backdrop-filter: blur(8px);
-backdrop-filter: blur(8px);
-
-/* ❌ НЕПРАВИЛЬНО — Safariігнорує без префіксу */
 backdrop-filter: blur(8px);
 ```
 
-### color-mix() — підтримується в усіх сучасних браузерах (Chrome 111+, Firefox 113+, Safari 16.2+). Використовувати без застережень.
+### color-mix() — Chrome 111+, Firefox 113+, Safari 16.2+. Використовувати без застережень.
 
-### dvh/svh — підтримується в усіх сучасних браузерах (2022+). Використовувати без застережень.
+### dvh/svh — підтримується в усіх сучасних браузерах (2022+).
 
 ### Scrollbar styling — завжди парно:
 ```css
-/* Firefox */
 scrollbar-width: thin;
 scrollbar-color: var(--border) transparent;
-/* Chrome/Safari */
 &::-webkit-scrollbar { width: 4px; }
 &::-webkit-scrollbar-track { background: transparent; }
 &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -116,31 +182,13 @@ scrollbar-color: var(--border) transparent;
 
 ---
 
-## Правило CSS змінних
+## Правила написання стилів
 
-Завжди семантичні змінні — ніколи hex напряму:
-
-```tsx
-// ❌
-color: '#B83A2D'
-// ✅
-color: 'var(--accent)'
-```
-
----
-
-## Типографіка
-
-```css
---font-display:  'Furore', 'Oswald', 'Barlow Condensed', sans-serif
---font-ui:       'Oswald', 'Barlow Condensed', sans-serif
---font-body:     'PT Sans', 'Barlow', sans-serif
---font-mono:     'JetBrains Mono', monospace
-```
-
-- **Furore** — логотип HUD, великі заголовки, числові hero-значення (баланс, відлік F1)
-- **₴** — Barlow Condensed (Furore не підтримує гривню)
-- **JetBrains Mono** — числові значення, дати, технічні рядки
-- **Barlow Condensed** — навігація, теги, кнопки, підписи
-
-**Кирилиця:** `Furore`, `Barlow Condensed` і `Barlow` не містять кириличних гліфів (перевірено по cmap шрифтів) — будь-який український текст у цих стеках фолбекав на system sans-serif. Тому в `--font-display`/`--font-ui` доданий `Oswald`, а в `--font-body` — `PT Sans` (обидва мають повний кириличний набір, включно з і/ї/є/ґ) перед латинськими шрифтами. `JetBrains Mono` кирилицю підтримує сам.
+- **ЗАВЖДИ** `var(--accent)` — ніколи hex напряму
+- **ЗАВЖДИ** окрема папка: `ComponentName/index.tsx` + `*.module.css`
+- **НЕ** inline styles (крім динамічних значень що залежать від JS)
+- **НЕ** `!important`
+- Числа/дати — `var(--font-mono)`
+- Гривня ₴ — `var(--font-ui)` (Furore не підтримує ₴)
+- `backdrop-filter` — ЗАВЖДИ разом з `-webkit-backdrop-filter`
+- Акордеони — `max-height` + `opacity` transition, ніколи conditional mount/unmount

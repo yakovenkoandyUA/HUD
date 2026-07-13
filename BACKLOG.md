@@ -371,6 +371,16 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 - [ ] **Space тижневий дайджест** — backend cron (щонеділі) → push нотифікація: "Japan Trip: 3 задачі, 2 спогади, 12 000₴ витрат цього тижня"
 - [x] **ШІ-асистент per Space** — кнопка в хедері `SpaceDetail` → bottom sheet → SSE чат; `POST /api/ai/space-chat` приймає `spaceId` + `messages[]`; system prompt залежить від `space.type` (vehicle → механік, trip → travel planner, project → PM); Claude Haiku; контекст: назва/тип + останні 5 подій/задач/нотаток
 
+### ✅ Dashboard + UI polish (2026-07-13)
+
+- **HeroCard — фінанс блок:** видалено bar chart; замінено на stat strip (Сьогодні / 7 днів / Пік з назвою дня). Фон `var(--accent-soft)`. Контраст тексту налагоджено по всіх 6 темах: noir — `var(--surface)` фон як у решти блоків; pixel — білий текст; arctic/japan — dark text overrides; cyber — `var(--text)` для лейблів; velvet — золота ₴ і peak accent.
+- **F1 RaceCountdownStrip — баннер:** виправлено `LIGHT_THEMES`: arctic видалено (баннер dark), japan залишено (баннер light). `new Set(['pixel', 'japan'])`.
+- **VehicleSpaceView — фото авто:** виправлено відображення після завантаження — `profile?.photoUrl` тепер рендерить `<img>` замість SVG-medallion.
+- **VehicleSpaceView — navbar:** кнопки "Назад" і "Редагувати" перенесено з `position: absolute` всередині картки в окремий `vehicleNavBar` рядок над hero card — більше не перекриваються з фото.
+- **SpacesStrip — назва картки:** `-webkit-line-clamp` змінено з 1 на 2 рядки.
+- **SpacesStrip — створення простору:** кнопка "Додати" тепер відкриває inline sheet (template → form) замість переходу на `/profile?tab=spaces`. Реалізовано через `createPortal(…, document.body)` щоб уникнути overflow/transform stacking context. `useSwipeToDismiss` для drag-to-close.
+- **AchievementsTab — XP display:** змінено з `"60 рун · до рівня 3: 20"` на `"60 / 2000 рун"` (game-style). `score.earned` — більший і яскравий (`.heroSubCurrent`), total — приглушений. Шрифт `var(--font-mono)`.
+
 ### ✅ Типізовані Space-вʼюхи (2026-07-11)
 
 - [x] **Home Space** — `homeProfile` sub-doc (`address/ownership/area/floor/moveInDate/photo`); `HomeEvent` модель (repair/payment/purchase/document/inspection/note/photo); CRUD `/api/spaces/:id/home/(profile|events)`; `HomeSpaceView` — профільна картка + 6 quick actions + хронологія; toggle-пікери дат
