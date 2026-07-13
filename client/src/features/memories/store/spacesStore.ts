@@ -70,6 +70,10 @@ export interface Space {
   tripProfile:    TripProfile | null
   archived:       boolean
   createdAt:      string
+  memoriesCount:  number
+  openTasksCount: number
+  notesCount:     number
+  lastActivityAt: string | null
 }
 
 export interface SpaceInput {

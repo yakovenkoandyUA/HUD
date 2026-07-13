@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
+import { Types } from 'mongoose'
 import { Space } from '../models/Space'
 import { User } from '../models/User'
+import Memory from '../models/Memory'
+import SprintTask from '../models/SprintTask'
+import Note from '../models/Note'
 import { assertLimit, assertFeature } from '../utils/entitlements'
 
 function memberPublic(u: InstanceType<typeof User>, role: string) {
@@ -13,7 +17,18 @@ function memberPublic(u: InstanceType<typeof User>, role: string) {
   }
 }
 
-function serializeSpace(space: InstanceType<typeof Space>, memberUsers: InstanceType<typeof User>[]) {
+interface SpaceStats {
+  memoriesCount:  number
+  openTasksCount: number
+  notesCount:     number
+  lastActivityAt: string | null
+}
+
+function serializeSpace(
+  space: InstanceType<typeof Space>,
+  memberUsers: InstanceType<typeof User>[],
+  stats?: SpaceStats,
+) {
   const userMap = new Map(memberUsers.map(u => [(u._id as { toString(): string }).toString(), u]))
   return {
     id:        (space._id as { toString(): string }).toString(),
@@ -38,6 +53,10 @@ function serializeSpace(space: InstanceType<typeof Space>, memberUsers: Instance
     petProfile:     space.petProfile     ?? null,
     tripProfile:    space.tripProfile    ?? null,
     createdAt: space.createdAt,
+    memoriesCount:  stats?.memoriesCount  ?? 0,
+    openTasksCount: stats?.openTasksCount ?? 0,
+    notesCount:     stats?.notesCount     ?? 0,
+    lastActivityAt: stats?.lastActivityAt ?? null,
   }
 }
 
@@ -57,9 +76,55 @@ export async function getSpaces(req: Request, res: Response): Promise<void> {
       'members.userId': req.userId,
       archived: showArchived ? true : { $ne: true },
     })
+
     const allUserIds = [...new Set(spaces.flatMap(s => s.members.map(m => m.userId)))]
-    const users = await User.find({ _id: { $in: allUserIds } })
-    res.json(spaces.map(s => serializeSpace(s, users)))
+    const spaceIds   = spaces.map(s => (s._id as { toString(): string }).toString())
+
+    const [users, memoryAgg, taskAgg, noteAgg] = await Promise.all([
+      User.find({ _id: { $in: allUserIds } }),
+      Memory.aggregate<{ _id: string; count: number; lastDate: string | null }>([
+        { $match: { spaceId: { $in: spaceIds } } },
+        { $group: { _id: '$spaceId', count: { $sum: 1 }, lastDate: { $max: '$date' } } },
+      ]),
+      SprintTask.aggregate<{ _id: string; openCount: number; lastDate: Date | null }>([
+        { $match: { spaceId: { $in: spaceIds } } },
+        { $group: {
+          _id:       '$spaceId',
+          openCount: { $sum: { $cond: ['$done', 0, 1] } },
+          lastDate:  { $max: '$updatedAt' },
+        }},
+      ]),
+      Note.aggregate<{ _id: Types.ObjectId; count: number; lastDate: Date | null }>([
+        { $match: { spaceId: { $in: spaceIds.map(id => new Types.ObjectId(id)) } } },
+        { $group: { _id: '$spaceId', count: { $sum: 1 }, lastDate: { $max: '$updatedAt' } } },
+      ]),
+    ])
+
+    // Build per-spaceId stats maps
+    const memMap  = new Map(memoryAgg.map(r => [r._id, r]))
+    const taskMap = new Map(taskAgg.map(r => [r._id, r]))
+    const noteMap = new Map(noteAgg.map(r => [r._id.toString(), r]))
+
+    const statsForSpace = (id: string): SpaceStats => {
+      const mem  = memMap.get(id)
+      const task = taskMap.get(id)
+      const note = noteMap.get(id)
+
+      const dates: Date[] = []
+      if (mem?.lastDate)  dates.push(new Date(mem.lastDate))
+      if (task?.lastDate) dates.push(new Date(task.lastDate))
+      if (note?.lastDate) dates.push(new Date(note.lastDate))
+      const latest = dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null
+
+      return {
+        memoriesCount:  mem?.count      ?? 0,
+        openTasksCount: task?.openCount ?? 0,
+        notesCount:     note?.count     ?? 0,
+        lastActivityAt: latest ? latest.toISOString() : null,
+      }
+    }
+
+    res.json(spaces.map(s => serializeSpace(s, users, statsForSpace((s._id as { toString(): string }).toString()))))
   } catch (err) {
     res.status(500).json({ error: 'Server error' })
   }

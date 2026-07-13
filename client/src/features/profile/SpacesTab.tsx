@@ -11,6 +11,19 @@ import { SPACE_TEMPLATES } from './spaceTemplates'
 import { SPACE_TYPE_CONFIG } from '@/features/spaces/data/spaceTypes'
 import styles from './SpacesTab.module.css'
 
+function formatRelative(iso: string | null): string | null {
+  if (!iso) return null
+  const diff = Date.now() - new Date(iso).getTime()
+  const days = Math.floor(diff / 86_400_000)
+  if (days === 0) return 'сьогодні'
+  if (days === 1) return 'вчора'
+  if (days < 7)  return `${days} дні тому`
+  if (days < 14) return '1 тиждень тому'
+  if (days < 30) return `${Math.floor(days / 7)} тижні тому`
+  if (days < 60) return '1 місяць тому'
+  return `${Math.floor(days / 30)} місяці тому`
+}
+
 const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
   { value: 'trip',    label: 'Поїздка'    },
   { value: 'vehicle', label: 'Авто'       },
@@ -260,27 +273,51 @@ const SpacesTab: React.FC = () => {
 
       {/* ── Spaces list ── */}
       <div className={styles.list}>
-        {spaces.map(space => (
-          <button
-            key={space.id}
-            type="button"
-            className={styles.spaceCard}
-            onClick={() => { setMemberInput(''); setDetailSpace(space) }}
-          >
-            <span className={styles.spaceColor} style={{ background: space.color }} />
-            <span className={styles.spaceInfo}>
-              <span className={styles.spaceName}>{space.name}</span>
-              <span className={styles.spaceMeta}>
-                {TYPE_OPTIONS.find(t => t.value === space.type)?.label ?? space.type}
-                {' · '}
-                {space.members.length} {space.members.length === 1 ? 'учасник' : 'учасники'}
-              </span>
-            </span>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className={styles.spaceChevron}>
-              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        ))}
+        {spaces.map(space => {
+          const cfg      = SPACE_TYPE_CONFIG[space.type]
+          const typeColor = cfg?.color ?? '#888'
+          const metrics: string[] = []
+          if (space.memoriesCount  > 0) metrics.push(`${space.memoriesCount} ${space.memoriesCount === 1 ? 'спогад' : 'спогади'}`)
+          if (space.openTasksCount > 0) metrics.push(`${space.openTasksCount} ${space.openTasksCount === 1 ? 'задача' : 'задачі'}`)
+          if (space.notesCount     > 0) metrics.push(`${space.notesCount} ${space.notesCount === 1 ? 'нотатка' : 'нотатки'}`)
+          const relativeTime = formatRelative(space.lastActivityAt)
+
+          return (
+            <button
+              key={space.id}
+              type="button"
+              className={styles.spaceCard}
+              style={{ '--space-color': space.color, '--type-color': typeColor } as React.CSSProperties}
+              onClick={() => { setMemberInput(''); setDetailSpace(space) }}
+            >
+              <div className={styles.spaceIconZone}>
+                {cfg && <img src={cfg.iconSrc} alt="" className={styles.spaceIconImg} draggable={false} />}
+              </div>
+
+              <div className={styles.spaceInfo}>
+                <span className={styles.spaceName}>{space.name}</span>
+                <span className={styles.spaceType}>
+                  {TYPE_OPTIONS.find(t => t.value === space.type)?.label ?? space.type}
+                  {' · '}
+                  {space.members.length} {space.members.length === 1 ? 'учасник' : 'учасники'}
+                </span>
+                {metrics.length > 0 && (
+                  <span className={styles.spaceMetrics}>{metrics.join(' · ')}</span>
+                )}
+                {relativeTime && (
+                  <span className={styles.spaceActivity}>{relativeTime}</span>
+                )}
+                {metrics.length === 0 && !relativeTime && (
+                  <span className={styles.spaceEmpty}>Активності ще немає</span>
+                )}
+              </div>
+
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" className={styles.spaceChevron}>
+                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )
+        })}
       </div>
 
       {/* ── Archived accordion ── */}
@@ -306,10 +343,10 @@ const SpacesTab: React.FC = () => {
         ) : (
           archivedSpaces.map(space => (
             <div key={space.id} className={styles.archivedCard}>
-              <span className={styles.spaceColor} style={{ background: space.color }} />
+              <span className={styles.spaceColorDot} style={{ background: space.color }} />
               <span className={styles.spaceInfo}>
                 <span className={styles.spaceName}>{space.name}</span>
-                <span className={styles.spaceMeta}>
+                <span className={styles.spaceType}>
                   {TYPE_OPTIONS.find(t => t.value === space.type)?.label ?? space.type}
                 </span>
               </span>
@@ -331,7 +368,7 @@ const SpacesTab: React.FC = () => {
       {/* ══ Create Sheet ══ */}
       {createOpen && (
         <div className={styles.overlay} ref={createOverlayRef} onClick={() => setCreateOpen(false)}>
-          <div className={styles.sheet} ref={createSheetRef} onClick={e => e.stopPropagation()}>
+          <div className={styles.sheet} ref={createSheetRef} onClick={e => e.stopPropagation()} onAnimationEnd={e => { e.currentTarget.style.animation = 'none' }}>
             <div className={styles.sheetHandle} />
 
             {createStep === 'template' ? (
@@ -434,7 +471,7 @@ const SpacesTab: React.FC = () => {
       {/* ══ Detail Sheet ══ */}
       {detailSpace && (
         <div className={styles.overlay} ref={detailOverlayRef} onClick={() => setDetailSpace(null)}>
-          <div className={styles.sheet} ref={detailSheetRef} onClick={e => e.stopPropagation()}>
+          <div className={styles.sheet} ref={detailSheetRef} onClick={e => e.stopPropagation()} onAnimationEnd={e => { e.currentTarget.style.animation = 'none' }}>
             <div className={styles.sheetHandle} />
 
             <div className={styles.detailHeader}>
