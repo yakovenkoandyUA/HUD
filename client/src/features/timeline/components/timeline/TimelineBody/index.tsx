@@ -138,7 +138,13 @@ const TimelineBody: React.FC = () => {
         ))}
       </div>
 
-      <div className={styles.list}>
+      {loading ? (
+        <div className={styles.skeleton}>
+          {Array.from({ length: 4 }, (_, i) => <div key={i} className={styles.skeletonRow} />)}
+        </div>
+      ) : null}
+
+      <div className={styles.list} style={loading ? { display: 'none' } : undefined}>
         {yearLocked && (
           <div className={styles.empty}>
             <UpgradePrompt limitKey="timelineHistoryYears" currentCount={currentYear - year} />

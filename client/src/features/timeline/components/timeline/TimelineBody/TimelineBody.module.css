@@ -142,6 +142,32 @@
   text-align: center;
 }
 
+/* ── Loading skeleton ── */
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px 24px;
+}
+
+.skeletonRow {
+  height: 54px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  animation: skeletonPulse 1.6s ease-in-out infinite;
+}
+
+.skeletonRow:nth-child(2) { animation-delay: 0.12s; }
+.skeletonRow:nth-child(3) { animation-delay: 0.24s; }
+.skeletonRow:nth-child(4) { animation-delay: 0.18s; }
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
+}
+
 /* ── Space dot in chip ── */
 .spaceDot {
   display: inline-block;
