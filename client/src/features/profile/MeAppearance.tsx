@@ -19,23 +19,24 @@ interface ThemePalette {
   second: string
   gold: string
   text: string
-  dark: boolean
 }
 
 const PALETTES: ThemePalette[] = [
-  { id: 'velvet', name: 'VELVET', bg: '#0d0f1a', surface: '#1e2235', border: '#2e3450', accent: '#d4a017', second: '#6a4fc8', gold: '#d4a017', text: '#e8d5a0', dark: true },
-  { id: 'japan',  name: 'JAPAN',  bg: '#F5F0EB', surface: '#EDE8E2', border: '#D5CEC5', accent: '#C8102E', second: '#1a1a1a', gold: '#8B7355',  text: '#1a1a1a', dark: false },
-  { id: 'cyber',  name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', second: '#00d4ff', gold: '#f0a020',  text: '#d8eaf8', dark: true },
-  { id: 'noir',   name: 'NOIR',   bg: '#080808', surface: '#1a1a1a', border: '#2a2a2a', accent: '#d0d0d0', second: '#606060', gold: '#c8c8c8',  text: '#ebebeb', dark: true },
-  { id: 'pixel',  name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', second: '#1848c8', gold: '#e8a020',  text: '#181028', dark: false },
-  { id: 'arctic', name: 'ARCTIC', bg: '#1e2330', surface: '#313a4e', border: '#4a5570', accent: '#88c0d0', second: '#b48ead', gold: '#ebcb8b',  text: '#eceff4', dark: true },
+  { id: 'velvet', name: 'VELVET', bg: '#0d0f1a', surface: '#1e2235', border: '#2e3450', accent: '#d4a017', second: '#6a4fc8', gold: '#d4a017', text: '#e8d5a0' },
+  { id: 'japan',  name: 'JAPAN',  bg: '#F5F0EB', surface: '#EDE8E2', border: '#D5CEC5', accent: '#C8102E', second: '#1a1a1a', gold: '#8B7355',  text: '#1a1a1a' },
+  { id: 'cyber',  name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', second: '#00d4ff', gold: '#f0a020',  text: '#d8eaf8' },
+  { id: 'noir',   name: 'NOIR',   bg: '#080808', surface: '#1a1a1a', border: '#2a2a2a', accent: '#d0d0d0', second: '#606060', gold: '#c8c8c8',  text: '#ebebeb' },
+  { id: 'pixel',  name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', second: '#1848c8', gold: '#e8a020',  text: '#181028' },
+  { id: 'arctic', name: 'ARCTIC', bg: '#1e2330', surface: '#313a4e', border: '#4a5570', accent: '#88c0d0', second: '#b48ead', gold: '#ebcb8b',  text: '#eceff4' },
 ]
 
-/**
- * MeAppearance
- * ------------
- * Підекран "Вигляд" вкладки "Я": теми + стиль навігації + закріплені розділи.
- */
+const LockIcon: React.FC = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+    <rect x="2" y="5.5" width="8" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+    <path d="M4 5.5V3.5a2 2 0 0 1 4 0v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>
+)
+
 /**
  * MeAppearance
  * ------------
@@ -101,17 +102,10 @@ const MeAppearance: React.FC = () => {
                 </div>
                 {isActive && <span className={styles.themeActiveTick} style={{ color: p.accent }}>✓</span>}
                 {!isUnlocked && (
-                  <div className={styles.themeLockOverlay}>
-                    <img
-                      src={p.dark ? '/achive/theme-lock-dark.png' : '/achive/theme-lock-light.png'}
-                      alt="Заблоковано"
-                      className={styles.themeLockCoin}
-                      draggable={false}
-                    />
-                    <span className={styles.themeLockLevel} style={{ color: p.text }}>
-                      РВН {unlockLevel}
-                    </span>
-                  </div>
+                  <span className={styles.themeLockBadge} style={{ color: p.text, background: `${p.bg}cc` }}>
+                    <LockIcon />
+                    {unlockLevel} рівень
+                  </span>
                 )}
               </button>
             )
