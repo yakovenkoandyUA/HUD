@@ -5,6 +5,7 @@ import { usePushSubscription } from '@/shared/hooks/usePushSubscription'
 import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
 import { clearApiCaches } from '@/shared/utils/appCache'
 import { reverseGeocodeCity } from '@/features/memories/utils/geocode'
+import MeSecurity from './MeSecurity'
 import styles from './ProfilePage.module.css'
 
 const LocateIcon: React.FC = () => (
@@ -215,6 +216,9 @@ const MeSystem: React.FC = () => {
           </div>
         </>
       )}
+      <div className={styles.cardDivider} />
+      <div className={styles.cardSubTitle} style={{ padding: '12px 16px 4px' }}>БЕЗПЕКА</div>
+      <MeSecurity />
     </>
   )
 }

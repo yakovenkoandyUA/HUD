@@ -10,18 +10,15 @@ import settingsStyles from './SettingsTab.module.css'
 
 const LS_TERMS   = 'mimir-terms-confirmed'
 const LS_PRIVACY = 'mimir-privacy-confirmed'
-import MeSecurity from './MeSecurity'
 import MeAppearance from './MeAppearance'
 import MeSystem from './MeSystem'
 import MeMedia from './MeMedia'
 import MeFamily from './MeFamily'
-import MeAchievements from './MeAchievements'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
-import { ACHIEVEMENTS } from '@/shared/data/achievements'
 import styles from './ProfilePage.module.css'
 
-type MeSection = 'security' | 'appearance' | 'system' | 'media' | 'family' | 'achievements'
+type MeSection = 'appearance' | 'system' | 'media' | 'family' | 'achievements'
 
 const CameraIcon: React.FC = () => (
   <svg width="12" height="12" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -49,12 +46,6 @@ const ChevronRightIcon: React.FC = () => (
   </svg>
 )
 
-const LockIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
-    <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" strokeWidth="1.4"/>
-  </svg>
-)
 
 const PaletteIcon: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -79,11 +70,6 @@ const FilmIcon: React.FC = () => (
   </svg>
 )
 
-const TrophyIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <path d="M8 1.5l1.85 3.75L14 5.85l-3 2.92.7 4.13L8 10.9l-3.7 1.99.7-4.13-3-2.92 4.15-.6L8 1.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-  </svg>
-)
 
 const UsersIcon: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -102,12 +88,10 @@ interface MenuItemConfig {
 }
 
 const MENU_ITEMS: MenuItemConfig[] = [
-  { id: 'security',   label: 'Безпека', sub: 'Пароль, PIN-код',              Icon: LockIcon },
-  { id: 'appearance', label: 'Вигляд',  sub: 'Теми, стиль навігації',        Icon: PaletteIcon },
-  { id: 'system',     label: 'Система', sub: 'Місто, F1, сповіщення, кеш',   Icon: GearIcon },
+  { id: 'appearance', label: 'Вигляд',  sub: 'Теми, стиль навігації',                    Icon: PaletteIcon },
+  { id: 'system',     label: 'Система', sub: 'Місто, F1, сповіщення, кеш, безпека',      Icon: GearIcon },
   { id: 'media',      label: 'Медіа',   sub: 'Фільми, серіали, ігри...',     Icon: FilmIcon },
   { id: 'family',     label: "Сім'я",   sub: 'Запити, учасники',             Icon: UsersIcon },
-  { id: 'achievements', label: 'Досягнення', sub: 'Бейджі за перші кроки',   Icon: TrophyIcon },
 ]
 
 /**
@@ -276,7 +260,6 @@ const MeTab: React.FC = () => {
   const runeScore = useRuneScore()
   const level = getLevel(runeScore)
 
-  const unlockedIds = activeProfile.unlockedAchievements ?? []
 
   return (
     <div className={styles.tabContent}>
@@ -389,21 +372,15 @@ const MeTab: React.FC = () => {
               {item.id === 'family' && familyPending > 0 && (
                 <span className={styles.menuPulseDot} aria-label={`${familyPending} запитів`} />
               )}
-              {item.id === 'achievements' && (
-                <span className={styles.menuAchBadge}>
-                  <span className={styles.menuAchCount}>{unlockedIds.length}</span>
-                  <span className={styles.menuAchTotal}>/{ACHIEVEMENTS.length}</span>
-                </span>
-              )}
+
               <span className={`${styles.menuChevron} ${isOpen ? styles.menuChevronOpen : ''}`}><ChevronRightIcon /></span>
             </button>
             <div className={`${styles.menuAccordionBody} ${isOpen ? styles.menuAccordionBodyOpen : ''}`}>
-              {item.id === 'security' && <MeSecurity />}
               {item.id === 'appearance' && <MeAppearance />}
               {item.id === 'system' && <MeSystem />}
               {item.id === 'media' && <MeMedia />}
               {item.id === 'family' && <MeFamily />}
-              {item.id === 'achievements' && <MeAchievements />}
+
             </div>
           </div>
         )
