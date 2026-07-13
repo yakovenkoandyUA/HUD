@@ -4,7 +4,7 @@ import type { F1Race } from '@/features/f1/data/f1Season2026'
 import { useUiStore } from '@/shared/store/uiStore'
 import styles from './RaceCountdownStrip.module.css'
 
-const LIGHT_THEMES = new Set(['pixel', 'arctic'])
+const LIGHT_THEMES = new Set(['pixel', 'japan'])
 
 /**
  * RaceCountdownStrip

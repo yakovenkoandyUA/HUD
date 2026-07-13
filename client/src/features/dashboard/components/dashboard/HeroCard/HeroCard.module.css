@@ -39,7 +39,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent) 70%, var(--text3));
+  color: var(--text2);
 }
 
 /* ── Stat strip ─────────────────────────────────────────────── */
@@ -79,7 +79,7 @@
   font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 400;
-  color: color-mix(in srgb, var(--accent) 60%, var(--text3));
+  color: var(--text2);
   letter-spacing: 0;
 }
 
@@ -89,32 +89,61 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent) 55%, var(--text3));
+  color: var(--text2);
   line-height: 1;
 }
 
-/* ── Velvet: gold tones on accent-dim ───────────────────────── */
+/* ── Noir: match surface background like other blocks ───────── */
 
-:global([data-theme='velvet']) .balanceCurrency   { color: var(--gold); }
-:global([data-theme='velvet']) .balanceSubLabel   { color: color-mix(in srgb, var(--gold) 70%, var(--text3)); }
-:global([data-theme='velvet']) .statValueAccent   { color: var(--gold); }
-:global([data-theme='velvet']) .statSub           { color: color-mix(in srgb, var(--gold) 55%, var(--text3)); }
-:global([data-theme='velvet']) .statLabel         { color: color-mix(in srgb, var(--gold) 50%, var(--text3)); }
-:global([data-theme='velvet']) .statStrip,
-:global([data-theme='velvet']) .statItem + .statItem {
-  border-color: color-mix(in srgb, var(--gold) 20%, transparent);
+:global([data-theme='noir']) .balanceCard {
+  background: var(--surface);
+  border-color: var(--border);
 }
+:global([data-theme='noir']) .statStrip,
+:global([data-theme='noir']) .statItem + .statItem { border-color: var(--border); }
+:global([data-theme='noir']) .balanceCurrency    { color: var(--gold); }
+:global([data-theme='noir']) .statValueAccent    { color: var(--gold); }
 
-/* ── Pixel: vivid red bg — text needs max contrast ──────────── */
+/* ── Velvet: gold tones ─────────────────────────────────────── */
 
-:global([data-theme='pixel']) .balanceAmount      { color: #fff; }
-:global([data-theme='pixel']) .balanceCurrency    { color: #fff; }
-:global([data-theme='pixel']) .balanceSubLabel    { color: rgba(255,255,255,0.6); }
-:global([data-theme='pixel']) .statValue          { color: #fff; }
-:global([data-theme='pixel']) .statValueAccent    { color: #fff; }
-:global([data-theme='pixel']) .statSub            { color: rgba(255,255,255,0.55); }
-:global([data-theme='pixel']) .statLabel          { color: rgba(255,255,255,0.55); }
+:global([data-theme='velvet']) .balanceCurrency  { color: var(--gold); }
+:global([data-theme='velvet']) .statValueAccent  { color: var(--gold); }
+
+/* ── Pixel: vivid red bg — white text ───────────────────────── */
+
+:global([data-theme='pixel']) .balanceAmount     { color: #fff; }
+:global([data-theme='pixel']) .balanceCurrency   { color: #fff; }
+:global([data-theme='pixel']) .balanceSubLabel   { color: rgba(255,255,255,0.65); }
+:global([data-theme='pixel']) .statValue         { color: #fff; }
+:global([data-theme='pixel']) .statValueAccent   { color: #fff; }
+:global([data-theme='pixel']) .statSub           { color: rgba(255,255,255,0.6); }
+:global([data-theme='pixel']) .statLabel         { color: rgba(255,255,255,0.6); }
 :global([data-theme='pixel']) .statStrip,
-:global([data-theme='pixel']) .statItem + .statItem {
-  border-color: rgba(255,255,255,0.2);
-}
+:global([data-theme='pixel']) .statItem + .statItem { border-color: rgba(255,255,255,0.2); }
+
+/* ── Arctic: light accent-dim bg — dark text ────────────────── */
+
+:global([data-theme='arctic']) .balanceAmount    { color: var(--text); }
+:global([data-theme='arctic']) .balanceCurrency  { color: var(--accent); }
+:global([data-theme='arctic']) .balanceSubLabel  { color: var(--text3); }
+:global([data-theme='arctic']) .statValue        { color: var(--text); }
+:global([data-theme='arctic']) .statValueAccent  { color: var(--accent); }
+:global([data-theme='arctic']) .statSub          { color: var(--text3); }
+:global([data-theme='arctic']) .statLabel        { color: var(--text3); }
+
+/* ── Japan: light bg — dark text ───────────────────────────── */
+
+:global([data-theme='japan']) .balanceAmount     { color: var(--text); }
+:global([data-theme='japan']) .balanceCurrency   { color: var(--accent); }
+:global([data-theme='japan']) .balanceSubLabel   { color: var(--text3); }
+:global([data-theme='japan']) .statValue         { color: var(--text); }
+:global([data-theme='japan']) .statValueAccent   { color: var(--accent); }
+:global([data-theme='japan']) .statSub           { color: var(--text3); }
+:global([data-theme='japan']) .statLabel         { color: var(--text3); }
+
+/* ── Cyber: dark neon bg — boost label visibility ───────────── */
+
+:global([data-theme='cyber']) .balanceSubLabel   { color: var(--text2); }
+:global([data-theme='cyber']) .statSub           { color: var(--text2); }
+:global([data-theme='cyber']) .statLabel         { color: var(--text2); }
+:global([data-theme='cyber']) .statValueAccent   { color: var(--accent); }
