@@ -202,10 +202,15 @@ const PinGuard: React.FC = () => {
 
 const App: React.FC = () => {
   const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
-  const { token, activeProfile, updateProfile } = useProfileStore()
+  const { token, activeProfile, updateProfile, refreshProfile } = useProfileStore()
   const { setUpdateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe } = usePushSubscription()
   const cityAutoLocateRef = useRef(false)
+
+  useEffect(() => {
+    if (token) refreshProfile()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return

@@ -55,6 +55,7 @@ interface ProfileState {
   pinLocked: boolean
 
   fetchProfiles: () => Promise<void>
+  refreshProfile: () => Promise<void>
   loginWithEmail: (username: string, password: string) => Promise<void>
   register: (email: string, password: string, name: string, username: string) => Promise<void>
   selectProfile: (username: string) => Promise<void>
@@ -124,6 +125,17 @@ export const useProfileStore = create<ProfileState>()(
             : null
           set({ profiles, activeProfile: freshActive })
         } catch { /* offline — use cached */ }
+      },
+
+      refreshProfile: async () => {
+        const { token, activeProfile } = get()
+        if (!token || !activeProfile) return
+        try {
+          const res = await authFetch('/api/auth/me')
+          if (!res.ok) return
+          const fresh = await res.json() as Profile
+          set({ activeProfile: { ...activeProfile, ...fresh, hasPIN: activeProfile.hasPIN } })
+        } catch { /* offline — keep cached */ }
       },
 
       loginWithEmail: async (username: string, password: string) => {
