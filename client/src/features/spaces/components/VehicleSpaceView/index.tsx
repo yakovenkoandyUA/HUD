@@ -256,13 +256,24 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
 
   return (
     <>
-      <div className={styles.vehicleHeroCard} style={colorVar}>
-        <button type="button" className={styles.vehicleHeroBackBtn} onClick={onBack} aria-label="Назад">
+      {/* ── Nav bar ── */}
+      <div className={styles.vehicleNavBar}>
+        <button type="button" className={styles.vehicleNavBack} onClick={onBack} aria-label="Назад">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M11 4l-5 5 5 5"/>
           </svg>
         </button>
+        <span className={styles.vehicleNavTitle}>{spaceName}</span>
+        {isOwner && (
+          <button type="button" className={styles.vehicleNavEdit} onClick={openEdit} aria-label="Редагувати профіль авто">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
+            </svg>
+          </button>
+        )}
+      </div>
 
+      <div className={styles.vehicleHeroCard} style={colorVar}>
         <div className={styles.vehicleMedallion}>
           {profile?.photoUrl
             ? <img src={profile.photoUrl} alt="авто" className={styles.vehicleMedallionPhoto} />
@@ -271,7 +282,6 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
         </div>
 
         <div className={styles.vehicleHeroInfo}>
-          <h1 className={styles.vehicleHeroName}>{spaceName}</h1>
           <span className={styles.vehicleHeroTypeBadge}>АВТО</span>
           {profile?.make || profile?.model ? (
             <span className={styles.vehicleHeroSubtitle}>
@@ -297,14 +307,6 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
             </div>
           </div>
         </div>
-
-        {isOwner && (
-          <button type="button" className={styles.vehicleHeroEditBtn} onClick={openEdit} aria-label="Редагувати профіль авто">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
-            </svg>
-          </button>
-        )}
       </div>
 
       {editOpen && (
@@ -819,7 +821,7 @@ interface TimelineProps {
 function useCarIllustration(): string {
   const theme     = useUiStore(s => s.theme)
   const f1Enabled = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
-  if (f1Enabled)         return '/car/car-f1.png'
+  if (f1Enabled)         return '/car/car-f12.png'
   if (theme === 'cyber') return '/car/car-cyber.png'
   if (theme === 'pixel') return '/car/car-pixel.png'
   return '/car/car-default.png'
