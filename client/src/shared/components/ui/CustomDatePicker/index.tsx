@@ -116,10 +116,10 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, on
         <div className={styles.grid}>
           {cells.map((cell, i) => {
             const cellDay        = toLocalMidnight(cell)
-            const minDay         = minDate ? toLocalMidnight(minDate) : today
+            const minDay         = minDate ? toLocalMidnight(minDate) : null
             const isCurrentMonth = cell.getMonth() === viewMonth
             const isToday        = cellDay.getTime() === today.getTime()
-            const isBlocked      = cellDay.getTime() < minDay.getTime()
+            const isBlocked      = minDay !== null && cellDay.getTime() < minDay.getTime()
             const isSelected     = selected !== null && cellDay.getTime() === toLocalMidnight(selected).getTime()
 
             return (
