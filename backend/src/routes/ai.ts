@@ -9,6 +9,7 @@ import TodoItem from '../models/TodoItem'
 import Recipe from '../models/Recipe'
 import WatchlistItem from '../models/WatchlistItem'
 import Memory from '../models/Memory'
+import Note from '../models/Note'
 import { Space } from '../models/Space'
 import { User } from '../models/User'
 
@@ -32,6 +33,81 @@ function detectDomains(message: string): string[] {
   return Object.entries(DOMAINS)
     .filter(([, keywords]) => keywords.some(k => lower.includes(k)))
     .map(([domain]) => domain)
+}
+
+// ── Action intent detection ───────────────────────────────────────────────────
+
+interface ActionIntent {
+  type: 'note' | 'quest'
+  content: string
+  fromResponse: boolean // true = use accumulated AI response as note text
+}
+
+interface ActionResult {
+  type: 'note' | 'quest'
+  id: string
+  title: string
+}
+
+const QUEST_RE = /(?:додай|створи|постав)\s+(?:квест|задач[уу]|завдання)[:\s]+(.+)/iu
+const NOTE_RE  = /(?:занотуй|запам.ятай|запиши|(?:збережи(?:\s+це)?|зроби|створи|додай)\s+(?:це\s+)?(?:як\s+)?нотатк[ую])[:\s]*(.*)/iu
+
+function detectActionIntent(message: string): ActionIntent | null {
+  const qm = message.match(QUEST_RE)
+  if (qm) {
+    const content = qm[1].trim().replace(/[?!,;.]+$/, '')
+    if (content) return { type: 'quest', content, fromResponse: false }
+  }
+  const nm = message.match(NOTE_RE)
+  if (nm) {
+    const content = nm[1].trim().replace(/[?!,;.]+$/, '')
+    const fromResponse = !content || /^(?:це|цю\s+відповідь|цю\s+розмову|нашу\s+розмову)$/iu.test(content)
+    return { type: 'note', content: fromResponse ? '' : content, fromResponse }
+  }
+  return null
+}
+
+function currentISOWeekData(): { weekNumber: number; year: number; weekStart: string } {
+  const now = new Date()
+  const day = now.getDay() === 0 ? 7 : now.getDay()
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - (day - 1))
+  monday.setHours(0, 0, 0, 0)
+  const weekStart = monday.toISOString().slice(0, 10)
+  const thursday = new Date(monday)
+  thursday.setDate(monday.getDate() + 3)
+  const yearStart = new Date(thursday.getFullYear(), 0, 1)
+  const weekNumber = Math.ceil((((thursday.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+  return { weekNumber, year: thursday.getFullYear(), weekStart }
+}
+
+async function executeAction(intent: ActionIntent, userId: string, accText: string): Promise<ActionResult | null> {
+  try {
+    if (intent.type === 'quest') {
+      const { weekNumber, year, weekStart } = currentISOWeekData()
+      const title = intent.content.charAt(0).toUpperCase() + intent.content.slice(1)
+      const task = await SprintTask.create({ title, userId, weekNumber, year, weekStart, type: 'task', done: false, priority: 'normal' })
+      return { type: 'quest', id: (task._id as { toString(): string }).toString(), title }
+    }
+    if (intent.type === 'note') {
+      const text = intent.fromResponse ? accText.trim() : intent.content
+      if (!text) return null
+      const note = await Note.create({ text, userId })
+      const preview = text.length > 50 ? text.slice(0, 50) + '…' : text
+      return { type: 'note', id: (note._id as { toString(): string }).toString(), title: preview }
+    }
+  } catch { /* DB error — don't surface to user */ }
+  return null
+}
+
+function buildActionPromptHint(intent: ActionIntent): string {
+  if (intent.type === 'quest') {
+    return `\nВАЖЛИВО: Квест «${intent.content}» буде автоматично доданий в спринт. Підтверди це одним коротким реченням.`
+  }
+  if (!intent.fromResponse) {
+    return `\nВАЖЛИВО: Нотатку «${intent.content}» буде збережено. Підтверди одним коротким реченням.`
+  }
+  return `\nВАЖЛИВО: Надай конкретну корисну відповідь — вона буде збережена як нотатка. Без вступних фраз.`
 }
 
 // ── Fetch context data ───────────────────────────────────────────────────────
@@ -102,6 +178,7 @@ router.post('/chat', requireFeature('aiChat'), async (req: Request, res: Respons
   if (!apiKey) { res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' }); return }
 
   const userId   = req.userId as string
+  const intent   = detectActionIntent(message)
   const domains  = detectDomains(message)
   const context  = await buildContext(userId, domains)
   const userName = (await User.findById(userId).select('name').lean() as { name?: string } | null)?.name ?? 'Користувач'
@@ -110,7 +187,7 @@ router.post('/chat', requireFeature('aiChat'), async (req: Request, res: Respons
   const systemPrompt = `Ти MIMIR — особистий AI-асистент органайзеру. Відповідаєш лаконічно, по-людськи, українською.
 Користувач: ${userName}. Сьогодні: ${today}.
 
-${context ? `Дані користувача:\n${context}` : 'Даних не знайдено — відповідай загально.'}`
+${context ? `Дані користувача:\n${context}` : 'Даних не знайдено — відповідай загально.'}${intent ? buildActionPromptHint(intent) : ''}`
 
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
@@ -141,6 +218,7 @@ ${context ? `Дані користувача:\n${context}` : 'Даних не з
 
     const reader  = anthropicRes.body.getReader()
     const decoder = new TextDecoder()
+    let accText   = ''
 
     while (true) {
       const { done, value } = await reader.read()
@@ -153,10 +231,17 @@ ${context ? `Дані користувача:\n${context}` : 'Даних не з
         try {
           const parsed = JSON.parse(payload) as { type: string; delta?: { type: string; text?: string } }
           if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+            accText += parsed.delta.text
             res.write(`data: ${JSON.stringify(parsed.delta.text)}\n\n`)
           }
         } catch { /* skip malformed */ }
       }
+    }
+
+    // Execute detected action and emit result before [DONE]
+    if (intent) {
+      const result = await executeAction(intent, userId, accText)
+      if (result) res.write(`data: [ACTION:${JSON.stringify(result)}]\n\n`)
     }
 
     res.write('data: [DONE]\n\n')

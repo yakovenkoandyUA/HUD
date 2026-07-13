@@ -12,6 +12,7 @@ const MIMIR_THINKING_SRC = '/mimir/mimir-thinking.png'
  * -----------
  * Bottom-sheet AI асистент MIMIR. Streaming відповіді через SSE.
  * Розпізнає домен питання (фінанси/задачі/рецепти/watchlist) і підвантажує контекст.
+ * Підтримує AI-дії: створення нотаток і квестів через природну мову.
  *
  * Props:
  * @prop {boolean}    isOpen  — видимість шіта
@@ -22,11 +23,18 @@ interface AiChatSheetProps {
   onClose: () => void
 }
 
+interface ActionResult {
+  type: 'note' | 'quest'
+  id: string
+  title: string
+}
+
 interface Message {
   id: string
   role: 'user' | 'ai'
   text: string
   streaming?: boolean
+  action?: ActionResult
 }
 
 const SUGGESTIONS = [
@@ -35,6 +43,24 @@ const SUGGESTIONS = [
   'Що приготувати з куркою?',
   'Що зараз дивлюся?',
 ]
+
+// ── Action chip icons ─────────────────────────────────────────────────────────
+
+const NoteIcon: React.FC = () => (
+  <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+    <path d="M8.5 1.5L10.5 3.5L3.5 10.5H1.5V8.5L8.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+    <path d="M7 3L9 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+)
+
+const QuestIcon: React.FC = () => (
+  <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+    <path d="M2 1.5v9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <path d="M2 2.5h7L7.5 5.5H2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+// ── Main component ─────────────────────────────────────────────────────────────
 
 const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([])
@@ -115,13 +141,26 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
           const payload = line.slice(6).trim()
+
+          if (payload.startsWith('[ACTION:')) {
+            try {
+              const action = JSON.parse(payload.slice(8, -1)) as ActionResult
+              setMessages(prev => prev.map(m =>
+                m.id === aiId ? { ...m, action } : m
+              ))
+            } catch { /* skip malformed action */ }
+            continue
+          }
+
           if (payload === '[DONE]') break
+
           if (payload.startsWith('[ERROR]')) {
             setMessages(prev => prev.map(m =>
               m.id === aiId ? { ...m, text: 'Помилка відповіді. Спробуй ще раз.', streaming: false } : m
             ))
             break
           }
+
           try {
             const chunk = JSON.parse(payload) as string
             setMessages(prev => prev.map(m =>
@@ -207,6 +246,18 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
                   : msg.text || ''
                 }
                 {msg.streaming && msg.text && <span className={styles.cursor} />}
+
+                {msg.action && !msg.streaming && (
+                  <div className={styles.actionChip}>
+                    <span className={styles.actionIcon}>
+                      {msg.action.type === 'note' ? <NoteIcon /> : <QuestIcon />}
+                    </span>
+                    <span className={styles.actionLabel}>
+                      {msg.action.type === 'note' ? 'Нотатку збережено' : 'Квест додано'}
+                    </span>
+                    <span className={styles.actionTitle}>{msg.action.title}</span>
+                  </div>
+                )}
               </div>
             ))
           )}

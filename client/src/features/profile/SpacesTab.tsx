@@ -324,7 +324,7 @@ const SpacesTab: React.FC = () => {
                         onClick={() => pickTemplate(tpl)}
                       >
                         <div className={styles.templateIconZone}>
-                          {cfg && <img src={cfg.iconSrc} width={30} height={30} alt="" aria-hidden="true" />}
+                          {cfg && <img src={cfg.iconSrc} width={70} height={70} alt="" aria-hidden="true" />}
                         </div>
                         <div className={styles.templateCardBody}>
                           <span className={styles.templateLabel}>{tpl.label}</span>
