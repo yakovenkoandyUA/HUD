@@ -189,7 +189,8 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
           const showAbove = node.y > 55
           return (
             <div
-              className={styles.nodePopup}
+              key={selectedId}
+              className={styles.nodePopupAnchor}
               style={{
                 left: '50%',
                 top: showAbove
@@ -200,19 +201,21 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
                   : 'translate(-50%, 0)',
               }}
             >
-              <span className={styles.nodePopupTitle}>{ach.title}</span>
-              <p className={styles.nodePopupDesc}>{ach.description}</p>
-              {ach.status === 'in_progress' && (
-                <div className={styles.nodePopupProgress}>
-                  <div className={styles.nodePopupTrack}>
-                    <div
-                      className={styles.nodePopupFill}
-                      style={{ width: `${(ach.progress / ach.target) * 100}%` }}
-                    />
+              <div className={styles.nodePopup}>
+                <span className={styles.nodePopupTitle}>{ach.title}</span>
+                <p className={styles.nodePopupDesc}>{ach.description}</p>
+                {ach.status === 'in_progress' && (
+                  <div className={styles.nodePopupProgress}>
+                    <div className={styles.nodePopupTrack}>
+                      <div
+                        className={styles.nodePopupFill}
+                        style={{ width: `${(ach.progress / ach.target) * 100}%` }}
+                      />
+                    </div>
+                    <span className={styles.nodePopupLabel}>{ach.progress} / {ach.target}</span>
                   </div>
-                  <span className={styles.nodePopupLabel}>{ach.progress} / {ach.target}</span>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )
         })()}
