@@ -50,7 +50,12 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
       aria-label={achievement.title}
     >
       {status === 'locked' && (
-        <img src={isNear ? questionSrc : blockSrc} alt="" className={styles.badgeImg} draggable={false} />
+        <img
+          src={isNear ? questionSrc : blockSrc}
+          alt=""
+          className={`${styles.badgeImg} ${isNear ? styles.badgeImgNear : ''}`}
+          draggable={false}
+        />
       )}
 
       {status === 'hidden' && (
