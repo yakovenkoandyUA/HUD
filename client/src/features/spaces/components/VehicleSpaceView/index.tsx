@@ -20,6 +20,7 @@ interface Props {
   membersCount:  number
   isOwner:       boolean
   onEditSpace:   () => void
+  onBack:        () => void
 }
 
 type SheetType = 'fuel' | 'maintenance' | 'document' | 'note' | null
@@ -173,9 +174,10 @@ interface HeroProps {
   profile:   VehicleProfile | null
   lastEvent: VehicleEvent | null
   isOwner:   boolean
+  onBack:    () => void
 }
 
-const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, lastEvent, isOwner }) => {
+const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, lastEvent, isOwner, onBack }) => {
   const [editOpen, setEditOpen] = useState(false)
   const [form, setForm]         = useState<Partial<VehicleProfile>>({})
   const [saving, setSaving]     = useState(false)
@@ -244,6 +246,12 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
   return (
     <>
       <div className={styles.vehicleHeroCard} style={colorVar}>
+        <button type="button" className={styles.vehicleHeroBackBtn} onClick={onBack} aria-label="Назад">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M11 4l-5 5 5 5"/>
+          </svg>
+        </button>
+
         <div className={styles.vehicleMedallion}>
           <VehicleMedallion />
         </div>
@@ -797,9 +805,9 @@ interface TimelineProps {
 function useCarIllustration(): string {
   const theme     = useUiStore(s => s.theme)
   const f1Enabled = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
-  if (f1Enabled)          return '/car/car-f1.png'
-  if (theme === 'pixel')  return '/car/car-pixel.png'
-  if (theme === 'cyber')  return '/car/car-cyber.png'
+  if (theme === 'pixel') return '/car/car-pixel.png'
+  if (theme === 'cyber') return '/car/car-cyber.png'
+  if (f1Enabled)         return '/car/car-f1.png'
   return '/car/car-default.png'
 }
 
@@ -913,7 +921,7 @@ const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spac
  * @prop {() => void} onEditSpace — opens parent space edit sheet
  */
 const VehicleSpaceView: React.FC<Props> = ({
-  spaceId, color, spaceName, memoriesCount, plansCount, tasksCount, membersCount, isOwner, onEditSpace: _onEditSpace,
+  spaceId, color, spaceName, memoriesCount, plansCount, tasksCount, membersCount, isOwner, onEditSpace: _onEditSpace, onBack,
 }) => {
   const [sheet, setSheet] = useState<SheetType>(null)
   const { fetchEvents, fetchStats, eventsBySpace, loading } = useVehicleStore()
@@ -1010,6 +1018,7 @@ const VehicleSpaceView: React.FC<Props> = ({
         profile={profile}
         lastEvent={lastEvent}
         isOwner={isOwner}
+        onBack={onBack}
       />
 
       {/* ── Stats cards ── */}
