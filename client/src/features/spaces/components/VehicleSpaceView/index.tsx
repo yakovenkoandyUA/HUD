@@ -796,7 +796,7 @@ interface TimelineProps {
 
 function useCarIllustration(): string {
   const theme     = useUiStore(s => s.theme)
-  const f1Enabled = useProfileStore(s => s.profile?.f1Enabled ?? false)
+  const f1Enabled = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   if (f1Enabled)          return '/car/car-f1.png'
   if (theme === 'pixel')  return '/car/car-pixel.png'
   if (theme === 'cyber')  return '/car/car-cyber.png'
