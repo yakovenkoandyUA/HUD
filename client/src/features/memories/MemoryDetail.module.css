@@ -586,7 +586,7 @@
 .photoGrid {
 	display: flex;
 	gap: 3px;
-	padding: 16px 4px 32px;
+	padding: 0px 4px 32px;
 	align-items: flex-start;
 }
 

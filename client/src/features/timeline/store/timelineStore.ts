@@ -25,7 +25,7 @@ export const useTimelineStore = create<TimelineState>()((set, get) => ({
   year: new Date().getFullYear(),
   scope: 'all',
   spaceId: null,
-  loading: false,
+  loading: true,
 
   setYear: (year) => {
     set({ year })
@@ -43,7 +43,7 @@ export const useTimelineStore = create<TimelineState>()((set, get) => ({
   },
 
   fetchTimeline: async () => {
-    if (!getToken()) return
+    if (!getToken()) { set({ loading: false }); return }
     const { year, scope, spaceId } = get()
     set({ loading: true })
     try {

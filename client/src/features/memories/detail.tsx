@@ -327,7 +327,6 @@ const MemoryDetailScreen: React.FC = () => {
 
   const memory = memories.find(m => m.id === id)
   const [related, setRelated] = useState<Memory[]>([])
-  const [moodScore, setMoodScore] = useState<number | null>(null)
 
   // Deep-link entry (e.g. from Timeline) can land here before memoriesStore was ever populated.
   useEffect(() => {
@@ -341,34 +340,12 @@ const MemoryDetailScreen: React.FC = () => {
     return () => { cancelled = true }
   }, [id, fetchRelated])
 
-  // Load mood for memory date + family members (for withProfiles chips)
+  // Load family members for withProfiles chips
   useEffect(() => {
     if (!memory) return
-    let cancelled = false
-
-    const load = async () => {
-      // Mood for this date
-      try {
-        const month = memory.date.slice(0, 7)
-        const res = await authFetch(`/api/mood/history?month=${month}`)
-        if (res.ok) {
-          const history = await res.json() as Record<string, number | { score: number }>
-          const entry = history[memory.date]
-          if (!cancelled && entry !== undefined) {
-            const score = typeof entry === 'number' ? entry : (entry as { score: number }).score
-            setMoodScore(score ?? null)
-          }
-        }
-      } catch { /* offline */ }
-
-      // Family members for withProfiles mapping
-      if ((memory.withProfiles ?? []).length > 0 && accepted.length === 0) {
-        fetchFamily()
-      }
+    if ((memory.withProfiles ?? []).length > 0 && accepted.length === 0) {
+      fetchFamily()
     }
-
-    load()
-    return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memory?.id])
 
@@ -380,9 +357,6 @@ const MemoryDetailScreen: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [sharing, setSharing]           = useState(false)
 
-  const [editingNotes, setEditingNotes] = useState(false)
-  const [localNotes, setLocalNotes]     = useState('')
-  const [addingTag, setAddingTag]       = useState(false)
   const [addingPlace, setAddingPlace]   = useState(false)
 
   const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null)
@@ -406,7 +380,6 @@ const MemoryDetailScreen: React.FC = () => {
   }, [placeDetails])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const notesTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleFilesChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
@@ -441,32 +414,6 @@ const MemoryDetailScreen: React.FC = () => {
     navigate(-1)
   }
 
-  const handleSaveNotes = async (notes: string) => {
-    setEditingNotes(false)
-    updateMemory(id!, { notes })
-  }
-
-  const handleCancelNotes = () => {
-    setEditingNotes(false)
-    setLocalNotes(memory?.notes ?? '')
-  }
-
-  const handleAddTag = (tag: string) => {
-    if (!tag || !memory) return
-    const trimmed = tag.trim().toLowerCase().replace(/\s+/g, '')
-    if (!trimmed) return
-    const current = memory.tags ?? []
-    if (current.includes(trimmed)) return
-    const updated = [...current, trimmed]
-    updateMemory(id!, { tags: updated })
-  }
-
-  const handleRemoveTag = (tag: string) => {
-    if (!memory) return
-    const updated = (memory.tags ?? []).filter(t => t !== tag)
-    updateMemory(id!, { tags: updated })
-  }
-
   const handleAddPlace = (loc: PlanLocation) => {
     if (!memory || loc.lat == null || loc.lng == null) return
     const place: MemoryPlace = {
@@ -485,16 +432,6 @@ const MemoryDetailScreen: React.FC = () => {
     const updated = (memory.places ?? []).filter(p => p.id !== placeId)
     updateMemory(id!, { places: updated })
   }
-
-  useEffect(() => {
-    if (!editingNotes) return
-    const el = notesTextareaRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    const fits = el.scrollHeight <= 160
-    el.style.height = `${fits ? el.scrollHeight : 160}px`
-    el.style.overflowY = fits ? 'hidden' : 'auto'
-  }, [editingNotes, localNotes])
 
   const formattedDate = useMemo(
     () => memory ? formatMemoryDate(memory.date) : '',
@@ -619,138 +556,27 @@ const MemoryDetailScreen: React.FC = () => {
 				)}
 			</div>
 
-			{/* ── Subheader: note + tags (sticky under header) ── */}
-			<div className={styles.subheader}>
-				{/* When note exists: card row + tags row */}
-				{memory.notes ? (
-					<>
-						<button
-							type="button"
-							className={styles.noteCard}
-							onClick={() => { setLocalNotes(memory.notes ?? ''); setEditingNotes(true) }}
-						>
-							<p className={styles.notesText}>{memory.notes}</p>
-							<svg className={styles.noteEditIcon} width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-								<path d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-							</svg>
-						</button>
-						<div className={styles.metaChipsRow}>
-							{(memory.tags ?? []).map(tag => (
-								<span key={tag} className={styles.tag}>
-									<span className={styles.tagHash}>#</span>
-									{tag}
-									<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>×</button>
-								</span>
-							))}
-							{addingTag ? (
-								<span className={styles.tagInputWrap}>
-									<span className={styles.tagInputPrefix}>#</span>
-									<input
-										className={styles.tagInput}
-										placeholder="тег"
-										autoFocus
-										onBlur={() => setAddingTag(false)}
-										onKeyDown={e => {
-											if (e.key === 'Enter' || e.key === ',') {
-												e.preventDefault()
-												handleAddTag(e.currentTarget.value)
-												e.currentTarget.value = ''
-											}
-										}}
-									/>
-								</span>
-							) : (
-								<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
-									<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-										<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-									</svg>
-									тег
-								</button>
-							)}
-						</div>
-					</>
-				) : (
-					/* No note: single chips row — note btn + divider + tags */
-					<div className={styles.metaChipsRow}>
-						<button
-							type="button"
-							className={styles.noteCardEmpty}
-							onClick={() => { setLocalNotes(''); setEditingNotes(true) }}
-						>
-							<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-								<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-							</svg>
-							нотатка
-						</button>
-						<span className={styles.chipsDivider} />
-						{(memory.tags ?? []).map(tag => (
-							<span key={tag} className={styles.tag}>
-								<span className={styles.tagHash}>#</span>
-								{tag}
-								<button type="button" className={styles.tagRemove} onClick={() => handleRemoveTag(tag)}>×</button>
-							</span>
-						))}
-						{addingTag ? (
-							<span className={styles.tagInputWrap}>
-								<span className={styles.tagInputPrefix}>#</span>
-								<input
-									className={styles.tagInput}
-									placeholder="тег"
-									autoFocus
-									onBlur={() => setAddingTag(false)}
-									onKeyDown={e => {
-										if (e.key === 'Enter' || e.key === ',') {
-											e.preventDefault()
-											handleAddTag(e.currentTarget.value)
-											e.currentTarget.value = ''
-										}
-									}}
-								/>
-							</span>
-						) : (
-							<button type="button" className={styles.addTagBtn} onClick={() => setAddingTag(true)}>
-								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-									<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-								</svg>
-								тег
-							</button>
-						)}
-					</div>
-				)}
-			</div>
-
-			{/* ── Context block: people + mood ── */}
-			{((memory.withProfiles ?? []).length > 0 || moodScore !== null) && (
+			{/* ── Context block: people ── */}
+			{(memory.withProfiles ?? []).length > 0 && (
 				<div className={styles.contextBlock}>
-					{(memory.withProfiles ?? []).length > 0 && (
-						<div className={styles.contextSection}>
-							<span className={styles.contextLabel}>З КИМ</span>
-							<div className={styles.contextChips}>
-								{(memory.withProfiles ?? []).map(uid => {
-									const member = accepted.find(a => a.id === uid)
-									if (!member) return null
-									return (
-										<span key={uid} className={styles.personChip}>
-											{member.avatarUrl
-												? <img src={member.avatarUrl} alt={member.name} className={styles.personAvatar} />
-												: <span className={styles.personInitial}>{member.name[0]}</span>
-											}
-											<span className={styles.personName}>{member.name.split(' ')[0]}</span>
-										</span>
-									)
-								})}
-							</div>
+					<div className={styles.contextSection}>
+						<span className={styles.contextLabel}>З КИМ</span>
+						<div className={styles.contextChips}>
+							{(memory.withProfiles ?? []).map(uid => {
+								const member = accepted.find(a => a.id === uid)
+								if (!member) return null
+								return (
+									<span key={uid} className={styles.personChip}>
+										{member.avatarUrl
+											? <img src={member.avatarUrl} alt={member.name} className={styles.personAvatar} />
+											: <span className={styles.personInitial}>{member.name[0]}</span>
+										}
+										<span className={styles.personName}>{member.name.split(' ')[0]}</span>
+									</span>
+								)
+							})}
 						</div>
-					)}
-					{moodScore !== null && (
-						<div className={styles.contextSection}>
-							<span className={styles.contextLabel}>НАСТРІЙ</span>
-							<span className={styles.moodChip} data-score={moodScore}>
-								<span className={styles.moodDot} />
-								<span className={styles.moodScore}>{moodScore}/5</span>
-							</span>
-						</div>
-					)}
+					</div>
 				</div>
 			)}
 
@@ -989,21 +815,6 @@ const MemoryDetailScreen: React.FC = () => {
 			{/* ── Add place modal ── */}
 			<Modal isOpen={addingPlace} onClose={() => setAddingPlace(false)} title="Додати заклад" draggable>
 				<LocationSearch onSelect={handleAddPlace} inlineResults />
-			</Modal>
-
-			{/* ── Notes modal ── */}
-			<Modal isOpen={editingNotes} onClose={handleCancelNotes} title="Нотатка" draggable>
-				<div className={styles.notesEditWrap}>
-					<textarea ref={notesTextareaRef} className={styles.notesTextarea} value={localNotes} onChange={e => setLocalNotes(e.target.value)} autoFocus rows={1} />
-					<div className={styles.notesEditActions}>
-						<button type="button" className={styles.notesCancelBtn} onClick={handleCancelNotes}>
-							Скасувати
-						</button>
-						<button type="button" className={styles.notesDoneBtn} onClick={() => handleSaveNotes(localNotes)}>
-							Готово
-						</button>
-					</div>
-				</div>
 			</Modal>
 
 			{/* ── Photo viewer ── */}

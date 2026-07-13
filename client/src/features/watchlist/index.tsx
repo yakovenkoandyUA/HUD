@@ -72,8 +72,8 @@ const STAT_LABELS: Record<string, { short: string }> = {
 }
 
 const Watchlist: React.FC = () => {
-  const { items, addItem, setStatus, setRating, updateItem, deleteItem, fetchWatchlist } = useWatchlistStore()
-  const { items: games, fetchGames, addGame, updateGame, deleteGame } = useGamesStore()
+  const { items, addItem, setStatus, setRating, updateItem, deleteItem, fetchWatchlist, isLoading } = useWatchlistStore()
+  const { items: games, fetchGames, addGame, updateGame, deleteGame, loading: gamesLoading } = useGamesStore()
   const { showToast } = useUiStore()
   const { accepted, fetchFamily } = useFamilyStore()
   const { activeProfile } = useProfileStore()
@@ -505,9 +505,15 @@ const Watchlist: React.FC = () => {
               </div>
             </div>
 
-            <div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}-${sortBy}-${watchScope}`} className={styles.contentAnimated}>
-              <WatchlistGrid items={tabItems} onTap={setSelected} />
-            </div>
+            {isLoading ? (
+              <div className={styles.mediaSkeleton}>
+                {Array.from({ length: 9 }, (_, i) => <div key={i} className={styles.skeletonCard} />)}
+              </div>
+            ) : (
+              <div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}-${sortBy}-${watchScope}`} className={styles.contentAnimated}>
+                <WatchlistGrid items={tabItems} onTap={setSelected} />
+              </div>
+            )}
           </>
         )}
 
@@ -603,24 +609,30 @@ const Watchlist: React.FC = () => {
               ))}
             </div>
 
-            <div key={`game-${gameStatusFilter}-${gameGenreFilter ?? ''}-${gameSortBy}`} className={styles.contentAnimated}>
-              {filteredGames.length === 0 ? (
-                <div className={styles.emptyGames}>
-                  <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyMimirImg} draggable={false} />
-                  <p className={styles.emptyText}>
-                    {gameGenreFilter
-                      ? 'Немає ігор цього жанру'
-                      : gameStatusFilter === 'all' ? 'Додай першу гру через пошук' : 'Немає ігор у цій категорії'}
-                  </p>
-                </div>
-              ) : (
-                <div className={styles.gamesGrid}>
-                  {filteredGames.map(game => (
-                    <GameCard key={game.id} item={game} onClick={() => setSelectedGame(game)} />
-                  ))}
-                </div>
-              )}
-            </div>
+            {gamesLoading ? (
+              <div className={styles.gamesSkeleton}>
+                {Array.from({ length: 6 }, (_, i) => <div key={i} className={styles.skeletonCard} />)}
+              </div>
+            ) : (
+              <div key={`game-${gameStatusFilter}-${gameGenreFilter ?? ''}-${gameSortBy}`} className={styles.contentAnimated}>
+                {filteredGames.length === 0 ? (
+                  <div className={styles.emptyGames}>
+                    <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyMimirImg} draggable={false} />
+                    <p className={styles.emptyText}>
+                      {gameGenreFilter
+                        ? 'Немає ігор цього жанру'
+                        : gameStatusFilter === 'all' ? 'Додай першу гру через пошук' : 'Немає ігор у цій категорії'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className={styles.gamesGrid}>
+                    {filteredGames.map(game => (
+                      <GameCard key={game.id} item={game} onClick={() => setSelectedGame(game)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

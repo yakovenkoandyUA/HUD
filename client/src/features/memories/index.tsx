@@ -85,7 +85,7 @@ function yearsAgoLabel(years: number): string {
  */
 const MemoriesScreen: React.FC = () => {
   const navigate    = useNavigate()
-  const { memories, fetchMemories, addMemory } = useMemoriesStore()
+  const { memories, isLoading: memoriesLoading, fetchMemories, addMemory } = useMemoriesStore()
   const { plans, fetchPlans, addPlan, updatePlan, deletePlan } = usePlansStore()
   const { accepted, fetchFamily } = useFamilyStore()
   const { showToast } = useUiStore()
@@ -351,7 +351,11 @@ const MemoriesScreen: React.FC = () => {
       {/* ── Memories tab ── */}
       {activeTab === 'memories' && (
         <>
-          {filteredMemories.length === 0 ? (
+          {memoriesLoading ? (
+            <div className={styles.memoriesSkeleton}>
+              {Array.from({ length: 9 }, (_, i) => <div key={i} className={styles.skeletonCard} />)}
+            </div>
+          ) : filteredMemories.length === 0 ? (
             <div className={styles.empty}>
               <img src="/mimir/mimir-empty-memories.png" alt="" className={styles.emptyMimir} draggable={false} />
               <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі ще немає спогадів' : 'Ще немає спогадів'}</p>

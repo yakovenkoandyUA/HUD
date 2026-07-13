@@ -32,6 +32,7 @@ interface RecipesState {
   scope: RecipeScope
   wishlistIds: string[]
   cookStats: Record<string, CookStat>
+  isLoading: boolean
   fetchRecipes: (scope?: RecipeScope) => Promise<void>
   fetchCookStats: () => Promise<void>
   logCook: (id: string) => Promise<void>
@@ -49,6 +50,7 @@ export const useRecipesStore = create<RecipesState>()(
       scope: 'mine',
       wishlistIds: [],
       cookStats: {},
+      isLoading: true,
 
       setScope: (scope) => {
         set({ scope })
@@ -56,16 +58,20 @@ export const useRecipesStore = create<RecipesState>()(
       },
 
       fetchRecipes: async (scope) => {
-        if (!getToken()) return
-        const s = scope ?? get().scope
-        const res = await authFetch(`/api/recipes?scope=${s}`)
-        if (!res.ok) return
-        const data = await res.json()
-        // For 'mine' scope backend returns plain docs without isOwn — inject it
-        const recipes = data.map((d: Record<string, unknown>) =>
-          toRecipe(s === 'mine' ? { ...d, isOwn: true } : d)
-        )
-        set({ recipes, scope: s })
+        if (!getToken()) { set({ isLoading: false }); return }
+        try {
+          const s = scope ?? get().scope
+          const res = await authFetch(`/api/recipes?scope=${s}`)
+          if (!res.ok) return
+          const data = await res.json()
+          // For 'mine' scope backend returns plain docs without isOwn — inject it
+          const recipes = data.map((d: Record<string, unknown>) =>
+            toRecipe(s === 'mine' ? { ...d, isOwn: true } : d)
+          )
+          set({ recipes, scope: s })
+        } finally {
+          set({ isLoading: false })
+        }
       },
 
       addRecipe: async (data) => {

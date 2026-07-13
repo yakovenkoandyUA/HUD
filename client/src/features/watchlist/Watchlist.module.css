@@ -500,3 +500,39 @@
   max-width: 260px;
   line-height: 1.6;
 }
+
+/* ── Loading skeletons ── */
+
+.skeletonCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  animation: skeletonPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
+}
+
+.mediaSkeleton {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 12px;
+  padding: 12px 16px 24px;
+}
+
+.mediaSkeleton .skeletonCard {
+  aspect-ratio: 2 / 3;
+}
+
+.gamesSkeleton {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 10px 12px 16px;
+}
+
+.gamesSkeleton .skeletonCard {
+  aspect-ratio: 16 / 9;
+}

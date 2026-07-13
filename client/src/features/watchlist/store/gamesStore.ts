@@ -54,10 +54,10 @@ interface GamesStore {
 
 export const useGamesStore = create<GamesStore>()((set, get) => ({
   items:   [],
-  loading: false,
+  loading: true,
 
   fetchGames: async () => {
-    if (!getToken() || !isBackendConfigured()) return
+    if (!getToken() || !isBackendConfigured()) { set({ loading: false }); return }
     set({ loading: true })
     try {
       const res = await authFetch('/api/games')

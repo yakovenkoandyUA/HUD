@@ -106,7 +106,7 @@ interface SpacesStore {
 export const useSpacesStore = create<SpacesStore>((set) => ({
   spaces:         [],
   archivedSpaces: [],
-  loading:        false,
+  loading:        true,
 
   fetchSpaces: async () => {
     set({ loading: true })

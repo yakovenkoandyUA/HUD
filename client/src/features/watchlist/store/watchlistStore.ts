@@ -75,6 +75,7 @@ function fromApi(raw: ApiWatchlistItem): WatchlistItem {
 interface WatchlistStore {
   items: WatchlistItem[]
   syncStatus: SyncStatus
+  isLoading: boolean
 
   fetchWatchlist: (filters?: { category?: string; status?: string }) => Promise<void>
   addItem: (item: Omit<WatchlistItem, 'id' | 'addedAt'>) => void
@@ -89,11 +90,12 @@ interface WatchlistStore {
 export const useWatchlistStore = create<WatchlistStore>()((set, get) => ({
   items: [],
   syncStatus: 'local' as SyncStatus,
+  isLoading: true,
 
   setSyncStatus: (syncStatus) => set({ syncStatus }),
 
   fetchWatchlist: async (filters) => {
-    if (!getToken() || !isBackendConfigured()) return
+    if (!getToken() || !isBackendConfigured()) { set({ isLoading: false }); return }
     set({ syncStatus: 'syncing' })
     try {
       const params = new URLSearchParams()
@@ -106,6 +108,8 @@ export const useWatchlistStore = create<WatchlistStore>()((set, get) => ({
       set({ items: data.map(fromApi), syncStatus: 'synced' })
     } catch {
       set({ syncStatus: 'error' })
+    } finally {
+      set({ isLoading: false })
     }
   },
 

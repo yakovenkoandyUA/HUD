@@ -54,6 +54,7 @@ function toMemory(d: Record<string, any>): Memory {
  */
 interface MemoriesState {
   memories: Memory[]
+  isLoading: boolean
   fetchMemories: () => Promise<void>
   addMemory: (memory: Omit<Memory, 'id' | 'createdAt'>) => Promise<string>
   updateMemory: (id: string, updates: Partial<Omit<Memory, 'id' | 'createdAt'>>) => Promise<void>
@@ -67,13 +68,18 @@ interface MemoriesState {
 
 export const useMemoriesStore = create<MemoriesState>()((set) => ({
   memories: [],
+  isLoading: true,
 
   fetchMemories: async () => {
-    if (!getToken()) return
-    const res = await authFetch('/api/memories')
-    if (!res.ok) return
-    const data = await res.json()
-    set({ memories: data.map(toMemory) })
+    if (!getToken()) { set({ isLoading: false }); return }
+    try {
+      const res = await authFetch('/api/memories')
+      if (!res.ok) return
+      const data = await res.json()
+      set({ memories: data.map(toMemory) })
+    } finally {
+      set({ isLoading: false })
+    }
   },
 
   addMemory: async (memory) => {

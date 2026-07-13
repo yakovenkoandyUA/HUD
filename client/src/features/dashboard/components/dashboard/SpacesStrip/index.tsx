@@ -38,7 +38,7 @@ const PlusIcon: React.FC = () => (
 )
 
 const SpacesStrip: React.FC = () => {
-  const { spaces, fetchSpaces, createSpace } = useSpacesStore()
+  const { spaces, loading: spacesLoading, fetchSpaces, createSpace } = useSpacesStore()
   const { showToast } = useUiStore()
   const navigate  = useNavigate()
   const location  = useLocation()
@@ -107,7 +107,7 @@ const SpacesStrip: React.FC = () => {
       </div>
 
       <div className={styles.grid}>
-        {spaces.length === 0 && (
+        {spaces.length === 0 && !spacesLoading && (
           <button type="button" className={styles.emptyCard} onClick={openSheet}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>

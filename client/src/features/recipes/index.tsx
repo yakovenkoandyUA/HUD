@@ -35,7 +35,7 @@ const SCOPE_ORDER: RecipeScope[] = ['mine', 'family', 'all']
  */
 const Recipes: React.FC = () => {
   const navigate = useNavigate()
-  const { recipes, scope, wishlistIds, fetchRecipes, setScope, addRecipe, updateRecipe } = useRecipesStore()
+  const { recipes, scope, wishlistIds, isLoading: recipesLoading, fetchRecipes, setScope, addRecipe, updateRecipe } = useRecipesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
 
@@ -188,10 +188,12 @@ const Recipes: React.FC = () => {
                 <div className={styles.ghostLineShort} />
               </div>
             ))}
-            <div className={styles.ghostOverlay}>
-              <DoodleIllustration variant="recipes" size={88} />
-              <span className={styles.ghostMsg}>{emptyMsg}</span>
-            </div>
+            {!recipesLoading && (
+              <div className={styles.ghostOverlay}>
+                <DoodleIllustration variant="recipes" size={88} />
+                <span className={styles.ghostMsg}>{emptyMsg}</span>
+              </div>
+            )}
           </div>
         ) : (
           <div className={styles.recipeGrid}>
