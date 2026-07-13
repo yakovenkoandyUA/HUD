@@ -169,15 +169,14 @@
   gap: 3px;
 }
 
-.levelImg {
+.runeImg {
   flex-shrink: 0;
-  width: 72px;
-  height: 72px;
+  width: 44px;
+  height: 62px;
   object-fit: contain;
   user-select: none;
   pointer-events: none;
-  background: var(--surface);
-  border-radius: 12px;
+  opacity: 0.85;
 }
 
 .fileInput {
@@ -1280,6 +1279,59 @@
   background: var(--border);
 }
 
+/* ── Nested sub-accordion (used in MeModules) ── */
+.subAccordion {
+  border-top: 1px solid var(--border);
+}
+
+.subAccordionBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.subAccordionLabel {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text2);
+  text-transform: uppercase;
+}
+
+.subAccordionCount {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.subAccordionChevron {
+  color: var(--text3);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.subAccordionChevronOpen {
+  transform: rotate(180deg);
+}
+
+.subAccordionBody {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 280ms ease-in-out, opacity 220ms ease-in-out;
+}
+.subAccordionBodyOpen {
+  max-height: 800px;
+  opacity: 1;
+}
+
 .cardRow {
   display: flex;
   align-items: center;
@@ -1735,7 +1787,7 @@
 /* ── Theme grid ── */
 .themeGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 

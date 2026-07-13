@@ -12,13 +12,13 @@ const LS_TERMS   = 'mimir-terms-confirmed'
 const LS_PRIVACY = 'mimir-privacy-confirmed'
 import MeAppearance from './MeAppearance'
 import MeSystem from './MeSystem'
-import MeMedia from './MeMedia'
+import MeModules from './MeModules'
 import MeFamily from './MeFamily'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
 import styles from './ProfilePage.module.css'
 
-type MeSection = 'appearance' | 'system' | 'media' | 'family' | 'achievements'
+type MeSection = 'appearance' | 'system' | 'modules' | 'family' | 'achievements'
 
 const CameraIcon: React.FC = () => (
   <svg width="12" height="12" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -63,10 +63,12 @@ const GearIcon: React.FC = () => (
   </svg>
 )
 
-const FilmIcon: React.FC = () => (
+const ModulesIcon: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <rect x="1.5" y="3" width="13" height="10" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
-    <path d="M5 3v10M11 3v10M1.5 6.3h2.3M1.5 9.7h2.3M12.2 6.3h2.3M12.2 9.7h2.3" stroke="currentColor" strokeWidth="1.1"/>
+    <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
+    <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
+    <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
+    <rect x="9" y="9" width="5.5" height="5.5" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
   </svg>
 )
 
@@ -90,7 +92,7 @@ interface MenuItemConfig {
 const MENU_ITEMS: MenuItemConfig[] = [
   { id: 'appearance', label: 'Вигляд',  sub: 'Теми, стиль навігації',                    Icon: PaletteIcon },
   { id: 'system',     label: 'Система', sub: 'Місто, F1, сповіщення, кеш, безпека',      Icon: GearIcon },
-  { id: 'media',      label: 'Медіа',   sub: 'Фільми, серіали, ігри...',     Icon: FilmIcon },
+  { id: 'modules',    label: 'Модулі',  sub: 'Медіа, спорт та інше',         Icon: ModulesIcon },
   { id: 'family',     label: "Сім'я",   sub: 'Запити, учасники',             Icon: UsersIcon },
 ]
 
@@ -287,9 +289,6 @@ const MeTab: React.FC = () => {
             </div>
             <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleAvatarChange} />
           </div>
-          <span className={styles.rankPill} style={{ color: level.color, borderColor: level.color }}>
-            {level.label}
-          </span>
         </div>
 
         <div className={styles.profileCol}>
@@ -344,12 +343,7 @@ const MeTab: React.FC = () => {
           )}
         </div>
 
-        <img
-          src={`/achive/profile/level-${level.level}.png`}
-          alt={level.label}
-          className={styles.levelImg}
-          draggable={false}
-        />
+        <img src="/achive/achive-hero.png" alt="" className={styles.runeImg} draggable={false} />
       </div>
 
 
@@ -378,7 +372,7 @@ const MeTab: React.FC = () => {
             <div className={`${styles.menuAccordionBody} ${isOpen ? styles.menuAccordionBodyOpen : ''}`}>
               {item.id === 'appearance' && <MeAppearance />}
               {item.id === 'system' && <MeSystem />}
-              {item.id === 'media' && <MeMedia />}
+              {item.id === 'modules' && <MeModules />}
               {item.id === 'family' && <MeFamily />}
 
             </div>

@@ -131,23 +131,6 @@ const MeSystem: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles.cardDivider} />
-      <div className={styles.cardRow}>
-        <div className={styles.pushInfo}>
-          <span className={styles.cardRowLabel}>F1 модуль</span>
-          <span className={styles.pushSub}>Календар, стендінги, прогнози</span>
-        </div>
-        <button
-          type="button"
-          className={`${styles.toggle} ${activeProfile.f1Enabled ? styles.toggleOn : ''}`}
-          onClick={() => updateProfile({ f1Enabled: !(activeProfile.f1Enabled ?? false) })}
-          aria-label="Увімкнути F1 модуль"
-          aria-pressed={activeProfile.f1Enabled ?? false}
-        >
-          <span className={styles.toggleThumb} />
-        </button>
-      </div>
-
       {isSupported && !permissionDenied && (
         <>
           <div className={styles.cardDivider} />

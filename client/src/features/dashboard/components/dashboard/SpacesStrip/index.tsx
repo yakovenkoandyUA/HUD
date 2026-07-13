@@ -135,7 +135,7 @@ const SpacesStrip: React.FC = () => {
               onClick={() => navigate(`/spaces/${space.id}`)}
             >
               <span className={styles.iconWrap}>
-                {cfg && <img src={cfg.iconSrc} width={22} height={22} alt="" aria-hidden="true" />}
+                {cfg && <img src={cfg.iconSrc} width={35} height={35} alt="" aria-hidden="true" />}
               </span>
               <span className={styles.textStack}>
                 <span className={styles.name}>{space.name}</span>

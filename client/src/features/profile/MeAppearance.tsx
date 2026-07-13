@@ -67,7 +67,7 @@ const MeAppearance: React.FC = () => {
                 className={`${styles.themeCard} ${!isUnlocked ? styles.themeCardLocked : ''}`}
                 style={{
                   background: p.bg,
-                  border: isActive ? `2px solid ${p.accent}` : `1.5px solid ${p.border}`,
+                  border: `2px solid ${isActive ? p.accent : p.border}`,
                   boxShadow: isActive ? `0 0 16px ${p.accent}44` : 'none',
                   opacity: isUnlocked ? 1 : 0.45,
                 }}
