@@ -89,6 +89,7 @@ const AchievementsTab: React.FC = () => {
         achievements={all}
         category={activeTab}
         onNodeClick={handleNodeClick}
+        onClose={() => setSelectedId(null)}
         selectedId={selectedId}
       />
 

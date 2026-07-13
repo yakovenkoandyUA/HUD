@@ -42,7 +42,7 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
       type="button"
       className={`${styles.node} ${selected ? styles.nodeSelected : ''} ${blendNode ? styles.nodeBlend : ''}`}
       style={{ left: `${x}%`, top: `${y}%` }}
-      onClick={onClick}
+      onClick={e => { e.stopPropagation(); onClick() }}
       aria-label={achievement.title}
     >
       {status === 'locked' && (
@@ -85,6 +85,7 @@ interface AchievementMapProps {
   achievements: AchievementWithStatus[]
   category: string
   onNodeClick: (id: string) => void
+  onClose: () => void
   selectedId: string | null
 }
 
@@ -104,6 +105,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
   achievements,
   category,
   onNodeClick,
+  onClose,
   selectedId,
 }) => {
   const [showInfo, setShowInfo] = useState(false)
@@ -134,7 +136,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
         </button>
       </div>
 
-      <div className={styles.canvas}>
+      <div className={styles.canvas} onClick={onClose}>
         <img src={treeSrc} alt="" className={`${styles.treeImg} ${isDark ? styles.treeImgDark : styles.treeImgLight}`} draggable={false} />
 
         {showInfo && (
