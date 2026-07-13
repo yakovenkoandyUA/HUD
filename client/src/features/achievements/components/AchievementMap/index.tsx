@@ -23,9 +23,10 @@ interface AchievementNodeProps {
   y: number   // % of container
   onClick: () => void
   selected: boolean
+  isNear?: boolean  // adjacent to at least one unlocked node
 }
 
-const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, onClick, selected }) => {
+const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, onClick, selected, isNear }) => {
   const { status, progress, target } = achievement
   const fraction = target > 0 ? progress / target : 0
   const arcFill  = fraction * CIRC
@@ -49,7 +50,7 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
       aria-label={achievement.title}
     >
       {status === 'locked' && (
-        <img src={blockSrc} alt="" className={styles.badgeImg} draggable={false} />
+        <img src={isNear ? questionSrc : blockSrc} alt="" className={styles.badgeImg} draggable={false} />
       )}
 
       {status === 'hidden' && (
@@ -118,6 +119,16 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
 
   const byId = Object.fromEntries(achievements.map(a => [a.id, a]))
 
+  // IDs of locked nodes adjacent to at least one unlocked node
+  const nearIds = new Set<string>()
+  connections.forEach(([ai, bi]) => {
+    const na = nodes[ai], nb = nodes[bi]
+    if (!na || !nb) return
+    const sa = byId[na.id]?.status, sb = byId[nb.id]?.status
+    if (sa === 'unlocked' && sb === 'locked') nearIds.add(nb.id)
+    if (sb === 'unlocked' && sa === 'locked') nearIds.add(na.id)
+  })
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -179,6 +190,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
               y={node.y}
               selected={selectedId === node.id}
               onClick={() => onNodeClick(node.id)}
+              isNear={nearIds.has(node.id)}
             />
           )
         })}
