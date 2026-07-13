@@ -5,7 +5,7 @@ import styles from './HeroCard.module.css'
 /**
  * HeroCard
  * --------
- * Фінансова картка Dashboard: баланс місяця + 3 stat chips (сьогодні / тиждень / пік).
+ * Фінансова картка Dashboard: баланс місяця + stat strip (число зверху, лейбл знизу).
  *
  * Props:
  * @prop {number}   balance       — витрачено за поточний місяць (грн)
@@ -30,8 +30,6 @@ function getSparkDaysShort(): string[] {
     return DAYS_SHORT[d.getDay()]
   })
 }
-
-// ── HeroCard ──────────────────────────────────────────────────────────────────
 
 const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget, todaySpent, sparklineData }) => {
   const [displayed, setDisplayed] = useState(0)
@@ -74,10 +72,10 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget,
     return { amount: fmt(max), day: days[idx] }
   })()
 
-  const chips = [
-    { label: 'Сьогодні', value: `${fmt(todaySpent)} ₴` },
-    ...(weekTotal != null ? [{ label: '7 днів', value: `${fmt(weekTotal)} ₴` }] : []),
-    ...(peak ? [{ label: 'Пік', value: `${peak.amount} ₴`, sub: peak.day }] : []),
+  const stats = [
+    { value: `${fmt(todaySpent)} ₴`, label: 'Сьогодні' },
+    ...(weekTotal != null ? [{ value: `${fmt(weekTotal)} ₴`, label: '7 днів' }] : []),
+    ...(peak ? [{ value: `${peak.amount} ₴`, label: 'Пік', sub: peak.day, accent: true }] : []),
   ]
 
   return (
@@ -89,15 +87,15 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget,
         <span className={styles.balanceSubLabel}>за цей місяць</span>
       </div>
 
-      {chips.length > 0 && (
-        <div className={styles.chips}>
-          {chips.map(c => (
-            <div key={c.label} className={styles.chip}>
-              <span className={styles.chipLabel}>{c.label}</span>
-              <span className={styles.chipValue}>
-                {c.value}
-                {c.sub && <span className={styles.chipSub}> · {c.sub}</span>}
+      {stats.length > 0 && (
+        <div className={styles.statStrip}>
+          {stats.map((s, i) => (
+            <div key={i} className={styles.statItem}>
+              <span className={`${styles.statValue} ${s.accent ? styles.statValueAccent : ''}`}>
+                {s.value}
+                {s.sub && <span className={styles.statSub}> · {s.sub}</span>}
               </span>
+              <span className={styles.statLabel}>{s.label}</span>
             </div>
           ))}
         </div>
