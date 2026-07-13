@@ -49,17 +49,13 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
       onClick={e => { e.stopPropagation(); onClick() }}
       aria-label={achievement.title}
     >
-      {status === 'locked' && (
+      {(status === 'locked' || status === 'hidden') && (
         <img
           src={isNear ? questionSrc : blockSrc}
           alt=""
           className={`${styles.badgeImg} ${isNear ? styles.badgeImgNear : ''}`}
           draggable={false}
         />
-      )}
-
-      {status === 'hidden' && (
-        <img src={questionSrc} alt="" className={styles.badgeImg} draggable={false} />
       )}
 
       {status === 'unlocked' && (
@@ -124,15 +120,18 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
 
   const byId = Object.fromEntries(achievements.map(a => [a.id, a]))
 
-  // IDs of locked nodes adjacent to at least one unlocked node
+  // IDs of locked/hidden nodes adjacent to at least one unlocked node
   const nearIds = new Set<string>()
   connections.forEach(([ai, bi]) => {
     const na = nodes[ai], nb = nodes[bi]
     if (!na || !nb) return
     const sa = byId[na.id]?.status, sb = byId[nb.id]?.status
-    if (sa === 'unlocked' && sb === 'locked') nearIds.add(nb.id)
-    if (sb === 'unlocked' && sa === 'locked') nearIds.add(na.id)
+    const aUnlocked = sa === 'unlocked', bUnlocked = sb === 'unlocked'
+    if (aUnlocked && (sb === 'locked' || sb === 'hidden')) nearIds.add(nb.id)
+    if (bUnlocked && (sa === 'locked' || sa === 'hidden')) nearIds.add(na.id)
   })
+  // If nothing is unlocked yet, mark the first (top) node as the starting hint
+  if (nearIds.size === 0 && nodes[0]) nearIds.add(nodes[0].id)
 
   return (
     <div className={styles.card}>
