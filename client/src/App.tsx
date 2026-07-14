@@ -35,6 +35,8 @@ import OnboardingScreen from '@/features/auth/Onboarding'
 import TermsPage from '@/features/auth/TermsPage'
 import PrivacyPage from '@/features/auth/PrivacyPage'
 import PaymentResult from '@/features/auth/PaymentResult'
+import PwaInstallBanner from '@/shared/components/ui/PwaInstallBanner'
+import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
 import ErrorBoundary from '@/shared/components/ui/ErrorBoundary'
 import './App.css'
 
@@ -203,6 +205,7 @@ const App: React.FC = () => {
   const { token, activeProfile, updateProfile, refreshProfile } = useProfileStore()
   const { setUpdateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe } = usePushSubscription()
+  const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
   const cityAutoLocateRef = useRef(false)
 
   useEffect(() => {
@@ -266,6 +269,9 @@ const App: React.FC = () => {
       <PinGuard />
       <ToastContainer />
       <AchievementUnlockedModal />
+      {(isInstallable || isIOS) && !isDismissed && (
+        <PwaInstallBanner isIOS={isIOS} onInstall={promptInstall} onDismiss={dismiss} />
+      )}
     </BrowserRouter>
     </ErrorBoundary>
   )
