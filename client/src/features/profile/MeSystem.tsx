@@ -26,7 +26,6 @@ const MeSystem: React.FC = () => {
   const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushSubscription()
   const { isInstallable, isIOS, promptInstall } = usePwaInstall()
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-  const showInstall = !isStandalone && (isInstallable || isIOS)
 
   const [pushLoading, setPushLoading]           = useState(false)
   const [permissionDenied, setPermissionDenied] = useState(false)
