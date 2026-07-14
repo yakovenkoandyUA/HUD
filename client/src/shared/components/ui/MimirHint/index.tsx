@@ -1,15 +1,35 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useUiStore, type MimirMode } from '@/shared/store/uiStore'
 import styles from './MimirHint.module.css'
 
-const DISMISS_KEY = 'mimir-dismissed-day'
+const DISMISS_KEY     = 'mimir-hint-daily'
+const MAX_DAILY_SHOWS = 3
+
+interface DailyRecord { date: string; count: number }
+
+function getDailyRecord(): DailyRecord {
+  try {
+    const raw = localStorage.getItem(DISMISS_KEY)
+    if (!raw) return { date: '', count: 0 }
+    const rec = JSON.parse(raw) as DailyRecord
+    if (rec.date !== new Date().toDateString()) return { date: new Date().toDateString(), count: 0 }
+    return rec
+  } catch { return { date: new Date().toDateString(), count: 0 } }
+}
 
 function isDismissedToday(): boolean {
-  return sessionStorage.getItem(DISMISS_KEY) === new Date().toDateString()
+  return getDailyRecord().count >= MAX_DAILY_SHOWS
 }
+
+function markShownToday() {
+  const rec = getDailyRecord()
+  localStorage.setItem(DISMISS_KEY, JSON.stringify({ date: new Date().toDateString(), count: rec.count + 1 }))
+}
+
 function setDismissedToday() {
-  sessionStorage.setItem(DISMISS_KEY, new Date().toDateString())
+  localStorage.setItem(DISMISS_KEY, JSON.stringify({ date: new Date().toDateString(), count: MAX_DAILY_SHOWS }))
 }
 
 // ── Hints per mode ─────────────────────────────────────────────────────────
@@ -108,7 +128,7 @@ interface MimirHintProps {
 const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss, oneTime = false, showUpgrade = false }) => {
   const navigate = useNavigate()
   const { mimirMode } = useUiStore()
-  // oneTime хінти не залежать від sessionStorage — показуються завжди до dismiss
+  // oneTime хінти не залежать від денного лічильника — показуються завжди до dismiss
   const [dismissed, setDismissed] = useState(() => oneTime ? false : isDismissedToday())
   const [hiding, setHiding] = useState(false)
 
@@ -117,6 +137,12 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
   const onDismissRef = useRef(onDismiss)
   onDismissRef.current = onDismiss
   const mountTimeRef = useRef(Date.now())
+
+  // Щоденний лічильник: рахуємо цей показ при монтуванні (не oneTime)
+  useEffect(() => {
+    if (!oneTime && !dismissed) markShownToday()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // For oneTime hints: mark as seen on unmount only if visible for ≥ 3s (user had time to read it)
   useEffect(() => {
@@ -143,21 +169,18 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
     }, 320)
   }, [hiding, oneTime, onDismiss])
 
-  // Tap anywhere on the page dismisses Mimir
-  useEffect(() => {
-    if (dismissed) return
-    const t = setTimeout(() => {
-      document.addEventListener('click', handleDismiss, { once: true })
-    }, 600)
-    return () => {
-      clearTimeout(t)
-      document.removeEventListener('click', handleDismiss)
-    }
-  }, [dismissed, handleDismiss])
-
   if (dismissed) return null
 
   return (
+    <>
+      {createPortal(
+        <div
+          className={`${styles.backdrop} ${hiding ? styles.rootHiding : ''}`}
+          onClick={handleDismiss}
+          aria-hidden="true"
+        />,
+        document.body
+      )}
     <div className={`${styles.root} ${hiding ? styles.rootHiding : ''}`}>
       <div className={styles.row}>
         <img
@@ -185,6 +208,7 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
         </div>
       </div>
     </div>
+    </>
   )
 }
 
