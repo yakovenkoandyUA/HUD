@@ -125,8 +125,8 @@ const AdminTab: React.FC = () => {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })
 
-  if (loading) return <div className={styles.tabContent}><p className={styles.adminEmpty}>Завантаження...</p></div>
-  if (error)   return <div className={styles.tabContent}><p className={styles.adminEmpty}>{error}</p></div>
+  if (loading) return <p className={styles.adminEmpty}>Завантаження...</p>
+  if (error)   return <p className={styles.adminEmpty}>{error}</p>
 
   const groupMap = buildFamilyGroups(users)
 
@@ -220,28 +220,26 @@ const AdminTab: React.FC = () => {
   }
 
   return (
-    <div className={styles.tabContent}>
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <span className={styles.sectionTitle}>КОРИСТУВАЧІ</span>
-          <span className={styles.sectionCount}>{users.length}</span>
-        </div>
+    <section className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionTitle}>КОРИСТУВАЧІ</span>
+        <span className={styles.sectionCount}>{users.length}</span>
+      </div>
 
-        {users.length === 0 && <p className={styles.adminEmpty}>Немає користувачів</p>}
+      {users.length === 0 && <p className={styles.adminEmpty}>Немає користувачів</p>}
 
-        <div className={styles.adminList}>
-          {items.map((item) => {
-            if (item.type === 'user') return renderUserCard(item.user)
-            return (
-              <div key={item.groupId} className={styles.adminFamilyGroup}>
-                <span className={styles.adminFamilyLabel}>СІМ'Я</span>
-                {item.members.map(u => renderUserCard(u))}
-              </div>
-            )
-          })}
-        </div>
-      </section>
-    </div>
+      <div className={styles.adminList}>
+        {items.map((item) => {
+          if (item.type === 'user') return renderUserCard(item.user)
+          return (
+            <div key={item.groupId} className={styles.adminFamilyGroup}>
+              <span className={styles.adminFamilyLabel}>СІМ'Я</span>
+              {item.members.map(u => renderUserCard(u))}
+            </div>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 

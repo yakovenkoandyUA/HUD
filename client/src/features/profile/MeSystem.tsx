@@ -180,21 +180,24 @@ const MeSystem: React.FC = () => {
         </button>
       </div>
 
-      {showInstall && (
+      {!isStandalone && (
         <>
           <div className={styles.cardDivider} />
           <div className={styles.cardRow}>
-            {isIOS ? (
+            <div className={styles.pushInfo}>
+              <span className={styles.cardRowLabel}>Встановити додаток</span>
               <span className={styles.pushSub}>
-                Натисніть <strong>⎙ Share</strong> → <strong>«Додати на початковий екран»</strong>
+                {isIOS
+                  ? 'Safari → Share → «Додати на початковий екран»'
+                  : isInstallable
+                  ? 'Працює офлайн · Без браузера'
+                  : 'Chrome → меню ⋮ → «Встановити додаток»'}
               </span>
-            ) : (
-              <>
-                <span className={styles.cardRowLabel}>Встановити додаток</span>
-                <button type="button" className={styles.pinBtn} onClick={promptInstall}>
-                  ВСТАНОВИТИ
-                </button>
-              </>
+            </div>
+            {isInstallable && (
+              <button type="button" className={styles.pinBtn} onClick={promptInstall}>
+                ВСТАНОВИТИ
+              </button>
             )}
           </div>
         </>

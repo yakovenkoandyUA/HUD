@@ -61,7 +61,7 @@
   padding: 16px 16px 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+
 }
 
 /* ── Date row ── */
@@ -72,7 +72,6 @@
   gap: 10px;
   background: var(--surface);
   border: 1px solid var(--border2);
-  border-radius: 10px;
   padding: 14px 14px;
   color: var(--text2);
   font-family: var(--font-ui);
@@ -103,7 +102,6 @@
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border2);
-  border-radius: 10px;
   padding: 14px 14px;
   cursor: pointer;
   text-align: left;
@@ -116,8 +114,8 @@
 }
 
 .toggleRowActive {
-  background: var(--accent-soft);
-  border-color: var(--accent-dim);
+  background: var(--surface2);
+  border-color: var(--accent);
 }
 
 .toggleIcon {

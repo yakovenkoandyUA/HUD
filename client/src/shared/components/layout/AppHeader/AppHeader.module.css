@@ -123,6 +123,25 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  position: relative;
+}
+
+.installDot {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1.5px solid var(--bg2);
+  animation: installPulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes installPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
 }
 
 .avatar {

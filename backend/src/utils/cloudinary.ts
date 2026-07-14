@@ -1,4 +1,15 @@
 /**
+ * publicIdFromUrl
+ * ---------------
+ * Витягує Cloudinary public_id з повного URL.
+ * Формат: https://res.cloudinary.com/{cloud}/image/upload/v{n}/{public_id}.{ext}
+ */
+export function publicIdFromUrl(url: string): string | null {
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/)
+  return match ? match[1] : null
+}
+
+/**
  * destroyImages
  * -------------
  * Видаляє масив ресурсів з Cloudinary через Admin API (Basic auth).

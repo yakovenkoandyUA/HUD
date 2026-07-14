@@ -85,6 +85,13 @@ export const useUiStore = create<UiState>()(
     }),
     {
       name: 'hud-ui',
+      version: 1,
+      migrate: (persisted: unknown) => {
+        const s = persisted as Partial<UiState>
+        // v0→v1: pill was experimental default; reset to classic
+        if (s.navStyle === 'pill') s.navStyle = 'classic'
+        return s as UiState
+      },
       partialize: (s) => ({ theme: s.theme, navStyle: s.navStyle, navLabelMode: s.navLabelMode, pinnedSections: s.pinnedSections, pinnedProfileTabs: s.pinnedProfileTabs, mimirMode: s.mimirMode, mimirFrequency: s.mimirFrequency }),
     }
   )

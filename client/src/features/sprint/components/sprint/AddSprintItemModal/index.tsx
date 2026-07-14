@@ -138,7 +138,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   const [showFormReminderPicker, setShowFormReminderPicker] = useState(false)
   const [quickAddDate, setQuickAddDate]         = useState<string | null>(null)
   const [quickAddTime, setQuickAddTime]         = useState<string | null>(null)
-  const [showDeadlineSheet, setShowDeadlineSheet] = useState(false)
+  const [showDeadlineSheet, setShowDeadlineSheet]         = useState(false)
+  const [showInitialDatePicker, setShowInitialDatePicker] = useState(false)
   const [pendingImages, setPendingImages]       = useState<File[]>([])
   const [imageUploading, setImageUploading]     = useState(false)
   const imageInputRef                           = useRef<HTMLInputElement>(null)
@@ -180,6 +181,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     setQuickAddDate(null)
     setQuickAddTime(null)
     setShowDeadlineSheet(false)
+    setShowInitialDatePicker(false)
     setPendingImages([])
   }
 
@@ -419,7 +421,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                       >✕</span>
                     </button>
                   ) : (
-                    <button type="button" className={styles.metaChip} onClick={() => setShowDeadlineSheet(true)}>
+                    <button type="button" className={styles.metaChip} onClick={() => setShowInitialDatePicker(true)}>
                       <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
                         <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
                         <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -577,9 +579,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                     <circle cx="4" cy="5.5" r="1" stroke="currentColor" strokeWidth="1.2"/>
                     <path d="M0.5 8.5l3-3 2 2 2-2 4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  {pendingImages.length === 0
-                    ? 'Додати фото'
-                    : `Ще ${maxImages - pendingImages.length}`}
+                  {pendingImages.length === 0 ? 'Додати фото' : 'Додати ще'}
                 </button>
               )}
             </div>
@@ -643,6 +643,20 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
           value={repeatStartDate}
           onChange={date => { setRepeatStartDate(date); setShowStartDatePicker(false) }}
           onClose={() => setShowStartDatePicker(false)}
+        />
+      )}
+
+      {/* Initial calendar — opens directly when tapping "Дедлайн" without a date */}
+      {showInitialDatePicker && (
+        <CustomDatePicker
+          value={quickAddDate ?? undefined}
+          minDate={new Date()}
+          onChange={date => {
+            setQuickAddDate(date)
+            setShowInitialDatePicker(false)
+            setShowDeadlineSheet(true)
+          }}
+          onClose={() => setShowInitialDatePicker(false)}
         />
       )}
 

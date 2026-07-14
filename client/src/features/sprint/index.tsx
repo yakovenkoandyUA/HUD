@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
-import FabHint from '@/shared/components/ui/FabHint'
+
 import MimirHint from '@/shared/components/ui/MimirHint'
 import { useMimirHint } from '@/shared/hooks/useMimirHint'
 import AppHeader from '@/shared/components/layout/AppHeader'
@@ -63,6 +63,7 @@ const Sprint: React.FC = () => {
 	const updateProfile = useProfileStore(s => s.updateProfile)
 	const location = useLocation()
 	const navigate = useNavigate()
+	const [searchParams] = useSearchParams()
 	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
 	const [filterType, setFilterType]     = useState<FilterType>(locationState?.filterType ?? 'task')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
@@ -75,12 +76,14 @@ const Sprint: React.FC = () => {
 
 	const [showAdd, setShowAdd]           = useState(false)
 	const [quickAddDate, setQuickAddDate] = useState<string | null>(null)
-	const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+	const [detailTaskId, setDetailTaskId] = useState<string | null>(() => searchParams.get('quest'))
 	const [weekExpanded, setWeekExpanded] = useState(false)
 	const [binHidden, setBinHidden]       = useState(true)
-	const [doneVisibleCount, setDoneVisibleCount] = useState(20)
-	const binTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
-	const doneSentinelRef  = useRef<HTMLDivElement>(null)
+	const [doneVisibleCount, setDoneVisibleCount]     = useState(20)
+	const [activeVisibleCount, setActiveVisibleCount] = useState(20)
+	const binTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const doneSentinelRef   = useRef<HTMLDivElement>(null)
+	const activeSentinelRef = useRef<HTMLDivElement>(null)
 	const handleSwipeTutorialDone = () => {
 		updateProfile({ sprintTutorialSeen: true })
 	}
@@ -96,6 +99,14 @@ const Sprint: React.FC = () => {
 		setCalendarMode(next)
 		localStorage.setItem('sprint-calendar-mode', next)
 	}
+
+	// Clean up ?quest= param from URL after reading it on mount
+	useEffect(() => {
+		if (searchParams.get('quest')) {
+			navigate('/sprint', { replace: true })
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
 
 	useEffect(
 		() => () => {
@@ -197,8 +208,11 @@ const Sprint: React.FC = () => {
 			return b.createdAt.localeCompare(a.createdAt)
 		})
 
-	const doneHasMore      = filterStatus === 'done' && doneVisibleCount < dayQuests.length
-	const visibleDayQuests = filterStatus === 'done' ? dayQuests.slice(0, doneVisibleCount) : dayQuests
+	const doneHasMore      = filterStatus === 'done'   && doneVisibleCount   < dayQuests.length
+	const activeHasMore    = filterStatus !== 'done'   && activeVisibleCount < dayQuests.length
+	const visibleDayQuests = filterStatus === 'done'
+		? dayQuests.slice(0, doneVisibleCount)
+		: dayQuests.slice(0, activeVisibleCount)
 
 	const showSwipeGhost = ghostHintEligible && !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
 
@@ -212,8 +226,9 @@ const Sprint: React.FC = () => {
 	}, [dayQuests.length, showSwipeGhost])
 
 	useEffect(() => {
-		if (filterStatus === 'done') setDoneVisibleCount(20)
-	}, [filterStatus, selectedDay])
+		setDoneVisibleCount(20)
+		setActiveVisibleCount(20)
+	}, [filterStatus, filterType, selectedDay])
 
 	useEffect(() => {
 		const el = doneSentinelRef.current
@@ -225,6 +240,17 @@ const Sprint: React.FC = () => {
 		observer.observe(el)
 		return () => observer.disconnect()
 	}, [doneHasMore, doneVisibleCount])
+
+	useEffect(() => {
+		const el = activeSentinelRef.current
+		if (!el || !activeHasMore) return
+		const observer = new IntersectionObserver(
+			([entry]) => { if (entry.isIntersecting) setActiveVisibleCount(c => c + 20) },
+			{ threshold: 0.1 },
+		)
+		observer.observe(el)
+		return () => observer.disconnect()
+	}, [activeHasMore, activeVisibleCount])
 
 	const handleDayLongPress = (day: Date) => {
 		const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
@@ -316,7 +342,7 @@ const Sprint: React.FC = () => {
 						<MimirHint
 							pose="pointing"
 							oneTime
-							textKey="Тижневий спринт порожній. Натисни + щоб додати першу задачу — вона з'явиться тут."
+							textKey="Тижневий спринт порожній. Натисни «Додати квест» внизу — і вона з'явиться тут."
 							onDismiss={markSprintEmptySeen}
 						/>
 					) : (
@@ -350,26 +376,33 @@ const Sprint: React.FC = () => {
 									<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
 								))}
 							</ul>
-							{doneHasMore && <div ref={doneSentinelRef} className={styles.sentinel} />}
+							{doneHasMore   && <div ref={doneSentinelRef}   className={styles.sentinel} />}
+							{activeHasMore && <div ref={activeSentinelRef} className={styles.sentinel} />}
 							{!doneHasMore && filterStatus === 'done' && dayQuests.length > 20 && (
 								<p className={styles.allLoaded}>Всі {dayQuests.length} завершених</p>
 							)}
+							{!activeHasMore && filterStatus !== 'done' && dayQuests.length > 20 && (
+								<p className={styles.allLoaded}>Всі {dayQuests.length} квестів</p>
+							)}
 						</>
+					)}
+					{filterStatus !== 'done' && (
+						<button
+							className={`${styles.addRow} ${!loading && dayQuests.length === 0 && !showSwipeGhost ? styles.addRowEmpty : ''}`}
+							onClick={() => setShowAdd(true)}
+						>
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+								<line x1="12" y1="5" x2="12" y2="19" />
+								<line x1="5" y1="12" x2="19" y2="12" />
+							</svg>
+							{filterType === 'shopping' ? 'Додати покупку' : 'Додати квест'}
+						</button>
 					)}
 				</div>
 
 				{/* ── Trash accordion ── */}
 				<TrashBin />
 			</div>
-
-			{/* ── FAB ── */}
-			{items.length === 0 && <FabHint storageKey="sprint" text="Додай першу задачу" />}
-			<button className={styles.fab} onClick={() => setShowAdd(true)} aria-label="Додати квест">
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-					<line x1="12" y1="5" x2="12" y2="19" />
-					<line x1="5" y1="12" x2="19" y2="12" />
-				</svg>
-			</button>
 
 			{/* ── Trash bin (swipe-to-delete target) ── */}
 			<div className={`${styles.trashBin} ${filteredItems.length === 0 ? styles.trashBinEmpty : ''}`} id="sprint-trash-bin" aria-hidden="true" style={binHidden ? { display: 'none' } : undefined}>

@@ -437,6 +437,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
               value={titleDraft}
               onChange={e => setTitleDraft(e.target.value)}
               onBlur={handleTitleBlur}
+              enterKeyHint="done"
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); titleRef.current?.blur() } }}
               rows={1}
             />
             {task.recipeImageUrl && (

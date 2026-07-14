@@ -181,7 +181,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const [editingId, setEditingId]                 = useState<string | null>(null)
   const [editingTitle, setEditingTitle]           = useState('')
   const [visibleCount, setVisibleCount]           = useState(20)
-  const sentinelRef = useRef<HTMLDivElement>(null)
+  const [newItemIds, setNewItemIds]               = useState<Set<string>>(new Set())
+  const sentinelRef       = useRef<HTMLDivElement>(null)
+  const isLoadingMoreRef  = useRef(false)
+  const prevIdsRef        = useRef<Set<string>>(new Set())
 
   // ── Receipt item editing ──
   type ReceiptItem = { name: string; price: number; category: string }
@@ -224,9 +227,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
 
   const hasMore = visibleCount < filteredAll.length
 
-  // Reset visible count when filters change
+  // Reset visible count and animation tracking when filters change
   useEffect(() => {
     setVisibleCount(20)
+    prevIdsRef.current = new Set()
   }, [typeFilter, categoryFilter])
 
   // IntersectionObserver — load 20 more when sentinel scrolls into view
@@ -234,7 +238,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
     const el = sentinelRef.current
     if (!el || !hasMore) return
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisibleCount(c => c + 20) },
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          isLoadingMoreRef.current = true
+          setVisibleCount(c => c + 20)
+        }
+      },
       { threshold: 0.1 },
     )
     observer.observe(el)
@@ -254,6 +263,18 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
 
   // Sync without animation when transactions data changes (initial load, add, delete, scroll)
   useEffect(() => {
+    const currentIds = new Set(list.map(t => t.id))
+
+    if (isLoadingMoreRef.current && prevIdsRef.current.size > 0) {
+      const incoming = new Set([...currentIds].filter(id => !prevIdsRef.current.has(id)))
+      if (incoming.size > 0) {
+        setNewItemIds(incoming)
+        setTimeout(() => setNewItemIds(new Set()), 320)
+      }
+    }
+
+    isLoadingMoreRef.current = false
+    prevIdsRef.current = currentIds
     setDisplayedList(list)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, visibleCount])
@@ -358,7 +379,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
             const receipt    = parseReceipt(t.description)
             const isRecurring = !!(t.recurringId || t.description === 'Регулярний платіж')
             return (
-              <li key={t.id} className={`${styles.item} ${isPending ? styles.itemPending : ''}`}>
+              <li key={t.id} className={`${styles.item} ${isPending ? styles.itemPending : ''} ${newItemIds.has(t.id) ? styles.itemNew : ''}`}>
                 {isPending ? (
                   <div className={styles.confirmRow}>
                     <span className={styles.confirmText}>Видалити?</span>

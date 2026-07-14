@@ -15,6 +15,15 @@ const TrashBin: React.FC = () => {
   const [open, setOpen] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
+  const handleToggle = async () => {
+    const next = !open
+    setOpen(next)
+    if (next) {
+      await fetchTrash()
+      setLoaded(true)
+    }
+  }
+
   useEffect(() => {
     let cancelled = false
     const load = async () => {
@@ -27,7 +36,7 @@ const TrashBin: React.FC = () => {
 
   return (
     <div className={styles.wrap}>
-      <button type="button" className={styles.header} onClick={() => setOpen(v => !v)} aria-expanded={open}>
+      <button type="button" className={styles.header} onClick={handleToggle} aria-expanded={open}>
         <span className={styles.label}>
           Кошик
           {trashItems.length > 0 && <span className={styles.count}>{trashItems.length}</span>}

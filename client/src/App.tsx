@@ -2,10 +2,8 @@ import React, { useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import BottomNav from '@/shared/components/layout/BottomNav'
 import ToastContainer from '@/shared/components/ui/Toast'
-import PwaInstallBanner from '@/shared/components/ui/PwaInstallBanner'
 import AchievementUnlockedModal from '@/shared/components/ui/AchievementUnlockedModal'
 import PinLock from '@/shared/components/ui/PinLock'
-import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { usePushSubscription } from '@/shared/hooks/usePushSubscription'
@@ -201,7 +199,7 @@ const PinGuard: React.FC = () => {
 }
 
 const App: React.FC = () => {
-  const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
+
   const { token, activeProfile, updateProfile, refreshProfile } = useProfileStore()
   const { setUpdateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe } = usePushSubscription()
@@ -260,19 +258,10 @@ const App: React.FC = () => {
     )
   }, [token, activeProfile, updateProfile])
 
-  const showBanner = !isDismissed && (isInstallable || isIOS)
- 
   return (
     <ErrorBoundary>
     <BrowserRouter>
       <AnimatedRoutes />
-      {showBanner && (
-        <PwaInstallBanner
-          isIOS={isIOS}
-          onInstall={promptInstall}
-          onDismiss={dismiss}
-        />
-      )}
       <NavGuard />
       <PinGuard />
       <ToastContainer />

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { Space } from '../models/Space'
 import { PetEvent } from '../models/PetEvent'
+import { destroyImages, publicIdFromUrl } from '../utils/cloudinary'
 
 /** GET /api/spaces/:id/pet/profile */
 export async function getPetProfile(req: Request, res: Response): Promise<void> {
@@ -115,6 +116,11 @@ export async function deletePetEvent(req: Request, res: Response): Promise<void>
 
     const event = await PetEvent.findOneAndDelete({ _id: req.params.eventId, spaceId: req.params.id })
     if (!event) { res.status(404).json({ error: 'Event not found' }); return }
+
+    if (event.attachments?.length) {
+      const ids = event.attachments.map(publicIdFromUrl).filter(Boolean) as string[]
+      destroyImages(ids).catch(() => {})
+    }
 
     res.json({ ok: true })
   } catch {

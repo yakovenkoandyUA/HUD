@@ -9,6 +9,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
+import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
 import styles from './AppHeader.module.css'
 
 /**
@@ -38,6 +39,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const canUseAI = useCanUseFeature('aiChat')
   const runeScore = useRuneScore()
   const level = getLevel(runeScore)
+  const { isInstallable, isIOS } = usePwaInstall()
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  const showInstallDot = !isStandalone && (isInstallable || isIOS)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
@@ -102,6 +106,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
                 {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}
+            {showInstallDot && <span className={styles.installDot} aria-hidden="true" />}
           </button>
         </div>
       </header>

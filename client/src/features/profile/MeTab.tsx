@@ -14,11 +14,12 @@ import MeAppearance from './MeAppearance'
 import MeSystem from './MeSystem'
 import MeModules from './MeModules'
 import MeFamily from './MeFamily'
+import AdminTab from './AdminTab'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
 import styles from './ProfilePage.module.css'
 
-type MeSection = 'appearance' | 'system' | 'modules' | 'family' | 'achievements'
+type MeSection = 'appearance' | 'system' | 'modules' | 'family' | 'achievements' | 'admin'
 
 const CameraIcon: React.FC = () => (
   <svg width="12" height="12" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -82,6 +83,13 @@ const UsersIcon: React.FC = () => (
   </svg>
 )
 
+const AdminIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3"/>
+    <path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+)
+
 interface MenuItemConfig {
   id: MeSection
   label: string
@@ -89,12 +97,16 @@ interface MenuItemConfig {
   Icon: React.FC
 }
 
-const MENU_ITEMS: MenuItemConfig[] = [
-  { id: 'appearance', label: 'Вигляд',  sub: 'Теми, стиль навігації',                    Icon: PaletteIcon },
-  { id: 'system',     label: 'Система', sub: 'Місто, F1, сповіщення, кеш, безпека',      Icon: GearIcon },
-  { id: 'modules',    label: 'Модулі',  sub: 'Медіа, спорт та інше',         Icon: ModulesIcon },
-  { id: 'family',     label: "Сім'я",   sub: 'Запити, учасники',             Icon: UsersIcon },
+const BASE_MENU_ITEMS: MenuItemConfig[] = [
+  { id: 'appearance', label: 'Вигляд',  sub: 'Теми, стиль навігації',                Icon: PaletteIcon },
+  { id: 'system',     label: 'Система', sub: 'Місто, F1, сповіщення, кеш, безпека',  Icon: GearIcon },
+  { id: 'modules',    label: 'Модулі',  sub: 'Медіа, спорт та інше',                 Icon: ModulesIcon },
+  { id: 'family',     label: "Сім'я",   sub: 'Запити, учасники',                     Icon: UsersIcon },
 ]
+
+const ADMIN_MENU_ITEM: MenuItemConfig = {
+  id: 'admin', label: 'Адмін', sub: 'Користувачі, плани', Icon: AdminIcon,
+}
 
 /**
  * MeTab
@@ -261,6 +273,9 @@ const MeTab: React.FC = () => {
   const familyPending = pendingReceived.length
   const runeScore = useRuneScore()
   const level = getLevel(runeScore)
+  const menuItems = activeProfile.role === 'admin'
+    ? [...BASE_MENU_ITEMS, ADMIN_MENU_ITEM]
+    : BASE_MENU_ITEMS
 
 
   return (
@@ -348,7 +363,7 @@ const MeTab: React.FC = () => {
 
 
       {/* ── Акордеон-меню підрозділів ── */}
-      {MENU_ITEMS.map(item => {
+      {menuItems.map(item => {
         const isOpen = openSection === item.id
         return (
           <div key={item.id} className={styles.settingsCard}>
@@ -374,7 +389,7 @@ const MeTab: React.FC = () => {
               {item.id === 'system' && <MeSystem />}
               {item.id === 'modules' && <MeModules />}
               {item.id === 'family' && <MeFamily />}
-
+              {item.id === 'admin' && <AdminTab />}
             </div>
           </div>
         )

@@ -104,7 +104,7 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
           sendPushToUser(uid, {
             title: '📋 Нова задача для тебе',
             body: `${assignerName} призначив тебе на «${task.title}»`,
-            url: '/sprint',
+            url: `/sprint?quest=${task._id}`,
           })
         )
       )

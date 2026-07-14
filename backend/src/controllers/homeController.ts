@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { Space } from '../models/Space'
 import { HomeEvent } from '../models/HomeEvent'
+import { destroyImages, publicIdFromUrl } from '../utils/cloudinary'
 
 /** GET /api/spaces/:id/home/profile */
 export async function getHomeProfile(req: Request, res: Response): Promise<void> {
@@ -115,6 +116,11 @@ export async function deleteHomeEvent(req: Request, res: Response): Promise<void
 
     const event = await HomeEvent.findOneAndDelete({ _id: req.params.eventId, spaceId: req.params.id })
     if (!event) { res.status(404).json({ error: 'Event not found' }); return }
+
+    if (event.attachments?.length) {
+      const ids = event.attachments.map(publicIdFromUrl).filter(Boolean) as string[]
+      destroyImages(ids).catch(() => {})
+    }
 
     res.json({ ok: true })
   } catch {

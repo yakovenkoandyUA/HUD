@@ -149,22 +149,37 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
         </div>
 
         <div className={styles.legend}>
-          {(showAll ? entries : entries.slice(0, VISIBLE_COUNT)).map(({ cat, amount }) => (
+          {entries.slice(0, VISIBLE_COUNT).map(({ cat, amount }) => (
             <div key={cat} className={styles.legendItem}>
               <span className={styles.dot} style={{ background: colorOf(cat) }} />
               <span className={styles.legendName}>{cat}</span>
               <span className={styles.legendAmount}>{fmt(amount)} ₴</span>
             </div>
           ))}
-          {!showAll && entries.length > VISIBLE_COUNT && (
-            <button className={styles.showMore} onClick={() => setShowAll(true)}>
-              ще {entries.length - VISIBLE_COUNT} →
-            </button>
-          )}
-          {showAll && entries.length > VISIBLE_COUNT && (
-            <button className={styles.showMore} onClick={() => setShowAll(false)}>
-              згорнути ↑
-            </button>
+          {entries.length > VISIBLE_COUNT && (
+            <>
+              <div className={`${styles.extraItems} ${showAll ? styles.extraItemsOpen : ''}`}>
+                {entries.slice(VISIBLE_COUNT).map(({ cat, amount }) => (
+                  <div key={cat} className={styles.legendItem}>
+                    <span className={styles.dot} style={{ background: colorOf(cat) }} />
+                    <span className={styles.legendName}>{cat}</span>
+                    <span className={styles.legendAmount}>{fmt(amount)} ₴</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                className={styles.showMore}
+                onClick={() => setShowAll(v => !v)}
+              >
+                <svg
+                  width="10" height="10" viewBox="0 0 10 10" fill="none"
+                  className={`${styles.showMoreChevron} ${showAll ? styles.showMoreChevronOpen : ''}`}
+                >
+                  <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {showAll ? 'сховати' : `ще ${entries.length - VISIBLE_COUNT}`}
+              </button>
+            </>
           )}
         </div>
       </div>

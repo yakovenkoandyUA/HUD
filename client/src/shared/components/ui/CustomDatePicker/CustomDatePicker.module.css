@@ -28,7 +28,7 @@
 .header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 16px 0 12px;
 }
 
@@ -40,8 +40,6 @@
   border: none;
   border-radius: 8px;
   color: var(--text2);
-  font-size: 20px;
-  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -50,29 +48,70 @@
 }
 .navBtn:hover { background: var(--surface2); color: var(--text); }
 
-.monthLabel {
+.monthLabelBtn {
   flex: 1;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
   font-family: var(--font-ui);
   font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
 }
+.monthLabelBtn:hover { background: var(--surface); color: var(--accent); }
+
+.monthLabelChevron {
+  color: var(--text3);
+  transition: transform 0.22s ease;
+  flex-shrink: 0;
+}
+.monthLabelChevronUp { transform: rotate(180deg); }
 
 .closeBtn {
   flex-shrink: 0;
   background: none;
   border: none;
   color: var(--text3);
-  font-size: 22px;
-  line-height: 1;
   cursor: pointer;
-  padding: 4px 2px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   transition: color 0.15s;
 }
 .closeBtn:hover { color: var(--text); }
+
+/* ── Month/Year wheel picker ── */
+.monthPickerWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.monthPickerBody {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
 
 /* ── Weekday labels ── */
 .weekdays {
@@ -94,13 +133,29 @@
   padding: 4px 0;
 }
 
-/* ── Calendar grid ── */
+/* ── Calendar grid (swipeable carousel) ── */
+.gridWrap {
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+/* 3 grids side by side; JS sets translateX to show the center one */
+.gridContainer {
+  display: flex;
+  width: 300%;
+  will-change: transform;
+}
+
+/* Each grid = 1/3 of container = 100% of visible gridWrap */
 .grid {
+  flex-shrink: 0;
+  width: 33.3333%;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
 }
 
+/* ── Day cells ── */
 .cell {
   aspect-ratio: 1;
   display: flex;
@@ -167,5 +222,5 @@
   cursor: pointer;
   transition: opacity 0.15s;
 }
-.confirmBtn:hover   { opacity: 0.88; }
+.confirmBtn:hover    { opacity: 0.88; }
 .confirmBtn:disabled { opacity: 0.4; cursor: default; }

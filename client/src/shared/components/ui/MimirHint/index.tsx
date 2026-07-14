@@ -131,6 +131,8 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
   // oneTime хінти не залежать від денного лічильника — показуються завжди до dismiss
   const [dismissed, setDismissed] = useState(() => oneTime ? false : isDismissedToday())
   const [hiding, setHiding] = useState(false)
+  // true якщо поточний показ — останній дозволений сьогодні
+  const isLastShow = useState(() => !oneTime && getDailyRecord().count === MAX_DAILY_SHOWS - 1)[0]
 
   const dismissedRef = useRef(dismissed)
   dismissedRef.current = dismissed
@@ -191,7 +193,7 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
         />
         {/* key forces re-mount → bubble entrance animation fires on mode change */}
         <div key={mimirMode} className={styles.bubble}>
-          <p className={styles.text}>{hint}</p>
+          <p className={styles.text}>{isLastShow ? `${hint} Нагадую востаннє на сьогодні.` : hint}</p>
           <span className={styles.signature}>— Мімір</span>
           {showUpgrade ? (
             <button

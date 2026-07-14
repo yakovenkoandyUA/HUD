@@ -1,6 +1,5 @@
 /* ── Floating pill nav ── */
 .nav {
-  /* min-width: none; */
   position: fixed;
   bottom: calc(16px + env(safe-area-inset-bottom));
   left: 50%;
@@ -10,6 +9,7 @@
 
   display: flex;
   align-items: center;
+  justify-content: space-around;
   gap: 2px;
   padding: 3px 12px;
   border-radius: 100px;
@@ -191,26 +191,32 @@
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   width: 100%;
+  max-width: none;
+  justify-content: stretch;
 }
 
 .profileItem {
   flex: 1;
+  min-width: 0;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   border-radius: 0;
   width: auto;
   height: auto;
-  padding: 10px 11px 12px;
+  padding: 10px 3px 12px;
 }
 
 .tabLabel {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   line-height: 1;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .profileItem .icon {
@@ -228,12 +234,13 @@
   left: 0;
   transform: none;
   width: 100%;
+  max-width: none;
   border-radius: 0;
   border-top: 1px solid var(--border);
   border-bottom: none;
   border-left: none;
   border-right: none;
-  padding: 15px 5px;
+  padding:7px 5px;
   gap: 0;
   justify-content: space-around;
   box-shadow: 0 -4px 24px rgba(0,0,0,0.14);
@@ -244,12 +251,13 @@
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 5px 6px 4px;
+  padding: 5px 3px 4px;
   border-radius: 8px;
   color: var(--text3);
   transition: color 0.18s, background 0.18s;
   text-decoration: none;
   flex: 1;
+  min-width: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -263,12 +271,15 @@
 
 .classicLabel {
   font-family: var(--font-ui);
-  font-size: 8.5px;
+  font-size: 8px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   line-height: 1;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* ── Active-tab label for pill / hub styles ── */
@@ -285,8 +296,6 @@
 /* ── All-labels mode: tighten spacing so pill fits on screen ── */
 .navAllLabels {
   gap: 10px;
-  padding-left: 6px;
-  padding-right: 6px;
 }
 .navAllLabels .itemWithLabel {
   padding-left: 5px;

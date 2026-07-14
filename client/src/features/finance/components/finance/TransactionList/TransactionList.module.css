@@ -519,3 +519,12 @@
   padding: 12px 0 4px;
   margin: 0;
 }
+
+@keyframes itemSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.itemNew {
+  animation: itemSlideIn 220ms ease-out both;
+}

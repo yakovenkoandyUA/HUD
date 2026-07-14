@@ -147,9 +147,28 @@
   flex-shrink: 0;
 }
 
+/* ── Expandable extra items ── */
+
+.extraItems {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 300ms ease-in-out, opacity 220ms ease-in-out;
+}
+.extraItemsOpen {
+  max-height: 400px;
+  opacity: 1;
+}
+
 /* ── Show more / collapse ── */
 
 .showMore {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-family: var(--font-ui);
   font-size: 12px;
   color: var(--text3);
@@ -159,8 +178,17 @@
   padding: 2px 0;
   text-align: left;
   transition: color 0.15s;
+  margin-top: 2px;
 }
 .showMore:hover { color: var(--text2); }
+
+.showMoreChevron {
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+.showMoreChevronOpen {
+  transform: rotate(180deg);
+}
 
 /* ── Insight ── */
 

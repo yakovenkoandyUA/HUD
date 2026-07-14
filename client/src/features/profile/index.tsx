@@ -5,14 +5,13 @@ import { useFamilyStore } from '@/shared/store/familyStore'
 import MeTab from './MeTab'
 import WalletTab from './WalletTab'
 import PlanTab from './PlanTab'
-import AdminTab from './AdminTab'
 import YearbookTab from './YearbookTab'
 import SpacesTab from './SpacesTab'
 import MeMimir from './MeMimir'
 import AchievementsTab from '@/features/achievements'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'mimir' | 'achievements' | 'admin'
+type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'mimir' | 'achievements'
 
 /**
  * ProfilePage
@@ -67,7 +66,6 @@ const ProfilePage: React.FC = () => {
           {activeTab === 'spaces'   && <SpacesTab />}
           {activeTab === 'mimir'        && <MeMimir />}
           {activeTab === 'achievements' && <AchievementsTab />}
-          {activeTab === 'admin'        && activeProfile.role === 'admin' && <AdminTab />}
         </div>
       </div>
     </div>

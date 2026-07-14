@@ -214,6 +214,8 @@ function taskBody(item: Partial<UnifiedTodo> & { type?: string }): Record<string
       repeatDay:       item.repeatDay,
       repeatStartDate: item.repeatStartDate,
     }),
+    ...(item.imageUrls?.length      && { imageUrls:      item.imageUrls }),
+    ...(item.imagePublicIds?.length && { imagePublicIds: item.imagePublicIds }),
   }
 }
 
@@ -488,7 +490,13 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     set(s => ({ items: s.items.map(i => i.id === id ? { ...i, ...updates } : i) }))
     if (!getToken() || !isBackendConfigured()) return
 
-    const body: Record<string, unknown> = { ...updates }
+    // undefined → null: JSON.stringify strips undefined, so fields like dueDate/dueTime
+    // that are intentionally cleared would never reach the backend otherwise
+    const body: Record<string, unknown> = {}
+    for (const key of Object.keys(updates as Record<string, unknown>)) {
+      const val = (updates as Record<string, unknown>)[key]
+      body[key] = val === undefined ? null : val
+    }
     if (updates.labels !== undefined) {
       body.labels = (updates.labels ?? []).map(l => l.id)
     }
