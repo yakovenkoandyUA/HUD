@@ -32,7 +32,7 @@ const LegalDocModal: React.FC<LegalDocModalProps> = ({ isOpen, onClose, onConfir
   const overlayRef = useRef<HTMLDivElement>(null)
   const bodyRef    = useRef<HTMLDivElement>(null)
 
-  const sheetRef = useSwipeToDismiss(onClose, { overlayRef, bodyRef })
+  const sheetRef = useSwipeToDismiss(onClose, { enabled: mounted, overlayRef, bodyRef })
 
   useModalHistory(onClose, isOpen)
 

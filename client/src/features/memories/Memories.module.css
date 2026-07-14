@@ -79,28 +79,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 40px 24px;
+  padding: 48px 24px 40px;
   color: var(--text3);
 }
 
 .emptyIcon {
-  font-size: 48px;
-  margin-bottom: 4px;
-}
-
-.emptyMimir {
-  width: 170px;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
-  animation: emptyMimirFloat 4.5s ease-in-out infinite;
-}
-
-@keyframes emptyMimirFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-7px); }
+  color: var(--text3);
+  opacity: 0.45;
+  margin-bottom: 8px;
 }
 
 .emptyTitle {

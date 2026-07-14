@@ -357,7 +357,11 @@ const MemoriesScreen: React.FC = () => {
             </div>
           ) : filteredMemories.length === 0 ? (
             <div className={styles.empty}>
-              <img src="/mimir/mimir-empty-memories.png" alt="" className={styles.emptyMimir} draggable={false} />
+              <svg className={styles.emptyIcon} width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                <rect x="6" y="14" width="60" height="44" rx="6" stroke="currentColor" strokeWidth="2.5"/>
+                <circle cx="22" cy="28" r="5" stroke="currentColor" strokeWidth="2.5"/>
+                <path d="M6 44l16-14 12 11 8-8 24 23" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі ще немає спогадів' : 'Ще немає спогадів'}</p>
               <p className={styles.emptyHint}>{selectedSpaceId ? 'Додай перший!' : 'Додай перший!'}</p>
             </div>
