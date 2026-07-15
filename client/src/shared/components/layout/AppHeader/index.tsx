@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+
 import { useNavigate } from 'react-router-dom'
 import MimirLogo from '@/assets/mimir-logo.svg?react'
 import VerificationBanner from '@/shared/components/ui/VerificationBanner'
@@ -10,6 +11,7 @@ import { useCanUseFeature } from '@/shared/hooks/usePlan'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
 import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
+import FeedbackSheet from '@/shared/components/ui/FeedbackSheet'
 import styles from './AppHeader.module.css'
 
 /**
@@ -42,6 +44,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const { isInstallable, isIOS } = usePwaInstall()
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
   const showInstallDot = !isStandalone && (isInstallable || isIOS)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
@@ -70,6 +73,18 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
 
         <div className={styles.right}>
           {right}
+          <button
+            type="button"
+            className={styles.feedbackBtn}
+            onClick={() => setShowFeedback(true)}
+            aria-label="Надіслати фідбек"
+          >
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9Z"/>
+              <line x1="7" y1="8" x2="13" y2="8"/>
+              <line x1="7" y1="11" x2="10" y2="11"/>
+            </svg>
+          </button>
           <button
             type="button"
             className={styles.aiBtn}
@@ -114,6 +129,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
       <VerificationBanner />
 
       <AiChatSheet isOpen={showChat} onClose={() => setShowChat(false)} />
+      <FeedbackSheet isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
     </>
   )
 }

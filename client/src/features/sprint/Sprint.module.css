@@ -107,7 +107,7 @@
   justify-content: center;
   padding: 16px;
   border-bottom: none;
-  border: 1.5px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+  border: 1.5px dashed var(--tint-accent-xl);
   border-radius: 12px;
   margin: 16px 0 8px;
   color: var(--accent);
@@ -117,7 +117,7 @@
 }
 .addRowEmpty:active {
   opacity: 1;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: var(--tint-accent-sm);
 }
 
 

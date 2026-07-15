@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
 import { usePlan } from '@/shared/hooks/usePlan'
 import { useProfileStore } from '@/shared/store/profileStore'
-import { useUiStore } from '@/shared/store/uiStore'
-import { createBillingCheckout, submitWayForPayForm } from '@/shared/services/billing'
 import type { PlanId } from '@/shared/config/plans'
-import type { PaidPlanId, BillingInterval } from '@/shared/services/billing'
 import styles from './PlanTab.module.css'
+
+const MONOBANK_JAR = 'https://send.monobank.ua/jar/5kPnR95Ve3'
 
 type BillingCycle = 'monthly' | 'annual'
 
@@ -110,27 +109,14 @@ function FeatureValue({ value }: { value: string | boolean }) {
  * поточний план користувача з profileStore, і таблицю порівняння функцій.
  */
 const PlanTab: React.FC = () => {
-  const [cycle, setCycle]           = useState<BillingCycle>('monthly')
-  const [expanded, setExpanded]     = useState(false)
-  const [loadingPlan, setLoadingPlan] = useState<PaidPlanId | null>(null)
-  const { plan: currentPlan }       = usePlan()
-  const { fetchProfiles }           = useProfileStore()
-  const { showToast }               = useUiStore()
+  const [cycle, setCycle]   = useState<BillingCycle>('monthly')
+  const [expanded, setExpanded] = useState(false)
+  const { plan: currentPlan }   = usePlan()
+  const { fetchProfiles }       = useProfileStore()
   void fetchProfiles // used in PaymentResult, kept here for store subscription
 
-  const handleUpgrade = async (planId: PaidPlanId) => {
-    if (loadingPlan) return
-    setLoadingPlan(planId)
-    try {
-      const interval: BillingInterval = cycle === 'annual' ? 'year' : 'month'
-      const checkout = await createBillingCheckout(planId, interval)
-      submitWayForPayForm(checkout.payment.actionUrl, checkout.payment.fields)
-      // After submit the browser navigates away — no cleanup needed
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Помилка запиту'
-      showToast(msg, 'error')
-      setLoadingPlan(null)
-    }
+  const handleUpgrade = () => {
+    window.open(MONOBANK_JAR, '_blank', 'noopener,noreferrer')
   }
 
   const visibleFeatures = expanded ? FEATURES : FEATURES.slice(0, 7)
@@ -206,20 +192,10 @@ const PlanTab: React.FC = () => {
               <button
                 type="button"
                 className={`${styles.cta} ${isCurrent ? styles.ctaCurrent : styles.ctaUpgrade}`}
-                disabled={isCurrent || plan.id === 'free' || loadingPlan !== null}
-                onClick={() => {
-                  if (!isCurrent && plan.id !== 'free') {
-                    void handleUpgrade(plan.id as PaidPlanId)
-                  }
-                }}
+                disabled={isCurrent || plan.id === 'free'}
+                onClick={() => { if (!isCurrent && plan.id !== 'free') handleUpgrade() }}
               >
-                {loadingPlan === plan.id ? (
-                  <span className={styles.ctaSpinner} aria-label="Завантаження" />
-                ) : isCurrent ? (
-                  'Поточний план'
-                ) : (
-                  plan.ctaLabel
-                )}
+                {isCurrent ? 'Поточний план' : plan.ctaLabel}
               </button>
             </div>
           )
@@ -272,7 +248,7 @@ const PlanTab: React.FC = () => {
 
       {/* ── Footer note ── */}
       <p className={styles.footerNote}>
-        Платежі обробляються через WayForPay. Скасування підписки — в будь-який момент.
+        Оплата через Monobank — після підтвердження платежу план активується вручну.
       </p>
     </div>
   )

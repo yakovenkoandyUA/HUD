@@ -420,7 +420,9 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 
 - [x] **Міграція Sprint** — `Sprint.module.css`, `AddSprintItemModal.module.css`, `TaskDetailModal.module.css`, `PriorityBadge.module.css`: всі `color-mix(in srgb, ...)` → семантичні токени
 - [x] **inputError** — `rgba(184,58,45,0.08)` → `var(--panel-danger-bg)` в `global.css`
-- [ ] **Залишок міграції** — ще ~60 CSS файлів мають `color-mix(in srgb, var(--negative)...)` паттерни; мігрувати по мірі редагування файлів
+- [x] **Повна міграція color-mix** — автоматична (Python-скрипт `scripts/migrate-color-mix.py`): 15 нових токенів в `global.css`, 94 заміни у 37 файлах. Залишились тільки виправдані `color-mix()`: gradient-stop значення, hex-кольори в WeatherModal, dynamic CSS vars (`--space-color`, `--cat-color`, etc.)
+
+  Нові токени: `--tint-accent-xs/sm/10/md/lg/xl`, `--accent-wash`, `--accent-wash-md`, `--accent-border-strong`, `--tint-gold-sm/md`, `--border-alpha-50/60`, `--tint-muted`, `--tint-second`
 
 ---
 
@@ -430,5 +432,5 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 |--------|--------|
 | Верифікація email | ✅ Закрито (mimir-hud.tech + Resend) |
 | MongoDB M10+ | 🟢 Некритично поки < 100 юзерів |
-| Семантичні токени (міграція CSS) | 🟡 ~60 файлів ще мають color-mix patterns |
+| Семантичні токени (міграція CSS) | ✅ Закрито — 15 нових токенів, 94 заміни у 37 файлах |
 | Усі інші | ✅ Закрито |

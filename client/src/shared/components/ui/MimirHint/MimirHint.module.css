@@ -412,5 +412,5 @@
 .modeBtnOn {
   border-color: var(--accent);
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: var(--tint-accent-10);
 }
