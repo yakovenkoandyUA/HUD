@@ -10,8 +10,8 @@
   gap: 6px;
   font-size: 12px;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  background: var(--tint-accent-10);
+  border: 1px solid var(--tint-accent-lg);
   border-radius: 8px;
   padding: 8px 10px;
   margin: 0;
@@ -104,7 +104,7 @@
 }
 
 .status_watching {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--tint-accent-md);
   color: var(--accent);
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
 }

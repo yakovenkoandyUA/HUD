@@ -193,7 +193,7 @@
   -webkit-line-clamp: 1;
 }
 .addCard:hover {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: var(--tint-accent-sm);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -222,7 +222,7 @@
   transition: background 0.14s, border-color 0.14s, color 0.14s;
 }
 .emptyCard:hover {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: var(--tint-accent-sm);
   border-color: var(--accent);
   color: var(--accent);
 }

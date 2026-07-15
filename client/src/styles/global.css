@@ -65,6 +65,35 @@
   --tint-warning: color-mix(in srgb, var(--orange)   12%, transparent);
   --tint-gold:    color-mix(in srgb, var(--gold)     12%, transparent);
 
+  /* ── Accent tint scale (5–40%) ── */
+  --tint-accent-xs:  color-mix(in srgb, var(--accent)  5%, transparent);
+  --tint-accent-sm:  color-mix(in srgb, var(--accent)  8%, transparent);
+  --tint-accent-10:  color-mix(in srgb, var(--accent) 10%, transparent);
+  --tint-accent-md:  color-mix(in srgb, var(--accent) 15%, transparent);
+  --tint-accent-lg:  color-mix(in srgb, var(--accent) 30%, transparent);
+  --tint-accent-xl:  color-mix(in srgb, var(--accent) 40%, transparent);
+
+  /* ── Accent overlaid on surface ── */
+  --accent-wash:     color-mix(in srgb, var(--accent)  6%, var(--surface));
+  --accent-wash-md:  color-mix(in srgb, var(--accent) 10%, var(--surface));
+
+  /* ── Accent overlaid on border (strong) ── */
+  --accent-border-strong: color-mix(in srgb, var(--accent) 30%, var(--border));
+
+  /* ── Gold tint scale ── */
+  --tint-gold-sm:    color-mix(in srgb, var(--gold) 12%, var(--surface));
+  --tint-gold-md:    color-mix(in srgb, var(--gold) 30%, transparent);
+
+  /* ── Border with transparency ── */
+  --border-alpha-50: color-mix(in srgb, var(--border) 50%, transparent);
+  --border-alpha-60: color-mix(in srgb, var(--border) 60%, transparent);
+
+  /* ── Muted text tint (--text3 base) ── */
+  --tint-muted:      color-mix(in srgb, var(--text3) 12%, transparent);
+
+  /* ── Second color tint ── */
+  --tint-second:     color-mix(in srgb, var(--second) 14%, var(--surface2));
+
   /* ── Interaction ── */
   --tap-bg:    rgba(255, 255, 255, 0.05);
   --focus-ring: var(--accent);

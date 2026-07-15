@@ -34,8 +34,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text3);
-  background: color-mix(in srgb, var(--gold) 12%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  background: var(--tint-gold-sm);
+  border: 1px solid var(--tint-gold-md);
   padding: 3px 8px;
   border-radius: 4px;
 }
@@ -127,7 +127,7 @@
 .table td {
   padding: 7px 10px;
   color: var(--text2);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  border-bottom: 1px solid var(--border-alpha-50);
   vertical-align: top;
 }
 .table tr:last-child td { border-bottom: none; }

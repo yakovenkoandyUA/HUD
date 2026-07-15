@@ -4,7 +4,7 @@
   gap: 8px;
   padding: 8px 16px;
   background: color-mix(in srgb, var(--gold) 12%, var(--bg2));
-  border-bottom: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  border-bottom: 1px solid var(--tint-gold-md);
 }
 
 .icon {

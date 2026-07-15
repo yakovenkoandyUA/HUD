@@ -774,7 +774,7 @@
 .watchedWithChipOn {
   border-color: var(--accent);
   color: var(--text);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--tint-accent);
 }
 
 .watchedWithAvatar {

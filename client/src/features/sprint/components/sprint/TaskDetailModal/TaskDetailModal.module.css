@@ -263,7 +263,7 @@
 .deadlineBadgePart + .deadlineBadgePart {
   border-top: 1px solid var(--border);
 }
-.deadlineBadgePart:active { color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.deadlineBadgePart:active { color: var(--accent); background: var(--accent-wash); }
 
 .deadlineBadgeSep { display: none; }
 
@@ -1263,7 +1263,7 @@
 }
 .timeOfDayBtn:hover { background: var(--surface); }
 .timeOfDayBtnActive {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--tint-accent-md);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -1340,7 +1340,7 @@
 }
 
 .calNavBtn:hover {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--tint-accent);
   color: var(--accent);
 }
 
@@ -1390,7 +1390,7 @@
 }
 
 .calCellMissed {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--tint-accent-md);
   color: color-mix(in srgb, var(--accent) 70%, var(--text3));
   text-decoration: line-through;
   text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent);

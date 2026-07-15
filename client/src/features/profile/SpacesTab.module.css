@@ -581,7 +581,7 @@
   flex: 1;
   padding: 13px;
   background: none;
-  border: 1.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border: 1.5px solid var(--tint-accent-lg);
   border-radius: 10px;
   font-size: 14px;
   color: var(--accent);
@@ -589,7 +589,7 @@
   transition: background 0.15s ease;
 }
 .deleteBtn:active {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: var(--tint-accent-sm);
 }
 
 /* ── Archived accordion ── */

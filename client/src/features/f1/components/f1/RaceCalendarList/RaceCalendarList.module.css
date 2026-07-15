@@ -105,7 +105,7 @@
 
 .rowNext {
   opacity: 1;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: var(--tint-accent-sm);
   border-left: 2px solid var(--accent);
   padding-left: 10px;
   border-radius: 6px;

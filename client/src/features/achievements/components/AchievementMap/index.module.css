@@ -42,7 +42,7 @@
 .infoBtnActive {
   color: var(--accent);
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: var(--tint-accent-10);
 }
 
 /* ── Info tooltip ── */
@@ -57,7 +57,7 @@
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border: 1px solid var(--accent-border-strong);
   border-radius: 10px;
   animation: fadeIn 0.15s ease;
 }
@@ -249,7 +249,7 @@
 
 .nodePopup {
   background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border: 1px solid var(--accent-border-strong);
   border-radius: 10px;
   padding: 10px 12px;
   display: flex;
@@ -290,7 +290,7 @@
 .nodePopupTrack {
   flex: 1;
   height: 3px;
-  background: color-mix(in srgb, var(--border) 60%, transparent);
+  background: var(--border-alpha-60);
   border-radius: 2px;
   overflow: hidden;
 }

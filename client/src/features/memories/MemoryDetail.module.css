@@ -1436,7 +1436,7 @@
 	color: var(--positive);
 }
 .placeDetailsClosed {
-	background: color-mix(in srgb, var(--text3) 12%, transparent);
+	background: var(--tint-muted);
 	color: var(--text3);
 }
 

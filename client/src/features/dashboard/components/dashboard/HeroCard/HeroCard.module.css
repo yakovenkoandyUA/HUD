@@ -2,8 +2,8 @@
 
 .balanceCard {
   background: var(--accent-soft);
-  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-top: 1px solid var(--tint-accent-lg);
+  border-bottom: 1px solid var(--tint-accent-lg);
   padding: 10px 16px 0;
   display: flex;
   flex-direction: column;
@@ -46,7 +46,7 @@
 
 .statStrip {
   display: flex;
-  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-top: 1px solid var(--tint-accent-lg);
 }
 
 .statItem {

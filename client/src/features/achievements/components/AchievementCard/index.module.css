@@ -12,7 +12,7 @@
 }
 
 .cardUnlocked {
-	border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+	border-color: var(--accent-border-strong);
 	background: color-mix(in srgb, var(--accent) 4%, var(--surface));
 }
 

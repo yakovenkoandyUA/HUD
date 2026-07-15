@@ -303,7 +303,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 4px 20px var(--tint-accent-xl);
   transition: opacity 0.15s, transform 0.15s;
 }
 .generateBtn:active {

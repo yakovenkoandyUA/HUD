@@ -48,7 +48,7 @@
 }
 
 .rowRequired {
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  background: var(--tint-accent-xs);
 }
 
 .fieldName {
@@ -94,7 +94,7 @@
 
 .selectTriggerOpen {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  background: var(--accent-wash);
 }
 
 .selectTriggerPlaceholder .selectTriggerLabel {

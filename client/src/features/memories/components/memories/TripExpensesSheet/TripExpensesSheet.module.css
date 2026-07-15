@@ -159,7 +159,7 @@
 }
 .item:last-child { border-bottom: none; }
 .item:active { background: var(--surface); }
-.itemChecked { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.itemChecked { background: var(--tint-accent-xs); }
 
 .itemBody {
   flex: 1;

@@ -245,7 +245,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: color-mix(in srgb, var(--second) 14%, var(--surface2));
+  background: var(--tint-second);
   border: 1px solid color-mix(in srgb, var(--second) 30%, transparent);
   border-radius: 20px;
   padding: 3px 7px;

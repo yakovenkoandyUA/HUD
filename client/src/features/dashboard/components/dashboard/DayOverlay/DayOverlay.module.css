@@ -126,7 +126,7 @@
 .section:last-child { border-bottom: none; }
 
 .sectionCurrent {
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  background: var(--tint-accent-xs);
 }
 
 .sectionLabel {
@@ -176,7 +176,7 @@
 }
 .moodBtn:hover { background: var(--surface); transform: translateY(-2px); }
 .moodBtnActive {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--tint-accent);
   border-color: var(--accent);
   transform: translateY(-2px);
 }

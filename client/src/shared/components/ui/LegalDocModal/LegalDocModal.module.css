@@ -192,7 +192,7 @@
 .docLink {
   color: var(--accent);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-decoration-color: var(--tint-accent-xl);
 }
 
 .docList {

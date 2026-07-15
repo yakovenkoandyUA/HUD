@@ -60,7 +60,7 @@
 .exportBtn:hover:not(:disabled) {
   background: color-mix(in srgb, var(--accent) 10%, var(--bg2));
   color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  border-color: var(--tint-accent-lg);
 }
 .exportBtn:disabled { opacity: 0.6; cursor: default; }
 
@@ -129,8 +129,8 @@
   color: var(--text2);
 }
 .legalCheckDone {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--tint-accent);
+  border-color: var(--tint-accent-xl);
   color: var(--accent);
   cursor: default;
 }

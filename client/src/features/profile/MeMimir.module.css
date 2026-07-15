@@ -48,7 +48,7 @@
   width: auto;
   height: 190px;
   object-fit: contain;
-  filter: drop-shadow(0 8px 28px color-mix(in srgb, var(--accent) 30%, transparent));
+  filter: drop-shadow(0 8px 28px var(--tint-accent-lg));
   animation: portraitFloat 4s ease-in-out infinite;
 }
 
@@ -94,7 +94,7 @@
   background: color-mix(in srgb, var(--bg) 50%, transparent);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
-  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border: 1px solid var(--border-alpha-60);
   border-radius: 50%;
   color: var(--accent);
   cursor: pointer;
@@ -236,7 +236,7 @@
   padding: 10px 14px;
   background: color-mix(in srgb, var(--bg) 70%, transparent);
   border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border-bottom: 1px solid var(--border-alpha-60);
   cursor: pointer;
   text-align: left;
   transition: background 0.15s;
@@ -322,7 +322,7 @@
 .freqTabs {
   display: flex;
   width: 100%;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  border-bottom: 1px solid var(--border-alpha-50);
 }
 
 .freqTab {
@@ -354,7 +354,7 @@
 
 .sectionDivider {
   height: 1px;
-  background: color-mix(in srgb, var(--border) 60%, transparent);
+  background: var(--border-alpha-60);
   margin: 0 -16px;
 }
 
@@ -401,7 +401,7 @@
 
 .aiCardActive {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  background: var(--accent-wash);
 }
 
 .aiCardIcon {

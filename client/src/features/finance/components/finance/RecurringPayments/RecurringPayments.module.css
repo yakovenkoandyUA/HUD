@@ -422,7 +422,7 @@
 .reminderChip:hover { border-color: var(--accent); color: var(--accent); }
 
 .reminderChipActive {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--tint-accent-md);
   border-color: var(--accent);
   color: var(--accent);
   font-weight: 600;
@@ -431,7 +431,7 @@
 /* ── Confirm button ── */
 .confirmBtn {
   flex-shrink: 0;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--tint-accent-md);
   border: 1px solid var(--accent);
   border-radius: 8px;
   padding: 4px 10px;

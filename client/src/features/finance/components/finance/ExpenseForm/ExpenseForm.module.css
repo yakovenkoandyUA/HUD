@@ -47,7 +47,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text3);
-  background: color-mix(in srgb, var(--text3) 12%, transparent);
+  background: var(--tint-muted);
   border: 1px solid var(--border2);
   border-radius: 3px;
   padding: 1px 5px;

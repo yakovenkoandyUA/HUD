@@ -11,7 +11,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: color-mix(in srgb, var(--gold) 12%, var(--surface));
+  background: var(--tint-gold-sm);
   border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
   border-radius: 10px;
   font-family: var(--font-ui);
@@ -58,7 +58,7 @@
   font-size: 9px;
   font-weight: 700;
   color: var(--positive);
-  background: color-mix(in srgb, var(--positive) 14%, transparent);
+  background: var(--tint-success);
   padding: 1px 5px;
   border-radius: 6px;
   letter-spacing: 0.04em;
@@ -84,7 +84,7 @@
 
 .cardCurrent {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  background: var(--accent-wash);
 }
 
 /* per-plan accent tints */
@@ -93,7 +93,7 @@
 .cardCouple   { border-color: color-mix(in srgb, var(--second) 60%, var(--border)); }
 .cardFamily   { border-color: color-mix(in srgb, var(--gold) 60%, var(--border)); }
 
-.cardPersonal.cardCurrent { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.cardPersonal.cardCurrent { border-color: var(--accent); background: var(--accent-wash); }
 .cardCouple.cardCurrent   { border-color: var(--second); background: color-mix(in srgb, var(--second) 6%, var(--surface)); }
 .cardFamily.cardCurrent   { border-color: var(--gold);   background: color-mix(in srgb, var(--gold) 6%, var(--surface)); }
 

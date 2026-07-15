@@ -127,34 +127,68 @@ F1 banner: **dark** (arctic — світлий акцент на темному 
 
 ## Семантичні токени
 
-Всі ці змінні визначені в `:root` у `global.css` і перевизначаються в темах де потрібно:
+Всі ці змінні визначені в `:root` у `global.css`. **Міграція завершена** — `color-mix()` в компонентах замінено на токени автоматично (скрипт `scripts/migrate-color-mix.py`).
 
 ```css
-/* Панелі */
---panel-danger-bg, --panel-danger-border
---panel-success-bg, --panel-success-border
---panel-warning-bg, --panel-warning-border
---panel-accent-bg, --panel-accent-border
+/* ── Панелі (колір + surface) ── */
+--panel-danger-bg,   --panel-danger-border
+--panel-success-bg,  --panel-success-border
+--panel-warning-bg,  --panel-warning-border
+--panel-accent-bg,   --panel-accent-border
 --panel-muted-bg
 
-/* Поверхні */
+/* ── Поверхні ── */
 --card-bg, --card-bg-hover   /* cards */
---nav-bg, --nav-border       /* bottom nav */
+--nav-bg,  --nav-border      /* bottom nav */
 
-/* Tints (прозорі) */
---tint-accent, --tint-gold
+/* ── Base tints (12–14%) ── */
+--tint-accent    /* accent  12% transparent */
+--tint-danger    /* negative 12% transparent */
+--tint-success   /* positive 14% transparent */
+--tint-warning   /* orange   12% transparent */
+--tint-gold      /* gold     12% transparent */
+--tint-muted     /* text3    12% transparent */
 
-/* Взаємодія */
+/* ── Accent tint scale ── */
+--tint-accent-xs   /* 5%  — ghost, ледь помітний */
+--tint-accent-sm   /* 8%  — hover bg */
+--tint-accent-10   /* 10% */
+--tint-accent-md   /* 15% — active bg */
+--tint-accent-lg   /* 30% — strong, focus ring */
+--tint-accent-xl   /* 40% — selected/pressed */
+
+/* ── Accent-on-surface ── */
+--accent-wash      /* accent  6% + surface */
+--accent-wash-md   /* accent 10% + surface */
+--accent-border-strong  /* accent 30% + border */
+
+/* ── Gold tints ── */
+--tint-gold-sm   /* gold 12% + surface */
+--tint-gold-md   /* gold 30% transparent */
+
+/* ── Border alpha ── */
+--border-alpha-50   /* border 50% transparent */
+--border-alpha-60   /* border 60% transparent */
+
+/* ── Second color ── */
+--tint-second   /* second 14% + surface2 */
+
+/* ── Взаємодія ── */
 --tap-bg       /* press/tap feedback — rgba(0,0,0,0.05) для світлих тем */
 --focus-ring   /* keyboard focus outline = var(--accent) */
 ```
 
 Завжди використовуй семантичні токени замість `color-mix()` в нових компонентах:
 ```css
-/* ❌ старий патерн — мігруємо по мірі редагування */
+/* ❌ */
 background: color-mix(in srgb, var(--negative) 8%, var(--surface));
-/* ✅ новий */
+/* ✅ */
 background: var(--panel-danger-bg);
+
+/* ❌ */
+background: color-mix(in srgb, var(--accent) 30%, transparent);
+/* ✅ */
+background: var(--tint-accent-lg);
 ```
 
 ---
