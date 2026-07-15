@@ -128,8 +128,9 @@
   50%       { opacity: 0.15; }
 }
 
-/* ── Velvet: golden glow pulse ───────────────────────────────── */
+/* ── Velvet: Cinzel + golden glow pulse ──────────────────────── */
 :global([data-theme='velvet']) .time {
+  font-family: 'Cinzel', serif;
   color: var(--gold);
   animation: velvetGlow 3s ease-in-out infinite;
 }
@@ -138,8 +139,10 @@
   50%       { text-shadow: 0 0 10px color-mix(in srgb, var(--gold) 65%, transparent), 0 0 22px color-mix(in srgb, var(--gold) 25%, transparent); }
 }
 
-/* ── Cyber: rare glitch ──────────────────────────────────────── */
+/* ── Cyber: Orbitron + rare glitch ──────────────────────────── */
 :global([data-theme='cyber']) .time {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
   color: var(--accent);
   animation: cyberGlitch 5s infinite;
 }
@@ -151,8 +154,10 @@
   97%            { transform: none; filter: none; }
 }
 
-/* ── Noir: slow dim ──────────────────────────────────────────── */
+/* ── Noir: Special Elite + slow dim ─────────────────────────── */
 :global([data-theme='noir']) .time {
+  font-family: 'Special Elite', monospace;
+  font-size: 14px;
   animation: noirPulse 4s ease-in-out infinite;
 }
 @keyframes noirPulse {
@@ -160,7 +165,12 @@
   50%       { opacity: 0.5; }
 }
 
-/* ── Pixel: hard-step blink on colon ────────────────────────── */
+/* ── Pixel: Press Start 2P + hard-step colon ────────────────── */
+:global([data-theme='pixel']) .time {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
 :global([data-theme='pixel']) .colon {
   animation: pixelStep 1s steps(1) infinite;
 }
@@ -169,8 +179,12 @@
   50%, 99% { opacity: 0; }
 }
 
-/* ── Arctic: cold shimmer ────────────────────────────────────── */
+/* ── Arctic: Exo 2 + cold shimmer ───────────────────────────── */
 :global([data-theme='arctic']) .time {
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 0.06em;
   animation: arcticShimmer 2.5s ease-in-out infinite;
 }
 @keyframes arcticShimmer {
@@ -178,8 +192,11 @@
   50%       { filter: brightness(1.35) hue-rotate(18deg); }
 }
 
-/* ── Japan: soft sakura fade ─────────────────────────────────── */
+/* ── Japan: Cormorant Garamond + soft sakura fade ────────────── */
 :global([data-theme='japan']) .time {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-style: italic;
   animation: japanFade 2.5s ease-in-out infinite;
 }
 @keyframes japanFade {
