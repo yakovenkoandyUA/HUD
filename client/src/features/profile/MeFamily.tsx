@@ -150,12 +150,24 @@ const MeFamily: React.FC = () => {
       <div className={styles.cardPadded}>
         <div className={styles.familySearchWrap}>
           <input
-            className={styles.familySearchInput}
+            className={`${styles.familySearchInput} ${familySearch ? styles.familySearchInputWithClear : ''}`}
             type="text"
             placeholder="Пошук по логіну..."
             value={familySearch}
             onChange={e => handleFamilySearch(e.target.value)}
           />
+          {familySearch && (
+            <button
+              type="button"
+              className={styles.familySearchClear}
+              onClick={() => { setFamilySearch(''); clearSearch(); setPendingUser(null) }}
+              aria-label="Очистити пошук"
+            >
+              <svg width="12" height="12" viewBox="0 0 10 10" fill="none">
+                <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
 
           {/* Search results — pick a user to proceed */}
           {!pendingUser && familySearch && searchResults.length > 0 && (

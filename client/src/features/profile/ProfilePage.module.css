@@ -1086,6 +1086,7 @@
 
 .familySearchWrap {
   margin-top: 4px;
+  position: relative;
 }
 
 .familySearchInput {
@@ -1103,6 +1104,27 @@
 }
 .familySearchInput::placeholder { color: var(--text3); }
 .familySearchInput:focus { border-color: var(--accent); }
+.familySearchInputWithClear { padding-right: 38px; }
+
+.familySearchClear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--negative, #e05050);
+  cursor: pointer;
+  border-radius: 4px;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.familySearchClear:hover { opacity: 0.7; }
 
 .familySearchResults {
   margin-top: 6px;
