@@ -50,6 +50,9 @@ export interface IUser extends Document {
   renewalReminder7dSentAt: Date | null
   renewalReminder1dSentAt: Date | null
   downgradedAt: Date | null
+  // Manual billing (Monobank flow) — set by admin
+  planExpiresAt: Date | null
+  planExpiryWarningSentAt: Date | null
   // Account lifecycle
   accountStatus: AccountStatus
   deletedAt: Date | null
@@ -102,6 +105,9 @@ const schema = new Schema<IUser>({
   renewalReminder7dSentAt:   { type: Date, default: null },
   renewalReminder1dSentAt:   { type: Date, default: null },
   downgradedAt:              { type: Date, default: null },
+  // Manual billing (Monobank flow)
+  planExpiresAt:             { type: Date, default: null },
+  planExpiryWarningSentAt:   { type: Date, default: null },
   // Account lifecycle — safe defaults, no migration needed
   accountStatus: { type: String, enum: ['active', 'deletion_requested', 'deleted'], default: 'active' },
   deletedAt:     { type: Date, default: null },

@@ -12,6 +12,7 @@ interface AdminUser {
   createdAt: string
   plan: 'free' | 'personal' | 'couple' | 'family'
   subscriptionStatus: string
+  planExpiresAt: string | null
   familyIds: string[]
 }
 
@@ -66,6 +67,7 @@ const AdminTab: React.FC = () => {
   const [expandedId, setExpandedId]   = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [savingPlan, setSavingPlan]   = useState<string | null>(null)
+  const [savingMonths, setSavingMonths] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -95,14 +97,42 @@ const AdminTab: React.FC = () => {
         body: JSON.stringify({ plan, subscriptionStatus: plan === 'free' ? 'none' : 'active' }),
       })
       if (!res.ok) throw new Error()
+      const data = await res.json() as { plan: AdminUser['plan']; subscriptionStatus: string; planExpiresAt: string | null }
       if (!cancelled) {
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, plan, subscriptionStatus: plan === 'free' ? 'none' : 'active' } : u))
-        setExpandedId(null)
+        setUsers(prev => prev.map(u => u.id === userId
+          ? { ...u, plan: data.plan, subscriptionStatus: data.subscriptionStatus, planExpiresAt: data.planExpiresAt }
+          : u,
+        ))
       }
     } catch {
       // silent — plan didn't change
     } finally {
       if (!cancelled) setSavingPlan(null)
+    }
+    return () => { cancelled = true }
+  }
+
+  const handleExtendPlan = async (userId: string, months: number) => {
+    let cancelled = false
+    setSavingMonths(userId)
+    try {
+      const res = await authFetch(`/api/auth/admin/users/${userId}/plan`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ months }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json() as { plan: AdminUser['plan']; subscriptionStatus: string; planExpiresAt: string | null }
+      if (!cancelled) {
+        setUsers(prev => prev.map(u => u.id === userId
+          ? { ...u, planExpiresAt: data.planExpiresAt }
+          : u,
+        ))
+      }
+    } catch {
+      // silent
+    } finally {
+      if (!cancelled) setSavingMonths(null)
     }
     return () => { cancelled = true }
   }
@@ -124,6 +154,12 @@ const AdminTab: React.FC = () => {
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })
+
+  const formatExpiry = (iso: string) =>
+    new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })
+
+  const daysUntilExpiry = (iso: string) =>
+    Math.ceil((new Date(iso).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
 
   if (loading) return <p className={styles.adminEmpty}>Завантаження...</p>
   if (error)   return <p className={styles.adminEmpty}>{error}</p>
@@ -152,6 +188,9 @@ const AdminTab: React.FC = () => {
     const isExpanded = expandedId === u.id
     const isConfirming = confirmDelete === u.id
     const isSaving = savingPlan === u.id
+    const isExtending = savingMonths === u.id
+    const expiryDays = u.planExpiresAt ? daysUntilExpiry(u.planExpiresAt) : null
+    const expiryWarn = expiryDays !== null && expiryDays <= 3
 
     return (
       <div key={u.id} className={styles.adminUserRow}>
@@ -173,8 +212,14 @@ const AdminTab: React.FC = () => {
           </div>
           <span className={styles.adminUserSub}>@{u.username}{u.email ? ` · ${u.email}` : ''}</span>
           <span className={styles.adminUserDate}>{formatDate(u.createdAt)}</span>
+          {u.planExpiresAt && (
+            <span className={`${styles.adminExpiryDate} ${expiryWarn ? styles.adminExpiryWarn : ''}`}>
+              до {formatExpiry(u.planExpiresAt)}
+              {expiryWarn && expiryDays !== null && ` · ${expiryDays <= 0 ? 'прострочено' : `${expiryDays} дн`}`}
+            </span>
+          )}
 
-          {/* Expanded: plan picker + delete */}
+          {/* Expanded: plan picker + months extension + delete */}
           {isExpanded && (
             <div className={styles.adminExpanded}>
               <div className={styles.adminPlanRow}>
@@ -182,7 +227,7 @@ const AdminTab: React.FC = () => {
                   <button
                     key={p}
                     type="button"
-                    disabled={isSaving}
+                    disabled={isSaving || isExtending}
                     className={`${styles.adminPlanBtn} ${u.plan === p ? styles.adminPlanBtnActive : ''}`}
                     onClick={() => handleSetPlan(u.id, p)}
                   >
@@ -190,6 +235,21 @@ const AdminTab: React.FC = () => {
                   </button>
                 ))}
               </div>
+              {u.plan !== 'free' && (
+                <div className={styles.adminMonthRow}>
+                  {([1, 3, 6, 12] as const).map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      disabled={isSaving || isExtending}
+                      className={styles.adminMonthBtn}
+                      onClick={() => handleExtendPlan(u.id, m)}
+                    >
+                      +{m}м
+                    </button>
+                  ))}
+                </div>
+              )}
               {isConfirming ? (
                 <div className={styles.adminConfirmRow}>
                   <span className={styles.adminConfirmText}>Видалити акаунт?</span>

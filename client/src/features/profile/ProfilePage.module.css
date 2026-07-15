@@ -59,7 +59,7 @@
   background: color-mix(in srgb, var(--bg) 72%, transparent);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  border-bottom-color: color-mix(in srgb, var(--border) 50%, transparent);
+  border-bottom-color: var(--border-alpha-50);
 }
 
 /* ── Content ── */
@@ -270,13 +270,13 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 
 .sectionHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 9px 20px;
 }
 
 .sectionTitle {
@@ -320,8 +320,8 @@
 .catTabBtn:hover { color: var(--text2); }
 .catTabBtnActive {
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  background: var(--accent-wash-md);
+  border-color: var(--tint-accent-lg);
 }
 
 .catGrid {
@@ -1165,8 +1165,8 @@
   gap: 12px;
   margin: 16px 12px 8px;
   padding: 14px 14px 14px 16px;
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-wash-md);
+  border: 1px solid var(--tint-accent-xl);
   border-left: 3px solid var(--accent);
   border-radius: 10px;
 }
@@ -1627,7 +1627,7 @@
 .navStyleCard:active { transform: scale(0.97); }
 .navStyleCardActive {
   border-color: var(--accent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: 0 0 12px var(--tint-accent-lg);
 }
 
 .navPreview {
@@ -1948,7 +1948,7 @@
   font-family: var(--font-ui);
   letter-spacing: 0.06em;
   color: var(--text3);
-  background: color-mix(in srgb, var(--text3) 12%, transparent);
+  background: var(--tint-muted);
   border: 1px solid var(--border2);
   border-radius: 3px;
   padding: 1px 5px;
@@ -2246,10 +2246,43 @@
 }
 .adminPlanBtn:disabled { opacity: 0.5; cursor: default; }
 
+/* ── Admin: expiry date ── */
+.adminExpiryDate {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+.adminExpiryWarn {
+  color: var(--negative);
+  font-weight: 600;
+}
+
+/* ── Admin: month extension buttons ── */
+.adminMonthRow {
+  display: flex;
+  gap: 6px;
+}
+
+.adminMonthBtn {
+  flex: 1;
+  padding: 6px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.adminMonthBtn:hover { border-color: var(--accent); background: var(--tint-accent-sm); }
+.adminMonthBtn:disabled { opacity: 0.5; cursor: default; }
+
 .adminDeleteBtn {
   padding: 7px;
   background: none;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border: 1px solid var(--tint-accent-lg);
   border-radius: 6px;
   font-size: 12px;
   color: var(--accent);
@@ -2257,7 +2290,7 @@
   text-align: center;
   transition: background 0.15s;
 }
-.adminDeleteBtn:active { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.adminDeleteBtn:active { background: var(--tint-accent-sm); }
 
 .adminConfirmRow {
   display: flex;
@@ -2291,7 +2324,7 @@
 /* ── Admin: family group ── */
 .adminFamilyGroup {
   position: relative;
-  border: 1.5px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border: 1.5px solid var(--panel-accent-border);
   border-radius: 12px;
   padding: 8px 8px 8px;
   display: flex;
@@ -2495,7 +2528,7 @@
   transition: background 0.15s;
   font-size: 12px;
 }
-.bankSyncBtn:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.bankSyncBtn:hover:not(:disabled) { background: var(--accent-wash-md); }
 .bankSyncBtn:disabled { opacity: 0.5; cursor: default; }
 
 .bankDisconnectBtn {
@@ -2565,9 +2598,9 @@
   color: var(--accent);
   text-decoration: none;
   padding: 7px 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border: 1px solid var(--tint-accent-xl);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: var(--tint-accent-sm);
   transition: background 0.15s;
 }
 .bankApiLink:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
@@ -2663,7 +2696,7 @@
 .monoAuthSpinner {
   width: 16px;
   height: 16px;
-  border: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border: 2px solid var(--tint-accent-lg);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;

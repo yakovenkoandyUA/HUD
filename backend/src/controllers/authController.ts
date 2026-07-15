@@ -490,7 +490,7 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
   try {
     const users = await User.find(
       {},
-      { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1, plan: 1, subscriptionStatus: 1 },
+      { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1, plan: 1, subscriptionStatus: 1, planExpiresAt: 1 },
     ).sort({ createdAt: -1 })
 
     const links = await FamilyLink.find({ status: 'accepted' }, { requester: 1, recipient: 1 })
@@ -516,6 +516,7 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
         createdAt: u.createdAt,
         plan: u.plan ?? 'free',
         subscriptionStatus: u.subscriptionStatus ?? 'none',
+        planExpiresAt: u.planExpiresAt ?? null,
         familyIds: familyMap.get(id) ?? [],
       }
     }))
@@ -524,20 +525,40 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** PATCH /auth/admin/users/:id/plan — set plan + subscriptionStatus manually */
+/** PATCH /auth/admin/users/:id/plan — set plan + subscriptionStatus manually; or add months to planExpiresAt */
 export async function adminSetPlan(req: Request, res: Response): Promise<void> {
-  const { plan, subscriptionStatus } = req.body as { plan?: string; subscriptionStatus?: string }
+  const { plan, subscriptionStatus, months } = req.body as { plan?: string; subscriptionStatus?: string; months?: number }
   const validPlans = ['free', 'personal', 'couple', 'family']
   const validStatuses = ['none', 'trialing', 'active', 'past_due', 'canceled']
   if (plan && !validPlans.includes(plan)) { res.status(400).json({ error: 'Invalid plan' }); return }
   if (subscriptionStatus && !validStatuses.includes(subscriptionStatus)) { res.status(400).json({ error: 'Invalid status' }); return }
+  if (months !== undefined && (typeof months !== 'number' || months < 1 || months > 24)) {
+    res.status(400).json({ error: 'months must be 1–24' }); return
+  }
   try {
     const user = await User.findById(req.params.id)
     if (!user) { res.status(404).json({ error: 'Not found' }); return }
     if (plan) user.plan = plan as 'free' | 'personal' | 'couple' | 'family'
     if (subscriptionStatus) user.subscriptionStatus = subscriptionStatus as 'none' | 'trialing' | 'active' | 'past_due' | 'canceled'
+    if (months !== undefined) {
+      const now = new Date()
+      const base = user.planExpiresAt && user.planExpiresAt > now ? user.planExpiresAt : now
+      const next = new Date(base)
+      next.setMonth(next.getMonth() + months)
+      user.planExpiresAt = next
+      user.planExpiryWarningSentAt = null  // reset warning so admin gets notified again
+    }
+    if (plan === 'free') {
+      user.planExpiresAt = null
+      user.planExpiryWarningSentAt = null
+    }
     await user.save()
-    res.json({ id: req.params.id, plan: user.plan, subscriptionStatus: user.subscriptionStatus })
+    res.json({
+      id: req.params.id,
+      plan: user.plan,
+      subscriptionStatus: user.subscriptionStatus,
+      planExpiresAt: user.planExpiresAt ?? null,
+    })
   } catch {
     res.status(500).json({ error: 'Failed to update plan' })
   }
