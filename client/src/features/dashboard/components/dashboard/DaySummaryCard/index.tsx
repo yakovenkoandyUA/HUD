@@ -1,18 +1,26 @@
 import React from 'react'
 import styles from './DaySummaryCard.module.css'
 
+function formatNoteDate(iso: string): string {
+  const d = new Date(iso)
+  const now = new Date()
+  const isToday = d.toDateString() === now.toDateString()
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1)
+  if (isToday) return 'сьогодні'
+  if (d.toDateString() === yesterday.toDateString()) return 'вчора'
+  return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}`
+}
+
 /**
  * DaySummaryCard
  * --------------
  * Навігаційний 2×2 грід на Dashboard: Квести / Покупки / Страва / Нотатки.
- * Кожна клітинка: label + icon + primary value + secondary hint.
  *
- * Props:
  * @prop {number}   activeQuests        — кількість активних квестів
  * @prop {number}   shoppingCount       — кількість непридбаних покупок
  * @prop {string[]} meals               — назви страв на сьогодні
  * @prop {number}   notesCount          — загальна кількість нотаток
- * @prop {string}   latestNote          — перший рядок останньої нотатки
+ * @prop {string}   latestNoteDate      — updatedAt останньої нотатки (ISO)
  * @prop {() => void} onQuestsClick     — перейти до квестів
  * @prop {() => void} onShoppingClick   — перейти до покупок
  * @prop {() => void} onMealsClick      — перейти до планера
@@ -23,7 +31,7 @@ interface DaySummaryCardProps {
   shoppingCount: number
   meals: string[]
   notesCount: number
-  latestNote: string
+  latestNoteDate: string
   onQuestsClick: () => void
   onShoppingClick: () => void
   onMealsClick: () => void
@@ -31,7 +39,7 @@ interface DaySummaryCardProps {
 }
 
 const DaySummaryCard: React.FC<DaySummaryCardProps> = ({
-  activeQuests, shoppingCount, meals, notesCount, latestNote,
+  activeQuests, shoppingCount, meals, notesCount, latestNoteDate,
   onQuestsClick, onShoppingClick, onMealsClick, onNotesClick,
 }) => (
   <div className={styles.grid}>
@@ -103,8 +111,10 @@ const DaySummaryCard: React.FC<DaySummaryCardProps> = ({
       </div>
       {notesCount > 0 ? (
         <>
-          <span className={styles.cellVal}>{latestNote || `${notesCount} записів`}</span>
-          <span className={`${styles.cellSub} ${styles.cellSubNote}`}>остання нотатка</span>
+          <span className={`${styles.cellVal} ${styles.cellValNote}`}>{notesCount}</span>
+          <span className={`${styles.cellSub} ${styles.cellSubNote}`}>
+            {`записів · ${formatNoteDate(latestNoteDate)}`}
+          </span>
         </>
       ) : (
         <span className={`${styles.cellVal} ${styles.cellValDim}`}>немає</span>

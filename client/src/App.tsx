@@ -132,6 +132,7 @@ const NavGuard: React.FC = () => {
   if (pathname === '/recipes/planner') return null
   if (/^\/recipes\/.+/.test(pathname)) return null
   if (pathname === '/shopping') return null
+  if (pathname === '/notes') return null
   if (pathname === '/login') return null
   if (pathname === '/register') return null
   if (pathname === '/profile-select') return null

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
-import AppHeader from '@/shared/components/layout/AppHeader'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useNotesStore } from '@/features/notes/notesStore'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import styles from './Notes.module.css'
@@ -25,6 +24,7 @@ function formatDate(iso: string): string {
  */
 const NotesScreen: React.FC = () => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { notes, loading, fetchNotes, addNote, updateNote, deleteNote } = useNotesStore()
 
   const [query, setQuery] = useState('')
@@ -107,7 +107,15 @@ const NotesScreen: React.FC = () => {
 
   return (
     <div className={styles.screen}>
-      <AppHeader />
+      <header className={styles.header}>
+        <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span className={styles.headerTitle}>Нотатки</span>
+        <div className={styles.headerSpacer} />
+      </header>
       <div className={styles.content}>
 
         {/* Search */}

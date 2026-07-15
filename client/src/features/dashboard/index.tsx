@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
 
   const activeQuests  = sprintItems.filter(t => !isRecurring(t) && t.type !== 'shopping' && !t.done).length
   const shoppingCount = sprintItems.filter(t => t.type === 'shopping' && !t.done).length
-  const latestNote    = notes[0]?.text.split('\n')[0] ?? ''
+  const latestNoteDate = notes[0]?.updatedAt ?? ''
 
   const todayMeals = (mealPlan[today] ?? [])
     .map(id => recipes.find(r => r.id === id))
@@ -169,7 +169,7 @@ const Dashboard: React.FC = () => {
             shoppingCount={shoppingCount}
             meals={todayMeals.map(r => r.title)}
             notesCount={notes.length}
-            latestNote={latestNote}
+            latestNoteDate={latestNoteDate}
             onQuestsClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'task' } })}
             onShoppingClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'shopping' } })}
             onMealsClick={() => todayMeals.length === 1

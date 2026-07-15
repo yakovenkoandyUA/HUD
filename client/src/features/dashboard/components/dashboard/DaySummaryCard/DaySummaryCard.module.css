@@ -119,8 +119,9 @@
 /* Quest accent number must win over the generic cellVal override above */
 :global([data-theme='velvet']) .cellValQuest { font-size: 22px; line-height: 1; }
 
-/* Quest: large coloured number */
-.cellValQuest {
+/* Quest / Notes: large number */
+.cellValQuest,
+.cellValNote {
   color: var(--text);
   font-size: 22px;
   line-height: 1;
