@@ -101,7 +101,7 @@ const BASE_MENU_ITEMS: MenuItemConfig[] = [
   { id: 'appearance', label: 'Вигляд',  sub: 'Теми, стиль навігації',                Icon: PaletteIcon },
   { id: 'system',     label: 'Система', sub: 'Місто, F1, сповіщення, кеш, безпека',  Icon: GearIcon },
   { id: 'modules',    label: 'Модулі',  sub: 'Медіа, спорт та інше',                 Icon: ModulesIcon },
-  { id: 'family',     label: "Сім'я",   sub: 'Запити, учасники',                     Icon: UsersIcon },
+  { id: 'family',     label: 'Близькі',  sub: 'Запити, учасники',                     Icon: UsersIcon },
 ]
 
 const ADMIN_MENU_ITEM: MenuItemConfig = {

@@ -977,7 +977,7 @@
   padding: 10px 12px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 10px;
+
 }
 
 .familyAvatar {
@@ -1085,7 +1085,6 @@
 .familyRemoveBtn:hover { color: var(--negative); border-color: var(--negative); }
 
 .familySearchWrap {
-  position: relative;
   margin-top: 4px;
 }
 
@@ -1106,16 +1105,11 @@
 .familySearchInput:focus { border-color: var(--accent); }
 
 .familySearchResults {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  margin-top: 6px;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
-  z-index: 20;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 
 .familySearchItem {
