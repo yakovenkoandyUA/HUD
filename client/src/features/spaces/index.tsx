@@ -917,15 +917,6 @@ const SpaceDetailScreen: React.FC = () => {
               maxLength={60}
             />
 
-            <label className={styles.fieldLabel}>EMOJI</label>
-            <input
-              className={`${styles.fieldInput} ${styles.fieldInputEmoji}`}
-              value={editEmoji}
-              onChange={e => setEditEmoji(e.target.value)}
-              placeholder="🌐"
-              maxLength={4}
-            />
-
             <label className={styles.fieldLabel}>ТИП</label>
             <PillSelector
               options={TYPE_OPTIONS}

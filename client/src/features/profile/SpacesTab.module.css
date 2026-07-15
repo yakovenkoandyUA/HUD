@@ -284,6 +284,56 @@
   transform: scale(1.15);
 }
 
+/* ── Profile sub-sections (vehicle / pet) ── */
+.profileDivider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0 16px;
+}
+
+.profileSectionLabel {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.fieldGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 8px;
+}
+
+.fieldGrid2 .input {
+  margin-bottom: 8px;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg);
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chipOn {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}
+
 /* ── Primary button ── */
 .primaryBtn {
   width: 100%;

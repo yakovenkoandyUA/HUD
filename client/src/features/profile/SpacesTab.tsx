@@ -7,6 +7,7 @@ import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { usePlan } from '@/shared/hooks/usePlan'
 import UpgradePrompt from '@/shared/components/ui/UpgradePrompt'
 import PillSelector from '@/shared/components/ui/PillSelector'
+import { authFetch } from '@/shared/services/api'
 import { SPACE_TEMPLATES } from './spaceTemplates'
 import { SPACE_TYPE_CONFIG } from '@/features/spaces/data/spaceTypes'
 import styles from './SpacesTab.module.css'
@@ -65,6 +66,18 @@ const SpacesTab: React.FC = () => {
   const [newType, setNewType]   = useState<SpaceType>('shared')
   const [newColor, setNewColor] = useState(COLORS[0])
   const [creating, setCreating] = useState(false)
+  const [fromTemplate, setFromTemplate] = useState(false)
+
+  // ── Vehicle profile fields (create) ──
+  const [vehicleMake,  setVehicleMake]  = useState('')
+  const [vehicleModel, setVehicleModel] = useState('')
+  const [vehicleYear,  setVehicleYear]  = useState('')
+  const [vehiclePlate, setVehiclePlate] = useState('')
+
+  // ── Pet profile fields (create) ──
+  const [petName,    setPetName]    = useState('')
+  const [petSpecies, setPetSpecies] = useState('')
+  const [petBreed,   setPetBreed]   = useState('')
 
   // ── Detail / members ──
   const [memberInput, setMemberInput]   = useState('')
@@ -94,8 +107,15 @@ const SpacesTab: React.FC = () => {
     if (updated) setDetailSpace(updated)
   }, [spaces, detailSpace])
 
+  const resetProfileFields = () => {
+    setVehicleMake(''); setVehicleModel(''); setVehicleYear(''); setVehiclePlate('')
+    setPetName(''); setPetSpecies(''); setPetBreed('')
+  }
+
   const openCreate = () => {
     setNewName(''); setNewType('shared'); setNewColor(COLORS[0])
+    setFromTemplate(false)
+    resetProfileFields()
     setCreateStep('template')
     setCreateOpen(true)
   }
@@ -105,7 +125,11 @@ const SpacesTab: React.FC = () => {
       setNewName(tpl.defaultName)
       setNewType(tpl.type)
       setNewColor(tpl.color)
+      setFromTemplate(true)
+    } else {
+      setFromTemplate(false)
     }
+    resetProfileFields()
     setCreateStep('form')
   }
 
@@ -119,21 +143,46 @@ const SpacesTab: React.FC = () => {
   }
 
   const handleCreate = async () => {
-    if (!newName.trim()) return
-    let cancelled = false
-    const submit = async () => {
-      setCreating(true)
-      try {
-        await createSpace({ name: newName.trim(), type: newType, color: newColor })
-        if (!cancelled) { setCreateOpen(false); showToast('Простір створено', 'success') }
-      } catch {
-        if (!cancelled) showToast('Помилка створення', 'error')
-      } finally {
-        if (!cancelled) setCreating(false)
+    if (!newName.trim() || creating) return
+    setCreating(true)
+    try {
+      const space = await createSpace({ name: newName.trim(), type: newType, color: newColor })
+
+      if (newType === 'vehicle') {
+        const body: Record<string, unknown> = {}
+        if (vehicleMake.trim())  body.make        = vehicleMake.trim()
+        if (vehicleModel.trim()) body.model       = vehicleModel.trim()
+        const yr = parseInt(vehicleYear)
+        if (!isNaN(yr) && yr > 1900) body.year   = yr
+        if (vehiclePlate.trim()) body.plateNumber = vehiclePlate.trim().toUpperCase()
+        if (Object.keys(body).length) {
+          authFetch(`/api/spaces/${space.id}/vehicle/profile`, {
+            method: 'PATCH',
+            body: JSON.stringify(body),
+          }).catch(() => {})
+        }
       }
+
+      if (newType === 'pet') {
+        const body: Record<string, unknown> = {}
+        if (petName.trim())  body.name    = petName.trim()
+        if (petSpecies)      body.species = petSpecies
+        if (petBreed.trim()) body.breed   = petBreed.trim()
+        if (Object.keys(body).length) {
+          authFetch(`/api/spaces/${space.id}/pet/profile`, {
+            method: 'PATCH',
+            body: JSON.stringify(body),
+          }).catch(() => {})
+        }
+      }
+
+      setCreateOpen(false)
+      showToast('Простір створено', 'success')
+    } catch {
+      showToast('Помилка створення', 'error')
+    } finally {
+      setCreating(false)
     }
-    submit()
-    return () => { cancelled = true }
   }
 
   const handleSaveName = async () => {
@@ -432,13 +481,17 @@ const SpacesTab: React.FC = () => {
                   autoFocus
                 />
 
-                <label className={styles.fieldLabel}>ТИП</label>
-                <PillSelector
-                  options={TYPE_OPTIONS}
-                  value={newType}
-                  onChange={setNewType}
-                  className={styles.typePicker}
-                />
+                {!fromTemplate && (
+                  <>
+                    <label className={styles.fieldLabel}>ТИП</label>
+                    <PillSelector
+                      options={TYPE_OPTIONS}
+                      value={newType}
+                      onChange={v => setNewType(v as SpaceType)}
+                      className={styles.typePicker}
+                    />
+                  </>
+                )}
 
                 <label className={styles.fieldLabel}>КОЛІР</label>
                 <div className={styles.colorRow}>
@@ -453,6 +506,86 @@ const SpacesTab: React.FC = () => {
                     />
                   ))}
                 </div>
+
+                {/* ── Авто: додаткові поля ── */}
+                {newType === 'vehicle' && (
+                  <>
+                    <hr className={styles.profileDivider} />
+                    <p className={styles.profileSectionLabel}>ПРО АВТОМОБІЛЬ</p>
+                    <div className={styles.fieldGrid2}>
+                      <input
+                        className={styles.input}
+                        value={vehicleMake}
+                        onChange={e => setVehicleMake(e.target.value)}
+                        placeholder="Марка"
+                        maxLength={40}
+                      />
+                      <input
+                        className={styles.input}
+                        value={vehicleModel}
+                        onChange={e => setVehicleModel(e.target.value)}
+                        placeholder="Модель"
+                        maxLength={40}
+                      />
+                      <input
+                        className={styles.input}
+                        value={vehicleYear}
+                        onChange={e => setVehicleYear(e.target.value)}
+                        placeholder="Рік"
+                        type="number"
+                        min={1900}
+                        max={new Date().getFullYear() + 1}
+                      />
+                      <input
+                        className={styles.input}
+                        value={vehiclePlate}
+                        onChange={e => setVehiclePlate(e.target.value)}
+                        placeholder="Держ. номер"
+                        maxLength={10}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* ── Улюбленець: додаткові поля ── */}
+                {newType === 'pet' && (
+                  <>
+                    <hr className={styles.profileDivider} />
+                    <p className={styles.profileSectionLabel}>ПРО УЛЮБЛЕНЦЯ</p>
+                    <input
+                      className={styles.input}
+                      value={petName}
+                      onChange={e => setPetName(e.target.value)}
+                      placeholder="Ім'я тварини"
+                      maxLength={40}
+                    />
+                    <div className={styles.chipRow}>
+                      {([
+                        { value: 'dog',    label: 'Собака' },
+                        { value: 'cat',    label: 'Кіт'    },
+                        { value: 'bird',   label: 'Птах'   },
+                        { value: 'rabbit', label: 'Кролик' },
+                        { value: 'other',  label: 'Інший'  },
+                      ] as const).map(s => (
+                        <button
+                          key={s.value}
+                          type="button"
+                          className={`${styles.chip} ${petSpecies === s.value ? styles.chipOn : ''}`}
+                          onClick={() => setPetSpecies(petSpecies === s.value ? '' : s.value)}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      className={styles.input}
+                      value={petBreed}
+                      onChange={e => setPetBreed(e.target.value)}
+                      placeholder="Порода (опційно)"
+                      maxLength={40}
+                    />
+                  </>
+                )}
 
                 <button
                   type="button"
