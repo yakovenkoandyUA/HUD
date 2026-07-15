@@ -115,6 +115,78 @@
   white-space: nowrap;
 }
 
+.time {
+  display: inline;
+}
+
+.colon {
+  animation: colonBlink 1s step-end infinite;
+}
+
+@keyframes colonBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.15; }
+}
+
+/* ── Velvet: golden glow pulse ───────────────────────────────── */
+:global([data-theme='velvet']) .time {
+  color: var(--gold);
+  animation: velvetGlow 3s ease-in-out infinite;
+}
+@keyframes velvetGlow {
+  0%, 100% { text-shadow: 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent); }
+  50%       { text-shadow: 0 0 10px color-mix(in srgb, var(--gold) 65%, transparent), 0 0 22px color-mix(in srgb, var(--gold) 25%, transparent); }
+}
+
+/* ── Cyber: rare glitch ──────────────────────────────────────── */
+:global([data-theme='cyber']) .time {
+  color: var(--accent);
+  animation: cyberGlitch 5s infinite;
+}
+@keyframes cyberGlitch {
+  0%, 93%, 100% { transform: none; filter: none; opacity: 1; }
+  94%            { transform: translateX(-1px); filter: hue-rotate(80deg); opacity: 0.9; }
+  95%            { transform: translateX(1px);  filter: hue-rotate(-80deg); }
+  96%            { transform: none; filter: brightness(1.6); opacity: 1; }
+  97%            { transform: none; filter: none; }
+}
+
+/* ── Noir: slow dim ──────────────────────────────────────────── */
+:global([data-theme='noir']) .time {
+  animation: noirPulse 4s ease-in-out infinite;
+}
+@keyframes noirPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* ── Pixel: hard-step blink on colon ────────────────────────── */
+:global([data-theme='pixel']) .colon {
+  animation: pixelStep 1s steps(1) infinite;
+}
+@keyframes pixelStep {
+  0%,  49% { opacity: 1; }
+  50%, 99% { opacity: 0; }
+}
+
+/* ── Arctic: cold shimmer ────────────────────────────────────── */
+:global([data-theme='arctic']) .time {
+  animation: arcticShimmer 2.5s ease-in-out infinite;
+}
+@keyframes arcticShimmer {
+  0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+  50%       { filter: brightness(1.35) hue-rotate(18deg); }
+}
+
+/* ── Japan: soft sakura fade ─────────────────────────────────── */
+:global([data-theme='japan']) .time {
+  animation: japanFade 2.5s ease-in-out infinite;
+}
+@keyframes japanFade {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
 .weatherChip {
   display: flex;
   align-items: center;
