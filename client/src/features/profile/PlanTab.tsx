@@ -115,8 +115,9 @@ const PlanTab: React.FC = () => {
   const { fetchProfiles }       = useProfileStore()
   void fetchProfiles // used in PaymentResult, kept here for store subscription
 
-  const handleUpgrade = () => {
-    window.open(MONOBANK_JAR, '_blank', 'noopener,noreferrer')
+  const handleUpgrade = (priceMonthly: number) => {
+    const totalAmount = priceMonthly * (cycle === 'annual' ? 12 : 1) * 100 // kopecks
+    window.open(`${MONOBANK_JAR}?amount=${totalAmount}`, '_blank', 'noopener,noreferrer')
   }
 
   const visibleFeatures = expanded ? FEATURES : FEATURES.slice(0, 7)
@@ -193,7 +194,7 @@ const PlanTab: React.FC = () => {
                 type="button"
                 className={`${styles.cta} ${isCurrent ? styles.ctaCurrent : styles.ctaUpgrade}`}
                 disabled={isCurrent || plan.id === 'free'}
-                onClick={() => { if (!isCurrent && plan.id !== 'free') handleUpgrade() }}
+                onClick={() => { if (!isCurrent && plan.id !== 'free') handleUpgrade(plan.priceMonthly) }}
               >
                 {isCurrent ? 'Поточний план' : plan.ctaLabel}
               </button>
