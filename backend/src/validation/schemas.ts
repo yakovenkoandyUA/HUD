@@ -77,6 +77,8 @@ export const updateTaskSchema = z.object({
   repeatStartDate:   z.string().optional(),
   repeatConfig:      z.record(z.string(), z.unknown()).optional(),
   reminder:          z.object({ amount: z.number(), unit: z.string() }).nullable().optional(),
+  imageUrls:         z.array(z.string()).optional(),
+  imagePublicIds:    z.array(z.string()).optional(),
 })
 
 export const createTaskSchema = updateTaskSchema.extend({

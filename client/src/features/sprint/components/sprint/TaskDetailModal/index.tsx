@@ -295,8 +295,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
       const newUrls = [...(task.imageUrls ?? []), ...results.map(r => r.url)]
       const newIds  = [...(task.imagePublicIds ?? []), ...results.map(r => r.publicId)]
       updateTask(task.id, { imageUrls: newUrls, imagePublicIds: newIds })
-      const endpoint = task.type === 'sprint' ? `/api/sprint/tasks/${task.id}` : `/api/sprint/todos/${task.id}`
-      authFetch(endpoint, {
+      authFetch(`/api/sprint/tasks/${task.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ imageUrls: newUrls, imagePublicIds: newIds }),
       }).catch(console.error)
@@ -313,8 +312,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     const newUrls = (task.imageUrls ?? []).filter((_, i) => i !== idx)
     const newIds  = (task.imagePublicIds ?? []).filter((_, i) => i !== idx)
     updateTask(task.id, { imageUrls: newUrls, imagePublicIds: newIds })
-    const endpoint = task.type === 'sprint' ? `/api/sprint/tasks/${task.id}` : `/api/sprint/todos/${task.id}`
-    authFetch(endpoint, {
+    authFetch(`/api/sprint/tasks/${task.id}`, {
       method: 'PATCH',
       body: JSON.stringify({ imageUrls: newUrls, imagePublicIds: newIds }),
     }).catch(console.error)
