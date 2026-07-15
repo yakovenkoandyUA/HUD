@@ -271,8 +271,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     const trimmed = titleDraft.trim()
     if (trimmed === task.title) return
     updateTask(task.id, { title: trimmed })
-    const endpoint = task.type === 'sprint' ? `/api/sprint/tasks/${task.id}` : `/api/sprint/todos/${task.id}`
-    authFetch(endpoint, { method: 'PATCH', body: JSON.stringify({ title: trimmed }) }).catch(console.error)
   }, [task, titleDraft, updateTask])
 
   const handleDescBlur = useCallback(() => {

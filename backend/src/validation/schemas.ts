@@ -58,6 +58,7 @@ export const updateTaskSchema = z.object({
   done:              z.boolean().optional(),
   priority:          z.enum(['urgent', 'normal', 'low']).optional(),
   dueDate:           z.string().nullable().optional(),
+  dueTime:           z.string().nullable().optional(),
   description:       z.string().max(2000).optional(),
   checklist:         z.array(z.object({ id: z.string(), title: z.string(), done: z.boolean() })).optional(),
   labels:            z.array(z.string()).optional(),
