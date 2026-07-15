@@ -8,13 +8,38 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px 100px;
+  padding: 12px 16px 120px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-/* ── New note input ── */
+/* ── Search ── */
+
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.searchIcon { color: var(--text3); flex-shrink: 0; }
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+}
+.searchInput::placeholder { color: var(--text3); }
+
+/* ── New note form ── */
 
 .newNoteWrap {
   display: flex;
@@ -22,9 +47,8 @@
   gap: 8px;
   background: var(--surface);
   border: 1px solid var(--accent);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px;
-  margin-bottom: 4px;
 }
 
 .newNoteTextarea {
@@ -39,7 +63,6 @@
   line-height: 1.5;
   min-height: 72px;
 }
-
 .newNoteTextarea::placeholder { color: var(--text3); }
 
 .newNoteActions {
@@ -76,31 +99,12 @@
 }
 .newNoteSaveBtn:disabled { opacity: 0.4; cursor: default; }
 
-/* ── Search ── */
+/* ── Masonry 2-column grid ── */
 
-.searchWrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 9px 12px;
-  margin-bottom: 4px;
+.grid {
+  columns: 2;
+  column-gap: 8px;
 }
-
-.searchIcon { color: var(--text3); flex-shrink: 0; }
-
-.searchInput {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--text);
-}
-.searchInput::placeholder { color: var(--text3); }
 
 /* ── Note card ── */
 
@@ -108,22 +112,32 @@
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 40px 10px 12px;
+  border-radius: 12px;
+  padding: 12px 36px 10px 12px;
   cursor: pointer;
   transition: border-color 0.15s;
+  break-inside: avoid;
+  margin-bottom: 8px;
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
 }
 .noteCard:active { border-color: var(--border2); }
+.noteCardEditing {
+  border-color: var(--accent);
+  cursor: default;
+  padding-bottom: 40px;
+}
 
 .noteText {
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text);
-  line-height: 1.5;
+  line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 12;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -138,10 +152,10 @@
 
 .deleteBtn {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
+  top: 7px;
+  right: 7px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,12 +180,53 @@
   outline: none;
   resize: none;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text);
-  line-height: 1.5;
+  line-height: 1.55;
   min-height: 60px;
   padding: 0;
 }
+
+.editOkBtn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.editOkBtn:active { opacity: 0.8; }
+
+/* ── FAB ── */
+
+.fab {
+  position: fixed;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 45%, transparent);
+  z-index: 10;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.fab:active { transform: scale(0.91); }
 
 /* ── Empty state ── */
 
