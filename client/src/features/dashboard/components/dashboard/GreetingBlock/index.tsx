@@ -26,9 +26,11 @@ interface GreetingBlockProps {
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 
 function formatDate(d: Date): string {
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  return `${DAYS_SHORT[d.getDay()]} · ${dd}.${mm}`
+  const dd  = String(d.getDate()).padStart(2, '0')
+  const mm  = String(d.getMonth() + 1).padStart(2, '0')
+  const hh  = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${DAYS_SHORT[d.getDay()]} · ${dd}.${mm} · ${hh}:${min}`
 }
 
 const THEME_PHOTOS: Partial<Record<string, string>> = {

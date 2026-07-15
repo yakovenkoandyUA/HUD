@@ -53,17 +53,6 @@
   50%       { opacity: 0.5; }
 }
 
-/* ── Clock ── */
-
-.clock {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--accent);
-  line-height: 1;
-  letter-spacing: 0.03em;
-}
-
 /* ── SVG logo ── */
 
 .logoSvg {
@@ -95,7 +84,7 @@
   height: 32px;
   border: none;
   background: none;
-  color: var(--text3);
+  color: var(--accent-dim);
   cursor: pointer;
   border-radius: 8px;
   transition: color 0.15s, background 0.15s;

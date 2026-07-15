@@ -18,21 +18,16 @@ import styles from './AppHeader.module.css'
  * AppHeader
  * ---------
  * Єдиний шапковий компонент для всіх екранів.
- * Ліво: живий годинник (год:хв), Центр: SVG-логотип, Право: аватар профілю.
+ * Ліво: аватар профілю, Центр: SVG-логотип, Право: feedback + AI.
  *
  * Props:
- * @prop {React.ReactNode} [right] — додатковий вміст зліва від аватара
+ * @prop {React.ReactNode} [right] — додатковий вміст зліва від кнопок
  */
 interface AppHeaderProps {
   right?: React.ReactNode
 }
 
-function formatTime(d: Date): string {
-  return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
-}
-
 const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
-  const [now, setNow] = useState(new Date())
   const [showChat, setShowChat] = useState(false)
   const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
@@ -47,11 +42,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const [showFeedback, setShowFeedback] = useState(false)
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000)
-    return () => clearInterval(id)
-  }, [])
-
-  useEffect(() => {
     const on  = () => setOffline(false)
     const off = () => setOffline(true)
     window.addEventListener('online',  on)
@@ -63,12 +53,31 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
     <>
       <header className={styles.bar}>
         <div className={styles.left}>
-          <span className={styles.clock}>{formatTime(now)}</span>
-          {offline && <span className={styles.offlineBadge}>офлайн</span>}
+          <button
+            type="button"
+            className={styles.avatarBtn}
+            onClick={() => navigate('/profile')}
+            aria-label="Профіль і налаштування"
+          >
+            {activeProfile?.avatarUrl ? (
+              <img
+                src={activeProfile.avatarUrl}
+                alt={activeProfile.name}
+                className={styles.avatar}
+                style={{ borderColor: level.color }}
+              />
+            ) : (
+              <div className={styles.avatarFallback} style={{ borderColor: level.color }}>
+                {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
+              </div>
+            )}
+            {showInstallDot && <span className={styles.installDot} aria-hidden="true" />}
+          </button>
         </div>
 
         <div className={styles.center}>
           <MimirLogo className={styles.logoSvg} />
+          {offline && <span className={styles.offlineBadge}>офлайн</span>}
         </div>
 
         <div className={styles.right}>
@@ -102,26 +111,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
                 <path d="M3 4.5V3a2 2 0 0 1 4 0v1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
               </svg>
             )}
-          </button>
-          <button
-            type="button"
-            className={styles.avatarBtn}
-            onClick={() => navigate('/profile')}
-            aria-label="Профіль і налаштування"
-          >
-            {activeProfile?.avatarUrl ? (
-              <img
-                src={activeProfile.avatarUrl}
-                alt={activeProfile.name}
-                className={styles.avatar}
-                style={{ borderColor: level.color }}
-              />
-            ) : (
-              <div className={styles.avatarFallback} style={{ borderColor: level.color }}>
-                {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
-              </div>
-            )}
-            {showInstallDot && <span className={styles.installDot} aria-hidden="true" />}
           </button>
         </div>
       </header>
