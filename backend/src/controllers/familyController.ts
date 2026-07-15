@@ -37,7 +37,7 @@ export async function getFamily(req: Request, res: Response): Promise<void> {
       .map(l => {
         const memberId = l.requester === req.userId ? l.recipient : l.requester
         const u = userMap.get(memberId)
-        return u ? { linkId: (l._id as { toString(): string }).toString(), ...userPublic(u) } : null
+        return u ? { linkId: (l._id as { toString(): string }).toString(), relationshipType: l.relationshipType ?? null, ...userPublic(u) } : null
       })
       .filter(Boolean)
 
@@ -83,7 +83,7 @@ export async function searchUsers(req: Request, res: Response): Promise<void> {
 
 /** POST /api/family/request — { targetUserId } */
 export async function sendRequest(req: Request, res: Response): Promise<void> {
-  const { targetUserId } = req.body as { targetUserId?: string }
+  const { targetUserId, relationshipType } = req.body as { targetUserId?: string; relationshipType?: string }
   if (!targetUserId) {
     res.status(400).json({ error: 'targetUserId required' })
     return
@@ -112,7 +112,7 @@ export async function sendRequest(req: Request, res: Response): Promise<void> {
       return
     }
 
-    const link = await FamilyLink.create({ requester: req.userId, recipient: targetUserId })
+    const link = await FamilyLink.create({ requester: req.userId, recipient: targetUserId, relationshipType: relationshipType ?? null })
     res.status(201).json({ linkId: (link._id as { toString(): string }).toString(), status: link.status })
   } catch {
     res.status(500).json({ error: 'Failed to send request' })

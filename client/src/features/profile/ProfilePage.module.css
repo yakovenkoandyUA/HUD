@@ -1145,6 +1145,73 @@
   text-align: center;
 }
 
+.familyRelTag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: var(--tint-accent-sm);
+  border: 1px solid var(--tint-accent-lg);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* ── Relationship type picker ── */
+
+.relationPicker {
+  margin-top: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.relationPickerUser {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.relationPickerLabel {
+  padding: 10px 14px 6px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin: 0;
+}
+
+.relationTypes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 6px 12px 12px;
+}
+
+.relationTypeBtn {
+  padding: 9px 8px;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.relationTypeBtn:hover { border-color: var(--accent); color: var(--accent); background: var(--tint-accent-sm); }
+.relationTypeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ── Tab content wrapper ── */
 .tabContent {
   display: flex;

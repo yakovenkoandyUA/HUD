@@ -14,6 +14,7 @@ export interface FamilyLink {
   name: string
   username: string
   avatarUrl: string | null
+  relationshipType: string | null
 }
 
 interface FamilyState {
@@ -25,7 +26,7 @@ interface FamilyState {
 
   fetchFamily: () => Promise<void>
   searchUsers: (q: string) => Promise<void>
-  sendRequest: (targetUserId: string) => Promise<void>
+  sendRequest: (targetUserId: string, relationshipType: string) => Promise<void>
   acceptRequest: (linkId: string) => Promise<void>
   removeLink: (linkId: string) => Promise<void>
   clearSearch: () => void
@@ -63,10 +64,10 @@ export const useFamilyStore = create<FamilyState>()((set, get) => ({
     } catch { /* noop */ }
   },
 
-  sendRequest: async (targetUserId: string) => {
+  sendRequest: async (targetUserId: string, relationshipType: string) => {
     const res = await authFetch('/api/family/request', {
       method: 'POST',
-      body: JSON.stringify({ targetUserId }),
+      body: JSON.stringify({ targetUserId, relationshipType }),
     })
     if (!res.ok) {
       const data = await res.json() as { error?: string }
