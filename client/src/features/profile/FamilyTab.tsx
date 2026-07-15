@@ -26,7 +26,7 @@ const FamilyTab: React.FC = () => {
   const handleSendRequest = useCallback(async (targetUserId: string) => {
     setFamilyLoading(true)
     try {
-      await sendRequest(targetUserId)
+      await sendRequest(targetUserId, 'family')
       setFamilySearch(''); clearSearch()
       showToast('Запит надіслано', 'success')
     } catch (err) {
