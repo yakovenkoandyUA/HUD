@@ -96,7 +96,7 @@ const RegisterScreen: React.FC = () => {
               <input
                 className={styles.input}
                 type="text"
-                placeholder="andriy"
+                placeholder="Dekimo"
                 value={username}
                 onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                 autoComplete="username"

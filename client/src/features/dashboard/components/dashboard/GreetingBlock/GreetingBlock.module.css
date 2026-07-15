@@ -109,7 +109,7 @@
 
 .date {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -219,15 +219,14 @@
 .weatherChip:active { opacity: 0.7; }
 
 .weatherIcon {
-  width: 20px;
-  height: 20px;
+  width: 40px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .weatherTemp {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text);
   line-height: 1;
@@ -235,7 +234,7 @@
 
 .weatherDesc {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 12px;
   color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -374,21 +373,21 @@
 :global([data-theme='japan']) .date,
 :global([data-theme='japan']) .weatherTemp,
 :global([data-theme='japan']) .weatherDesc  { font-family: 'Cormorant Garamond', serif; font-style: italic; }
-:global([data-theme='japan']) .date         { font-size: 14px; }
-:global([data-theme='japan']) .weatherTemp  { font-size: 14px; font-style: italic; }
+:global([data-theme='japan']) .date         { font-size: 20px; }
+:global([data-theme='japan']) .weatherTemp  { font-size: 20px; font-style: italic; }
 :global([data-theme='japan']) .weatherDesc  { font-size: 10px; text-transform: none; letter-spacing: 0.02em; }
 
-:global([data-theme='cyber']) .date         { font-family: 'Orbitron', monospace; font-size: 10px; }
-:global([data-theme='cyber']) .weatherTemp  { font-family: 'Orbitron', monospace; font-size: 12px; }
+:global([data-theme='cyber']) .date         { font-family: 'Orbitron', monospace; font-size: 14px; }
+:global([data-theme='cyber']) .weatherTemp  { font-family: 'Orbitron', monospace; font-size: 20px; }
 
-:global([data-theme='noir']) .date,
-:global([data-theme='noir']) .weatherTemp   { font-family: 'Special Elite', monospace; font-size: 14px; }
+
+:global([data-theme='noir']) .weatherTemp   { font-family: 'Special Elite', monospace; font-size: 20px; }
 
 :global([data-theme='pixel']) .date         { font-family: 'Press Start 2P', monospace; font-size: 8px; }
-:global([data-theme='pixel']) .weatherTemp  { font-family: 'Press Start 2P', monospace; font-size: 9px; }
+:global([data-theme='pixel']) .weatherTemp  { font-family: 'Press Start 2P', monospace; font-size: 17px; }
 
 :global([data-theme='arctic']) .date,
 :global([data-theme='arctic']) .weatherTemp,
 :global([data-theme='arctic']) .weatherDesc { font-family: 'Exo 2', sans-serif; font-weight: 300; letter-spacing: 0.06em; }
-:global([data-theme='arctic']) .date        { font-size: 13px; }
-:global([data-theme='arctic']) .weatherDesc { font-size: 9px; font-weight: 400; }
+:global([data-theme='arctic']) .date        { font-size: 14px; }
+:global([data-theme='arctic']) .weatherDesc { font-size: 12px; font-weight: 400; }

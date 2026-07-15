@@ -93,7 +93,7 @@
 
 .cellVal {
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text);
   white-space: nowrap;
@@ -119,9 +119,8 @@
 /* Quest accent number must win over the generic cellVal override above */
 :global([data-theme='velvet']) .cellValQuest { font-size: 22px; line-height: 1; }
 
-/* Quest / Notes: large number */
-.cellValQuest,
-.cellValNote {
+/* Quest: large coloured number */
+.cellValQuest {
   color: var(--text);
   font-size: 22px;
   line-height: 1;
