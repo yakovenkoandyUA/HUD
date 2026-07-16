@@ -751,6 +751,38 @@
   border-color: var(--space-color);
 }
 
+/* ── Station row (AZS field + find-on-map link) ── */
+.stationRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stationRow .fieldInput {
+  flex: 1;
+  margin: 0;
+}
+
+.findStationBtn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.findStationBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .attachSpinner {
   width: 14px;
   height: 14px;
@@ -855,7 +887,7 @@
 .vehicleHeroDesc {
   font-family: var(--font-ui);
   font-size: 11px;
-  color: var(--text3);
+  color: var(--text2);
   line-height: 1.4;
   margin-top: 2px;
 }
@@ -886,14 +918,14 @@
   font-family: var(--font-ui);
   font-size: 9px;
   letter-spacing: 0.08em;
-  color: var(--text3);
+  color: var(--text2);
   text-transform: uppercase;
 }
 
 .vehicleHeroLastEntryValue {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--text2);
+  color: var(--text);
 }
 
 /* ── Nav bar (back + title + edit) ── */
@@ -953,42 +985,41 @@
   border-color: var(--space-color);
 }
 
-/* ── Stats cards (4-grid with counts) ── */
-.vehicleStatsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-
-.vehicleStatCard {
+/* ── Stats strip (compact inline row) ── */
+.vehicleStatStrip {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 10px 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 0;
 }
 
-.vehicleStatCardIcon {
+.vehicleStatStripDot {
+  font-size: 14px;
   color: var(--text3);
+  line-height: 1;
+  user-select: none;
 }
 
-.vehicleStatCardNum {
+.vehicleStatStripItem {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.vehicleStatStripNum {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
 }
 
-.vehicleStatCardLabel {
+.vehicleStatStripLabel {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text3);
-  text-align: center;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 /* ── Onboarding checklist ── */
@@ -1117,6 +1148,77 @@
   flex-shrink: 0;
 }
 
+/* ── Vehicle state block ── */
+.vehicleStateBlock {
+  background: color-mix(in srgb, var(--space-color) 5%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--space-color) 20%, var(--border));
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.vehicleStateTitle {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.vehicleStateItems {
+  display: flex;
+  flex-direction: column;
+}
+
+.vehicleStateItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.vehicleStateItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.vehicleStateItem:first-child {
+  padding-top: 0;
+}
+
+.vehicleStateIcon {
+  color: var(--space-color);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.vehicleStateIconWarning { color: var(--color-warning, #f39c12); }
+.vehicleStateIconDanger  { color: var(--color-error,   #e74c3c); }
+
+.vehicleStateLabel {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.vehicleStateLabelAlert {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.vehicleStateValue {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--space-color);
+  flex-shrink: 0;
+}
+
 /* ── Action grid 2×2 ── */
 .vehicleActionGrid {
   display: grid;
@@ -1196,7 +1298,7 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--text3);
+  color: var(--text2);
   text-transform: uppercase;
   margin: 0;
 }
@@ -1237,14 +1339,14 @@
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 700;
-  color: var(--text2);
+  color: var(--text);
   margin: 0;
 }
 
 .vehicleEmptyDesc {
   font-family: var(--font-ui);
   font-size: 12px;
-  color: var(--text3);
+  color: var(--text2);
   line-height: 1.4;
   max-width: 240px;
   margin: 0;

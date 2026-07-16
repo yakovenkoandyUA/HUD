@@ -316,9 +316,9 @@ const Sprint: React.FC = () => {
 					</div>
 				)}
 
-				{/* ── Status row ── */}
-				<div className={styles.statusRow}>
-					{filterType === 'task' && isDayToday && (
+				{/* ── Status row (tasks only) ── */}
+				{filterType === 'task' && <div className={styles.statusRow}>
+					{isDayToday && (
 						<div className={styles.statusLeft}>
 							{(['active', 'done'] as const).map((status, i) => (
 								<React.Fragment key={status}>
@@ -333,22 +333,20 @@ const Sprint: React.FC = () => {
 							))}
 						</div>
 					)}
-				</div>
+				</div>}
 
-				{/* ── Sprint Mimir: one-time empty hint, then daily rotating ── */}
-				<div className={styles.mimirFloat}>
-					{!sprintEmptySeen && isCurrentWeek && filterType === 'task' && filterStatus === 'active'
-					 && !loading && items.filter(t => !isRecurring(t) && t.type !== 'shopping').length === 0 ? (
+				{/* ── Sprint Mimir: one-time empty hint only (no flex-gap from empty wrapper) ── */}
+				{filterType === 'task' && !sprintEmptySeen && isCurrentWeek && filterStatus === 'active'
+				 && !loading && items.filter(t => !isRecurring(t) && t.type !== 'shopping').length === 0 && (
+					<div className={styles.mimirFloat}>
 						<MimirHint
 							pose="pointing"
 							oneTime
 							textKey="Тижневий спринт порожній. Натисни «Додати квест» внизу — і вона з'явиться тут."
 							onDismiss={markSprintEmptySeen}
 						/>
-					) : (
-						<MimirHint pose="thinking" />
-					)}
-				</div>
+					</div>
+				)}
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>

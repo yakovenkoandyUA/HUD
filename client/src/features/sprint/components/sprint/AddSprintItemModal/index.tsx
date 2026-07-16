@@ -12,6 +12,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { usePlan } from '@/shared/hooks/usePlan'
 import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import type { TodoPriority, SprintLabel, RepeatConfig } from '@/shared/types'
 import styles from './AddSprintItemModal.module.css'
 
@@ -120,9 +121,13 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   const { limits } = usePlan()
   const maxImages = limits.maxTaskImages
 
+  const { spaces } = useSpacesStore()
+  const spaceOptions = useMemo(() => spaces.filter(s => !s.archived && s.modules.includes('tasks')), [spaces])
+
   const [newType, setNewType]                   = useState<ItemType>(defaultType ?? 'todo')
   const [newTitle, setNewTitle]                 = useState('')
   const [newPriority, setNewPriority]           = useState<TodoPriority | null>(null)
+  const [newSpaceId, setNewSpaceId]             = useState<string | null>(null)
   const [newQuantity, setNewQuantity]           = useState('')
   const [newLabels, setNewLabels]               = useState<SprintLabel[]>([])
   const [showLabelPicker, setShowLabelPicker]   = useState(false)
@@ -165,6 +170,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     setNewTitle('')
     setNewType(defaultType ?? 'todo')
     setNewPriority(null)
+    setNewSpaceId(null)
     setNewQuantity('')
     setNewLabels([])
     setShowLabelPicker(false)
@@ -190,7 +196,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     onClose()
   }
 
-  const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAdd = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!newTitle.trim()) return
 
@@ -240,6 +246,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
         ...(newReminder ? { reminder: newReminder } : {}),
       } : {}),
       ...(imageUrls.length > 0 ? { imageUrls, imagePublicIds } : {}),
+      ...(newSpaceId ? { spaceId: newSpaceId } : {}),
     },
     // Rollback images if backend save fails
     imagePublicIds.length > 0 ? imagePublicIds : undefined)
@@ -284,6 +291,28 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
               Покупка
             </button>
           </div>
+
+          {spaceOptions.length > 0 && (
+            <div className={styles.spaceSection}>
+              <span className={styles.spaceLabel}>
+                Простір <span className={styles.spaceLabelOpt}>(необов'язково)</span>
+              </span>
+              <div className={styles.spaceRow}>
+                {spaceOptions.map(sp => (
+                  <button
+                    key={sp.id}
+                    type="button"
+                    className={`${styles.spaceChip} ${newSpaceId === sp.id ? styles.spaceChipActive : ''}`}
+                    style={{ '--chip-color': sp.color } as React.CSSProperties}
+                    onClick={() => setNewSpaceId(newSpaceId === sp.id ? null : sp.id)}
+                  >
+                    <span className={styles.spaceChipDot} />
+                    {sp.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <input
             className={styles.todoInput}
@@ -585,7 +614,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
             </div>
           )}
 
-          <Button type="submit" fullWidth disabled={imageUploading}>
+          <Button type="submit" fullWidth disabled={imageUploading || !newTitle.trim()}>
             {imageUploading ? 'Завантаження...' : 'Додати'}
           </Button>
         </form>

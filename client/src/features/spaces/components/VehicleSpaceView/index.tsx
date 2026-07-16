@@ -61,6 +61,18 @@ const EVENT_LABELS: Record<VehicleEventType, string> = {
   note:        'Нотатка',
 }
 
+function daysAgo(isoDate: string): number {
+  const then = new Date(isoDate)
+  const now  = new Date()
+  return Math.floor((now.getTime() - then.getTime()) / 86_400_000)
+}
+
+function pluralDays(n: number): string {
+  if (n === 1) return 'день'
+  if (n >= 2 && n <= 4) return 'дні'
+  return 'днів'
+}
+
 function fmtDate(iso: string): string {
   const [y, m, d] = iso.slice(0, 10).split('-')
   return `${d}.${m}.${y}`
@@ -360,6 +372,9 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
               </button>
             </div>
 
+            <label className={styles.fieldLabel}>FRAME NUMBER <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: 0, opacity: 0.6 }}>(для Японії)</span></label>
+            <input className={styles.fieldInput} value={form.frameNumber ?? ''} onChange={e => setForm(p => ({ ...p, frameNumber: e.target.value.toUpperCase() }))} placeholder="DBA-ZVW30 / ZVW30-1234567" />
+
             <label className={styles.fieldLabel}>ПАЛЬНЕ</label>
             <input className={styles.fieldInput} value={form.fuelType ?? ''} onChange={e => setForm(p => ({ ...p, fuelType: e.target.value }))} placeholder="Бензин / Дизель / Гібрид / Електро" />
 
@@ -590,7 +605,21 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile }) =
           </div>
         </div>
         <label className={styles.fieldLabel}>АЗС</label>
-        <input className={styles.fieldInput} value={vendor} onChange={e => setVendor(e.target.value)} placeholder="WOG, ОККО…" />
+        <div className={styles.stationRow}>
+          <input className={styles.fieldInput} value={vendor} onChange={e => setVendor(e.target.value)} placeholder="WOG, ОККО…" />
+          <a
+            href={/iphone|ipad|ipod|mac/i.test(navigator.userAgent) ? 'maps://?q=gas+station' : 'https://maps.google.com/?q=gas+station'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.findStationBtn}
+            title="Знайти заправку на карті"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              <circle cx="12" cy="9" r="2.5"/>
+            </svg>
+          </a>
+        </div>
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
@@ -807,6 +836,101 @@ const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
   )
 }
 
+// ── VehicleStateBlock ──────────────────────────────────────────────────────
+
+import type { VehicleStats } from '../../store/vehicleStore'
+
+function StateIcon({ type }: { type: string }) {
+  const props = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true }
+  switch (type) {
+    case 'maintenance':
+      return <svg {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    case 'fuel':
+      return <svg {...props}><path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M3 22h12M15 8h2a2 2 0 0 1 2 2v6a1 1 0 0 0 2 0V9l-2-2"/></svg>
+    case 'document':
+      return <svg {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+    case 'coins':
+      return <svg {...props}><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><line x1="16.71" y1="13.88" x2="17" y2="14"/></svg>
+    default:
+      return null
+  }
+}
+
+interface StateBlockProps {
+  profile: VehicleProfile | null
+  events:  VehicleEvent[]
+  stats:   VehicleStats | undefined
+  color:   string
+}
+
+const VehicleStateBlock: React.FC<StateBlockProps> = ({ profile, events, stats, color }) => {
+  const colorVar = { '--space-color': color } as React.CSSProperties
+  type Status = 'ok' | 'warning' | 'danger'
+  const items: { icon: string; label: string; value?: string; status: Status }[] = []
+
+  if (profile?.nextServiceMileage != null && profile?.currentMileage != null) {
+    const kmLeft = profile.nextServiceMileage - profile.currentMileage
+    items.push({
+      icon:   'maintenance',
+      label:  kmLeft >= 0 ? `ТО через ${kmLeft.toLocaleString('uk-UA')} км` : 'ТО прострочено',
+      status: kmLeft < 0 ? 'danger' : kmLeft < 1000 ? 'warning' : 'ok',
+    })
+  }
+
+  if (stats?.expiringDocs?.length) {
+    for (const doc of stats.expiringDocs) {
+      items.push({
+        icon:   'document',
+        label:  `${doc.docType || 'Документ'} до ${fmtDate(doc.docExpiresAt)}`,
+        status: 'warning',
+      })
+    }
+  }
+
+  const lastFuel = [...events]
+    .filter(e => e.type === 'fuel')
+    .sort((a, b) => b.date.localeCompare(a.date))[0]
+  if (lastFuel) {
+    const days = daysAgo(lastFuel.date)
+    items.push({
+      icon:   'fuel',
+      label:  days === 0 ? 'Заправка сьогодні' : `Заправка ${days} ${pluralDays(days)} тому`,
+      value:  lastFuel.cost != null ? fmtCost(lastFuel.cost, lastFuel.currency) : undefined,
+      status: 'ok',
+    })
+  }
+
+  if (stats?.totalCostMonth && stats.totalCostMonth > 0) {
+    items.push({
+      icon:   'coins',
+      label:  'Цього місяця',
+      value:  `₴${stats.totalCostMonth.toLocaleString('uk-UA')}`,
+      status: 'ok',
+    })
+  }
+
+  if (items.length === 0) return null
+
+  return (
+    <div className={styles.vehicleStateBlock} style={colorVar}>
+      <span className={styles.vehicleStateTitle}>СТАН АВТО</span>
+      <div className={styles.vehicleStateItems}>
+        {items.map((item, i) => (
+          <div key={i} className={styles.vehicleStateItem}>
+            <span className={`${styles.vehicleStateIcon} ${item.status === 'warning' ? styles.vehicleStateIconWarning : item.status === 'danger' ? styles.vehicleStateIconDanger : ''}`}>
+              <StateIcon type={item.icon} />
+            </span>
+            <span className={`${styles.vehicleStateLabel} ${item.status !== 'ok' ? styles.vehicleStateLabelAlert : ''}`}>
+              {item.label}
+            </span>
+            {item.value && <span className={styles.vehicleStateValue}>{item.value}</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── VehicleTimeline ────────────────────────────────────────────────────────
 
 interface TimelineProps {
@@ -943,7 +1067,8 @@ const VehicleSpaceView: React.FC<Props> = ({
   modules, spaceTxs, isOwner, onEditSpace: _onEditSpace, onBack,
 }) => {
   const [sheet, setSheet] = useState<SheetType>(null)
-  const { fetchEvents, fetchStats, eventsBySpace, loading } = useVehicleStore()
+  const { fetchEvents, fetchStats, eventsBySpace, statsBySpace, loading } = useVehicleStore()
+  const stats = statsBySpace[spaceId]
   const space  = useSpacesStore(s => s.spaces.find(sp => sp.id === spaceId) ?? null)
   const events = eventsBySpace[spaceId] ?? []
   const colorVar = { '--space-color': color } as React.CSSProperties
@@ -1043,14 +1168,16 @@ const VehicleSpaceView: React.FC<Props> = ({
         onBack={onBack}
       />
 
-      {/* ── Stats cards ── */}
-      <div className={styles.vehicleStatsGrid}>
-        {STATS.map(s => (
-          <div key={s.label} className={styles.vehicleStatCard}>
-            <span className={styles.vehicleStatCardIcon}>{s.icon}</span>
-            <span className={styles.vehicleStatCardNum}>{s.num}</span>
-            <span className={styles.vehicleStatCardLabel}>{s.label}</span>
-          </div>
+      {/* ── Stats strip ── */}
+      <div className={styles.vehicleStatStrip}>
+        {STATS.map((s, i) => (
+          <React.Fragment key={s.label}>
+            {i > 0 && <span className={styles.vehicleStatStripDot}>·</span>}
+            <span className={styles.vehicleStatStripItem}>
+              <span className={styles.vehicleStatStripNum}>{s.num}</span>
+              <span className={styles.vehicleStatStripLabel}>{s.label}</span>
+            </span>
+          </React.Fragment>
         ))}
       </div>
 
@@ -1092,6 +1219,11 @@ const VehicleSpaceView: React.FC<Props> = ({
         </div>
       )}
 
+      {/* ── Vehicle state (replaces onboarding after completion) ── */}
+      {onboardingDone && (
+        <VehicleStateBlock profile={profile} events={events} stats={stats} color={color} />
+      )}
+
       {/* ── Action grid 2×2 ── */}
       <div className={styles.vehicleActionGrid} style={colorVar}>
         {ACTION_CARDS.map(a => (
@@ -1108,8 +1240,8 @@ const VehicleSpaceView: React.FC<Props> = ({
       {/* ── Vehicle fuel/cost stats (shows only when has data) ── */}
       <VehicleStats spaceId={spaceId} color={color} />
 
-      {/* ── Finance module — linked transactions ── */}
-      {hasFinanceModule && (
+      {/* ── Finance module — linked transactions (hidden when empty) ── */}
+      {hasFinanceModule && spaceTxs.length > 0 && (
         <div className={styles.vehicleModuleCard} style={colorVar}>
           <div className={styles.vehicleModuleHeader}>
             <h3 className={styles.vehicleModuleTitle}>Витрати</h3>

@@ -17,6 +17,7 @@ export interface VehicleProfile {
   year:               number | null
   plateNumber:        string
   vin:                string
+  frameNumber:        string
   currentMileage:     number | null
   fuelType:           string
   purchaseDate:       string | null

@@ -13,6 +13,7 @@ export interface IVehicleProfile {
   year:               number | null
   plateNumber:        string
   vin:                string
+  frameNumber:        string
   currentMileage:     number | null
   fuelType:           string
   purchaseDate:       string | null
@@ -78,6 +79,7 @@ const vehicleProfileSchema = new Schema<IVehicleProfile>({
   year:           { type: Number, default: null },
   plateNumber:    { type: String, default: '' },
   vin:            { type: String, default: '' },
+  frameNumber:    { type: String, default: '' },
   currentMileage: { type: Number, default: null },
   fuelType:       { type: String, default: '' },
   purchaseDate:       { type: String, default: null },

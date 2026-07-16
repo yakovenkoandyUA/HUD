@@ -349,10 +349,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                     {streak}
                   </span>
                 )}
-                {item.type === 'shopping' && item.priority && (
-                  <PriorityBadge priority={item.priority} compact={item.priority === 'normal'} />
+                {item.type === 'shopping' && item.priority && item.priority !== 'normal' && (
+                  <PriorityBadge priority={item.priority} />
                 )}
-                {item.type === 'shopping' && item.priority && checkTotal > 0 && !item.done && (
+                {item.type === 'shopping' && item.priority && item.priority !== 'normal' && checkTotal > 0 && !item.done && (
                   <span className={styles.metaSep}>·</span>
                 )}
                 {checkTotal > 0 && !item.done && (

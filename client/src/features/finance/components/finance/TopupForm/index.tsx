@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import Input from '@/shared/components/ui/Input'
 import Button from '@/shared/components/ui/Button'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { INCOME_CATEGORIES } from '../../../constants'
 import styles from './TopupForm.module.css'
 
@@ -9,27 +10,33 @@ import styles from './TopupForm.module.css'
  * ---------
  * Форма поповнення балансу з вибором категорії доходу.
  * Відображає категорії у 3-колонковому grid (catCell-стиль, єдиний з ExpenseForm).
+ * Необов'язковий вибір простору — прив'язує дохід до простору з увімкненим модулем finance.
  *
  * Props:
- * @prop {(amount: number, description: string, category: string) => void} onTopup
+ * @prop {(amount: number, description: string, category: string, spaceId?: string | null) => void} onTopup
  */
 interface TopupFormProps {
-  onTopup: (amount: number, description: string, category: string) => void
+  onTopup: (amount: number, description: string, category: string, spaceId?: string | null) => void
 }
 
 const TopupForm: React.FC<TopupFormProps> = ({ onTopup }) => {
+  const spaces = useSpacesStore(s => s.spaces)
+  const financeSpaces = useMemo(() => spaces.filter(sp => !sp.archived && sp.modules.includes('finance')), [spaces])
+
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState(INCOME_CATEGORIES[0].id)
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const n = parseFloat(amount)
     if (!n || n <= 0) return
-    onTopup(n, description || 'Поповнення', category)
+    onTopup(n, description || 'Поповнення', category, selectedSpaceId)
     setAmount('')
     setDescription('')
     setCategory(INCOME_CATEGORIES[0].id)
+    setSelectedSpaceId(null)
   }
 
   return (
@@ -68,6 +75,27 @@ const TopupForm: React.FC<TopupFormProps> = ({ onTopup }) => {
         onChange={setDescription}
         placeholder="Зарплата за червень..."
       />
+
+      {financeSpaces.length > 0 && (
+        <div className={styles.section}>
+          <span className={styles.sectionLabel}>Простір (необов'язково)</span>
+          <div className={styles.spaceChips}>
+            {financeSpaces.map(sp => (
+              <button
+                key={sp.id}
+                type="button"
+                className={`${styles.spaceChip} ${selectedSpaceId === sp.id ? styles.spaceChipActive : ''}`}
+                style={{ '--space-color': sp.color } as React.CSSProperties}
+                onClick={() => setSelectedSpaceId(prev => prev === sp.id ? null : sp.id)}
+              >
+                <span className={styles.spaceChipDot} />
+                {sp.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Button type="submit" fullWidth>Поповнити</Button>
     </form>
   )

@@ -129,8 +129,8 @@ const Finance: React.FC = () => {
 
   const avgPerDay = daysElapsed > 0 ? Math.round(totalExpense / daysElapsed) : 0
 
-  const handleTopup = (amount: number, description: string, category: string) => {
-    addTopup(amount, description, category)
+  const handleTopup = (amount: number, description: string, category: string, spaceId?: string | null) => {
+    addTopup(amount, description, category, spaceId)
     useAchievementsStore.getState().unlock('first-transaction')
     setShowTopup(false)
     showToast(`+${amount} ₴ додано`, 'success')

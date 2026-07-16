@@ -1460,6 +1460,9 @@
 }
 .logoutBtn:hover { color: var(--negative); background: var(--negative-soft); }
 
+/* placeholder to balance header when no right button */
+.headerSpacer { width: 36px; flex-shrink: 0; }
+
 /* ── Section hint / action ── */
 .sectionHint {
   font-family: var(--font-body);

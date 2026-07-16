@@ -5,6 +5,7 @@ import MimirLogo from '@/assets/mimir-logo.svg?react'
 import VerificationBanner from '@/shared/components/ui/VerificationBanner'
 import AiChatSheet from '@/features/dashboard/components/dashboard/AiChatSheet'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
+import ProfileDrawer from '@/shared/components/layout/ProfileDrawer'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
@@ -29,6 +30,7 @@ interface AppHeaderProps {
 
 const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const [showChat, setShowChat] = useState(false)
+  const [showDrawer, setShowDrawer] = useState(false)
   const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
@@ -56,7 +58,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
           <button
             type="button"
             className={styles.avatarBtn}
-            onClick={() => navigate('/profile')}
+            onClick={() => setShowDrawer(true)}
             aria-label="Профіль і налаштування"
           >
             {activeProfile?.avatarUrl ? (
@@ -119,6 +121,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
 
       <AiChatSheet isOpen={showChat} onClose={() => setShowChat(false)} />
       <FeedbackSheet isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
+      <ProfileDrawer isOpen={showDrawer} onClose={() => setShowDrawer(false)} />
     </>
   )
 }

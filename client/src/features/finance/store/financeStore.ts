@@ -76,7 +76,7 @@ interface FinanceState {
   syncStatus: SyncStatus
 
   fetchTransactions: (month?: string) => Promise<void>
-  addTopup: (amount: number, description: string, incomeCategory?: string) => void
+  addTopup: (amount: number, description: string, incomeCategory?: string, spaceId?: string | null) => void
   addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
@@ -112,7 +112,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     }
   },
 
-  addTopup: (amount, description, incomeCategory) => {
+  addTopup: (amount, description, incomeCategory, spaceId) => {
     const tx: Transaction = {
       id: crypto.randomUUID(),
       type: 'topup',
@@ -127,7 +127,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       writeCache(transactions, balance)
       return { balance, transactions, syncStatus: 'syncing' }
     })
-    authFetch('/api/transactions', { method: 'POST', body: JSON.stringify(toApiBody(tx)) })
+    authFetch('/api/transactions', { method: 'POST', body: JSON.stringify({ ...toApiBody(tx), spaceId: spaceId ?? null }) })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then((created: ApiTransaction) => {
         set(s => {

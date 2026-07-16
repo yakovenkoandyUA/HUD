@@ -2,24 +2,16 @@ import React, { useCallback, useRef, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
-import { useFamilyStore } from '@/shared/store/familyStore'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import { authFetch } from '@/shared/services/api'
 import LegalDocModal from '@/shared/components/ui/LegalDocModal'
 import settingsStyles from './SettingsTab.module.css'
-
-const LS_TERMS   = 'mimir-terms-confirmed'
-const LS_PRIVACY = 'mimir-privacy-confirmed'
-import MeAppearance from './MeAppearance'
-import MeSystem from './MeSystem'
-import MeModules from './MeModules'
-import MeFamily from './MeFamily'
-import AdminTab from './AdminTab'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
 import styles from './ProfilePage.module.css'
 
-type MeSection = 'appearance' | 'system' | 'modules' | 'family' | 'achievements' | 'admin'
+const LS_TERMS   = 'mimir-terms-confirmed'
+const LS_PRIVACY = 'mimir-privacy-confirmed'
 
 const CameraIcon: React.FC = () => (
   <svg width="12" height="12" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -41,86 +33,17 @@ const PencilIcon: React.FC = () => (
   </svg>
 )
 
-const ChevronRightIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <path d="M6 3.5L11 8l-5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-)
-
-
-const PaletteIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <path d="M8 1.5a6.5 6.5 0 1 0 0 13c.9 0 1.4-.6 1.4-1.3 0-.35-.14-.66-.36-.9-.2-.23-.32-.5-.32-.8 0-.66.55-1.2 1.25-1.2H11.5A3 3 0 0 0 14.5 7c0-3-3-5.5-6.5-5.5z" stroke="currentColor" strokeWidth="1.3"/>
-    <circle cx="5" cy="6.5" r="0.9" fill="currentColor"/>
-    <circle cx="8" cy="4.5" r="0.9" fill="currentColor"/>
-    <circle cx="11" cy="6.5" r="0.9" fill="currentColor"/>
-  </svg>
-)
-
-const GearIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <circle cx="8" cy="8" r="2.3" stroke="currentColor" strokeWidth="1.3"/>
-    <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-  </svg>
-)
-
-const ModulesIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
-    <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
-    <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
-    <rect x="9" y="9" width="5.5" height="5.5" rx="1.3" stroke="currentColor" strokeWidth="1.3"/>
-  </svg>
-)
-
-
-const UsersIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <circle cx="6" cy="5.5" r="2" stroke="currentColor" strokeWidth="1.3"/>
-    <path d="M2 14c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-    <circle cx="11.5" cy="5.5" r="1.6" stroke="currentColor" strokeWidth="1.2"/>
-    <path d="M10.3 10.7c.4-.1.8-.2 1.2-.2 1.8 0 3.3 1.1 3.3 2.9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-  </svg>
-)
-
-const AdminIcon: React.FC = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3"/>
-    <path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-  </svg>
-)
-
-interface MenuItemConfig {
-  id: MeSection
-  label: string
-  sub: string
-  Icon: React.FC
-}
-
-const BASE_MENU_ITEMS: MenuItemConfig[] = [
-  { id: 'appearance', label: 'Вигляд',  sub: 'Теми, стиль навігації',                Icon: PaletteIcon },
-  { id: 'system',     label: 'Система', sub: 'Місто, F1, сповіщення, кеш, безпека',  Icon: GearIcon },
-  { id: 'modules',    label: 'Модулі',  sub: 'Медіа, спорт та інше',                 Icon: ModulesIcon },
-  { id: 'family',     label: 'Близькі',  sub: 'Запити, учасники',                     Icon: UsersIcon },
-]
-
-const ADMIN_MENU_ITEM: MenuItemConfig = {
-  id: 'admin', label: 'Адмін', sub: 'Користувачі, плани', Icon: AdminIcon,
-}
-
 /**
  * MeTab
  * -----
- * Вкладка "Профіль" — hero-картка (аватар/ім'я) + акордеон-меню підрозділів
- * (Безпека / Вигляд / Система / Медіа / Сім'я / Досягнення) + утиліти
+ * Вкладка "Профіль" — hero-картка (аватар/ім'я) + утиліти
  * (Експорт даних / Юридична інформація / Небезпечна зона).
+ * Підрозділи (Вигляд/Система/Модулі/Близькі/Адмін) — окремі маршрути через ProfileDrawer.
  */
 const MeTab: React.FC = () => {
   const navigate = useNavigate()
   const { activeProfile, updateProfile, logout } = useProfileStore()
-  const { pendingReceived } = useFamilyStore()
   const { showToast, updateAvailable, setUpdateAvailable } = useUiStore()
-  const [openSection, setOpenSection] = useState<MeSection | null>(null)
 
   const [legalOpen, setLegalOpen]             = useState<'terms' | 'privacy' | null>(null)
   const [termsConfirmed, setTermsConfirmed]   = useState(() => localStorage.getItem(LS_TERMS) === '1')
@@ -202,7 +125,6 @@ const MeTab: React.FC = () => {
       navigator.serviceWorker?.removeEventListener('controllerchange', onControllerChange)
     }
   }, [setUpdateAvailable])
-  const toggleSection = (id: MeSection) => setOpenSection(prev => prev === id ? null : id)
 
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
@@ -270,12 +192,8 @@ const MeTab: React.FC = () => {
 
   if (!activeProfile) return null
 
-  const familyPending = pendingReceived.length
   const runeScore = useRuneScore()
   const level = getLevel(runeScore)
-  const menuItems = activeProfile.role === 'admin'
-    ? [...BASE_MENU_ITEMS, ADMIN_MENU_ITEM]
-    : BASE_MENU_ITEMS
 
 
   return (
@@ -361,39 +279,6 @@ const MeTab: React.FC = () => {
         <img src="/achive/achive-hero.png" alt="" className={styles.runeImg} draggable={false} />
       </div>
 
-
-      {/* ── Акордеон-меню підрозділів ── */}
-      {menuItems.map(item => {
-        const isOpen = openSection === item.id
-        return (
-          <div key={item.id} className={styles.settingsCard}>
-            <button
-              type="button"
-              className={styles.menuRow}
-              onClick={() => toggleSection(item.id)}
-              aria-expanded={isOpen}
-            >
-              <span className={styles.menuIcon}><item.Icon /></span>
-              <span className={styles.menuRowText}>
-                <span className={styles.menuRowLabel}>{item.label}</span>
-                <span className={styles.menuRowSub}>{item.sub}</span>
-              </span>
-              {item.id === 'family' && familyPending > 0 && (
-                <span className={styles.menuPulseDot} aria-label={`${familyPending} запитів`} />
-              )}
-
-              <span className={`${styles.menuChevron} ${isOpen ? styles.menuChevronOpen : ''}`}><ChevronRightIcon /></span>
-            </button>
-            <div className={`${styles.menuAccordionBody} ${isOpen ? styles.menuAccordionBodyOpen : ''}`}>
-              {item.id === 'appearance' && <MeAppearance />}
-              {item.id === 'system' && <MeSystem />}
-              {item.id === 'modules' && <MeModules />}
-              {item.id === 'family' && <MeFamily />}
-              {item.id === 'admin' && <AdminTab />}
-            </div>
-          </div>
-        )
-      })}
 
       {/* ── Update banner ── */}
       {updateAvailable && (
