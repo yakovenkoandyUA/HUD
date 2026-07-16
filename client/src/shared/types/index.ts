@@ -240,6 +240,6 @@ export interface GameItem {
   notes: string
   hoursPlayed: number | null
   completedAt: string | null
-  currentPlatform: string | null
+  currentPlatform?: string | null
   addedAt: string
 }
