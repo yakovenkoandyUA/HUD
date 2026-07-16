@@ -57,7 +57,7 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
   const notesTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hoursTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const sheetRef = useSwipeToDismiss(onClose, { overlayRef, bodyRef, enabled: mounted })
+  const sheetRef = useSwipeToDismiss(onClose, { overlayRef, enabled: mounted })
 
   useModalHistory(onClose, isOpen)
 

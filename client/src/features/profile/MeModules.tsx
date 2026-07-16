@@ -7,7 +7,7 @@ const MEDIA_TABS: { id: string; label: string; sub: string; wip?: boolean }[] = 
   { id: 'series', label: 'Серіали', sub: 'Серіали та шоу' },
   { id: 'anime',  label: 'Аніме',   sub: 'Аніме та манга' },
   { id: 'game',   label: 'Ігри',    sub: 'Відеоігри' },
-  { id: 'book',   label: 'Книги',   sub: 'Бібліотека',    wip: true },
+  { id: 'book',   label: 'Книги',   sub: 'Бібліотека' },
 ]
 
 const SPORT_MODULES: { id: string; label: string; sub: string; wip?: boolean }[] = [
