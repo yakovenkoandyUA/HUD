@@ -124,8 +124,8 @@ const Watchlist: React.FC = () => {
   const displayGame = effectiveSelectedGame ?? lastSelectedGameRef.current
 
   const watchingItems = useMemo(
-    () => items.filter((i) => i.status === 'watching'),
-    [items]
+    () => items.filter((i) => i.status === 'watching' && i.category === (tab as WatchlistCategory)),
+    [items, tab]
   )
 
   const byCategoryItems = useMemo(

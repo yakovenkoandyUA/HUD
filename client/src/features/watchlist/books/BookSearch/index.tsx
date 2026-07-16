@@ -57,6 +57,7 @@ const BookSearch: React.FC<BookSearchProps> = ({ onAdd }) => {
       setResults(await res.json())
     } catch {
       setError('Помилка пошуку')
+      setResults([])
     } finally {
       setLoading(false)
     }

@@ -173,6 +173,19 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     }).catch(console.error)
   }
 
+  const handleMarkSeasonWatched = (season: number, episodeNumbers: number[]) => {
+    const toAdd = episodeNumbers
+      .filter(ep => !watchedEpisodes.some(w => w.season === season && w.episode === ep && w.userId === myId))
+      .map(ep => ({ season, episode: ep, userId: myId }))
+    if (toAdd.length === 0) return
+    const updated = [...watchedEpisodes, ...toAdd]
+    setWatchedEpisodes(updated)
+    authFetch(`/api/watchlist/${item.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ watchedEpisodes: updated }),
+    }).catch(console.error)
+  }
+
   useEffect(() => {
     setLocalRating(item.rating ?? 0)
   }, [item.rating])
@@ -510,29 +523,69 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             </button>
           )}
 
-          {/* Rating */}
-          <div className={styles.ratingWrap}>
-            <p className={styles.sectionLabel}>МОЯ ОЦІНКА</p>
-            <div className={styles.ratingRow}>
-              <StarRating
-                value={localRating || null}
-                onChange={(r) => { setLocalRating(r); onRatingChange(r) }}
-                size="md"
-              />
-              {localRating > 0 && (
-                <button
-                  type="button"
-                  className={styles.clearRating}
-                  onClick={() => { setLocalRating(0); onRatingChange(null) }}
-                >
-                  прибрати
-                </button>
+          {/* Rating + watched summary combined row */}
+          {isSeriesLike && item.status === 'watched' ? (
+            <div className={styles.watchedStatsRow}>
+              <div className={styles.watchedStatsCell}>
+                <p className={styles.watchedStatsCellLabel}>МОЯ ОЦІНКА</p>
+                <StarRating
+                  value={localRating || null}
+                  onChange={(r) => { setLocalRating(r); onRatingChange(r) }}
+                  size="sm"
+                />
+                {localRating > 0 && (
+                  <button
+                    type="button"
+                    className={styles.clearRating}
+                    onClick={() => { setLocalRating(0); onRatingChange(null) }}
+                  >
+                    прибрати
+                  </button>
+                )}
+              </div>
+              {item.totalSeasons && (
+                <>
+                  <div className={styles.watchedStatsDivider} />
+                  <div className={styles.watchedStatsCell}>
+                    <span className={styles.watchedStatsNum}>{item.totalSeasons}</span>
+                    <span className={styles.watchedStatsCellLabel}>{item.totalSeasons === 1 ? 'СЕЗОН' : item.totalSeasons < 5 ? 'СЕЗОНИ' : 'СЕЗОНІВ'}</span>
+                  </div>
+                </>
+              )}
+              {item.totalEpisodes && (
+                <>
+                  <div className={styles.watchedStatsDivider} />
+                  <div className={styles.watchedStatsCell}>
+                    <span className={styles.watchedStatsNum}>{item.totalEpisodes}</span>
+                    <span className={styles.watchedStatsCellLabel}>{item.totalEpisodes === 1 ? 'СЕРІЯ' : item.totalEpisodes < 5 ? 'СЕРІЇ' : 'СЕРІЙ'}</span>
+                  </div>
+                </>
               )}
             </div>
-          </div>
+          ) : (
+            <div className={styles.ratingWrap}>
+              <p className={styles.sectionLabel}>МОЯ ОЦІНКА</p>
+              <div className={styles.ratingRow}>
+                <StarRating
+                  value={localRating || null}
+                  onChange={(r) => { setLocalRating(r); onRatingChange(r) }}
+                  size="md"
+                />
+                {localRating > 0 && (
+                  <button
+                    type="button"
+                    className={styles.clearRating}
+                    onClick={() => { setLocalRating(0); onRatingChange(null) }}
+                  >
+                    прибрати
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
-          {/* Episodes — series and anime */}
-          {isSeriesLike && item.tmdbId > 0 && (
+          {/* Episodes — series and anime, only when not watched */}
+          {isSeriesLike && item.tmdbId > 0 && item.status !== 'watched' && (
             <div ref={episodesRef}>
               <EpisodesList
                 tmdbId={item.tmdbId}
@@ -547,6 +600,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                     avatarUrl: accepted.find(m => m.id === w.userId)?.avatarUrl ?? null,
                   }))}
                 onToggleEpisode={handleToggleEpisode}
+                onMarkSeasonWatched={handleMarkSeasonWatched}
                 status={item.status}
                 initialSeason={item.currentSeason ?? 1}
                 onMarkWatched={() => onStatusChange('watched')}

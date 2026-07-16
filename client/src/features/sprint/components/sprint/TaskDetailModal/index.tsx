@@ -293,10 +293,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
       const newUrls = [...(task.imageUrls ?? []), ...results.map(r => r.url)]
       const newIds  = [...(task.imagePublicIds ?? []), ...results.map(r => r.publicId)]
       updateTask(task.id, { imageUrls: newUrls, imagePublicIds: newIds })
-      authFetch(`/api/sprint/tasks/${task.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ imageUrls: newUrls, imagePublicIds: newIds }),
-      }).catch(console.error)
     } catch {
       // toast shown by parent if needed
     } finally {
@@ -310,10 +306,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     const newUrls = (task.imageUrls ?? []).filter((_, i) => i !== idx)
     const newIds  = (task.imagePublicIds ?? []).filter((_, i) => i !== idx)
     updateTask(task.id, { imageUrls: newUrls, imagePublicIds: newIds })
-    authFetch(`/api/sprint/tasks/${task.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ imageUrls: newUrls, imagePublicIds: newIds }),
-    }).catch(console.error)
     if (removedId) {
       authFetch('/api/sprint/images/rollback', {
         method: 'POST',

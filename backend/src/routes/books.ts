@@ -3,11 +3,11 @@ import { requireAuth } from '../middleware/auth'
 
 const router = Router()
 
-const BOOKS_KEY = process.env.GOOGLE_BOOKS_KEY
 const cache = new Map<string, { data: unknown; at: number }>()
 const CACHE_TTL = 10 * 60 * 1000 // 10 min
 
 router.get('/search', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const BOOKS_KEY = process.env.GOOGLE_BOOKS_KEY
   const q = (req.query.q as string | undefined)?.trim()
   if (!q) { res.status(400).json({ error: 'Query required' }); return }
   if (!BOOKS_KEY) { res.status(503).json({ error: 'Books API not configured' }); return }

@@ -33,6 +33,7 @@ interface EpisodesListProps {
   watchedEpisodes: { season: number; episode: number }[]
   partnerEpisodes?: PartnerEpisode[]
   onToggleEpisode: (season: number, episode: number) => void
+  onMarkSeasonWatched?: (season: number, episodeNumbers: number[]) => void
   status: string
   initialSeason?: number
   onMarkWatched?: () => void
@@ -54,7 +55,7 @@ function relativeLabel(days: number): string {
 }
 
 const EpisodesList: React.FC<EpisodesListProps> = ({
-  tmdbId, seasons, watchedEpisodes, partnerEpisodes = [], onToggleEpisode, status, initialSeason, onMarkWatched,
+  tmdbId, seasons, watchedEpisodes, partnerEpisodes = [], onToggleEpisode, onMarkSeasonWatched, status, initialSeason, onMarkWatched,
 }) => {
   const validSeasons = seasons.filter(s => s > 0)
   const fallbackSeason = (initialSeason && initialSeason > 0 ? initialSeason : null) ?? validSeasons[0] ?? 1
@@ -112,6 +113,15 @@ const EpisodesList: React.FC<EpisodesListProps> = ({
               style={{ width: `${Math.min((watchedInSeason / airedEpisodes.length) * 100, 100)}%` }}
             />
           </div>
+          {watchedInSeason < airedEpisodes.length && onMarkSeasonWatched && (
+            <button
+              type="button"
+              className={styles.markSeasonBtn}
+              onClick={() => onMarkSeasonWatched(activeSeason, airedEpisodes.map(ep => ep.episode_number))}
+            >
+              Всі
+            </button>
+          )}
         </div>
       )}
 

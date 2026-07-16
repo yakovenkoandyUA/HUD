@@ -81,6 +81,29 @@
   transition: width 0.3s ease;
 }
 
+.markSeasonBtn {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--second);
+  background: none;
+  border: 1px solid var(--second);
+  border-radius: 5px;
+  padding: 3px 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.markSeasonBtn:active {
+  opacity: 1;
+  background: var(--second);
+  color: var(--bg);
+}
+
 /* ── Completed hint ── */
 .completedHint {
   display: flex;
