@@ -146,6 +146,12 @@
   white-space: nowrap;
 }
 
+.metaSep {
+  font-size: 11px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
 .checklistBadge {
   font-family: var(--font-mono);
   font-size: 11px;
