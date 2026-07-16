@@ -609,31 +609,6 @@ const Watchlist: React.FC = () => {
                       </button>
                     ))}
                     <div className={styles.dropdownDivider} />
-                    {availableGameGenres.length > 1 && (
-                      <>
-                        <p className={styles.dropdownSection}>ЖАНР</p>
-                        <div className={styles.dropdownGenres}>
-                          <button
-                            type="button"
-                            className={`${styles.dropdownGenreChip} ${gameGenreFilter === null ? styles.dropdownGenreChipActive : ''}`}
-                            onClick={() => { setGameGenreFilter(null); setGameSortOpen(false) }}
-                          >
-                            Всі
-                          </button>
-                          {availableGameGenres.map(g => (
-                            <button
-                              key={g}
-                              type="button"
-                              className={`${styles.dropdownGenreChip} ${gameGenreFilter === g ? styles.dropdownGenreChipActive : ''}`}
-                              onClick={() => { setGameGenreFilter(gameGenreFilter === g ? null : g); setGameSortOpen(false) }}
-                            >
-                              {g}
-                            </button>
-                          ))}
-                        </div>
-                        <div className={styles.dropdownDivider} />
-                      </>
-                    )}
                     <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
                     {GAME_SORT_OPTIONS.map(o => (
                       <button
@@ -651,27 +626,27 @@ const Watchlist: React.FC = () => {
               </div>
             </div>
 
-            <div className={styles.tabsInner}>
-              {GAME_STATUS_TABS.filter(t => t.id !== 'announced' && t.id !== 'dropped').map(t => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`${styles.innerTab} ${gameStatusFilter === t.id ? styles.innerTabActive : ''}`}
-                  onClick={() => setGameStatusFilter(t.id)}
-                >
-                  {t.label}
-                </button>
-              ))}
-              {(gameStatusFilter === 'dropped' || gameStatusFilter === 'announced') && (
+            {availableGameGenres.length > 1 && (
+              <div className={styles.genreStrip}>
                 <button
                   type="button"
-                  className={`${styles.innerTab} ${styles.innerTabActive}`}
-                  onClick={() => setGameStatusFilter('all')}
+                  className={`${styles.genreTag} ${gameGenreFilter === null ? styles.genreTagActive : ''}`}
+                  onClick={() => setGameGenreFilter(null)}
                 >
-                  {gameStatusFilter === 'dropped' ? 'Кинув' : 'Анонси'}
+                  Всі
                 </button>
-              )}
-            </div>
+                {availableGameGenres.map(g => (
+                  <button
+                    key={g}
+                    type="button"
+                    className={`${styles.genreTag} ${gameGenreFilter === g ? styles.genreTagActive : ''}`}
+                    onClick={() => setGameGenreFilter(gameGenreFilter === g ? null : g)}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {availableGamePlatforms.length > 1 && (
               <div className={styles.platformRail}>
@@ -724,7 +699,7 @@ const Watchlist: React.FC = () => {
       </div>
 
       {/* ── Watchlist detail modal ── */}
-      {displayItem && isMedia && (
+      {displayItem && (isMedia || isBook) && (
         <WatchlistDetail
           item={displayItem}
           isOpen={!!selected}
