@@ -7,7 +7,6 @@ import WatchlistDetail from './components/watchlist/WatchlistDetail'
 import GameSearch from './games/games/GameSearch'
 import GameCard from './games/games/GameCard'
 import GameDetail from './games/games/GameDetail'
-import GameHero from './games/games/GameHero'
 import GameUpcoming from './games/games/GameUpcoming'
 import WatchlistStatsSheet from './components/watchlist/WatchlistStatsSheet'
 import ImportWatchlistModal from './components/watchlist/ImportWatchlistModal'
@@ -203,7 +202,6 @@ const Watchlist: React.FC = () => {
     return sorted
   }, [gamesByStatus, gameGenreFilter, gamePlatformFilter, gameSortBy])
 
-  const playingGames = useMemo(() => games.filter(g => g.status === 'playing'), [games])
 
   const gameStats = useMemo(() => ({
     playing:    games.filter(g => g.status === 'playing').length,
@@ -415,11 +413,9 @@ const Watchlist: React.FC = () => {
 
       {/* ── Content (scrollable) ── */}
       <div className={styles.content}>
-        {/* hero scrolls away — media or games */}
+        {/* hero scrolls away — media only */}
         {isMedia && watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
-        {isGame && gameStatusFilter === 'all' && (
-          <GameHero items={playingGames} onTap={setSelectedGame} />
-        )}
+        {isGame && <GameUpcoming ownedGames={games} onAdd={handleAddGame} />}
 
         {/* ── Tabs — sticky ── */}
         <div className={styles.tabBar}>
@@ -565,10 +561,6 @@ const Watchlist: React.FC = () => {
         {/* ── Games content ── */}
         {isGame && (
           <>
-            {gameStatusFilter === 'all' && gameGenreFilter === null && (
-              <GameUpcoming ownedGames={games} onAdd={handleAddGame} />
-            )}
-
             <div className={styles.filterBar}>
               <button
                 type="button"

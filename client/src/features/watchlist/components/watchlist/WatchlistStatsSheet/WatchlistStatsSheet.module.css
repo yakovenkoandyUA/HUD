@@ -143,6 +143,14 @@
   margin-top: 4px;
 }
 
+.donutCenterRating {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  margin-top: 3px;
+  opacity: 0.8;
+}
+
 /* ── Media type stacked bar ── */
 .stackSection {
   padding: 0 24px 20px;
@@ -288,15 +296,15 @@
 
 .tooltipSub {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text3);
+  font-size: 12px;
+  color: var(--text2);
   white-space: nowrap;
 }
 
 .tooltipMeta {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text3);
+  color: var(--text2);
   white-space: nowrap;
 }
 

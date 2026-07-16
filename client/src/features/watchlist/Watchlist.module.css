@@ -277,9 +277,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
   color: var(--text3);
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
@@ -507,7 +504,7 @@
   align-items: center;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  padding: 6px 8px 6px 12px;
+  padding: 0px 8px 0px 12px;
   gap: 4px;
   position: relative;
   z-index: 48;

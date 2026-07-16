@@ -172,6 +172,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
   const { updateItem } = useWatchlistStore()
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
   const attemptedRef = useRef<Set<string>>(new Set())
 
   useModalHistory(onClose, isOpen)
@@ -258,8 +259,11 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
   const animePct  = totalMin > 0 ? 100 - moviePct - seriesPct : 0
   const hasMediaBreakdown = (movieMinutes > 0 ? 1 : 0) + (seriesMinutes > 0 ? 1 : 0) + (animeMinutes > 0 ? 1 : 0) > 1
 
-  const topGenre = root.children.find(g => g.name !== 'Інше') ?? root.children[0]
   const maxGenreCount = root.children[0]?.value ?? 1
+  const centerGenre = selectedGenre ? root.children.find(g => g.name === selectedGenre) : null
+  const centerNum    = centerGenre ? centerGenre.value : watchedCount
+  const centerName   = centerGenre ? centerGenre.name.toUpperCase() : 'ТАЙТЛІВ'
+  const centerRating = centerGenre?.avgRating != null ? (centerGenre.avgRating / 2).toFixed(1) : null
 
   return (
     <div
@@ -321,8 +325,9 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
               <>
                 <div className={styles.donutWrap}>
                   <div className={styles.donutCenter}>
-                    <span className={styles.donutCenterNum}>{topGenre?.value ?? 0}</span>
-                    <span className={styles.donutCenterLabel}>{topGenre?.name.toUpperCase() ?? ''}</span>
+                    <span className={styles.donutCenterNum}>{centerNum}</span>
+                    <span className={styles.donutCenterLabel}>{centerName}</span>
+                    {centerRating && <span className={styles.donutCenterRating}>★ {centerRating}</span>}
                   </div>
                   <ResponsivePie<PieGenreDatum>
                     data={root.children.map(g => ({
@@ -337,22 +342,15 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                     cornerRadius={4}
                     colors={{ datum: 'data.color' }}
                     borderWidth={0}
+                    activeOuterRadiusOffset={6}
                     enableArcLabels={false}
                     enableArcLinkLabels={false}
                     margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
                     theme={nivoTheme}
-                    tooltip={({ datum }) => (
-                      <div className={styles.tooltip}>
-                        <span className={styles.tooltipDot} style={{ background: datum.color }} />
-                        <div className={styles.tooltipBody}>
-                          <span className={styles.tooltipName}>{datum.label}</span>
-                          <span className={styles.tooltipSub}>{datum.value} тайт.</span>
-                          {datum.data.avgRating != null && (
-                            <span className={styles.tooltipMeta}>★ {(datum.data.avgRating / 2).toFixed(1)}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    tooltip={() => null}
+                    onClick={(datum) => {
+                      setSelectedGenre(prev => prev === datum.id ? null : datum.id as string)
+                    }}
                   />
                 </div>
                 <div className={styles.rankingBars}>
