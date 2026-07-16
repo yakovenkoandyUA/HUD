@@ -161,7 +161,7 @@ function formatNoteDate(iso: string): string {
 const SpaceDetailScreen: React.FC = () => {
   const navigate = useNavigate()
   const { spaceId } = useParams<{ spaceId: string }>()
-  const { spaces, fetchSpaces, updateSpace, deleteSpace, addMember, removeMember, setHomeProfile, setPetProfile, setTripProfile } = useSpacesStore()
+  const { spaces, fetchSpaces, updateSpace, deleteSpace, archiveSpace, addMember, removeMember, setHomeProfile, setPetProfile, setTripProfile } = useSpacesStore()
   const myId = useProfileStore(s => s.activeProfile?.id ?? '')
   const { showToast } = useUiStore()
   const { addMemory }  = useMemoriesStore()
@@ -412,6 +412,12 @@ const SpaceDetailScreen: React.FC = () => {
   const handleDelete = async () => {
     if (!space) return
     await deleteSpace(space.id)
+    navigate(-1)
+  }
+
+  const handleArchive = async () => {
+    if (!space) return
+    await archiveSpace(space.id)
     navigate(-1)
   }
 
@@ -1015,6 +1021,12 @@ const SpaceDetailScreen: React.FC = () => {
             </button>
 
             <div className={styles.deleteDivider} />
+
+            {isOwner && (
+              <button type="button" className={styles.archiveSpaceBtn} onClick={handleArchive}>
+                Архівувати простір
+              </button>
+            )}
 
             {!confirmDelete ? (
               <button type="button" className={styles.deleteSpaceBtn} onClick={() => setConfirmDelete(true)}>

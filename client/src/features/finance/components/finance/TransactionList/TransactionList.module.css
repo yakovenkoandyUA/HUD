@@ -230,6 +230,31 @@
   margin-top: 2px;
 }
 
+/* ── Space badge ── */
+.spaceBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.spaceDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.spaceName {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
 .txCategory {
   color: var(--text3);
   font-size: 12px;

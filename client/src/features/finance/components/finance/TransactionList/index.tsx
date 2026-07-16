@@ -5,6 +5,7 @@ import { getServiceLogoUrl, getServiceEmoji } from '../../../utils/serviceLogos'
 import { authFetch } from '@/shared/services/api'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { INCOME_CATEGORIES } from '../../../constants'
 import Modal from '@/shared/components/ui/Modal'
 import styles from './TransactionList.module.css'
@@ -169,6 +170,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const renameTransaction                  = useFinanceStore(s => s.renameTransaction)
   const patchTransaction                   = useFinanceStore(s => s.patchTransaction)
   const { categories, fetchCategories }    = useCategoryStore()
+  const spaces                             = useSpacesStore(s => s.spaces)
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
@@ -463,6 +465,15 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                           )}
                         </div>
                         <div className={styles.date}>{formatDate(t.date)}</div>
+                        {t.spaceId && (() => {
+                          const sp = spaces.find(s => s.id === t.spaceId)
+                          return sp ? (
+                            <div className={styles.spaceBadge}>
+                              <span className={styles.spaceDot} style={{ background: sp.color }} />
+                              <span className={styles.spaceName}>{sp.name}</span>
+                            </div>
+                          ) : null
+                        })()}
                       </div>
                     </div>
                     <div className={styles.right}>

@@ -213,6 +213,23 @@
   flex-shrink: 0;
 }
 
+.spaceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+}
+
+.spaceChipDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .checklistCounter {
   font-family: var(--font-mono);
   font-size: 11px;

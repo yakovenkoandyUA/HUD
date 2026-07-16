@@ -2,6 +2,7 @@ import React, { useRef, useCallback, useEffect, useState } from 'react'
 import PriorityBadge from '@/shared/components/ui/PriorityBadge'
 import type { UnifiedTodo, SprintTag } from '@/shared/types'
 import { isRecurring, isRoutineDueOnDay, calcStreak } from '../../../utils/sprint'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import styles from './TaskCard.module.css'
 
 /**
@@ -97,6 +98,9 @@ function getDayWord(n: number): string {
 const SWIPE_THRESHOLD = 80
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDetail }) => {
+  const spaces     = useSpacesStore(s => s.spaces)
+  const taskSpace  = item.spaceId ? spaces.find(s => s.id === item.spaceId) : undefined
+
   const checkDone  = (item.checklist ?? []).filter(c => c.done).length
   const checkTotal = (item.checklist ?? []).length
   const checkPct   = checkTotal > 0 ? Math.round((checkDone / checkTotal) * 100) : 0
@@ -107,7 +111,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const hasLabels    = (item.labels ?? []).length > 0
   const hasDueDate   = !!item.dueDate
   const isOverdue    = hasDueDate && !item.done && getDueDateDiff(item.dueDate!) < 0
-  const hasExtras    = hasLabels || hasDueDate || hasMissed
+  const hasExtras    = hasLabels || hasDueDate || hasMissed || !!taskSpace
   const showBar      = checkTotal > 0 && checkPct > 0
 
   // Swipe-to-delete
@@ -389,6 +393,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                 {hasMissed && !item.done && (
                   <span className={`${styles.missedBadge} ${missedLevel === 'danger' ? styles.missedBadgeDanger : ''}`}>
                     Пропущено {missedDays} {getDayWord(missedDays)}
+                  </span>
+                )}
+                {taskSpace && (
+                  <span className={styles.spaceChip}>
+                    <span className={styles.spaceChipDot} style={{ background: taskSpace.color }} />
+                    {taskSpace.name}
                   </span>
                 )}
               </div>

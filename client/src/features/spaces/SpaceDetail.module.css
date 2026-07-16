@@ -722,6 +722,21 @@
   margin: 24px 0 16px;
 }
 
+.archiveSpaceBtn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+  margin-bottom: 8px;
+}
+.archiveSpaceBtn:active { opacity: 1; }
+
 .deleteSpaceBtn {
   width: 100%;
   padding: 11px;
