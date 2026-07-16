@@ -18,14 +18,29 @@ const STATUS_CLASS: Record<string, string> = {
   dropped:   styles.statusDropped,
 }
 
+const PLATFORM_SHORT: Record<string, string> = {
+  'PC':               'PC',
+  'PS5':              'PS5',
+  'PS4':              'PS4',
+  'Xbox':             'XBX',
+  'Xbox Series X':    'XBX',
+  'Xbox One':         'XBX',
+  'Nintendo Switch':  'NSW',
+  'Switch':           'NSW',
+  'Mobile':           'MOB',
+  'iOS':              'iOS',
+  'Android':          'AND',
+  'Mac':              'MAC',
+  'Linux':            'LNX',
+}
+
 const PS_PLATFORMS = new Set(['PS5', 'PS4'])
 
 /**
  * GameCard
  * --------
- * Full-cover card in the 2-column games grid.
- * Title and meta are overlaid on the image via a bottom gradient.
- * Metacritic score shown as a color-coded badge top-right.
+ * Portrait 3:4 card in the 2-column games grid.
+ * Cover image fills card; title, platform badges and meta overlaid via bottom gradient.
  *
  * Props:
  * @prop {GameItem}   item    — game to display
@@ -38,6 +53,9 @@ interface GameCardProps {
 
 const GameCard: React.FC<GameCardProps> = ({ item, onClick }) => {
   const isPS = item.platforms.some(p => PS_PLATFORMS.has(p))
+  const platformLabels = [...new Set(
+    item.platforms.map(p => PLATFORM_SHORT[p] ?? p.slice(0, 3).toUpperCase())
+  )].slice(0, 3)
 
   return (
     <button type="button" className={styles.card} onClick={onClick}>
@@ -71,9 +89,21 @@ const GameCard: React.FC<GameCardProps> = ({ item, onClick }) => {
 
         <div className={styles.info}>
           <p className={styles.title}>{item.title}</p>
+
+          {platformLabels.length > 0 && (
+            <div className={styles.platforms}>
+              {platformLabels.map(p => (
+                <span key={p} className={styles.platformBadge}>{p}</span>
+              ))}
+            </div>
+          )}
+
           <div className={styles.meta}>
             {item.releaseDate && (
               <span className={styles.year}>{item.releaseDate.slice(0, 4)}</span>
+            )}
+            {item.status === 'playing' && item.hoursPlayed != null && item.hoursPlayed > 0 && (
+              <span className={styles.hours}>{item.hoursPlayed}год</span>
             )}
             {item.status === 'completed' && item.rating != null && item.rating > 0 && (
               <span className={styles.ratingTag}>★ {item.rating}</span>

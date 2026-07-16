@@ -92,6 +92,7 @@ const Watchlist: React.FC = () => {
   const [gameSortBy, setGameSortBy] = useState<GameSortBy>('added')
   const [gameSortOpen, setGameSortOpen] = useState(false)
   const [gameGenreFilter, setGameGenreFilter] = useState<string | null>(null)
+  const [gamePlatformFilter, setGamePlatformFilter] = useState<string | null>(null)
   const gameSortRef = useRef<HTMLDivElement>(null)
 
   const [sortBy, setSortBy] = useState<SortBy>('newest')
@@ -175,12 +176,22 @@ const Watchlist: React.FC = () => {
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).map(([g]) => g).slice(0, 12)
   }, [gamesByStatus])
 
+  const availableGamePlatforms = useMemo(() => {
+    const all = gamesByStatus.flatMap(g => g.platforms)
+    return [...new Set(all)].sort()
+  }, [gamesByStatus])
+
   useEffect(() => {
     if (gameGenreFilter && !availableGameGenres.includes(gameGenreFilter)) setGameGenreFilter(null)
   }, [availableGameGenres, gameGenreFilter])
 
+  useEffect(() => {
+    if (gamePlatformFilter && !availableGamePlatforms.includes(gamePlatformFilter)) setGamePlatformFilter(null)
+  }, [availableGamePlatforms, gamePlatformFilter])
+
   const filteredGames = useMemo(() => {
-    const list = gameGenreFilter ? gamesByStatus.filter(g => g.genres.includes(gameGenreFilter)) : gamesByStatus
+    let list = gameGenreFilter ? gamesByStatus.filter(g => g.genres.includes(gameGenreFilter)) : gamesByStatus
+    if (gamePlatformFilter) list = list.filter(g => g.platforms.includes(gamePlatformFilter))
     const sorted = [...list]
     switch (gameSortBy) {
       case 'rating':
@@ -196,15 +207,14 @@ const Watchlist: React.FC = () => {
         sorted.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
     }
     return sorted
-  }, [gamesByStatus, gameGenreFilter, gameSortBy])
+  }, [gamesByStatus, gameGenreFilter, gamePlatformFilter, gameSortBy])
 
   const playingGames = useMemo(() => games.filter(g => g.status === 'playing'), [games])
 
   const gameStats = useMemo(() => ({
-    total:      games.length,
     playing:    games.filter(g => g.status === 'playing').length,
+    want:       games.filter(g => g.status === 'want').length,
     completed:  games.filter(g => g.status === 'completed').length,
-    platinum:   games.filter(g => g.platinum).length,
     totalHours: Math.round(games.reduce((s, g) => s + (g.hoursPlayed ?? 0), 0)),
   }), [games])
 
@@ -380,14 +390,14 @@ const Watchlist: React.FC = () => {
       {/* ── Game stats row ── */}
       {isGame && (
         <div className={styles.gameStatsRow}>
-          <div className={styles.gameStat} onClick={() => setGameStatusFilter('all')}>
-            <span className={styles.gameStatNum}>{gameStats.total}</span>
-            <span className={styles.gameStatLabel}>всього</span>
-          </div>
-          <div className={styles.gameStatSep} />
           <div className={styles.gameStat} onClick={() => setGameStatusFilter('playing')}>
             <span className={`${styles.gameStatNum} ${styles.gameStatNumTeal}`}>{gameStats.playing}</span>
             <span className={styles.gameStatLabel}>граю</span>
+          </div>
+          <div className={styles.gameStatSep} />
+          <div className={styles.gameStat} onClick={() => setGameStatusFilter('want')}>
+            <span className={styles.gameStatNum}>{gameStats.want}</span>
+            <span className={styles.gameStatLabel}>хочу</span>
           </div>
           <div className={styles.gameStatSep} />
           <div className={styles.gameStat} onClick={() => setGameStatusFilter('completed')}>
@@ -395,17 +405,10 @@ const Watchlist: React.FC = () => {
             <span className={styles.gameStatLabel}>пройдено</span>
           </div>
           <div className={styles.gameStatSep} />
-          {gameStats.totalHours > 0 ? (
-            <div className={styles.gameStat}>
-              <span className={`${styles.gameStatNum} ${styles.gameStatNumAccent}`}>{gameStats.totalHours}</span>
-              <span className={styles.gameStatLabel}>годин</span>
-            </div>
-          ) : (
-            <div className={styles.gameStat}>
-              <span className={`${styles.gameStatNum} ${styles.gameStatNumAccent}`}>{gameStats.platinum}</span>
-              <span className={styles.gameStatLabel}>platinum</span>
-            </div>
-          )}
+          <div className={styles.gameStat}>
+            <span className={`${styles.gameStatNum} ${styles.gameStatNumAccent}`}>{gameStats.totalHours}</span>
+            <span className={styles.gameStatLabel}>годин</span>
+          </div>
         </div>
       )}
 
@@ -569,7 +572,7 @@ const Watchlist: React.FC = () => {
               <div className={styles.sortWrap} ref={gameSortRef}>
                 <button
                   type="button"
-                  className={`${styles.sortBtn} ${gameSortBy !== 'added' || gameGenreFilter !== null ? styles.sortBtnActive : ''}`}
+                  className={`${styles.sortBtn} ${(gameSortBy !== 'added' || gameGenreFilter !== null || gamePlatformFilter !== null || gameStatusFilter === 'dropped' || gameStatusFilter === 'announced') ? styles.sortBtnActive : ''}`}
                   onClick={() => setGameSortOpen(v => !v)}
                   aria-label="Сортування і фільтр"
                 >
@@ -579,6 +582,19 @@ const Watchlist: React.FC = () => {
                 </button>
                 {gameSortOpen && (
                   <div className={styles.sortDropdown}>
+                    <p className={styles.dropdownSection}>СТАТУС</p>
+                    {(['dropped', 'announced'] as const).map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        className={`${styles.sortOption} ${gameStatusFilter === s ? styles.sortOptionActive : ''}`}
+                        onClick={() => { setGameStatusFilter(gameStatusFilter === s ? 'all' : s); setGameSortOpen(false) }}
+                      >
+                        {gameStatusFilter === s && <span className={styles.sortOptionDot} />}
+                        {s === 'dropped' ? 'Кинув' : 'Анонси'}
+                      </button>
+                    ))}
+                    <div className={styles.dropdownDivider} />
                     {availableGameGenres.length > 1 && (
                       <>
                         <p className={styles.dropdownSection}>ЖАНР</p>
@@ -622,7 +638,7 @@ const Watchlist: React.FC = () => {
             </div>
 
             <div className={styles.tabsInner}>
-              {GAME_STATUS_TABS.map(t => (
+              {GAME_STATUS_TABS.filter(t => t.id !== 'announced' && t.id !== 'dropped').map(t => (
                 <button
                   key={t.id}
                   type="button"
@@ -632,14 +648,45 @@ const Watchlist: React.FC = () => {
                   {t.label}
                 </button>
               ))}
+              {(gameStatusFilter === 'dropped' || gameStatusFilter === 'announced') && (
+                <button
+                  type="button"
+                  className={`${styles.innerTab} ${styles.innerTabActive}`}
+                  onClick={() => setGameStatusFilter('all')}
+                >
+                  {gameStatusFilter === 'dropped' ? 'Кинув' : 'Анонси'}
+                </button>
+              )}
             </div>
+
+            {availableGamePlatforms.length > 1 && (
+              <div className={styles.platformRail}>
+                <button
+                  type="button"
+                  className={`${styles.platformPill} ${gamePlatformFilter === null ? styles.platformPillActive : ''}`}
+                  onClick={() => setGamePlatformFilter(null)}
+                >
+                  Всі
+                </button>
+                {availableGamePlatforms.map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`${styles.platformPill} ${gamePlatformFilter === p ? styles.platformPillActive : ''}`}
+                    onClick={() => setGamePlatformFilter(gamePlatformFilter === p ? null : p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {gamesLoading ? (
               <div className={styles.gamesSkeleton}>
                 {Array.from({ length: 6 }, (_, i) => <div key={i} className={styles.skeletonCard} />)}
               </div>
             ) : (
-              <div key={`game-${gameStatusFilter}-${gameGenreFilter ?? ''}-${gameSortBy}`} className={styles.contentAnimated}>
+              <div key={`game-${gameStatusFilter}-${gameGenreFilter ?? ''}-${gameSortBy}-${gamePlatformFilter ?? ''}`} className={styles.contentAnimated}>
                 {filteredGames.length === 0 ? (
                   <div className={styles.emptyGames}>
                     <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyMimirImg} draggable={false} />

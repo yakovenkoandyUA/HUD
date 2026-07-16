@@ -11,7 +11,7 @@
 .cover {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 3 / 4;
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--surface);
@@ -41,9 +41,9 @@
   inset: 0;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.90) 0%,
-    rgba(0, 0, 0, 0.35) 40%,
-    transparent 68%
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.45) 40%,
+    transparent 65%
   );
   pointer-events: none;
 }
@@ -109,10 +109,10 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 8px 9px 7px;
+  padding: 10px 9px 9px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .title {
@@ -129,6 +129,25 @@
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
+/* ── Platform badges ── */
+.platforms {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.platformBadge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  padding: 1px 4px;
+  line-height: 1.4;
+}
+
 .meta {
   display: flex;
   align-items: center;
@@ -138,7 +157,13 @@
 .year {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.hours {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #2DD4BF;
 }
 
 .ratingTag {
