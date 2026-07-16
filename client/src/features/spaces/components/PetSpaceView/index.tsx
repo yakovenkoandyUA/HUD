@@ -108,13 +108,15 @@ function EventIcon({ type }: { type: PetEventType }) {
 
 // ── Empty state ────────────────────────────────────────────────────────────
 
-function EmptyEvents() {
+function EmptyEvents({ onVet, onVacc }: { onVet: () => void; onVacc: () => void }) {
   return (
     <div className={styles.empty}>
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={styles.emptyIcon}>
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-      </svg>
-      <p className={styles.emptyText}>Поки немає записів.<br/>Додай ветеринара, щеплення чи ліки.</p>
+      <p className={styles.emptyTitle}>Хронологія порожня</p>
+      <p className={styles.emptyText}>Додай першу подію, щоб почати хронологію життя улюбленця.</p>
+      <div className={styles.emptyCtaRow}>
+        <button type="button" className={styles.emptyCtaBtn} onClick={onVet}>+ Ветеринар</button>
+        <button type="button" className={styles.emptyCtaBtn} onClick={onVacc}>+ Щеплення</button>
+      </div>
     </div>
   )
 }
@@ -581,104 +583,93 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdat
     }
   }
 
+  const isProfileEmpty = !profile?.name && !profile?.species && !profile?.breed && !profile?.birthDate && profile?.weight == null
   const colorVar = { '--space-color': color } as React.CSSProperties
 
   return (
     <div className={styles.root} style={colorVar}>
 
-      {/* Profile card */}
-      <div className={styles.profileCard}>
-        {profile?.photoUrl ? (
-          <img src={profile.photoUrl} alt={profile.name || 'Улюбленець'} className={styles.profilePhoto} />
+      {/* ── Profile section ── */}
+      <div className={styles.profileSection}>
+        <div className={styles.profileSectionHeader}>
+          <span className={styles.sectionTitle}>ПРОФІЛЬ УЛЮБЛЕНЦЯ</span>
+          {!isProfileEmpty && (
+            <button type="button" className={styles.profileEditBtn} onClick={() => setProfileOpen(true)} aria-label="Редагувати профіль">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {isProfileEmpty ? (
+          <div className={styles.profileSetupCard}>
+            <div className={styles.profileSetupRows}>
+              <div className={styles.profileSetupRow}>
+                <span className={styles.profileSetupIcon}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <span className={styles.profileSetupContent}>
+                  <span className={styles.profileSetupLabel}>Кличка</span>
+                  <span className={styles.profileSetupValue}>не вказано</span>
+                </span>
+              </div>
+              <div className={styles.profileSetupRow}>
+                <span className={styles.profileSetupIcon}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="14" r="5"/><circle cx="5" cy="8" r="2"/><circle cx="19" cy="8" r="2"/><circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/></svg>
+                </span>
+                <span className={styles.profileSetupContent}>
+                  <span className={styles.profileSetupLabel}>Вид / порода</span>
+                  <span className={styles.profileSetupValue}>не вказано</span>
+                </span>
+              </div>
+              <div className={styles.profileSetupRow}>
+                <span className={styles.profileSetupIcon}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+                <span className={styles.profileSetupContent}>
+                  <span className={styles.profileSetupLabel}>Дата народження</span>
+                  <span className={styles.profileSetupValue}>не вказано</span>
+                </span>
+              </div>
+            </div>
+            <button type="button" className={styles.profileSetupBtn} onClick={() => setProfileOpen(true)}>
+              Заповнити профіль
+            </button>
+          </div>
         ) : (
-          <div className={styles.profilePhotoPlaceholder}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
+          <div className={styles.profileCard}>
+            {profile?.photoUrl && (
+              <img src={profile.photoUrl} alt={profile.name || ''} className={styles.profilePhoto} />
+            )}
+            <div className={styles.profileInfo}>
+              <div className={styles.profileName}>{profile?.name || '—'}</div>
+              <div className={styles.profileMeta}>
+                {profile?.species && <span className={styles.speciesBadge}>{profile.species}</span>}
+                {profile?.breed   && <span className={styles.metaItem}>{profile.breed}</span>}
+                {profile?.birthDate && <span className={styles.metaItem}>{calcAge(profile.birthDate)}</span>}
+                {profile?.weight != null && <span className={styles.metaItem}>{profile.weight} кг</span>}
+              </div>
+            </div>
           </div>
         )}
-        <div className={styles.profileInfo}>
-          <div className={styles.profileName}>
-            {profile?.name || 'Улюбленець'}
-          </div>
-          <div className={styles.profileMeta}>
-            {profile?.species && (
-              <span className={styles.speciesBadge}>{profile.species}</span>
-            )}
-            {profile?.breed && (
-              <span className={styles.metaItem}>{profile.breed}</span>
-            )}
-            {profile?.birthDate && (
-              <span className={styles.metaItem}>{calcAge(profile.birthDate)}</span>
-            )}
-            {profile?.weight != null && (
-              <span className={styles.metaItem}>{profile.weight} кг</span>
-            )}
-          </div>
+      </div>
+
+      {/* ── Quick actions ── */}
+      <div className={styles.actionsSection}>
+        <span className={styles.sectionTitle}>ШВИДКІ ДІЇ</span>
+        <div className={styles.actionsGrid}>
+          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('vet_visit')}>Ветеринар</button>
+          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('vaccination')}>Щеплення</button>
+          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('medication')}>Ліки</button>
+          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('grooming')}>Грумінг</button>
+          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('weight')}>Вага</button>
+          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('note')}>Нотатка</button>
         </div>
-        <button
-          type="button"
-          className={styles.profileEditBtn}
-          onClick={() => setProfileOpen(true)}
-          aria-label="Редагувати профіль"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-        </button>
       </div>
 
-      {/* Quick actions */}
-      <div className={styles.actions}>
-        <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('vet_visit')}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-          Ветеринар
-        </button>
-        <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('vaccination')}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/>
-            <path d="m9 17 3-3-3-3M15 17h6M18 14v6"/>
-          </svg>
-          Щеплення
-        </button>
-        <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('medication')}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="16" cy="16" r="6"/>
-            <path d="m12.5 19.5 7-7"/>
-            <path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/>
-          </svg>
-          Ліки
-        </button>
-        <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('grooming')}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-          Грумінг
-        </button>
-        <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('weight')}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-            <path d="M12 6v6l4 2"/>
-          </svg>
-          Вага
-        </button>
-        <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('note')}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="8" y1="6" x2="21" y2="6"/>
-            <line x1="8" y1="12" x2="21" y2="12"/>
-            <line x1="8" y1="18" x2="21" y2="18"/>
-            <line x1="3" y1="6" x2="3.01" y2="6"/>
-            <line x1="3" y1="12" x2="3.01" y2="12"/>
-            <line x1="3" y1="18" x2="3.01" y2="18"/>
-          </svg>
-          Нотатка
-        </button>
-      </div>
-
-      {/* Events list */}
+      {/* ── Events list ── */}
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>ХРОНОЛОГІЯ</h3>
         {loading && events.length === 0 ? (
@@ -686,7 +677,7 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdat
             <span className={styles.loadingDot} style={{ background: color }} />
           </div>
         ) : events.length === 0 ? (
-          <EmptyEvents />
+          <EmptyEvents onVet={() => setAddSheet('vet_visit')} onVacc={() => setAddSheet('vaccination')} />
         ) : (
           <div className={styles.eventList}>
             {events.map(event => (
