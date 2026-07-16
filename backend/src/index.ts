@@ -1,6 +1,6 @@
 import path from 'path'
 import dotenv from 'dotenv'
-dotenv.config({ path: path.resolve(__dirname, '../.env') })
+dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 import * as Sentry from '@sentry/node'
 import express from 'express'
 import cors from 'cors'

@@ -20,7 +20,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response): Promise<
   }
 
   try {
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=12&langRestrict=&key=${BOOKS_KEY}`
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=20&orderBy=relevance&key=${BOOKS_KEY}`
     const resp = await fetch(url)
     if (!resp.ok) { res.status(resp.status).json({ error: 'Books API error' }); return }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,8 +49,10 @@ router.get('/search', requireAuth, async (req: Request, res: Response): Promise<
       }
     })
 
-    cache.set(cacheKey, { data: items, at: Date.now() })
-    res.json(items)
+    const filtered = items.filter((i: { language: string | null }) => i.language !== 'ru')
+    const result = filtered.length > 0 ? filtered : items
+    cache.set(cacheKey, { data: result, at: Date.now() })
+    res.json(result)
   } catch {
     res.status(500).json({ error: 'Failed to fetch books' })
   }

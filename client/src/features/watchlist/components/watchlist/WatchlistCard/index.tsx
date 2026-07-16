@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styles from './WatchlistCard.module.css'
 import type { WatchlistItem } from '@/shared/types'
 
@@ -39,13 +39,23 @@ const STATUS_CLASS: Record<string, string> = {
 const getStatusLabel = (item: WatchlistItem) => STATUS_LABEL[item.status] ?? null
 
 const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
-	const imgSrc = item.posterPath ? `https://image.tmdb.org/t/p/w342${item.posterPath}` : (item.thumbnail ?? null)
+	const [imgError, setImgError] = useState(false)
+	const imgSrc = item.posterPath
+		? `https://image.tmdb.org/t/p/w342${item.posterPath}`
+		: (item.thumbnail || null)
+	const showImg = imgSrc && !imgError
 
 	return (
 		<button type="button" className={styles.card} onClick={onClick}>
 			<div className={styles.poster}>
-				{imgSrc ? (
-					<img src={imgSrc} alt={item.title} className={styles.img} loading="lazy" />
+				{showImg ? (
+					<img
+						src={imgSrc}
+						alt={item.title}
+						className={styles.img}
+						loading="lazy"
+						onError={() => setImgError(true)}
+					/>
 				) : (
 					<div className={styles.noImg}>
 						<span>{CATEGORY_ICON[item.category]}</span>

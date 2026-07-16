@@ -112,7 +112,7 @@ const BookSearch: React.FC<BookSearchProps> = ({ onAdd }) => {
           <input
             ref={inputRef}
             className={styles.input}
-            placeholder="Пошук книги..."
+            placeholder="Назва, автор або ISBN..."
             value={query}
             onFocus={() => setActive(true)}
             onChange={e => setQuery(e.target.value)}
