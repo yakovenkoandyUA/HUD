@@ -1,5 +1,6 @@
 .wrap {
   padding: 0 0 4px;
+  margin-left: 12px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -9,7 +10,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--accent);
-  padding: 10px 16px 6px;
+  padding: 10px 16px 6px 4px;
 }
 
 .scrollRow {
@@ -18,7 +19,7 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding-left: 16px;
+  padding-left: 4px;
   padding-right: 16px;
   padding-bottom: 8px;
   scrollbar-width: none;
@@ -26,7 +27,7 @@
 .scrollRow::-webkit-scrollbar { display: none; }
 
 .heroCard {
-  flex: 0 0 calc(50% - 5px);
+  flex: 0 0 calc(45% - 5px);
   scroll-snap-align: start;
   position: relative;
   border-radius: 10px;

@@ -501,6 +501,36 @@
   margin: 0;
 }
 
+/* ── Unified filter bar (search icon + genres + actions) ── */
+.filterBar {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  padding: 6px 8px 6px 12px;
+  gap: 4px;
+  position: relative;
+  z-index: 48;
+}
+
+.filterBarGenres {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.filterBarGenres::-webkit-scrollbar { display: none; }
+
+.filterBarActions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* ── Book WIP placeholder ── */
 .bookWip {
   display: flex;

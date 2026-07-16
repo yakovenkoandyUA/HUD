@@ -83,13 +83,18 @@ function computeCirclePack(items: WatchlistItem[]): { root: CirclePackRoot; watc
     })
   })
 
-  const children: GenreBubble[] = Object.entries(genreMap)
-    .sort((a, b) => b[1].count - a[1].count)
-    .slice(0, 10)
-    .map(([name, { count, ratingSum, ratingCount }], i) => {
-      const avgRating = ratingCount > 0 ? ratingSum / ratingCount : null
-      return { name, value: count, avgRating, color: genreColor(i, avgRating), textColor: genreTextColor(avgRating) }
-    })
+  const sorted = Object.entries(genreMap).sort((a, b) => b[1].count - a[1].count)
+  const top5 = sorted.slice(0, 5)
+  const otherCount = sorted.slice(5).reduce((s, [, v]) => s + v.count, 0)
+
+  const children: GenreBubble[] = top5.map(([name, { count, ratingSum, ratingCount }], i) => {
+    const avgRating = ratingCount > 0 ? ratingSum / ratingCount : null
+    return { name, value: count, avgRating, color: genreColor(i, avgRating), textColor: genreTextColor(avgRating) }
+  })
+
+  if (otherCount > 0) {
+    children.push({ name: 'Інше', value: otherCount, avgRating: null, color: 'hsl(220, 14%, 26%)', textColor: '#c8b890' })
+  }
 
   return {
     root: { name: 'root', color: 'transparent', children },
@@ -133,14 +138,11 @@ const nivoTheme = {
   background: 'transparent',
   tooltip: {
     container: {
-      background: '#1e2235',
-      border: '1px solid #4a5280',
-      borderRadius: 10,
-      padding: '8px 14px',
-      fontSize: 13,
-      fontFamily: 'var(--font-body)',
-      color: '#e8d5a0',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+      background: 'transparent',
+      border: 'none',
+      borderRadius: 0,
+      padding: 0,
+      boxShadow: 'none',
     },
   },
   axis: {
@@ -234,10 +236,10 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
     const { root, watchedCount } = computeCirclePack(items)
     const monthBins = computeMonthly(items)
 
-    return { movieWatched, seriesCount, animeCount, seriesEp, animeEp, totalH, root, watchedCount, monthBins }
+    return { movieWatched, seriesCount, animeCount, seriesEp, animeEp, totalH, movieMinutes, seriesMinutes, animeMinutes, root, watchedCount, monthBins }
   }, [items])
 
-  const { totalH, movieWatched, seriesCount, animeCount, seriesEp, animeEp, root, watchedCount, monthBins } = stats
+  const { totalH, movieWatched, seriesCount, animeCount, seriesEp, animeEp, movieMinutes, seriesMinutes, animeMinutes, root, watchedCount, monthBins } = stats
 
   if (!mounted) return null
 
@@ -249,6 +251,15 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
   if (movieWatched > 0) summaryParts.push(`${movieWatched} фільм${movieWatched === 1 ? '' : 'ів'}`)
   if (seriesCount > 0)  summaryParts.push(`${seriesEp} еп. серіалів`)
   if (animeCount > 0)   summaryParts.push(`${animeEp} еп. аніме`)
+
+  const totalMin = movieMinutes + seriesMinutes + animeMinutes
+  const moviePct  = totalMin > 0 ? Math.round(movieMinutes  / totalMin * 100) : 0
+  const seriesPct = totalMin > 0 ? Math.round(seriesMinutes / totalMin * 100) : 0
+  const animePct  = totalMin > 0 ? 100 - moviePct - seriesPct : 0
+  const hasMediaBreakdown = (movieMinutes > 0 ? 1 : 0) + (seriesMinutes > 0 ? 1 : 0) + (animeMinutes > 0 ? 1 : 0) > 1
+
+  const topGenre = root.children.find(g => g.name !== 'Інше') ?? root.children[0]
+  const maxGenreCount = root.children[0]?.value ?? 1
 
   return (
     <div
@@ -271,24 +282,47 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
           <>
             <div className={styles.heroBlock}>
               <span className={styles.heroNum}>{String(totalH)}</span>
-              <span className={styles.heroLabel}>ГОДИН</span>
+              <span className={styles.heroLabel}>ГОДИН · за весь час</span>
               <span className={styles.heroDays}>{days} доби</span>
             </div>
 
-            {summaryParts.length > 0 && (
-              <p className={styles.summary}>{summaryParts.join(' · ')}</p>
+            {(watchedCount > 0 || summaryParts.length > 0) && (
+              <p className={styles.summary}>
+                {watchedCount > 0 && `${watchedCount} тайтлів`}
+                {summaryParts.length > 0 && ` · ${summaryParts.join(' · ')}`}
+              </p>
+            )}
+
+            {hasMediaBreakdown && (
+              <>
+                <div className={styles.divider}>
+                  <span className={styles.dividerLabel}>РОЗПОДІЛ ЧАСУ</span>
+                </div>
+                <div className={styles.stackSection}>
+                  <div className={styles.stackBar}>
+                    {movieMinutes > 0  && <div className={styles.stackSegMovie}  style={{ width: `${moviePct}%`  }} />}
+                    {seriesMinutes > 0 && <div className={styles.stackSegSeries} style={{ width: `${seriesPct}%` }} />}
+                    {animeMinutes > 0  && <div className={styles.stackSegAnime}  style={{ width: `${animePct}%`  }} />}
+                  </div>
+                  <div className={styles.stackLabels}>
+                    {movieMinutes > 0  && <span className={styles.stackLabel}><i className={styles.stackDotMovie}  />Фільми {moviePct}%</span>}
+                    {seriesMinutes > 0 && <span className={styles.stackLabel}><i className={styles.stackDotSeries} />Серіали {seriesPct}%</span>}
+                    {animeMinutes > 0  && <span className={styles.stackLabel}><i className={styles.stackDotAnime}  />Аніме {animePct}%</span>}
+                  </div>
+                </div>
+              </>
             )}
 
             <div className={styles.divider}>
-              <span className={styles.dividerLabel}>ЖАНРИ × РЕЙТИНГ</span>
+              <span className={styles.dividerLabel}>ТОП ЖАНРИ</span>
             </div>
 
             {hasBubbles ? (
               <>
                 <div className={styles.donutWrap}>
                   <div className={styles.donutCenter}>
-                    <span className={styles.donutCenterNum}>{watchedCount}</span>
-                    <span className={styles.donutCenterLabel}>ПЕРЕГЛЯНУТО</span>
+                    <span className={styles.donutCenterNum}>{topGenre?.value ?? 0}</span>
+                    <span className={styles.donutCenterLabel}>{topGenre?.name.toUpperCase() ?? ''}</span>
                   </div>
                   <ResponsivePie<PieGenreDatum>
                     data={root.children.map(g => ({
@@ -321,12 +355,17 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                     )}
                   />
                 </div>
-                <div className={styles.genreLegend}>
+                <div className={styles.rankingBars}>
                   {root.children.map(g => (
-                    <div key={g.name} className={styles.genreRow}>
-                      <span className={styles.genreDot} style={{ background: g.color }} />
-                      <span className={styles.genreName}>{g.name}</span>
-                      <span className={styles.genreCount}>{g.value}</span>
+                    <div key={g.name} className={styles.rankingRow}>
+                      <span className={styles.rankingName}>{g.name}</span>
+                      <div className={styles.rankingTrack}>
+                        <div
+                          className={styles.rankingFill}
+                          style={{ width: `${(g.value / maxGenreCount) * 100}%`, background: g.color }}
+                        />
+                      </div>
+                      <span className={styles.rankingCount}>{g.value}</span>
                     </div>
                   ))}
                 </div>

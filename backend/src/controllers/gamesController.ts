@@ -15,6 +15,61 @@ const PLATFORM_MAP: Record<number, string> = {
   21:  'Android',
 }
 
+interface RawgGame {
+  id: number
+  name: string
+  background_image: string | null
+  released: string | null
+  metacritic: number | null
+  platforms: Array<{ platform: { id: number; name: string } }> | null
+  genres: Array<{ name: string }>
+}
+
+let upcomingCache: { data: unknown[]; expiresAt: number } | null = null
+
+export async function upcoming(req: Request, res: Response): Promise<void> {
+  if (!RAWG_KEY) { res.status(503).json({ error: 'RAWG_API_KEY not configured' }); return }
+
+  if (upcomingCache && Date.now() < upcomingCache.expiresAt) {
+    res.json(upcomingCache.data)
+    return
+  }
+
+  try {
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, '0')
+    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate()
+    const dateFrom = `${y}-${m}-01`
+    const dateTo   = `${y}-${m}-${lastDay}`
+
+    const url = `${RAWG_BASE}/games?key=${RAWG_KEY}&dates=${dateFrom},${dateTo}&ordering=-added&page_size=20&platforms=187,18,4,7,186`
+    const raw = await fetch(url)
+    if (!raw.ok) { res.status(502).json({ error: 'RAWG error' }); return }
+
+    const data = await raw.json() as { results: RawgGame[] }
+    const results = (data.results ?? [])
+      .filter(r => r.background_image)
+      .map(r => ({
+        rawgId:      r.id,
+        title:       r.name,
+        coverUrl:    r.background_image ?? '',
+        releaseDate: r.released ?? '',
+        metacritic:  r.metacritic ?? null,
+        platforms:   (r.platforms ?? [])
+          .map(p => PLATFORM_MAP[p.platform.id] ?? null)
+          .filter((v): v is string => v !== null)
+          .filter((v, i, a) => a.indexOf(v) === i),
+        genres:      (r.genres ?? []).map(g => g.name),
+      }))
+
+    upcomingCache = { data: results, expiresAt: Date.now() + 2 * 60 * 60 * 1000 }
+    res.json(results)
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch upcoming games' })
+  }
+}
+
 export async function search(req: Request, res: Response): Promise<void> {
   const q = (req.query.q as string | undefined)?.trim()
   if (!q) { res.status(400).json({ error: 'Query required' }); return }

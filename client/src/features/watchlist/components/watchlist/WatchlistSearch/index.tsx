@@ -42,6 +42,8 @@ interface SearchResult {
 interface WatchlistSearchProps {
   category: WatchlistCategory
   onAdd: (item: Omit<WatchlistItem, 'id' | 'addedAt'>) => void
+  /** When true — renders only a search icon button; overlay opens on click */
+  iconOnly?: boolean
 }
 
 const STATUS_PREVIEW_OPTIONS: { value: WatchlistStatus; label: string }[] = [
@@ -50,7 +52,7 @@ const STATUS_PREVIEW_OPTIONS: { value: WatchlistStatus; label: string }[] = [
   { value: 'watched',  label: 'ГЛЯНУВ'  },
 ]
 
-const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) => {
+const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, iconOnly }) => {
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -246,46 +248,63 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd }) =>
   })()
 
   return (
-    <div className={styles.wrap}>
+    <div className={iconOnly ? styles.wrapIcon : styles.wrap}>
       {/* Backdrop overlay — closes search */}
       {searchActive && !preview && (
         <div className={styles.searchOverlay} onClick={deactivateSearch} />
       )}
 
-      {/* Search bar — fixed to top when active */}
-      <div className={`${styles.searchBar} ${searchActive ? styles.searchBarActive : ''}`}>
-        <div className={styles.inputRow}>
-          <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 16 16" fill="none">
+      {/* iconOnly mode: just a search icon button when inactive */}
+      {iconOnly && !searchActive && (
+        <button
+          type="button"
+          className={styles.searchIconBtn}
+          onClick={activateSearch}
+          aria-label="Пошук"
+        >
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
             <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
             <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
-          <input
-            ref={inputRef}
-            className={styles.input}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={activateSearch}
-            placeholder={placeholder}
-          />
-          {query && (
-            <button
-              type="button"
-              className={styles.clearBtn}
-              onClick={() => { setQuery(''); setResults([]); setIsOpen(false) }}
-              aria-label="Очистити"
-            >
-              ✕
+        </button>
+      )}
+
+      {/* Search bar — fixed to top when active (always shown in non-iconOnly mode) */}
+      {(!iconOnly || searchActive) && (
+        <div className={`${styles.searchBar} ${searchActive ? styles.searchBarActive : ''}`}>
+          <div className={styles.inputRow}>
+            <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <input
+              ref={inputRef}
+              className={styles.input}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={activateSearch}
+              placeholder={placeholder}
+            />
+            {query && (
+              <button
+                type="button"
+                className={styles.clearBtn}
+                onClick={() => { setQuery(''); setResults([]); setIsOpen(false) }}
+                aria-label="Очистити"
+              >
+                ✕
+              </button>
+            )}
+            {loading && <div className={styles.spinner} />}
+          </div>
+
+          {searchActive && (
+            <button type="button" className={styles.cancelBtn} onClick={deactivateSearch}>
+              Скасувати
             </button>
           )}
-          {loading && <div className={styles.spinner} />}
         </div>
-
-        {searchActive && (
-          <button type="button" className={styles.cancelBtn} onClick={deactivateSearch}>
-            Скасувати
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Results panel */}
       {showResults && (

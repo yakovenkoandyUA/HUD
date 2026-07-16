@@ -4,6 +4,28 @@
   width: 100%;
 }
 
+/* iconOnly mode — just a button, no extra space */
+.wrapIcon {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.searchIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.searchIconBtn:active { color: var(--accent); }
+
 /* ── Search overlay ─────────────────────────────────────────── */
 
 .searchOverlay {

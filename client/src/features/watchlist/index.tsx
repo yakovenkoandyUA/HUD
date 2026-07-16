@@ -8,6 +8,7 @@ import GameSearch from './games/games/GameSearch'
 import GameCard from './games/games/GameCard'
 import GameDetail from './games/games/GameDetail'
 import GameHero from './games/games/GameHero'
+import GameUpcoming from './games/games/GameUpcoming'
 import WatchlistStatsSheet from './components/watchlist/WatchlistStatsSheet'
 import ImportWatchlistModal from './components/watchlist/ImportWatchlistModal'
 import BookSearch from './books/BookSearch'
@@ -441,95 +442,96 @@ const Watchlist: React.FC = () => {
         {/* ── Media content ── */}
         {isMedia && (
           <>
-            {availableGenres.length > 0 && (
-              <div className={styles.genreStrip}>
-                {availableGenres.map(g => (
-                  <button
-                    key={g}
-                    type="button"
-                    className={`${styles.genreTag} ${activeGenres.has(g) ? styles.genreTagActive : ''}`}
-                    onClick={() =>
-                      setActiveGenres(prev => {
-                        const next = new Set(prev)
-                        next.has(g) ? next.delete(g) : next.add(g)
-                        return next
-                      })
-                    }
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className={styles.searchWrap}>
-              <WatchlistSearch category={tab as WatchlistCategory} onAdd={handleAdd} />
-              {(tab === 'movie' || tab === 'series' || tab === 'anime') && (
-                <button
-                  type="button"
-                  className={styles.sortBtn}
-                  onClick={() => setImportOpen(true)}
-                  aria-label="Імпорт"
-                  title="Імпорт зі стороннього сервісу"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 2v8M8 10l-3-3M8 10l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M2 12.5v1A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                </button>
+            <div className={styles.filterBar}>
+              <WatchlistSearch category={tab as WatchlistCategory} onAdd={handleAdd} iconOnly />
+              {availableGenres.length > 0 && (
+                <div className={styles.filterBarGenres}>
+                  {availableGenres.map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      className={`${styles.genreTag} ${activeGenres.has(g) ? styles.genreTagActive : ''}`}
+                      onClick={() =>
+                        setActiveGenres(prev => {
+                          const next = new Set(prev)
+                          next.has(g) ? next.delete(g) : next.add(g)
+                          return next
+                        })
+                      }
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
               )}
-              <div className={styles.sortWrap} ref={sortRef}>
-                <button
-                  type="button"
-                  className={`${styles.sortBtn} ${sortBy !== 'newest' || watchScope !== 'all' ? styles.sortBtnActive : ''}`}
-                  onClick={() => setSortOpen(v => !v)}
-                  aria-label="Сортування"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </button>
-                {sortOpen && (
-                  <div className={styles.sortDropdown}>
-                    {accepted.length > 0 && (
-                      <>
-                        <p className={styles.dropdownSection}>ПОКАЗАТИ</p>
-                        {WATCH_SCOPE_OPTIONS.map(o => (
-                          <button
-                            key={o.key}
-                            type="button"
-                            className={`${styles.sortOption} ${watchScope === o.key ? styles.sortOptionActive : ''}`}
-                            onClick={() => { setWatchScope(o.key); setSortOpen(false) }}
-                          >
-                            {watchScope === o.key && <span className={styles.sortOptionDot} />}
-                            {o.label}
-                          </button>
-                        ))}
-                        <div className={styles.dropdownDivider} />
-                      </>
-                    )}
-                    <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
-                    {(
-                      [
-                        { key: 'newest', label: 'Нові спочатку' },
-                        { key: 'oldest', label: 'Старі спочатку' },
-                        { key: 'year_desc', label: 'Рік: новіші' },
-                        { key: 'year_asc', label: 'Рік: старіші' },
-                        { key: 'rating', label: 'Рейтинг' },
-                      ] as { key: SortBy; label: string }[]
-                    ).map(o => (
-                      <button
-                        key={o.key}
-                        type="button"
-                        className={`${styles.sortOption} ${sortBy === o.key ? styles.sortOptionActive : ''}`}
-                        onClick={() => { setSortBy(o.key); setSortOpen(false) }}
-                      >
-                        {sortBy === o.key && <span className={styles.sortOptionDot} />}
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
+              <div className={styles.filterBarActions}>
+                {(tab === 'movie' || tab === 'series' || tab === 'anime') && (
+                  <button
+                    type="button"
+                    className={styles.sortBtn}
+                    onClick={() => setImportOpen(true)}
+                    aria-label="Імпорт"
+                    title="Імпорт зі стороннього сервісу"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 2v8M8 10l-3-3M8 10l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 12.5v1A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </button>
                 )}
+                <div className={styles.sortWrap} ref={sortRef}>
+                  <button
+                    type="button"
+                    className={`${styles.sortBtn} ${sortBy !== 'newest' || watchScope !== 'all' ? styles.sortBtnActive : ''}`}
+                    onClick={() => setSortOpen(v => !v)}
+                    aria-label="Сортування"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                  {sortOpen && (
+                    <div className={styles.sortDropdown}>
+                      {accepted.length > 0 && (
+                        <>
+                          <p className={styles.dropdownSection}>ПОКАЗАТИ</p>
+                          {WATCH_SCOPE_OPTIONS.map(o => (
+                            <button
+                              key={o.key}
+                              type="button"
+                              className={`${styles.sortOption} ${watchScope === o.key ? styles.sortOptionActive : ''}`}
+                              onClick={() => { setWatchScope(o.key); setSortOpen(false) }}
+                            >
+                              {watchScope === o.key && <span className={styles.sortOptionDot} />}
+                              {o.label}
+                            </button>
+                          ))}
+                          <div className={styles.dropdownDivider} />
+                        </>
+                      )}
+                      <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
+                      {(
+                        [
+                          { key: 'newest', label: 'Нові спочатку' },
+                          { key: 'oldest', label: 'Старі спочатку' },
+                          { key: 'year_desc', label: 'Рік: новіші' },
+                          { key: 'year_asc', label: 'Рік: старіші' },
+                          { key: 'rating', label: 'Рейтинг' },
+                        ] as { key: SortBy; label: string }[]
+                      ).map(o => (
+                        <button
+                          key={o.key}
+                          type="button"
+                          className={`${styles.sortOption} ${sortBy === o.key ? styles.sortOptionActive : ''}`}
+                          onClick={() => { setSortBy(o.key); setSortOpen(false) }}
+                        >
+                          {sortBy === o.key && <span className={styles.sortOptionDot} />}
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -563,82 +565,80 @@ const Watchlist: React.FC = () => {
         {/* ── Games content ── */}
         {isGame && (
           <>
-            <div className={styles.searchWrap}>
+            {gameStatusFilter === 'all' && gameGenreFilter === null && (
+              <GameUpcoming ownedGames={games} onAdd={handleAddGame} />
+            )}
+
+            <div className={styles.filterBar}>
               <button
                 type="button"
-                className={styles.gameSearchTrigger}
+                className={styles.sortBtn}
                 onClick={() => setGameSearchOpen(true)}
+                aria-label="Пошук гри"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5"/>
                   <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
-                Пошук гри...
               </button>
-              <div className={styles.sortWrap} ref={gameSortRef}>
-                <button
-                  type="button"
-                  className={`${styles.sortBtn} ${(gameSortBy !== 'added' || gameGenreFilter !== null || gamePlatformFilter !== null || gameStatusFilter === 'dropped' || gameStatusFilter === 'announced') ? styles.sortBtnActive : ''}`}
-                  onClick={() => setGameSortOpen(v => !v)}
-                  aria-label="Сортування і фільтр"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </button>
-                {gameSortOpen && (
-                  <div className={styles.sortDropdown}>
-                    <p className={styles.dropdownSection}>СТАТУС</p>
-                    {(['dropped', 'announced'] as const).map(s => (
-                      <button
-                        key={s}
-                        type="button"
-                        className={`${styles.sortOption} ${gameStatusFilter === s ? styles.sortOptionActive : ''}`}
-                        onClick={() => { setGameStatusFilter(gameStatusFilter === s ? 'all' : s); setGameSortOpen(false) }}
-                      >
-                        {gameStatusFilter === s && <span className={styles.sortOptionDot} />}
-                        {s === 'dropped' ? 'Кинув' : 'Анонси'}
-                      </button>
-                    ))}
-                    <div className={styles.dropdownDivider} />
-                    <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
-                    {GAME_SORT_OPTIONS.map(o => (
-                      <button
-                        key={o.id}
-                        type="button"
-                        className={`${styles.sortOption} ${gameSortBy === o.id ? styles.sortOptionActive : ''}`}
-                        onClick={() => { setGameSortBy(o.id); setGameSortOpen(false) }}
-                      >
-                        {gameSortBy === o.id && <span className={styles.sortOptionDot} />}
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              {availableGameGenres.length > 1 && (
+                <div className={styles.filterBarGenres}>
+                  {availableGameGenres.map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      className={`${styles.genreTag} ${gameGenreFilter === g ? styles.genreTagActive : ''}`}
+                      onClick={() => setGameGenreFilter(gameGenreFilter === g ? null : g)}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className={styles.filterBarActions}>
+                <div className={styles.sortWrap} ref={gameSortRef}>
+                  <button
+                    type="button"
+                    className={`${styles.sortBtn} ${(gameSortBy !== 'added' || gameGenreFilter !== null || gamePlatformFilter !== null || gameStatusFilter === 'dropped' || gameStatusFilter === 'announced') ? styles.sortBtnActive : ''}`}
+                    onClick={() => setGameSortOpen(v => !v)}
+                    aria-label="Сортування і фільтр"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 4h10M5 8h6M7 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                  {gameSortOpen && (
+                    <div className={styles.sortDropdown}>
+                      <p className={styles.dropdownSection}>СТАТУС</p>
+                      {(['dropped', 'announced'] as const).map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          className={`${styles.sortOption} ${gameStatusFilter === s ? styles.sortOptionActive : ''}`}
+                          onClick={() => { setGameStatusFilter(gameStatusFilter === s ? 'all' : s); setGameSortOpen(false) }}
+                        >
+                          {gameStatusFilter === s && <span className={styles.sortOptionDot} />}
+                          {s === 'dropped' ? 'Кинув' : 'Анонси'}
+                        </button>
+                      ))}
+                      <div className={styles.dropdownDivider} />
+                      <p className={styles.dropdownSection}>СОРТУВАННЯ</p>
+                      {GAME_SORT_OPTIONS.map(o => (
+                        <button
+                          key={o.id}
+                          type="button"
+                          className={`${styles.sortOption} ${gameSortBy === o.id ? styles.sortOptionActive : ''}`}
+                          onClick={() => { setGameSortBy(o.id); setGameSortOpen(false) }}
+                        >
+                          {gameSortBy === o.id && <span className={styles.sortOptionDot} />}
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-
-            {availableGameGenres.length > 1 && (
-              <div className={styles.genreStrip}>
-                <button
-                  type="button"
-                  className={`${styles.genreTag} ${gameGenreFilter === null ? styles.genreTagActive : ''}`}
-                  onClick={() => setGameGenreFilter(null)}
-                >
-                  Всі
-                </button>
-                {availableGameGenres.map(g => (
-                  <button
-                    key={g}
-                    type="button"
-                    className={`${styles.genreTag} ${gameGenreFilter === g ? styles.genreTagActive : ''}`}
-                    onClick={() => setGameGenreFilter(gameGenreFilter === g ? null : g)}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            )}
 
             {availableGamePlatforms.length > 1 && (
               <div className={styles.platformRail}>
