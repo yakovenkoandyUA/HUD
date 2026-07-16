@@ -106,6 +106,61 @@ function EventIcon({ type }: { type: PetEventType }) {
   }
 }
 
+// ── Weight trend ──────────────────────────────────────────────────────────
+
+function calcWeightTrend(events: PetEvent[]): { latest: number; delta: number } | null {
+  const weights = [...events]
+    .filter(e => e.type === 'weight' && e.weight != null)
+    .sort((a, b) => a.date.localeCompare(b.date))
+  if (weights.length < 2) return null
+  const latest = weights[weights.length - 1].weight!
+  const prev   = weights[weights.length - 2].weight!
+  return { latest, delta: Math.round((latest - prev) * 10) / 10 }
+}
+
+// ── Upcoming (nextDue) block ───────────────────────────────────────────────
+
+function daysUntil(isoDate: string): number {
+  const then = new Date(isoDate)
+  const now  = new Date()
+  then.setHours(0, 0, 0, 0)
+  now.setHours(0, 0, 0, 0)
+  return Math.round((then.getTime() - now.getTime()) / 86_400_000)
+}
+
+function pluralDays(n: number): string {
+  const abs = Math.abs(n)
+  if (abs === 1) return 'день'
+  if (abs >= 2 && abs <= 4) return 'дні'
+  return 'днів'
+}
+
+interface UpcomingItem {
+  label:   string
+  date:    string
+  daysLeft: number
+}
+
+function getUpcoming(events: PetEvent[]): UpcomingItem[] {
+  const today = new Date().toISOString().slice(0, 10)
+  const seen  = new Set<string>()
+  const items: UpcomingItem[] = []
+
+  for (const e of events) {
+    if (!e.nextDue) continue
+    const key = `${e.type}:${e.nextDue}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const days = daysUntil(e.nextDue)
+    if (days > 90) continue
+    const typeLabel = EVENT_LABELS[e.type]
+    items.push({ label: typeLabel, date: e.nextDue, daysLeft: days })
+  }
+
+  items.sort((a, b) => a.daysLeft - b.daysLeft)
+  return items.filter(i => i.date >= today || i.daysLeft >= -7)
+}
+
 // ── Empty state ────────────────────────────────────────────────────────────
 
 function EmptyEvents({ onVet, onVacc }: { onVet: () => void; onVacc: () => void }) {
@@ -660,14 +715,71 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdat
       <div className={styles.actionsSection}>
         <span className={styles.sectionTitle}>ШВИДКІ ДІЇ</span>
         <div className={styles.actionsGrid}>
-          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('vet_visit')}>Ветеринар</button>
-          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('vaccination')}>Щеплення</button>
-          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('medication')}>Ліки</button>
-          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('grooming')}>Грумінг</button>
-          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('weight')}>Вага</button>
-          <button type="button" className={styles.actionBtn} onClick={() => setAddSheet('note')}>Нотатка</button>
+          {([
+            { type: 'vet_visit'   as SheetType, label: 'Ветеринар', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+            { type: 'vaccination' as SheetType, label: 'Щеплення',  icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 17 3-3-3-3M15 17h6M18 14v6"/><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/></svg> },
+            { type: 'medication'  as SheetType, label: 'Ліки',      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="16" cy="16" r="6"/><path d="m12.5 19.5 7-7"/><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/></svg> },
+            { type: 'grooming'    as SheetType, label: 'Грумінг',   icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
+            { type: 'weight'      as SheetType, label: 'Вага',      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 1.5"/></svg> },
+            { type: 'note'        as SheetType, label: 'Нотатка',   icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> },
+          ] as const).map(a => (
+            <button key={a.type} type="button" className={styles.actionBtn} onClick={() => setAddSheet(a.type)}>
+              <span className={styles.actionBtnIcon}>{a.icon}</span>
+              {a.label}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* ── Weight trend ── */}
+      {(() => {
+        const trend = calcWeightTrend(events)
+        if (!trend) return null
+        const up = trend.delta > 0
+        const eq = trend.delta === 0
+        return (
+          <div className={styles.weightTrendRow} style={colorVar}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 1.5"/></svg>
+            <span className={styles.weightTrendVal}>{trend.latest} кг</span>
+            {!eq && (
+              <span className={`${styles.weightTrendDelta} ${up ? styles.weightTrendUp : styles.weightTrendDown}`}>
+                {up ? '▲' : '▼'} {Math.abs(trend.delta)} кг
+              </span>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* ── Upcoming (nextDue) ── */}
+      {(() => {
+        const upcoming = getUpcoming(events)
+        if (upcoming.length === 0) return null
+        return (
+          <div className={styles.upcomingBlock} style={colorVar}>
+            <span className={styles.sectionTitle}>НАЙБЛИЖЧЕ</span>
+            <div className={styles.upcomingList}>
+              {upcoming.map((item, i) => {
+                const overdue = item.daysLeft < 0
+                const soon    = item.daysLeft >= 0 && item.daysLeft <= 3
+                return (
+                  <div key={i} className={styles.upcomingItem}>
+                    <span className={`${styles.upcomingDot} ${overdue ? styles.upcomingDotDanger : soon ? styles.upcomingDotWarn : ''}`} />
+                    <span className={styles.upcomingLabel}>{item.label}</span>
+                    <span className={styles.upcomingDate}>{fmtDate(item.date)}</span>
+                    <span className={`${styles.upcomingDays} ${overdue ? styles.upcomingDaysDanger : soon ? styles.upcomingDaysWarn : ''}`}>
+                      {overdue
+                        ? `${Math.abs(item.daysLeft)} ${pluralDays(item.daysLeft)} тому`
+                        : item.daysLeft === 0
+                          ? 'сьогодні'
+                          : `${item.daysLeft} ${pluralDays(item.daysLeft)}`}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Events list ── */}
       <div className={styles.section}>
