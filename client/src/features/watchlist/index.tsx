@@ -35,14 +35,6 @@ const WATCH_SCOPE_OPTIONS: { key: WatchScope; label: string }[] = [
   { key: 'solo',     label: 'Особисте'  },
 ]
 
-const GAME_STATUS_TABS: { id: GameStatusFilter; label: string }[] = [
-  { id: 'all',       label: 'Всі'      },
-  { id: 'playing',   label: 'Граю'     },
-  { id: 'want',      label: 'Хочу'     },
-  { id: 'completed', label: 'Пройдено' },
-  { id: 'announced', label: 'Анонси'   },
-  { id: 'dropped',   label: 'Кинув'    },
-]
 
 const GAME_SORT_OPTIONS: { id: GameSortBy; label: string }[] = [
   { id: 'added',  label: 'За датою додавання' },
