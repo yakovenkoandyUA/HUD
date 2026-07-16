@@ -92,7 +92,7 @@ function AnsuzRune({ flipped }: { flipped: boolean }) {
  */
 const BottomNav: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  const { navStyle, navLabelMode, pinnedSections, pinnedProfileTabs } = useUiStore()
+  const { navStyle, navLabelMode, pinnedSections, pinnedProfileTabs, modalDepth } = useUiStore()
   const f1Enabled = activeProfile?.f1Enabled ?? false
   const { pathname } = useLocation()
   const [searchParams] = useSearchParams()
@@ -107,6 +107,8 @@ const BottomNav: React.FC = () => {
   React.useEffect(() => {
     document.body.dataset.navStyle = navStyle
   }, [navStyle])
+
+  if (modalDepth > 0) return null
 
   const isProfile = pathname === '/profile'
 
