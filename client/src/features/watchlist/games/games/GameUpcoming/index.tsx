@@ -90,16 +90,20 @@ const GameUpcoming: React.FC<GameUpcomingProps> = ({ ownedGames, onAdd }) => {
   const handleAdd = () => {
     if (!preview) return
     onAdd({
-      rawgId:      preview.rawgId,
-      title:       preview.title,
-      coverUrl:    preview.coverUrl,
+      rawgId:        preview.rawgId,
+      title:         preview.title,
+      coverUrl:      preview.coverUrl,
+      backgroundUrl: '',
       status,
-      platforms:   preview.platforms,
-      genres:      preview.genres,
-      releaseDate: preview.releaseDate,
-      rating:      null,
-      hoursPlayed: null,
-      notes:       '',
+      platforms:     preview.platforms,
+      genres:        preview.genres,
+      releaseDate:   preview.releaseDate,
+      rating:        null,
+      hoursPlayed:   null,
+      notes:         '',
+      platinum:      false,
+      metacritic:    null,
+      completedAt:   null,
     })
     setPreview(null)
   }
