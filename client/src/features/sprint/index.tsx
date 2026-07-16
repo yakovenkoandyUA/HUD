@@ -352,6 +352,18 @@ const Sprint: React.FC = () => {
 
 				{/* ── List ── */}
 				<div key={`${filterType}-${filterStatus}-${selectedDay}`} className={styles.tabContent}>
+					{filterStatus !== 'done' && (
+						<button
+							className={styles.addRow}
+							onClick={() => setShowAdd(true)}
+						>
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+								<line x1="12" y1="5" x2="12" y2="19" />
+								<line x1="5" y1="12" x2="19" y2="12" />
+							</svg>
+							{filterType === 'shopping' ? 'Додати покупку' : 'Додати квест'}
+						</button>
+					)}
 					{loading && items.length === 0 ? (
 						<p className={styles.dayEmptyText}>Завантаження...</p>
 					) : dayQuests.length === 0 && !showSwipeGhost ? (
@@ -385,18 +397,6 @@ const Sprint: React.FC = () => {
 								<p className={styles.allLoaded}>Всі {dayQuests.length} квестів</p>
 							)}
 						</>
-					)}
-					{filterStatus !== 'done' && (
-						<button
-							className={`${styles.addRow} ${!loading && dayQuests.length === 0 && !showSwipeGhost ? styles.addRowEmpty : ''}`}
-							onClick={() => setShowAdd(true)}
-						>
-							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-								<line x1="12" y1="5" x2="12" y2="19" />
-								<line x1="5" y1="12" x2="19" y2="12" />
-							</svg>
-							{filterType === 'shopping' ? 'Додати покупку' : 'Додати квест'}
-						</button>
 					)}
 				</div>
 
