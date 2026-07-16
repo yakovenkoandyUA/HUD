@@ -255,15 +255,40 @@ const Watchlist: React.FC = () => {
     showToast(`${game.title} додано`, 'success')
   }
 
-  const handleAddHourGame = (id: string) => {
-    const game = games.find(g => g.id === id)
-    if (!game) return
-    updateGame(id, { hoursPlayed: Math.round((game.hoursPlayed ?? 0) + 1) })
-    showToast('+1 година зараховано', 'success')
-  }
-
   const handleStatusChange = (status: WatchlistStatus) => {
     if (!selected) return
+
+    const isSeriesLike = selected.category === 'series' || selected.category === 'anime'
+    const tmdbId       = selected.tmdbId
+    const myId         = activeProfile?.id ?? ''
+    const tmdbKey      = import.meta.env.VITE_TMDB_API_KEY as string | undefined
+
+    if (status === 'watched' && isSeriesLike && tmdbId && tmdbKey) {
+      setStatus(selected.id, status)
+      setSelected(prev => prev ? { ...prev, status } : null)
+
+      interface TmdbSeason { season_number: number; episode_count: number }
+      interface TmdbTvDetails { seasons: TmdbSeason[] }
+
+      fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${tmdbKey}`)
+        .then(r => r.json())
+        .then((d: TmdbTvDetails) => {
+          const allEpisodes: { season: number; episode: number; userId: string }[] = []
+          for (const s of d.seasons ?? []) {
+            if (s.season_number === 0) continue
+            for (let ep = 1; ep <= s.episode_count; ep++) {
+              allEpisodes.push({ season: s.season_number, episode: ep, userId: myId })
+            }
+          }
+          if (allEpisodes.length > 0) {
+            updateItem(selected.id, { watchedEpisodes: allEpisodes })
+            setSelected(prev => prev ? { ...prev, watchedEpisodes: allEpisodes } : null)
+          }
+        })
+        .catch(() => {})
+      return
+    }
+
     setStatus(selected.id, status)
     setSelected((prev) => prev ? { ...prev, status } : null)
   }
@@ -389,7 +414,7 @@ const Watchlist: React.FC = () => {
         {/* hero scrolls away — media or games */}
         {isMedia && watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
         {isGame && gameStatusFilter === 'all' && (
-          <GameHero items={playingGames} onTap={setSelectedGame} onAddHour={handleAddHourGame} />
+          <GameHero items={playingGames} onTap={setSelectedGame} />
         )}
 
         {/* ── Tabs — sticky ── */}
