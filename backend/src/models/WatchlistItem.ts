@@ -4,7 +4,10 @@ export interface IWatchlistItem extends Document {
   tmdbId: number
   title: string
   originalTitle: string
-  category: 'movie' | 'series' | 'anime'
+  category: 'movie' | 'series' | 'anime' | 'book'
+  author: string
+  pageCount: number | null
+  isbn: string | null
   status: 'want' | 'watching' | 'watched' | 'dropped'
   posterPath: string
   backdropPath: string
@@ -36,7 +39,10 @@ const schema = new Schema<IWatchlistItem>({
   tmdbId:        { type: Number, default: 0 },
   title:         { type: String, required: true },
   originalTitle: { type: String, default: '' },
-  category:      { type: String, enum: ['movie', 'series', 'anime'], required: true },
+  category:      { type: String, enum: ['movie', 'series', 'anime', 'book'], required: true },
+  author:        { type: String, default: '' },
+  pageCount:     { type: Number, default: null },
+  isbn:          { type: String, default: null },
   status:        { type: String, enum: ['want', 'watching', 'watched', 'dropped'], default: 'want' },
   posterPath:    { type: String, default: '' },
   backdropPath:  { type: String, default: '' },

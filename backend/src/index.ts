@@ -59,6 +59,7 @@ import userRouter from './routes/user'
 import billingRouter from './routes/billing'
 import mimirRouter from './routes/mimir'
 import feedbackRouter from './routes/feedback'
+import booksRouter from './routes/books'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -119,6 +120,7 @@ app.use('/api/user', userRouter)
 app.use('/api/billing', billingRouter)
 app.use('/api/mimir', mimirRouter)
 app.use('/api/feedback', feedbackRouter)
+app.use('/api/books', booksRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

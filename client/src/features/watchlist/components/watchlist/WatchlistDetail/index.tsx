@@ -10,6 +10,7 @@ import { authFetch } from '@/shared/services/api'
 import { useSeriesEpisodes } from '../../../hooks/useSeriesEpisodes'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
+import { useUiStore } from '@/shared/store/uiStore'
 import styles from './WatchlistDetail.module.css'
 import type { WatchlistItem, WatchlistStatus } from '@/shared/types'
 
@@ -94,6 +95,13 @@ const STATUS_OPTIONS_DEFAULT: { value: WatchlistStatus; label: string; color: st
   { value: 'dropped',  label: 'Кинув',      color: 'var(--negative)' },
 ]
 
+const STATUS_OPTIONS_BOOK: { value: WatchlistStatus; label: string; color: string }[] = [
+  { value: 'want',     label: 'Хочу прочитати', color: 'var(--text2)'    },
+  { value: 'watching', label: 'Читаю',          color: 'var(--second)'   },
+  { value: 'watched',  label: 'Прочитав',       color: 'var(--gold)'     },
+  { value: 'dropped',  label: 'Кинув',          color: 'var(--negative)' },
+]
+
 
 const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   item,
@@ -108,6 +116,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 }) => {
   const activeProfile = useProfileStore(s => s.activeProfile)
   const { accepted, fetchFamily } = useFamilyStore()
+  const { pushModal, popModal } = useUiStore()
 
   const [mounted, setMounted]             = useState(false)
   const [visible, setVisible]             = useState(false)
@@ -146,6 +155,8 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   }, [])
 
   const isSeriesLike = item.category === 'series' || item.category === 'anime'
+  const isBook       = item.category === 'book'
+  const statusOptions = isBook ? STATUS_OPTIONS_BOOK : STATUS_OPTIONS_DEFAULT
   const { episodes } = useSeriesEpisodes(isSeriesLike && item.tmdbId > 0 ? item.tmdbId : null)
 
   const seasons = Array.from({ length: item.totalSeasons ?? 1 }, (_, i) => i + 1)
@@ -337,15 +348,18 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      pushModal()
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true)
       setConfirmDelete(false)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+      return () => { popModal() }
     } else {
       setVisible(false)
       const t = setTimeout(() => setMounted(false), ANIM_MS)
       return () => clearTimeout(t)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   useEffect(() => {
@@ -451,10 +465,25 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             <p className={styles.overview}>{item.overview}</p>
           )}
 
+          {/* Book-specific meta */}
+          {isBook && (item.author || item.pageCount) && (
+            <div className={styles.metaRow} style={{ flexWrap: 'wrap', gap: '8px' }}>
+              {item.author && (
+                <span className={styles.year}>{item.author}</span>
+              )}
+              {item.pageCount && (
+                <span className={styles.year}>{item.pageCount} стор.</span>
+              )}
+              {item.isbn && (
+                <span className={styles.year} style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>ISBN {item.isbn}</span>
+              )}
+            </div>
+          )}
+
           {/* Status selector */}
           <p className={styles.sectionLabel}>Статус</p>
           <div className={styles.statusChips}>
-            {STATUS_OPTIONS_DEFAULT.map((s) => (
+            {statusOptions.map((s) => (
               <button
                 key={s.value}
                 type="button"
@@ -526,7 +555,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
           )}
 
           {/* Watch Together — family member selector */}
-          {onNotifyChange && accepted.length > 0 && (
+          {!isBook && onNotifyChange && accepted.length > 0 && (
             <div className={styles.watchedWithSection}>
               <p className={styles.sectionLabel}>
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{ verticalAlign: 'middle', marginRight: 5 }}>
@@ -638,7 +667,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
           )}
 
           {/* Similar */}
-          {similar.length > 0 && (
+          {!isBook && similar.length > 0 && (
             <div className={styles.similarSection}>
               <p className={styles.sectionLabel}>СХОЖІ</p>
               <div className={styles.similarRow}>

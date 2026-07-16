@@ -20,6 +20,9 @@ export const NAV_STYLE_MAX_PINNED: Record<NavStyle, number> = { classic: 8, pill
 interface UiState {
   toasts: Toast[]
   activeModal: string | null
+  modalDepth: number
+  pushModal: () => void
+  popModal: () => void
   theme: Theme
   navStyle: NavStyle
   navLabelMode: NavLabelMode
@@ -47,6 +50,9 @@ export const useUiStore = create<UiState>()(
     (set) => ({
       toasts: [],
       activeModal: null,
+      modalDepth: 0,
+      pushModal: () => set((s) => ({ modalDepth: s.modalDepth + 1 })),
+      popModal: () => set((s) => ({ modalDepth: Math.max(0, s.modalDepth - 1) })),
       theme: 'velvet',
       navStyle: 'classic',
       navLabelMode: 'always',

@@ -207,7 +207,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
           if (item.category === 'movie') {
             if (d.runtime) updateItem(item.id, { runtimeMin: d.runtime })
           } else {
-            const ep = d.episode_run_time?.[0]
+            const ep = d.episode_run_time?.[0] || d.last_episode_to_air?.runtime || null
             if (ep) updateItem(item.id, { episodeRuntimeMin: ep })
           }
         })

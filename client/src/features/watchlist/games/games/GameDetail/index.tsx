@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { useModalHistory } from '@/shared/hooks/useModalHistory'
+import { useUiStore } from '@/shared/store/uiStore'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import styles from './GameDetail.module.css'
 import type { GameItem, GameStatus } from '@/shared/types'
@@ -43,6 +44,7 @@ interface GameDetailProps {
 const ANIM_MS = 380
 
 const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate, onDelete }) => {
+  const { pushModal, popModal } = useUiStore()
   const [mounted, setMounted]             = useState(false)
   const [visible, setVisible]             = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -61,16 +63,19 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
 
   React.useEffect(() => {
     if (isOpen) {
+      pushModal()
       setMounted(true)
       requestAnimationFrame(() => setVisible(true))
       setNotes(item.notes ?? '')
       setHours(item.hoursPlayed != null ? String(item.hoursPlayed) : '')
       setConfirmDelete(false)
+      return () => { popModal() }
     } else {
       setVisible(false)
       const t = setTimeout(() => setMounted(false), ANIM_MS)
       return () => clearTimeout(t)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, item.notes, item.hoursPlayed])
 
   if (!mounted) return null
@@ -205,6 +210,26 @@ const GameDetail: React.FC<GameDetailProps> = ({ item, isOpen, onClose, onUpdate
               ))}
             </div>
           </div>
+
+          {/* Current platform — only when playing and multiple platforms */}
+          {item.status === 'playing' && item.platforms.length > 1 && (
+            <div className={styles.section}>
+              <p className={styles.sectionLabel}>ГРАЮ НА</p>
+              <div className={styles.statusChips}>
+                {item.platforms.map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`${styles.statusChip} ${item.currentPlatform === p ? styles.statusChipActive : ''}`}
+                    style={item.currentPlatform === p ? { borderColor: '#2DD4BF', color: '#2DD4BF' } as React.CSSProperties : undefined}
+                    onClick={() => onUpdate(item.id, { currentPlatform: item.currentPlatform === p ? null : p })}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Platinum — only for PS */}
           {isPS && (

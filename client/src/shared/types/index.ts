@@ -182,7 +182,7 @@ export interface Recipe {
   isOwn?: boolean
 }
 
-export type WatchlistCategory = 'movie' | 'series' | 'anime'
+export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'
 export type WatchlistStatus = 'want' | 'watching' | 'watched' | 'dropped'
 
 export interface WatchlistItem {
@@ -215,6 +215,9 @@ export interface WatchlistItem {
   watchedEpisodes?: { season: number; episode: number; userId: string }[]
   watchTogether?: boolean
   watchedWith?: string[]
+  author?: string
+  pageCount?: number | null
+  isbn?: string | null
 }
 
 // ── Games ────────────────────────────────────────────────────────────────────
@@ -237,5 +240,6 @@ export interface GameItem {
   notes: string
   hoursPlayed: number | null
   completedAt: string | null
+  currentPlatform: string | null
   addedAt: string
 }

@@ -10,6 +10,7 @@ import GameDetail from './games/games/GameDetail'
 import GameHero from './games/games/GameHero'
 import WatchlistStatsSheet from './components/watchlist/WatchlistStatsSheet'
 import ImportWatchlistModal from './components/watchlist/ImportWatchlistModal'
+import BookSearch from './books/BookSearch'
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore'
 import { useGamesStore } from '@/features/watchlist/store/gamesStore'
 import { useUiStore } from '@/shared/store/uiStore'
@@ -389,25 +390,32 @@ const Watchlist: React.FC = () => {
 
       {/* ── Game stats row ── */}
       {isGame && (
-        <div className={styles.gameStatsRow}>
-          <div className={styles.gameStat} onClick={() => setGameStatusFilter('playing')}>
-            <span className={`${styles.gameStatNum} ${styles.gameStatNumTeal}`}>{gameStats.playing}</span>
-            <span className={styles.gameStatLabel}>граю</span>
-          </div>
-          <div className={styles.gameStatSep} />
-          <div className={styles.gameStat} onClick={() => setGameStatusFilter('want')}>
-            <span className={styles.gameStatNum}>{gameStats.want}</span>
-            <span className={styles.gameStatLabel}>хочу</span>
-          </div>
-          <div className={styles.gameStatSep} />
-          <div className={styles.gameStat} onClick={() => setGameStatusFilter('completed')}>
-            <span className={`${styles.gameStatNum} ${styles.gameStatNumGold}`}>{gameStats.completed}</span>
-            <span className={styles.gameStatLabel}>пройдено</span>
-          </div>
-          <div className={styles.gameStatSep} />
-          <div className={styles.gameStat}>
-            <span className={`${styles.gameStatNum} ${styles.gameStatNumAccent}`}>{gameStats.totalHours}</span>
-            <span className={styles.gameStatLabel}>годин</span>
+        <div className={styles.statsRow}>
+          <div className={styles.statsPills}>
+            {(['playing', 'want', 'completed'] as const).map((status, i) => {
+              const isActive = gameStatusFilter === status
+              const count = status === 'playing' ? gameStats.playing : status === 'want' ? gameStats.want : gameStats.completed
+              const label = status === 'playing' ? 'граю' : status === 'want' ? 'хочу' : 'пройдено'
+              return (
+                <React.Fragment key={status}>
+                  {i > 0 && <span className={styles.statSep}>·</span>}
+                  <button
+                    type="button"
+                    className={`${styles.stat} ${isActive ? styles.statActive : ''}`}
+                    onClick={() => setGameStatusFilter(isActive ? 'all' : status)}
+                  >
+                    <span className={styles.statNum}>{count}</span>
+                    <span className={styles.statLabel}>{label}</span>
+                    {isActive && <span className={styles.statClear}>×</span>}
+                  </button>
+                </React.Fragment>
+              )
+            })}
+            <span className={styles.statSep}>·</span>
+            <div className={styles.stat}>
+              <span className={styles.statNum}>{gameStats.totalHours}</span>
+              <span className={styles.statLabel}>годин</span>
+            </div>
           </div>
         </div>
       )}
@@ -545,13 +553,19 @@ const Watchlist: React.FC = () => {
           </>
         )}
 
-        {/* ── Book placeholder ── */}
+        {/* ── Books content ── */}
         {isBook && (
-          <div className={styles.bookWip}>
-            <img src={openmojiUrl('1F4DA')} alt="" className={styles.bookWipIcon} aria-hidden="true" />
-            <p className={styles.bookWipTitle}>Книги</p>
-            <p className={styles.bookWipSub}>Функція в розробці — бібліотека та читалка з'являться тут найближчим часом</p>
-          </div>
+          <>
+            <div className={styles.searchWrap}>
+              <BookSearch onAdd={handleAdd} />
+            </div>
+            <div className={styles.contentAnimated}>
+              <WatchlistGrid
+                items={items.filter(i => i.category === 'book')}
+                onTap={setSelected}
+              />
+            </div>
+          </>
         )}
 
         {/* ── Games content ── */}

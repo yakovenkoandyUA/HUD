@@ -15,6 +15,7 @@ export interface IGame extends Document {
   notes: string
   hoursPlayed: number | null
   completedAt: string | null
+  currentPlatform: string | null
   userId: string
   addedAt: string
 }
@@ -32,8 +33,9 @@ const schema = new Schema<IGame>({
   releaseDate:   { type: String, default: '' },
   metacritic:    { type: Number, default: null },
   notes:         { type: String, default: '' },
-  hoursPlayed:   { type: Number, default: null },
-  completedAt:   { type: String, default: null },
+  hoursPlayed:      { type: Number, default: null },
+  completedAt:      { type: String, default: null },
+  currentPlatform:  { type: String, default: null },
   userId:        { type: String, required: true, index: true },
   addedAt:       { type: String, default: () => new Date().toISOString() },
 }, { timestamps: true })

@@ -83,7 +83,7 @@ export async function create(req: Request, res: Response): Promise<void> {
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
-  const allowed = ['status', 'platinum', 'rating', 'notes', 'hoursPlayed', 'completedAt', 'coverUrl', 'platforms']
+  const allowed = ['status', 'platinum', 'rating', 'notes', 'hoursPlayed', 'completedAt', 'coverUrl', 'platforms', 'currentPlatform']
   const patch: Record<string, unknown> = {}
   allowed.forEach(k => { if (req.body[k] !== undefined) patch[k] = req.body[k] })
 

@@ -17,11 +17,6 @@ const PLATFORM_SHORT: Record<string, string> = {
   'Mac':              'MAC',
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('uk-UA', { month: 'short', year: 'numeric' })
-}
-
 /**
  * GameHero
  * --------
@@ -46,9 +41,9 @@ const GameHero: React.FC<GameHeroProps> = ({ items, onTap }) => {
       <div className={styles.scrollRow}>
         {items.map(item => {
           const src = item.backgroundUrl ?? item.coverUrl ?? null
-          const platformLabels = [...new Set(
-            item.platforms.map(p => PLATFORM_SHORT[p] ?? p.slice(0, 3).toUpperCase())
-          )].slice(0, 4)
+          const platform = item.currentPlatform
+            ?? (item.platforms.length === 1 ? item.platforms[0] : null)
+          const platformShort = platform ? (PLATFORM_SHORT[platform] ?? platform.slice(0, 3).toUpperCase()) : null
           return (
             <div key={item.id} className={styles.card} onClick={() => onTap(item)}>
               {src
@@ -58,21 +53,20 @@ const GameHero: React.FC<GameHeroProps> = ({ items, onTap }) => {
               <div className={styles.gradient} />
               <div className={styles.footer}>
                 <span className={styles.title}>{item.title}</span>
-                <div className={styles.meta}>
-                  <span className={styles.dot} />
-                  <span className={styles.playing}>Граю</span>
-                  {item.hoursPlayed != null && item.hoursPlayed > 0 && (
-                    <span className={styles.hours}>{item.hoursPlayed} год</span>
-                  )}
-                  {item.completedAt && (
-                    <span className={styles.completedAt}>✓ {formatDate(item.completedAt)}</span>
-                  )}
-                  {platformLabels.length > 0 && (
-                    <span className={styles.platforms}>{platformLabels.join(' · ')}</span>
-                  )}
-                </div>
+                {(item.hoursPlayed != null && item.hoursPlayed > 0 || platformShort) && (
+                  <div className={styles.meta}>
+                    {item.hoursPlayed != null && item.hoursPlayed > 0 && (
+                      <span className={styles.hours}>{item.hoursPlayed} год</span>
+                    )}
+                    {item.hoursPlayed != null && item.hoursPlayed > 0 && platformShort && (
+                      <span className={styles.sep}>·</span>
+                    )}
+                    {platformShort && (
+                      <span className={styles.platform}>{platformShort}</span>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className={styles.bar} />
             </div>
           )
         })}
