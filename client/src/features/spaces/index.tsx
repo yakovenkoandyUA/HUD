@@ -582,8 +582,8 @@ const SpaceDetailScreen: React.FC = () => {
         )}
       </div>}
 
-      {/* ── Overview (hidden for vehicle) ── */}
-      {space?.type !== 'vehicle' && (() => {
+      {/* ── Overview (hidden for vehicle + pet) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && (() => {
         const isTyped = ['home', 'pet', 'trip'].includes(space?.type ?? '')
         const showPlans = !isTyped || (space?.modules ?? []).includes('plans')
         const overviewItems = [
