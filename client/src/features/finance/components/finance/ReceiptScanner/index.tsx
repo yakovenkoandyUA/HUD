@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { authFetch } from '@/shared/services/api'
 import { useUiStore } from '@/shared/store/uiStore'
+import PillSelector from '@/shared/components/ui/PillSelector'
 import styles from './ReceiptScanner.module.css'
 
 /**
@@ -40,11 +41,12 @@ const fmtPrice = (n: number) =>
   n.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, onSave, onCancel }) => {
-  const [status, setStatus]     = useState<'loading' | 'preview'>('loading')
-  const [result, setResult]     = useState<ReceiptResult | null>(null)
-  const [items, setItems]       = useState<ReceiptItem[]>([])
-  const [category, setCategory] = useState(allCategories[0]?.value ?? 'продукти')
-  const { showToast }           = useUiStore()
+  const [status, setStatus]       = useState<'loading' | 'preview'>('loading')
+  const [result, setResult]       = useState<ReceiptResult | null>(null)
+  const [storeName, setStoreName] = useState('')
+  const [items, setItems]         = useState<ReceiptItem[]>([])
+  const [category, setCategory]   = useState(allCategories[0]?.value ?? 'продукти')
+  const { showToast }             = useUiStore()
 
   useEffect(() => {
     let cancelled = false
@@ -63,6 +65,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
 
         if (!cancelled) {
           setResult(data)
+          setStoreName(data.store || '')
           setItems(data.items)
           setStatus('preview')
         }
@@ -91,7 +94,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
 
   const handleSave = () => {
     if (!result) return
-    const description = JSON.stringify({ store: result.store, items })
+    const description = JSON.stringify({ store: storeName || result.store, items })
     onSave(computedTotal, description, category)
   }
 
@@ -108,11 +111,25 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
     return (
       <div className={styles.previewPanel}>
         <div className={styles.previewHeader}>
-          <span className={styles.previewStore}>🧾 {result.store || 'Чек'}</span>
+          <div className={styles.storeInputWrap}>
+            <svg className={styles.storeIcon} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+              <rect x="9" y="3" width="6" height="4" rx="1"/>
+              <path d="M9 12h6M9 16h4"/>
+            </svg>
+            <input
+              className={styles.storeInput}
+              value={storeName}
+              onChange={e => setStoreName(e.target.value)}
+              placeholder="Назва магазину"
+            />
+          </div>
           <span className={styles.previewTotal}>{fmtPrice(computedTotal)} ₴</span>
         </div>
 
         <div className={styles.divider} />
+
+        <div className={styles.editHint}>Торкніться назви або суми для редагування</div>
 
         <ul className={styles.itemList}>
           {items.map((item, i) => (
@@ -134,7 +151,9 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
                 onClick={() => removeItem(i)}
                 aria-label="Видалити позицію"
               >
-                ×
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                  <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
               </button>
             </li>
           ))}
@@ -142,17 +161,13 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
 
         <div className={styles.divider} />
 
-        <div className={styles.categoryRow}>
-          <span className={styles.categoryLabel}>Категорія:</span>
-          <select
-            className={styles.categorySelect}
+        <div className={styles.categorySection}>
+          <span className={styles.categoryLabel}>КАТЕГОРІЯ</span>
+          <PillSelector
+            options={allCategories.map(c => ({ value: c.value, label: c.label }))}
             value={category}
-            onChange={e => setCategory(e.target.value)}
-          >
-            {allCategories.map(c => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-          </select>
+            onChange={setCategory}
+          />
         </div>
 
         <div className={styles.actions}>

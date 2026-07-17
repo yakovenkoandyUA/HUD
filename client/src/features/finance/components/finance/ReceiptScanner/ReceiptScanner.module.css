@@ -41,18 +41,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 10px 14px;
   background: var(--surface2);
 }
 
-.previewStore {
+/* ── Store name editable ── */
+.storeInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.storeIcon {
+  flex-shrink: 0;
+  color: var(--text3);
+}
+
+.storeInput {
+  flex: 1;
+  min-width: 0;
   font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 700;
   color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border2);
+  border-radius: 0;
+  padding: 2px 0;
+  outline: none;
+  transition: border-color 0.15s;
 }
+.storeInput:focus { border-bottom-color: var(--accent); }
+.storeInput::placeholder { color: var(--text3); font-weight: 400; }
 
 .previewTotal {
+  flex-shrink: 0;
   font-family: var(--font-mono);
   font-size: 16px;
   font-weight: 700;
@@ -64,11 +91,21 @@
   background: var(--border);
 }
 
+/* ── Edit hint ── */
+.editHint {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text3);
+  padding: 5px 14px 3px;
+}
+
 /* ── Items ── */
 .itemList {
   list-style: none;
   padding: 4px 0;
-  max-height: 200px;
+  max-height: 180px;
   overflow-y: auto;
 }
 
@@ -88,15 +125,16 @@
   font-size: 13px;
   color: var(--text);
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 4px 6px;
+  border: none;
+  border-bottom: 1px dashed color-mix(in srgb, var(--border2) 60%, transparent);
+  border-radius: 0;
+  padding: 4px 2px;
   outline: none;
-  transition: border-color 0.12s, background 0.12s;
+  transition: border-color 0.12s;
 }
 .itemNameInput:focus {
-  border-color: var(--accent);
-  background: var(--bg3);
+  border-bottom-color: var(--accent);
+  color: var(--text);
 }
 
 .itemPriceInput {
@@ -106,16 +144,16 @@
   font-size: 12px;
   color: var(--text2);
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 4px 6px;
+  border: none;
+  border-bottom: 1px dashed color-mix(in srgb, var(--border2) 60%, transparent);
+  border-radius: 0;
+  padding: 4px 2px;
   outline: none;
   text-align: right;
-  transition: border-color 0.12s, background 0.12s;
+  transition: border-color 0.12s;
 }
 .itemPriceInput:focus {
-  border-color: var(--accent);
-  background: var(--bg3);
+  border-bottom-color: var(--accent);
   color: var(--text);
 }
 .itemPriceInput::-webkit-inner-spin-button,
@@ -131,50 +169,27 @@
   background: transparent;
   border: none;
   color: var(--text3);
-  font-size: 16px;
-  line-height: 1;
   cursor: pointer;
   border-radius: 50%;
   transition: color 0.12s, background 0.12s;
 }
 .itemRemoveBtn:hover { color: var(--accent); background: var(--accent-soft); }
 
-/* ── Category row ── */
-.categoryRow {
+/* ── Category section ── */
+.categorySection {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 12px;
 }
 
 .categoryLabel {
   font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   color: var(--text2);
-  flex-shrink: 0;
 }
-
-.categorySelect {
-  flex: 1;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  padding: 5px 10px;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='9' height='6' viewBox='0 0 9 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l3.5 3.5L8 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 28px;
-}
-.categorySelect:focus { border-color: var(--accent); }
 
 /* ── Actions ── */
 .actions {
