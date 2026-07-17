@@ -14,10 +14,11 @@ import styles from './HeroCard.module.css'
  * @prop {number[]} sparklineData — масив витрат за 7 днів (oldest→newest)
  */
 interface HeroCardProps {
-  balance:        number
-  dailyBudget:    number
-  todaySpent:     number
-  sparklineData?: number[]
+  balance:         number
+  dailyBudget:     number
+  todaySpent:      number
+  dailyAllowance?: number | null
+  sparklineData?:  number[]
 }
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
@@ -31,7 +32,7 @@ function getSparkDaysShort(): string[] {
   })
 }
 
-const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget, todaySpent, sparklineData }) => {
+const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget, todaySpent, dailyAllowance, sparklineData }) => {
   const [displayed, setDisplayed] = useState(0)
   const hasAnimated = useRef(false)
   const rafRef      = useRef<number | undefined>(undefined)
@@ -72,8 +73,12 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget,
     return { amount: fmt(max), day: days[idx] }
   })()
 
+  const todayValue = dailyAllowance != null
+    ? `${fmt(todaySpent)} / ${fmt(dailyAllowance)}`
+    : `${fmt(todaySpent)}`
+
   const stats = [
-    { value: `${fmt(todaySpent)} ₴`, label: 'Сьогодні' },
+    { value: `${todayValue} ₴`, label: 'Сьогодні', over: dailyAllowance != null && todaySpent > dailyAllowance },
     ...(weekTotal != null ? [{ value: `${fmt(weekTotal)} ₴`, label: '7 днів' }] : []),
     ...(peak ? [{ value: `${peak.amount} ₴`, label: 'Пік', sub: peak.day, accent: true }] : []),
   ]
@@ -91,7 +96,7 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget,
         <div className={styles.statStrip}>
           {stats.map((s, i) => (
             <div key={i} className={styles.statItem}>
-              <span className={`${styles.statValue} ${s.accent ? styles.statValueAccent : ''}`}>
+              <span className={`${styles.statValue} ${s.accent ? styles.statValueAccent : ''} ${'over' in s && s.over ? styles.statValueOver : ''}`}>
                 {s.value}
                 {s.sub && <span className={styles.statSub}> · {s.sub}</span>}
               </span>

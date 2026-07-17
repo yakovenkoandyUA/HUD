@@ -74,6 +74,11 @@ const WalletTab: React.FC = () => {
   const [savingSalary, setSavingSalary] = useState(false)
   const salaryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Monthly spend limit
+  const [limitInput, setLimitInput]   = useState(activeProfile?.monthlySpendLimit != null ? String(activeProfile.monthlySpendLimit) : '')
+  const [savingLimit, setSavingLimit] = useState(false)
+  const limitDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // Categories
   const [addingCat, setAddingCat]   = useState(false)
   const [newCatValue, setNewCatValue] = useState('')
@@ -170,6 +175,24 @@ const WalletTab: React.FC = () => {
         showToast('Помилка збереження', 'error')
       } finally {
         setSavingSalary(false)
+      }
+    }, 800)
+  }
+
+  const handleLimitChange = (raw: string) => {
+    setLimitInput(raw)
+    if (limitDebounceRef.current) clearTimeout(limitDebounceRef.current)
+    limitDebounceRef.current = setTimeout(async () => {
+      setSavingLimit(true)
+      try {
+        const parsed = raw.trim() === '' ? null : parseInt(raw, 10)
+        if (parsed !== null && (isNaN(parsed) || parsed < 0)) return
+        await updateProfile({ monthlySpendLimit: parsed })
+        showToast('Збережено', 'success')
+      } catch {
+        showToast('Помилка збереження', 'error')
+      } finally {
+        setSavingLimit(false)
       }
     }, 800)
   }
@@ -434,6 +457,29 @@ const WalletTab: React.FC = () => {
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* ── Monthly spend limit ── */}
+      <div className={styles.settingsCard}>
+        <div className={styles.cardTitle}>
+          МІСЯЧНИЙ ЛІМІТ ВИТРАТ
+          {savingLimit && <span className={styles.pushSub} style={{ marginLeft: 8, textTransform: 'none', fontFamily: 'var(--font-ui)' }}>Зберігаю...</span>}
+        </div>
+        <div className={styles.cardRow}>
+          <div>
+            <div className={styles.cardRowLabel}>Бюджет на місяць (₴)</div>
+            <div className={styles.pushSub}>Дашборд покаже денний ліміт що залишився</div>
+          </div>
+          <input
+            type="number"
+            className={styles.salaryNumCompact}
+            style={{ width: 90, textAlign: 'right', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', color: 'var(--text)', fontFamily: 'var(--font-mono)', fontSize: 16, outline: 'none' }}
+            value={limitInput}
+            onChange={e => handleLimitChange(e.target.value)}
+            placeholder="—"
+            min={0}
+          />
         </div>
       </div>
 

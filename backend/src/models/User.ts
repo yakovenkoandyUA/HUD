@@ -14,6 +14,7 @@ export interface IUser extends Document {
   role: 'admin' | 'user'
   f1Enabled: boolean
   salaryDay: number
+  monthlySpendLimit: number | null
   city: string
   morningStart: number
   afternoonStart: number
@@ -68,6 +69,7 @@ const schema = new Schema<IUser>({
   role:              { type: String, enum: ['admin', 'user'], default: 'user' },
   f1Enabled:         { type: Boolean, default: false },
   salaryDay:         { type: Number, default: 1, min: 1, max: 31 },
+  monthlySpendLimit: { type: Number, default: null },
   city:              { type: String, default: '' },
   morningStart:      { type: Number, default: 6,  min: 0, max: 23 },
   afternoonStart:    { type: Number, default: 12, min: 0, max: 23 },

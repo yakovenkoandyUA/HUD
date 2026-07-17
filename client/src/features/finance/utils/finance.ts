@@ -26,6 +26,25 @@ export function calcDailyBudget(balance: number, salaryDay = 1): number {
   return Math.floor(balance / Math.max(1, getDaysLeftInMonth(salaryDay)))
 }
 
+/**
+ * Rolling daily allowance based on a fixed monthly spend limit.
+ * Formula: (limit - spentThisMonthExcludingToday) / daysLeftInCalendarMonthIncludingToday
+ * Returns null when no limit is set.
+ */
+export function calcRollingDailyAllowance(
+  monthlyLimit: number | null,
+  monthlySpent: number,
+  todaySpent: number,
+): number | null {
+  if (!monthlyLimit) return null
+  const now = new Date()
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const daysLeft = Math.max(1, daysInMonth - now.getDate() + 1)
+  const spentBeforeToday = Math.max(0, monthlySpent - todaySpent)
+  const remaining = Math.max(0, monthlyLimit - spentBeforeToday)
+  return Math.floor(remaining / daysLeft)
+}
+
 export function getPeriodStart(salaryDay = 1): string {
   const now = new Date()
   const today = now.getDate()

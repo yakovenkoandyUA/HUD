@@ -74,6 +74,7 @@
 }
 
 .statValueAccent { color: var(--accent); }
+.statValueOver   { color: #ef4444; }
 
 .statSub {
   font-family: var(--font-ui);

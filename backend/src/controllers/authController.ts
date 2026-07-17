@@ -95,7 +95,8 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   avatarUrl: user.avatarUrl,
   role: user.role,
   f1Enabled:      user.f1Enabled ?? false,
-  salaryDay:      user.salaryDay ?? 1,
+  salaryDay:         user.salaryDay ?? 1,
+  monthlySpendLimit: user.monthlySpendLimit ?? null,
   city:           user.city ?? '',
   morningStart:   user.morningStart   ?? 6,
   afternoonStart: user.afternoonStart ?? 12,
@@ -603,15 +604,15 @@ export async function selectProfile(req: Request, res: Response): Promise<void> 
 
 /** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl, name, f1Enabled, salaryDay, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs, unlockedAchievements, sprintTutorialSeen, weekdayLongPressTutorialSeen, swipeDismissTutorialSeen, sprintTutorialShownCount, weekdayLongPressShownCount, swipeDismissShownCount, onboardingCompleted, mimirSeenHints } = req.body as {
-    avatarUrl?: string; name?: string; f1Enabled?: boolean; salaryDay?: number; username?: string
+  const { avatarUrl, name, f1Enabled, salaryDay, monthlySpendLimit, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs, unlockedAchievements, sprintTutorialSeen, weekdayLongPressTutorialSeen, swipeDismissTutorialSeen, sprintTutorialShownCount, weekdayLongPressShownCount, swipeDismissShownCount, onboardingCompleted, mimirSeenHints } = req.body as {
+    avatarUrl?: string; name?: string; f1Enabled?: boolean; salaryDay?: number; monthlySpendLimit?: number | null; username?: string
     city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string
     mediaEnabledTabs?: string[]; unlockedAchievements?: ({ id: string } | string)[]; sprintTutorialSeen?: boolean
     weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean
     sprintTutorialShownCount?: number; weekdayLongPressShownCount?: number; swipeDismissShownCount?: number
     onboardingCompleted?: boolean; mimirSeenHints?: string[]
   }
-  if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && !username &&
+  if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && monthlySpendLimit === undefined && !username &&
       city === undefined && morningStart === undefined && afternoonStart === undefined && eveningStart === undefined &&
       reportStyle === undefined && mediaEnabledTabs === undefined && unlockedAchievements === undefined &&
       sprintTutorialSeen === undefined && weekdayLongPressTutorialSeen === undefined && swipeDismissTutorialSeen === undefined &&
@@ -630,6 +631,9 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
       const day = Math.round(salaryDay)
       if (day < 1 || day > 31) { res.status(400).json({ error: 'salaryDay must be 1–31' }); return }
       update.salaryDay = day
+    }
+    if (monthlySpendLimit !== undefined) {
+      update.monthlySpendLimit = monthlySpendLimit === null ? null : Math.max(0, Math.round(monthlySpendLimit))
     }
     if (username?.trim()) {
       const slug = username.trim().toLowerCase()
