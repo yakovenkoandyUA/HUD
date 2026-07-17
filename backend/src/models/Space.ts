@@ -36,6 +36,7 @@ export interface IPetFoodItem {
   brand:     string
   reaction:  'yes' | 'maybe' | 'no'
   notes:     string
+  imageUrl:  string
 }
 
 export interface IPetProfile {
@@ -112,6 +113,7 @@ const petFoodItemSchema = new Schema<IPetFoodItem>({
   brand:    { type: String, default: '' },
   reaction: { type: String, enum: ['yes', 'maybe', 'no'], default: 'yes' },
   notes:    { type: String, default: '' },
+  imageUrl: { type: String, default: '' },
 }, { _id: false })
 
 const petProfileSchema = new Schema<IPetProfile>({

@@ -40,6 +40,7 @@ export interface PetFoodItem {
   brand:    string
   reaction: 'yes' | 'maybe' | 'no'
   notes:    string
+  imageUrl: string
 }
 
 export interface PetProfile {

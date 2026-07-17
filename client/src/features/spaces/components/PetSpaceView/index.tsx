@@ -1052,19 +1052,23 @@ function nextReaction(r: Reaction): Reaction {
 
 function genId() { return Math.random().toString(36).slice(2, 10) }
 
-interface PetFoodSuggestion { name: string; brand: string }
+interface PetFoodSuggestion { name: string; brand: string; imageUrl: string }
 
 async function searchPetFood(q: string): Promise<PetFoodSuggestion[]> {
   if (q.length < 2) return []
   try {
     const res = await fetch(
-      `https://world.openpetfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands`
+      `https://world.openpetfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands,image_small_url`
     )
     if (!res.ok) return []
-    const data = await res.json() as { products?: { product_name?: string; brands?: string }[] }
+    const data = await res.json() as { products?: { product_name?: string; brands?: string; image_small_url?: string }[] }
     return (data.products ?? [])
       .filter(p => p.product_name)
-      .map(p => ({ name: p.product_name ?? '', brand: p.brands?.split(',')[0].trim() ?? '' }))
+      .map(p => ({
+        name:     p.product_name ?? '',
+        brand:    p.brands?.split(',')[0].trim() ?? '',
+        imageUrl: p.image_small_url ?? '',
+      }))
   } catch { return [] }
 }
 
@@ -1078,6 +1082,7 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
   const [open, setOpen]           = useState(false)
   const [addName, setAddName]     = useState('')
   const [addBrand, setAddBrand]   = useState('')
+  const [addImageUrl, setAddImageUrl] = useState('')
   const [addReact, setAddReact]   = useState<Reaction>('yes')
   const [saving, setSaving]       = useState(false)
   const [filter, setFilter]       = useState<'all' | Reaction>('all')
@@ -1100,6 +1105,7 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
   const handlePickSuggestion = (s: PetFoodSuggestion) => {
     setAddName(s.name)
     setAddBrand(s.brand)
+    setAddImageUrl(s.imageUrl)
     setShowSug(false)
   }
 
@@ -1107,9 +1113,9 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
     if (!addName.trim()) return
     setSaving(true)
     setShowSug(false)
-    const item: PetFoodItem = { id: genId(), name: addName.trim(), brand: addBrand.trim(), reaction: addReact, notes: '' }
+    const item: PetFoodItem = { id: genId(), name: addName.trim(), brand: addBrand.trim(), reaction: addReact, notes: '', imageUrl: addImageUrl }
     try { await onSave([...foodLog, item]) } finally { setSaving(false) }
-    setAddName(''); setAddBrand(''); setAddReact('yes')
+    setAddName(''); setAddBrand(''); setAddReact('yes'); setAddImageUrl('')
   }
 
   const handleCycleReaction = async (id: string) => {
@@ -1149,6 +1155,14 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
             const meta = REACTION_META[item.reaction]
             return (
               <div key={item.id} className={styles.foodRow}>
+                {item.imageUrl
+                  ? <img src={item.imageUrl} alt="" className={styles.foodImg} />
+                  : <div className={styles.foodImgPlaceholder} />
+                }
+                <div className={styles.foodMain}>
+                  <span className={styles.foodName}>{item.name}</span>
+                  {item.brand && <span className={styles.foodBrand}>{item.brand}</span>}
+                </div>
                 <button
                   type="button"
                   className={styles.foodReactionPill}
@@ -1158,10 +1172,6 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
                 >
                   {meta.label}
                 </button>
-                <div className={styles.foodMain}>
-                  <span className={styles.foodName}>{item.name}</span>
-                  {item.brand && <span className={styles.foodBrand}>{item.brand}</span>}
-                </div>
                 <button type="button" className={styles.foodDeleteBtn} onClick={() => handleDelete(item.id)}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                 </button>
@@ -1195,8 +1205,14 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
                 <div className={styles.foodSuggestions}>
                   {suggestions.map((s, i) => (
                     <button key={i} type="button" className={styles.foodSugItem} onMouseDown={() => handlePickSuggestion(s)}>
-                      <span className={styles.foodSugName}>{s.name}</span>
-                      {s.brand && <span className={styles.foodSugBrand}>{s.brand}</span>}
+                      {s.imageUrl
+                        ? <img src={s.imageUrl} alt="" className={styles.foodSugImg} />
+                        : <div className={styles.foodSugImgPlaceholder} />
+                      }
+                      <div className={styles.foodSugText}>
+                        <span className={styles.foodSugName}>{s.name}</span>
+                        {s.brand && <span className={styles.foodSugBrand}>{s.brand}</span>}
+                      </div>
                     </button>
                   ))}
                 </div>
