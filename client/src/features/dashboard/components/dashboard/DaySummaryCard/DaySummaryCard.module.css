@@ -126,6 +126,13 @@
   line-height: 1;
 }
 
+/* Shop: large coloured number */
+.cellValShop {
+  color: var(--cat-shop);
+  font-size: 22px;
+  line-height: 1;
+}
+
 /* ── Secondary hint ── */
 
 .cellSub {

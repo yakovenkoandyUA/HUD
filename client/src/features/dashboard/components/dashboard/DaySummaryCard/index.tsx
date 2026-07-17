@@ -70,12 +70,14 @@ const DaySummaryCard: React.FC<DaySummaryCardProps> = ({
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
         </svg>
       </div>
-      <span className={`${styles.cellVal} ${shoppingCount === 0 ? styles.cellValDim : ''}`}>
-        {shoppingCount > 0 ? 'є товари' : 'порожньо'}
-      </span>
-      <span className={`${styles.cellSub} ${styles.cellSubShop}`}>
-        {shoppingCount > 0 ? `${shoppingCount} пунктів` : '0 товарів'}
-      </span>
+      {shoppingCount > 0 ? (
+        <>
+          <span className={`${styles.cellVal} ${styles.cellValShop}`}>{shoppingCount}</span>
+          <span className={`${styles.cellSub} ${styles.cellSubShop}`}>до купівлі</span>
+        </>
+      ) : (
+        <span className={`${styles.cellVal} ${styles.cellValDim}`}>порожньо</span>
+      )}
     </button>
 
     {/* Страва */}
