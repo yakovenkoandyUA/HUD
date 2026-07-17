@@ -146,10 +146,8 @@ const Sprint: React.FC = () => {
 		if (isRecurring(t)) return false
 		if (filterType === 'task'     && t.type === 'shopping') return false
 		if (filterType === 'shopping' && t.type !== 'shopping') return false
-		if (filterType === 'task') {
-			if (filterStatus === 'active') return !t.done
-			if (filterStatus === 'done')   return t.done
-		}
+		if (filterStatus === 'active') return !t.done
+		if (filterStatus === 'done')   return t.done
 		return true
 	})
 
@@ -325,8 +323,8 @@ const Sprint: React.FC = () => {
 					</div>
 				)}
 
-				{/* ── Status row (tasks only) ── */}
-				{filterType === 'task' && <div className={styles.statusRow}>
+				{/* ── Status row ── */}
+				<div className={styles.statusRow}>
 					{isDayToday && (
 						<div className={styles.statusLeft}>
 							{(['active', 'done'] as const).map((status, i) => (
@@ -342,7 +340,7 @@ const Sprint: React.FC = () => {
 							))}
 						</div>
 					)}
-				</div>}
+				</div>
 
 				{/* ── Sprint Mimir: one-time empty hint only (no flex-gap from empty wrapper) ── */}
 				{filterType === 'task' && !sprintEmptySeen && isCurrentWeek && filterStatus === 'active'

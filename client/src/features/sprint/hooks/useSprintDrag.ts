@@ -80,13 +80,18 @@ export function useSprintDrag(
     const deltaY = e.clientY - dragStartYRef.current
     dragDeltaYRef.current = deltaY
 
-    const children = Array.from(listRef.current.children) as HTMLElement[]
-    const y = e.clientY
-    let newIndex = dragFromIndex
+    const el = listRef.current
+    const children = Array.from(el.children) as HTMLElement[]
+    // offsetTop is NOT affected by CSS transforms — gives original layout position
+    const listTop = el.getBoundingClientRect().top
+    const y = e.clientY - listTop + el.scrollTop
+
+    let newIndex = children.length - 1
     for (let i = 0; i < children.length; i++) {
-      const rect = children[i].getBoundingClientRect()
-      if (y < rect.top + rect.height / 2) { newIndex = i; break }
-      newIndex = i
+      if (y < children[i].offsetTop + children[i].offsetHeight / 2) {
+        newIndex = i
+        break
+      }
     }
 
     applyDragStyles(dragFromIndex, newIndex, deltaY)
@@ -102,7 +107,11 @@ export function useSprintDrag(
     }
     const reordered = [...visibleItemsRef.current]
     const [moved] = reordered.splice(dragFromIndex, 1)
-    reordered.splice(dragOverIndex, 0, moved)
+    // dragOverIndex is in original-array coordinates.
+    // After splice(dragFromIndex, 1), items after dragFromIndex shift left by 1,
+    // so when dropping below the original position we subtract 1 to compensate.
+    const insertAt = dragOverIndex > dragFromIndex ? dragOverIndex - 1 : dragOverIndex
+    reordered.splice(insertAt, 0, moved)
     reorderTasks(reordered.map(t => t.id))
     setDragFromIndex(null)
     setDragOverIndex(null)

@@ -39,6 +39,7 @@ const Dashboard: React.FC = () => {
   const { showToast } = useUiStore()
   const f1Enabled         = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay         = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
+  const monthlyBudget     = useProfileStore(s => s.activeProfile?.monthlySpendLimit ?? null)
   const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
   const { notes, fetchNotes } = useNotesStore()
@@ -82,6 +83,15 @@ const Dashboard: React.FC = () => {
   const todaySpent  = transactions
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))
     .reduce((sum, t) => sum + t.amount, 0)
+  const thisMonthPrefix  = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`
+  const lastMonthDate    = new Date(todayDate.getFullYear(), todayDate.getMonth() - 1, 1)
+  const lastMonthPrefix  = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`
+  const thisMonthExpenses = transactions
+    .filter(t => t.type === 'expense' && t.date.startsWith(thisMonthPrefix))
+    .reduce((s, t) => s + t.amount, 0)
+  const lastMonthExpenses = transactions
+    .filter(t => t.type === 'expense' && t.date.startsWith(lastMonthPrefix))
+    .reduce((s, t) => s + t.amount, 0)
 
   const isDoneToday = (t: (typeof sprintItems)[number]) =>
     isRecurring(t) ? !!(t.completionLog?.some(d => d >= today)) : t.done
@@ -196,6 +206,9 @@ const Dashboard: React.FC = () => {
             dailyBudget={dailyBudget}
             todaySpent={todaySpent}
             sparklineData={sparklineData}
+            monthlyBudget={monthlyBudget}
+            thisMonthExpenses={thisMonthExpenses}
+            lastMonthExpenses={lastMonthExpenses}
           />
         </div>
 
