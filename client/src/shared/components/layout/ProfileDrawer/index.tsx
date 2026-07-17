@@ -150,7 +150,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
           <DrawerItem
             icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="2.2"/><path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.1 3.1l1.4 1.4M13.5 13.5l1.4 1.4M3.1 14.9l1.4-1.4M13.5 4.5l1.4-1.4"/><circle cx="9" cy="9" r="5.5"/></svg>}
             label="Акаунт"
-            sub="Дані, безпека, юридичне"
+            sub="Дані, юридичне, небезпечна зона"
             onClick={() => go('/profile/account')}
           />
           {updateAvailable && (

@@ -142,9 +142,9 @@ const RecipeDetailScreen: React.FC = () => {
     setShowEdit(false)
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!id) return
-    deleteRecipe(id)
+    await deleteRecipe(id)
     navigate('/recipes')
   }
 

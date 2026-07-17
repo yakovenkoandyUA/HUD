@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import type { UnifiedTodo } from '@/shared/types'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 
@@ -6,7 +7,7 @@ import MimirHint from '@/shared/components/ui/MimirHint'
 import { useMimirHint } from '@/shared/hooks/useMimirHint'
 import AppHeader from '@/shared/components/layout/AppHeader'
 import TrashBin from './components/sprint/TrashBin'
-import WeekHeader, { addWeeks } from './components/sprint/WeekHeader'
+import WeekHeader from './components/sprint/WeekHeader'
 import TaskCard from './components/sprint/TaskCard'
 import TaskDetailModal from './components/sprint/TaskDetailModal'
 import WeekExpandedView from './components/sprint/WeekExpandedView'
@@ -15,9 +16,10 @@ import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { useMealPlanStore } from '@/features/recipes/store/mealPlanStore'
 import { useRecipesStore } from '@/features/recipes/store/recipesStore'
 import { useProfileStore } from '@/shared/store/profileStore'
-import { getCurrentWeekStart, isRecurring, isRoutineDueOnDay } from './utils/sprint'
+import { isRecurring, isRoutineDueOnDay } from './utils/sprint'
 import { getToken } from '@/shared/services/api'
-import type { UnifiedTodo } from '@/shared/types'
+import { useSprintDrag } from './hooks/useSprintDrag'
+import { useSprintCalendar } from './hooks/useSprintCalendar'
 import styles from './Sprint.module.css'
 
 type FilterType   = 'task' | 'shopping'
@@ -65,7 +67,8 @@ const Sprint: React.FC = () => {
 	const navigate = useNavigate()
 	const [searchParams] = useSearchParams()
 	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
-	const [filterType, setFilterType]     = useState<FilterType>(locationState?.filterType ?? 'task')
+
+	const [filterType, setFilterType]   = useState<FilterType>(locationState?.filterType ?? 'task')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
 
 	// "Заморожуємо" рішення показувати підказку на момент монтування — інакше інкремент
@@ -77,7 +80,6 @@ const Sprint: React.FC = () => {
 	const [showAdd, setShowAdd]           = useState(false)
 	const [quickAddDate, setQuickAddDate] = useState<string | null>(null)
 	const [detailTaskId, setDetailTaskId] = useState<string | null>(() => searchParams.get('quest'))
-	const [weekExpanded, setWeekExpanded] = useState(false)
 	const [binHidden, setBinHidden]       = useState(true)
 	const [doneVisibleCount, setDoneVisibleCount]     = useState(20)
 	const [activeVisibleCount, setActiveVisibleCount] = useState(20)
@@ -85,29 +87,22 @@ const Sprint: React.FC = () => {
 	const doneSentinelRef   = useRef<HTMLDivElement>(null)
 	const activeSentinelRef = useRef<HTMLDivElement>(null)
 
-	// ── Drag-to-reorder state ─────────────────────────────────────────────────
-	const [dragFromIndex, setDragFromIndex] = useState<number | null>(null)
-	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
-	const dragStartYRef   = useRef(0)
-	const dragDeltaYRef   = useRef(0)
-	const listRef         = useRef<HTMLUListElement>(null)
-	const handleSwipeTutorialDone = () => {
-		updateProfile({ sprintTutorialSeen: true })
-	}
+	const handleSwipeTutorialDone = () => { updateProfile({ sprintTutorialSeen: true }) }
 
+	// ── Calendar / week navigation ────────────────────────────────────────────
+	const {
+		todayStr,
+		selectedDay, setSelectedDay,
+		weekStart,
+		isCurrentWeek,
+		weekExpanded, setWeekExpanded,
+		calendarMode,
+		toggleCalendarMode,
+		goToPrevWeek,
+		goToNextWeek,
+	} = useSprintCalendar(locationState?.selectedDay)
 
-	const _td = new Date()
-	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
-	const [selectedDay, setSelectedDay] = useState(locationState?.selectedDay ?? todayStr)
-	const [calendarMode, setCalendarMode] = useState<'week' | 'month'>(() =>
-		(localStorage.getItem('sprint-calendar-mode') as 'week' | 'month') || 'week'
-	)
-	const toggleCalendarMode = () => {
-		const next = calendarMode === 'week' ? 'month' : 'week'
-		setCalendarMode(next)
-		localStorage.setItem('sprint-calendar-mode', next)
-	}
-
+	// ── Data fetch on mount ───────────────────────────────────────────────────
 	// Clean up ?quest= param from URL after reading it on mount
 	useEffect(() => {
 		if (searchParams.get('quest')) {
@@ -145,20 +140,6 @@ const Sprint: React.FC = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	const currentWeekStart = getCurrentWeekStart()
-	const [weekStart, setWeekStart] = useState(currentWeekStart)
-	const isCurrentWeek = weekStart === currentWeekStart
-
-	const goToPrevWeek = () => {
-		const prev = addWeeks(weekStart, -1)
-		setWeekStart(prev)
-		setSelectedDay(prev)
-	}
-	const goToNextWeek = () => {
-		const next = addWeeks(weekStart, 1)
-		setWeekStart(next)
-		setSelectedDay(next === currentWeekStart ? todayStr : next)
-	}
 	const routineItems = items.filter(t => isRecurring(t))
 
 	const filteredItems = items.filter(t => {
@@ -191,6 +172,7 @@ const Sprint: React.FC = () => {
 		|| items.some(t => !isRecurring(t) && t.dueDate === selectedDay)
 
 	const hasCustomOrder = rawDayQuests.some(t => (t.order ?? 0) > 0)
+
 	const dayQuests = filterStatus === 'done'
 		? [...rawDayQuests].sort((a, b) => {
 			const tA = a.completedAt ? new Date(a.completedAt).getTime() : new Date(a.createdAt).getTime()
@@ -233,97 +215,15 @@ const Sprint: React.FC = () => {
 
 	const showSwipeGhost = ghostHintEligible && !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
 
-	// ── Drag helpers ──────────────────────────────────────────────────────────
-	const applyDragStyles = useCallback((from: number, over: number, deltaY: number) => {
-		const el = listRef.current
-		if (!el) return
-		const children = Array.from(el.children) as HTMLElement[]
-		const itemH = children[from]?.offsetHeight ?? 64
-
-		children.forEach((child, i) => {
-			if (i === from) {
-				child.style.transform  = `translateY(${deltaY}px) scale(1.03)`
-				child.style.zIndex     = '20'
-				child.style.position   = 'relative'
-				child.style.transition = 'box-shadow 0.15s ease'
-				child.removeAttribute('data-drop-above')
-			} else {
-				child.style.zIndex   = ''
-				child.style.position = ''
-				child.style.transition = 'transform 0.18s ease'
-				if (over > from && i > from && i <= over) {
-					child.style.transform = `translateY(-${itemH}px)`
-				} else if (over < from && i >= over && i < from) {
-					child.style.transform = `translateY(${itemH}px)`
-				} else {
-					child.style.transform = ''
-				}
-				// drop indicator line
-				if (i === over) child.setAttribute('data-drop-above', 'true')
-				else            child.removeAttribute('data-drop-above')
-			}
-		})
-	}, [])
-
-	const resetDragStyles = useCallback(() => {
-		const el = listRef.current
-		if (!el) return
-		Array.from(el.children as HTMLCollectionOf<HTMLElement>).forEach(child => {
-			child.style.transform  = ''
-			child.style.zIndex     = ''
-			child.style.position   = ''
-			child.style.transition = ''
-			child.removeAttribute('data-drop-above')
-		})
-	}, [])
-
-	// ── Drag handlers ─────────────────────────────────────────────────────────
-	const handleDragHandlePointerDown = useCallback((index: number, e: React.PointerEvent) => {
-		dragStartYRef.current = e.clientY
-		dragDeltaYRef.current = 0
-		setDragFromIndex(index)
-		setDragOverIndex(index)
-		;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-	}, [])
-
-	const handleDragPointerMove = useCallback((e: React.PointerEvent) => {
-		if (dragFromIndex === null || !listRef.current) return
-		const deltaY = e.clientY - dragStartYRef.current
-		dragDeltaYRef.current = deltaY
-
-		const children = Array.from(listRef.current.children) as HTMLElement[]
-		const y = e.clientY
-		let newIndex = dragFromIndex
-		for (let i = 0; i < children.length; i++) {
-			const rect = children[i].getBoundingClientRect()
-			if (y < rect.top + rect.height / 2) { newIndex = i; break }
-			newIndex = i
-		}
-
-		applyDragStyles(dragFromIndex, newIndex, deltaY)
-		if (newIndex !== dragOverIndex) setDragOverIndex(newIndex)
-	}, [dragFromIndex, dragOverIndex, applyDragStyles])
-
-	const handleDragPointerUp = useCallback(() => {
-		resetDragStyles()
-		if (dragFromIndex === null || dragOverIndex === null || dragFromIndex === dragOverIndex) {
-			setDragFromIndex(null)
-			setDragOverIndex(null)
-			return
-		}
-		const reordered = [...visibleDayQuests]
-		const [moved] = reordered.splice(dragFromIndex, 1)
-		reordered.splice(dragOverIndex, 0, moved)
-		reorderTasks(reordered.map(t => t.id))
-		setDragFromIndex(null)
-		setDragOverIndex(null)
-	}, [dragFromIndex, dragOverIndex, visibleDayQuests, reorderTasks, resetDragStyles])
-
-	// Відновлюємо transform після React re-render (dragOverIndex state change)
-	useLayoutEffect(() => {
-		if (dragFromIndex === null) return
-		applyDragStyles(dragFromIndex, dragOverIndex ?? dragFromIndex, dragDeltaYRef.current)
-	}, [dragFromIndex, dragOverIndex, applyDragStyles])
+	// ── Drag-to-reorder ───────────────────────────────────────────────────────
+	const {
+		dragFromIndex,
+		dragOverIndex,
+		listRef,
+		handleDragHandlePointerDown,
+		handleDragPointerMove,
+		handleDragPointerUp,
+	} = useSprintDrag(visibleDayQuests, reorderTasks)
 
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
