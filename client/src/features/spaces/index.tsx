@@ -584,30 +584,43 @@ const SpaceDetailScreen: React.FC = () => {
         )
       })()}
 
-      {/* ── Budget bar (hidden for vehicle) ── */}
-      {space?.type !== 'vehicle' && space?.budget != null && (() => {
+      {/* ── Budget / spending block (hidden for vehicle) ── */}
+      {space?.type !== 'vehicle' && (() => {
         const spent = spaceTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-        const pct   = Math.min(100, (spent / space.budget) * 100)
-        const sym   = space.budgetCurrency === 'USD' ? '$' : space.budgetCurrency === 'EUR' ? '€' : '₴'
-        const barColor: 'green' | 'gold' | 'red' = pct < 80 ? 'green' : pct < 100 ? 'gold' : 'red'
-        return (
-          <div className={styles.budgetBar} style={colorVar}>
-            <div className={styles.budgetRow}>
-              <span className={styles.budgetLabel}>БЮДЖЕТ</span>
-              <span className={styles.budgetAmounts}>
-                <span className={`${styles.budgetSpent} ${styles[`budgetSpent_${barColor}`]}`}>
+        const sym   = space?.budgetCurrency === 'USD' ? '$' : space?.budgetCurrency === 'EUR' ? '€' : '₴'
+        if (space?.budget != null) {
+          const pct      = Math.min(100, (spent / space.budget) * 100)
+          const barColor: 'green' | 'gold' | 'red' = pct < 80 ? 'green' : pct < 100 ? 'gold' : 'red'
+          return (
+            <div className={styles.budgetBar} style={colorVar}>
+              <div className={styles.budgetRow}>
+                <span className={styles.budgetLabel}>БЮДЖЕТ</span>
+                <span className={styles.budgetAmounts}>
+                  <span className={`${styles.budgetSpent} ${styles[`budgetSpent_${barColor}`]}`}>
+                    {sym}{formatTxAmount(spent)}
+                  </span>
+                  <span className={styles.budgetSep}>/</span>
+                  <span className={styles.budgetTotal}>{sym}{formatTxAmount(space.budget)}</span>
+                </span>
+              </div>
+              <ProgressBar value={spent} max={space.budget} color={barColor} />
+              {pct >= 100 && <span className={styles.budgetOver}>Бюджет перевищено</span>}
+            </div>
+          )
+        }
+        if (spent > 0) {
+          return (
+            <div className={styles.budgetBar} style={colorVar}>
+              <div className={styles.budgetRow}>
+                <span className={styles.budgetLabel}>ВИТРАТИ</span>
+                <span className={`${styles.budgetSpent} ${styles.budgetSpent_green}`}>
                   {sym}{formatTxAmount(spent)}
                 </span>
-                <span className={styles.budgetSep}>/</span>
-                <span className={styles.budgetTotal}>{sym}{formatTxAmount(space.budget)}</span>
-              </span>
+              </div>
             </div>
-            <ProgressBar value={spent} max={space.budget} color={barColor} />
-            {pct >= 100 && (
-              <span className={styles.budgetOver}>Бюджет перевищено</span>
-            )}
-          </div>
-        )
+          )
+        }
+        return null
       })()}
 
       {/* ── Typed views (replace generic content) ── */}
