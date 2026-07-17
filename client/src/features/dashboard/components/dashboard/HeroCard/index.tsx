@@ -14,11 +14,10 @@ import styles from './HeroCard.module.css'
  * @prop {number[]} sparklineData — масив витрат за 7 днів (oldest→newest)
  */
 interface HeroCardProps {
-  balance:         number
-  dailyBudget:     number
-  todaySpent:      number
-  dailyAllowance?: number | null
-  sparklineData?:  number[]
+  balance:        number
+  dailyBudget:    number
+  todaySpent:     number
+  sparklineData?: number[]
 }
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
@@ -32,7 +31,7 @@ function getSparkDaysShort(): string[] {
   })
 }
 
-const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget, todaySpent, dailyAllowance, sparklineData }) => {
+const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget, todaySpent, sparklineData }) => {
   const [displayed, setDisplayed] = useState(0)
   const hasAnimated = useRef(false)
   const rafRef      = useRef<number | undefined>(undefined)
@@ -73,12 +72,12 @@ const HeroCard: React.FC<HeroCardProps> = ({ balance, dailyBudget: _dailyBudget,
     return { amount: fmt(max), day: days[idx] }
   })()
 
-  const todayValue = dailyAllowance != null
-    ? `${fmt(todaySpent)} / ${fmt(dailyAllowance)}`
+  const todayValue = dailyBudget > 0
+    ? `${fmt(todaySpent)} / ${fmt(dailyBudget)}`
     : `${fmt(todaySpent)}`
 
   const stats = [
-    { value: `${todayValue} ₴`, label: 'Сьогодні', over: dailyAllowance != null && todaySpent > dailyAllowance },
+    { value: `${todayValue} ₴`, label: 'Сьогодні', over: dailyBudget > 0 && todaySpent > dailyBudget },
     ...(weekTotal != null ? [{ value: `${fmt(weekTotal)} ₴`, label: '7 днів' }] : []),
     ...(peak ? [{ value: `${peak.amount} ₴`, label: 'Пік', sub: peak.day, accent: true }] : []),
   ]

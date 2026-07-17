@@ -22,7 +22,6 @@ import { getNextRace } from '@/features/f1/utils/f1'
 import { isRecurring, isRoutineDueOnDay } from '@/features/sprint/utils/sprint'
 import { usePullToRefresh } from '@/shared/hooks/usePullToRefresh'
 import { calcDailyBudget } from './helpers'
-import { calcRollingDailyAllowance } from '@/features/finance/utils/finance'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 
 import type { ExpenseCategory } from '@/shared/types'
@@ -40,7 +39,6 @@ const Dashboard: React.FC = () => {
   const { showToast } = useUiStore()
   const f1Enabled         = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay         = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
-  const monthlySpendLimit = useProfileStore(s => s.activeProfile?.monthlySpendLimit ?? null)
   const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
   const { notes, fetchNotes } = useNotesStore()
@@ -81,14 +79,9 @@ const Dashboard: React.FC = () => {
   const dailyBudget = calcDailyBudget(balance, salaryDay)
   const today       = new Date().toISOString().split('T')[0]
   const todayDate   = new Date()
-  const currentMonth = today.slice(0, 7)
   const todaySpent  = transactions
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))
     .reduce((sum, t) => sum + t.amount, 0)
-  const monthlySpent = transactions
-    .filter((t) => t.type === 'expense' && t.date.startsWith(currentMonth))
-    .reduce((sum, t) => sum + t.amount, 0)
-  const dailyAllowance = calcRollingDailyAllowance(monthlySpendLimit, monthlySpent, todaySpent)
 
   const isDoneToday = (t: (typeof sprintItems)[number]) =>
     isRecurring(t) ? !!(t.completionLog?.some(d => d >= today)) : t.done
@@ -202,7 +195,6 @@ const Dashboard: React.FC = () => {
             balance={balance}
             dailyBudget={dailyBudget}
             todaySpent={todaySpent}
-            dailyAllowance={dailyAllowance}
             sparklineData={sparklineData}
           />
         </div>
