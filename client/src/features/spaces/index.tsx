@@ -631,6 +631,7 @@ const SpaceDetailScreen: React.FC = () => {
         <PetSpaceView
           spaceId={spaceId!}
           color={space.color}
+          spaceName={space.name}
           profile={space.petProfile}
           onProfileUpdate={p => setPetProfile(space.id, p)}
         />

@@ -82,6 +82,9 @@
 .actionBtnIcon {
   color: var(--space-color); display: flex; align-items: center; flex-shrink: 0;
 }
+.actionBtnPlus {
+  margin-left: auto; flex-shrink: 0; color: var(--text3);
+}
 .actionBtn:active {
   border-color: color-mix(in srgb, var(--space-color) 50%, var(--border));
   background: color-mix(in srgb, var(--space-color) 5%, var(--surface));
@@ -213,5 +216,146 @@
 .currencyPill { padding: 6px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text2); font-family: var(--font-mono); font-size: 0.7rem; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
 .currencyPillOn { border-color: var(--space-color); color: var(--space-color); background: color-mix(in srgb, var(--space-color) 10%, var(--bg2)); }
 
-.photoRow { display: flex; align-items: center; gap: 12px; }
-.profilePhotoPreview { width: 56px; height: 56px; object-fit: cover; border-radius: 50%; border: 1px solid var(--border); flex-shrink: 0; }
+/* ── Avatar section (edit sheet) ── */
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0 2px;
+}
+
+.avatarCircle {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--border2);
+  background: var(--surface2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+.avatarCircle:active { border-color: var(--space-color); }
+
+.avatarCircleImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarPlaceholderIcon { color: var(--text3); opacity: 0.45; }
+
+.avatarEditBadge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg2);
+  border: 1.5px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+}
+
+.avatarRemoveBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--text3);
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+.avatarRemoveBtn:hover { color: var(--accent); }
+
+/* ── Crop mode ── */
+.cropBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 16px;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.cropCircle {
+  width: min(260px, calc(100vw - 64px));
+  height: min(260px, calc(100vw - 64px));
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--space-color);
+  box-shadow: 0 0 0 2000px rgba(0,0,0,0.55);
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+.cropCircle:active { cursor: grabbing; }
+
+.cropImg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.cropHint {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--text3);
+  text-align: center;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.cropFooterBtns {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+}
+
+.cropCancelBtn {
+  padding: 13px;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  background: var(--surface2);
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.cropCancelBtn:active { opacity: 0.6; }
+
+.cropConfirmBtn {
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.cropConfirmBtn:disabled { opacity: 0.45; cursor: default; }

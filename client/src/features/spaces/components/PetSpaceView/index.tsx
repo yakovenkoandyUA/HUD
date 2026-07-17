@@ -4,7 +4,7 @@ import type { PetProfile } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
-import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
+import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import styles from './PetSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -12,6 +12,7 @@ import styles from './PetSpaceView.module.css'
 interface Props {
   spaceId:         string
   color:           string
+  spaceName:       string
   profile:         PetProfile | null
   onProfileUpdate: (p: PetProfile) => void
 }
@@ -392,20 +393,23 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
 // ── Profile edit sheet ─────────────────────────────────────────────────────
 
 interface ProfileSheetProps {
-  isOpen:   boolean
-  profile:  PetProfile | null
-  onClose:  () => void
-  onSave:   (data: Partial<PetProfile>) => Promise<void>
-  color:    string
+  isOpen:    boolean
+  profile:   PetProfile | null
+  spaceName: string
+  onClose:   () => void
+  onSave:    (data: Partial<PetProfile>) => Promise<void>
+  color:     string
 }
 
-const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, onClose, onSave, color }) => {
-  const [name, setName]         = useState(profile?.name ?? '')
+const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceName, onClose, onSave, color }) => {
+  const { showToast } = useUiStore()
+
+  const [name, setName]         = useState(profile?.name || spaceName)
   const [species, setSpecies]   = useState(profile?.species ?? '')
   const [breed, setBreed]       = useState(profile?.breed ?? '')
-  const [birthDate, setBirthDate]       = useState(profile?.birthDate ?? '')
+  const [birthDate, setBirthDate]         = useState(profile?.birthDate ?? '')
   const [birthDateOpen, setBirthDateOpen] = useState(false)
-  const [weight, setWeight]             = useState(profile?.weight?.toString() ?? '')
+  const [weight, setWeight]     = useState(profile?.weight?.toString() ?? '')
   const [photoUrl, setPhotoUrl] = useState(profile?.photoUrl ?? '')
   const [chipNum, setChipNum]   = useState(profile?.chipNumber ?? '')
   const [passport, setPassport] = useState(profile?.passportNumber ?? '')
@@ -413,15 +417,29 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, onClos
   const [mounted, setMounted]   = useState(false)
   const [visible, setVisible]   = useState(false)
 
-  const sheetRef   = useRef<HTMLDivElement>(null)
-  const overlayRef = useRef<HTMLDivElement>(null)
-  const bodyRef    = useRef<HTMLDivElement>(null)
+  // ── Avatar crop state ──
+  const [pendingImgSrc, setPendingImgSrc] = useState<string | null>(null)
+  const [cropOffset, setCropOffset]       = useState({ x: 0, y: 0 })
+  const [cropScale, setCropScale]         = useState(1)
+  const [cropBusy, setCropBusy]           = useState(false)
+  const [naturalSize, setNaturalSize]     = useState({ w: 0, h: 0 })
 
-  useSwipeToDismiss(onClose, { enabled: isOpen, bodyRef, overlayRef, sheetRef })
+  const sheetRef      = useRef<HTMLDivElement>(null)
+  const overlayRef    = useRef<HTMLDivElement>(null)
+  const bodyRef       = useRef<HTMLDivElement>(null)
+  const fileInputRef  = useRef<HTMLInputElement>(null)
+  const cropCircleRef = useRef<HTMLDivElement>(null)
+  const cropImgRef    = useRef<HTMLImageElement>(null)
+  const cropOverlayRef = useRef<HTMLDivElement>(null)
+  const cropDragRef   = useRef<{ startX: number; startY: number; startOffX: number; startOffY: number } | null>(null)
+  const pointersRef   = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const pinchStartRef = useRef<{ dist: number; scale: number } | null>(null)
+
+  useSwipeToDismiss(onClose, { enabled: isOpen && !pendingImgSrc, bodyRef, overlayRef, sheetRef })
 
   useEffect(() => {
     if (isOpen) {
-      setName(profile?.name ?? '')
+      setName(profile?.name || spaceName)
       setSpecies(profile?.species ?? '')
       setBreed(profile?.breed ?? '')
       setBirthDate(profile?.birthDate ?? '')
@@ -429,6 +447,9 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, onClos
       setPhotoUrl(profile?.photoUrl ?? '')
       setChipNum(profile?.chipNumber ?? '')
       setPassport(profile?.passportNumber ?? '')
+      setPendingImgSrc(null)
+      setCropOffset({ x: 0, y: 0 })
+      setCropScale(1)
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
@@ -436,7 +457,128 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, onClos
       const t = setTimeout(() => setMounted(false), 320)
       return () => clearTimeout(t)
     }
-  }, [isOpen, profile])
+  }, [isOpen, profile, spaceName])
+
+  // Stop native touch events inside crop overlay from triggering swipe-dismiss
+  useEffect(() => {
+    if (!pendingImgSrc || !cropOverlayRef.current) return
+    const el = cropOverlayRef.current
+    const stop = (e: TouchEvent) => e.stopPropagation()
+    el.addEventListener('touchstart', stop, { passive: true })
+    el.addEventListener('touchmove',  stop, { passive: false })
+    return () => {
+      el.removeEventListener('touchstart', stop)
+      el.removeEventListener('touchmove',  stop)
+    }
+  }, [pendingImgSrc])
+
+  // ── Crop handlers ──
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (pendingImgSrc) URL.revokeObjectURL(pendingImgSrc)
+    setPendingImgSrc(URL.createObjectURL(file))
+    setCropOffset({ x: 0, y: 0 })
+    setCropScale(1)
+    e.target.value = ''
+  }
+
+  const handleCropImgLoad = () => {
+    const img    = cropImgRef.current
+    const circle = cropCircleRef.current
+    if (!img || !circle) return
+    const size  = circle.offsetWidth
+    const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight)
+    setNaturalSize({ w: img.naturalWidth, h: img.naturalHeight })
+    setCropScale(scale)
+  }
+
+  const handleCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const pts = [...pointersRef.current.values()]
+    if (pts.length === 1) {
+      cropDragRef.current = { startX: e.clientX, startY: e.clientY, startOffX: cropOffset.x, startOffY: cropOffset.y }
+      pinchStartRef.current = null
+    } else if (pts.length === 2) {
+      cropDragRef.current = null
+      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
+      pinchStartRef.current = { dist, scale: cropScale }
+    }
+  }
+
+  const handleCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const pts = [...pointersRef.current.values()]
+    if (pts.length === 2 && pinchStartRef.current) {
+      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
+      setCropScale(Math.max(0.3, Math.min(6, pinchStartRef.current.scale * (dist / pinchStartRef.current.dist))))
+    } else if (pts.length === 1 && cropDragRef.current) {
+      setCropOffset({ x: cropDragRef.current.startOffX + e.clientX - cropDragRef.current.startX, y: cropDragRef.current.startOffY + e.clientY - cropDragRef.current.startY })
+    }
+  }
+
+  const handleCropPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    pointersRef.current.delete(e.pointerId)
+    const pts = [...pointersRef.current.values()]
+    if (pts.length === 1) {
+      cropDragRef.current = { startX: pts[0].x, startY: pts[0].y, startOffX: cropOffset.x, startOffY: cropOffset.y }
+      pinchStartRef.current = null
+    } else if (pts.length === 0) {
+      cropDragRef.current = null
+      pinchStartRef.current = null
+    }
+  }
+
+  const handleCropWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    setCropScale(s => Math.max(0.3, Math.min(6, s * (1 - e.deltaY * 0.001))))
+  }
+
+  const handleCropConfirm = async () => {
+    if (!cropImgRef.current || !cropCircleRef.current || !pendingImgSrc) return
+    setCropBusy(true)
+    try {
+      const size      = 400
+      const canvas    = document.createElement('canvas')
+      canvas.width    = size
+      canvas.height   = size
+      const ctx       = canvas.getContext('2d')!
+      ctx.beginPath()
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
+      ctx.clip()
+      const circleSize = cropCircleRef.current.offsetWidth
+      const drawW = naturalSize.w * cropScale
+      const drawH = naturalSize.h * cropScale
+      const drawX = (circleSize - drawW) / 2 + cropOffset.x
+      const drawY = (circleSize - drawH) / 2 + cropOffset.y
+      const ratio = size / circleSize
+      ctx.drawImage(cropImgRef.current, drawX * ratio, drawY * ratio, drawW * ratio, drawH * ratio)
+      const blob = await new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.92)
+      )
+      const file = new File([blob], 'pet-avatar.jpg', { type: 'image/jpeg' })
+      const url  = await uploadToCloudinary(file, 'spaces')
+      setPhotoUrl(url)
+      URL.revokeObjectURL(pendingImgSrc)
+      setPendingImgSrc(null)
+    } catch {
+      showToast('Помилка завантаження — спробуй ще раз', 'error')
+    } finally {
+      setCropBusy(false)
+    }
+  }
+
+  const handleCropCancel = () => {
+    if (pendingImgSrc) URL.revokeObjectURL(pendingImgSrc)
+    setPendingImgSrc(null)
+    setCropOffset({ x: 0, y: 0 })
+    setCropScale(1)
+  }
 
   const handleSave = async () => {
     setBusy(true)
@@ -469,112 +611,165 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, onClos
     >
       <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
         <div className={styles.handle} />
-        <div className={styles.sheetHeader}>
-          <span className={styles.sheetTitle}>ПРОФІЛЬ УЛЮБЛЕНЦЯ</span>
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
 
-        <div ref={bodyRef} className={styles.sheetBody}>
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>ФОТО</label>
-            <div className={styles.photoRow}>
-              {photoUrl && <img src={photoUrl} alt="" className={styles.profilePhotoPreview} />}
-              <ImageUploadButton
-                onUpload={url => setPhotoUrl(url)}
-                currentUrl={photoUrl || undefined}
-                folder="spaces"
-                variant="wide"
-              />
-            </div>
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>КЛИЧКА</label>
-            <input
-              className={styles.fieldInput}
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="—"
-            />
-          </div>
-
-          <div className={styles.fieldRow}>
-            <div className={styles.field}>
-              <label className={styles.fieldLabel}>ВИД</label>
-              <input
-                className={styles.fieldInput}
-                value={species}
-                onChange={e => setSpecies(e.target.value)}
-                placeholder="Кіт, Собака…"
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.fieldLabel}>ПОРОДА</label>
-              <input
-                className={styles.fieldInput}
-                value={breed}
-                onChange={e => setBreed(e.target.value)}
-                placeholder="—"
-              />
-            </div>
-          </div>
-
-          <div className={styles.fieldRow}>
-            <div className={styles.field}>
-              <label className={styles.fieldLabel}>ДАТА НАРОДЖЕННЯ</label>
-              <button type="button" className={styles.dateField} onClick={() => setBirthDateOpen(true)}>
-                {birthDate ? fmtDate(birthDate) : 'Не вказано'}
+        {pendingImgSrc ? (
+          /* ── Crop mode ── */
+          <>
+            <div className={styles.sheetHeader}>
+              <span className={styles.sheetTitle}>КАДРУВАННЯ ФОТО</span>
+              <button type="button" className={styles.closeBtn} onClick={handleCropCancel} aria-label="Скасувати">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
-              {birthDateOpen && <CustomDatePicker value={birthDate} onChange={v => { setBirthDate(v); setBirthDateOpen(false) }} onClose={() => setBirthDateOpen(false)} />}
             </div>
-            <div className={styles.field}>
-              <label className={styles.fieldLabel}>ВАГА (кг)</label>
-              <input
-                className={styles.fieldInput}
-                type="number"
-                inputMode="decimal"
-                step="0.1"
-                value={weight}
-                onChange={e => setWeight(e.target.value)}
-                placeholder="—"
-              />
+            <div ref={cropOverlayRef} className={styles.cropBody}>
+              <div
+                ref={cropCircleRef}
+                className={styles.cropCircle}
+                onPointerDown={handleCropPointerDown}
+                onPointerMove={handleCropPointerMove}
+                onPointerUp={handleCropPointerUp}
+                onPointerCancel={handleCropPointerUp}
+                onWheel={handleCropWheel}
+              >
+                <img
+                  ref={cropImgRef}
+                  src={pendingImgSrc}
+                  alt=""
+                  onLoad={handleCropImgLoad}
+                  className={styles.cropImg}
+                  style={{ transform: `translate(calc(-50% + ${cropOffset.x}px), calc(-50% + ${cropOffset.y}px)) scale(${cropScale})` }}
+                  draggable={false}
+                />
+              </div>
+              <p className={styles.cropHint}>Перетягни · зводь пальці для масштабу</p>
             </div>
-          </div>
+            <div className={styles.sheetFooter}>
+              <div className={styles.cropFooterBtns}>
+                <button type="button" className={styles.cropCancelBtn} onClick={handleCropCancel}>Скасувати</button>
+                <button type="button" className={styles.cropConfirmBtn} style={{ background: color }} onClick={handleCropConfirm} disabled={cropBusy}>
+                  {cropBusy ? 'Завантаження…' : 'Підтвердити'}
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* ── Edit mode ── */
+          <>
+            <div className={styles.sheetHeader}>
+              <span className={styles.sheetTitle}>ПРОФІЛЬ УЛЮБЛЕНЦЯ</span>
+              <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
 
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>НОМЕР МІКРОЧІПА</label>
-            <input
-              className={styles.fieldInput}
-              value={chipNum}
-              onChange={e => setChipNum(e.target.value)}
-              placeholder="—"
-            />
-          </div>
+            <div ref={bodyRef} className={styles.sheetBody}>
+              {/* ── Avatar ── */}
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
+              <div className={styles.avatarSection}>
+                <div className={styles.avatarCircle} onClick={() => fileInputRef.current?.click()}>
+                  {photoUrl
+                    ? <img src={photoUrl} alt="" className={styles.avatarCircleImg} />
+                    : <svg className={styles.avatarPlaceholderIcon} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                      </svg>
+                  }
+                  <div className={styles.avatarEditBadge}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
+                </div>
+                {photoUrl && (
+                  <button type="button" className={styles.avatarRemoveBtn} onClick={() => setPhotoUrl('')}>
+                    Видалити фото
+                  </button>
+                )}
+              </div>
 
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>НОМЕР ПАСПОРТА</label>
-            <input
-              className={styles.fieldInput}
-              value={passport}
-              onChange={e => setPassport(e.target.value)}
-              placeholder="—"
-            />
-          </div>
-        </div>
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>КЛИЧКА</label>
+                <input
+                  className={styles.fieldInput}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="—"
+                /></div>
 
-        <div className={styles.sheetFooter}>
-          <button
-            type="button"
-            className={styles.saveBtn}
-            style={{ background: color }}
-            onClick={handleSave}
-            disabled={busy}
-          >
-            {busy ? 'Збереження…' : 'Зберегти'}
-          </button>
-        </div>
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel}>ВИД</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={species}
+                    onChange={e => setSpecies(e.target.value)}
+                    placeholder="Кіт, Собака…"
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel}>ПОРОДА</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={breed}
+                    onChange={e => setBreed(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel}>ДАТА НАРОДЖЕННЯ</label>
+                  <button type="button" className={styles.dateField} onClick={() => setBirthDateOpen(true)}>
+                    {birthDate ? fmtDate(birthDate) : 'Не вказано'}
+                  </button>
+                  {birthDateOpen && <CustomDatePicker value={birthDate} onChange={v => { setBirthDate(v); setBirthDateOpen(false) }} onClose={() => setBirthDateOpen(false)} />}
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel}>ВАГА (кг)</label>
+                  <input
+                    className={styles.fieldInput}
+                    type="number"
+                    inputMode="decimal"
+                    step="0.1"
+                    value={weight}
+                    onChange={e => setWeight(e.target.value)}
+                    placeholder="—"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>НОМЕР МІКРОЧІПА</label>
+                <input
+                  className={styles.fieldInput}
+                  value={chipNum}
+                  onChange={e => setChipNum(e.target.value)}
+                  placeholder="—"
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>НОМЕР ПАСПОРТА</label>
+                <input
+                  className={styles.fieldInput}
+                  value={passport}
+                  onChange={e => setPassport(e.target.value)}
+                  placeholder="—"
+                />
+              </div>
+            </div>
+
+            <div className={styles.sheetFooter}>
+              <button
+                type="button"
+                className={styles.saveBtn}
+                style={{ background: color }}
+                onClick={handleSave}
+                disabled={busy}
+              >
+                {busy ? 'Збереження…' : 'Зберегти'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -594,7 +789,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, onClos
  * @prop profile         — поточний petProfile (з Space)
  * @prop onProfileUpdate — callback після збереження профілю
  */
-const PetSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate }) => {
+const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onProfileUpdate }) => {
   const showToast = useUiStore(s => s.showToast)
   const { eventsBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile } = usePetStore()
 
@@ -726,6 +921,7 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdat
             <button key={a.type} type="button" className={styles.actionBtn} onClick={() => setAddSheet(a.type)}>
               <span className={styles.actionBtnIcon}>{a.icon}</span>
               {a.label}
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
             </button>
           ))}
         </div>
@@ -815,6 +1011,7 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdat
       <ProfileEditSheet
         isOpen={profileOpen}
         profile={profile}
+        spaceName={spaceName}
         onClose={() => setProfileOpen(false)}
         onSave={handleProfileSave}
         color={color}
