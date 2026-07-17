@@ -175,7 +175,6 @@ const Finance: React.FC = () => {
 					totalTopup={totalTopup}
 					avgPerDay={avgPerDay}
 					daysLeft={daysLeft}
-					daysElapsed={daysElapsed}
 					todaySpent={todaySpent}
 				/>
 

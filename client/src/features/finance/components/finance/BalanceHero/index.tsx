@@ -17,7 +17,6 @@ import styles from './BalanceHero.module.css'
  * @prop {number}  totalTopup   — поповнення за бюджетний період
  * @prop {number}  avgPerDay    — середнє витрат на день
  * @prop {number}  daysLeft     — днів до наступного поповнення
- * @prop {number}  daysElapsed  — днів минуло з початку бюджетного періоду
  * @prop {number}  todaySpent   — витрачено сьогодні
  */
 interface BalanceHeroProps {
@@ -27,7 +26,6 @@ interface BalanceHeroProps {
   totalTopup: number
   avgPerDay: number
   daysLeft: number
-  daysElapsed: number
   todaySpent: number
 }
 
@@ -38,7 +36,6 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   totalTopup,
   avgPerDay,
   daysLeft,
-  daysElapsed,
   todaySpent,
 }) => {
   const { checkToday } = useStreakStore()
