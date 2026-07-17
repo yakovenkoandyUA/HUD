@@ -115,12 +115,6 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
             onClick={() => go('/profile/appearance')}
           />
           <DrawerItem
-            icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.9 3.9l1.4 1.4M12.7 12.7l1.4 1.4M3.9 14.1l1.4-1.4M12.7 5.3l1.4-1.4"/></svg>}
-            label="Система"
-            sub="Місто, F1, сповіщення, безпека"
-            onClick={() => go('/profile/system')}
-          />
-          <DrawerItem
             icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="1.5" y="1.5" width="6.5" height="6.5" rx="1.5"/><rect x="10" y="1.5" width="6.5" height="6.5" rx="1.5"/><rect x="1.5" y="10" width="6.5" height="6.5" rx="1.5"/><rect x="10" y="10" width="6.5" height="6.5" rx="1.5"/></svg>}
             label="Модулі"
             sub="Медіа, спорт та інше"
@@ -150,7 +144,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
           <DrawerItem
             icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="2.2"/><path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.1 3.1l1.4 1.4M13.5 13.5l1.4 1.4M3.1 14.9l1.4-1.4M13.5 4.5l1.4-1.4"/><circle cx="9" cy="9" r="5.5"/></svg>}
             label="Налаштування"
-            sub="Дані, юридичне, безпека"
+            sub="Система, дані, юридичне, безпека"
             onClick={() => go('/profile/account')}
           />
           {updateAvailable && (

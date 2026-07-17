@@ -4,7 +4,9 @@ import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { authFetch } from '@/shared/services/api'
 import LegalDocModal from '@/shared/components/ui/LegalDocModal'
+import MeSystem from './MeSystem'
 import settingsStyles from './SettingsTab.module.css'
+import profileStyles from './ProfilePage.module.css'
 
 const LS_TERMS   = 'mimir-terms-confirmed'
 const LS_PRIVACY = 'mimir-privacy-confirmed'
@@ -91,6 +93,11 @@ const MeAccount: React.FC = () => {
 
   return (
     <div>
+      {/* ── System settings (city, push, cache, security) ── */}
+      <div className={profileStyles.cardSubTitle} style={{ padding: '16px 16px 4px' }}>СИСТЕМА</div>
+      <MeSystem />
+      <div style={{ height: 8 }} />
+
       {/* ── Export ── */}
       <section className={settingsStyles.section}>
         <div className={settingsStyles.sectionHead}>

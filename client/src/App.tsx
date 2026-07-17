@@ -28,7 +28,6 @@ import RegisterScreen from '@/features/auth/Register'
 import ProfilePage from '@/features/profile'
 import ProfileSubPage from '@/features/profile/ProfileSubPage'
 import MeAppearance from '@/features/profile/MeAppearance'
-import MeSystem from '@/features/profile/MeSystem'
 import MeModules from '@/features/profile/MeModules'
 import MeFamily from '@/features/profile/MeFamily'
 import AdminTab from '@/features/profile/AdminTab'
@@ -110,7 +109,6 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/spaces/:spaceId" element={<SpaceDetailScreen />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/appearance" element={<ProfileSubPage title="ВИГЛЯД"><MeAppearance /></ProfileSubPage>} />
-          <Route path="/profile/system"     element={<ProfileSubPage title="СИСТЕМА"><MeSystem /></ProfileSubPage>} />
           <Route path="/profile/modules"    element={<ProfileSubPage title="МОДУЛІ"><MeModules /></ProfileSubPage>} />
           <Route path="/profile/family"     element={<ProfileSubPage title="БЛИЗЬКІ"><MeFamily /></ProfileSubPage>} />
           <Route path="/profile/account"    element={<ProfileSubPage title="НАЛАШТУВАННЯ"><MeAccount /></ProfileSubPage>} />
