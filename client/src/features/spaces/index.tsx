@@ -5,7 +5,6 @@ import { useSpacesStore, type Space, type SpaceType } from '@/features/memories/
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
-import PillSelector from '@/shared/components/ui/PillSelector'
 import { authFetch } from '@/shared/services/api'
 import MemoryCard from '@/features/memories/components/memories/MemoryCard'
 import PlanCard from '@/features/memories/components/memories/PlanCard'
@@ -28,14 +27,6 @@ import styles from './SpaceDetail.module.css'
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
-  { value: 'trip',    label: 'Поїздка'    },
-  { value: 'vehicle', label: 'Авто'       },
-  { value: 'home',    label: 'Дім'        },
-  { value: 'pet',     label: 'Улюбленець' },
-  { value: 'sports',  label: 'Спорт'      },
-  { value: 'shared',  label: 'Спільний'   },
-]
 
 const COLORS = [
   '#9b59b6', '#3498db', '#2ecc71', '#e74c3c',
