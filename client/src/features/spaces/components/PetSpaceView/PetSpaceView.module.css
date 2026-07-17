@@ -391,9 +391,10 @@
 
 .foodFilters { display: flex; gap: 5px; }
 .foodFilterBtn {
-  padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border);
+  padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);
   background: none; color: var(--text3); font-family: var(--font-ui); font-size: 0.65rem;
   font-weight: 600; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
 .foodFilterBtnOn { color: var(--text); border-color: var(--text2); }
 
@@ -401,32 +402,32 @@
 
 .foodRow {
   display: flex; align-items: center; gap: 10px;
-  padding: 9px 0; border-bottom: 1px solid var(--border);
+  padding: 10px 0; border-bottom: 1px solid var(--border);
 }
 .foodRow:last-child { border-bottom: none; }
 
-.foodDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+/* reaction pill — big tap target, cycles on tap */
+.foodReactionPill {
+  flex-shrink: 0;
+  padding: 5px 11px; border-radius: 20px; border: 1px solid;
+  font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.12s;
+  -webkit-tap-highlight-color: transparent; white-space: nowrap;
+  min-width: 72px; text-align: center;
+}
+.foodReactionPill:active { opacity: 0.65; }
 
 .foodMain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .foodName { font-family: var(--font-ui); font-size: 0.83rem; font-weight: 600; color: var(--text); }
 .foodBrand { font-family: var(--font-ui); font-size: 0.68rem; color: var(--text3); }
 
-.foodActions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-
-.foodReactBtn {
-  width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border);
-  background: none; color: var(--text3); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-.foodReactBtnOn { }
-
 .foodDeleteBtn {
-  width: 24px; height: 24px; border-radius: 6px; border: none;
+  width: 36px; height: 36px; border-radius: 8px; border: none; flex-shrink: 0;
   background: none; color: var(--text3); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; opacity: 0.4; transition: opacity 0.15s, color 0.15s;
-  margin-left: 2px;
+  cursor: pointer; opacity: 0.35; transition: opacity 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.foodDeleteBtn:hover { opacity: 1; color: var(--accent); }
+.foodDeleteBtn:active { opacity: 1; color: var(--accent); }
 
 .foodEmpty {
   font-family: var(--font-ui); font-size: 0.78rem; color: var(--text3);
@@ -438,17 +439,37 @@
 
 .foodOpenBtn {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 12px; border-radius: 8px;
+  padding: 10px 12px; border-radius: 10px;
   border: 1px dashed color-mix(in srgb, var(--space-color) 40%, var(--border));
   background: color-mix(in srgb, var(--space-color) 5%, transparent);
   color: var(--space-color); font-family: var(--font-ui); font-size: 0.78rem;
   font-weight: 600; cursor: pointer; width: 100%; justify-content: center;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s; -webkit-tap-highlight-color: transparent;
 }
 .foodOpenBtn:active { opacity: 0.7; }
 
+/* autocomplete */
+.foodInputWrap { position: relative; }
+
+.foodSuggestions {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 60;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px;
+  overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.foodSugItem {
+  display: flex; flex-direction: column; gap: 1px;
+  width: 100%; padding: 10px 12px; border: none; border-top: 1px solid var(--border);
+  background: none; text-align: left; cursor: pointer; transition: background 0.1s;
+}
+.foodSugItem:first-child { border-top: none; }
+.foodSugItem:active { background: rgba(255,255,255,0.05); }
+
+.foodSugName { font-family: var(--font-ui); font-size: 0.83rem; color: var(--text); font-weight: 500; }
+.foodSugBrand { font-family: var(--font-ui); font-size: 0.68rem; color: var(--text3); }
+
 .foodInput {
-  width: 100%; padding: 8px 11px; border: 1px solid var(--border); border-radius: 8px;
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px;
   background: var(--surface2); color: var(--text); font-family: var(--font-ui);
   font-size: 0.88rem; outline: none; transition: border-color 0.15s; box-sizing: border-box;
 }
@@ -456,23 +477,23 @@
 
 .foodReactRow { display: flex; gap: 6px; }
 .foodReactChoice {
-  flex: 1; padding: 6px 0; border-radius: 7px; border: 1px solid var(--border);
-  background: none; color: var(--text3); font-family: var(--font-ui); font-size: 0.75rem;
+  flex: 1; padding: 9px 0; border-radius: 8px; border: 1px solid var(--border);
+  background: none; color: var(--text3); font-family: var(--font-ui); font-size: 0.78rem;
   font-weight: 600; cursor: pointer; transition: all 0.12s; text-align: center;
+  -webkit-tap-highlight-color: transparent;
 }
-.foodReactChoiceOn { }
 
 .foodAddBtns { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
 
 .foodCancelBtn {
-  padding: 9px; border-radius: 8px; border: 1px solid var(--border2);
+  padding: 11px; border-radius: 9px; border: 1px solid var(--border2);
   background: var(--surface2); color: var(--text2); font-family: var(--font-ui);
   font-size: 0.82rem; cursor: pointer; transition: opacity 0.15s;
 }
 .foodCancelBtn:active { opacity: 0.7; }
 
 .foodSaveBtn {
-  padding: 9px; border-radius: 8px; border: none;
+  padding: 11px; border-radius: 9px; border: none;
   color: #fff; font-family: var(--font-ui); font-size: 0.82rem; font-weight: 700;
   cursor: pointer; transition: opacity 0.15s;
 }

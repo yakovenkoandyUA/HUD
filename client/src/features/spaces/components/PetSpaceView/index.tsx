@@ -1037,13 +1037,36 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onP
 
 // ── Food log ──────────────────────────────────────────────────────────────
 
-const REACTION_ICONS = {
-  yes:   { label: 'Їсть',      color: '#2ecc71' },
-  maybe: { label: 'Так собі',  color: '#f39c12' },
-  no:    { label: 'Не їсть',   color: '#e74c3c' },
-} as const
+const REACTIONS = ['yes', 'maybe', 'no'] as const
+type Reaction = typeof REACTIONS[number]
+
+const REACTION_META: Record<Reaction, { label: string; color: string }> = {
+  yes:   { label: 'Їсть',     color: '#2ecc71' },
+  maybe: { label: 'Так собі', color: '#f39c12' },
+  no:    { label: 'Не їсть',  color: '#e74c3c' },
+}
+
+function nextReaction(r: Reaction): Reaction {
+  return r === 'yes' ? 'maybe' : r === 'maybe' ? 'no' : 'yes'
+}
 
 function genId() { return Math.random().toString(36).slice(2, 10) }
+
+interface PetFoodSuggestion { name: string; brand: string }
+
+async function searchPetFood(q: string): Promise<PetFoodSuggestion[]> {
+  if (q.length < 2) return []
+  try {
+    const res = await fetch(
+      `https://world.openpetfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=6&fields=product_name,brands`
+    )
+    if (!res.ok) return []
+    const data = await res.json() as { products?: { product_name?: string; brands?: string }[] }
+    return (data.products ?? [])
+      .filter(p => p.product_name)
+      .map(p => ({ name: p.product_name ?? '', brand: p.brands?.split(',')[0].trim() ?? '' }))
+  } catch { return [] }
+}
 
 interface FoodLogProps {
   foodLog: PetFoodItem[]
@@ -1055,22 +1078,44 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
   const [open, setOpen]           = useState(false)
   const [addName, setAddName]     = useState('')
   const [addBrand, setAddBrand]   = useState('')
-  const [addReact, setAddReact]   = useState<'yes' | 'maybe' | 'no'>('yes')
+  const [addReact, setAddReact]   = useState<Reaction>('yes')
   const [saving, setSaving]       = useState(false)
-  const [filter, setFilter]       = useState<'all' | 'yes' | 'maybe' | 'no'>('all')
+  const [filter, setFilter]       = useState<'all' | Reaction>('all')
+  const [suggestions, setSuggestions] = useState<PetFoodSuggestion[]>([])
+  const [showSug, setShowSug]         = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const colorVar = { '--space-color': color } as React.CSSProperties
+
+  const handleNameChange = (val: string) => {
+    setAddName(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchPetFood(val)
+      setSuggestions(results)
+      setShowSug(results.length > 0)
+    }, 400)
+  }
+
+  const handlePickSuggestion = (s: PetFoodSuggestion) => {
+    setAddName(s.name)
+    setAddBrand(s.brand)
+    setShowSug(false)
+  }
 
   const handleAdd = async () => {
     if (!addName.trim()) return
     setSaving(true)
+    setShowSug(false)
     const item: PetFoodItem = { id: genId(), name: addName.trim(), brand: addBrand.trim(), reaction: addReact, notes: '' }
     try { await onSave([...foodLog, item]) } finally { setSaving(false) }
     setAddName(''); setAddBrand(''); setAddReact('yes')
   }
 
-  const handleReactionChange = async (id: string, reaction: 'yes' | 'maybe' | 'no') => {
-    await onSave(foodLog.map(f => f.id === id ? { ...f, reaction } : f))
+  const handleCycleReaction = async (id: string) => {
+    const item = foodLog.find(f => f.id === id)
+    if (!item) return
+    await onSave(foodLog.map(f => f.id === id ? { ...f, reaction: nextReaction(f.reaction) } : f))
   }
 
   const handleDelete = async (id: string) => {
@@ -1084,15 +1129,15 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
       <div className={styles.foodHeader}>
         <h3 className={styles.sectionTitle}>РАЦІОН</h3>
         <div className={styles.foodFilters}>
-          {(['all', 'yes', 'maybe', 'no'] as const).map(f => (
+          {(['all', ...REACTIONS] as const).map(f => (
             <button
               key={f}
               type="button"
               className={`${styles.foodFilterBtn} ${filter === f ? styles.foodFilterBtnOn : ''}`}
               onClick={() => setFilter(f)}
-              style={filter === f && f !== 'all' ? { color: REACTION_ICONS[f]?.color, borderColor: REACTION_ICONS[f]?.color } : undefined}
+              style={filter === f && f !== 'all' ? { color: REACTION_META[f].color, borderColor: REACTION_META[f].color } : undefined}
             >
-              {f === 'all' ? 'Всі' : REACTION_ICONS[f].label}
+              {f === 'all' ? 'Всі' : REACTION_META[f].label}
             </button>
           ))}
         </div>
@@ -1100,38 +1145,29 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
 
       {visible.length > 0 && (
         <div className={styles.foodList}>
-          {visible.map(item => (
-            <div key={item.id} className={styles.foodRow}>
-              <div className={styles.foodDot} style={{ background: REACTION_ICONS[item.reaction].color }} />
-              <div className={styles.foodMain}>
-                <span className={styles.foodName}>{item.name}</span>
-                {item.brand && <span className={styles.foodBrand}>{item.brand}</span>}
-              </div>
-              <div className={styles.foodActions}>
-                {(['yes', 'maybe', 'no'] as const).map(r => (
-                  <button
-                    key={r}
-                    type="button"
-                    className={`${styles.foodReactBtn} ${item.reaction === r ? styles.foodReactBtnOn : ''}`}
-                    style={item.reaction === r ? { background: REACTION_ICONS[r].color + '22', borderColor: REACTION_ICONS[r].color, color: REACTION_ICONS[r].color } : undefined}
-                    onClick={() => handleReactionChange(item.id, r)}
-                    title={REACTION_ICONS[r].label}
-                  >
-                    {r === 'yes' ? (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                    ) : r === 'maybe' ? (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14"/></svg>
-                    ) : (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                    )}
-                  </button>
-                ))}
+          {visible.map(item => {
+            const meta = REACTION_META[item.reaction]
+            return (
+              <div key={item.id} className={styles.foodRow}>
+                <button
+                  type="button"
+                  className={styles.foodReactionPill}
+                  style={{ background: meta.color + '1a', borderColor: meta.color, color: meta.color }}
+                  onClick={() => handleCycleReaction(item.id)}
+                  title="Тап — змінити"
+                >
+                  {meta.label}
+                </button>
+                <div className={styles.foodMain}>
+                  <span className={styles.foodName}>{item.name}</span>
+                  {item.brand && <span className={styles.foodBrand}>{item.brand}</span>}
+                </div>
                 <button type="button" className={styles.foodDeleteBtn} onClick={() => handleDelete(item.id)}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                 </button>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -1139,20 +1175,33 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
         <p className={styles.foodEmpty}>Немає позицій у цій категорії</p>
       )}
       {foodLog.length === 0 && filter === 'all' && (
-        <p className={styles.foodEmpty}>Додай перший корм щоб відстежувати раціон Фібі</p>
+        <p className={styles.foodEmpty}>Додай перший корм щоб відстежувати раціон</p>
       )}
 
       <div className={`${styles.foodAddRow} ${open ? styles.foodAddRowOpen : ''}`}>
         {open ? (
           <>
-            <input
-              className={styles.foodInput}
-              placeholder="Назва корму *"
-              value={addName}
-              onChange={e => setAddName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
-              autoFocus
-            />
+            <div className={styles.foodInputWrap}>
+              <input
+                className={styles.foodInput}
+                placeholder="Назва корму *"
+                value={addName}
+                onChange={e => handleNameChange(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setShowSug(false) }}
+                onBlur={() => setTimeout(() => setShowSug(false), 150)}
+                autoFocus
+              />
+              {showSug && (
+                <div className={styles.foodSuggestions}>
+                  {suggestions.map((s, i) => (
+                    <button key={i} type="button" className={styles.foodSugItem} onMouseDown={() => handlePickSuggestion(s)}>
+                      <span className={styles.foodSugName}>{s.name}</span>
+                      {s.brand && <span className={styles.foodSugBrand}>{s.brand}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <input
               className={styles.foodInput}
               placeholder="Бренд (необов'язково)"
@@ -1160,20 +1209,20 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
               onChange={e => setAddBrand(e.target.value)}
             />
             <div className={styles.foodReactRow}>
-              {(['yes', 'maybe', 'no'] as const).map(r => (
+              {REACTIONS.map(r => (
                 <button
                   key={r}
                   type="button"
                   className={`${styles.foodReactChoice} ${addReact === r ? styles.foodReactChoiceOn : ''}`}
-                  style={addReact === r ? { background: REACTION_ICONS[r].color + '20', borderColor: REACTION_ICONS[r].color, color: REACTION_ICONS[r].color } : undefined}
+                  style={addReact === r ? { background: REACTION_META[r].color + '20', borderColor: REACTION_META[r].color, color: REACTION_META[r].color } : undefined}
                   onClick={() => setAddReact(r)}
                 >
-                  {REACTION_ICONS[r].label}
+                  {REACTION_META[r].label}
                 </button>
               ))}
             </div>
             <div className={styles.foodAddBtns}>
-              <button type="button" className={styles.foodCancelBtn} onClick={() => { setOpen(false); setAddName(''); setAddBrand('') }}>Скасувати</button>
+              <button type="button" className={styles.foodCancelBtn} onClick={() => { setOpen(false); setAddName(''); setAddBrand(''); setShowSug(false) }}>Скасувати</button>
               <button
                 type="button"
                 className={styles.foodSaveBtn}
