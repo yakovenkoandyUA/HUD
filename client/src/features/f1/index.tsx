@@ -9,7 +9,7 @@ import LastRaceCard from './components/f1/LastRaceCard'
 import { F1_SEASON_2026 } from './data/f1Season2026'
 import { getNextRace, getNextRound } from './utils/f1'
 import { useUiStore } from '@/shared/store/uiStore'
-import { useF1PredictionsStore } from '@/features/f1/store/f1PredictionsStore'
+import { useF1PredictionsStore, toRaceId, isRaceLocked } from '@/features/f1/store/f1PredictionsStore'
 import styles from './F1.module.css'
 
 type F1Tab = 'calendar' | 'drivers' | 'constructors'
@@ -55,8 +55,21 @@ const F1Screen: React.FC = () => {
     return () => { cancelled = true; clearInterval(timer) }
   }, [])
 
-  const nextRace = getNextRace(F1_SEASON_2026)
+  const nextRace  = getNextRace(F1_SEASON_2026)
   const nextRound = getNextRound(F1_SEASON_2026)
+
+  const nextPred  = nextRace ? predictions.find(p => p.raceId === toRaceId(nextRace)) : null
+  const raceLocked = nextRace ? isRaceLocked(nextRace) : false
+
+  const deadlineText = (() => {
+    if (!nextRace || raceLocked) return null
+    const ms = new Date(nextRace.date + 'T11:00:00Z').getTime() - Date.now()
+    if (ms <= 0) return null
+    const totalHours = Math.floor(ms / 3_600_000)
+    if (totalHours >= 48) return `${Math.floor(totalHours / 24)}д ${totalHours % 24}г`
+    if (totalHours >= 1)  return `${totalHours}г`
+    return `${Math.floor(ms / 60_000)}хв`
+  })()
   const bgRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const showBg = theme !== 'japan'
@@ -107,12 +120,32 @@ const F1Screen: React.FC = () => {
                 <path d="M12 8v4l3 3"/>
               </svg>
               ПРОГНОЗИ
+              {nextRace && (
+                <span className={styles.mySeasonCardGP}>
+                  · {nextRace.flag} {nextRace.name.split(' ')[0].toUpperCase()}
+                </span>
+              )}
             </div>
-            <span className={styles.mySeasonCardSub}>
-              {totalPts} pts · {correctPicks}/{totalRaces} влучань
-            </span>
+            {nextPred ? (
+              <span className={`${styles.mySeasonCardSub} ${styles.mySeasonCardSaved}`}>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 6l2.8 3L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Збережено
+                {totalPts > 0 && <span className={styles.mySeasonPts}> · {totalPts} pts</span>}
+              </span>
+            ) : raceLocked ? (
+              <span className={styles.mySeasonCardSub}>🔒 Прогноз закрито</span>
+            ) : (
+              <span className={styles.mySeasonCardSub}>Прогноз не збережено</span>
+            )}
+            {deadlineText && (
+              <span className={styles.mySeasonDeadline}>До дедлайну: {deadlineText}</span>
+            )}
           </div>
-          <span className={styles.mySeasonCardArrow}>→</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.mySeasonCardArrow}>
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
         </button>
 
         <div className={styles.tabs}>

@@ -11,6 +11,17 @@
 
 .list { list-style: none; display: flex; flex-direction: column; }
 
+.list li[data-drop-above]::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  border-radius: 1px;
+  margin: 0 16px 2px;
+  pointer-events: none;
+}
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }

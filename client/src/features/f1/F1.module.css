@@ -117,16 +117,43 @@
   flex-shrink: 0;
 }
 
+.mySeasonCardGP {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .mySeasonCardSub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-family: var(--font-mono);
   font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+.mySeasonCardSaved {
+  color: var(--positive);
+}
+
+.mySeasonPts {
+  color: var(--text2);
+}
+
+.mySeasonDeadline {
+  font-family: var(--font-mono);
+  font-size: 10px;
   color: var(--text3);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .mySeasonCardArrow {
-  font-size: 16px;
-  color: var(--gold);
+  color: var(--text3);
+  flex-shrink: 0;
 }
 
 .done {

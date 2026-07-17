@@ -18,8 +18,8 @@
   flex-wrap: nowrap;
 }
 
-.icon {
-  font-size: 13px;
+.headerIcon {
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -51,10 +51,7 @@
 }
 
 .savedMark {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--positive, #2ecc71);
+  color: var(--positive);
   flex-shrink: 0;
 }
 
@@ -116,23 +113,27 @@
 .resultTotal {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   margin-top: 4px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  color: var(--text2);
   border-top: 1px solid var(--border);
   padding-top: 8px;
 }
 
 .resultScore {
   font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text);
+  color: var(--text2);
+}
+
+.resultSep {
+  font-size: 11px;
+  color: var(--border2);
 }
 
 .resultPts {
   font-family: var(--font-mono);
+  font-size: 13px;
   font-weight: 700;
   color: var(--gold);
 }
@@ -224,6 +225,11 @@
   flex-shrink: 0;
 }
 
+.metaStarIcon {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
 /* ── Sections ── */
 .section {
   display: flex;
@@ -238,7 +244,7 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--text3);
+  color: var(--text2);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -457,84 +463,121 @@
   color: var(--tc);
 }
 
-/* ── Safety Car toggle ── */
-.toggleRow {
+/* ── Safety Car — inline row ── */
+.scRow {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.toggleChip {
-  padding: 6px 20px;
-  border-radius: 20px;
+.scToggle {
+  display: flex;
   background: var(--surface2);
   border: 1px solid var(--border);
-  color: var(--text2);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.scSegment {
+  padding: 6px 16px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
+  color: var(--text3);
+  background: none;
+  border: none;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.13s, color 0.13s;
   -webkit-tap-highlight-color: transparent;
 }
 
-.toggleChip:disabled { opacity: 0.4; cursor: not-allowed; }
+.scSegment:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.toggleChipActive {
-  background: var(--accent-soft);
-  border-color: var(--accent);
+.scSegment + .scSegment {
+  border-left: 1px solid var(--border);
+}
+
+.scSegmentActive {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.scSegmentActiveYes {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
   color: var(--accent);
-}
-
-/* ── Max points ── */
-.maxPts {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0 4px;
-  border-top: 1px solid var(--border);
-}
-
-.maxPtsLabel {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--text3);
-}
-
-.maxPtsNum {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--gold);
 }
 
 /* ── Lock note ── */
 .lockNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text3);
   margin: 0;
 }
 
-/* ── Buttons ── */
+/* ── Sticky save footer (portal → body) ── */
+.stickyFooter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.stickyMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.stickyMetaLabel {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+}
+
+.stickyMetaVal {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+/* ── Save button (in sticky footer) ── */
 .saveBtn {
-  align-self: center;
+  flex: 1;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  padding: 8px 20px;
+  padding: 13px;
   border-radius: var(--radius);
   background: var(--accent);
   color: var(--bg);
   border: none;
   cursor: pointer;
-  transition: opacity 0.15s;
-  margin-top: 2px;
+  transition: opacity 0.15s, transform 0.12s;
 }
 .saveBtn:hover:not(:disabled) { opacity: 0.85; }
+.saveBtn:active:not(:disabled) { transform: scale(0.99); }
 .saveBtn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .changeBtn {
@@ -552,3 +595,146 @@
   transition: opacity 0.15s;
 }
 .changeBtn:hover { opacity: 0.75; }
+
+/* ── Filled slot indicator ── */
+.posSlotFilled {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+/* ── Driver picker sheet ── */
+.pickerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.pickerSheet {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bg2);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 72dvh;
+}
+
+.pickerHandle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border2);
+  align-self: center;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+.pickerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pickerPos {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  min-width: 26px;
+}
+
+.pickerTitle {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  letter-spacing: 0.04em;
+}
+
+.pickerClear {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.pickerClear:hover { color: var(--accent); }
+
+.pickerGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.pickerGrid::-webkit-scrollbar { display: none; }
+
+.pickerChip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 4px 8px;
+  cursor: pointer;
+  transition: all 0.13s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pickerChipSelected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.pickerChipUsed {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.pickerChipAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid var(--border2);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.pickerChipSelected .pickerChipAvatar {
+  border-color: var(--accent);
+}
+
+.pickerChipAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.pickerChipCode {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text2);
+}
+
+.pickerChipSelected .pickerChipCode {
+  color: var(--accent);
+}

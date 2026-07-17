@@ -1,28 +1,29 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   padding-bottom: 8px;
 }
 
-/* ── Early Bird ── */
-.earlyBird {
+/* ── Promo strip ── */
+.promoStrip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: var(--tint-gold-sm);
-  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  gap: 7px;
+  padding: 9px 13px;
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
   border-radius: 10px;
   font-family: var(--font-ui);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--gold);
   line-height: 1.4;
 }
-.earlyBirdIcon { flex-shrink: 0; color: var(--gold); }
+.promoStrip strong { font-weight: 700; }
+.promoStar { flex-shrink: 0; }
 
-/* ── Billing cycle toggle ── */
+/* ── Billing toggle ── */
 .cycleRow {
   display: flex;
   gap: 4px;
@@ -30,7 +31,6 @@
   border-radius: 10px;
   padding: 3px;
 }
-
 .cycleBtn {
   flex: 1;
   display: flex;
@@ -53,7 +53,6 @@
   color: var(--text);
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
-
 .cycleSaveBadge {
   font-size: 9px;
   font-weight: 700;
@@ -65,195 +64,228 @@
 }
 
 /* ── Cards ── */
-.cards {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .card {
   position: relative;
-  padding: 16px;
+  padding: 14px 16px;
   border-radius: 14px;
   border: 1.5px solid var(--border);
   background: var(--surface);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
+/* FREE — compact, quieter */
+.cardFree {
+  padding: 12px 16px;
+  background: var(--surface2);
+  border-color: var(--border);
+  gap: 10px;
+}
+.cardCurrentFree { border-color: var(--border); }
+
+.freeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.freePrice {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+/* Per-plan accent borders */
+.cardPersonal { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+.cardCouple   { border-color: color-mix(in srgb, var(--second) 50%, var(--border)); }
+.cardFamily   { border-color: color-mix(in srgb, var(--gold)   50%, var(--border)); }
+
+/* Popular — subtle glow on MEMORY */
+.cardPopular {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+              0 4px 20px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* Current */
 .cardCurrent {
-  border-color: var(--accent);
-  background: var(--accent-wash);
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
 }
+.cardPersonal.cardCurrent { background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.cardCouple.cardCurrent   { background: color-mix(in srgb, var(--second) 6%, var(--surface)); }
+.cardFamily.cardCurrent   { background: color-mix(in srgb, var(--gold)   6%, var(--surface)); border-color: color-mix(in srgb, var(--gold) 60%, var(--border)); }
 
-/* per-plan accent tints */
-.cardFree     { }
-.cardPersonal { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); }
-.cardCouple   { border-color: color-mix(in srgb, var(--second) 60%, var(--border)); }
-.cardFamily   { border-color: color-mix(in srgb, var(--gold) 60%, var(--border)); }
-
-.cardPersonal.cardCurrent { border-color: var(--accent); background: var(--accent-wash); }
-.cardCouple.cardCurrent   { border-color: var(--second); background: color-mix(in srgb, var(--second) 6%, var(--surface)); }
-.cardFamily.cardCurrent   { border-color: var(--gold);   background: color-mix(in srgb, var(--gold) 6%, var(--surface)); }
-
-/* badges */
-.planBadge {
-  position: absolute;
-  top: -10px;
-  left: 16px;
+/* Badge row — inline, not hanging */
+.badgeRow {
+  display: flex;
+  gap: 6px;
+}
+.badge {
+  display: inline-block;
   font-family: var(--font-ui);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--bg);
-  background: var(--second);
   padding: 3px 8px;
   border-radius: 6px;
 }
+.badgePopular { color: var(--bg); background: var(--accent); }
+.badgeCurrent { color: var(--bg); background: var(--text3); }
 
-.currentBadge {
-  position: absolute;
-  top: -10px;
-  right: 16px;
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--bg);
-  background: var(--accent);
-  padding: 3px 8px;
-  border-radius: 6px;
-}
-
-.cardTop {
+/* Plan name + concept */
+.cardHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
-
 .planName {
+  display: block;
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: 0.06em;
-  margin: 0 0 2px;
+  line-height: 1.1;
 }
-
-.planTagline {
+.planConcept {
+  display: block;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text3);
-  margin: 0;
+  margin-top: 2px;
 }
 
+/* Price */
 .priceBlock {
   text-align: right;
   flex-shrink: 0;
 }
-
-.priceFree {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text2);
+.priceMain {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  justify-content: flex-end;
 }
-
 .priceAmount {
   font-family: var(--font-mono);
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
 }
-
-.priceCurrency {
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text2);
-  margin-left: 1px;
-}
-
-.pricePer {
+.priceSuffix {
   font-family: var(--font-ui);
   font-size: 11px;
-  color: var(--text3);
-  margin-left: 1px;
+  font-weight: 500;
+  color: var(--text2);
 }
-
 .priceAnnualNote {
   font-family: var(--font-ui);
   font-size: 9px;
   color: var(--text3);
-  margin: 2px 0 0;
+  margin-top: 2px;
+  text-align: right;
 }
 
-/* ── CTA button ── */
-.cta {
+/* Key highlights */
+.highlights {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.highlightItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.3;
+}
+.highlightCheck { color: var(--accent); flex-shrink: 0; }
+.cardCouple .highlightCheck { color: var(--second); }
+.cardFamily .highlightCheck { color: var(--gold); }
+
+/* CTA buttons */
+.ctaUpgrade {
   width: 100%;
-  padding: 12px;
+  padding: 11px;
   border-radius: 10px;
   border: none;
+  background: var(--accent);
+  color: var(--bg);
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   transition: opacity 0.15s, transform 0.12s;
 }
-.cta:active { transform: scale(0.98); }
+.ctaUpgrade:active { transform: scale(0.98); }
 
-.ctaCurrent {
-  background: var(--surface2);
+.ctaManage {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: none;
+  color: var(--text2);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  margin-top: 4px;
+}
+.ctaManage:hover { border-color: var(--text3); color: var(--text); }
+
+/* FREE "stay" — text-only, no solid fill */
+.ctaStay {
+  font-family: var(--font-ui);
+  font-size: 11px;
   color: var(--text3);
-  cursor: default;
+  text-align: center;
+  padding: 4px 0;
 }
 
-.ctaUpgrade {
-  background: var(--accent);
-  color: var(--bg);
+/* Current status inline */
+.currentStatus {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
 }
-.cardPersonal .ctaUpgrade { background: var(--accent); }
-.cardCouple   .ctaUpgrade { background: var(--second); }
-.cardFamily   .ctaUpgrade { background: var(--gold); }
-
-.ctaSpinner {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255,255,255,0.35);
-  border-top-color: #fff;
+.currentDot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  animation: ctaSpin 0.7s linear infinite;
-}
-@keyframes ctaSpin {
-  to { transform: rotate(360deg); }
+  background: var(--positive);
+  flex-shrink: 0;
 }
 
-/* ── Feature table ── */
+/* ── Feature comparison ── */
 .table {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+  margin-top: 4px;
 }
-
 .tableHeader {
   display: grid;
-  grid-template-columns: 1fr 52px 52px 52px 52px;
+  grid-template-columns: 1fr 44px 44px 44px 44px;
   background: var(--surface2);
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
 }
-
-.tableFeatureCol { }
-
 .tableColLabel {
   font-family: var(--font-ui);
   font-size: 9px;
@@ -264,41 +296,37 @@
   text-transform: uppercase;
 }
 .tableColLabelActive { color: var(--accent); }
-
 .tableRow {
   display: grid;
-  grid-template-columns: 1fr 52px 52px 52px 52px;
-  padding: 9px 12px;
+  grid-template-columns: 1fr 44px 44px 44px 44px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   align-items: center;
 }
 .tableRow:last-of-type { border-bottom: none; }
-.tableRow:nth-child(even) { background: color-mix(in srgb, var(--surface) 50%, transparent); }
-
+.tableRow:nth-child(even) { background: color-mix(in srgb, var(--surface2) 40%, transparent); }
 .tableFeature {
   font-family: var(--font-ui);
   font-size: 11px;
   color: var(--text2);
-  padding-right: 8px;
+  padding-right: 6px;
+  line-height: 1.35;
 }
-
 .tableCell {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .featureVal {
   font-family: var(--font-ui);
   font-size: 9px;
   font-weight: 600;
   color: var(--text2);
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.25;
 }
-
 .checkIcon { color: var(--positive); }
-.dashIcon  { font-size: 12px; color: var(--text3); font-weight: 400; }
+.dashIcon  { font-size: 11px; color: var(--text3); font-weight: 400; }
 
 .expandBtn {
   display: flex;
@@ -319,6 +347,27 @@
 }
 .expandBtn:hover { color: var(--accent); }
 
+/* ── Support button ── */
+.supportBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: none;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  margin-top: 4px;
+}
+.supportBtn:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); color: var(--accent); }
+
 /* ── Footer ── */
 .footerNote {
   font-family: var(--font-ui);
@@ -327,4 +376,155 @@
   text-align: center;
   line-height: 1.5;
   padding: 0 8px;
+  margin-top: 0;
+}
+
+/* ── Support bottom sheet ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sheetHandle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 0 auto 4px;
+}
+
+.supportHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 4px 0 4px;
+}
+.supportIconWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+.supportTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+.supportDesc {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text2);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 300px;
+}
+
+/* Monobank button */
+.monoBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+}
+.monoBtn:hover { border-color: var(--text3); background: var(--surface); }
+.monoBtnInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.monoBtnName {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.monoBtnSub {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+}
+.monoBtnIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg);
+  flex-shrink: 0;
+}
+
+/* Card section */
+.cardSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cardSectionLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+}
+.cardRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+.cardRow:hover { border-color: var(--text3); }
+.cardNumber {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.08em;
+}
+.cardMeta {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 3px;
 }

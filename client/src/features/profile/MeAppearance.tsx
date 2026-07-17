@@ -30,6 +30,107 @@ const PALETTES: ThemePalette[] = [
   { id: 'arctic', name: 'ARCTIC', bg: '#1e2330', surface: '#313a4e', border: '#4a5570', accent: '#88c0d0', second: '#b48ead', gold: '#ebcb8b',  text: '#eceff4' },
 ]
 
+/** Ansuz rune for hub preview */
+function PreviewAnsuz() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
+      <line x1="8" y1="2.5" x2="8" y2="19.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+      <line x1="8" y1="6" x2="16" y2="10.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+      <line x1="8" y1="12" x2="16" y2="16.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+interface NavLivePreviewProps {
+  navStyle: import('@/shared/store/uiStore').NavStyle
+  navLabelMode: import('@/shared/store/uiStore').NavLabelMode
+  pinnedSections: string[]
+  f1Enabled: boolean
+}
+
+/**
+ * NavLivePreview
+ * --------------
+ * Статичний превʼю реального нав-бара відповідно до поточних налаштувань.
+ * Перший розділ (/) завжди "активний" для демонстрації.
+ */
+function NavLivePreview({ navStyle, navLabelMode, pinnedSections, f1Enabled }: NavLivePreviewProps) {
+  const sections = ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || f1Enabled)
+  const demoActive = '/'
+
+  const showLabel = (to: string) =>
+    navLabelMode === 'always' || (navLabelMode === 'active' && to === demoActive)
+
+  const pinned = sections.filter(s => pinnedSections.includes(s.to)).slice(0, 4)
+  const leftItems  = pinned.length >= 2 ? pinned.slice(0, 2) : sections.slice(0, 2)
+  const rightItems = pinned.length >= 4 ? pinned.slice(2, 4) : sections.slice(2, 4)
+
+  return (
+    <div className={styles.navLiveWrap}>
+      <span className={styles.navLiveTitle}>ПРЕВ'ЮЮ</span>
+      <div className={styles.navLiveStage}>
+
+        {navStyle === 'classic' && (
+          <div className={styles.navLiveClassic}>
+            {sections.map(s => {
+              const active = s.to === demoActive
+              const label = showLabel(s.to)
+              return (
+                <div key={s.to} className={`${styles.navLiveClassicItem} ${active ? styles.navLiveActive : ''}`}>
+                  <s.Icon className={styles.navLiveIcon} />
+                  {label && <span className={styles.navLiveLabel}>{s.label}</span>}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {navStyle === 'pill' && (
+          <div className={`${styles.navLivePill} ${navLabelMode === 'always' ? styles.navLivePillWide : ''}`}>
+            {sections.map(s => {
+              const active = s.to === demoActive
+              const label = showLabel(s.to)
+              return (
+                <div key={s.to} className={`${styles.navLiveItem} ${active ? styles.navLiveActive : ''} ${label ? styles.navLiveItemExpanded : ''}`}>
+                  <s.Icon className={styles.navLiveIcon} />
+                  {label && <span className={styles.navLiveLabel}>{s.label}</span>}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {navStyle === 'hub' && (
+          <div className={styles.navLivePill}>
+            {leftItems.map(s => {
+              const active = s.to === demoActive
+              const label = navLabelMode !== 'never' && active
+              return (
+                <div key={s.to} className={`${styles.navLiveItem} ${active ? styles.navLiveActive : ''} ${label ? styles.navLiveItemExpanded : ''}`}>
+                  <s.Icon className={styles.navLiveIcon} />
+                  {label && <span className={styles.navLiveLabel}>{s.label}</span>}
+                </div>
+              )
+            })}
+            <div className={styles.navLiveHub}><PreviewAnsuz /></div>
+            {rightItems.map(s => {
+              const active = s.to === demoActive
+              const label = navLabelMode !== 'never' && active
+              return (
+                <div key={s.to} className={`${styles.navLiveItem} ${active ? styles.navLiveActive : ''} ${label ? styles.navLiveItemExpanded : ''}`}>
+                  <s.Icon className={styles.navLiveIcon} />
+                  {label && <span className={styles.navLiveLabel}>{s.label}</span>}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
+}
+
 const LockIcon: React.FC = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
     <rect x="2" y="5.5" width="8" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -197,6 +298,13 @@ const MeAppearance: React.FC = () => {
             </button>
           ))}
         </div>
+
+        <NavLivePreview
+          navStyle={navStyle}
+          navLabelMode={navLabelMode}
+          pinnedSections={pinnedSections}
+          f1Enabled={activeProfile?.f1Enabled ?? false}
+        />
 
         {navStyle === 'hub' && (() => {
           const isAdmin = activeProfile?.role === 'admin'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 
@@ -89,6 +89,7 @@ const Sprint: React.FC = () => {
 	const [dragFromIndex, setDragFromIndex] = useState<number | null>(null)
 	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 	const dragStartYRef   = useRef(0)
+	const dragDeltaYRef   = useRef(0)
 	const listRef         = useRef<HTMLUListElement>(null)
 	const handleSwipeTutorialDone = () => {
 		updateProfile({ sprintTutorialSeen: true })
@@ -232,16 +233,64 @@ const Sprint: React.FC = () => {
 
 	const showSwipeGhost = ghostHintEligible && !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
 
+	// ── Drag helpers ──────────────────────────────────────────────────────────
+	const applyDragStyles = useCallback((from: number, over: number, deltaY: number) => {
+		const el = listRef.current
+		if (!el) return
+		const children = Array.from(el.children) as HTMLElement[]
+		const itemH = children[from]?.offsetHeight ?? 64
+
+		children.forEach((child, i) => {
+			if (i === from) {
+				child.style.transform  = `translateY(${deltaY}px) scale(1.03)`
+				child.style.zIndex     = '20'
+				child.style.position   = 'relative'
+				child.style.transition = 'box-shadow 0.15s ease'
+				child.removeAttribute('data-drop-above')
+			} else {
+				child.style.zIndex   = ''
+				child.style.position = ''
+				child.style.transition = 'transform 0.18s ease'
+				if (over > from && i > from && i <= over) {
+					child.style.transform = `translateY(-${itemH}px)`
+				} else if (over < from && i >= over && i < from) {
+					child.style.transform = `translateY(${itemH}px)`
+				} else {
+					child.style.transform = ''
+				}
+				// drop indicator line
+				if (i === over) child.setAttribute('data-drop-above', 'true')
+				else            child.removeAttribute('data-drop-above')
+			}
+		})
+	}, [])
+
+	const resetDragStyles = useCallback(() => {
+		const el = listRef.current
+		if (!el) return
+		Array.from(el.children as HTMLCollectionOf<HTMLElement>).forEach(child => {
+			child.style.transform  = ''
+			child.style.zIndex     = ''
+			child.style.position   = ''
+			child.style.transition = ''
+			child.removeAttribute('data-drop-above')
+		})
+	}, [])
+
 	// ── Drag handlers ─────────────────────────────────────────────────────────
 	const handleDragHandlePointerDown = useCallback((index: number, e: React.PointerEvent) => {
+		dragStartYRef.current = e.clientY
+		dragDeltaYRef.current = 0
 		setDragFromIndex(index)
 		setDragOverIndex(index)
-		dragStartYRef.current = e.clientY
 		;(e.target as HTMLElement).setPointerCapture(e.pointerId)
 	}, [])
 
 	const handleDragPointerMove = useCallback((e: React.PointerEvent) => {
 		if (dragFromIndex === null || !listRef.current) return
+		const deltaY = e.clientY - dragStartYRef.current
+		dragDeltaYRef.current = deltaY
+
 		const children = Array.from(listRef.current.children) as HTMLElement[]
 		const y = e.clientY
 		let newIndex = dragFromIndex
@@ -250,10 +299,13 @@ const Sprint: React.FC = () => {
 			if (y < rect.top + rect.height / 2) { newIndex = i; break }
 			newIndex = i
 		}
-		setDragOverIndex(newIndex)
-	}, [dragFromIndex])
+
+		applyDragStyles(dragFromIndex, newIndex, deltaY)
+		if (newIndex !== dragOverIndex) setDragOverIndex(newIndex)
+	}, [dragFromIndex, dragOverIndex, applyDragStyles])
 
 	const handleDragPointerUp = useCallback(() => {
+		resetDragStyles()
 		if (dragFromIndex === null || dragOverIndex === null || dragFromIndex === dragOverIndex) {
 			setDragFromIndex(null)
 			setDragOverIndex(null)
@@ -265,7 +317,13 @@ const Sprint: React.FC = () => {
 		reorderTasks(reordered.map(t => t.id))
 		setDragFromIndex(null)
 		setDragOverIndex(null)
-	}, [dragFromIndex, dragOverIndex, visibleDayQuests, reorderTasks])
+	}, [dragFromIndex, dragOverIndex, visibleDayQuests, reorderTasks, resetDragStyles])
+
+	// Відновлюємо transform після React re-render (dragOverIndex state change)
+	useLayoutEffect(() => {
+		if (dragFromIndex === null) return
+		applyDragStyles(dragFromIndex, dragOverIndex ?? dragFromIndex, dragDeltaYRef.current)
+	}, [dragFromIndex, dragOverIndex, applyDragStyles])
 
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)

@@ -13,8 +13,9 @@ const FALLBACK_SERIES_MIN = 45
 const FALLBACK_ANIME_MIN  = 24
 
 function countEpisodes(item: WatchlistItem): number {
+  if (item.watchedEpisodes?.length) return item.watchedEpisodes.length
   if (item.status === 'watched' && item.totalEpisodes) return item.totalEpisodes
-  return item.watchedEpisodes?.length ?? 0
+  return 0
 }
 
 // ── Chart data ─────────────────────────────────────────────────────────────────

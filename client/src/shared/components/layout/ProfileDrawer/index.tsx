@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
+import { useUiStore } from '@/shared/store/uiStore'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
+import ChangelogSheet from '@/features/profile/components/ChangelogSheet'
 import styles from './ProfileDrawer.module.css'
 
 /**
@@ -24,12 +26,14 @@ interface ProfileDrawerProps {
 const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
   const { activeProfile, logout } = useProfileStore()
   const { pendingReceived } = useFamilyStore()
+  const { updateAvailable } = useUiStore()
   const navigate = useNavigate()
   const runeScore = useRuneScore()
   const level = getLevel(runeScore)
 
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
+  const [changelogOpen, setChangelogOpen] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -105,12 +109,6 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
         {/* ── Nav items ── */}
         <nav className={styles.nav}>
           <DrawerItem
-            icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="6.5" r="3"/><path d="M3 17c0-3 2.5-5 6-5s6 2 6 5"/></svg>}
-            label="Налаштування"
-            sub="Особисті дані, аватар"
-            onClick={() => go('/profile')}
-          />
-          <DrawerItem
             icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 1.5a7.5 7.5 0 1 0 0 15c1 0 1.6-.7 1.6-1.5 0-.4-.15-.76-.38-1.04-.22-.27-.37-.6-.37-.96 0-.76.62-1.38 1.4-1.38h1.75A3.5 3.5 0 0 0 16.5 8c0-3.5-3.4-6.5-7.5-6.5z"/><circle cx="5.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="9" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="12.5" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg>}
             label="Вигляд"
             sub="Теми, стиль навігації"
@@ -135,6 +133,12 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
             badge={familyPending > 0 ? familyPending : undefined}
             onClick={() => go('/profile/family')}
           />
+          <DrawerItem
+            icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="14" height="11" rx="2"/><path d="M5 4V3a2 2 0 0 1 4 0v1M5 9h8M5 12h5"/></svg>}
+            label="Тариф"
+            sub="Підписка, ліміти"
+            onClick={() => go('/profile?tab=plan')}
+          />
           {isAdmin && (
             <DrawerItem
               icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 1L2 5v4c0 4.2 3 7.7 7 9 4-1.3 7-4.8 7-9V5L9 1z"/></svg>}
@@ -143,7 +147,23 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
               onClick={() => go('/profile/admin')}
             />
           )}
+          <DrawerItem
+            icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="2.2"/><path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.1 3.1l1.4 1.4M13.5 13.5l1.4 1.4M3.1 14.9l1.4-1.4M13.5 4.5l1.4-1.4"/><circle cx="9" cy="9" r="5.5"/></svg>}
+            label="Акаунт"
+            sub="Дані, безпека, юридичне"
+            onClick={() => go('/profile/account')}
+          />
+          {updateAvailable && (
+            <button type="button" className={styles.updateRow} onClick={() => setChangelogOpen(true)}>
+              <span className={styles.updateDot} />
+              <span className={styles.updateText}>Доступне оновлення</span>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 3l4 4-4 4"/>
+              </svg>
+            </button>
+          )}
         </nav>
+        <ChangelogSheet isOpen={changelogOpen} onClose={() => setChangelogOpen(false)} />
 
         <div className={styles.spacer} />
         <div className={styles.divider} />

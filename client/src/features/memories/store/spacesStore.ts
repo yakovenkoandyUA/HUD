@@ -119,9 +119,10 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
       const res = await authFetch('/api/spaces')
       if (!res.ok) throw new Error('fetch failed')
       const data: Space[] = await res.json()
-      set({ spaces: data })
-    } finally {
+      set({ spaces: data, loading: false })
+    } catch (err) {
       set({ loading: false })
+      throw err
     }
   },
 

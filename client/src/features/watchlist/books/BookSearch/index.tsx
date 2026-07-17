@@ -53,7 +53,13 @@ const BookSearch: React.FC<BookSearchProps> = ({ onAdd }) => {
     setError(null)
     try {
       const res = await authFetch(`/api/books/search?q=${encodeURIComponent(q)}`)
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        setError(res.status === 503
+          ? 'Google Books тимчасово недоступний — спробуй за хвилину'
+          : 'Помилка пошуку')
+        setResults([])
+        return
+      }
       setResults(await res.json())
     } catch {
       setError('Помилка пошуку')

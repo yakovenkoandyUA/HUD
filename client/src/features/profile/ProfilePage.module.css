@@ -2841,3 +2841,135 @@
 .monoAuthCancelBtn:hover { color: var(--accent); }
 
 
+/* ── Nav live preview (MeAppearance) ── */
+.navLiveWrap {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.navLiveTitle {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+
+.navLiveStage {
+  width: 100%;
+  height: 80px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  padding-bottom: 12px;
+}
+
+/* Classic: pinned to bottom of stage */
+.navLiveClassic {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 6px 4px 8px;
+}
+
+.navLiveClassicItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--text3);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Pill: floating, centered in stage */
+.navLivePill {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--bg2) 90%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+}
+
+.navLivePillWide {
+  gap: 6px;
+}
+
+/* Individual nav item in pill */
+.navLiveItem {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.navLiveItemExpanded {
+  width: auto;
+  height: auto;
+  padding: 4px 8px 5px;
+  border-radius: 20px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navLiveActive {
+  color: var(--accent);
+}
+.navLiveActive svg { stroke: var(--accent); }
+
+.navLiveIcon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.navLiveLabel {
+  font-family: var(--font-ui);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  color: inherit;
+}
+
+/* Hub button in preview */
+.navLiveHub {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0 3px;
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--accent) 40%, transparent);
+}

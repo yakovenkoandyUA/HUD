@@ -114,6 +114,17 @@ Slide-down toast при розблокуванні ачівки (non-blocking, �
 - AI-кнопка — PaywallGate для `aiChat` фічі + requireVerified
 - PWA update — пульсуюча крапка на аватарі при `uiStore.updateAvailable`
 
+### ChangelogSheet (`features/profile/components/ChangelogSheet`)
+Bottom sheet з журналом змін. Відкривається з `ProfileDrawer` при наявності оновлення PWA.
+Дані: `shared/data/changelog.ts` — `CHANGELOG: ChangelogEntry[]` + `APP_VERSION`.
+Кнопка "Встановити оновлення" → reload + зберігає `lastSeenVersion` в localStorage.
+**Workflow:** перед кожним пушем дописати новий запис `{ version, date, notes[] }` в `changelog.ts`.
+
+### ProfileDrawer
+Slide-in panel from the left, triggered by the avatar in AppHeader.
+- Порядок: Вигляд → Система → Модулі → Близькі → Адмін → **Налаштування** (внизу, шестерня)
+- При `uiStore.updateAvailable` — рядок оновлення під Налаштуваннями → `ChangelogSheet`
+
 ### BottomNav
 Нижня навігація. 3 стилі через `uiStore.navStyle`:
 - **classic** — повна панель з підписами під всіма іконками

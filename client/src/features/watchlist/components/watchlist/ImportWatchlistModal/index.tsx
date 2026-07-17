@@ -203,14 +203,7 @@ const ImportWatchlistModal: React.FC<ImportWatchlistModalProps> = ({ isOpen, onC
               <p className={styles.errorText}>{store.error}</p>
             )}
 
-            <div className={styles.services}>
-              <p className={styles.servicesTitle}>Підтримувані сервіси</p>
-              <div className={styles.servicesList}>
-                {['MyShows', 'Letterboxd', 'Trakt', 'IMDb', 'Кінопошук'].map(s => (
-                  <span key={s} className={styles.serviceChip}>{s}</span>
-                ))}
-              </div>
-            </div>
+            
           </>
         )}
 
