@@ -17,7 +17,8 @@ const BASE_CATEGORIES = [
   { name: 'Підписки',   icon: 'ti-repeat',           color: '#6366F1', order: 12 },
   { name: 'Навчання',   icon: 'ti-book',             color: '#0369A1', order: 13 },
   { name: 'Подарунки',  icon: 'ti-gift',             color: '#FB923C', order: 14 },
-  { name: 'Інше',       icon: 'ti-dots',             color: '#9CA3AF', order: 15 },
+  { name: 'Тварини',   icon: 'ti-paw',              color: '#84CC16', order: 15 },
+  { name: 'Інше',       icon: 'ti-dots',             color: '#9CA3AF', order: 16 },
 ]
 
 export const seedCategoriesForUser = async (userId: string): Promise<void> => {
