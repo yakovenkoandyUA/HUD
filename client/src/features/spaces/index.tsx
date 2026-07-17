@@ -993,13 +993,6 @@ const SpaceDetailScreen: React.FC = () => {
               maxLength={60}
             />
 
-            <label className={styles.fieldLabel}>ТИП</label>
-            <PillSelector
-              options={TYPE_OPTIONS}
-              value={editType}
-              onChange={v => setEditType(v as SpaceType)}
-            />
-
             <label className={styles.fieldLabel}>КОЛІР</label>
             <div className={styles.colorRow}>
               {COLORS.map(c => (
