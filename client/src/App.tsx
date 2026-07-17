@@ -31,8 +31,8 @@ import MeAppearance from '@/features/profile/MeAppearance'
 import MeSystem from '@/features/profile/MeSystem'
 import MeModules from '@/features/profile/MeModules'
 import MeFamily from '@/features/profile/MeFamily'
-import MeAccount from '@/features/profile/MeAccount'
 import AdminTab from '@/features/profile/AdminTab'
+import MeAccount from '@/features/profile/MeAccount'
 import VerifyEmail from '@/features/auth/VerifyEmail'
 import NotFound from '@/features/auth/NotFound'
 import NotesScreen from '@/features/notes'
@@ -113,7 +113,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/profile/system"     element={<ProfileSubPage title="СИСТЕМА"><MeSystem /></ProfileSubPage>} />
           <Route path="/profile/modules"    element={<ProfileSubPage title="МОДУЛІ"><MeModules /></ProfileSubPage>} />
           <Route path="/profile/family"     element={<ProfileSubPage title="БЛИЗЬКІ"><MeFamily /></ProfileSubPage>} />
-          <Route path="/profile/account"    element={<ProfileSubPage title="АКАУНТ"><MeAccount /></ProfileSubPage>} />
+          <Route path="/profile/account"    element={<ProfileSubPage title="НАЛАШТУВАННЯ"><MeAccount /></ProfileSubPage>} />
           <Route path="/profile/admin"      element={<ProfileSubPage title="АДМІН"><AdminTab /></ProfileSubPage>} />
           <Route path="/notes" element={<NotesScreen />} />
           <Route path="/timeline" element={<TimelineScreen />} />

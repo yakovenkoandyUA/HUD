@@ -19,10 +19,10 @@ import styles from './ExpenseForm.module.css'
  * Необов'язковий вибір простору — прив'язує витрату до простору з увімкненим модулем finance.
  *
  * Props:
- * @prop {(amount: number, description: string, category: string, spaceId?: string | null) => void} onExpense
+ * @prop {(amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null) => void} onExpense
  */
 interface ExpenseFormProps {
-  onExpense: (amount: number, description: string, category: string, spaceId?: string | null) => void
+  onExpense: (amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null) => void
 }
 
 const CameraIcon: React.FC = () => (
@@ -77,9 +77,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
     e.preventDefault()
     if (!canSubmit || !finalCat) return
     const desc = description.trim() || finalCat.name
-    // Always group by parent category; subcategory name goes to description only
     const categoryName = (selectedCat ?? finalCat).name.toLowerCase()
-    onExpense(parseFloat(amount), desc, categoryName, selectedSpaceId)
+    const subcategoryName = selectedSubCat ? selectedSubCat.name : null
+    onExpense(parseFloat(amount), desc, categoryName, selectedSpaceId, subcategoryName)
     setAmount('')
     setDescription('')
     setSelectedCatId(null)

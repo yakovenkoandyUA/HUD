@@ -230,6 +230,13 @@
   margin-top: 2px;
 }
 
+.descSub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text3);
+  font-style: italic;
+}
+
 /* ── Space badge ── */
 .spaceBadge {
   display: flex;

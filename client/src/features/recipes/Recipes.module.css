@@ -159,6 +159,22 @@
 .randomBtn:hover { color: var(--accent); }
 .randomBtn:active { transform: scale(0.92); }
 
+.tabBtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.tabBtn:hover { color: var(--accent); }
+.tabBtn:active { transform: scale(0.92); }
+
 .savedBtn {
   display: flex;
   align-items: center;
@@ -205,9 +221,10 @@
 .tagsFilter {
   display: flex;
   gap: 6px;
-  padding-bottom: 2px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
-  margin: -4px -16px;
+  margin: 0 -16px;
   padding: 0 16px 4px;
 }
 .tagsFilter::-webkit-scrollbar { display: none; }
@@ -268,7 +285,7 @@
 }
 
 .ghostPhoto {
-  aspect-ratio: 4/5;
+  aspect-ratio: 4/3;
   border-radius: 12px;
   background: var(--surface);
   border: 1px solid var(--border);

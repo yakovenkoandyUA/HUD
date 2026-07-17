@@ -206,6 +206,7 @@ const MeTab: React.FC = () => {
 
         <img src="/achive/achive-hero.png" alt="" className={styles.runeImg} draggable={false} />
       </div>
+
     </div>
   )
 }

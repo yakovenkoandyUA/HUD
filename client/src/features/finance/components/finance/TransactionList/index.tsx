@@ -460,7 +460,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                                 className={styles.titleEditable}
                                 onClick={e => handleTitleClick(e, t)}
                               >
-                                {t.title ?? (receipt ? receipt.store : t.description)}
+                                {t.title ?? (receipt ? receipt.store : (t.subcategory ?? t.description))}
                               </span>
                               {(receipt || isRecurring) && t.category && (
                                 <span className={styles.txCategory}> · {t.category}</span>
@@ -473,7 +473,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                             </>
                           )}
                         </div>
-                        <div className={styles.date}>{formatDate(t.date)}</div>
+                        <div className={styles.date}>
+                          {formatDate(t.date)}
+                          {t.subcategory && t.description && t.description !== t.subcategory && (
+                            <span className={styles.descSub}> · {t.description}</span>
+                          )}
+                        </div>
                         {t.spaceId && (() => {
                           const sp = spaces.find(s => s.id === t.spaceId)
                           return sp ? (

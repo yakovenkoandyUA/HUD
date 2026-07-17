@@ -40,7 +40,14 @@
   align-items: center;
   gap: 12px;
   padding: 24px 20px 20px;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity 0.15s;
 }
+.header:active { opacity: 0.7; }
 
 .avatar {
   width: 46px;

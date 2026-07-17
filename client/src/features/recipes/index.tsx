@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSwipeTabs } from '@/shared/hooks/useSwipeTabs'
 import RecipeCard from './components/recipes/RecipeCard'
 import RecipeForm from './components/recipes/RecipeForm'
 import RecipeGeneratorModal from './components/recipes/RecipeGeneratorModal'
-import CategoriesSlider from './components/recipes/CategoriesSlider'
 import IngredientSearchSheet from './components/recipes/IngredientSearchSheet'
 import Modal from '@/shared/components/ui/Modal'
 import AppHeader from '@/shared/components/layout/AppHeader'
@@ -100,6 +99,15 @@ const Recipes: React.FC = () => {
     setShowForm(true)
   }
 
+  const categoryChips = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const r of baseRecipes) {
+      const cat = r.category ?? 'Інше'
+      map.set(cat, (map.get(cat) ?? 0) + 1)
+    }
+    return [...map.entries()].sort((a, b) => b[1] - a[1]).map(([cat]) => cat)
+  }, [baseRecipes])
+
   const emptyMsg = recipes.length === 0
     ? scope === 'mine'   ? 'Додай свій перший рецепт'
     : scope === 'family' ? 'У спільній книзі ще порожньо'
@@ -159,23 +167,27 @@ const Recipes: React.FC = () => {
 
       <div className={styles.content}>
 
-        {/* ── Categories slider ── */}
-        {baseRecipes.length > 0 && (
-          <div className={styles.sliderWrap}>
-            <CategoriesSlider
-              recipes={baseRecipes}
-              selectedCategory={selectedCategory}
-              onSelect={setSelectedCategory}
-            />
+        {/* ── Category chips ── */}
+        {categoryChips.length > 1 && (
+          <div className={styles.tagsFilter}>
+            <button
+              type="button"
+              className={`${styles.tagChip} ${selectedCategory === null ? styles.tagChipActive : ''}`}
+              onClick={() => setSelectedCategory(null)}
+            >
+              Всі
+            </button>
+            {categoryChips.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                className={`${styles.tagChip} ${selectedCategory === cat ? styles.tagChipActive : ''}`}
+                onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
-        )}
-
-
-        {/* ── Section label ── */}
-        {baseRecipes.length > 0 && (
-          <p className={styles.sectionLabel}>
-            {selectedCategory ?? (savedOnly ? 'Збережені' : SCOPE_TABS.find(t => t.value === scope)?.label)}
-          </p>
         )}
 
         {/* ── Grid ── */}
@@ -246,6 +258,7 @@ const Recipes: React.FC = () => {
             setShowGenerator(true)
           }}
           aria-label="Згенерувати рецепт"
+          title="Згенерувати рецепт"
         >
           <MimirIcon size={18} />
         </button>
