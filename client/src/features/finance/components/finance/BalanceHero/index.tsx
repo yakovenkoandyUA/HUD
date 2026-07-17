@@ -50,9 +50,8 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   const progressPct = dailyBudget > 0 ? Math.min(100, Math.round((todaySpent / dailyBudget) * 100)) : 0
   const progressColor: 'red' | 'green' = todaySpent > dailyBudget ? 'red' : 'green'
   const delta = dailyBudget - todaySpent
-  // скільки заощаджено/перевитрачено відносно норми за минулі дні
-  const normSpend = daysElapsed * dailyBudget
-  const saved = normSpend - monthSpent
+  // прогноз: якщо витрачати і далі в темпі avgPerDay, скільки залишиться до зарплати
+  const projected = balance - avgPerDay * daysLeft
 
   return (
     <div className={styles.hero}>
@@ -92,11 +91,11 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
         </div>
       </div>
 
-      {daysElapsed > 0 && dailyBudget > 0 && (
+      {daysLeft > 0 && avgPerDay > 0 && (
         <div className={styles.forecast}>
-          {saved >= 0
-            ? <>Заощадив відносно норми{' '}<span className={styles.forecastPos}>+{fmt(saved)} ₴</span></>
-            : <>Перевитратив відносно норми{' '}<span className={styles.forecastNeg}>−{fmt(Math.abs(saved))} ₴</span></>
+          {projected >= 0
+            ? <>При такому темпі залишиться{' '}<span className={styles.forecastPos}>~{fmt(projected)} ₴</span></>
+            : <>При такому темпі не вистачить{' '}<span className={styles.forecastNeg}>~{fmt(Math.abs(projected))} ₴</span></>
           }
         </div>
       )}
