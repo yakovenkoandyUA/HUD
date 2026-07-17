@@ -332,7 +332,8 @@ const SpaceDetailScreen: React.FC = () => {
   const parseMemories = async (res: Response): Promise<Memory[]> => {
     const raw = await res.json() as Record<string, unknown>[]
     return raw.map(d => ({
-      id: String(d._id ?? ''), title: String(d.title ?? ''), date: String(d.date ?? ''),
+      id: String(d._id ?? ''), userId: String(d.userId ?? ''),
+      title: String(d.title ?? ''), date: String(d.date ?? ''),
       dateEnd: (d.dateEnd as string | null) ?? null, isTrip: Boolean(d.isTrip),
       coverUrl: String(d.coverUrl ?? ''), coverAttribution: d.coverAttribution as string | undefined,
       location: d.location as string | undefined, lat: (d.lat as number | null) ?? null,

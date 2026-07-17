@@ -57,7 +57,7 @@ interface MemoriesState {
   memories: Memory[]
   isLoading: boolean
   fetchMemories: () => Promise<void>
-  addMemory: (memory: Omit<Memory, 'id' | 'createdAt'>) => Promise<string>
+  addMemory: (memory: Omit<Memory, 'id' | 'createdAt' | 'userId'>) => Promise<string>
   updateMemory: (id: string, updates: Partial<Omit<Memory, 'id' | 'createdAt'>>) => Promise<void>
   deleteMemory: (id: string) => Promise<void>
   addPhoto: (memoryId: string, photo: Omit<MemoryPhoto, 'id' | 'createdAt'>) => Promise<void>

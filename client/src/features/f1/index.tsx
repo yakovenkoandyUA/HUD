@@ -28,10 +28,7 @@ const F1Screen: React.FC = () => {
 
   const completed     = predictions.filter(p => p.result)
   const totalPts      = completed.reduce((sum, p) => sum + (p.result?.points ?? 0), 0)
-  const totalRaces    = completed.length
-  const correctPicks  = completed.filter(p =>
-    [p.result!.p1Match, p.result!.p2Match, p.result!.p3Match].some(m => m !== 'miss')
-  ).length
+
   const [liveActive, setLiveActive] = useState(false)
 
   useEffect(() => {

@@ -141,6 +141,7 @@ export interface UnifiedTodo {
   spaceId?: string | null
   imageUrls?: string[]
   imagePublicIds?: string[]
+  order?: number
 }
 
 export interface RepeatConfig {
