@@ -49,7 +49,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const [selectedSpaceId, setSelectedSpaceId]   = useState<string | null>(null)
   const [scannerFile, setScannerFile]           = useState<File | null>(null)
   const [catsExpanded, setCatsExpanded]         = useState(false)
+  const [showSourcePicker, setShowSourcePicker] = useState(false)
   const fileInputRef                            = useRef<HTMLInputElement>(null)
+  const cameraInputRef                          = useRef<HTMLInputElement>(null)
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
@@ -116,6 +118,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
 
       <Input
         label="Сума (₴)"
@@ -129,15 +139,36 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <span className={styles.sectionLabel}>Категорія</span>
+          <div className={styles.scanWrap}>
           <button type="button" className={styles.scanBtn} onClick={() => {
               if (!activeProfile?.isVerified) { showToast('Підтвердіть email для сканування чеків', 'error'); return }
               if (!canScan) { showToast('Сканер чеків — Personal Memory план', 'error'); window.location.href = '/profile?tab=plan'; return }
-              fileInputRef.current?.click()
+              setShowSourcePicker(v => !v)
             }}>
             <CameraIcon />
             Сканувати чек
             {!activeProfile?.isVerified && <span className={styles.verifyBadge}>ВЕРИФІКАЦІЯ</span>}
           </button>
+          {showSourcePicker && (
+            <div className={styles.sourcePicker}>
+              <button type="button" className={styles.sourceOption} onClick={() => { setShowSourcePicker(false); cameraInputRef.current?.click() }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1.5 5C1.5 4.17 2.17 3.5 3 3.5h1.5L6 1.5h6l1.5 2H15c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5H3c-.83 0-1.5-.67-1.5-1.5V5z"/>
+                  <circle cx="9" cy="9" r="2.5"/>
+                </svg>
+                Камера
+              </button>
+              <button type="button" className={styles.sourceOption} onClick={() => { setShowSourcePicker(false); fileInputRef.current?.click() }}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1.5" y="3" width="15" height="12" rx="1.5"/>
+                  <circle cx="6" cy="7.5" r="1.5"/>
+                  <path d="M1.5 12l4-4 3 3 2.5-2.5 4 4"/>
+                </svg>
+                Світлини
+              </button>
+            </div>
+          )}
+          </div>
         </div>
 
         <div className={styles.catGrid}>

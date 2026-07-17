@@ -11,11 +11,12 @@ import styles from './ImageUploadButton.module.css'
  * або прев'ю з кнопками "Змінити" / "×" якщо зображення є.
  *
  * Props:
- * @prop {string | undefined}        currentUrl   — поточний URL зображення
- * @prop {string}                    folder       — папка в Cloudinary
- * @prop {(url: string) => void}     onUpload     — коллбек з новим URL ('' = видалити)
- * @prop {string}                    [placeholder] — текст без зображення
- * @prop {'square' | 'wide'}         [variant]    — square (1:1) або wide (16:9)
+ * @prop {string | undefined}        currentUrl      — поточний URL зображення
+ * @prop {string}                    folder          — папка в Cloudinary
+ * @prop {(url: string) => void}     onUpload        — коллбек з новим URL ('' = видалити)
+ * @prop {string}                    [placeholder]   — текст без зображення
+ * @prop {'square' | 'wide'}         [variant]       — square (1:1) або wide (16:9)
+ * @prop {string}                    [objectPosition] — CSS object-position для прев'ю (н-д "center top")
  */
 interface ImageUploadButtonProps {
   currentUrl?: string
@@ -23,6 +24,7 @@ interface ImageUploadButtonProps {
   onUpload: (url: string) => void
   placeholder?: string
   variant?: 'square' | 'wide' | 'compact'
+  objectPosition?: string
 }
 
 const ImageUploadButton: React.FC<ImageUploadButtonProps> = ({
@@ -31,6 +33,7 @@ const ImageUploadButton: React.FC<ImageUploadButtonProps> = ({
   onUpload,
   placeholder = 'Додати фото',
   variant = 'square',
+  objectPosition,
 }) => {
   const { showToast } = useUiStore()
 
@@ -60,7 +63,7 @@ const ImageUploadButton: React.FC<ImageUploadButtonProps> = ({
 
       {currentUrl ? (
         <>
-          <img src={currentUrl} alt="" className={styles.img} />
+          <img src={currentUrl} alt="" className={styles.img} style={objectPosition ? { objectPosition } : undefined} />
           <div className={styles.overlay}>
             <button type="button" className={styles.changeBtn} onClick={trigger}>
               Змінити
