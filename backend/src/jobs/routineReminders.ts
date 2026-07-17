@@ -51,7 +51,8 @@ cron.schedule('0 9 * * *', async () => {
       await sendPushToUser(userId, {
         title: '⏰ Нагадування про звички',
         body,
-        url: '/sprint',
+        url:  '/sprint',
+        tag:  'routine-reminder',  // replaces previous reminder if not dismissed
       })
     }
 

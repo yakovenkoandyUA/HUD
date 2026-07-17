@@ -67,10 +67,10 @@ export async function sendRaceWeekendAlert(): Promise<void> {
       keys: s.keys,
     })),
     {
-      title: 'MIMIR',
-      body: `RAAAACCEEEEE WEEEEEEEK 🏎️`,
-      icon: '/icons/icon-192.png',
-      url: '/f1',
+      title: '🏎️ Гоночний вікенд!',
+      body: `${race.name} — цього тижня`,
+      url:  '/f1',
+      tag:  'f1-race-weekend',
     },
     async (expiredId) => {
       await PushSubscription.findByIdAndDelete(expiredId)
@@ -122,7 +122,7 @@ async function processReminders(
       try {
         await sendNotification(
           { endpoint: sub.endpoint, keys: sub.keys },
-          { title: 'MIMIR', body: `Нагадування: ${item.title}`, icon: '/icons/icon-192.png' }
+          { title: '⏰ Нагадування', body: item.title, url: '/sprint', tag: `reminder-${String(item._id)}` }
         )
       } catch (err: unknown) {
         if ((err as { expired?: boolean }).expired) {
@@ -163,7 +163,7 @@ async function sendRecurringPaymentNotifications(): Promise<void> {
       try {
         await sendNotification(
           { endpoint: sub.endpoint, keys: sub.keys },
-          { title: '💳 Регулярний платіж', body: `${payment.name} — ${payment.amount} ₴`, icon: '/icons/icon-192.png' }
+          { title: '💳 Регулярний платіж', body: `${payment.name} — ${payment.amount} ₴`, url: '/finance', tag: `recurring-${String(payment._id)}` }
         )
       } catch (err: unknown) {
         if ((err as { expired?: boolean }).expired) {

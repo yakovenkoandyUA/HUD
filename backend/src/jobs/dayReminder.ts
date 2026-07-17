@@ -9,8 +9,9 @@ cron.schedule('0 18 * * *', async () => {
     for (const user of users) {
       await sendPushToUser(user._id.toString(), {
         title: 'Як пройшов день?',
-        body: 'Відзнач настрій і підсумуй день у MIMIR',
-        url: '/',
+        body:  'Відзнач настрій і підсумуй день у MIMIR',
+        url:   '/',
+        tag:   'day-recap',  // one per day — replaces itself if sent twice
       })
     }
     console.log('[Push] Day recap reminders sent')

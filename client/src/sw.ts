@@ -59,16 +59,17 @@ self.addEventListener('activate', (event) => { event.waitUntil(self.clients.clai
 // ── Push notifications ───────────────────────────────────────────────────────
 self.addEventListener('push', (event: PushEvent) => {
   const data = event.data?.json() as {
-    title: string; body: string; icon?: string; url?: string
+    title: string; body: string; icon?: string; url?: string; tag?: string
   } | undefined
   if (!data) return
   event.waitUntil(
     self.registration.showNotification(data.title, {
-      body: data.body,
+      body:  data.body,
       // No explicit icon — Chrome uses the manifest icon on the left without
       // duplicating it as a large thumbnail on the right (Android behavior).
-      badge: '/badge-96.png',   // monochrome white-on-transparent for status bar
-      data: { url: data.url ?? '/' },
+      badge: '/badge-96.png',  // monochrome white-on-transparent for status bar
+      tag:   data.tag,         // same-tag notifications replace each other (no spam)
+      data:  { url: data.url ?? '/' },
     })
   )
 })

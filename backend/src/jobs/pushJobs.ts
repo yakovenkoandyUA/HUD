@@ -19,8 +19,9 @@ cron.schedule('* * * * *', async () => {
         for (const user of f1Users) {
           await sendPushToUser(user._id.toString(), {
             title: '🏎️ Гонка через 1 годину!',
-            body: `${race.name} — ${race.circuit}`,
-            url: '/f1',
+            body:  `${race.name} — ${race.circuit}`,
+            url:   '/f1',
+            tag:   'f1-race-start',
           })
         }
         console.log(`[Push] Sent F1 reminder for ${race.name}`)
@@ -46,8 +47,9 @@ cron.schedule('0 10 * * *', async () => {
     for (const item of items) {
       await sendPushToUser(item.userId, {
         title: '🎬 Нова серія вийшла!',
-        body: `«${item.title}» — вже доступна`,
-        url: '/watchlist',
+        body:  `«${item.title}» — вже доступна`,
+        url:   '/watchlist',
+        tag:   `episode-${String(item._id)}`,
       })
       console.log(`[Push] Sent episode reminder for "${item.title}"`)
     }
@@ -71,8 +73,9 @@ cron.schedule('0 9 * * *', async () => {
     for (const item of items) {
       await sendPushToUser(item.userId, {
         title: '🎬 Новий сезон вийшов!',
-        body: `«${item.title}» — вже доступний`,
-        url: '/watchlist',
+        body:  `«${item.title}» — вже доступний`,
+        url:   '/watchlist',
+        tag:   `season-${String(item._id)}`,
       })
       console.log(`[Push] Sent season reminder for "${item.title}"`)
     }

@@ -29,6 +29,7 @@ cron.schedule('0 9 * * *', async () => {
           title: '💳 Регулярний платіж',
           body:  `«${p.name}» — ${p.amount.toLocaleString('uk-UA')} ₴ (${label})`,
           url:   '/finance',
+          tag:   `recurring-${String(p._id)}`,
         })
         break // one notification per payment per day
       }

@@ -15,7 +15,7 @@ export function initWebPush(): void {
 
 export async function sendNotification(
   subscription: PushSubscription,
-  payload: { title: string; body: string; icon?: string; url?: string }
+  payload: { title: string; body: string; icon?: string; url?: string; tag?: string }
 ): Promise<SendResult | null> {
   try {
     return await webpush.sendNotification(subscription, JSON.stringify(payload))
@@ -32,7 +32,7 @@ export async function sendNotification(
 
 export async function sendPushToUser(
   userId: string,
-  payload: { title: string; body: string; icon?: string; url?: string }
+  payload: { title: string; body: string; icon?: string; url?: string; tag?: string }
 ): Promise<void> {
   const subs = await PushSubscriptionModel.find({ userId })
   await Promise.allSettled(
@@ -50,7 +50,7 @@ export async function sendPushToUser(
 
 export async function sendToAll(
   subscriptions: Array<{ endpoint: string; keys: { p256dh: string; auth: string }; id: string }>,
-  payload: { title: string; body: string; icon?: string; url?: string },
+  payload: { title: string; body: string; icon?: string; url?: string; tag?: string },
   onExpired?: (id: string) => Promise<void>
 ): Promise<void> {
   await Promise.allSettled(
