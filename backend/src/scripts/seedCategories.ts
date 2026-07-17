@@ -6,7 +6,7 @@ const BASE_CATEGORIES = [
   { name: 'Заклади',    icon: 'ti-tools-kitchen-2',  color: '#EAB308', order: 1  },
   { name: 'Житло',      icon: 'ti-home',             color: '#8B5CF6', order: 2  },
   { name: 'Комунальні', icon: 'ti-bolt',             color: '#06B6D4', order: 3  },
-  { name: 'Побут',      icon: 'ti-home-cog',         color: '#78716C', order: 4  },
+  { name: 'Побут',      icon: 'ti-home-cog',         color: '#F97316', order: 4  },
   { name: 'Медицина',   icon: 'ti-pill',             color: '#EF4444', order: 5  },
   { name: 'Краса',      icon: 'ti-sparkles',         color: '#D946EF', order: 6  },
   { name: 'Спорт',      icon: 'ti-barbell',          color: '#10B981', order: 7  },

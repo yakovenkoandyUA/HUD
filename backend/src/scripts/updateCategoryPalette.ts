@@ -11,7 +11,7 @@ const UPDATES: Record<string, { icon: string; color: string; order: number }> = 
   'Заклади':    { icon: 'ti-tools-kitchen-2',  color: '#EAB308', order: 1  },
   'Житло':      { icon: 'ti-home',             color: '#8B5CF6', order: 2  },
   'Комунальні': { icon: 'ti-bolt',             color: '#06B6D4', order: 3  },
-  'Побут':      { icon: 'ti-home-cog',         color: '#78716C', order: 4  },
+  'Побут':      { icon: 'ti-home-cog',         color: '#F97316', order: 4  },
   'Медицина':   { icon: 'ti-pill',             color: '#EF4444', order: 5  },
   'Краса':      { icon: 'ti-sparkles',         color: '#D946EF', order: 6  },
   'Спорт':      { icon: 'ti-barbell',          color: '#10B981', order: 7  },
