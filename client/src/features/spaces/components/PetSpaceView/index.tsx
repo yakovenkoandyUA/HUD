@@ -1058,7 +1058,7 @@ async function searchPetFood(q: string): Promise<PetFoodSuggestion[]> {
   if (q.length < 2) return []
   try {
     const res = await fetch(
-      `https://world.openpetfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=6&fields=product_name,brands`
+      `https://world.openpetfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,brands`
     )
     if (!res.ok) return []
     const data = await res.json() as { products?: { product_name?: string; brands?: string }[] }
