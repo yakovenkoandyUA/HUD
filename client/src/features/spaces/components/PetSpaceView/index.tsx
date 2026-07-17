@@ -663,54 +663,60 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
             </div>
 
             <div ref={bodyRef} className={styles.sheetBody}>
-              {/* ── Avatar ── */}
+              {/* ── Avatar hero row ── */}
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
-              <div className={styles.avatarSection}>
-                <div className={styles.avatarCircle} onClick={() => fileInputRef.current?.click()}>
-                  {photoUrl
-                    ? <img src={photoUrl} alt="" className={styles.avatarCircleImg} />
-                    : <svg className={styles.avatarPlaceholderIcon} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
-                      </svg>
-                  }
-                  <div className={styles.avatarEditBadge}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <div className={styles.avatarHero}>
+                {/* Left: avatar circle */}
+                <div className={styles.avatarSection}>
+                  <div className={styles.avatarWrap} onClick={() => fileInputRef.current?.click()}>
+                    <div className={styles.avatarCircle}>
+                      {photoUrl
+                        ? <img src={photoUrl} alt="" className={styles.avatarCircleImg} />
+                        : <svg className={styles.avatarPlaceholderIcon} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                          </svg>
+                      }
+                    </div>
+                    <div className={styles.avatarEditBadge} aria-hidden="true">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </div>
                   </div>
+                  {photoUrl && (
+                    <button type="button" className={styles.avatarRemoveBtn} onClick={() => setPhotoUrl('')}>
+                      Видалити фото
+                    </button>
+                  )}
                 </div>
-                {photoUrl && (
-                  <button type="button" className={styles.avatarRemoveBtn} onClick={() => setPhotoUrl('')}>
-                    Видалити фото
-                  </button>
-                )}
-              </div>
 
-              <div className={styles.field}>
-                <label className={styles.fieldLabel}>КЛИЧКА</label>
-                <input
-                  className={styles.fieldInput}
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="—"
-                /></div>
-
-              <div className={styles.fieldRow}>
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel}>ВИД</label>
-                  <input
-                    className={styles.fieldInput}
-                    value={species}
-                    onChange={e => setSpecies(e.target.value)}
-                    placeholder="Кіт, Собака…"
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel}>ПОРОДА</label>
-                  <input
-                    className={styles.fieldInput}
-                    value={breed}
-                    onChange={e => setBreed(e.target.value)}
-                    placeholder="—"
-                  />
+                {/* Right: name + species + breed */}
+                <div className={styles.avatarFields}>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel}>КЛИЧКА</label>
+                    <input
+                      className={styles.fieldInput}
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="—"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel}>ВИД</label>
+                    <input
+                      className={styles.fieldInput}
+                      value={species}
+                      onChange={e => setSpecies(e.target.value)}
+                      placeholder="Кіт, Собака…"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel}>ПОРОДА</label>
+                    <input
+                      className={styles.fieldInput}
+                      value={breed}
+                      onChange={e => setBreed(e.target.value)}
+                      placeholder="—"
+                    />
+                  </div>
                 </div>
               </div>
 

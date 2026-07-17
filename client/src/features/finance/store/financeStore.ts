@@ -17,6 +17,7 @@ interface ApiTransaction {
   incomeCategory?: string | null
   tripMemoryId?: string | null
   spaceId?: string | null
+  subcategory?: string | null
 }
 
 const CACHE_KEY = 'hud-finance-v1'
@@ -47,6 +48,7 @@ function toApiBody(tx: Transaction): object {
     category: tx.category ?? '',
     date: tx.date.slice(0, 10),
     ...(tx.incomeCategory !== undefined ? { incomeCategory: tx.incomeCategory } : {}),
+    ...(tx.subcategory ? { subcategory: tx.subcategory } : {}),
   }
 }
 
@@ -63,6 +65,7 @@ function fromApi(raw: ApiTransaction): Transaction {
     createdAt: raw.createdAt,
     recurringId: raw.recurringId ?? null,
     tripMemoryId: raw.tripMemoryId ?? null,
+    subcategory: raw.subcategory ?? null,
   }
 }
 
@@ -77,7 +80,7 @@ interface FinanceState {
 
   fetchTransactions: (month?: string) => Promise<void>
   addTopup: (amount: number, description: string, incomeCategory?: string, spaceId?: string | null) => void
-  addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null) => void
+  addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null, subcategory?: string | null) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
   patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => void
@@ -139,7 +142,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       .catch(() => set({ syncStatus: 'error' }))
   },
 
-  addExpense: (amount, description, category, tripMemoryId, spaceId) => {
+  addExpense: (amount, description, category, tripMemoryId, spaceId, subcategory) => {
     const tx: Transaction = {
       id: crypto.randomUUID(),
       type: 'expense',
@@ -148,6 +151,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       category,
       date: new Date().toISOString(),
       tripMemoryId: tripMemoryId ?? null,
+      subcategory: subcategory ?? null,
     }
     set(s => {
       const transactions = [tx, ...s.transactions].slice(0, 200)

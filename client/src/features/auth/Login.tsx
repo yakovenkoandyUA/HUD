@@ -57,6 +57,7 @@ const LoginScreen: React.FC = () => {
           sprintTutorialShownCount: user.sprintTutorialShownCount ?? 0,
           weekdayLongPressShownCount: user.weekdayLongPressShownCount ?? 0,
           swipeDismissShownCount: user.swipeDismissShownCount ?? 0,
+          monthlySpendLimit: (user as { monthlySpendLimit?: number | null }).monthlySpendLimit ?? null,
           onboardingCompleted: (user as { onboardingCompleted?: boolean }).onboardingCompleted ?? true,
           mimirSeenHints: (user as { mimirSeenHints?: string[] }).mimirSeenHints ?? [],
         },

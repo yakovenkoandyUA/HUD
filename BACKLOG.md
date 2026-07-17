@@ -72,7 +72,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 **Екрани:**
 - `/` Dashboard — DaySummaryCard, HeroCard (sparkline), DayOverlay, FAB, CarHero (Three.js)
 - `/finance` — BalanceHero, TransactionList, ExpenseChart, GoalsList, RecurringPayments, ShoppingTracker, MonthlyReport (AI)
-- `/sprint` — tasks/routines/todos/lessons, WeekHeader (week/month toggle), WeekExpandedView, TrashBin, filter bottom sheet
+- `/sprint` — tasks/routines/todos/lessons, WeekHeader (week/month toggle), WeekExpandedView, TrashBin, filter bottom sheet; drag-to-reorder логіка → `hooks/useSprintDrag`, календарна навігація → `hooks/useSprintCalendar`
 - `/shopping` — список покупок з рецептів + manual
 - `/recipes` — сітка, фільтри, AI-генератор, «Що є вдома?» ingredient search
 - `/recipes/:id` — Складові/Приготування таби, step checklist, CookLog, wishlist
@@ -81,7 +81,8 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - `/memories` — таймлайн + сітка + Mapbox GL карта (globe projection, теми, 3D, маршрути, карусель пінів), "Цей день рік тому", статистика відстаней; МІСЦЕ через LocationSearch (Mapbox Search Box автокомпліт) або LocationMapPicker (тап на карті)
 - `/memories/:id` — фото, Canvas export → PNG/Web Share з мінікартою-бейджем (поставити обкладинкою — лише з галереї фото або EditMemoryModal, без накладання тексту); fixed bottomBar (фото/поділитись/нотатка/теги); trip-спогади: блок "ВИТРАТИ В ПОЇЗДЦІ" з підсумком і до 5 транзакцій (`tripMemoryId` на Transaction)
 - `/notes` — inline edit, пошук
-- `/profile` — MeTab (avatar, name, username, password, секція МЕДІА — toggles для movie/series/anime/game + книги "в розробці", СІМ'Я), WalletTab (Monobank, salaryDay, категорії pill-cloud + ВИТРАТИ/ПОПОВНЕННЯ таби + icon picker), PlanTab (кнопка "Підтримати проект" вгорі, promo strip виправлено, номер картки `4874 0700 1132 4330`), AdminTab; **ProfileDrawer:** Налаштування переміщено вниз + іконка шестерні, при `updateAvailable` — рядок оновлення під ним → `ChangelogSheet` (bottom sheet з журналом змін + кнопка встановлення); `client/src/shared/data/changelog.ts` — версійні нотатки (v1.1.0)
+- `/profile` — MeTab (avatar, name, username — тільки hero-картка), WalletTab, PlanTab, AdminTab; **ProfileDrawer:** Вигляд → Система → Модулі → Близькі → **Тариф** (→ `/profile?tab=plan`) → Адмін → **Акаунт** (→ `/profile/account`); при `updateAvailable` — рядок під Акаунтом → `ChangelogSheet`
+- `/profile/account` — **MeAccount**: Експорт даних (JSON), Юридична інформація (Terms/Privacy + checkbox підтвердження), Небезпечна зона (видалення акаунту з confirmation input)
 - `/f1` — NextRaceCard, LastRaceCard, RacePredictionCard, ChampionshipTable (Пілоти/Конструктори/МІЙ СЕЗОН), McLarenViewer (Three.js)
 - `/f1/live` — F1 Live Dashboard (OpenF1 polling)
 - `/f1/:round` — RaceDetail (CircuitStats, SessionSchedule, Weather, Podium)

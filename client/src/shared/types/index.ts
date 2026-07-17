@@ -35,6 +35,7 @@ export interface Transaction {
   recurringId?: string | null
   tripMemoryId?: string | null
   spaceId?: string | null
+  subcategory?: string | null
 }
 
 export interface SprintTask {

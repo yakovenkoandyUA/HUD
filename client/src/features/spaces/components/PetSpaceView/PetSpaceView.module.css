@@ -217,30 +217,43 @@
 .currencyPillOn { border-color: var(--space-color); color: var(--space-color); background: color-mix(in srgb, var(--space-color) 10%, var(--bg2)); }
 
 /* ── Avatar section (edit sheet) ── */
+.avatarHero {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 4px 0 2px;
+}
+
 .avatarSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 4px 0 2px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.avatarWrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .avatarCircle {
-  position: relative;
   width: 96px;
   height: 96px;
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid var(--border2);
   background: var(--surface2);
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   transition: border-color 0.15s;
 }
-.avatarCircle:active { border-color: var(--space-color); }
+.avatarWrap:active .avatarCircle { border-color: var(--space-color); }
 
 .avatarCircleImg {
   width: 100%;
@@ -253,10 +266,11 @@
 
 .avatarEditBadge {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 22px;
-  height: 22px;
+  bottom: 0;
+  right: 0;
+  transform: translate(25%, 25%);
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--bg2);
   border: 1.5px solid var(--border2);
@@ -264,6 +278,15 @@
   align-items: center;
   justify-content: center;
   color: var(--text2);
+  pointer-events: none;
+}
+
+.avatarFields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .avatarRemoveBtn {
