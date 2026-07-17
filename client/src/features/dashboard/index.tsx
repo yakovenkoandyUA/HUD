@@ -23,6 +23,7 @@ import { isRecurring, isRoutineDueOnDay } from '@/features/sprint/utils/sprint'
 import { usePullToRefresh } from '@/shared/hooks/usePullToRefresh'
 import { calcDailyBudget } from './helpers'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { authFetch } from '@/shared/services/api'
 
 import type { ExpenseCategory } from '@/shared/types'
 import SpacesStrip from './components/dashboard/SpacesStrip'
@@ -53,6 +54,8 @@ const Dashboard: React.FC = () => {
   const [addModalDefaultType, setAddModalDefaultType] = useState<'todo' | 'shopping'>('todo')
   const [weatherData, setWeatherData]   = useState<WeatherData | null>(null)
   const [weatherOpen, setWeatherOpen]   = useState(false)
+  const [upcomingTotal, setUpcomingTotal] = useState(0)
+  const [upcomingCount, setUpcomingCount] = useState(0)
 
   const fabRef     = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -64,6 +67,30 @@ const Dashboard: React.FC = () => {
     fetchNotes()
     if (recipes.length === 0) fetchRecipes()
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await authFetch('/api/recurring')
+        if (!res.ok || cancelled) return
+        const data = await res.json() as Array<{ amount: number; dayOfMonth: number; isActive: boolean; lastConfirmedMonth?: string }>
+        const currentDay   = new Date().getDate()
+        const currentMonth = new Date().toISOString().slice(0, 7)
+        const upcoming = data.filter(p =>
+          p.isActive &&
+          p.dayOfMonth >= currentDay &&
+          p.lastConfirmedMonth !== currentMonth
+        )
+        if (!cancelled) {
+          setUpcomingTotal(upcoming.reduce((s, p) => s + p.amount, 0))
+          setUpcomingCount(upcoming.length)
+        }
+      } catch { /* silent */ }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
   usePullToRefresh(contentRef, { onRefresh: fetchTransactions })
 
@@ -209,6 +236,8 @@ const Dashboard: React.FC = () => {
             monthlyBudget={monthlyBudget}
             thisMonthExpenses={thisMonthExpenses}
             lastMonthExpenses={lastMonthExpenses}
+            upcomingTotal={upcomingTotal}
+            upcomingCount={upcomingCount}
           />
         </div>
 

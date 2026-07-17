@@ -5,25 +5,32 @@ import styles from './HeroCard.module.css'
 /**
  * HeroCard
  * --------
- * Фінансова картка Dashboard: баланс місяця + stat strip.
+ * Фінансова картка Dashboard.
+ *
+ * З бюджетом:   full-width — баланс + progress bar + 3 стати (Сьогодні / Залишилось / % бюджету)
+ * Без бюджету:  30/70 split — ліво: баланс + сьогодні, право: SVG area chart (7 днів)
  *
  * Props:
- * @prop {number}        balance             — чистий баланс (топап − витрати)
- * @prop {number}        dailyBudget         — денний бюджет (грн)
- * @prop {number}        todaySpent          — витрачено сьогодні (грн)
- * @prop {number[]}      sparklineData       — витрати за 7 днів (oldest→newest)
- * @prop {number|null}   monthlyBudget       — місячний бюджет з профілю (null = не встановлено)
- * @prop {number}        thisMonthExpenses   — витрати за поточний календарний місяць
- * @prop {number}        lastMonthExpenses   — витрати за попередній календарний місяць
+ * @prop {number}      balance            — чистий баланс (топап − витрати)
+ * @prop {number}      dailyBudget        — денний бюджет (грн)
+ * @prop {number}      todaySpent         — витрачено сьогодні (грн)
+ * @prop {number[]}    sparklineData      — витрати за 7 днів (oldest→newest)
+ * @prop {number|null} monthlyBudget      — місячний бюджет (null = не задано)
+ * @prop {number}      thisMonthExpenses  — витрати за поточний календарний місяць
+ * @prop {number}      lastMonthExpenses  — витрати за попередній місяць
+ * @prop {number}      upcomingTotal      — сума активних майбутніх регулярних платежів
+ * @prop {number}      upcomingCount      — кількість таких платежів
  */
 interface HeroCardProps {
-  balance:            number
-  dailyBudget:        number
-  todaySpent:         number
-  sparklineData?:     number[]
-  monthlyBudget?:     number | null
-  thisMonthExpenses:  number
-  lastMonthExpenses:  number
+  balance:           number
+  dailyBudget:       number
+  todaySpent:        number
+  sparklineData?:    number[]
+  monthlyBudget?:    number | null
+  thisMonthExpenses: number
+  lastMonthExpenses: number
+  upcomingTotal:     number
+  upcomingCount:     number
 }
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
@@ -37,13 +44,25 @@ function getSparkDaysShort(): string[] {
   })
 }
 
-function daysInCurrentMonth(): number {
-  const now = new Date()
-  return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-}
+const W = 100
+const H = 44
+const PAD_X = 2
+const PAD_Y = 4
 
-function dayOfMonth(): number {
-  return new Date().getDate()
+function buildSparkPath(data: number[]): { line: string; area: string } {
+  const max = Math.max(...data, 1)
+  const pts = data.map((v, i) => ({
+    x: PAD_X + (i / (data.length - 1)) * (W - PAD_X * 2),
+    y: H - PAD_Y - (v / max) * (H - PAD_Y * 2),
+  }))
+
+  let line = `M ${pts[0].x} ${pts[0].y}`
+  for (let i = 1; i < pts.length; i++) {
+    const cpx = (pts[i - 1].x + pts[i].x) / 2
+    line += ` C ${cpx} ${pts[i - 1].y} ${cpx} ${pts[i].y} ${pts[i].x} ${pts[i].y}`
+  }
+  const area = `${line} L ${pts[pts.length - 1].x} ${H} L ${pts[0].x} ${H} Z`
+  return { line, area }
 }
 
 const HeroCard: React.FC<HeroCardProps> = ({
@@ -53,7 +72,6 @@ const HeroCard: React.FC<HeroCardProps> = ({
   sparklineData,
   monthlyBudget,
   thisMonthExpenses,
-  lastMonthExpenses,
 }) => {
   const [displayed, setDisplayed] = useState(0)
   const hasAnimated = useRef(false)
@@ -83,105 +101,136 @@ const HeroCard: React.FC<HeroCardProps> = ({
     }
   }, [balance])
 
-  const hasBudget = monthlyBudget != null && monthlyBudget > 0
-
-  // Budget progress
-  const budgetRemaining = hasBudget ? (monthlyBudget! - thisMonthExpenses) : 0
+  const hasBudget      = monthlyBudget != null && monthlyBudget > 0
+  const budgetRemaining = hasBudget ? monthlyBudget! - thisMonthExpenses : 0
   const budgetProgress  = hasBudget ? Math.min(thisMonthExpenses / monthlyBudget!, 1) : 0
   const budgetOver      = hasBudget && thisMonthExpenses > monthlyBudget!
+  const budgetPct       = Math.round(budgetProgress * 100)
 
-  // vs last month
-  const vsLastMonth = (() => {
-    if (lastMonthExpenses === 0) return null
-    const diff = thisMonthExpenses - lastMonthExpenses
-    const pct  = Math.round(Math.abs(diff) / lastMonthExpenses * 100)
-    return { pct, up: diff > 0, same: diff === 0 }
-  })()
-
-  // Forecast
-  const day     = dayOfMonth()
-  const daysIn  = daysInCurrentMonth()
-  const forecast = day > 0 && thisMonthExpenses > 0
-    ? Math.round((thisMonthExpenses / day) * daysIn)
-    : null
-
-  const hasData   = sparklineData && sparklineData.length === 7
-  const peak = (() => {
-    if (!hasData || !sparklineData!.some(v => v > 0)) return null
-    const max = Math.max(...sparklineData!)
-    if (max === 0) return null
-    const idx  = sparklineData!.lastIndexOf(max)
-    const days = getSparkDaysShort()
-    return { amount: fmt(max), day: days[idx] }
-  })()
-
+  const todayOver = dailyBudget > 0 && todaySpent > dailyBudget
   const todayValue = dailyBudget > 0
     ? `${fmt(todaySpent)} / ${fmt(dailyBudget)}`
     : `${fmt(todaySpent)}`
 
-  // Stat strip: always Сьогодні first, then budget-aware items
-  const stats = [
-    { value: `${todayValue} ₴`, label: 'Сьогодні', over: dailyBudget > 0 && todaySpent > dailyBudget },
-    ...(hasBudget
-      ? [
-          {
-            value: budgetOver
-              ? `−${fmt(Math.abs(budgetRemaining))} ₴`
-              : `${fmt(budgetRemaining)} ₴`,
-            label: budgetOver ? 'Перевищено' : 'Залишилось',
-            over: budgetOver,
-          },
-        ]
-      : forecast != null
-        ? [{ value: `${fmt(forecast)} ₴`, label: 'Прогноз', accent: true }]
-        : peak
-          ? [{ value: `${peak.amount} ₴`, label: 'Пік', sub: peak.day, accent: true }]
-          : []
-    ),
-    ...(vsLastMonth != null
-      ? [{
-          value: vsLastMonth.same
-            ? '= 0%'
-            : `${vsLastMonth.up ? '+' : '−'}${vsLastMonth.pct}%`,
-          label: 'vs мин. міс.',
-          over:  vsLastMonth.up,
-          accent: !vsLastMonth.up,
-        }]
-      : []
-    ),
-  ]
+  // ── З бюджетом: full-width layout ───────────────────────────
+  if (hasBudget) {
+    const stats = [
+      { value: `${todayValue} ₴`, label: 'Сьогодні', over: todayOver },
+      {
+        value: budgetOver ? `−${fmt(Math.abs(budgetRemaining))} ₴` : `${fmt(budgetRemaining)} ₴`,
+        label: budgetOver ? 'Перевищено' : 'Залишилось',
+        over:  budgetOver,
+      },
+      { value: `${budgetPct}%`, label: 'Бюджету', over: budgetOver },
+    ]
 
-  return (
-    <div className={styles.balanceCard}>
-      <div className={styles.balanceTop}>
-        <span className={styles.balanceAmount}>
-          {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
-        </span>
-        <span className={styles.balanceSubLabel}>за цей місяць</span>
-      </div>
+    return (
+      <div className={styles.balanceCard}>
+        <div className={styles.balanceTop}>
+          <span className={styles.balanceAmount}>
+            {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
+          </span>
+          <span className={styles.balanceSubLabel}>за цей місяць</span>
+        </div>
 
-      {hasBudget && (
         <div className={styles.budgetBar}>
           <div
             className={`${styles.budgetFill} ${budgetOver ? styles.budgetFillOver : ''}`}
             style={{ width: `${budgetProgress * 100}%` }}
           />
         </div>
-      )}
 
-      {stats.length > 0 && (
         <div className={styles.statStrip}>
           {stats.map((s, i) => (
             <div key={i} className={styles.statItem}>
-              <span className={`${styles.statValue} ${s.accent ? styles.statValueAccent : ''} ${'over' in s && s.over ? styles.statValueOver : ''}`}>
+              <span className={`${styles.statValue} ${s.over ? styles.statValueOver : ''}`}>
                 {s.value}
-                {'sub' in s && s.sub && <span className={styles.statSub}> · {s.sub}</span>}
               </span>
               <span className={styles.statLabel}>{s.label}</span>
             </div>
           ))}
         </div>
-      )}
+      </div>
+    )
+  }
+
+  // ── Без бюджету: 30/70 split з area chart ───────────────────
+  const data     = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
+  const dayLabels = getSparkDaysShort()
+  const hasAnyData = data.some(v => v > 0)
+  const { line, area } = buildSparkPath(data)
+
+  return (
+    <div className={styles.splitCard}>
+      {/* Left 30% — баланс + сьогодні */}
+      <div className={styles.splitLeft}>
+        <div>
+          <span className={styles.balanceAmount}>
+            {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
+          </span>
+          <div className={styles.balanceSubLabel}>цей місяць</div>
+        </div>
+        <div className={styles.splitToday}>
+          <span className={`${styles.splitTodayValue} ${todayOver ? styles.statValueOver : ''}`}>
+            {fmt(todaySpent)} ₴
+          </span>
+          <span className={styles.splitTodayLabel}>сьогодні</span>
+        </div>
+      </div>
+
+      {/* Right 70% — area chart */}
+      <div className={styles.splitRight}>
+        <svg
+          viewBox={`0 0 ${W} ${H + 10}`}
+          preserveAspectRatio="none"
+          className={styles.sparkSvg}
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+
+          {hasAnyData && (
+            <>
+              <path d={area} fill="url(#sparkGrad)" />
+              <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </>
+          )}
+
+          {/* Day labels */}
+          {dayLabels.map((label, i) => {
+            const x = PAD_X + (i / (dayLabels.length - 1)) * (W - PAD_X * 2)
+            const isToday = i === 6
+            return (
+              <text
+                key={i}
+                x={x}
+                y={H + 9}
+                textAnchor="middle"
+                fontSize="5"
+                fontFamily="var(--font-ui)"
+                fill={isToday ? 'var(--accent)' : 'var(--text3)'}
+                fontWeight={isToday ? '700' : '400'}
+              >
+                {label}
+              </text>
+            )
+          })}
+
+          {/* Dot on last point */}
+          {hasAnyData && (() => {
+            const lastX = PAD_X + (W - PAD_X * 2)
+            const max   = Math.max(...data, 1)
+            const lastY = H - PAD_Y - (data[6] / max) * (H - PAD_Y * 2)
+            return (
+              <circle cx={lastX} cy={lastY} r="1.8" fill="var(--accent)" />
+            )
+          })()}
+        </svg>
+      </div>
     </div>
   )
 }

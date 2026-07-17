@@ -128,7 +128,7 @@
 
 /* Shop: large coloured number */
 .cellValShop {
-  color: var(--cat-shop);
+  color: var(--text);
   font-size: 22px;
   line-height: 1;
 }

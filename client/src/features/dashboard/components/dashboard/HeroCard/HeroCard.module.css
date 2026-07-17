@@ -42,6 +42,89 @@
   color: var(--text2);
 }
 
+/* ── Split layout (без бюджету) ─────────────────────────────── */
+
+.splitCard {
+  display: flex;
+  flex-direction: row;
+  background: var(--accent-soft);
+  border-top: 1px solid var(--tint-accent-lg);
+  border-bottom: 1px solid var(--tint-accent-lg);
+  overflow: hidden;
+}
+
+.splitLeft {
+  width: 38%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px 12px 16px;
+  border-right: 1px solid var(--tint-accent-lg);
+}
+
+.splitToday {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.splitTodayValue {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.splitTodayLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+  line-height: 1;
+}
+
+.splitRight {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  padding: 8px 10px 4px 6px;
+}
+
+.sparkSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* ── Budget progress bar ────────────────────────────────────── */
+
+.budgetBar {
+  height: 3px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0 0 2px;
+}
+
+.budgetFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.budgetFillOver {
+  background: #ef4444;
+}
+
 /* ── Stat strip ─────────────────────────────────────────────── */
 
 .statStrip {
@@ -96,10 +179,12 @@
 
 /* ── Noir: match surface background like other blocks ───────── */
 
-:global([data-theme='noir']) .balanceCard {
+:global([data-theme='noir']) .balanceCard,
+:global([data-theme='noir']) .splitCard {
   background: var(--surface);
   border-color: var(--border);
 }
+:global([data-theme='noir']) .splitLeft { border-color: var(--border); }
 :global([data-theme='noir']) .statStrip,
 :global([data-theme='noir']) .statItem + .statItem { border-color: var(--border); }
 :global([data-theme='noir']) .balanceCurrency    { color: var(--gold); }
