@@ -31,28 +31,23 @@ const F1_2026_RACES: Array<{ name: string; date: string; flag: string }> = [
   { name: 'Abu Dhabi GP',           flag: '🇦🇪', date: '2026-12-06' },
 ]
 
-// Returns the race happening this weekend (Mon–Sun window), if any
-function getRaceThisWeekend(): { name: string; flag: string } | null {
+// Returns the race happening this Sunday (called on Monday morning), if any.
+// "This Sunday" = 6 days after Monday = the same calendar week's Sunday.
+function getRaceThisSunday(): { name: string; flag: string } | null {
   const now = new Date()
-  // Start of current Monday
-  const monday = new Date(now)
-  monday.setHours(0, 0, 0, 0)
-  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
-  // End of current Sunday
-  const sunday = new Date(monday)
-  sunday.setDate(monday.getDate() + 6)
-  sunday.setHours(23, 59, 59, 999)
+  // Find next Sunday: from today (Monday) it's always +6 days
+  const sunday = new Date(now)
+  sunday.setHours(0, 0, 0, 0)
+  // getDay(): 0=Sun,1=Mon,...6=Sat — from Monday (+1) to Sunday is +6 days
+  const daysUntilSunday = (7 - now.getDay()) % 7 || 7
+  sunday.setDate(now.getDate() + daysUntilSunday)
+  const sundayStr = sunday.toISOString().slice(0, 10)
 
-  return (
-    F1_2026_RACES.find((race) => {
-      const d = new Date(race.date)
-      return d >= monday && d <= sunday
-    }) ?? null
-  )
+  return F1_2026_RACES.find(race => race.date === sundayStr) ?? null
 }
 
 export async function sendRaceWeekendAlert(): Promise<void> {
-  const race = getRaceThisWeekend()
+  const race = getRaceThisSunday()
   if (!race) return
 
   const subscriptions = await PushSubscription.find({}).lean()
@@ -181,11 +176,12 @@ export function startF1Scheduler(): void {
     return
   }
 
-  // F1 race weekend alert — every Sunday at 08:00 Kyiv
-  cron.schedule('0 8 * * 0', () => {
+  // F1 race week alert — every Monday at 08:00 Kyiv
+  // Checks if this week's Sunday has a race; if yes → push early in the week
+  cron.schedule('0 8 * * 1', () => {
     sendRaceWeekendAlert().catch(console.error)
   }, { timezone: 'Europe/Kyiv' })
-  console.log('🏎 F1 race weekend scheduler started (Sun 08:00 Kyiv time)')
+  console.log('🏎 F1 race week scheduler started (Mon 08:00 Kyiv time)')
 
   // Task/quest reminders — every 5 minutes, precise to dueDate+dueTime
   cron.schedule('*/5 * * * *', () => {
