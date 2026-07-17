@@ -22,8 +22,9 @@ const UPDATES: Record<string, { icon: string; color: string; order: number }> = 
   'Підписки':   { icon: 'ti-repeat',           color: '#6366F1', order: 12 },
   'Навчання':   { icon: 'ti-book',             color: '#0369A1', order: 13 },
   'Подарунки':  { icon: 'ti-gift',             color: '#FB923C', order: 14 },
-  'Тварини':    { icon: 'ti-paw',              color: '#84CC16', order: 15 },
-  'Інше':       { icon: 'ti-dots',             color: '#9CA3AF', order: 16 },
+  'Тварини':        { icon: 'ti-paw',              color: '#84CC16', order: 15 },
+  'Благодійність':  { icon: 'ti-heart-handshake', color: '#F43F5E', order: 16 },
+  'Інше':           { icon: 'ti-dots',             color: '#9CA3AF', order: 17 },
 }
 
 async function run(): Promise<void> {
