@@ -18,7 +18,7 @@ const UPDATES: Record<string, { icon: string; color: string; order: number }> = 
   'Одяг':       { icon: 'ti-hanger',           color: '#F472B6', order: 8  },
   'Транспорт':  { icon: 'ti-car',              color: '#3B82F6', order: 9  },
   'Подорожі':   { icon: 'ti-plane',            color: '#38BDF8', order: 10 },
-  'Розваги':    { icon: 'ti-device-gamepad-2', color: '#F97316', order: 11 },
+  'Розваги':    { icon: 'ti-device-gamepad-2', color: '#EC4899', order: 11 },
   'Підписки':   { icon: 'ti-repeat',           color: '#6366F1', order: 12 },
   'Навчання':   { icon: 'ti-book',             color: '#0369A1', order: 13 },
   'Подарунки':  { icon: 'ti-gift',             color: '#FB923C', order: 14 },

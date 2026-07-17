@@ -13,7 +13,7 @@ const BASE_CATEGORIES = [
   { name: 'Одяг',       icon: 'ti-hanger',           color: '#F472B6', order: 8  },
   { name: 'Транспорт',  icon: 'ti-car',              color: '#3B82F6', order: 9  },
   { name: 'Подорожі',   icon: 'ti-plane',            color: '#38BDF8', order: 10 },
-  { name: 'Розваги',    icon: 'ti-device-gamepad-2', color: '#F97316', order: 11 },
+  { name: 'Розваги',    icon: 'ti-device-gamepad-2', color: '#EC4899', order: 11 },
   { name: 'Підписки',   icon: 'ti-repeat',           color: '#6366F1', order: 12 },
   { name: 'Навчання',   icon: 'ti-book',             color: '#0369A1', order: 13 },
   { name: 'Подарунки',  icon: 'ti-gift',             color: '#FB923C', order: 14 },
