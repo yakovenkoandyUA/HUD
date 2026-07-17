@@ -34,6 +34,14 @@ export interface HomeProfile {
   photoUrl:      string
 }
 
+export interface PetFoodItem {
+  id:       string
+  name:     string
+  brand:    string
+  reaction: 'yes' | 'maybe' | 'no'
+  notes:    string
+}
+
 export interface PetProfile {
   name:           string
   species:        string
@@ -43,6 +51,7 @@ export interface PetProfile {
   photoUrl:       string
   chipNumber:     string
   passportNumber: string
+  foodLog:        PetFoodItem[]
 }
 
 export interface TripProfile {

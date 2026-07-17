@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { usePetStore, type PetEvent, type PetEventInput, type PetEventType } from '../../store/petStore'
-import type { PetProfile } from '@/features/memories/store/spacesStore'
+import type { PetProfile, PetFoodItem } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
@@ -983,6 +983,15 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onP
         )
       })()}
 
+      {/* ── Food log ── */}
+      <FoodLog
+        foodLog={profile?.foodLog ?? []}
+        color={color}
+        onSave={async (foodLog) => {
+          await handleProfileSave({ foodLog })
+        }}
+      />
+
       {/* ── Events list ── */}
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>ХРОНОЛОГІЯ</h3>
@@ -1022,6 +1031,167 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onP
         onSave={handleProfileSave}
         color={color}
       />
+    </div>
+  )
+}
+
+// ── Food log ──────────────────────────────────────────────────────────────
+
+const REACTION_ICONS = {
+  yes:   { label: 'Їсть',      color: '#2ecc71' },
+  maybe: { label: 'Так собі',  color: '#f39c12' },
+  no:    { label: 'Не їсть',   color: '#e74c3c' },
+} as const
+
+function genId() { return Math.random().toString(36).slice(2, 10) }
+
+interface FoodLogProps {
+  foodLog: PetFoodItem[]
+  color:   string
+  onSave:  (log: PetFoodItem[]) => Promise<void>
+}
+
+const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
+  const [open, setOpen]           = useState(false)
+  const [addName, setAddName]     = useState('')
+  const [addBrand, setAddBrand]   = useState('')
+  const [addReact, setAddReact]   = useState<'yes' | 'maybe' | 'no'>('yes')
+  const [saving, setSaving]       = useState(false)
+  const [filter, setFilter]       = useState<'all' | 'yes' | 'maybe' | 'no'>('all')
+
+  const colorVar = { '--space-color': color } as React.CSSProperties
+
+  const handleAdd = async () => {
+    if (!addName.trim()) return
+    setSaving(true)
+    const item: PetFoodItem = { id: genId(), name: addName.trim(), brand: addBrand.trim(), reaction: addReact, notes: '' }
+    try { await onSave([...foodLog, item]) } finally { setSaving(false) }
+    setAddName(''); setAddBrand(''); setAddReact('yes')
+  }
+
+  const handleReactionChange = async (id: string, reaction: 'yes' | 'maybe' | 'no') => {
+    await onSave(foodLog.map(f => f.id === id ? { ...f, reaction } : f))
+  }
+
+  const handleDelete = async (id: string) => {
+    await onSave(foodLog.filter(f => f.id !== id))
+  }
+
+  const visible = filter === 'all' ? foodLog : foodLog.filter(f => f.reaction === filter)
+
+  return (
+    <div className={styles.section} style={colorVar}>
+      <div className={styles.foodHeader}>
+        <h3 className={styles.sectionTitle}>РАЦІОН</h3>
+        <div className={styles.foodFilters}>
+          {(['all', 'yes', 'maybe', 'no'] as const).map(f => (
+            <button
+              key={f}
+              type="button"
+              className={`${styles.foodFilterBtn} ${filter === f ? styles.foodFilterBtnOn : ''}`}
+              onClick={() => setFilter(f)}
+              style={filter === f && f !== 'all' ? { color: REACTION_ICONS[f]?.color, borderColor: REACTION_ICONS[f]?.color } : undefined}
+            >
+              {f === 'all' ? 'Всі' : REACTION_ICONS[f].label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {visible.length > 0 && (
+        <div className={styles.foodList}>
+          {visible.map(item => (
+            <div key={item.id} className={styles.foodRow}>
+              <div className={styles.foodDot} style={{ background: REACTION_ICONS[item.reaction].color }} />
+              <div className={styles.foodMain}>
+                <span className={styles.foodName}>{item.name}</span>
+                {item.brand && <span className={styles.foodBrand}>{item.brand}</span>}
+              </div>
+              <div className={styles.foodActions}>
+                {(['yes', 'maybe', 'no'] as const).map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    className={`${styles.foodReactBtn} ${item.reaction === r ? styles.foodReactBtnOn : ''}`}
+                    style={item.reaction === r ? { background: REACTION_ICONS[r].color + '22', borderColor: REACTION_ICONS[r].color, color: REACTION_ICONS[r].color } : undefined}
+                    onClick={() => handleReactionChange(item.id, r)}
+                    title={REACTION_ICONS[r].label}
+                  >
+                    {r === 'yes' ? (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                    ) : r === 'maybe' ? (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14"/></svg>
+                    ) : (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    )}
+                  </button>
+                ))}
+                <button type="button" className={styles.foodDeleteBtn} onClick={() => handleDelete(item.id)}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {visible.length === 0 && filter !== 'all' && (
+        <p className={styles.foodEmpty}>Немає позицій у цій категорії</p>
+      )}
+      {foodLog.length === 0 && filter === 'all' && (
+        <p className={styles.foodEmpty}>Додай перший корм щоб відстежувати раціон Фібі</p>
+      )}
+
+      <div className={`${styles.foodAddRow} ${open ? styles.foodAddRowOpen : ''}`}>
+        {open ? (
+          <>
+            <input
+              className={styles.foodInput}
+              placeholder="Назва корму *"
+              value={addName}
+              onChange={e => setAddName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
+              autoFocus
+            />
+            <input
+              className={styles.foodInput}
+              placeholder="Бренд (необов'язково)"
+              value={addBrand}
+              onChange={e => setAddBrand(e.target.value)}
+            />
+            <div className={styles.foodReactRow}>
+              {(['yes', 'maybe', 'no'] as const).map(r => (
+                <button
+                  key={r}
+                  type="button"
+                  className={`${styles.foodReactChoice} ${addReact === r ? styles.foodReactChoiceOn : ''}`}
+                  style={addReact === r ? { background: REACTION_ICONS[r].color + '20', borderColor: REACTION_ICONS[r].color, color: REACTION_ICONS[r].color } : undefined}
+                  onClick={() => setAddReact(r)}
+                >
+                  {REACTION_ICONS[r].label}
+                </button>
+              ))}
+            </div>
+            <div className={styles.foodAddBtns}>
+              <button type="button" className={styles.foodCancelBtn} onClick={() => { setOpen(false); setAddName(''); setAddBrand('') }}>Скасувати</button>
+              <button
+                type="button"
+                className={styles.foodSaveBtn}
+                style={{ background: color }}
+                onClick={handleAdd}
+                disabled={!addName.trim() || saving}
+              >
+                {saving ? '…' : 'Додати'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <button type="button" className={styles.foodOpenBtn} onClick={() => setOpen(true)}>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M7 2v10M2 7h10"/></svg>
+            Додати корм
+          </button>
+        )}
+      </div>
     </div>
   )
 }

@@ -22,9 +22,9 @@ export async function updatePetProfile(req: Request, res: Response): Promise<voi
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
     if (space.type !== 'pet') { res.status(400).json({ error: 'Not a pet space' }); return }
 
-    const allowed = ['name', 'species', 'breed', 'birthDate', 'weight', 'photoUrl', 'chipNumber', 'passportNumber'] as const
+    const allowed = ['name', 'species', 'breed', 'birthDate', 'weight', 'photoUrl', 'chipNumber', 'passportNumber', 'foodLog'] as const
     if (!space.petProfile) {
-      space.petProfile = { name: '', species: '', breed: '', birthDate: null, weight: null, photoUrl: '', chipNumber: '', passportNumber: '' }
+      space.petProfile = { name: '', species: '', breed: '', birthDate: null, weight: null, photoUrl: '', chipNumber: '', passportNumber: '', foodLog: [] }
     }
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (space.petProfile as unknown as Record<string, unknown>)[key] = req.body[key]

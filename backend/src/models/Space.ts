@@ -30,6 +30,14 @@ export interface IHomeProfile {
   photoUrl:      string
 }
 
+export interface IPetFoodItem {
+  id:        string
+  name:      string
+  brand:     string
+  reaction:  'yes' | 'maybe' | 'no'
+  notes:     string
+}
+
 export interface IPetProfile {
   name:           string
   species:        string
@@ -39,6 +47,7 @@ export interface IPetProfile {
   photoUrl:       string
   chipNumber:     string
   passportNumber: string
+  foodLog:        IPetFoodItem[]
 }
 
 export interface ITripProfile {
@@ -97,6 +106,14 @@ const homeProfileSchema = new Schema<IHomeProfile>({
   photoUrl:      { type: String, default: '' },
 }, { _id: false })
 
+const petFoodItemSchema = new Schema<IPetFoodItem>({
+  id:       { type: String, default: () => new (require('mongoose').Types.ObjectId)().toHexString() },
+  name:     { type: String, default: '' },
+  brand:    { type: String, default: '' },
+  reaction: { type: String, enum: ['yes', 'maybe', 'no'], default: 'yes' },
+  notes:    { type: String, default: '' },
+}, { _id: false })
+
 const petProfileSchema = new Schema<IPetProfile>({
   name:           { type: String, default: '' },
   species:        { type: String, default: '' },
@@ -106,6 +123,7 @@ const petProfileSchema = new Schema<IPetProfile>({
   photoUrl:       { type: String, default: '' },
   chipNumber:     { type: String, default: '' },
   passportNumber: { type: String, default: '' },
+  foodLog:        { type: [petFoodItemSchema], default: [] },
 }, { _id: false })
 
 const tripProfileSchema = new Schema<ITripProfile>({
