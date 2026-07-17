@@ -136,8 +136,8 @@ const Finance: React.FC = () => {
     showToast(`+${amount} ₴ додано`, 'success')
   }
 
-  const handleExpense = (amount: number, description: string, category?: string, spaceId?: string | null) => {
-    addExpense(amount, description, category, null, spaceId)
+  const handleExpense = (amount: number, description: string, category?: string, spaceId?: string | null, subcategory?: string | null) => {
+    addExpense(amount, description, category, null, spaceId, subcategory)
     useAchievementsStore.getState().unlock('first-transaction')
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')
@@ -175,6 +175,7 @@ const Finance: React.FC = () => {
 					totalTopup={totalTopup}
 					avgPerDay={avgPerDay}
 					daysLeft={daysLeft}
+					daysElapsed={daysElapsed}
 					todaySpent={todaySpent}
 				/>
 

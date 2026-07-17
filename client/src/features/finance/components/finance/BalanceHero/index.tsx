@@ -17,6 +17,7 @@ import styles from './BalanceHero.module.css'
  * @prop {number}  totalTopup   — поповнення за бюджетний період
  * @prop {number}  avgPerDay    — середнє витрат на день
  * @prop {number}  daysLeft     — днів до наступного поповнення
+ * @prop {number}  daysElapsed  — днів минуло з початку бюджетного періоду
  * @prop {number}  todaySpent   — витрачено сьогодні
  */
 interface BalanceHeroProps {
@@ -26,6 +27,7 @@ interface BalanceHeroProps {
   totalTopup: number
   avgPerDay: number
   daysLeft: number
+  daysElapsed: number
   todaySpent: number
 }
 
@@ -36,6 +38,7 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   totalTopup,
   avgPerDay,
   daysLeft,
+  daysElapsed,
   todaySpent,
 }) => {
   const { checkToday } = useStreakStore()
@@ -47,7 +50,9 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   const progressPct = dailyBudget > 0 ? Math.min(100, Math.round((todaySpent / dailyBudget) * 100)) : 0
   const progressColor: 'red' | 'green' = todaySpent > dailyBudget ? 'red' : 'green'
   const delta = dailyBudget - todaySpent
-  const projectedBalance = balance - dailyBudget * daysLeft
+  // скільки заощаджено/перевитрачено відносно норми за минулі дні
+  const normSpend = daysElapsed * dailyBudget
+  const saved = normSpend - monthSpent
 
   return (
     <div className={styles.hero}>
@@ -78,7 +83,7 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
         <div className={styles.stat}>
           <span className={styles.statLabel}>Ср./день</span>
           <span className={`${styles.statValue} ${avgPerDay <= dailyBudget ? styles.neutral : styles.neg}`}>
-            {fmt(avgPerDay)}
+            {fmt(avgPerDay)} ₴
           </span>
         </div>
         <div className={styles.stat}>
@@ -87,11 +92,11 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
         </div>
       </div>
 
-      {daysLeft > 0 && (
+      {daysElapsed > 0 && dailyBudget > 0 && (
         <div className={styles.forecast}>
-          {projectedBalance > 0
-            ? <>За нормою залишиться{' '}<span className={styles.forecastPos}>~{fmt(projectedBalance)} ₴</span></>
-            : <>За нормою не вистачить{' '}<span className={styles.forecastNeg}>~{fmt(Math.abs(projectedBalance))} ₴</span></>
+          {saved >= 0
+            ? <>Заощадив відносно норми{' '}<span className={styles.forecastPos}>+{fmt(saved)} ₴</span></>
+            : <>Перевитратив відносно норми{' '}<span className={styles.forecastNeg}>−{fmt(Math.abs(saved))} ₴</span></>
           }
         </div>
       )}
