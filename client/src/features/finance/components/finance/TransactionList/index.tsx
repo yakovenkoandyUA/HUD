@@ -370,7 +370,16 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
       <div className={`${styles.transactionList} ${isAnimating ? styles.fadeOut : styles.fadeIn}`}>
       {displayedList.length === 0 ? (
         <div className={styles.emptyState}>
-          <img src="/mimir/mimir-empty-finance.png" alt="" className={styles.emptyImg} draggable={false} />
+          <div className={styles.emptyImgWrap}>
+            <img src="/mimir/mimir-empty-finance.png" alt="" className={styles.emptyImg} draggable={false} />
+            {/* Floating coin particles */}
+            {[0,1,2,3,4].map(i => (
+              <svg key={i} className={`${styles.coin} ${styles[`coin${i}` as keyof typeof styles]}`} width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="6.5" fill="#C9A227" stroke="#E8C040" strokeWidth="0.6" />
+                <text x="7" y="10.5" textAnchor="middle" fontSize="7" fontWeight="700" fill="#6B4E0A" fontFamily="sans-serif">₴</text>
+              </svg>
+            ))}
+          </div>
           <p className={styles.emptyText}>Транзакцій немає</p>
         </div>
       ) : (
