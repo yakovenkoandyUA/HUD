@@ -244,6 +244,11 @@ const SpaceDetailScreen: React.FC = () => {
   const [editSaving, setEditSaving]               = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  // ── Budget suggest ──
+  const [budgetSuggestDismissed, setBudgetSuggestDismissed] = useState(
+    () => !!localStorage.getItem(`budget-suggest-dismissed-${spaceId}`)
+  )
+
   // ── Members ──
   const [memberInput, setMemberInput]   = useState('')
   const [addingMember, setAddingMember] = useState(false)
@@ -456,6 +461,21 @@ const SpaceDetailScreen: React.FC = () => {
     return () => { cancelled = true }
   }
 
+  const handleAcceptBudgetSuggestion = async (suggested: number) => {
+    if (!space) return
+    try {
+      await updateSpace(space.id, { budget: suggested, budgetCurrency: space.budgetCurrency ?? 'UAH' })
+      showToast(`Бюджет ₴${suggested} встановлено`, 'success')
+    } catch {
+      showToast('Помилка збереження', 'error')
+    }
+  }
+
+  const handleDismissBudgetSuggest = () => {
+    localStorage.setItem(`budget-suggest-dismissed-${spaceId}`, '1')
+    setBudgetSuggestDismissed(true)
+  }
+
   const handleDelete = async () => {
     if (!space) return
     await deleteSpace(space.id)
@@ -609,6 +629,24 @@ const SpaceDetailScreen: React.FC = () => {
           )
         }
         if (spent > 0) {
+          const expenses    = spaceTxs.filter(t => t.type === 'expense')
+          const showSuggest = !budgetSuggestDismissed && expenses.length >= 20
+          let suggested: number | null = null
+          if (showSuggest) {
+            const dates    = expenses.map(t => new Date(t.date).getTime()).sort((a, b) => a - b)
+            const spanDays = Math.max(1, (dates[dates.length - 1] - dates[0]) / 86_400_000)
+            const perMonth = (spent / spanDays) * 30
+            const step     = perMonth >= 500 ? 100 : 50
+            suggested      = Math.ceil(perMonth / step) * step
+          }
+          const months = (() => {
+            if (!showSuggest) return ''
+            const expenses2 = spaceTxs.filter(t => t.type === 'expense')
+            const dates2    = expenses2.map(t => new Date(t.date).getTime()).sort((a, b) => a - b)
+            const spanDays2 = (dates2[dates2.length - 1] - dates2[0]) / 86_400_000
+            const m         = Math.round(spanDays2 / 30)
+            return m <= 1 ? 'місяць' : `${m} місяці`
+          })()
           return (
             <div className={styles.budgetBar} style={colorVar}>
               <div className={styles.budgetRow}>
@@ -617,6 +655,30 @@ const SpaceDetailScreen: React.FC = () => {
                   {sym}{formatTxAmount(spent)}
                 </span>
               </div>
+              {showSuggest && suggested != null && (
+                <div className={styles.budgetSuggest}>
+                  <p className={styles.budgetSuggestText}>
+                    За {months} ти витратив {sym}{formatTxAmount(spent)} — виходить ~{sym}{formatTxAmount(suggested)}/міс. Встановити як бюджет?
+                  </p>
+                  <div className={styles.budgetSuggestBtns}>
+                    <button
+                      type="button"
+                      className={styles.budgetSuggestAccept}
+                      style={colorVar}
+                      onClick={() => handleAcceptBudgetSuggestion(suggested!)}
+                    >
+                      Встановити {sym}{formatTxAmount(suggested)}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.budgetSuggestDismiss}
+                      onClick={handleDismissBudgetSuggest}
+                    >
+                      Пізніше
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )
         }

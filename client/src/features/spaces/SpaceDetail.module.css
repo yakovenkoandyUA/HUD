@@ -290,6 +290,57 @@
   letter-spacing: 0.04em;
 }
 
+/* ── Budget suggestion card ── */
+.budgetSuggest {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 25%, var(--border));
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 6%, var(--surface));
+}
+
+.budgetSuggestText {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+.budgetSuggestBtns {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.budgetSuggestAccept {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: none;
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 40%, transparent);
+  color: var(--space-color, var(--accent));
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.budgetSuggestAccept:active { opacity: 0.7; }
+
+.budgetSuggestDismiss {
+  padding: 6px 10px;
+  border-radius: 7px;
+  border: none;
+  background: none;
+  color: var(--text3);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.budgetSuggestDismiss:hover { color: var(--text2); }
+
 /* ── Quick actions ── */
 .actions {
   display: grid;
