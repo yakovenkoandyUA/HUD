@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 
@@ -52,7 +52,7 @@ function deadlineUrgency(dueDate: string, todayIso: string): number {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const Sprint: React.FC = () => {
-	const { items, loading, toggleItem, deleteItem, fetchItems, migrateFromLocalStorage } = useSprintStore()
+	const { items, loading, toggleItem, deleteItem, fetchItems, migrateFromLocalStorage, reorderTasks } = useSprintStore()
 	const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
 	const { recipes, fetchRecipes } = useRecipesStore()
 	const myUserId = useProfileStore(s => s.activeProfile?.id)
@@ -84,9 +84,16 @@ const Sprint: React.FC = () => {
 	const binTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
 	const doneSentinelRef   = useRef<HTMLDivElement>(null)
 	const activeSentinelRef = useRef<HTMLDivElement>(null)
+
+	// ── Drag-to-reorder state ─────────────────────────────────────────────────
+	const [dragFromIndex, setDragFromIndex] = useState<number | null>(null)
+	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+	const dragStartYRef   = useRef(0)
+	const listRef         = useRef<HTMLUListElement>(null)
 	const handleSwipeTutorialDone = () => {
 		updateProfile({ sprintTutorialSeen: true })
 	}
+
 
 	const _td = new Date()
 	const todayStr = `${_td.getFullYear()}-${String(_td.getMonth() + 1).padStart(2, '0')}-${String(_td.getDate()).padStart(2, '0')}`
@@ -182,6 +189,7 @@ const Sprint: React.FC = () => {
 	const dayHasAnyItems = isDayToday
 		|| items.some(t => !isRecurring(t) && t.dueDate === selectedDay)
 
+	const hasCustomOrder = rawDayQuests.some(t => (t.order ?? 0) > 0)
 	const dayQuests = filterStatus === 'done'
 		? [...rawDayQuests].sort((a, b) => {
 			const tA = a.completedAt ? new Date(a.completedAt).getTime() : new Date(a.createdAt).getTime()
@@ -189,22 +197,30 @@ const Sprint: React.FC = () => {
 			return tB - tA
 		})
 		: [...rawDayQuests].sort((a: UnifiedTodo, b: UnifiedTodo) => {
-			// 1. Pinned
+			// 1. Custom drag order (if user reordered)
+			if (hasCustomOrder) {
+				const ao = a.order ?? 0
+				const bo = b.order ?? 0
+				if (ao > 0 && bo === 0) return -1
+				if (ao === 0 && bo > 0) return 1
+				if (ao > 0 && bo > 0) return ao - bo
+			}
+			// 2. Pinned
 			if (a.isPinned && !b.isPinned) return -1
 			if (!a.isPinned && b.isPinned) return 1
-			// 2. Assigned to current user
+			// 3. Assigned to current user
 			const aAssigned = myUserId ? (a.assignedTo?.includes(myUserId) ?? false) : false
 			const bAssigned = myUserId ? (b.assignedTo?.includes(myUserId) ?? false) : false
 			if (aAssigned && !bAssigned) return -1
 			if (!aAssigned && bAssigned) return 1
-			// 3. Deadline urgency (exponential)
+			// 4. Deadline urgency (exponential)
 			const ua = a.dueDate ? deadlineUrgency(a.dueDate, todayStr) : 0
 			const ub = b.dueDate ? deadlineUrgency(b.dueDate, todayStr) : 0
 			if (ua !== ub) return ub - ua
-			// 4. Family tasks (ownerName) above solo tasks
+			// 5. Family tasks (ownerName) above solo tasks
 			if (a.ownerName && !b.ownerName) return -1
 			if (!a.ownerName && b.ownerName) return 1
-			// 5. Newest first
+			// 6. Newest first
 			return b.createdAt.localeCompare(a.createdAt)
 		})
 
@@ -215,6 +231,41 @@ const Sprint: React.FC = () => {
 		: dayQuests.slice(0, activeVisibleCount)
 
 	const showSwipeGhost = ghostHintEligible && !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
+
+	// ── Drag handlers ─────────────────────────────────────────────────────────
+	const handleDragHandlePointerDown = useCallback((index: number, e: React.PointerEvent) => {
+		setDragFromIndex(index)
+		setDragOverIndex(index)
+		dragStartYRef.current = e.clientY
+		;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+	}, [])
+
+	const handleDragPointerMove = useCallback((e: React.PointerEvent) => {
+		if (dragFromIndex === null || !listRef.current) return
+		const children = Array.from(listRef.current.children) as HTMLElement[]
+		const y = e.clientY
+		let newIndex = dragFromIndex
+		for (let i = 0; i < children.length; i++) {
+			const rect = children[i].getBoundingClientRect()
+			if (y < rect.top + rect.height / 2) { newIndex = i; break }
+			newIndex = i
+		}
+		setDragOverIndex(newIndex)
+	}, [dragFromIndex])
+
+	const handleDragPointerUp = useCallback(() => {
+		if (dragFromIndex === null || dragOverIndex === null || dragFromIndex === dragOverIndex) {
+			setDragFromIndex(null)
+			setDragOverIndex(null)
+			return
+		}
+		const reordered = [...visibleDayQuests]
+		const [moved] = reordered.splice(dragFromIndex, 1)
+		reordered.splice(dragOverIndex, 0, moved)
+		reorderTasks(reordered.map(t => t.id))
+		setDragFromIndex(null)
+		setDragOverIndex(null)
+	}, [dragFromIndex, dragOverIndex, visibleDayQuests, reorderTasks])
 
 	useEffect(() => {
 		if (binTimerRef.current !== null) clearTimeout(binTimerRef.current)
@@ -373,7 +424,12 @@ const Sprint: React.FC = () => {
 						</div>
 					) : (
 						<>
-							<ul className={styles.list}>
+							<ul
+								ref={listRef}
+								className={styles.list}
+								onPointerMove={dragFromIndex !== null ? handleDragPointerMove : undefined}
+								onPointerUp={dragFromIndex !== null ? handleDragPointerUp : undefined}
+							>
 								{showSwipeGhost && (
 									<TaskCard
 										item={SWIPE_GHOST_TASK}
@@ -382,8 +438,17 @@ const Sprint: React.FC = () => {
 										onOpenDetail={() => {}}
 									/>
 								)}
-								{visibleDayQuests.map(t => (
-									<TaskCard key={t.id} item={t} onToggle={() => toggleItem(t.id)} onDelete={() => deleteItem(t.id)} onOpenDetail={() => setDetailTaskId(t.id)} />
+								{visibleDayQuests.map((t, i) => (
+									<TaskCard
+										key={t.id}
+										item={t}
+										onToggle={() => toggleItem(t.id)}
+										onDelete={() => deleteItem(t.id)}
+										onOpenDetail={() => setDetailTaskId(t.id)}
+										onDragHandlePointerDown={filterType === 'task' && filterStatus === 'active' ? (e) => handleDragHandlePointerDown(i, e) : undefined}
+										isDragging={dragFromIndex === i}
+										isDragOver={dragOverIndex === i && dragFromIndex !== null && dragFromIndex !== i}
+									/>
 								))}
 							</ul>
 							{doneHasMore   && <div ref={doneSentinelRef}   className={styles.sentinel} />}

@@ -294,6 +294,28 @@
 }
 .del:hover { color: var(--accent); }
 
+/* ── Drag handle ── */
+.dragHandle {
+  color: var(--text3);
+  padding: 4px 6px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: grab;
+  touch-action: none;
+  align-self: flex-start;
+  transition: color 0.15s;
+}
+.dragHandle:active { cursor: grabbing; color: var(--text2); }
+
+/* ── Drag states ── */
+.dragging {
+  opacity: 0.4;
+}
+.dragOver {
+  border-top: 2px solid var(--accent);
+}
+
 /* ── Confirm close banner ── */
 .confirmBanner {
   position: absolute;

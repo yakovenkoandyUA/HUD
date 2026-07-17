@@ -23,6 +23,9 @@ interface TaskCardProps {
   onToggle: () => void
   onDelete: () => void
   onOpenDetail: () => void
+  onDragHandlePointerDown?: (e: React.PointerEvent) => void
+  isDragging?: boolean
+  isDragOver?: boolean
 }
 
 const TAG_LABEL: Record<SprintTag, string> = {
@@ -97,7 +100,7 @@ function getDayWord(n: number): string {
 
 const SWIPE_THRESHOLD = 80
 
-const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDetail }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDetail, onDragHandlePointerDown, isDragging, isDragOver }) => {
   const spaces     = useSpacesStore(s => s.spaces)
   const taskSpace  = item.spaceId ? spaces.find(s => s.id === item.spaceId) : undefined
 
@@ -307,7 +310,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   return (
     <li
       ref={itemRef}
-      className={`${styles.item} ${item.done ? styles.done : ''} ${missedLevel === 'warn' ? styles.cardWarn : missedLevel === 'danger' ? styles.cardDanger : ''} ${isOverdue ? styles.cardOverdue : ''}`}
+      className={`${styles.item} ${item.done ? styles.done : ''} ${missedLevel === 'warn' ? styles.cardWarn : missedLevel === 'danger' ? styles.cardDanger : ''} ${isOverdue ? styles.cardOverdue : ''} ${isDragging ? styles.dragging : ''} ${isDragOver ? styles.dragOver : ''}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -408,6 +411,23 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
             )}
           </div>
 
+          {onDragHandlePointerDown && !item.done && (
+            <button
+              type="button"
+              className={styles.dragHandle}
+              aria-label="Перетягнути"
+              onPointerDown={e => { e.stopPropagation(); onDragHandlePointerDown(e) }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="4.5" cy="3.5" r="1.2" fill="currentColor"/>
+                <circle cx="9.5" cy="3.5" r="1.2" fill="currentColor"/>
+                <circle cx="4.5" cy="7"   r="1.2" fill="currentColor"/>
+                <circle cx="9.5" cy="7"   r="1.2" fill="currentColor"/>
+                <circle cx="4.5" cy="10.5" r="1.2" fill="currentColor"/>
+                <circle cx="9.5" cy="10.5" r="1.2" fill="currentColor"/>
+              </svg>
+            </button>
+          )}
           <button type="button" className={styles.del} onClick={triggerDelete} aria-label="Delete">
             ✕
           </button>

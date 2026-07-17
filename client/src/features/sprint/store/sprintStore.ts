@@ -189,6 +189,7 @@ interface TodoState {
   updateGlobalLabel: (id: string, updates: Partial<SprintLabel>) => void
   deleteGlobalLabel: (id: string) => void
   pinItem: (id: string) => void
+  reorderTasks: (orderedIds: string[]) => Promise<void>
 }
 
 // ── Helper: build POST/PATCH body from UnifiedTodo ───────────────────────────
@@ -728,6 +729,20 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     authFetch(`/api/sprint/tasks/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ isPinned: newPinned }),
+    }).catch(() => {})
+  },
+
+  reorderTasks: async (orderedIds) => {
+    set(s => ({
+      items: s.items.map(t => {
+        const i = orderedIds.indexOf(t.id)
+        return i >= 0 ? { ...t, order: i + 1 } : t
+      })
+    }))
+    if (!getToken() || !isBackendConfigured()) return
+    await authFetch('/api/sprint/tasks/reorder', {
+      method: 'PATCH',
+      body: JSON.stringify({ ids: orderedIds }),
     }).catch(() => {})
   },
 

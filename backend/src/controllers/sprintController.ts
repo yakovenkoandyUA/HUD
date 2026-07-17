@@ -168,6 +168,17 @@ export async function rollbackImages(req: Request, res: Response): Promise<void>
   res.status(204).end()
 }
 
+export async function reorderTasks(req: Request, res: Response): Promise<void> {
+  const { ids } = req.body
+  if (!Array.isArray(ids)) { res.status(400).json({ error: 'ids required' }); return }
+  await Promise.all(
+    (ids as string[]).map((id, i) =>
+      SprintTask.findOneAndUpdate({ _id: id, userId: req.userId }, { order: i + 1 })
+    )
+  )
+  res.json({ ok: true })
+}
+
 export async function getTodos(req: Request, res: Response): Promise<void> {
   const items = await TodoItem.find({ userId: req.userId }).sort({ createdAt: 1 })
   res.json(items)
