@@ -572,19 +572,26 @@ const SpaceDetailScreen: React.FC = () => {
       </div>}
 
       {/* ── Overview (hidden for vehicle) ── */}
-      {space?.type !== 'vehicle' && <div className={styles.overview}>
-        {[
+      {space?.type !== 'vehicle' && (() => {
+        const isTyped = ['home', 'pet', 'trip'].includes(space?.type ?? '')
+        const showPlans = !isTyped || (space?.modules ?? []).includes('plans')
+        const overviewItems = [
           { num: memories.length,                desc: memories.length === 1 ? 'спогад' : memories.length < 5 ? 'спогади' : 'спогадів'    },
-          { num: plans.length,                   desc: plans.length    === 1 ? 'план'    : plans.length    < 5 ? 'плани'    : 'планів'      },
+          ...(showPlans ? [{ num: plans.length, desc: plans.length === 1 ? 'план' : plans.length < 5 ? 'плани' : 'планів' }] : []),
           { num: spaceTasks.filter(t => !t.done).length, desc: 'активних задач' },
           { num: space?.members.length ?? 0,     desc: (space?.members.length ?? 0) === 1 ? 'учасник' : 'учасників' },
-        ].map(item => (
-          <div key={item.desc} className={styles.overviewItem}>
-            <span className={styles.overviewNum}>{loading ? '—' : item.num}</span>
-            <span className={styles.overviewLabel}>{loading ? '…' : item.num === 0 ? `немає ${item.desc}` : item.desc}</span>
+        ]
+        return (
+          <div className={styles.overview}>
+            {overviewItems.map(item => (
+              <div key={item.desc} className={styles.overviewItem}>
+                <span className={styles.overviewNum}>{loading ? '—' : item.num}</span>
+                <span className={styles.overviewLabel}>{loading ? '…' : item.num === 0 ? `немає ${item.desc}` : item.desc}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>}
+        )
+      })()}
 
       {/* ── Budget bar (hidden for vehicle) ── */}
       {space?.type !== 'vehicle' && space?.budget != null && (() => {
@@ -1014,6 +1021,7 @@ const SpaceDetailScreen: React.FC = () => {
               onUpload={setEditCoverUrl}
               placeholder="Завантажити обкладинку"
               variant="wide"
+              objectPosition={editCoverUrl ? `center ${editCoverPosition}` : undefined}
             />
             {editCoverUrl && (
               <div className={styles.coverPositionRow}>
@@ -1061,6 +1069,7 @@ const SpaceDetailScreen: React.FC = () => {
                 { key: 'finance',   label: 'Фінанси' },
                 { key: 'tasks',     label: 'Задачі' },
                 { key: 'memories',  label: 'Спогади' },
+                { key: 'plans',     label: 'Плани' },
                 { key: 'notes',     label: 'Нотатки' },
               ]
               const toggleModule = (key: string) =>
