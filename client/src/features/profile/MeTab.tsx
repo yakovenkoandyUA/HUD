@@ -4,6 +4,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
+import AchievementsTab from '@/features/achievements'
 import styles from './ProfilePage.module.css'
 
 const CameraIcon: React.FC = () => (
@@ -207,6 +208,7 @@ const MeTab: React.FC = () => {
         <img src="/achive/achive-hero.png" alt="" className={styles.runeImg} draggable={false} />
       </div>
 
+      <AchievementsTab />
     </div>
   )
 }

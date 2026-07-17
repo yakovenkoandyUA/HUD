@@ -8,10 +8,9 @@ import PlanTab from './PlanTab'
 import YearbookTab from './YearbookTab'
 import SpacesTab from './SpacesTab'
 import MeMimir from './MeMimir'
-import AchievementsTab from '@/features/achievements'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'mimir' | 'achievements'
+type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'spaces' | 'mimir'
 
 /**
  * ProfilePage
@@ -47,7 +46,7 @@ const ProfilePage: React.FC = () => {
             <path d="M12.5 16L7 10l5.5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <span className={styles.headerTitle}>{activeTab === 'achievements' ? 'ГЛИБИНА' : 'ПРОФІЛЬ'}</span>
+        <span className={styles.headerTitle}>ПРОФІЛЬ</span>
         <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
             <path d="M12 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -65,7 +64,6 @@ const ProfilePage: React.FC = () => {
           {activeTab === 'timeline' && <YearbookTab />}
           {activeTab === 'spaces'   && <SpacesTab />}
           {activeTab === 'mimir'        && <MeMimir />}
-          {activeTab === 'achievements' && <AchievementsTab />}
         </div>
       </div>
     </div>
