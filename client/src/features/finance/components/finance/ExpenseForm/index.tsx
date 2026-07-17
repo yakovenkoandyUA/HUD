@@ -77,7 +77,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
     e.preventDefault()
     if (!canSubmit || !finalCat) return
     const desc = description.trim() || finalCat.name
-    onExpense(parseFloat(amount), desc, finalCat.name.toLowerCase(), selectedSpaceId)
+    // Always group by parent category; subcategory name goes to description only
+    const categoryName = (selectedCat ?? finalCat).name.toLowerCase()
+    onExpense(parseFloat(amount), desc, categoryName, selectedSpaceId)
     setAmount('')
     setDescription('')
     setSelectedCatId(null)
