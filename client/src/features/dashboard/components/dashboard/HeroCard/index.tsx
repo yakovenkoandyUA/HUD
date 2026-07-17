@@ -155,14 +155,20 @@ const HeroCard: React.FC<HeroCardProps> = ({
   }
 
   // ── Без бюджету: 30/70 split з area chart ───────────────────
-  const data     = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
-  const dayLabels = getSparkDaysShort()
+  const data       = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
+  const dayLabels  = getSparkDaysShort()
   const hasAnyData = data.some(v => v > 0)
   const { line, area } = buildSparkPath(data)
 
+  const lastX = PAD_X + (W - PAD_X * 2)
+  const lastY = (() => {
+    const max = Math.max(...data, 1)
+    return H - PAD_Y - (data[6] / max) * (H - PAD_Y * 2)
+  })()
+
   return (
     <div className={styles.splitCard}>
-      {/* Left 30% — баланс + сьогодні */}
+      {/* Left — баланс + сьогодні */}
       <div className={styles.splitLeft}>
         <div>
           <span className={styles.balanceAmount}>
@@ -178,10 +184,10 @@ const HeroCard: React.FC<HeroCardProps> = ({
         </div>
       </div>
 
-      {/* Right 70% — area chart */}
+      {/* Right — area chart + day labels */}
       <div className={styles.splitRight}>
         <svg
-          viewBox={`0 0 ${W} ${H + 10}`}
+          viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
           className={styles.sparkSvg}
           aria-hidden="true"
@@ -192,44 +198,23 @@ const HeroCard: React.FC<HeroCardProps> = ({
               <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
             </linearGradient>
           </defs>
-
           {hasAnyData && (
             <>
               <path d={area} fill="url(#sparkGrad)" />
               <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx={lastX} cy={lastY} r="1.8" fill="var(--accent)" />
             </>
           )}
-
-          {/* Day labels */}
-          {dayLabels.map((label, i) => {
-            const x = PAD_X + (i / (dayLabels.length - 1)) * (W - PAD_X * 2)
-            const isToday = i === 6
-            return (
-              <text
-                key={i}
-                x={x}
-                y={H + 9}
-                textAnchor="middle"
-                fontSize="5"
-                fontFamily="var(--font-ui)"
-                fill={isToday ? 'var(--accent)' : 'var(--text3)'}
-                fontWeight={isToday ? '700' : '400'}
-              >
-                {label}
-              </text>
-            )
-          })}
-
-          {/* Dot on last point */}
-          {hasAnyData && (() => {
-            const lastX = PAD_X + (W - PAD_X * 2)
-            const max   = Math.max(...data, 1)
-            const lastY = H - PAD_Y - (data[6] / max) * (H - PAD_Y * 2)
-            return (
-              <circle cx={lastX} cy={lastY} r="1.8" fill="var(--accent)" />
-            )
-          })()}
         </svg>
+
+        {/* Day labels as HTML — надійніший рендер шрифту */}
+        <div className={styles.sparkLabels}>
+          {dayLabels.map((label, i) => (
+            <span key={i} className={`${styles.sparkLabel} ${i === 6 ? styles.sparkLabelToday : ''}`}>
+              {label}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   )
