@@ -32,6 +32,7 @@ export interface MemoryPlace {
  */
 export interface Memory {
   id: string
+  userId: string
   title: string
   location?: string
   lat?: number | null

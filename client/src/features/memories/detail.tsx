@@ -11,6 +11,7 @@ import { useMemoriesStore } from '@/features/memories/store/memoriesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
+import { useProfileStore } from '@/shared/store/profileStore'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import { generateMemoryPosterBlob } from './utils/generateMemoryPoster'
 import { useLongPress } from '@/shared/hooks/useLongPress'
@@ -60,15 +61,16 @@ function formatMemoryDate(iso: string): string {
 interface PhotoItemProps {
   photo: MemoryPhoto
   onTap: () => void
-  onSetCover: () => void
-  onDelete: () => void
+  onSetCover?: () => void
+  onDelete?: () => void
 }
 
 const PhotoItem: React.FC<PhotoItemProps> = ({ photo, onTap, onSetCover, onDelete }) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [loaded, setLoaded]     = useState(false)
 
-  const longPress = useLongPress(() => setMenuOpen(true))
+  const hasMenu   = !!(onSetCover || onDelete)
+  const longPress = useLongPress(() => { if (hasMenu) setMenuOpen(true) })
 
   return (
     <div className={styles.photoItem} {...longPress}>
@@ -86,28 +88,29 @@ const PhotoItem: React.FC<PhotoItemProps> = ({ photo, onTap, onSetCover, onDelet
         <div className={styles.photoAttrBadge}>{photo.addedByName}</div>
       )}
 
-      {menuOpen && (
+      {menuOpen && hasMenu && (
         <>
-          <div
-            className={styles.menuBackdrop}
-            onClick={() => setMenuOpen(false)}
-          />
+          <div className={styles.menuBackdrop} onClick={() => setMenuOpen(false)} />
           <div className={styles.menu}>
-            <button
-              type="button"
-              className={styles.menuItem}
-              onClick={() => { onSetCover(); setMenuOpen(false) }}
-            >
-              Зробити обкладинкою
-            </button>
-            <div className={styles.menuDivider} />
-            <button
-              type="button"
-              className={`${styles.menuItem} ${styles.menuItemDanger}`}
-              onClick={() => { onDelete(); setMenuOpen(false) }}
-            >
-              Видалити
-            </button>
+            {onSetCover && (
+              <button
+                type="button"
+                className={styles.menuItem}
+                onClick={() => { onSetCover(); setMenuOpen(false) }}
+              >
+                Зробити обкладинкою
+              </button>
+            )}
+            {onSetCover && onDelete && <div className={styles.menuDivider} />}
+            {onDelete && (
+              <button
+                type="button"
+                className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                onClick={() => { onDelete(); setMenuOpen(false) }}
+              >
+                Видалити
+              </button>
+            )}
           </div>
         </>
       )}
@@ -324,8 +327,10 @@ const MemoryDetailScreen: React.FC = () => {
   const { showToast } = useUiStore()
   const { transactions } = useFinanceStore()
   const { accepted, fetchFamily } = useFamilyStore()
+  const { activeProfile } = useProfileStore()
 
-  const memory = memories.find(m => m.id === id)
+  const memory  = memories.find(m => m.id === id)
+  const isOwner = !!memory && !!activeProfile && memory.userId === activeProfile.id
   const [related, setRelated] = useState<Memory[]>([])
 
   // Deep-link entry (e.g. from Timeline) can land here before memoriesStore was ever populated.
@@ -522,11 +527,13 @@ const MemoryDetailScreen: React.FC = () => {
 					</div>
 				)}
 
-				<button type="button" className={styles.menuBtn} onClick={() => setMenuOpen(v => !v)} aria-label="Меню">
-					⋮
-				</button>
+				{isOwner && (
+					<button type="button" className={styles.menuBtn} onClick={() => setMenuOpen(v => !v)} aria-label="Меню">
+						⋮
+					</button>
+				)}
 
-				{menuOpen && (
+				{isOwner && menuOpen && (
 					<>
 						<div className={styles.dropBackdrop} onClick={() => setMenuOpen(false)} />
 						<div className={styles.dropdown}>
@@ -585,12 +592,14 @@ const MemoryDetailScreen: React.FC = () => {
 				<div className={styles.placesSection}>
 					<div className={styles.placesSectionHead}>
 						<span className={styles.placesSectionLabel}>МІСЦЯ</span>
-						<button type="button" className={styles.addPlaceChip} onClick={() => setAddingPlace(true)}>
-							<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
-								<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-							</svg>
-							додати
-						</button>
+						{isOwner && (
+							<button type="button" className={styles.addPlaceChip} onClick={() => setAddingPlace(true)}>
+								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+									<path d="M4.5 1v7M1 4.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+								</svg>
+								додати
+							</button>
+						)}
 					</div>
 
 					{(memory.places ?? []).length > 0 && (
@@ -805,7 +814,15 @@ const MemoryDetailScreen: React.FC = () => {
 								.filter((_, i) => i % 3 === col)
 								.map(photo => {
 									const i = memory.photos.indexOf(photo)
-									return <PhotoItem key={photo.id} photo={photo} onTap={() => setViewerIndex(i)} onSetCover={() => setCover(id!, photo.url)} onDelete={() => deletePhoto(id!, photo.id)} />
+									return (
+										<PhotoItem
+											key={photo.id}
+											photo={photo}
+											onTap={() => setViewerIndex(i)}
+											onSetCover={isOwner ? () => setCover(id!, photo.url) : undefined}
+											onDelete={isOwner ? () => deletePhoto(id!, photo.id) : undefined}
+										/>
+									)
 								})}
 						</div>
 					))}
@@ -823,7 +840,7 @@ const MemoryDetailScreen: React.FC = () => {
 					photos={memory.photos}
 					initialIndex={viewerIndex}
 					onClose={() => setViewerIndex(null)}
-					onDelete={photoId => {
+					onDelete={isOwner ? (photoId => {
 						const newIndex = Math.min(viewerIndex, memory.photos.length - 2)
 						deletePhoto(id!, photoId)
 						if (memory.photos.length <= 1) {
@@ -831,13 +848,13 @@ const MemoryDetailScreen: React.FC = () => {
 						} else {
 							setViewerIndex(newIndex >= 0 ? newIndex : 0)
 						}
-					}}
-					onCaption={(photoId, caption) => updatePhoto(id!, photoId, { caption })}
+					}) : undefined}
+					onCaption={isOwner ? ((photoId, caption) => updatePhoto(id!, photoId, { caption })) : undefined}
 				/>
 			)}
 
 			{/* ── Edit modal ── */}
-			{showEdit && (
+			{isOwner && showEdit && (
 				<EditMemoryModal
 					title={memory.title}
 					location={memory.location ?? ''}
@@ -867,7 +884,7 @@ const MemoryDetailScreen: React.FC = () => {
 			)}
 
 			{/* ── Delete confirm ── */}
-			{showDeleteConfirm && (
+			{isOwner && showDeleteConfirm && (
 				<div className={styles.confirmOverlay} onClick={() => setShowDeleteConfirm(false)}>
 					<div className={styles.confirmSheet} onClick={e => e.stopPropagation()}>
 						<p className={styles.confirmText}>Видалити «{memory.title}»?</p>

@@ -20,8 +20,8 @@ interface PhotoViewerModalProps {
   photos: MemoryPhoto[]
   initialIndex: number
   onClose: () => void
-  onDelete: (id: string) => void
-  onCaption: (id: string, caption: string) => void
+  onDelete?: (id: string) => void
+  onCaption?: (id: string, caption: string) => void
 }
 
 type SlideDir = 'next' | 'prev' | null
@@ -168,6 +168,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   // ── Delete ────────────────────────────────────────────────────────────────────
 
   const handleDelete = () => {
+    if (!onDelete) return
     onDelete(photo.id)
     if (photos.length === 1) {
       handleClose()
@@ -177,6 +178,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   }
 
   const handleCaptionSave = () => {
+    if (!onCaption) return
     onCaption(photo.id, captionInput)
     setEditingCaption(false)
   }
@@ -218,22 +220,26 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
         <div className={styles.topBar}>
           <span className={styles.counter}>{index + 1} / {photos.length}</span>
           <div className={styles.topActions}>
-            <button
-              type="button"
-              className={styles.actionBtn}
-              onClick={e => { e.stopPropagation(); setEditingCaption(v => !v) }}
-              title="Редагувати підпис"
-            >
-              ✎
-            </button>
-            <button
-              type="button"
-              className={`${styles.actionBtn} ${styles.deleteBtn}`}
-              onClick={e => { e.stopPropagation(); handleDelete() }}
-              title="Видалити фото"
-            >
-              🗑
-            </button>
+            {onCaption && (
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={e => { e.stopPropagation(); setEditingCaption(v => !v) }}
+                title="Редагувати підпис"
+              >
+                ✎
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                onClick={e => { e.stopPropagation(); handleDelete() }}
+                title="Видалити фото"
+              >
+                🗑
+              </button>
+            )}
             <button
               type="button"
               className={styles.closeBtn}
@@ -269,7 +275,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
 
         {/* Bottom: caption */}
         <div className={styles.bottom} onClick={e => e.stopPropagation()}>
-          {editingCaption ? (
+          {editingCaption && onCaption ? (
             <div className={styles.captionEdit}>
               <input
                 className={styles.captionInput}

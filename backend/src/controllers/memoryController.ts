@@ -1,31 +1,38 @@
 import { Request, Response } from 'express'
 import Memory from '../models/Memory'
 import { User } from '../models/User'
-import { getAcceptedFamilyIds } from './familyController'
+
+/** Memories the current user can see: own + tagged (withProfiles) */
+function visibleFilter(userId: string, extra: Record<string, unknown> = {}) {
+  return {
+    $or: [{ userId }, { withProfiles: userId }],
+    ...extra,
+  }
+}
+
+async function ownerMap(items: { userId: string }[], myId: string) {
+  const foreignIds = [...new Set(items.map(m => m.userId).filter(uid => uid !== myId))]
+  if (foreignIds.length === 0) return new Map<string, { name: string; avatarUrl: string | null }>()
+  const owners = await User.find({ _id: { $in: foreignIds } }, { name: 1, avatarUrl: 1 })
+  const map = new Map<string, { name: string; avatarUrl: string | null }>()
+  owners.forEach(u => {
+    map.set((u._id as { toString(): string }).toString(), { name: u.name, avatarUrl: u.avatarUrl })
+  })
+  return map
+}
 
 export async function getAll(req: Request, res: Response): Promise<void> {
   try {
-    const familyIds = await getAcceptedFamilyIds(req.userId!)
-    const allUserIds = [req.userId!, ...familyIds]
-
-    const filter: Record<string, unknown> = { userId: { $in: allUserIds } }
+    const filter: Record<string, unknown> = visibleFilter(req.userId!)
     if (req.query.spaceId) filter.spaceId = req.query.spaceId
 
     const items = await Memory.find(filter).sort({ date: -1 })
-
-    // Attach owner info for family memories
-    let ownerMap = new Map<string, { name: string; avatarUrl: string | null }>()
-    if (familyIds.length > 0) {
-      const owners = await User.find({ _id: { $in: familyIds } }, { name: 1, avatarUrl: 1 })
-      owners.forEach(u => {
-        ownerMap.set((u._id as { toString(): string }).toString(), { name: u.name, avatarUrl: u.avatarUrl })
-      })
-    }
+    const oMap  = await ownerMap(items, req.userId!)
 
     const result = items.map(m => {
       const obj = m.toObject()
       if (m.userId !== req.userId) {
-        const owner = ownerMap.get(m.userId)
+        const owner = oMap.get(m.userId)
         return { ...obj, ownerName: owner?.name, ownerAvatarUrl: owner?.avatarUrl ?? null }
       }
       return obj
@@ -38,19 +45,13 @@ export async function getAll(req: Request, res: Response): Promise<void> {
 }
 
 export async function getRelated(req: Request, res: Response): Promise<void> {
-  const familyIds = await getAcceptedFamilyIds(req.userId!)
-  const allUserIds = [req.userId!, ...familyIds]
-
-  const current = await Memory.findOne({ _id: req.params.id, userId: { $in: allUserIds } })
+  const current = await Memory.findOne(visibleFilter(req.userId!, { _id: req.params.id }))
   if (!current) { res.status(404).json({ error: 'Not found' }); return }
 
-  const others = await Memory.find({
-    _id: { $ne: current._id },
-    userId: { $in: allUserIds },
-  })
+  const others = await Memory.find(visibleFilter(req.userId!, { _id: { $ne: current._id } }))
 
-  const currentMonth = current.date.slice(0, 7)
-  const currentTags = new Set((current.tags ?? []).map(t => t.toLowerCase()))
+  const currentMonth    = current.date.slice(0, 7)
+  const currentTags     = new Set((current.tags ?? []).map(t => t.toLowerCase()))
   const currentLocation = (current.location ?? '').trim().toLowerCase()
 
   const scored = others.map(m => {
@@ -68,18 +69,12 @@ export async function getRelated(req: Request, res: Response): Promise<void> {
     .slice(0, 6)
     .map(s => s.m)
 
-  let ownerMap = new Map<string, { name: string; avatarUrl: string | null }>()
-  if (familyIds.length > 0) {
-    const owners = await User.find({ _id: { $in: familyIds } }, { name: 1, avatarUrl: 1 })
-    owners.forEach(u => {
-      ownerMap.set((u._id as { toString(): string }).toString(), { name: u.name, avatarUrl: u.avatarUrl })
-    })
-  }
+  const oMap = await ownerMap(top, req.userId!)
 
   const result = top.map(m => {
     const obj = m.toObject()
     if (m.userId !== req.userId) {
-      const owner = ownerMap.get(m.userId)
+      const owner = oMap.get(m.userId)
       return { ...obj, ownerName: owner?.name, ownerAvatarUrl: owner?.avatarUrl ?? null }
     }
     return obj
@@ -94,9 +89,8 @@ export async function create(req: Request, res: Response): Promise<void> {
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
-  const familyIds = await getAcceptedFamilyIds(req.userId!)
   const item = await Memory.findOneAndUpdate(
-    { _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } },
+    { _id: req.params.id, userId: req.userId! },
     req.body,
     { new: true }
   )
@@ -105,15 +99,14 @@ export async function update(req: Request, res: Response): Promise<void> {
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
-  const familyIds = await getAcceptedFamilyIds(req.userId!)
-  const item = await Memory.findOneAndDelete({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
+  const item = await Memory.findOneAndDelete({ _id: req.params.id, userId: req.userId! })
   if (!item) { res.status(404).json({ error: 'Not found' }); return }
   res.status(204).end()
 }
 
+/** Add photo: owner or tagged member */
 export async function addPhoto(req: Request, res: Response): Promise<void> {
-  const familyIds = await getAcceptedFamilyIds(req.userId!)
-  const memory = await Memory.findOne({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
+  const memory = await Memory.findOne(visibleFilter(req.userId!, { _id: req.params.id }))
   if (!memory) { res.status(404).json({ error: 'Not found' }); return }
 
   let addedByName = ''
@@ -122,37 +115,36 @@ export async function addPhoto(req: Request, res: Response): Promise<void> {
     addedByName = contributor?.name ?? ''
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   memory.photos.push({ url: req.body.url, caption: req.body.caption ?? '', addedBy: req.userId!, addedByName } as any)
   await memory.save()
   res.json(memory)
 }
 
+/** Delete photo: only memory owner */
 export async function deletePhoto(req: Request, res: Response): Promise<void> {
-  const familyIds = await getAcceptedFamilyIds(req.userId!)
-  const memory = await Memory.findOne({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
-  if (!memory) { res.status(404).json({ error: 'Not found' }); return }
+  const memory = await Memory.findOne({ _id: req.params.id, userId: req.userId! })
+  if (!memory) { res.status(403).json({ error: 'Forbidden' }); return }
 
   const photo = memory.photos.find(p => String(p._id) === req.params.photoId)
   if (!photo) { res.status(404).json({ error: 'Photo not found' }); return }
 
-  // Може видаляти тільки власник спогаду або той хто додав фото
-  const isMemoryOwner = memory.userId === req.userId!
-  const isPhotoOwner  = !photo.addedBy || photo.addedBy === req.userId!
-  if (!isMemoryOwner && !isPhotoOwner) { res.status(403).json({ error: 'Forbidden' }); return }
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   memory.photos = memory.photos.filter(p => String(p._id) !== req.params.photoId) as any
   await memory.save()
   res.json(memory)
 }
 
+/** Update photo caption: only memory owner */
 export async function updatePhoto(req: Request, res: Response): Promise<void> {
-  const familyIds = await getAcceptedFamilyIds(req.userId!)
-  const memory = await Memory.findOne({ _id: req.params.id, userId: { $in: [req.userId!, ...familyIds] } })
-  if (!memory) { res.status(404).json({ error: 'Not found' }); return }
+  const memory = await Memory.findOne({ _id: req.params.id, userId: req.userId! })
+  if (!memory) { res.status(403).json({ error: 'Forbidden' }); return }
+
   const photo = memory.photos.find(p => String(p._id) === req.params.photoId)
   if (!photo) { res.status(404).json({ error: 'Photo not found' }); return }
+
   if (req.body.caption !== undefined) photo.caption = req.body.caption
-  if (req.body.url !== undefined) photo.url = req.body.url
+  if (req.body.url     !== undefined) photo.url     = req.body.url
   await memory.save()
   res.json(memory)
 }

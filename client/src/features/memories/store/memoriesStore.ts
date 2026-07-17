@@ -29,6 +29,7 @@ function toPlace(p: Record<string, any>): MemoryPlace {
 function toMemory(d: Record<string, any>): Memory {
   return {
     id:             d._id,
+    userId:         d.userId ?? '',
     title:          d.title,
     location:       d.location || undefined,
     lat:            d.lat ?? null,
