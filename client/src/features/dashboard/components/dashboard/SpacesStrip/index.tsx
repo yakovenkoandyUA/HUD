@@ -59,7 +59,17 @@ const SpacesStrip: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false
-    const load = async () => { if (!cancelled) await fetchSpaces() }
+    const load = async () => {
+      try {
+        await fetchSpaces()
+      } catch {
+        if (!cancelled) {
+          setTimeout(async () => {
+            if (!cancelled) await fetchSpaces().catch(() => {})
+          }, 1500)
+        }
+      }
+    }
     load()
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,6 +135,10 @@ const SpacesStrip: React.FC = () => {
           const typeLabel = cfg?.label ?? space.type
           const memberCount = space.members.length
           const meta = memberCount > 1 ? `${memberCount} учасники` : typeLabel
+          const profilePhoto =
+            space.type === 'pet'     ? (space.petProfile?.photoUrl     || null) :
+            space.type === 'vehicle' ? (space.vehicleProfile?.photoUrl || null) :
+            null
 
           return (
             <button
@@ -135,7 +149,10 @@ const SpacesStrip: React.FC = () => {
               onClick={() => navigate(`/spaces/${space.id}`)}
             >
               <span className={styles.iconWrap}>
-                {cfg && <img src={cfg.iconSrc} width={35} height={35} alt="" aria-hidden="true" />}
+                {profilePhoto
+                  ? <img src={profilePhoto} className={styles.profilePhoto} alt="" aria-hidden="true" />
+                  : cfg && <img src={cfg.iconSrc} width={35} height={35} alt="" aria-hidden="true" />
+                }
               </span>
               <span className={styles.textStack}>
                 <span className={styles.name}>{space.name}</span>
