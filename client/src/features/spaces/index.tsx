@@ -245,8 +245,9 @@ const SpaceDetailScreen: React.FC = () => {
   const [editEmoji, setEditEmoji]     = useState('')
   const [editColor, setEditColor]     = useState(COLORS[0])
   const [editType, setEditType]       = useState<SpaceType>('shared')
-  const [editCoverUrl, setEditCoverUrl]           = useState('')
-  const [editBudget, setEditBudget]               = useState('')
+  const [editCoverUrl, setEditCoverUrl]             = useState('')
+  const [editCoverPosition, setEditCoverPosition]   = useState('center')
+  const [editBudget, setEditBudget]                 = useState('')
   const [editBudgetCurrency, setEditBudgetCurrency] = useState('UAH')
   const [editModules, setEditModules] = useState<string[]>([])
   const [editSaving, setEditSaving]               = useState(false)
@@ -320,6 +321,7 @@ const SpaceDetailScreen: React.FC = () => {
     setEditColor(space.color)
     setEditType(space.type)
     setEditCoverUrl(space.coverUrl ?? '')
+    setEditCoverPosition(space.coverPosition ?? 'center')
     setEditBudget(space.budget != null ? String(space.budget) : '')
     setEditBudgetCurrency(space.budgetCurrency ?? 'UAH')
     setEditModules(space.modules ?? [])
@@ -447,6 +449,7 @@ const SpaceDetailScreen: React.FC = () => {
           color:          editColor,
           type:           editType,
           coverUrl:       editCoverUrl,
+          coverPosition:  editCoverPosition,
           budget:         isNaN(budgetVal as number) ? null : budgetVal,
           budgetCurrency: editBudgetCurrency,
           modules:        editModules,
@@ -526,7 +529,13 @@ const SpaceDetailScreen: React.FC = () => {
         style={space?.coverUrl ? undefined : colorVar}
       >
         {space?.coverUrl && (
-          <img src={space.coverUrl} alt="" className={styles.heroCoverImg} aria-hidden="true" />
+          <img
+            src={space.coverUrl}
+            alt=""
+            className={styles.heroCoverImg}
+            style={{ objectPosition: `center ${space.coverPosition ?? 'center'}` }}
+            aria-hidden="true"
+          />
         )}
         <div className={styles.heroCoverOverlay} style={space?.coverUrl ? undefined : colorVar} />
 
@@ -1006,6 +1015,20 @@ const SpaceDetailScreen: React.FC = () => {
               placeholder="Завантажити обкладинку"
               variant="wide"
             />
+            {editCoverUrl && (
+              <div className={styles.coverPositionRow}>
+                {(['top', 'center', 'bottom'] as const).map(pos => (
+                  <button
+                    key={pos}
+                    type="button"
+                    className={`${styles.coverPositionBtn} ${editCoverPosition === pos ? styles.coverPositionBtnActive : ''}`}
+                    onClick={() => setEditCoverPosition(pos)}
+                  >
+                    {pos === 'top' ? 'Верх' : pos === 'center' ? 'Центр' : 'Низ'}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <label className={styles.fieldLabel}>БЮДЖЕТ</label>
             <div className={styles.budgetInputRow}>

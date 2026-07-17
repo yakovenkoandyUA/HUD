@@ -55,6 +55,7 @@ export interface ISpace extends Document {
   color:          string
   emoji:          string
   coverUrl:       string
+  coverPosition:  string
   budget:         number | null
   budgetCurrency: string
   ownerId:        string
@@ -121,6 +122,7 @@ const schema = new Schema<ISpace>({
   color:          { type: String, default: '#9b59b6' },
   emoji:          { type: String, default: '' },
   coverUrl:       { type: String, default: '' },
+  coverPosition:  { type: String, default: 'center' },
   budget:         { type: Number, default: null },
   budgetCurrency: { type: String, default: 'UAH' },
   ownerId:        { type: String, required: true, index: true },

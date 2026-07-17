@@ -17,7 +17,7 @@
 }
 
 .heroCovered {
-  min-height: 160px;
+  min-height: 240px;
   align-items: flex-end;
   background: transparent;
   border-bottom: none;
@@ -1018,6 +1018,32 @@
 }
 
 /* ── Budget edit fields ── */
+.coverPositionRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.coverPositionBtn {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  letter-spacing: 0.04em;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.coverPositionBtnActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
 .budgetInputRow {
   display: flex;
   gap: 10px;

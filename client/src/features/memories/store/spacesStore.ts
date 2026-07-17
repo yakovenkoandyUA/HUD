@@ -60,6 +60,7 @@ export interface Space {
   color:          string
   emoji:          string
   coverUrl:       string
+  coverPosition:  string
   budget:         number | null
   budgetCurrency: string
   ownerId:        string
@@ -83,6 +84,7 @@ export interface SpaceInput {
   color?:          string
   emoji?:          string
   coverUrl?:       string
+  coverPosition?:  string
   budget?:         number | null
   budgetCurrency?: string
   modules?:        string[]
