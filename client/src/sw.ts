@@ -65,8 +65,9 @@ self.addEventListener('push', (event: PushEvent) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: data.icon ?? '/icons/icon-192.png',
-      badge: '/icons/icon-96.png',
+      // No explicit icon — Chrome uses the manifest icon on the left without
+      // duplicating it as a large thumbnail on the right (Android behavior).
+      badge: '/badge-96.png',   // monochrome white-on-transparent for status bar
       data: { url: data.url ?? '/' },
     })
   )
