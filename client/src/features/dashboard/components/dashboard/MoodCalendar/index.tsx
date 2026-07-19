@@ -35,10 +35,11 @@ function getMondayOfWeek(d: Date): Date {
  * @prop {MoodLog[]} logs — масив записів настрою
  */
 interface MoodCalendarProps {
-  logs: MoodLog[]
+  logs:     MoodLog[]
+  popKey?:  number
 }
 
-const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs }) => {
+const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs, popKey = 0 }) => {
   const logMap = useMemo(() => {
     const m: Record<string, 1 | 2 | 3 | 4 | 5> = {}
     logs.forEach(l => { m[l.date] = l.score })
@@ -96,14 +97,16 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs }) => {
       <div className={styles.grid}>
         {cells.map(cell => {
           const scoreClass = cell.score ? styles[`score${cell.score}` as keyof typeof styles] : undefined
+          const isPopIn    = cell.isToday && !!cell.score && popKey > 0
           return (
             <div
-              key={cell.date}
+              key={cell.isToday ? `today-${popKey}` : cell.date}
               className={[
                 styles.cell,
                 cell.isFuture ? styles.cellFuture : (!cell.score ? styles.cellEmpty : styles.cellFilled),
                 cell.isToday  ? styles.cellToday  : '',
                 scoreClass ?? '',
+                isPopIn ? styles.cellPopIn : '',
               ].filter(Boolean).join(' ')}
               title={cell.score ? `${cell.date}: ${MOOD_LABELS[cell.score]}` : cell.date}
             >

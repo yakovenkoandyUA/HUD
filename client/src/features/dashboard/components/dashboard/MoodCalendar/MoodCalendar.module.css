@@ -52,6 +52,16 @@
   min-width: 0;
 }
 
+@keyframes cellPopIn {
+  0%   { transform: scale(0);    opacity: 0; }
+  60%  { transform: scale(1.28); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+.cellPopIn {
+  animation: cellPopIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 /* empty past — faint dot */
 .cellEmpty {
   background: var(--border);

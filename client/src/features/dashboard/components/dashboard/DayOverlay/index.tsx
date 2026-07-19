@@ -45,6 +45,14 @@ interface DayOverlayProps {
   onClose: () => void
 }
 
+const MOOD_COLORS: Record<number, string> = {
+  1: '#c0392b',
+  2: '#e67e22',
+  3: '#d4ac0d',
+  4: '#27ae60',
+  5: '#1e8449',
+}
+
 const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const navigate = useNavigate()
   const { fetchLogs, fetchFamilyMoods, setMood, setNote, todayScore, todayNote, logs, familyMoods } = useMoodStore()
@@ -59,6 +67,10 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const weather   = useWeather(activeProfile?.city)
   const [noteValue, setNoteValue] = useState('')
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [flashScore, setFlashScore] = useState<1|2|3|4|5|null>(null)
+  const [popKey, setPopKey]         = useState(0)
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const today        = toLocalIso(new Date())
   const currentSlot  = getCurrentSlot()
@@ -106,6 +118,10 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const handleMoodClick = useCallback((score: 1 | 2 | 3 | 4 | 5) => {
     if (currentMood === score) return
     setMood(today, score)
+    setFlashScore(score)
+    setPopKey(k => k + 1)
+    if (flashTimer.current) clearTimeout(flashTimer.current)
+    flashTimer.current = setTimeout(() => setFlashScore(null), 4000)
   }, [currentMood, today, setMood])
 
   const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -123,6 +139,13 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   return (
     <div ref={overlayRef} className={styles.overlay} onClick={onClose}>
       <div ref={sheetRef} className={styles.sheet} onClick={e => e.stopPropagation()}>
+        {flashScore !== null && (
+          <div
+            key={flashScore}
+            className={styles.moodAccentBar}
+            style={{ background: MOOD_COLORS[flashScore] }}
+          />
+        )}
         {/* ── Header ── */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
@@ -261,7 +284,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
 
           {/* ── Mood calendar ── */}
           <section className={`${styles.section} ${styles.sectionCalendar}`}>
-            <MoodCalendar logs={logs} />
+            <MoodCalendar logs={logs} popKey={popKey} />
           </section>
         </div>
       </div>
