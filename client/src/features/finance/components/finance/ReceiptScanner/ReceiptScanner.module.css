@@ -191,6 +191,36 @@
   color: var(--text2);
 }
 
+.selectWrap {
+  position: relative;
+}
+
+.categorySelect {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 8px 32px 8px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.categorySelect:focus { border-color: var(--accent-dim); }
+
+.selectArrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+  pointer-events: none;
+}
+
 /* ── Actions ── */
 .actions {
   display: flex;

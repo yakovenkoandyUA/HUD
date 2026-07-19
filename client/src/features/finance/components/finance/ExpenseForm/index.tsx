@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Input from '@/shared/components/ui/Input'
 import Button from '@/shared/components/ui/Button'
 import ReceiptScanner from '../ReceiptScanner'
+import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
@@ -22,7 +23,7 @@ import styles from './ExpenseForm.module.css'
  * @prop {(amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null) => void} onExpense
  */
 interface ExpenseFormProps {
-  onExpense: (amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null) => void
+  onExpense: (amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null, date?: string) => void
 }
 
 const CameraIcon: React.FC = () => (
@@ -50,8 +51,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const [scannerFile, setScannerFile]           = useState<File | null>(null)
   const [catsExpanded, setCatsExpanded]         = useState(false)
   const [showSourcePicker, setShowSourcePicker] = useState(false)
+  const [date, setDate]                         = useState<string>(new Date().toISOString().slice(0, 10))
+  const [showDatePicker, setShowDatePicker]     = useState(false)
   const fileInputRef                            = useRef<HTMLInputElement>(null)
   const cameraInputRef                          = useRef<HTMLInputElement>(null)
+
+  const today       = new Date().toISOString().slice(0, 10)
+  const isToday     = date === today
+  const dateLabel   = isToday ? 'Сьогодні' : new Date(date + 'T12:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
@@ -81,7 +88,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
     const desc = description.trim() || finalCat.name
     const categoryName = (selectedCat ?? finalCat).name.toLowerCase()
     const subcategoryName = selectedSubCat ? selectedSubCat.name : null
-    onExpense(parseFloat(amount), desc, categoryName, selectedSpaceId, subcategoryName)
+    onExpense(parseFloat(amount), desc, categoryName, selectedSpaceId, subcategoryName, isToday ? undefined : date)
     setAmount('')
     setDescription('')
     setSelectedCatId(null)
@@ -291,8 +298,38 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
         </div>
       )}
 
+      {/* ── Date selector ── */}
+      <div className={styles.dateRow}>
+        <button
+          type="button"
+          className={`${styles.dateBtn} ${!isToday ? styles.dateBtnActive : ''}`}
+          onClick={() => setShowDatePicker(v => !v)}
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <rect x="1" y="3" width="14" height="12" rx="1.5"/>
+            <path d="M5 1v4M11 1v4M1 7h14"/>
+          </svg>
+          {dateLabel}
+        </button>
+        {!isToday && (
+          <button type="button" className={styles.dateClear} onClick={() => { setDate(today); setShowDatePicker(false) }}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M2 2l6 6M8 2l-6 6"/>
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {showDatePicker && (
+        <CustomDatePicker
+          value={date}
+          onChange={d => { setDate(d); setShowDatePicker(false) }}
+          onClose={() => setShowDatePicker(false)}
+        />
+      )}
+
       <Button type="submit" fullWidth disabled={!canSubmit}>
-        Записати витрату
+        {isToday ? 'Записати витрату' : `Записати за ${dateLabel}`}
       </Button>
     </form>
   )

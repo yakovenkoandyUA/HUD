@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { authFetch } from '@/shared/services/api'
 import { useUiStore } from '@/shared/store/uiStore'
-import PillSelector from '@/shared/components/ui/PillSelector'
 import styles from './ReceiptScanner.module.css'
 
 /**
@@ -162,12 +161,22 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
         <div className={styles.divider} />
 
         <div className={styles.categorySection}>
-          <span className={styles.categoryLabel}>КАТЕГОРІЯ</span>
-          <PillSelector
-            options={allCategories.map(c => ({ value: c.value, label: c.label }))}
-            value={category}
-            onChange={setCategory}
-          />
+          <label className={styles.categoryLabel} htmlFor="receipt-cat">КАТЕГОРІЯ</label>
+          <div className={styles.selectWrap}>
+            <select
+              id="receipt-cat"
+              className={styles.categorySelect}
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+            >
+              {allCategories.map(c => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+            <svg className={styles.selectArrow} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+              <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
         </div>
 
         <div className={styles.actions}>

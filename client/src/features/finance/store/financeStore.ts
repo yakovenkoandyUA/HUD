@@ -80,7 +80,7 @@ interface FinanceState {
 
   fetchTransactions: (month?: string) => Promise<void>
   addTopup: (amount: number, description: string, incomeCategory?: string, spaceId?: string | null) => void
-  addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null, subcategory?: string | null) => void
+  addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null, subcategory?: string | null, date?: string) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
   patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => void
@@ -142,14 +142,14 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       .catch(() => set({ syncStatus: 'error' }))
   },
 
-  addExpense: (amount, description, category, tripMemoryId, spaceId, subcategory) => {
+  addExpense: (amount, description, category, tripMemoryId, spaceId, subcategory, date) => {
     const tx: Transaction = {
       id: crypto.randomUUID(),
       type: 'expense',
       amount,
       description,
       category,
-      date: new Date().toISOString(),
+      date: date ? `${date}T12:00:00.000Z` : new Date().toISOString(),
       tripMemoryId: tripMemoryId ?? null,
       subcategory: subcategory ?? null,
     }
