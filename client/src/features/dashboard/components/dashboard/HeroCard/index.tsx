@@ -49,13 +49,20 @@ const H = 44
 const PAD_X = 2
 const PAD_Y = 4
 
-function buildSparkPath(data: number[]): { line: string; area: string } {
-  const max = Math.max(...data, 1)
-  const pts = data.map((v, i) => ({
-    x: PAD_X + (i / (data.length - 1)) * (W - PAD_X * 2),
-    y: H - PAD_Y - (v / max) * (H - PAD_Y * 2),
-  }))
+function fmtK(n: number): string {
+  if (n >= 10000) return `${Math.round(n / 1000)}к`
+  if (n >= 1000)  return `${(n / 1000).toFixed(1)}к`
+  return String(Math.round(n))
+}
 
+function buildSparkPts(data: number[], chartMax: number) {
+  return data.map((v, i) => ({
+    x: PAD_X + (i / (data.length - 1)) * (W - PAD_X * 2),
+    y: H - PAD_Y - (v / chartMax) * (H - PAD_Y * 2),
+  }))
+}
+
+function buildSparkPath(pts: { x: number; y: number }[]): { line: string; area: string } {
   let line = `M ${pts[0].x} ${pts[0].y}`
   for (let i = 1; i < pts.length; i++) {
     const cpx = (pts[i - 1].x + pts[i].x) / 2
@@ -158,13 +165,19 @@ const HeroCard: React.FC<HeroCardProps> = ({
   const data       = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
   const dayLabels  = getSparkDaysShort()
   const hasAnyData = data.some(v => v > 0)
-  const { line, area } = buildSparkPath(data)
+  const chartMax   = Math.max(...data, dailyBudget > 0 ? dailyBudget * 1.1 : 1)
+  const pts        = buildSparkPts(data, chartMax)
+  const { line, area } = buildSparkPath(pts)
+  const lastX = pts[6].x
+  const lastY = pts[6].y
 
-  const lastX = PAD_X + (W - PAD_X * 2)
-  const lastY = (() => {
-    const max = Math.max(...data, 1)
-    return H - PAD_Y - (data[6] / max) * (H - PAD_Y * 2)
-  })()
+  const maxVal  = Math.max(...data)
+  const maxIdx  = data.indexOf(maxVal)
+  const maxPt   = pts[maxIdx]
+  const maxAnchor = maxIdx >= 5 ? 'end' : maxIdx <= 1 ? 'start' : 'middle'
+
+  const hasBudgetLine = dailyBudget > 0 && hasAnyData
+  const yBudget = H - PAD_Y - (dailyBudget / chartMax) * (H - PAD_Y * 2)
 
   return (
     <div className={styles.splitCard}>
@@ -189,6 +202,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
+          overflow="visible"
           className={styles.sparkSvg}
           aria-hidden="true"
         >
@@ -198,11 +212,52 @@ const HeroCard: React.FC<HeroCardProps> = ({
               <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
             </linearGradient>
           </defs>
+
           {hasAnyData && (
             <>
               <path d={area} fill="url(#sparkGrad)" />
               <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
               <circle cx={lastX} cy={lastY} r="1.8" fill="var(--accent)" />
+
+              {/* Max value label */}
+              {maxVal > 0 && (
+                <text
+                  x={maxPt.x}
+                  y={maxPt.y - 2.5}
+                  textAnchor={maxAnchor}
+                  fontSize="4"
+                  fontFamily="var(--font-mono)"
+                  fill="var(--text2)"
+                  fillOpacity="0.75"
+                >
+                  {fmtK(maxVal)}
+                </text>
+              )}
+            </>
+          )}
+
+          {/* Daily budget reference line */}
+          {hasBudgetLine && (
+            <>
+              <line
+                x1={PAD_X} y1={yBudget}
+                x2={W - PAD_X} y2={yBudget}
+                stroke="var(--accent)"
+                strokeWidth="0.6"
+                strokeDasharray="2.5 2"
+                strokeOpacity="0.45"
+              />
+              <text
+                x={W - PAD_X - 1}
+                y={yBudget - 1.8}
+                textAnchor="end"
+                fontSize="3.8"
+                fontFamily="var(--font-ui)"
+                fill="var(--accent)"
+                fillOpacity="0.6"
+              >
+                {fmtK(dailyBudget)} ₴/д
+              </text>
             </>
           )}
         </svg>
