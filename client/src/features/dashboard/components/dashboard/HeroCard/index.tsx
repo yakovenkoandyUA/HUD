@@ -33,6 +33,36 @@ interface HeroCardProps {
   upcomingCount:     number
 }
 
+const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+
+function getSparkDaysShort(): string[] {
+  const today = new Date()
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(today.getDate() - (6 - i))
+    return DAYS_SHORT[d.getDay()]
+  })
+}
+
+const W = 100
+const H = 44
+const PAD_X = 2
+const PAD_Y = 4
+
+function buildSparkPath(data: number[]): { line: string; area: string; pts: { x: number; y: number }[] } {
+  const max = Math.max(...data, 1)
+  const pts = data.map((v, i) => ({
+    x: PAD_X + (i / (data.length - 1)) * (W - PAD_X * 2),
+    y: H - PAD_Y - (v / max) * (H - PAD_Y * 2),
+  }))
+  let line = `M ${pts[0].x} ${pts[0].y}`
+  for (let i = 1; i < pts.length; i++) {
+    const cpx = (pts[i - 1].x + pts[i].x) / 2
+    line += ` C ${cpx} ${pts[i - 1].y} ${cpx} ${pts[i].y} ${pts[i].x} ${pts[i].y}`
+  }
+  const area = `${line} L ${pts[pts.length - 1].x} ${H} L ${pts[0].x} ${H} Z`
+  return { line, area, pts }
+}
 
 const HeroCard: React.FC<HeroCardProps> = ({
   balance,
@@ -41,7 +71,6 @@ const HeroCard: React.FC<HeroCardProps> = ({
   sparklineData,
   monthlyBudget,
   thisMonthExpenses,
-  lastMonthExpenses,
 }) => {
   const [displayed, setDisplayed] = useState(0)
   const hasAnimated = useRef(false)
@@ -124,14 +153,25 @@ const HeroCard: React.FC<HeroCardProps> = ({
     )
   }
 
-  // ── Без бюджету: 30/70 split з статами ─────────────────────
+  // ── Без бюджету: 30/70 split з area chart ───────────────────
   const data      = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
-  const weekTotal = data.reduce((s: number, v: number) => s + v, 0)
+  const dayLabels = getSparkDaysShort()
+  const hasAnyData = data.some(v => v > 0)
+  const { line, area, pts } = buildSparkPath(data)
+  const lastPt = pts[6]
 
-  const vsLastMonth = lastMonthExpenses > 0
-    ? Math.round(((thisMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100)
-    : null
-  const vsPositive = vsLastMonth !== null && vsLastMonth <= 0
+  const [activeIdx, setActiveIdx] = useState<number | null>(null)
+  const dismissRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleSparkTap = (i: number) => {
+    if (dismissRef.current) clearTimeout(dismissRef.current)
+    setActiveIdx(i)
+    dismissRef.current = setTimeout(() => setActiveIdx(null), 2000)
+  }
+
+  const tooltipPct = activeIdx !== null
+    ? Math.min(90, Math.max(10, (activeIdx / 6) * 100))
+    : 0
 
   return (
     <div className={styles.splitCard}>
@@ -151,23 +191,80 @@ const HeroCard: React.FC<HeroCardProps> = ({
         </div>
       </div>
 
-      {/* Right — 2 контекстні стати */}
+      {/* Right — area chart + tooltip */}
       <div className={styles.splitRight}>
-        <div className={styles.splitStat}>
-          <span className={styles.splitStatValue}>{fmt(weekTotal)} ₴</span>
-          <span className={styles.splitStatLabel}>тиждень</span>
-        </div>
-        <div className={styles.splitStatDivider} />
-        <div className={styles.splitStat}>
-          {vsLastMonth !== null ? (
-            <span className={`${styles.splitStatValue} ${vsPositive ? styles.splitStatPos : styles.splitStatNeg}`}>
-              {vsLastMonth > 0 ? '+' : ''}{vsLastMonth}%
-            </span>
-          ) : (
-            <span className={`${styles.splitStatValue} ${styles.splitStatDim}`}>—</span>
+        {activeIdx !== null && (
+          <div
+            className={styles.sparkTooltip}
+            style={{ left: `${tooltipPct}%` }}
+          >
+            <span className={styles.sparkTooltipDay}>{dayLabels[activeIdx]}</span>
+            <span className={styles.sparkTooltipVal}>{fmt(data[activeIdx])} ₴</span>
+          </div>
+        )}
+        <svg
+          viewBox={`0 0 ${W} ${H + 10}`}
+          preserveAspectRatio="none"
+          className={styles.sparkSvg}
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+
+          {hasAnyData && (
+            <>
+              <path d={area} fill="url(#sparkGrad)" />
+              <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              {/* Dot on last (today) */}
+              <circle cx={lastPt.x} cy={lastPt.y} r="1.8" fill="var(--accent)" />
+              {/* Active dot */}
+              {activeIdx !== null && activeIdx !== 6 && (
+                <circle cx={pts[activeIdx].x} cy={pts[activeIdx].y} r="2" fill="var(--accent)" fillOpacity="0.8" />
+              )}
+            </>
           )}
-          <span className={styles.splitStatLabel}>vs минулий</span>
-        </div>
+
+          {/* Day labels */}
+          {dayLabels.map((label, i) => {
+            const x = PAD_X + (i / (dayLabels.length - 1)) * (W - PAD_X * 2)
+            return (
+              <text
+                key={i}
+                x={x}
+                y={H + 9}
+                textAnchor="middle"
+                fontSize="5"
+                fontFamily="var(--font-ui)"
+                fill={i === activeIdx ? 'var(--accent)' : i === 6 ? 'var(--accent)' : 'var(--text3)'}
+                fontWeight={i === activeIdx || i === 6 ? '700' : '400'}
+              >
+                {label}
+              </text>
+            )
+          })}
+
+          {/* Invisible hit areas per day */}
+          {data.map((_, i) => {
+            const slotW = W / 7
+            return (
+              <rect
+                key={i}
+                x={i * slotW}
+                y={0}
+                width={slotW}
+                height={H + 10}
+                fill="transparent"
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSparkTap(i)}
+                onTouchStart={e => { e.preventDefault(); handleSparkTap(i) }}
+              />
+            )
+          })}
+        </svg>
       </div>
     </div>
   )
