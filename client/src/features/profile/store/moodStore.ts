@@ -30,8 +30,8 @@ interface MoodStore {
   todayNote:        () => string | null
 }
 
-function toIso(d: Date): string {
-  return d.toISOString().slice(0, 10)
+function toLocalIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 export const useMoodStore = create<MoodStore>((set, get) => ({
@@ -104,12 +104,12 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
   },
 
   todayScore: () => {
-    const today = toIso(new Date())
+    const today = toLocalIso(new Date())
     return get().logs.find(l => l.date === today)?.score ?? null
   },
 
   todayNote: () => {
-    const today = toIso(new Date())
+    const today = toLocalIso(new Date())
     return get().logs.find(l => l.date === today)?.note ?? null
   },
 }))

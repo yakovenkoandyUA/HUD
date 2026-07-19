@@ -20,8 +20,8 @@ const MOOD_LABELS: Record<number, string> = {
   5: 'Чудово',
 }
 
-function toIso(d: Date): string {
-  return d.toISOString().slice(0, 10)
+function toLocalIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function getCurrentSlot(): 'morning' | 'afternoon' | 'evening' {
@@ -60,7 +60,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const [noteValue, setNoteValue] = useState('')
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const today        = toIso(new Date())
+  const today        = toLocalIso(new Date())
   const currentSlot  = getCurrentSlot()
   const currentMood  = todayScore()
 
@@ -73,7 +73,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   useEffect(() => {
     let cancelled = false
     const load = async () => {
-      const from = toIso(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+      const from = toLocalIso(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
       await fetchLogs(from, today)
       if (!cancelled) {
         fetchItems()

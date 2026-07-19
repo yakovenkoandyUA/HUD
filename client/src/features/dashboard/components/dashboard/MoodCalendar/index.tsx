@@ -13,8 +13,8 @@ const MOOD_LABELS: Record<number, string> = {
 
 const DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
 
-function toIso(d: Date): string {
-  return d.toISOString().slice(0, 10)
+function toLocalIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function getMondayOfWeek(d: Date): Date {
@@ -50,7 +50,7 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs }) => {
     d.setHours(0, 0, 0, 0)
     return d
   }, [])
-  const todayIso = toIso(today)
+  const todayIso = toLocalIso(today)
 
   const gridStart = useMemo(() => {
     const monday = getMondayOfWeek(today)
@@ -70,7 +70,7 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs }) => {
       const d = new Date(gridStart)
       d.setDate(gridStart.getDate() + i)
       d.setHours(0, 0, 0, 0)
-      const iso = toIso(d)
+      const iso = toLocalIso(d)
       result.push({
         date:     iso,
         score:    logMap[iso] ?? null,
