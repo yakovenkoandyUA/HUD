@@ -203,7 +203,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
           </div>
         )}
         <svg
-          viewBox={`0 0 ${W} ${H + 10}`}
+          viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
           className={styles.sparkSvg}
           aria-hidden="true"
@@ -219,33 +219,12 @@ const HeroCard: React.FC<HeroCardProps> = ({
             <>
               <path d={area} fill="url(#sparkGrad)" />
               <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-              {/* Dot on last (today) */}
               <circle cx={lastPt.x} cy={lastPt.y} r="1.8" fill="var(--accent)" />
-              {/* Active dot */}
               {activeIdx !== null && activeIdx !== 6 && (
                 <circle cx={pts[activeIdx].x} cy={pts[activeIdx].y} r="2" fill="var(--accent)" fillOpacity="0.8" />
               )}
             </>
           )}
-
-          {/* Day labels */}
-          {dayLabels.map((label, i) => {
-            const x = PAD_X + (i / (dayLabels.length - 1)) * (W - PAD_X * 2)
-            return (
-              <text
-                key={i}
-                x={x}
-                y={H + 9}
-                textAnchor="middle"
-                fontSize="5"
-                fontFamily="var(--font-ui)"
-                fill={i === activeIdx ? 'var(--accent)' : i === 6 ? 'var(--accent)' : 'var(--text3)'}
-                fontWeight={i === activeIdx || i === 6 ? '700' : '400'}
-              >
-                {label}
-              </text>
-            )
-          })}
 
           {/* Invisible hit areas per day */}
           {data.map((_, i) => {
@@ -256,7 +235,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
                 x={i * slotW}
                 y={0}
                 width={slotW}
-                height={H + 10}
+                height={H}
                 fill="transparent"
                 style={{ cursor: 'pointer' }}
                 onClick={() => handleSparkTap(i)}
@@ -265,6 +244,18 @@ const HeroCard: React.FC<HeroCardProps> = ({
             )
           })}
         </svg>
+
+        {/* Day labels — HTML для кращого рендеру шрифту */}
+        <div className={styles.sparkLabels}>
+          {dayLabels.map((label, i) => (
+            <span
+              key={i}
+              className={`${styles.sparkLabel} ${i === 6 || i === activeIdx ? styles.sparkLabelActive : ''}`}
+            >
+              {label}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   )

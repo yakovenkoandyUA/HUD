@@ -146,6 +146,26 @@
   overflow: visible;
 }
 
+.sparkLabels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1px;
+}
+
+.sparkLabel {
+  font-family: var(--font-ui);
+  font-size: 8px;
+  font-weight: 500;
+  color: var(--text3);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.sparkLabelActive {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 /* ── Budget progress bar ────────────────────────────────────── */
 
 .budgetBar {
