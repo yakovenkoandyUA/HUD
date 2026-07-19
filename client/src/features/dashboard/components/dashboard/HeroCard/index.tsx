@@ -33,24 +33,6 @@ interface HeroCardProps {
   upcomingCount:     number
 }
 
-const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-
-function getSparkDaysShort(): string[] {
-  const today = new Date()
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(today.getDate() - (6 - i))
-    return DAYS_SHORT[d.getDay()]
-  })
-}
-
-const W = 100
-const H = 44
-const PAD_X = 2
-const PAD_Y = 4
-
-const BAR_GAP = 1.5
-const BAR_W   = (W - PAD_X * 2 - BAR_GAP * 6) / 7
 
 const HeroCard: React.FC<HeroCardProps> = ({
   balance,
@@ -59,6 +41,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
   sparklineData,
   monthlyBudget,
   thisMonthExpenses,
+  lastMonthExpenses,
 }) => {
   const [displayed, setDisplayed] = useState(0)
   const hasAnimated = useRef(false)
@@ -141,21 +124,14 @@ const HeroCard: React.FC<HeroCardProps> = ({
     )
   }
 
-  // ── Без бюджету: 30/70 split з bar chart ───────────────────
-  const data       = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
-  const dayLabels  = getSparkDaysShort()
-  const hasAnyData = data.some(v => v > 0)
-  const chartMax   = Math.max(...data, 1)
+  // ── Без бюджету: 30/70 split з статами ─────────────────────
+  const data      = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
+  const weekTotal = data.reduce((s: number, v: number) => s + v, 0)
 
-  const bars = data.map((v, i) => {
-    const barH = hasAnyData ? Math.max(v > 0 ? 2 : 0, (v / chartMax) * (H - PAD_Y)) : 0
-    const x    = PAD_X + i * (BAR_W + BAR_GAP)
-    const y    = H - barH
-    const isOver  = dailyBudget > 0 && v > dailyBudget
-    const isEmpty = v === 0
-    const isToday = i === 6
-    return { x, y, barH, isOver, isEmpty, isToday }
-  })
+  const vsLastMonth = lastMonthExpenses > 0
+    ? Math.round(((thisMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100)
+    : null
+  const vsPositive = vsLastMonth !== null && vsLastMonth <= 0
 
   return (
     <div className={styles.splitCard}>
@@ -175,40 +151,22 @@ const HeroCard: React.FC<HeroCardProps> = ({
         </div>
       </div>
 
-      {/* Right — bar chart + day labels */}
+      {/* Right — 2 контекстні стати */}
       <div className={styles.splitRight}>
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
-          className={styles.sparkSvg}
-          aria-hidden="true"
-        >
-          {bars.map((b, i) => (
-            <rect
-              key={i}
-              x={b.x}
-              y={b.y}
-              width={BAR_W}
-              height={b.barH}
-              rx="1.5"
-              fill={
-                b.isEmpty  ? 'var(--border2)' :
-                b.isOver   ? '#ef4444' :
-                b.isToday  ? 'var(--accent)' :
-                             'var(--accent)'
-              }
-              fillOpacity={b.isEmpty ? 0.4 : b.isToday ? 1 : 0.55}
-            />
-          ))}
-        </svg>
-
-        {/* Day labels */}
-        <div className={styles.sparkLabels}>
-          {dayLabels.map((label, i) => (
-            <span key={i} className={`${styles.sparkLabel} ${i === 6 ? styles.sparkLabelToday : ''}`}>
-              {label}
+        <div className={styles.splitStat}>
+          <span className={styles.splitStatValue}>{fmt(weekTotal)} ₴</span>
+          <span className={styles.splitStatLabel}>тиждень</span>
+        </div>
+        <div className={styles.splitStatDivider} />
+        <div className={styles.splitStat}>
+          {vsLastMonth !== null ? (
+            <span className={`${styles.splitStatValue} ${vsPositive ? styles.splitStatPos : styles.splitStatNeg}`}>
+              {vsLastMonth > 0 ? '+' : ''}{vsLastMonth}%
             </span>
-          ))}
+          ) : (
+            <span className={`${styles.splitStatValue} ${styles.splitStatDim}`}>—</span>
+          )}
+          <span className={styles.splitStatLabel}>vs минулий</span>
         </div>
       </div>
     </div>
