@@ -75,6 +75,23 @@ export async function getTasks(req: Request, res: Response): Promise<void> {
 export async function createTask(req: Request, res: Response): Promise<void> {
   const item = await SprintTask.create({ ...req.body, userId: req.userId })
   res.status(201).json(item)
+
+  // Notify assigned users (fire-and-forget)
+  const assignedTo: string[] = item.assignedTo ?? []
+  const newlyAssigned = assignedTo.filter(id => id !== req.userId)
+  if (newlyAssigned.length > 0) {
+    const assigner = await User.findById(req.userId, 'name username')
+    const assignerName = assigner?.name || assigner?.username || 'Хтось'
+    await Promise.allSettled(
+      newlyAssigned.map(uid =>
+        sendPushToUser(uid, {
+          title: '📋 Нова задача для тебе',
+          body: `${assignerName} призначив тебе на «${item.title}»`,
+          url: `/sprint?quest=${item._id}`,
+        })
+      )
+    )
+  }
 }
 
 export async function updateTask(req: Request, res: Response): Promise<void> {

@@ -13,6 +13,7 @@ import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { usePlan } from '@/shared/hooks/usePlan'
 import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
+import { useFamilyStore } from '@/shared/store/familyStore'
 import type { TodoPriority, SprintLabel, RepeatConfig } from '@/shared/types'
 import styles from './AddSprintItemModal.module.css'
 
@@ -124,6 +125,10 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   const { spaces } = useSpacesStore()
   const spaceOptions = useMemo(() => spaces.filter(s => !s.archived && s.modules.includes('tasks')), [spaces])
 
+  const familyMembers = useFamilyStore(s => s.accepted)
+  const fetchFamily   = useFamilyStore(s => s.fetchFamily)
+  const [newAssignedTo, setNewAssignedTo] = useState<string[]>([])
+
   const [newType, setNewType]                   = useState<ItemType>(defaultType ?? 'todo')
   const [newTitle, setNewTitle]                 = useState('')
   const [newPriority, setNewPriority]           = useState<TodoPriority | null>(null)
@@ -153,7 +158,9 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     if (isOpen) {
       setNewType(defaultType ?? 'todo')
       setQuickAddDate(initialDate ?? null)
+      if (familyMembers.length === 0) fetchFamily()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, defaultType, initialDate])
 
   const duplicateItem = useMemo(() => {
@@ -189,6 +196,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     setShowDeadlineSheet(false)
     setShowInitialDatePicker(false)
     setPendingImages([])
+    setNewAssignedTo([])
   }
 
   const handleClose = () => {
@@ -247,6 +255,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
       } : {}),
       ...(imageUrls.length > 0 ? { imageUrls, imagePublicIds } : {}),
       ...(newSpaceId ? { spaceId: newSpaceId } : {}),
+      ...(newAssignedTo.length > 0 ? { assignedTo: newAssignedTo } : {}),
     },
     // Rollback images if backend save fails
     imagePublicIds.length > 0 ? imagePublicIds : undefined)
@@ -310,6 +319,45 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                     {sp.name}
                   </button>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {familyMembers.length > 0 && (
+            <div className={styles.assignSection}>
+              <span className={styles.assignLabel}>
+                Асайнити <span className={styles.spaceLabelOpt}>(необов'язково)</span>
+              </span>
+              <div className={styles.assignRow}>
+                {familyMembers.map(m => {
+                  const on = newAssignedTo.includes(m.id)
+                  const initials = (m.name || m.username).slice(0, 2).toUpperCase()
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`${styles.assignAvatar} ${on ? styles.assignAvatarOn : ''}`}
+                      onClick={() => setNewAssignedTo(prev =>
+                        prev.includes(m.id) ? prev.filter(x => x !== m.id) : [...prev, m.id]
+                      )}
+                    >
+                      <div className={styles.assignAvatarCircle}>
+                        {m.avatarUrl
+                          ? <img src={m.avatarUrl} alt={m.name} />
+                          : initials
+                        }
+                        {on && (
+                          <div className={styles.assignCheckMark}>
+                            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                              <path d="M1.5 4.5l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <span className={styles.assignAvatarName}>{m.name || m.username}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
