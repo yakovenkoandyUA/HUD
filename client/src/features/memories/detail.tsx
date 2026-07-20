@@ -32,93 +32,56 @@ function formatMemoryDate(iso: string): string {
   return `${d} ${MONTHS_UA_SHORT[m - 1]} ${y}`
 }
 
-// ── Photo item with long-press menu ──────────────────────────────────────────
+// ── Deterministic span pattern for photo mosaic ──────────────────────────────
+// Each photo slot has a forced col/row span — object-fit: cover crops to fill.
+// Pattern repeats every 7 photos → unique layout for most gallery sizes.
+// Row unit = 8px.
 
-/**
- * Builds per-photo grid column spans using count-aware editorial rules.
- *
- * n=1 : featured full-width (span 2)
- * n=2 : both portrait/square → side-by-side (span 1); ≥1 landscape detected → both full-width (span 2)
- * n=3 : featured full-width (span 2); supporting photos always side-by-side (span 1)
- * n=4 : balanced 2×2 (all span 1); landscape photo breaks to span 2
- * n≥5 : featured span 2; landscape span 2; portrait/square span 1
- *
- * Unknown ratio (not yet loaded) is treated as portrait for safety.
- */
-function buildLayouts(
-  photos: MemoryPhoto[],
-  ratios: Record<string, number>,
-  featuredIndex: number,
-): Array<1 | 2> {
-  const n = photos.length
-  const r = (i: number): number | undefined => ratios[photos[i]?.id]
-  const isL = (i: number): boolean => (r(i) ?? 0) >= 1.2
-
-  if (n === 1) return [2]
-
-  if (n === 2) {
-    const anyLandscape = isL(0) || isL(1)
-    return anyLandscape ? [2, 2] : [1, 1]
-  }
-
-  if (n === 3) {
-    // fixed editorial: hero + pair below — supporting photos always side-by-side
-    return photos.map((_, i): 1 | 2 => (i === featuredIndex ? 2 : 1))
-  }
-
-  if (n === 4) {
-    return photos.map((_, i): 1 | 2 => (isL(i) ? 2 : 1))
-  }
-
-  // n≥5: featured span 2, landscape span 2, rest span 1
-  return photos.map((_, i): 1 | 2 => (i === featuredIndex || isL(i) ? 2 : 1))
-}
+const PHOTO_SPANS: Array<{ col: 1 | 2; row: number }> = [
+  { col: 2, row: 30 }, // 0 — full-width hero       240px
+  { col: 1, row: 38 }, // 1 — tall portrait          304px
+  { col: 1, row: 22 }, // 2 — short landscape        176px
+  { col: 1, row: 26 }, // 3 — medium portrait        208px
+  { col: 1, row: 34 }, // 4 — tall                   272px
+  { col: 2, row: 22 }, // 5 — full-width accent strip 176px
+  { col: 1, row: 30 }, // 6 — medium                 240px
+]
 
 /**
  * PhotoItem
  * ---------
- * Плитка в editorial collage / masonry grid.
- * Визначає aspect ratio після завантаження через naturalWidth/naturalHeight.
- * Займає span 1 або span 2 CSS Grid колонки залежно від орієнтації.
+ * Плитка в mosaic grid.
+ * Розмір визначається примусовим span-патерном (не aspect ratio фото).
+ * object-fit: cover кропає фото під виділену клітинку.
  *
  * Props:
- * @prop {MemoryPhoto}                          photo            — дані фото
- * @prop {1 | 2}                                span             — кількість grid-колонок
- * @prop {number | undefined}                   ratio            — виявлений aspect ratio (width/height)
- * @prop {() => void}                           onTap            — тап для перегляду (lightbox)
- * @prop {() => void}                           [onSetCover]     — зробити обкладинкою
- * @prop {() => void}                           [onDelete]       — видалити фото
- * @prop {(photoId: string, r: number) => void} onRatioDetected  — коллбек після визначення ratio
+ * @prop {MemoryPhoto}  photo       — дані фото
+ * @prop {1 | 2}        colSpan     — кількість grid-колонок
+ * @prop {number}       rowSpan     — кількість grid-рядків (×8px)
+ * @prop {() => void}   onTap       — відкрити lightbox
+ * @prop {() => void}   [onSetCover]— зробити обкладинкою
+ * @prop {() => void}   [onDelete]  — видалити
  */
 interface PhotoItemProps {
   photo: MemoryPhoto
-  span: 1 | 2
-  ratio: number | undefined
+  colSpan: 1 | 2
+  rowSpan: number
   onTap: () => void
   onSetCover?: () => void
   onDelete?: () => void
-  onRatioDetected: (photoId: string, ratio: number) => void
 }
 
-const PhotoItem: React.FC<PhotoItemProps> = ({ photo, span, ratio, onTap, onSetCover, onDelete, onRatioDetected }) => {
+const PhotoItem: React.FC<PhotoItemProps> = ({ photo, colSpan, rowSpan, onTap, onSetCover, onDelete }) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [loaded, setLoaded]     = useState(false)
 
   const hasMenu   = !!(onSetCover || onDelete)
   const longPress = useLongPress(() => { if (hasMenu) setMenuOpen(true) })
 
-  const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    setLoaded(true)
-    const { naturalWidth, naturalHeight } = e.currentTarget
-    if (naturalWidth && naturalHeight) {
-      onRatioDetected(photo.id, naturalWidth / naturalHeight)
-    }
-  }, [photo.id, onRatioDetected])
-
   return (
     <div
-      className={`${styles.photoItem} ${span === 2 ? styles.photoSpan2 : styles.photoSpan1}`}
-      style={{ aspectRatio: span === 2 ? Math.max(ratio ?? 1, 1) : (ratio ?? 0.8) }}
+      className={styles.photoItem}
+      style={{ gridColumn: `span ${colSpan}`, gridRow: `span ${rowSpan}` }}
       {...longPress}
     >
       {!loaded && <div className={styles.photoSkeleton} />}
@@ -126,8 +89,8 @@ const PhotoItem: React.FC<PhotoItemProps> = ({ photo, span, ratio, onTap, onSetC
         src={photo.url}
         alt={photo.caption ?? ''}
         className={`${styles.photoImg} ${loaded ? styles.photoImgLoaded : ''}`}
-        onLoad={handleLoad}
         loading="lazy"
+        onLoad={() => setLoaded(true)}
         onClick={() => { if (!menuOpen) onTap() }}
       />
 
@@ -450,14 +413,6 @@ const MemoryDetailScreen: React.FC = () => {
   const [showEdit, setShowEdit]         = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [sharing, setSharing]           = useState(false)
-  const [photoRatios, setPhotoRatios]   = useState<Record<string, number>>({})
-
-  const handleRatioDetected = useCallback((photoId: string, ratio: number) => {
-    setPhotoRatios(prev => {
-      if (prev[photoId] !== undefined) return prev
-      return { ...prev, [photoId]: ratio }
-    })
-  }, [])
 
   const [addingPlace, setAddingPlace]   = useState(false)
 
@@ -520,16 +475,6 @@ const MemoryDetailScreen: React.FC = () => {
     [memory]
   )
 
-  const featuredPhotoIndex = useMemo(() => {
-    if (!memory || memory.photos.length === 0) return 0
-    const coverIdx = memory.photos.findIndex(p => p.url === memory.coverUrl)
-    return coverIdx >= 0 ? coverIdx : 0
-  }, [memory?.coverUrl, memory?.photos]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const photoLayouts = useMemo(
-    () => memory ? buildLayouts(memory.photos, photoRatios, featuredPhotoIndex) : [],
-    [memory?.photos, photoRatios, featuredPhotoIndex] // eslint-disable-line react-hooks/exhaustive-deps
-  )
 
   const handleShare = useCallback(async () => {
     if (!memory || sharing) return
@@ -823,7 +768,7 @@ const MemoryDetailScreen: React.FC = () => {
 				</div>
 			)}
 
-			{/* ── Photos editorial collage / adaptive masonry ── */}
+			{/* ── Photos mosaic — deterministic span pattern ── */}
 			{memory.photos.length === 0 ? (
 				<div className={styles.emptyPhotos}>
 					<span className={styles.emptyIcon}>📷</span>
@@ -832,18 +777,20 @@ const MemoryDetailScreen: React.FC = () => {
 				</div>
 			) : (
 				<div className={styles.photoGrid}>
-					{memory.photos.map((photo, i) => (
-						<PhotoItem
-							key={photo.id}
-							photo={photo}
-							span={photoLayouts[i] ?? 1}
-							ratio={photoRatios[photo.id]}
-							onTap={() => setViewerIndex(i)}
-							onSetCover={isOwner ? () => setCover(id!, photo.url) : undefined}
-							onDelete={isOwner ? () => deletePhoto(id!, photo.id) : undefined}
-							onRatioDetected={handleRatioDetected}
-						/>
-					))}
+					{memory.photos.map((photo, i) => {
+						const { col, row } = PHOTO_SPANS[i % PHOTO_SPANS.length]
+						return (
+							<PhotoItem
+								key={photo.id}
+								photo={photo}
+								colSpan={col}
+								rowSpan={row}
+								onTap={() => setViewerIndex(i)}
+								onSetCover={isOwner ? () => setCover(id!, photo.url) : undefined}
+								onDelete={isOwner ? () => deletePhoto(id!, photo.id) : undefined}
+							/>
+						)
+					})}
 				</div>
 			)}
 

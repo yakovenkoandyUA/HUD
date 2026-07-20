@@ -586,23 +586,10 @@
 .photoGrid {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
-	grid-auto-flow: row dense;
+	grid-auto-rows: 8px;
+	grid-auto-flow: dense;
 	gap: 3px;
 	padding: 3px;
-}
-
-@media (min-width: 600px) {
-	.photoGrid {
-		grid-template-columns: repeat(3, 1fr);
-	}
-}
-
-.photoSpan1 {
-	grid-column: span 1;
-}
-
-.photoSpan2 {
-	grid-column: span 2;
 }
 
 @keyframes shimmer {
@@ -620,7 +607,7 @@
 	border-radius: 6px;
 	cursor: pointer;
 	background: var(--surface);
-	/* aspect-ratio applied via inline style from detected naturalWidth/naturalHeight */
+	-webkit-tap-highlight-color: transparent;
 }
 
 .photoSkeleton {
@@ -1299,6 +1286,72 @@
 	gap: 8px;
 	padding-bottom: 4px;
 }
+
+/* ── 4-column compact places grid ── */
+.placesGrid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 8px;
+	padding-bottom: 4px;
+}
+
+.placeGridItem {
+	position: relative;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.placeGridLink {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 5px;
+	padding: 10px 6px 8px;
+	text-decoration: none;
+	-webkit-tap-highlight-color: transparent;
+	width: 100%;
+}
+
+.placeGridIcon {
+	color: var(--gold);
+	flex-shrink: 0;
+}
+
+.placeGridName {
+	font-family: var(--font-ui);
+	font-size: 9px;
+	font-weight: 600;
+	color: var(--text);
+	text-align: center;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	line-height: 1.3;
+	word-break: break-word;
+	width: 100%;
+}
+
+.placeGridRemove {
+	position: absolute;
+	top: 3px;
+	right: 3px;
+	width: 16px;
+	height: 16px;
+	background: none;
+	border: none;
+	color: var(--text3);
+	cursor: pointer;
+	padding: 2px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	opacity: 0.5;
+}
+.placeGridRemove:hover { color: var(--negative); opacity: 1; }
 
 .placeCard {
 	background: var(--surface);
