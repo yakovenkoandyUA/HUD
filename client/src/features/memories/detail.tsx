@@ -19,7 +19,6 @@ import { useModalHistory } from '@/shared/hooks/useModalHistory'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import type { Memory, MemoryPhoto, MemoryPlace } from './types/memory'
 import type { PlanLocation } from '@/features/memories/store/plansStore'
-import { authFetch } from '@/shared/services/api'
 import styles from './MemoryDetail.module.css'
 
 
