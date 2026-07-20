@@ -31,21 +31,36 @@ import DayOverlay from './components/dashboard/DayOverlay'
 import MimirHint, { type MimirPose } from '@/shared/components/ui/MimirHint'
 import { useMimirHint } from '@/shared/hooks/useMimirHint'
 import { useMimirAiHint } from '@/shared/hooks/useMimirAiHint'
+import { MIMIR_DIALOGUE, getMimirText } from '@/shared/data/mimirDialogue'
+import { getMimirHistory, isDailyEligible, markDailyShown } from '@/shared/utils/mimirHistory'
 import styles from './Dashboard.module.css'
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const { items: sprintItems, fetchItems } = useSprintStore()
-  const { showToast } = useUiStore()
+  const { showToast, mimirMode } = useUiStore()
   const f1Enabled         = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const salaryDay         = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const monthlyBudget     = useProfileStore(s => s.activeProfile?.monthlySpendLimit ?? null)
+  const userId            = useProfileStore(s => s.activeProfile?.id ?? '')
   const { plan: mealPlan, fetchPlan: fetchMealPlan } = useMealPlanStore()
   const { recipes, fetchRecipes } = useRecipesStore()
   const { notes, fetchNotes } = useNotesStore()
   const { seen: welcomeSeen, markSeen: markWelcomeSeen } = useMimirHint('dashboard-welcome')
   const { hint: aiHint, markShown: markAiShown } = useMimirAiHint()
+
+  // Suppress daily greeting if first_visit fires in this session
+  const firstVisitInSession = useRef(!welcomeSeen)
+  const [showDailyGreeting, setShowDailyGreeting] = useState(false)
+  const dailyGreetingDecided = useRef(false)
+
+  useEffect(() => {
+    if (!welcomeSeen || dailyGreetingDecided.current || firstVisitInSession.current || !userId) return
+    dailyGreetingDecided.current = true
+    const h = getMimirHistory(userId)
+    if (isDailyEligible(h, 'dashboard_daily_greeting')) setShowDailyGreeting(true)
+  }, [welcomeSeen, userId])
 
   const [showDay, setShowDay]           = useState(false)
   const [showExpense, setShowExpense]   = useState(false)
@@ -181,10 +196,10 @@ const Dashboard: React.FC = () => {
         {!welcomeSeen ? (
           <div className={styles.mimirFloat}>
             <MimirHint
-              pose="excited"
+              pose={MIMIR_DIALOGUE.dashboard_first_visit.pose}
               oneTime
-              textKey="Криниця мудрості відкрита. Я Мімір — твій особистий охоронець порядку. Переглянь розділи знизу."
-              onDismiss={markWelcomeSeen}
+              textKey={getMimirText('dashboard_first_visit', mimirMode)}
+              onDismiss={() => { firstVisitInSession.current = true; markWelcomeSeen() }}
             />
           </div>
         ) : aiHint ? (
@@ -195,6 +210,14 @@ const Dashboard: React.FC = () => {
               oneTime
               onDismiss={markAiShown}
               showUpgrade={!aiHint.isAi}
+            />
+          </div>
+        ) : showDailyGreeting ? (
+          <div className={styles.mimirFloat}>
+            <MimirHint
+              pose={MIMIR_DIALOGUE.dashboard_daily_greeting.pose}
+              textKey={getMimirText('dashboard_daily_greeting', mimirMode)}
+              onDismiss={() => { setShowDailyGreeting(false); markDailyShown(userId, 'dashboard_daily_greeting') }}
             />
           </div>
         ) : null}

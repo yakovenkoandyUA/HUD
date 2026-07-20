@@ -18,6 +18,11 @@
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
+/* portal mode: card rendered directly to body, fixed above backdrop */
+.rootPortal {
+  position: fixed;
+}
+
 .rootHiding {
   opacity: 0;
   transform: translateY(8px) scale(0.96);

@@ -4,7 +4,6 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 
 import MimirHint from '@/shared/components/ui/MimirHint'
-import { useMimirHint } from '@/shared/hooks/useMimirHint'
 import AppHeader from '@/shared/components/layout/AppHeader'
 import TrashBin from './components/sprint/TrashBin'
 import WeekHeader from './components/sprint/WeekHeader'
@@ -16,10 +15,13 @@ import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { useMealPlanStore } from '@/features/recipes/store/mealPlanStore'
 import { useRecipesStore } from '@/features/recipes/store/recipesStore'
 import { useProfileStore } from '@/shared/store/profileStore'
+import { useUiStore } from '@/shared/store/uiStore'
 import { isRecurring, isRoutineDueOnDay } from './utils/sprint'
 import { getToken } from '@/shared/services/api'
 import { useSprintDrag } from './hooks/useSprintDrag'
 import { useSprintCalendar } from './hooks/useSprintCalendar'
+import { MIMIR_DIALOGUE, getMimirText, type MimirDialogueId } from '@/shared/data/mimirDialogue'
+import { getMimirHistory, isDailyEligible, isWeeklyEligible, markDailyShown, markWeeklyShown, getTodayIso } from '@/shared/utils/mimirHistory'
 import styles from './Sprint.module.css'
 
 type FilterType   = 'task' | 'shopping'
@@ -75,7 +77,15 @@ const Sprint: React.FC = () => {
 	// лічильника в фоні одразу ховав би підказку реактивно (миготіння в той же сеанс).
 	const [ghostHintEligible]     = useState(() => !sprintTutorialSeen && sprintTutorialShownCount < GHOST_HINT_LIMIT)
 	const [longPressHintEligible] = useState(() => !weekdayLongPressTutorialSeen && weekdayLongPressShownCount < LONGPRESS_HINT_LIMIT)
-	const { seen: sprintEmptySeen, markSeen: markSprintEmptySeen } = useMimirHint('sprint-empty')
+	const { mimirMode } = useUiStore()
+
+	// ── Mimir sprint dialogues ──────────────────────────────────────────────────
+	type SprintEventId = Extract<MimirDialogueId, 'sprint_all_completed' | 'task_first_completed'>
+	const [pendingSprintEvent, setPendingSprintEvent] = useState<SprintEventId | null>(null)
+	const [showOverdue, setShowOverdue]     = useState(false)
+	const [showSprintEmpty, setShowSprintEmpty] = useState(false)
+	const sprintStateDecided = useRef(false)
+	const prevItemsRef       = useRef<typeof items>([])
 
 	const [showAdd, setShowAdd]           = useState(false)
 	const [quickAddDate, setQuickAddDate] = useState<string | null>(null)
@@ -139,6 +149,43 @@ const Sprint: React.FC = () => {
 		run()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
+
+	// ── Mimir: state-based hints (once after data loads) ─────────────────────
+	useEffect(() => {
+		if (loading || sprintStateDecided.current || !myUserId) return
+		sprintStateDecided.current = true
+		const h = getMimirHistory(myUserId)
+		const today = getTodayIso()
+		const nonTask = items.filter(t => !isRecurring(t) && t.type !== 'shopping')
+		const hasOverdue = nonTask.some(t => !t.done && !!t.dueDate && t.dueDate < today)
+		if (hasOverdue && isDailyEligible(h, 'task_overdue')) {
+			setShowOverdue(true)
+		} else if (!hasOverdue && isCurrentWeek && nonTask.length === 0 && isDailyEligible(h, 'sprint_empty')) {
+			setShowSprintEmpty(true)
+		}
+	}, [loading, items, myUserId, isCurrentWeek])
+
+	// ── Mimir: event-based hints (on toggle) ──────────────────────────────────
+	useEffect(() => {
+		const prev = prevItemsRef.current
+		prevItemsRef.current = items
+		if (prev.length === 0 || loading || !myUserId) return
+		const nonTask = (arr: typeof items) => arr.filter(t => !isRecurring(t) && t.type !== 'shopping')
+		const prevNT = nonTask(prev)
+		const currNT = nonTask(items)
+		const newlyDone = currNT.filter(t => {
+			const p = prevNT.find(x => x.id === t.id)
+			return p && !p.done && t.done
+		})
+		if (newlyDone.length === 0) return
+		const h = getMimirHistory(myUserId)
+		const allDone = currNT.length > 0 && currNT.every(t => t.done)
+		if (allDone && isWeeklyEligible(h, 'sprint_all_completed')) {
+			setPendingSprintEvent('sprint_all_completed')
+		} else if (prevNT.filter(t => t.done).length === 0 && isWeeklyEligible(h, 'task_first_completed')) {
+			setPendingSprintEvent('task_first_completed')
+		}
+	}, [items, loading, myUserId])
 
 	const routineItems = items.filter(t => isRecurring(t))
 
@@ -342,16 +389,31 @@ const Sprint: React.FC = () => {
 					)}
 				</div>
 
-				{/* ── Sprint Mimir: one-time empty hint only (no flex-gap from empty wrapper) ── */}
-				{filterType === 'task' && !sprintEmptySeen && isCurrentWeek && filterStatus === 'active'
-				 && !loading && items.filter(t => !isRecurring(t) && t.type !== 'shopping').length === 0 && (
+				{/* ── Sprint Mimir dialogues ────────────────────────────────────────────── */}
+				{pendingSprintEvent && (
 					<div className={styles.mimirFloat}>
 						<MimirHint
-							pose="pointing"
-							oneTime
-							textKey="Тижневий спринт порожній. Натисни «Додати квест» внизу — і вона з'явиться тут."
-							onDismiss={markSprintEmptySeen}
+							pose={MIMIR_DIALOGUE[pendingSprintEvent].pose}
+							textKey={getMimirText(pendingSprintEvent, mimirMode)}
+							onDismiss={() => { markWeeklyShown(myUserId ?? '', pendingSprintEvent!); setPendingSprintEvent(null) }}
 						/>
+					</div>
+				)}
+				{!pendingSprintEvent && filterType === 'task' && (showOverdue || showSprintEmpty) && (
+					<div className={styles.mimirFloat}>
+						{showOverdue ? (
+							<MimirHint
+								pose={MIMIR_DIALOGUE.task_overdue.pose}
+								textKey={getMimirText('task_overdue', mimirMode)}
+								onDismiss={() => { setShowOverdue(false); markDailyShown(myUserId ?? '', 'task_overdue') }}
+							/>
+						) : (
+							<MimirHint
+								pose={MIMIR_DIALOGUE.sprint_empty.pose}
+								textKey={getMimirText('sprint_empty', mimirMode)}
+								onDismiss={() => { setShowSprintEmpty(false); markDailyShown(myUserId ?? '', 'sprint_empty') }}
+							/>
+						)}
 					</div>
 				)}
 

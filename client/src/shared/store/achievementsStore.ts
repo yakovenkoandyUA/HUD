@@ -3,6 +3,7 @@ import { useProfileStore } from './profileStore'
 import { ACHIEVEMENTS_BY_ID, type Achievement } from '@/shared/data/achievements'
 import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
 import { getLevel, type Level } from '@/features/achievements/levels'
+import { getMimirHistory } from '@/shared/utils/mimirHistory'
 
 /**
  * achievementsStore
@@ -18,9 +19,11 @@ import { getLevel, type Level } from '@/features/achievements/levels'
 interface AchievementsState {
   pending: Achievement | null
   pendingLevel: Level | null
+  mimirAchievementDialogue: { id: 'achievement_first' | 'achievement_rare'; achievementId: string } | null
   unlock: (id: string) => void
   dismiss: () => void
   dismissLevel: () => void
+  clearMimirAchievementDialogue: () => void
 }
 
 function calcRunes(ids: { id: string }[]): number {
@@ -30,6 +33,7 @@ function calcRunes(ids: { id: string }[]): number {
 export const useAchievementsStore = create<AchievementsState>()((set) => ({
   pending: null,
   pendingLevel: null,
+  mimirAchievementDialogue: null,
 
   unlock: (id) => {
     const achievement = ACHIEVEMENTS_BY_ID[id]
@@ -50,11 +54,28 @@ export const useAchievementsStore = create<AchievementsState>()((set) => ({
       pendingLevel: levelAfter.level !== levelBefore.level ? levelAfter : null,
     })
 
+    // Queue a Mimir dialogue after the achievement toast clears (handled by MimirAchievementLayer)
+    const userId = activeProfile.id ?? ''
+    if (userId) {
+      const h = getMimirHistory(userId)
+      const def = ACHIEVEMENT_BY_ID[id]
+      const rarity = def?.rarity
+      const isRare = rarity === 'stone' || rarity === 'root' || rarity === 'well'
+      const isFirst = before.length === 0 && !h.achievementFirstShown
+
+      if (isRare && !h.shownRareAchievementIds.includes(id)) {
+        set({ mimirAchievementDialogue: { id: 'achievement_rare', achievementId: id } })
+      } else if (isFirst) {
+        set({ mimirAchievementDialogue: { id: 'achievement_first', achievementId: id } })
+      }
+    }
+
     updateProfile({ unlockedAchievements: next }).catch(() => {
-      set({ pending: null, pendingLevel: null })
+      set({ pending: null, pendingLevel: null, mimirAchievementDialogue: null })
     })
   },
 
   dismiss: () => set({ pending: null }),
   dismissLevel: () => set({ pendingLevel: null }),
+  clearMimirAchievementDialogue: () => set({ mimirAchievementDialogue: null }),
 }))

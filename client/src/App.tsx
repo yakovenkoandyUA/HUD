@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'rea
 import BottomNav from '@/shared/components/layout/BottomNav'
 import ToastContainer from '@/shared/components/ui/Toast'
 import AchievementUnlockedModal from '@/shared/components/ui/AchievementUnlockedModal'
+import MimirAchievementLayer from '@/shared/components/ui/MimirAchievementLayer'
 import PinLock from '@/shared/components/ui/PinLock'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
@@ -282,6 +283,7 @@ const App: React.FC = () => {
       <PinGuard />
       <ToastContainer />
       <AchievementUnlockedModal />
+      <MimirAchievementLayer />
       {(isInstallable || isIOS) && !isDismissed && (
         <PwaInstallBanner isIOS={isIOS} onInstall={promptInstall} onDismiss={dismiss} />
       )}

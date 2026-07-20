@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppHeader from '@/shared/components/layout/AppHeader'
 import AddMemoryModal from './components/memories/AddMemoryModal'
@@ -18,7 +18,11 @@ import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { authFetch } from '@/shared/services/api'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import FabHint from '@/shared/components/ui/FabHint'
+import MimirHint from '@/shared/components/ui/MimirHint'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { useProfileStore } from '@/shared/store/profileStore'
+import { MIMIR_DIALOGUE, getMimirText } from '@/shared/data/mimirDialogue'
+import { getMimirHistory, isDailyEligible, markDailyShown } from '@/shared/utils/mimirHistory'
 import { haversineKm } from './utils/geo'
 import { useSwipeTabs } from '@/shared/hooks/useSwipeTabs'
 import styles from './Memories.module.css'
@@ -88,8 +92,21 @@ const MemoriesScreen: React.FC = () => {
   const { memories, isLoading: memoriesLoading, fetchMemories, addMemory } = useMemoriesStore()
   const { plans, fetchPlans, addPlan, updatePlan, deletePlan } = usePlansStore()
   const { accepted, fetchFamily } = useFamilyStore()
-  const { showToast } = useUiStore()
+  const { showToast, mimirMode } = useUiStore()
   const { transactions } = useFinanceStore()
+  const userId = useProfileStore(s => s.activeProfile?.id ?? '')
+
+  const [showMemoriesEmpty, setShowMemoriesEmpty] = useState(false)
+  const memoriesEmptyDecided = useRef(false)
+
+  useEffect(() => {
+    if (memoriesLoading || memoriesEmptyDecided.current || !userId) return
+    memoriesEmptyDecided.current = true
+    if (memories.length === 0) {
+      const h = getMimirHistory(userId)
+      if (isDailyEligible(h, 'memories_empty')) setShowMemoriesEmpty(true)
+    }
+  }, [memoriesLoading, memories.length, userId])
 
   const companionMap = useMemo(() =>
     Object.fromEntries(accepted.map(m => [m.id, m])),
@@ -356,15 +373,26 @@ const MemoriesScreen: React.FC = () => {
               {Array.from({ length: 9 }, (_, i) => <div key={i} className={styles.skeletonCard} />)}
             </div>
           ) : filteredMemories.length === 0 ? (
-            <div className={styles.empty}>
-              <svg className={styles.emptyIcon} width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-                <rect x="6" y="14" width="60" height="44" rx="6" stroke="currentColor" strokeWidth="2.5"/>
-                <circle cx="22" cy="28" r="5" stroke="currentColor" strokeWidth="2.5"/>
-                <path d="M6 44l16-14 12 11 8-8 24 23" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі ще немає спогадів' : 'Ще немає спогадів'}</p>
-              <p className={styles.emptyHint}>{selectedSpaceId ? 'Додай перший!' : 'Додай перший!'}</p>
-            </div>
+            <>
+              {showMemoriesEmpty && !selectedSpaceId && (
+                <div className={styles.mimirFloat}>
+                  <MimirHint
+                    pose={MIMIR_DIALOGUE.memories_empty.pose}
+                    textKey={getMimirText('memories_empty', mimirMode)}
+                    onDismiss={() => { setShowMemoriesEmpty(false); markDailyShown(userId, 'memories_empty') }}
+                  />
+                </div>
+              )}
+              <div className={styles.empty}>
+                <svg className={styles.emptyIcon} width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                  <rect x="6" y="14" width="60" height="44" rx="6" stroke="currentColor" strokeWidth="2.5"/>
+                  <circle cx="22" cy="28" r="5" stroke="currentColor" strokeWidth="2.5"/>
+                  <path d="M6 44l16-14 12 11 8-8 24 23" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі ще немає спогадів' : 'Ще немає спогадів'}</p>
+                <p className={styles.emptyHint}>{selectedSpaceId ? 'Додай перший!' : 'Додай перший!'}</p>
+              </div>
+            </>
           ) : (
             <div className={styles.timeline}>
               {/* Stats row — інтерактивний */}

@@ -844,3 +844,11 @@
   0%, 100% { opacity: 0.4; }
   50%       { opacity: 0.8; }
 }
+
+.mimirFloat {
+  position: relative;
+  height: 0;
+  overflow: visible;
+  z-index: 3;
+  pointer-events: none;
+}

@@ -21,6 +21,9 @@ import type { WatchlistCategory, WatchlistItem, WatchlistStatus, GameItem, GameS
 import { openmojiUrl } from './utils/openmojiUrl'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { useSwipeTabs } from '@/shared/hooks/useSwipeTabs'
+import MimirHint from '@/shared/components/ui/MimirHint'
+import { MIMIR_DIALOGUE, getMimirText } from '@/shared/data/mimirDialogue'
+import { getMimirHistory, isDailyEligible, markDailyShown } from '@/shared/utils/mimirHistory'
 import styles from './Watchlist.module.css'
 
 type Tab = WatchlistCategory | 'game' | 'book'
@@ -67,9 +70,22 @@ const STAT_LABELS: Record<string, { short: string }> = {
 const Watchlist: React.FC = () => {
   const { items, addItem, setStatus, setRating, updateItem, deleteItem, fetchWatchlist, isLoading } = useWatchlistStore()
   const { items: games, fetchGames, addGame, updateGame, deleteGame, loading: gamesLoading } = useGamesStore()
-  const { showToast } = useUiStore()
+  const { showToast, mimirMode } = useUiStore()
   const { accepted, fetchFamily } = useFamilyStore()
   const { activeProfile } = useProfileStore()
+  const userId = activeProfile?.id ?? ''
+
+  const [showWatchlistEmpty, setShowWatchlistEmpty] = useState(false)
+  const watchlistEmptyDecided = useRef(false)
+
+  useEffect(() => {
+    if (isLoading || watchlistEmptyDecided.current || !userId) return
+    watchlistEmptyDecided.current = true
+    if (items.length === 0) {
+      const h = getMimirHistory(userId)
+      if (isDailyEligible(h, 'watchlist_empty')) setShowWatchlistEmpty(true)
+    }
+  }, [isLoading, items.length, userId])
 
   const enabledTabIds = activeProfile?.mediaEnabledTabs ?? ['movie', 'series', 'anime', 'game']
   const TABS = ALL_TABS.filter(t => enabledTabIds.includes(t.id))
@@ -413,6 +429,15 @@ const Watchlist: React.FC = () => {
 
       {/* ── Content (scrollable) ── */}
       <div className={styles.content}>
+        {showWatchlistEmpty && (
+          <div className={styles.mimirFloat}>
+            <MimirHint
+              pose={MIMIR_DIALOGUE.watchlist_empty.pose}
+              textKey={getMimirText('watchlist_empty', mimirMode)}
+              onDismiss={() => { setShowWatchlistEmpty(false); markDailyShown(userId, 'watchlist_empty') }}
+            />
+          </div>
+        )}
         {/* hero scrolls away — media only */}
         {isMedia && watchingItems.length > 0 && <WatchlistHero items={watchingItems} onTap={setSelected} />}
         {isGame && <GameUpcoming ownedGames={games} onAdd={handleAddGame} />}

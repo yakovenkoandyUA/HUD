@@ -18,7 +18,8 @@ import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart } f
 import { getToken } from '@/shared/services/api'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import MimirHint from '@/shared/components/ui/MimirHint'
-import { useMimirHint } from '@/shared/hooks/useMimirHint'
+import { MIMIR_DIALOGUE, getMimirText } from '@/shared/data/mimirDialogue'
+import { getMimirHistory, isDailyEligible, markDailyShown } from '@/shared/utils/mimirHistory'
 import styles from './Finance.module.css'
 
 const IconExpense: React.FC = () => (
@@ -35,16 +36,35 @@ const IconTopup: React.FC = () => (
 
 const Finance: React.FC = () => {
   const { balance, transactions, addTopup, addExpense, deleteTransaction, fetchTransactions } = useFinanceStore()
-  const { showToast } = useUiStore()
+  const { showToast, mimirMode } = useUiStore()
   const salaryDay = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
+  const userId    = useProfileStore(s => s.activeProfile?.id ?? '')
   const { connection, syncing, importing, fetchStatus, sync, importCsv, recategorize } = useBankStore()
-  const { seen: financeWelcomeSeen, markSeen: markFinanceWelcomeSeen } = useMimirHint('finance-welcome')
 
   const [showTopup, setShowTopup]     = useState(false)
   const [showExpense, setShowExpense] = useState(false)
   const [showCsvModal, setShowCsvModal] = useState(false)
+  const [showFinanceEmpty, setShowFinanceEmpty] = useState(false)
 
   const csvInputRef = useRef<HTMLInputElement>(null)
+  const transactionsRef = useRef(transactions)
+  const financeEmptyDecided = useRef(false)
+
+  useEffect(() => { transactionsRef.current = transactions }, [transactions])
+
+  // Decide once, 800ms after userId is known, using up-to-date transaction count
+  useEffect(() => {
+    if (!userId || financeEmptyDecided.current) return
+    const t = setTimeout(() => {
+      if (financeEmptyDecided.current) return
+      financeEmptyDecided.current = true
+      if (transactionsRef.current.length === 0) {
+        const h = getMimirHistory(userId)
+        if (isDailyEligible(h, 'finance_empty')) setShowFinanceEmpty(true)
+      }
+    }, 800)
+    return () => clearTimeout(t)
+  }, [userId])
 
   useEffect(() => {
     if (!getToken()) return
@@ -179,12 +199,11 @@ const Finance: React.FC = () => {
 				/>
 
 				<div className={styles.mimirFloat}>
-					{!financeWelcomeSeen && transactions.length === 0 ? (
+					{showFinanceEmpty ? (
 						<MimirHint
-							pose="pointing"
-							oneTime
-							textKey="Почни з поповнення — встанови поточний баланс. Потім записуй витрати стрілкою вниз."
-							onDismiss={markFinanceWelcomeSeen}
+							pose={MIMIR_DIALOGUE.finance_empty.pose}
+							textKey={getMimirText('finance_empty', mimirMode)}
+							onDismiss={() => { setShowFinanceEmpty(false); markDailyShown(userId, 'finance_empty') }}
 						/>
 					) : (
 						<MimirHint pose={transactions.length === 0 ? 'sleeping' : 'writing'} />

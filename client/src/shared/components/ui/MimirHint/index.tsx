@@ -116,6 +116,7 @@ const POSE_CLASS: Record<MimirPose, string> = {
  * @param onDismiss   - викликається після анімації закриття (напр. для markSeen)
  * @param oneTime     - режим одноразового хінту: без sessionStorage, тільки локальний стан
  * @param showUpgrade - показати промпт "Оживити Міміра" (коли hint є статичним fallback)
+ * @param portal      - рендер картки і backdrop напряму в document.body (для глобальних шарів)
  */
 interface MimirHintProps {
   pose?: MimirPose
@@ -123,9 +124,10 @@ interface MimirHintProps {
   onDismiss?: () => void
   oneTime?: boolean
   showUpgrade?: boolean
+  portal?: boolean
 }
 
-const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss, oneTime = false, showUpgrade = false }) => {
+const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss, oneTime = false, showUpgrade = false, portal = false }) => {
   const navigate = useNavigate()
   const { mimirMode } = useUiStore()
   // oneTime хінти не залежать від денного лічильника — показуються завжди до dismiss
@@ -173,17 +175,11 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
 
   if (dismissed) return null
 
-  return (
-    <>
-      {createPortal(
-        <div
-          className={`${styles.backdrop} ${hiding ? styles.rootHiding : ''}`}
-          onClick={handleDismiss}
-          aria-hidden="true"
-        />,
-        document.body
-      )}
-    <div className={`${styles.root} ${hiding ? styles.rootHiding : ''}`}>
+  const card = (
+    <div
+      className={`${styles.root} ${portal ? styles.rootPortal : ''} ${hiding ? styles.rootHiding : ''}`}
+      onClick={portal ? handleDismiss : undefined}
+    >
       <div className={styles.row}>
         <img
           src={POSE_SRC[pose]}
@@ -210,6 +206,19 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
         </div>
       </div>
     </div>
+  )
+
+  return (
+    <>
+      {createPortal(
+        <div
+          className={`${styles.backdrop} ${hiding ? styles.rootHiding : ''}`}
+          onClick={handleDismiss}
+          aria-hidden="true"
+        />,
+        document.body
+      )}
+      {portal ? createPortal(card, document.body) : card}
     </>
   )
 }
