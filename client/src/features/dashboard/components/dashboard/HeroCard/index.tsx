@@ -160,19 +160,6 @@ const HeroCard: React.FC<HeroCardProps> = ({
   const { line, area, pts } = buildSparkPath(data)
   const lastPt = pts[6]
 
-  const [activeIdx, setActiveIdx] = useState<number | null>(null)
-  const dismissRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const handleSparkTap = (i: number) => {
-    if (dismissRef.current) clearTimeout(dismissRef.current)
-    setActiveIdx(i)
-    dismissRef.current = setTimeout(() => setActiveIdx(null), 2000)
-  }
-
-  const tooltipPct = activeIdx !== null
-    ? Math.min(90, Math.max(10, (activeIdx / 6) * 100))
-    : 0
-
   return (
     <div className={styles.splitCard}>
       {/* Left — баланс + сьогодні */}
@@ -191,17 +178,8 @@ const HeroCard: React.FC<HeroCardProps> = ({
         </div>
       </div>
 
-      {/* Right — area chart + tooltip */}
+      {/* Right — area chart */}
       <div className={styles.splitRight}>
-        {activeIdx !== null && (
-          <div
-            className={styles.sparkTooltip}
-            style={{ left: `${tooltipPct}%` }}
-          >
-            <span className={styles.sparkTooltipDay}>{dayLabels[activeIdx]}</span>
-            <span className={styles.sparkTooltipVal}>{fmt(data[activeIdx])} ₴</span>
-          </div>
-        )}
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
@@ -210,52 +188,49 @@ const HeroCard: React.FC<HeroCardProps> = ({
         >
           <defs>
             <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
+              <stop offset="0%"   stopColor="var(--accent)" stopOpacity="0.55" />
+              <stop offset="50%"  stopColor="var(--accent)" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.04" />
             </linearGradient>
+            <filter id="sparkGlow" x="-20%" y="-60%" width="140%" height="220%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="1.4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
           {/* Baseline */}
           <line x1={PAD_X} y1={H - PAD_Y} x2={W - PAD_X} y2={H - PAD_Y}
             stroke="var(--accent)" strokeOpacity="0.15" strokeWidth="0.5" />
 
+          {/* Tick marks at each day position */}
+          {pts.map((pt, i) => (
+            <line key={i}
+              x1={pt.x} y1={H - PAD_Y}
+              x2={pt.x} y2={H - PAD_Y + 2.5}
+              stroke="var(--accent)" strokeOpacity="0.3" strokeWidth="0.6" />
+          ))}
+
           {hasAnyData && (
             <>
               <path d={area} fill="url(#sparkGrad)" />
-              <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx={lastPt.x} cy={lastPt.y} r="1.8" fill="var(--accent)" />
-              {activeIdx !== null && activeIdx !== 6 && (
-                <circle cx={pts[activeIdx].x} cy={pts[activeIdx].y} r="2" fill="var(--accent)" fillOpacity="0.8" />
-              )}
+              <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.4"
+                strokeLinecap="round" strokeLinejoin="round"
+                filter="url(#sparkGlow)" />
+              {/* Pulsing today dot */}
+              <circle cx={lastPt.x} cy={lastPt.y} r="3.5" fill="var(--accent)" fillOpacity="0.18"
+                className={styles.sparkDotPulse} />
+              <circle cx={lastPt.x} cy={lastPt.y} r="2" fill="var(--accent)" />
             </>
           )}
-
-          {/* Invisible hit areas per day */}
-          {data.map((_, i) => {
-            const slotW = W / 7
-            return (
-              <rect
-                key={i}
-                x={i * slotW}
-                y={0}
-                width={slotW}
-                height={H}
-                fill="transparent"
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSparkTap(i)}
-                onTouchStart={e => { e.preventDefault(); handleSparkTap(i) }}
-              />
-            )
-          })}
         </svg>
 
         {/* Day labels */}
         <div className={styles.sparkLabels}>
           {dayLabels.map((label, i) => (
-            <span
-              key={i}
-              className={`${styles.sparkLabel} ${i === 6 || i === activeIdx ? styles.sparkLabelActive : ''}`}
-            >
+            <span key={i} className={`${styles.sparkLabel} ${i === 6 ? styles.sparkLabelActive : ''}`}>
               {label}
             </span>
           ))}

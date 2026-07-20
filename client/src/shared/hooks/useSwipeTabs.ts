@@ -51,13 +51,20 @@ export function useSwipeTabs({
       const relY = t.clientY / window.innerHeight
       // Ignore touches near the top (AppHeader) and bottom (BottomNav)
       if (relY < 0.15 || relY > 0.85) { tracking = false; return }
-      // Don't track if the touch originates inside a horizontally scrollable element
+      // Don't track if touch originates inside a fixed overlay, no-swipe-tabs element,
+      // or a horizontally scrollable element
       let node: Element | null = e.target as Element
       while (node && node !== el) {
-        const ox = window.getComputedStyle(node).overflowX
+        if ((node as HTMLElement).dataset.noSwipeTabs !== undefined) {
+          tracking = false; return
+        }
+        const style = window.getComputedStyle(node)
+        if (style.position === 'fixed') {
+          tracking = false; return
+        }
+        const ox = style.overflowX
         if ((ox === 'auto' || ox === 'scroll') && node.scrollWidth > node.clientWidth) {
-          tracking = false
-          return
+          tracking = false; return
         }
         node = node.parentElement
       }

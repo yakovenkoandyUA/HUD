@@ -9,18 +9,23 @@ import styles from './CustomDatePicker.module.css'
  * Bottom sheet поверх модалки, 6 тижнів, починаючи з понеділка.
  * Підтримує: свайп пальцем (3-grid carousel) для зміни місяця,
  * tap на заголовок → wheel picker місяця/року.
+ * Range mode: якщо передано rangeStart або rangeEnd — підсвічує діапазон.
  *
  * Props:
- * @prop {string | undefined}        value    — поточна дата ISO string або undefined
- * @prop {(date: string) => void}    onChange — коллбек при виборі дати (ISO YYYY-MM-DD)
- * @prop {() => void}                onClose  — коллбек закриття пікера
- * @prop {Date | undefined}          minDate  — мінімальна допустима дата
+ * @prop {string | undefined}        value      — поточна дата ISO string або undefined
+ * @prop {(date: string) => void}    onChange   — коллбек при виборі дати (ISO YYYY-MM-DD)
+ * @prop {() => void}                onClose    — коллбек закриття пікера
+ * @prop {Date | undefined}          minDate    — мінімальна допустима дата
+ * @prop {string | undefined}        rangeStart — фіксований початок діапазону (ISO), якщо редагується кінець
+ * @prop {string | undefined}        rangeEnd   — фіксований кінець діапазону (ISO), якщо редагується початок
  */
 interface CustomDatePickerProps {
   value?: string
   onChange: (date: string) => void
   onClose: () => void
   minDate?: Date
+  rangeStart?: string
+  rangeEnd?: string
 }
 
 const MONTHS_UA = [
@@ -58,7 +63,7 @@ function buildCalendarCells(year: number, month: number): Date[] {
   return cells
 }
 
-const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, onClose, minDate }) => {
+const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, onClose, minDate, rangeStart, rangeEnd }) => {
   const initial = value ? parseIso(value) : new Date()
 
   const [viewYear, setViewYear]   = useState(initial.getFullYear())
@@ -180,6 +185,17 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, on
 
   const renderGrid = (year: number, month: number, key: string) => {
     const cells = buildCalendarCells(year, month)
+
+    // Compute effective range endpoints for highlighting
+    const anchor = rangeStart ? toLocalMidnight(parseIso(rangeStart))
+                 : rangeEnd   ? toLocalMidnight(parseIso(rangeEnd))
+                 : null
+    const selDay = selected ? toLocalMidnight(selected) : null
+    const effectiveRange = anchor && selDay ? {
+      start: anchor < selDay ? anchor : selDay,
+      end:   anchor < selDay ? selDay : anchor,
+    } : null
+
     return (
       <div key={key} className={styles.grid}>
         {cells.map((cell, i) => {
@@ -190,6 +206,13 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, on
           const isBlocked      = minDay !== null && cellDay.getTime() < minDay.getTime()
           const isSelected     = selected !== null && cellDay.getTime() === toLocalMidnight(selected).getTime()
 
+          const isRangeEdge = effectiveRange
+            ? cellDay.getTime() === effectiveRange.start.getTime() || cellDay.getTime() === effectiveRange.end.getTime()
+            : false
+          const isInRange = effectiveRange
+            ? cellDay > effectiveRange.start && cellDay < effectiveRange.end
+            : false
+
           return (
             <button
               key={i}
@@ -198,9 +221,11 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, on
               className={[
                 styles.cell,
                 !isCurrentMonth ? styles.cellOtherMonth : '',
-                isBlocked && !isSelected ? styles.cellPast : '',
-                isToday && !isSelected ? styles.cellToday : '',
+                isBlocked && !isSelected && !isRangeEdge ? styles.cellPast : '',
+                isToday && !isSelected && !isRangeEdge ? styles.cellToday : '',
                 isSelected ? styles.cellSelected : '',
+                isRangeEdge && !isSelected ? styles.cellRangeEdge : '',
+                isInRange ? styles.cellInRange : '',
               ].filter(Boolean).join(' ')}
               onClick={() => !isBlocked && setSelected(cellDay)}
             >
@@ -213,7 +238,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, on
   }
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} onClick={onClose} data-no-swipe-tabs>
       <div className={styles.sheet} onClick={e => e.stopPropagation()}>
 
         {/* ── Header ── */}

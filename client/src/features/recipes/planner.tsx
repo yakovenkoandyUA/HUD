@@ -81,7 +81,7 @@ const RecipePicker: React.FC<RecipePickerProps> = ({ recipes, dayLabel, assigned
   )
 
   return (
-    <div className={styles.pickerOverlay} ref={overlayRef} onClick={e => { if (e.target === overlayRef.current) onClose() }}>
+    <div className={styles.pickerOverlay} ref={overlayRef} data-no-swipe-tabs onClick={e => { if (e.target === overlayRef.current) onClose() }}>
       <div className={styles.pickerSheet} ref={sheetRef}>
         <div className={styles.pickerDragHandle} />
         <p className={styles.pickerTitle}>{dayLabel}</p>

@@ -44,6 +44,35 @@ export async function getAll(req: Request, res: Response): Promise<void> {
   }
 }
 
+/** Normalize location string for fuzzy comparison */
+function normalizeLoc(loc: string): string {
+  return loc.trim().toLowerCase().replace(/[,.\-–]/g, ' ').replace(/\s+/g, ' ')
+}
+
+/** Returns true if locations overlap (one contains the other or share a significant token) */
+function locationsMatch(a: string, b: string): boolean {
+  const na = normalizeLoc(a)
+  const nb = normalizeLoc(b)
+  if (!na || !nb) return false
+  if (na === nb) return true
+  if (na.includes(nb) || nb.includes(na)) return true
+  // Match if the first meaningful token (city) is shared
+  const tokenA = na.split(' ')[0]
+  const tokenB = nb.split(' ')[0]
+  return tokenA.length > 2 && tokenA === tokenB
+}
+
+/** Returns true if two ISO dates fall within ±7 days ignoring the year (annual proximity) */
+function isAnnualProximity(dateA: string, dateB: string): boolean {
+  const a = new Date(dateA)
+  const b = new Date(dateB)
+  if (a.getFullYear() === b.getFullYear()) return false
+  const dayOfYearA = Math.floor((a.getTime() - new Date(a.getFullYear(), 0, 0).getTime()) / 86400000)
+  const dayOfYearB = Math.floor((b.getTime() - new Date(b.getFullYear(), 0, 0).getTime()) / 86400000)
+  const diff = Math.abs(dayOfYearA - dayOfYearB)
+  return diff <= 7 || diff >= 358 // 358 = 365-7, handles year-boundary wrap
+}
+
 export async function getRelated(req: Request, res: Response): Promise<void> {
   const current = await Memory.findOne(visibleFilter(req.userId!, { _id: req.params.id }))
   if (!current) { res.status(404).json({ error: 'Not found' }); return }
@@ -51,20 +80,38 @@ export async function getRelated(req: Request, res: Response): Promise<void> {
   const others = await Memory.find(visibleFilter(req.userId!, { _id: { $ne: current._id } }))
 
   const currentMonth    = current.date.slice(0, 7)
+  const currentYear     = current.date.slice(0, 4)
   const currentTags     = new Set((current.tags ?? []).map(t => t.toLowerCase()))
-  const currentLocation = (current.location ?? '').trim().toLowerCase()
+  const currentLocation = current.location ?? ''
 
   const scored = others.map(m => {
     let score = 0
+
+    // Tags: +3 per shared tag
     const tags = (m.tags ?? []).map(t => t.toLowerCase())
     score += tags.filter(t => currentTags.has(t)).length * 3
-    if (currentLocation && (m.location ?? '').trim().toLowerCase() === currentLocation) score += 2
+
+    // Location: fuzzy match +2
+    if (currentLocation && locationsMatch(currentLocation, m.location ?? '')) score += 2
+
+    // Same month + year: +1
     if (currentMonth && m.date.slice(0, 7) === currentMonth) score += 1
+
+    // Same month, different year: +0.5
+    if (
+      currentMonth &&
+      m.date.slice(5, 7) === currentMonth.slice(5, 7) &&
+      m.date.slice(0, 4) !== currentYear
+    ) score += 0.5
+
+    // Annual proximity: ±7 days across years: +1
+    if (isAnnualProximity(current.date, m.date)) score += 1
+
     return { m, score }
   })
 
   const top = scored
-    .filter(s => s.score > 0)
+    .filter(s => s.score >= 2)
     .sort((a, b) => b.score - a.score)
     .slice(0, 6)
     .map(s => s.m)

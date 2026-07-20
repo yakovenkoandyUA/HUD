@@ -80,7 +80,6 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
   const [location, setLocation] = useState<PlanLocation>({ name: null, address: null, lat: null, lng: null })
   const [date, setDate]           = useState(today())
   const [dateEnd, setDateEnd]     = useState<string | null>(null)
-  const [isTrip, setIsTrip]       = useState(false)
   const [coverUrl, setCoverUrl]             = useState('')
   const [coverAttribution, setCoverAttribution] = useState('')
   const [showUnsplash, setShowUnsplash]     = useState(false)
@@ -110,7 +109,6 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
     setLocation({ name: null, address: null, lat: null, lng: null })
     setDate(today())
     setDateEnd(null)
-    setIsTrip(false)
     setCoverUrl('')
     setCoverAttribution('')
     setNotes('')
@@ -145,8 +143,8 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
       lat:              location.lat,
       lng:              location.lng,
       date,
-      dateEnd:          isTrip ? (dateEnd || null) : null,
-      isTrip,
+      dateEnd:          dateEnd || null,
+      isTrip:           !!dateEnd,
       coverUrl,
       coverAttribution: coverAttribution || undefined,
       notes:            notes.trim() || undefined,
@@ -246,58 +244,59 @@ const AddMemoryModal: React.FC<AddMemoryModalProps> = ({ isOpen, onClose, onCrea
 						<input className={styles.input} value={title} onChange={e => setTitle(e.target.value)} placeholder="Назва події..." />
 					</div>
 
-					<div className={styles.row}>
-						<div className={`${styles.field} ${styles.fieldLocation}`}>
-							<label className={styles.label}>
-								МІСЦЕ <span className={styles.optional}>(необов'язково)</span>
-							</label>
-							<LocationSearch initial={location.address ?? ''} onSelect={setLocation} />
-						</div>
+					<div className={styles.field}>
+						<label className={styles.label}>
+							МІСЦЕ <span className={styles.optional}>(необов'язково)</span>
+						</label>
+						<LocationSearch initial={location.address ?? ''} onSelect={setLocation} />
+					</div>
 
-						<div className={`${styles.field} ${styles.fieldDate}`}>
-							<label className={styles.label}>ДАТА</label>
-							<button type="button" className={styles.dateBtn} onClick={() => setShowPicker(true)}>
-								{date ? formatDisplayDate(date) : 'Вибрати'}
+					<div className={styles.field}>
+						<label className={styles.label}>ДАТА</label>
+						<div className={styles.dateRow}>
+							<button type="button" className={styles.dateBtnRange} onClick={() => setShowPicker(true)}>
+								<span className={styles.dateBtnRangeLabel}>З</span>
+								<span>{formatDisplayDate(date)}</span>
+							</button>
+							<button type="button" className={styles.dateBtnRange} onClick={() => setShowEndPicker(true)}>
+								<span className={styles.dateBtnRangeLabel}>ПО</span>
+								{dateEnd ? (
+									<>
+										<span>{formatDisplayDate(dateEnd)}</span>
+										<span
+											role="button"
+											aria-label="Прибрати кінець події"
+											className={styles.dateBtnRangeClear}
+											onClick={e => { e.stopPropagation(); setDateEnd(null) }}
+										>
+											<svg width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+												<path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+											</svg>
+										</span>
+									</>
+								) : (
+									<span className={styles.dateBtnRangePlaceholder}>—</span>
+								)}
 							</button>
 						</div>
 					</div>
 
-					{/* Кінець події — animated toggle */}
-					<div className={`${styles.tripRow} ${isTrip ? styles.tripRowVisible : ''}`}>
-						<span className={styles.tripRowLabel}>КІНЕЦЬ ПОДІЇ</span>
-						<button type="button" className={styles.dateBtn} onClick={() => setShowEndPicker(true)}>
-							{dateEnd ? formatDisplayDate(dateEnd) : 'Кінцева дата'}
-						</button>
-						<button
-							type="button"
-							className={styles.dateClear}
-							onClick={() => { setIsTrip(false); setDateEnd(null) }}
-							aria-label="Прибрати кінець події"
-						>
-							<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-								<path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-							</svg>
-						</button>
-					</div>
-
-					<div className={`${styles.tripAddBtnWrap} ${isTrip ? '' : styles.tripAddBtnWrapVisible}`}>
-						<button type="button" className={styles.tripAddBtn} onClick={() => setIsTrip(true)}>
-							<svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-								<path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-							</svg>
-							Додати кінець події
-						</button>
-					</div>
-
-					{showPicker && <CustomDatePicker value={date} onChange={setDate} onClose={() => setShowPicker(false)} />}
-					{showEndPicker && <CustomDatePicker value={dateEnd ?? date} onChange={setDateEnd} onClose={() => setShowEndPicker(false)} />}
-
-					<div className={styles.field}>
-						<label className={styles.label}>
-							НОТАТКИ <span className={styles.optional}>(необов'язково)</span>
-						</label>
-						<textarea className={styles.textarea} placeholder="Що запам'яталось..." value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
-					</div>
+					{showPicker && (
+						<CustomDatePicker
+							value={date}
+							onChange={setDate}
+							onClose={() => setShowPicker(false)}
+							rangeEnd={dateEnd ?? undefined}
+						/>
+					)}
+					{showEndPicker && (
+						<CustomDatePicker
+							value={dateEnd ?? date}
+							onChange={setDateEnd}
+							onClose={() => setShowEndPicker(false)}
+							rangeStart={date}
+						/>
+					)}
 
 					<div className={styles.field}>
 						<label className={styles.label}>

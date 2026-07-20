@@ -254,86 +254,59 @@
 }
 .dateBtn:hover { border-color: var(--accent); }
 
-/* ── Trip row: КІНЕЦЬ ПОДІЇ label + end date btn + × ── */
-.tripRow {
+/* ── Date range row: З / ПО ── */
+.dateRow {
   display: flex;
-  align-items: center;
   gap: 8px;
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: max-height 240ms ease, opacity 180ms ease;
-}
-.tripRowVisible {
-  max-height: 60px;
-  opacity: 1;
-  pointer-events: auto;
 }
 
-.tripRowLabel {
+.dateBtnRange {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s;
+  min-width: 0;
+  white-space: nowrap;
+}
+.dateBtnRange:hover { border-color: var(--accent); }
+
+.dateBtnRangeLabel {
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--accent);
-  white-space: nowrap;
   flex-shrink: 0;
 }
 
-.tripRow .dateBtn {
-  flex: 1;
-  width: auto;
-}
-
-.dateClear {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--border2);
-  background: var(--surface);
+.dateBtnRangePlaceholder {
   color: var(--text3);
+  flex: 1;
+}
+
+.dateBtnRangeClear {
+  flex-shrink: 0;
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.dateClear:hover { color: var(--accent); border-color: var(--accent); }
-
-/* ── "Додати кінець події" link-button ── */
-.tripAddBtnWrap {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: max-height 240ms ease, opacity 180ms ease;
-}
-.tripAddBtnWrapVisible {
-  max-height: 32px;
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.tripAddBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
   color: var(--text3);
-  cursor: pointer;
-  letter-spacing: 0.02em;
+  border-radius: 50%;
   transition: color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.tripAddBtn:hover { color: var(--accent); }
+.dateBtnRangeClear:hover { color: var(--accent); }
 
 .textarea {
   background: var(--surface);

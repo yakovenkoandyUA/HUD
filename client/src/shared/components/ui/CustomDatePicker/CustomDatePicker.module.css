@@ -205,6 +205,20 @@
 }
 .cellSelected:hover { background: var(--accent-dim) !important; }
 
+.cellRangeEdge {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  opacity: 0.75 !important;
+}
+.cellRangeEdge:hover { opacity: 0.9 !important; }
+
+.cellInRange {
+  background: var(--accent-dim, rgba(180, 60, 60, 0.18)) !important;
+  color: var(--text) !important;
+  border-radius: 4px;
+  opacity: 1 !important;
+}
+
 /* ── Confirm button ── */
 .confirmBtn {
   width: 100%;
