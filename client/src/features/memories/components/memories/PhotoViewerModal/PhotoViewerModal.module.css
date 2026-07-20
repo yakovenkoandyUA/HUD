@@ -67,8 +67,13 @@
   transition: opacity 0.25s ease;
 }
 
-.uiVisible { opacity: 1; pointer-events: auto; }
-.uiHidden  { opacity: 0; pointer-events: none; }
+.uiVisible { opacity: 1; }
+.uiHidden  { opacity: 0; }
+
+/* Only interactive bars get pointer-events — the transparent middle stays pass-through */
+.uiVisible .topBar,
+.uiVisible .navBtn,
+.uiVisible .bottom { pointer-events: auto; }
 
 /* ── Top bar ── */
 .topBar {

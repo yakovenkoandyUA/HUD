@@ -24,17 +24,17 @@
 /* ── Bottom action bar: ФОТО + ПОДІЛИТИСЬ only ── */
 .bottomBar {
 	position: fixed;
-	bottom: 16px;
-	left: 16px;
-	right: 16px;
+	bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+	left: 12px;
+	right: 12px;
 	z-index: 20;
 	display: flex;
-	gap: 8px;
+	gap: 6px;
 	background: var(--bg2);
 	border: 1px solid var(--border);
-	border-radius: 16px;
-	padding: 10px 12px;
-	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+	border-radius: 12px;
+	padding: 6px 8px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
 /* ── Header ── */
@@ -543,7 +543,7 @@
 	color: var(--text3);
 }
 
-/* ── Photo grid (3-column JS masonry) ── */
+/* ── Photo grid (adaptive editorial collage) ── */
 .relatedRow {
 	display: flex;
 	flex-direction: column;
@@ -584,18 +584,25 @@
 }
 
 .photoGrid {
-	display: flex;
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	grid-auto-flow: row dense;
 	gap: 3px;
-	padding: 0px 4px 32px;
-	align-items: flex-start;
+	padding: 3px;
 }
 
-.photoColumn {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	min-width: 0;
+@media (min-width: 600px) {
+	.photoGrid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+.photoSpan1 {
+	grid-column: span 1;
+}
+
+.photoSpan2 {
+	grid-column: span 2;
 }
 
 @keyframes shimmer {
@@ -608,12 +615,12 @@
 }
 
 .photoItem {
-	width: 100%;
-	display: block;
-	border-radius: 6px;
-	overflow: hidden;
-	cursor: pointer;
 	position: relative;
+	overflow: hidden;
+	border-radius: 6px;
+	cursor: pointer;
+	background: var(--surface);
+	/* aspect-ratio applied via inline style from detected naturalWidth/naturalHeight */
 }
 
 .photoSkeleton {
@@ -626,8 +633,10 @@
 }
 
 .photoImg {
+	position: absolute;
+	inset: 0;
 	width: 100%;
-	height: auto;
+	height: 100%;
 	display: block;
 	object-fit: cover;
 	opacity: 0;
@@ -873,6 +882,67 @@
 }
 .editSave:disabled {
 	opacity: 0.4;
+}
+
+/* ── Edit modal companions (З КИМ) ── */
+.editCompanions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 4px;
+}
+
+.editCompanion {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px 6px 6px;
+	border-radius: 20px;
+	border: 1px solid var(--border);
+	background: var(--surface2);
+	cursor: pointer;
+	transition: border-color 0.15s, background 0.15s;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.editCompanionActive {
+	border-color: var(--accent);
+	background: var(--accent-dim, rgba(180, 60, 60, 0.1));
+}
+
+.editCompanionAvatar {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex-shrink: 0;
+}
+
+.editCompanionInitial {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: var(--surface);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-ui);
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--text2);
+	flex-shrink: 0;
+}
+
+.editCompanionName {
+	font-family: var(--font-ui);
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text);
+}
+
+.editCompanionCheck {
+	color: var(--accent);
+	flex-shrink: 0;
 }
 
 /* ── Edit modal cover zone ── */
@@ -1156,6 +1226,29 @@
 	letter-spacing: 0.04em;
 }
 
+/* ── Tags ── */
+.tagsSection {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 10px 16px 2px;
+	flex-shrink: 0;
+}
+
+.tagChip {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 9px;
+	background: var(--surface2);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	font-family: var(--font-ui);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text2);
+	letter-spacing: 0.02em;
+}
+
 /* ── Places section ── */
 .placesSection {
 	padding: 14px 16px 4px;
@@ -1281,6 +1374,20 @@
 	-webkit-tap-highlight-color: transparent;
 }
 .placeCardMapLink:hover { opacity: 0.8; }
+
+.placeCardMapLinkInline {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-family: var(--font-ui);
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--gold);
+	text-decoration: none;
+	letter-spacing: 0.03em;
+	-webkit-tap-highlight-color: transparent;
+	padding: 0 12px 10px 39px;
+}
 
 /* Details accordion */
 .placeDetails {

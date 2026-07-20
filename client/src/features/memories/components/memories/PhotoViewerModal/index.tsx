@@ -14,7 +14,8 @@ import styles from './PhotoViewerModal.module.css'
  * @prop {number}                    initialIndex    — індекс фото для відкриття
  * @prop {() => void}                onClose         — закриття
  * @prop {(id: string) => void}      onDelete        — видалення фото по id
- * @prop {(id: string, caption: string) => void} onCaption — зміна підпису
+ * @prop {(id: string, caption: string) => void} onCaption  — зміна підпису
+ * @prop {(url: string) => void}     onSetCover      — зробити поточне фото обкладинкою
  */
 interface PhotoViewerModalProps {
   photos: MemoryPhoto[]
@@ -22,6 +23,7 @@ interface PhotoViewerModalProps {
   onClose: () => void
   onDelete?: (id: string) => void
   onCaption?: (id: string, caption: string) => void
+  onSetCover?: (url: string) => void
 }
 
 type SlideDir = 'next' | 'prev' | null
@@ -35,6 +37,7 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
   onClose,
   onDelete,
   onCaption,
+  onSetCover,
 }) => {
   const [index, setIndex]           = useState(initialIndex)
   const [showUI, setShowUI]         = useState(true)
@@ -220,6 +223,20 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
         <div className={styles.topBar}>
           <span className={styles.counter}>{index + 1} / {photos.length}</span>
           <div className={styles.topActions}>
+            {onSetCover && (
+              <button
+                type="button"
+                className={styles.actionBtn}
+                onClick={e => { e.stopPropagation(); onSetCover(photo.url) }}
+                title="Зробити обкладинкою"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+                  <path d="M1.5 10l3.5-3.5L8 9.5l2.5-2.5L14.5 10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="5.5" cy="6" r="1.2" fill="currentColor"/>
+                </svg>
+              </button>
+            )}
             {onCaption && (
               <button
                 type="button"
@@ -227,7 +244,10 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
                 onClick={e => { e.stopPropagation(); setEditingCaption(v => !v) }}
                 title="Редагувати підпис"
               >
-                ✎
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M11 2.5l2.5 2.5-8 8H3v-2.5l8-8z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9.5 4l2.5 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                </svg>
               </button>
             )}
             {onDelete && (
@@ -237,7 +257,10 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
                 onClick={e => { e.stopPropagation(); handleDelete() }}
                 title="Видалити фото"
               >
-                🗑
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2.5 4.5h11M6 4.5V3h4v1.5M13 4.5l-.8 8.5H3.8L3 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6.5 7v4M9.5 7v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                </svg>
               </button>
             )}
             <button
@@ -246,7 +269,9 @@ const PhotoViewerModal: React.FC<PhotoViewerModalProps> = ({
               onClick={e => { e.stopPropagation(); handleClose() }}
               title="Закрити"
             >
-              ×
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              </svg>
             </button>
           </div>
         </div>

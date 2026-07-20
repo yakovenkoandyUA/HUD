@@ -48,38 +48,93 @@ function formatMemoryDate(iso: string): string {
 // ── Photo item with long-press menu ──────────────────────────────────────────
 
 /**
+ * Builds per-photo grid column spans using count-aware editorial rules.
+ *
+ * n=1 : featured full-width (span 2)
+ * n=2 : both portrait/square → side-by-side (span 1); ≥1 landscape detected → both full-width (span 2)
+ * n=3 : featured full-width (span 2); supporting photos by ratio
+ * n=4 : balanced 2×2 (all span 1); landscape photo breaks to span 2
+ * n≥5 : featured span 2; landscape span 2; portrait/square span 1
+ *
+ * Unknown ratio (not yet loaded) is treated as portrait for safety.
+ */
+function buildLayouts(
+  photos: MemoryPhoto[],
+  ratios: Record<string, number>,
+  featuredIndex: number,
+): Array<1 | 2> {
+  const n = photos.length
+  const r = (i: number): number | undefined => ratios[photos[i]?.id]
+  const isL = (i: number): boolean => (r(i) ?? 0) >= 1.2
+
+  if (n === 1) return [2]
+
+  if (n === 2) {
+    const anyLandscape = isL(0) || isL(1)
+    return anyLandscape ? [2, 2] : [1, 1]
+  }
+
+  if (n === 4) {
+    return photos.map((_, i): 1 | 2 => (isL(i) ? 2 : 1))
+  }
+
+  // n=3 and n≥5: featured span 2, landscape span 2, rest span 1
+  return photos.map((_, i): 1 | 2 => (i === featuredIndex || isL(i) ? 2 : 1))
+}
+
+/**
  * PhotoItem
  * ---------
- * Фото в masonry grid з підтримкою довгого тапу для контекстного меню.
+ * Плитка в editorial collage / masonry grid.
+ * Визначає aspect ratio після завантаження через naturalWidth/naturalHeight.
+ * Займає span 1 або span 2 CSS Grid колонки залежно від орієнтації.
  *
  * Props:
- * @prop {MemoryPhoto}   photo          — дані фото
- * @prop {() => void}    onTap          — тап для перегляду
- * @prop {() => void}    onSetCover     — зробити обкладинкою
- * @prop {() => void}    onDelete       — видалити фото
+ * @prop {MemoryPhoto}                          photo            — дані фото
+ * @prop {1 | 2}                                span             — кількість grid-колонок
+ * @prop {number | undefined}                   ratio            — виявлений aspect ratio (width/height)
+ * @prop {() => void}                           onTap            — тап для перегляду (lightbox)
+ * @prop {() => void}                           [onSetCover]     — зробити обкладинкою
+ * @prop {() => void}                           [onDelete]       — видалити фото
+ * @prop {(photoId: string, r: number) => void} onRatioDetected  — коллбек після визначення ratio
  */
 interface PhotoItemProps {
   photo: MemoryPhoto
+  span: 1 | 2
+  ratio: number | undefined
   onTap: () => void
   onSetCover?: () => void
   onDelete?: () => void
+  onRatioDetected: (photoId: string, ratio: number) => void
 }
 
-const PhotoItem: React.FC<PhotoItemProps> = ({ photo, onTap, onSetCover, onDelete }) => {
+const PhotoItem: React.FC<PhotoItemProps> = ({ photo, span, ratio, onTap, onSetCover, onDelete, onRatioDetected }) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [loaded, setLoaded]     = useState(false)
 
   const hasMenu   = !!(onSetCover || onDelete)
   const longPress = useLongPress(() => { if (hasMenu) setMenuOpen(true) })
 
+  const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    setLoaded(true)
+    const { naturalWidth, naturalHeight } = e.currentTarget
+    if (naturalWidth && naturalHeight) {
+      onRatioDetected(photo.id, naturalWidth / naturalHeight)
+    }
+  }, [photo.id, onRatioDetected])
+
   return (
-    <div className={styles.photoItem} {...longPress}>
+    <div
+      className={`${styles.photoItem} ${span === 2 ? styles.photoSpan2 : styles.photoSpan1}`}
+      style={{ aspectRatio: ratio ?? 0.8 }}
+      {...longPress}
+    >
       {!loaded && <div className={styles.photoSkeleton} />}
       <img
         src={photo.url}
         alt={photo.caption ?? ''}
         className={`${styles.photoImg} ${loaded ? styles.photoImgLoaded : ''}`}
-        onLoad={() => setLoaded(true)}
+        onLoad={handleLoad}
         loading="lazy"
         onClick={() => { if (!menuOpen) onTap() }}
       />
@@ -134,7 +189,8 @@ interface EditMemoryModalProps {
   dateEnd: string | null
   isTrip: boolean
   coverUrl: string
-  onSave: (title: string, location: PlanLocation, date: string, dateEnd: string | null, isTrip: boolean) => void
+  withProfiles: string[]
+  onSave: (title: string, location: PlanLocation, date: string, dateEnd: string | null, isTrip: boolean, withProfiles: string[]) => void
   onChangeCover: (url: string, attribution?: string) => void
   onClose: () => void
 }
@@ -149,7 +205,7 @@ const formatDisplayDate = (iso: string) => {
 const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   title: initTitle, location: initLoc, lat: initLat, lng: initLng,
   date: initDate, dateEnd: initDateEnd, isTrip: initIsTrip,
-  coverUrl, onSave, onChangeCover, onClose,
+  coverUrl, withProfiles: initWithProfiles, onSave, onChangeCover, onClose,
 }) => {
   const [title, setTitle]         = useState(initTitle)
   const [location, setLocation]   = useState<PlanLocation>({
@@ -158,17 +214,29 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   const [date, setDate]           = useState(initDate)
   const [dateEnd, setDateEnd]     = useState<string | null>(initDateEnd)
   const [isTrip, setIsTrip]       = useState(initIsTrip)
+  const [withProfiles, setWithProfiles] = useState<string[]>(initWithProfiles)
   const [showPicker, setShowPicker]       = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
   const [showUnsplash, setShowUnsplash]   = useState(false)
   const [visible, setVisible] = useState(false)
 
+  const { accepted: familyAccepted, fetchFamily } = useFamilyStore()
+
   const { trigger: triggerCover, uploading: coverUploading, inputElement: coverInput } =
     useImageUpload('mimir/memories/covers', (url) => onChangeCover(url))
 
   useEffect(() => {
-    requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
-  }, [])
+    let cancelled = false
+    const load = async () => {
+      if (familyAccepted.length === 0) await fetchFamily()
+      if (!cancelled) requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+    }
+    load()
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleCompanion = (uid: string) =>
+    setWithProfiles(prev => prev.includes(uid) ? prev.filter(x => x !== uid) : [...prev, uid])
 
   const handleClose = () => {
     setVisible(false)
@@ -285,11 +353,40 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
               )}
             </button>
           </div>
+          {familyAccepted.length > 0 && (
+            <>
+              <label className={styles.editLabel}>З КИМ</label>
+              <div className={styles.editCompanions}>
+                {familyAccepted.map(m => {
+                  const active = withProfiles.includes(m.id)
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`${styles.editCompanion} ${active ? styles.editCompanionActive : ''}`}
+                      onClick={() => toggleCompanion(m.id)}
+                    >
+                      {m.avatarUrl
+                        ? <img src={m.avatarUrl} alt="" className={styles.editCompanionAvatar} />
+                        : <span className={styles.editCompanionInitial}>{m.name[0]?.toUpperCase()}</span>
+                      }
+                      <span className={styles.editCompanionName}>{m.name.split(' ')[0]}</span>
+                      {active && (
+                        <svg className={styles.editCompanionCheck} width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
           <button
             type="button"
             className={styles.editSave}
             disabled={!title.trim()}
-            onClick={() => { onSave(title.trim(), location, date, isTrip ? dateEnd : null, isTrip); handleClose() }}
+            onClick={() => { onSave(title.trim(), location, date, isTrip ? dateEnd : null, isTrip, withProfiles); handleClose() }}
           >
             ЗБЕРЕГТИ
           </button>
@@ -361,6 +458,14 @@ const MemoryDetailScreen: React.FC = () => {
   const [showEdit, setShowEdit]         = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [sharing, setSharing]           = useState(false)
+  const [photoRatios, setPhotoRatios]   = useState<Record<string, number>>({})
+
+  const handleRatioDetected = useCallback((photoId: string, ratio: number) => {
+    setPhotoRatios(prev => {
+      if (prev[photoId] !== undefined) return prev
+      return { ...prev, [photoId]: ratio }
+    })
+  }, [])
 
   const [addingPlace, setAddingPlace]   = useState(false)
 
@@ -441,6 +546,17 @@ const MemoryDetailScreen: React.FC = () => {
   const formattedDate = useMemo(
     () => memory ? formatMemoryDate(memory.date) : '',
     [memory]
+  )
+
+  const featuredPhotoIndex = useMemo(() => {
+    if (!memory || memory.photos.length === 0) return 0
+    const coverIdx = memory.photos.findIndex(p => p.url === memory.coverUrl)
+    return coverIdx >= 0 ? coverIdx : 0
+  }, [memory?.coverUrl, memory?.photos]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const photoLayouts = useMemo(
+    () => memory ? buildLayouts(memory.photos, photoRatios, featuredPhotoIndex) : [],
+    [memory?.photos, photoRatios, featuredPhotoIndex] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const handleShare = useCallback(async () => {
@@ -587,11 +703,20 @@ const MemoryDetailScreen: React.FC = () => {
 				</div>
 			)}
 
+			{/* ── Tags ── */}
+			{(memory.tags ?? []).length > 0 && (
+				<div className={styles.tagsSection}>
+					{(memory.tags ?? []).map(tag => (
+						<span key={tag} className={styles.tagChip}>#{tag}</span>
+					))}
+				</div>
+			)}
+
 			{/* ── Places section ── */}
 			{((memory.places ?? []).length > 0 || true) && (
 				<div className={styles.placesSection}>
 					<div className={styles.placesSectionHead}>
-						<span className={styles.placesSectionLabel}>МІСЦЯ</span>
+						<span className={styles.placesSectionLabel}>ЗАКЛАДИ</span>
 						{isOwner && (
 							<button type="button" className={styles.addPlaceChip} onClick={() => setAddingPlace(true)}>
 								<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
@@ -610,8 +735,10 @@ const MemoryDetailScreen: React.FC = () => {
 								const fsq        = details && details !== 'loading' && details !== 'not_found' && details !== 'error' ? details : null
 
 								const hasCoords = !!(place.lat && place.lng)
+								// show chevron only if FSQ not yet tried, loading, or returned data
+								const hasFsqOrPending = details === undefined || details === 'loading' || fsq !== null
 								const handleCardClick = () => {
-									if (!hasCoords) return
+									if (!hasCoords || !hasFsqOrPending) return
 									if (isExpanded) { setExpandedPlaceId(null); return }
 									setExpandedPlaceId(place.id)
 									fetchPlaceDetails(place)
@@ -623,7 +750,7 @@ const MemoryDetailScreen: React.FC = () => {
 											type="button"
 											className={styles.placeCardMain}
 											onClick={handleCardClick}
-											style={!hasCoords ? { cursor: 'default' } : undefined}
+											style={(!hasCoords || !hasFsqOrPending) ? { cursor: 'default' } : undefined}
 										>
 											<div className={styles.placeCardPin}>
 												<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -637,7 +764,7 @@ const MemoryDetailScreen: React.FC = () => {
 													<span className={styles.placeCardAddr}>{place.address}</span>
 												)}
 											</div>
-											{hasCoords && (
+											{hasCoords && hasFsqOrPending && (
 												<svg
 													className={`${styles.placeCardChevron} ${isExpanded ? styles.placeCardChevronOpen : ''}`}
 													width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
@@ -647,9 +774,27 @@ const MemoryDetailScreen: React.FC = () => {
 											)}
 										</button>
 
-										{/* Details accordion — always renders "На карті", FSQ data only when available */}
+										{/* "На карті" — always visible, no accordion needed */}
+										{hasCoords && (
+											<a
+												href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
+												target="_blank" rel="noreferrer"
+												className={styles.placeCardMapLinkInline}
+											>
+												<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+													<path d="M6 1a3 3 0 013 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 013-3Z" stroke="currentColor" strokeWidth="1.2"/>
+												</svg>
+												На карті
+											</a>
+										)}
+
+										{/* Details accordion — FSQ enrichment only */}
 										<div className={`${styles.placeDetails} ${isExpanded ? styles.placeDetailsOpen : ''}`}>
-											{/* FSQ enriched data (shown only when successfully loaded) */}
+											{details === 'loading' && (
+												<div className={styles.placeDetailsLinks}>
+													<span className={styles.placeDetailsSpinner} />
+												</div>
+											)}
 											{fsq && (
 												<>
 													{(fsq.category || fsq.openNow !== null) && (
@@ -663,48 +808,36 @@ const MemoryDetailScreen: React.FC = () => {
 														</div>
 													)}
 													{fsq.hoursDisplay && <span className={styles.placeDetailsHours}>{fsq.hoursDisplay}</span>}
+													{(fsq.tel || fsq.website) && (
+														<div className={styles.placeDetailsLinks}>
+															{fsq.tel && (
+																<a href={`tel:${fsq.tel}`} className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
+																	<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+																		<path d="M2 2.5C2 2 2.5 1.5 3 1.5h1.5l1 2.5L4 5c.8 1.6 2.4 3.2 4 4l1-1.5 2.5 1V10c0 .5-.5 1-1 1C4.7 11 1 7.3 1 3c0-.28.22-.5.5-.5z" stroke="currentColor" strokeWidth="1.1"/>
+																	</svg>
+																	{fsq.tel}
+																</a>
+															)}
+															{fsq.website && (
+																<a href={fsq.website} target="_blank" rel="noreferrer" className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
+																	<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+																		<circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.1"/>
+																		<path d="M6 1.5C6 1.5 4.5 3 4.5 6S6 10.5 6 10.5M6 1.5C6 1.5 7.5 3 7.5 6S6 10.5 6 10.5M1.5 6h9" stroke="currentColor" strokeWidth="1.1"/>
+																	</svg>
+																	{new URL(fsq.website).hostname.replace('www.', '')}
+																</a>
+															)}
+														</div>
+													)}
+													{fsq.rating !== null && fsq.rating !== undefined && (
+														<span className={styles.placeDetailsRating}>
+															{fsq.rating.toFixed(1)}
+															<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
+																<path d="M6 1l1.5 3H11L8.5 6.5 9.5 10 6 8l-3.5 2 1-3.5L1 4h3.5z"/>
+															</svg>
+														</span>
+													)}
 												</>
-											)}
-
-											{/* Links — always shown when expanded */}
-											<div className={styles.placeDetailsLinks}>
-												{details === 'loading' && <span className={styles.placeDetailsSpinner} />}
-												<a
-													href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
-													target="_blank" rel="noreferrer"
-													className={styles.placeCardMapLink}
-													onClick={e => e.stopPropagation()}
-												>
-													<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-														<path d="M6 1a3 3 0 013 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 013-3Z" stroke="currentColor" strokeWidth="1.2"/>
-													</svg>
-													На карті
-												</a>
-												{fsq?.tel && (
-													<a href={`tel:${fsq.tel}`} className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
-														<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-															<path d="M2 2.5C2 2 2.5 1.5 3 1.5h1.5l1 2.5L4 5c.8 1.6 2.4 3.2 4 4l1-1.5 2.5 1V10c0 .5-.5 1-1 1C4.7 11 1 7.3 1 3c0-.28.22-.5.5-.5z" stroke="currentColor" strokeWidth="1.1"/>
-														</svg>
-														{fsq.tel}
-													</a>
-												)}
-												{fsq?.website && (
-													<a href={fsq.website} target="_blank" rel="noreferrer" className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
-														<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-															<circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.1"/>
-															<path d="M6 1.5C6 1.5 4.5 3 4.5 6S6 10.5 6 10.5M6 1.5C6 1.5 7.5 3 7.5 6S6 10.5 6 10.5M1.5 6h9" stroke="currentColor" strokeWidth="1.1"/>
-														</svg>
-														{new URL(fsq.website).hostname.replace('www.', '')}
-													</a>
-												)}
-											</div>
-											{fsq?.rating !== null && fsq?.rating !== undefined && (
-												<span className={styles.placeDetailsRating}>
-													{fsq.rating.toFixed(1)}
-													<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
-														<path d="M6 1l1.5 3H11L8.5 6.5 9.5 10 6 8l-3.5 2 1-3.5L1 4h3.5z"/>
-													</svg>
-												</span>
 											)}
 										</div>
 
@@ -799,7 +932,7 @@ const MemoryDetailScreen: React.FC = () => {
 				</div>
 			)}
 
-			{/* ── Photos masonry grid ── */}
+			{/* ── Photos editorial collage / adaptive masonry ── */}
 			{memory.photos.length === 0 ? (
 				<div className={styles.emptyPhotos}>
 					<span className={styles.emptyIcon}>📷</span>
@@ -808,23 +941,17 @@ const MemoryDetailScreen: React.FC = () => {
 				</div>
 			) : (
 				<div className={styles.photoGrid}>
-					{[0, 1, 2].map(col => (
-						<div className={styles.photoColumn} key={col}>
-							{memory.photos
-								.filter((_, i) => i % 3 === col)
-								.map(photo => {
-									const i = memory.photos.indexOf(photo)
-									return (
-										<PhotoItem
-											key={photo.id}
-											photo={photo}
-											onTap={() => setViewerIndex(i)}
-											onSetCover={isOwner ? () => setCover(id!, photo.url) : undefined}
-											onDelete={isOwner ? () => deletePhoto(id!, photo.id) : undefined}
-										/>
-									)
-								})}
-						</div>
+					{memory.photos.map((photo, i) => (
+						<PhotoItem
+							key={photo.id}
+							photo={photo}
+							span={photoLayouts[i] ?? 1}
+							ratio={photoRatios[photo.id]}
+							onTap={() => setViewerIndex(i)}
+							onSetCover={isOwner ? () => setCover(id!, photo.url) : undefined}
+							onDelete={isOwner ? () => deletePhoto(id!, photo.id) : undefined}
+							onRatioDetected={handleRatioDetected}
+						/>
 					))}
 				</div>
 			)}
@@ -850,6 +977,7 @@ const MemoryDetailScreen: React.FC = () => {
 						}
 					}) : undefined}
 					onCaption={isOwner ? ((photoId, caption) => updatePhoto(id!, photoId, { caption })) : undefined}
+					onSetCover={isOwner ? ((url) => setCover(id!, url)) : undefined}
 				/>
 			)}
 
@@ -864,7 +992,8 @@ const MemoryDetailScreen: React.FC = () => {
 					dateEnd={memory.dateEnd ?? null}
 					isTrip={memory.isTrip ?? false}
 					coverUrl={memory.coverUrl ?? ''}
-					onSave={(title, location, date, dateEnd, isTrip) =>
+					withProfiles={memory.withProfiles ?? []}
+					onSave={(title, location, date, dateEnd, isTrip, withProfiles) =>
 						updateMemory(id!, {
 							title,
 							location: location.address || location.name || undefined,
@@ -873,6 +1002,7 @@ const MemoryDetailScreen: React.FC = () => {
 							date,
 							dateEnd,
 							isTrip,
+							withProfiles,
 						})
 					}
 					onChangeCover={(url, attribution) => {
