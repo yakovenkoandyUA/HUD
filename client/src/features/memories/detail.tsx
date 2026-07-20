@@ -77,7 +77,7 @@ const PHOTO_SPANS_3: Array<{ col: 1 | 2 | 3; row: number }> = [
  */
 interface PhotoItemProps {
   photo: MemoryPhoto
-  colSpan: 1 | 2
+  colSpan: 1 | 2 | 3
   rowSpan: number
   onTap: () => void
   onSetCover?: () => void
