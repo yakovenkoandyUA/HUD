@@ -518,6 +518,8 @@
   scrollbar-width: none;
   padding: 0 2px;
   -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to right, black calc(100% - 36px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 36px), transparent 100%);
 }
 .filterBarGenres::-webkit-scrollbar { display: none; }
 

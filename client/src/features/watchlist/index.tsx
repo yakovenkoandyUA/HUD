@@ -139,10 +139,16 @@ const Watchlist: React.FC = () => {
   if (effectiveSelectedGame) lastSelectedGameRef.current = effectiveSelectedGame
   const displayGame = effectiveSelectedGame ?? lastSelectedGameRef.current
 
-  const watchingItems = useMemo(
-    () => items.filter((i) => i.status === 'watching' && i.category === (tab as WatchlistCategory)),
-    [items, tab]
-  )
+  // All media tabs share one hero — no height jump on tab switch.
+  // Current tab's items come first, the rest follow.
+  const watchingItems = useMemo(() => {
+    const mediaCategories = ['movie', 'series', 'anime'] as WatchlistCategory[]
+    const all = items.filter(i => i.status === 'watching' && mediaCategories.includes(i.category as WatchlistCategory))
+    return [
+      ...all.filter(i => i.category === tab),
+      ...all.filter(i => i.category !== tab),
+    ]
+  }, [items, tab])
 
   const byCategoryItems = useMemo(
     () => items.filter((i) => i.category === (tab as WatchlistCategory)),

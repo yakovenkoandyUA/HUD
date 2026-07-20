@@ -154,6 +154,22 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+const _today     = new Date()
+const _todayStr  = _today.toISOString().slice(0, 10)
+const _yest      = new Date(_today); _yest.setDate(_yest.getDate() - 1)
+const _yesterStr = _yest.toISOString().slice(0, 10)
+
+function formatDateHeader(iso: string): string {
+  if (iso === _todayStr)  return 'Сьогодні'
+  if (iso === _yesterStr) return 'Вчора'
+  const d = new Date(iso + 'T00:00:00')
+  const sameYear = d.getFullYear() === _today.getFullYear()
+  return d.toLocaleDateString('uk-UA', {
+    day: 'numeric', month: 'long',
+    ...(!sameYear && { year: 'numeric' }),
+  })
+}
+
 const TYPE_OPTIONS: DropOption[] = [
   { value: 'all',     label: 'Всі' },
   { value: 'income',  label: 'Доходи' },
@@ -209,6 +225,9 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
 
   const sorted = useMemo(() =>
     [...transactions].sort((a, b) => {
+      const dateA = a.date.slice(0, 10)
+      const dateB = b.date.slice(0, 10)
+      if (dateB !== dateA) return dateB.localeCompare(dateA)
       const tA = new Date(a.createdAt ?? a.date).getTime()
       const tB = new Date(b.createdAt ?? b.date).getTime()
       return tB - tA
@@ -384,13 +403,22 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
         </div>
       ) : (
         <ul className={styles.list}>
-          {displayedList.map((t) => {
+          {displayedList.map((t, idx) => {
+            const currentDate = t.date.slice(0, 10)
+            const prevDate    = idx > 0 ? displayedList[idx - 1].date.slice(0, 10) : null
+            const showHeader  = currentDate !== prevDate
 
             const isPending  = pendingDelete === t.id
             const receipt    = parseReceipt(t.description)
             const isRecurring = !!(t.recurringId || t.description === 'Регулярний платіж')
             return (
-              <li key={t.id} className={`${styles.item} ${isPending ? styles.itemPending : ''} ${newItemIds.has(t.id) ? styles.itemNew : ''}`}>
+              <React.Fragment key={t.id}>
+              {showHeader && (
+                <li className={styles.dateHeader} aria-hidden="true">
+                  {formatDateHeader(currentDate)}
+                </li>
+              )}
+              <li className={`${styles.item} ${isPending ? styles.itemPending : ''} ${newItemIds.has(t.id) ? styles.itemNew : ''}`}>
                 {isPending ? (
                   <div className={styles.confirmRow}>
                     <span className={styles.confirmText}>Видалити?</span>
@@ -473,12 +501,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                             </>
                           )}
                         </div>
-                        <div className={styles.date}>
-                          {formatDate(t.date)}
-                          {t.subcategory && t.description && t.description !== t.subcategory && (
-                            <span className={styles.descSub}> · {t.description}</span>
-                          )}
-                        </div>
+                        {t.subcategory && t.description && t.description !== t.subcategory && (
+                          <div className={styles.date}>
+                            <span className={styles.descSub}>{t.description}</span>
+                          </div>
+                        )}
                         {t.spaceId && (() => {
                           const sp = spaces.find(s => s.id === t.spaceId)
                           return sp ? (
@@ -508,6 +535,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                   </>
                 )}
               </li>
+              </React.Fragment>
             )
           })}
         </ul>

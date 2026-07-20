@@ -44,6 +44,7 @@ function groupByMonth(memories: Memory[]): [string, Memory[]][] {
     .forEach(m => {
       const key = new Date(m.date)
         .toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' })
+        .replace(/ р\./i, '')
         .toUpperCase()
       if (!groups[key]) groups[key] = []
       groups[key].push(m)
@@ -218,6 +219,7 @@ const MemoriesScreen: React.FC = () => {
   const currentMonthKey = useMemo(
     () => new Date()
       .toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' })
+      .replace(/ р\./i, '')
       .toUpperCase(),
     []
   )

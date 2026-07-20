@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom'
 import { Map, Marker, NavigationControl } from 'react-map-gl/mapbox'
 import type { MapMouseEvent, MapRef } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -146,7 +147,7 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
   if (!mounted) return null
 
-  return (
+  return ReactDOM.createPortal(
     <div
       className={`${styles.overlay} ${visible ? styles.overlayVisible : styles.overlayHidden}`}
       onClick={handleClose}
@@ -208,7 +209,8 @@ const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

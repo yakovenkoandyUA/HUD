@@ -144,11 +144,23 @@
   filter: grayscale(1);
 }
 
+.dateHeader {
+  list-style: none;
+  padding: 14px 0 6px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.dateHeader:first-child { padding-top: 4px; }
+
 .item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }

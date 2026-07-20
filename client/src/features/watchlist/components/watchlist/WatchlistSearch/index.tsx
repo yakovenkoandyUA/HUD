@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import styles from './WatchlistSearch.module.css'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '@/shared/types'
 import { TMDB_GENRES } from '../../../utils/tmdbGenres'
+import { useUiStore } from '@/shared/store/uiStore'
 
 const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY
 const TMDB_IMG  = 'https://image.tmdb.org/t/p/w92'
@@ -53,6 +54,7 @@ const STATUS_PREVIEW_OPTIONS: { value: WatchlistStatus; label: string }[] = [
 ]
 
 const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, iconOnly }) => {
+  const { pushModal, popModal } = useUiStore()
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -83,6 +85,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
     setQuery('')
     setResults([])
     setIsOpen(false)
+    if (preview) popModal()
     setPreview(null)
     setPreviewDetails(null)
     setPreviewCast([])
@@ -149,6 +152,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
   }, [category])
 
   const handleResultClick = async (result: SearchResult) => {
+    pushModal()
     setPreview(result)
     setPreviewDetails(null)
     setPreviewCast([])
@@ -228,7 +232,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
     category === 'series' ? 'Пошук серіалу...' :
                             'Пошук фільму...'
 
-  const closePreview = () => { setPreview(null); setPreviewDetails(null); setPreviewCast([]); setSelectedStatus('want') }
+  const closePreview = () => { popModal(); setPreview(null); setPreviewDetails(null); setPreviewCast([]); setSelectedStatus('want') }
 
   const handleHeroTouchStart = (e: React.TouchEvent) => {
     heroStartY.current = e.touches[0].clientY

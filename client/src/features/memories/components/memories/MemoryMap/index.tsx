@@ -104,12 +104,6 @@ const MapFeatureHint: React.FC<{ onDismiss: () => void }> = ({ onDismiss }) => (
     <button type="button" className={styles.featureHintClose} onClick={onDismiss} aria-label="Закрити підказку">✕</button>
     <div className={styles.featureHintRow}>
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M2 8a6 6 0 1 1 1.8 4.3M2 8v4M2 8h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      Крути карту двома пальцями
-    </div>
-    <div className={styles.featureHintRow}>
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M2 11l5-7 3 4 4-6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M2 13h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
       </svg>
@@ -159,6 +153,7 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
   const [popupPin, setPopupPin] = useState<MapPin | null>(null)
   const [clusters, setClusters] = useState<ClusterGroup[]>([])
   const [tilted, setTilted] = useState(false)
+  const [bearing, setBearing] = useState(0)
   const [route, setRoute] = useState<RouteResult | null>(null)
   const [routeLoading, setRouteLoading] = useState(false)
   const [showHint, setShowHint] = useState(false)
@@ -191,6 +186,10 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
     const next = !tilted
     setTilted(next)
     map.easeTo({ pitch: next ? 60 : 0, duration: 500 })
+  }
+
+  const resetNorth = () => {
+    mapRef.current?.easeTo({ bearing: 0, duration: 400 })
   }
 
   const planPins: MapPin[] = plans
@@ -365,6 +364,23 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
         >
           3D
         </button>
+        <button
+          type="button"
+          className={`${styles.compassBtn} ${Math.abs(bearing) > 2 ? styles.compassBtnVisible : ''}`}
+          onClick={resetNorth}
+          aria-label="На північ"
+        >
+          <svg
+            width="18" height="18" viewBox="0 0 18 18" fill="none"
+            style={{ transform: `rotate(${-bearing}deg)`, transition: 'transform 0.1s linear' }}
+            aria-hidden="true"
+          >
+            {/* North needle — solid */}
+            <polygon points="9,1 11,9 9,8 7,9" fill="#e04040"/>
+            {/* South needle — dim */}
+            <polygon points="9,17 11,9 9,10 7,9" fill="currentColor" opacity="0.35"/>
+          </svg>
+        </button>
         <div className={styles.map}>
           <Map
             ref={mapRef}
@@ -375,7 +391,8 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
             style={{ width: '100%', height: '100%' }}
             onLoad={handleLoad}
             onZoomEnd={recompute}
-            onMoveEnd={recompute}
+            onMoveEnd={() => { recompute(); setBearing(mapRef.current?.getBearing() ?? 0) }}
+            onRotateEnd={() => setBearing(mapRef.current?.getBearing() ?? 0)}
           >
             <NavigationControl position="top-right" showCompass={false} />
             {clusters.map((group, idx) => {

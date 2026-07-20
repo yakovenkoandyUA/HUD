@@ -478,7 +478,7 @@ const WalletTab: React.FC = () => {
             style={{ width: 90, textAlign: 'right', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', color: 'var(--text)', fontFamily: 'var(--font-mono)', fontSize: 16, outline: 'none' }}
             value={limitInput}
             onChange={e => handleLimitChange(e.target.value)}
-            placeholder="—"
+            placeholder=""
             min={0}
           />
         </div>

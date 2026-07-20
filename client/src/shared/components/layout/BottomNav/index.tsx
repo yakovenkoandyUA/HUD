@@ -225,38 +225,45 @@ const BottomNav: React.FC = () => {
     )
   }
 
+  // Dashboard in center when count is odd (5/7); left when even (6 — no true center)
+  const dashSection = availableSections.find(s => s.to === '/')
+  const rest        = availableSections.filter(s => s.to !== '/')
+  const isOdd       = availableSections.length % 2 === 1
+  const half        = Math.ceil(rest.length / 2)
+
+  const orderedSections: NavSection[] = dashSection && isOdd
+    ? [...rest.slice(0, half), dashSection, ...rest.slice(half)]
+    : availableSections
+
   // ── Classic style ─────────────────────────────────────────────
   if (navStyle === 'classic') {
+    const classicLink = (s: NavSection) => (
+      <NavLink
+        key={s.to}
+        to={s.to}
+        end={s.to === '/'}
+        className={({ isActive }) =>
+          `${styles.classicItem} ${isActive ? styles.active : ''}`
+        }
+      >
+        {({ isActive }) => (
+          <>
+            <s.Icon className={styles.icon} />
+            {(navLabelMode === 'always' || (navLabelMode === 'active' && isActive)) && (
+              <span className={styles.classicLabel}>{s.label}</span>
+            )}
+          </>
+        )}
+      </NavLink>
+    )
     return (
       <nav className={`${styles.nav} ${styles.navClassic}`}>
-        {availableSections.map(s => (
-          <NavLink
-            key={s.to}
-            to={s.to}
-            end={s.to === '/'}
-            className={({ isActive }) =>
-              `${styles.classicItem} ${isActive ? styles.active : ''}`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <s.Icon className={styles.icon} />
-                {(navLabelMode === 'always' || (navLabelMode === 'active' && isActive)) && (
-                  <span className={styles.classicLabel}>{s.label}</span>
-                )}
-              </>
-            )}
-          </NavLink>
-        ))}
+        {orderedSections.map(classicLink)}
       </nav>
     )
   }
 
   // ── Pill style ────────────────────────────────────────────────
-  // Завжди всі доступні розділи (максимум 7), без налаштування — Dashboard
-  // в центрі ряду тільки коли загальна кількість непарна (5/7 — є справжній
-  // центр); інакше (6 — типовий випадок без F1) Dashboard зліва, бо немає
-  // парного центру і "зліва" найпередбачуваніше для головного розділу.
   if (navStyle === 'pill') {
     const pillLink = (s: NavSection) => (
       <NavLink
@@ -280,27 +287,10 @@ const BottomNav: React.FC = () => {
       </NavLink>
     )
 
-    const dashSection = availableSections.find(s => s.to === '/')
-    const rest = availableSections.filter(s => s.to !== '/')
-    const isOdd = availableSections.length % 2 === 1
-
     const allLabelsClass = navLabelMode === 'always' ? styles.navAllLabels : ''
-
-    if (!isOdd) {
-      return (
-        <nav className={`${styles.nav} ${allLabelsClass}`}>
-          {dashSection && pillLink(dashSection)}
-          {rest.map(pillLink)}
-        </nav>
-      )
-    }
-
-    const half = Math.ceil(rest.length / 2)
     return (
       <nav className={`${styles.nav} ${allLabelsClass}`}>
-        {rest.slice(0, half).map(pillLink)}
-        {dashSection && pillLink(dashSection)}
-        {rest.slice(half).map(pillLink)}
+        {orderedSections.map(pillLink)}
       </nav>
     )
   }
