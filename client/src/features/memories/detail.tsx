@@ -34,17 +34,30 @@ function formatMemoryDate(iso: string): string {
 
 // ── Deterministic span pattern for photo mosaic ──────────────────────────────
 // Each photo slot has a forced col/row span — object-fit: cover crops to fill.
-// Pattern repeats every 7 photos → unique layout for most gallery sizes.
 // Row unit = 8px.
 
-const PHOTO_SPANS: Array<{ col: 1 | 2; row: number }> = [
-  { col: 2, row: 30 }, // 0 — full-width hero       240px
-  { col: 1, row: 38 }, // 1 — tall portrait          304px
-  { col: 1, row: 22 }, // 2 — short landscape        176px
-  { col: 1, row: 26 }, // 3 — medium portrait        208px
+// 2-column pattern (1–4 photos), repeats every 7
+const PHOTO_SPANS_2: Array<{ col: 1 | 2; row: number }> = [
+  { col: 2, row: 30 }, // 0 — full hero              240px
+  { col: 1, row: 38 }, // 1 — tall left              304px
+  { col: 1, row: 22 }, // 2 — short right            176px
+  { col: 1, row: 26 }, // 3 — medium                 208px
   { col: 1, row: 34 }, // 4 — tall                   272px
-  { col: 2, row: 22 }, // 5 — full-width accent strip 176px
+  { col: 2, row: 22 }, // 5 — wide strip             176px
   { col: 1, row: 30 }, // 6 — medium                 240px
+]
+
+// 3-column pattern (5+ photos), repeats every 9
+const PHOTO_SPANS_3: Array<{ col: 1 | 2 | 3; row: number }> = [
+  { col: 3, row: 28 }, // 0 — full hero              224px
+  { col: 2, row: 34 }, // 1 — large 2/3              272px
+  { col: 1, row: 20 }, // 2 — small 1/3 top          160px
+  { col: 1, row: 14 }, // 3 — small 1/3 bottom       112px
+  { col: 1, row: 28 }, // 4 — medium 1/3             224px
+  { col: 2, row: 22 }, // 5 — wide 2/3               176px
+  { col: 1, row: 26 }, // 6 — medium 1/3             208px
+  { col: 1, row: 18 }, // 7 — short 1/3              144px
+  { col: 2, row: 30 }, // 8 — large 2/3              240px
 ]
 
 /**
@@ -775,24 +788,32 @@ const MemoryDetailScreen: React.FC = () => {
 					<p className={styles.emptyText}>Поки немає фотографій</p>
 					<p className={styles.emptyHint}>Натисни «+ Додати фото» вище</p>
 				</div>
-			) : (
-				<div className={styles.photoGrid}>
-					{memory.photos.map((photo, i) => {
-						const { col, row } = PHOTO_SPANS[i % PHOTO_SPANS.length]
+			) : (() => {
+						const use3 = memory.photos.length >= 5
+						const spans = use3 ? PHOTO_SPANS_3 : PHOTO_SPANS_2
 						return (
-							<PhotoItem
-								key={photo.id}
-								photo={photo}
-								colSpan={col}
-								rowSpan={row}
-								onTap={() => setViewerIndex(i)}
-								onSetCover={isOwner ? () => setCover(id!, photo.url) : undefined}
-								onDelete={isOwner ? () => deletePhoto(id!, photo.id) : undefined}
-							/>
+							<div
+								className={styles.photoGrid}
+								style={{ '--grid-cols': use3 ? 3 : 2 } as React.CSSProperties}
+							>
+								{memory.photos.map((photo, i) => {
+									const { col, row } = spans[i % spans.length]
+									return (
+										<PhotoItem
+											key={photo.id}
+											photo={photo}
+											colSpan={col}
+											rowSpan={row}
+											onTap={() => setViewerIndex(i)}
+											onSetCover={isOwner ? () => setCover(id!, photo.url) : undefined}
+											onDelete={isOwner ? () => deletePhoto(id!, photo.id) : undefined}
+										/>
+									)
+								})}
+							</div>
 						)
-					})}
-				</div>
-			)}
+					})()
+			}
 
 			{/* ── Add place modal ── */}
 			<Modal isOpen={addingPlace} onClose={() => setAddingPlace(false)} title="Додати заклад" draggable>
