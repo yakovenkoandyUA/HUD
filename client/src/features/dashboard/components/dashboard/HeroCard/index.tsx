@@ -215,6 +215,10 @@ const HeroCard: React.FC<HeroCardProps> = ({
             </linearGradient>
           </defs>
 
+          {/* Baseline */}
+          <line x1={PAD_X} y1={H - PAD_Y} x2={W - PAD_X} y2={H - PAD_Y}
+            stroke="var(--accent)" strokeOpacity="0.15" strokeWidth="0.5" />
+
           {hasAnyData && (
             <>
               <path d={area} fill="url(#sparkGrad)" />
@@ -245,7 +249,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
           })}
         </svg>
 
-        {/* Day labels — HTML для кращого рендеру шрифту */}
+        {/* Day labels */}
         <div className={styles.sparkLabels}>
           {dayLabels.map((label, i) => (
             <span

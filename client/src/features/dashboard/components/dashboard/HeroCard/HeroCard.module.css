@@ -51,7 +51,7 @@
   border-top: 1px solid var(--tint-accent-lg);
   border-bottom: 1px solid var(--tint-accent-lg);
   overflow: hidden;
-  height: 100px;
+  height: 120px;
 }
 
 .splitLeft {
@@ -154,9 +154,9 @@
 
 .sparkLabel {
   font-family: var(--font-ui);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 500;
-  color: var(--text3);
+  color: var(--text2);
   letter-spacing: 0.02em;
   line-height: 1;
 }

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { authFetch } from '@/shared/services/api'
-import Modal from '@/shared/components/ui/Modal'
 import styles from './Onboarding.module.css'
 
 const MONTHS_UA = [
@@ -75,50 +75,59 @@ const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) =>
   return (
     <>
       <button type="button" className={styles.dayTrigger} onClick={() => setOpen(true)}>
-        <span className={styles.dayTriggerNum}>{value}-го</span>
-        <span className={styles.dayTriggerSub}>числа</span>
+        <span className={styles.dayTriggerNum}>{value}</span>
+        <span className={styles.dayTriggerLabel}>
+          <span className={styles.dayTriggerTitle}>числа місяця</span>
+          <span className={styles.dayTriggerSub}>торкніться щоб змінити</span>
+        </span>
         <span className={styles.dayTriggerChevron}><ChevronRight /></span>
       </button>
 
-      <Modal isOpen={open} onClose={() => setOpen(false)} title="День зарплати" draggable>
-        <div className={styles.calModal}>
-          <div className={styles.calNavRow}>
-            <button type="button" className={styles.calNavBtn} onClick={goToPrev} aria-label="Попередній місяць">
-              <ArrowLeft />
-            </button>
-            <span className={styles.calMonthLabel}>{MONTHS_UA[viewMonth]} {viewYear}</span>
-            <button type="button" className={styles.calNavBtn} onClick={goToNext} aria-label="Наступний місяць">
-              <ArrowRight />
-            </button>
+      {open && createPortal(
+        <div className={styles.calSheet}>
+          <div className={styles.calSheetOverlay} onClick={() => setOpen(false)} />
+          <div className={styles.calSheetBody}>
+            <div className={styles.calSheetHandle} />
+            <div className={styles.calSheetTitle}>День зарплати</div>
+            <div className={styles.calNavRow}>
+              <button type="button" className={styles.calNavBtn} onClick={goToPrev} aria-label="Попередній місяць">
+                <ArrowLeft />
+              </button>
+              <span className={styles.calMonthLabel}>{MONTHS_UA[viewMonth]} {viewYear}</span>
+              <button type="button" className={styles.calNavBtn} onClick={goToNext} aria-label="Наступний місяць">
+                <ArrowRight />
+              </button>
+            </div>
+            <div className={styles.calGrid}>
+              {['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(d => (
+                <span key={d} className={styles.calDow}>{d}</span>
+              ))}
+              {Array.from({ length: firstDow }, (_, i) => (
+                <span key={`e${i}`} className={styles.calEmpty} />
+              ))}
+              {Array.from({ length: daysInMonth }, (_, i) => {
+                const d = i + 1
+                const isToday = d === todayDate && viewMonth === todayMonth && viewYear === todayYear
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    className={[
+                      styles.calDay,
+                      value === d ? styles.calDayOn : '',
+                      isToday && value !== d ? styles.calDayToday : '',
+                    ].join(' ')}
+                    onClick={() => { onChange(d); setOpen(false) }}
+                  >
+                    {d}
+                  </button>
+                )
+              })}
+            </div>
           </div>
-          <div className={styles.calGrid}>
-            {['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(d => (
-              <span key={d} className={styles.calDow}>{d}</span>
-            ))}
-            {Array.from({ length: firstDow }, (_, i) => (
-              <span key={`e${i}`} className={styles.calEmpty} />
-            ))}
-            {Array.from({ length: daysInMonth }, (_, i) => {
-              const d = i + 1
-              const isToday = d === todayDate && viewMonth === todayMonth && viewYear === todayYear
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  className={[
-                    styles.calDay,
-                    value === d ? styles.calDayOn : '',
-                    isToday && value !== d ? styles.calDayToday : '',
-                  ].join(' ')}
-                  onClick={() => { onChange(d); setOpen(false) }}
-                >
-                  {d}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </Modal>
+        </div>,
+        document.body,
+      )}
     </>
   )
 }
@@ -218,47 +227,42 @@ const OnboardingScreen: React.FC = () => {
   const handleFinish = async () => {
     setSaving(true)
     try {
-      await updateProfile({ salaryDay, onboardingCompleted: true })
+      const profileSave = updateProfile({ salaryDay, onboardingCompleted: true })
+      const timeout = new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 6000),
+      )
+      await Promise.race([profileSave, timeout])
 
-      const tasks: Promise<unknown>[] = []
-
-      // Deactivate unchecked categories
+      // Fire-and-forget secondary tasks — don't block navigation
       topLevelCats
         .filter(c => !selectedCatIds.has(c._id))
         .forEach(c => {
-          tasks.push(
-            authFetch(`/api/categories/${c._id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ isActive: false }),
-            })
-          )
+          authFetch(`/api/categories/${c._id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive: false }),
+          }).catch(() => {})
         })
 
       if (habitTitle) {
-        tasks.push(
-          authFetch('/api/sprint/tasks', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: habitTitle, type: 'routine', repeat: 'daily', priority: 'normal' }),
-          })
-        )
+        authFetch('/api/sprint/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: habitTitle, type: 'routine', repeat: 'daily', priority: 'normal' }),
+        }).catch(() => {})
       }
 
       if (planDest.trim()) {
-        tasks.push(
-          authFetch('/api/plans', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: planDest.trim(), status: 'want' }),
-          })
-        )
+        authFetch('/api/plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: planDest.trim(), status: 'want' }),
+        }).catch(() => {})
       }
-
-      await Promise.allSettled(tasks)
-      navigate('/', { replace: true })
     } catch {
-      setSaving(false)
+      // ignore — navigate anyway so user is never stuck
+    } finally {
+      navigate('/', { replace: true })
     }
   }
 
@@ -476,16 +480,16 @@ const OnboardingScreen: React.FC = () => {
               />
             )}
 
-            <div className={styles.btnRow}>
-              <button className={styles.skipBtn} onClick={() => setStep(6)}>
+            <div className={styles.slideActions}>
+              <button className={styles.slideSkipBtn} onClick={() => setStep(6)}>
                 Пропустити
               </button>
               <button
-                className={styles.primaryBtn}
+                className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`}
                 onClick={() => setStep(6)}
                 disabled={!habitTitle}
               >
-                Далі <ChevronRight />
+                ДАЛІ <ChevronRight />
               </button>
             </div>
           </div>
@@ -495,7 +499,7 @@ const OnboardingScreen: React.FC = () => {
         {step === 6 && (
           <div className={styles.step}>
             <img
-              src="/mimir/mimir-thinking.png"
+              src="/mimir/mimir-location.png"
               alt="Mimir"
               className={`${styles.mimirAvatar} ${styles.mimirAvatarMd}`}
               draggable={false}
@@ -513,12 +517,12 @@ const OnboardingScreen: React.FC = () => {
               autoFocus
             />
 
-            <div className={styles.btnRow}>
-              <button className={styles.skipBtn} onClick={() => setStep(7)}>
+            <div className={styles.slideActions}>
+              <button className={styles.slideSkipBtn} onClick={() => setStep(7)}>
                 Пропустити
               </button>
-              <button className={styles.primaryBtn} onClick={() => setStep(7)}>
-                Далі <ChevronRight />
+              <button className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`} onClick={() => setStep(7)}>
+                ДАЛІ <ChevronRight />
               </button>
             </div>
           </div>
@@ -526,26 +530,28 @@ const OnboardingScreen: React.FC = () => {
 
         {/* ── Step 7: Done ──────────────────────────────────── */}
         {step === 7 && (
-          <div className={styles.step}>
+          <div className={styles.slideHero}>
             <img
               src="/mimir/mimir-celebrating.png"
               alt="Mimir"
-              className={`${styles.mimirAvatar} ${styles.mimirAvatarLg}`}
+              className={styles.slideHeroImg}
               draggable={false}
             />
-            <h2 className={styles.doneTitle}>Криниця відкрита.</h2>
-            <p className={styles.doneDesc}>
-              Мімір пам'ятає все — тепер і твоє.<br />Твоя хроніка починається.
-            </p>
-            <p className={styles.doneHint}>
-              Вигляд і навігацію можна змінити у Профіль → Вигляд
-            </p>
+            <div className={styles.slideCopy}>
+              <h2 className={styles.doneTitle}>Криниця відкрита.</h2>
+              <p className={styles.doneDesc}>
+                Мімір пам'ятає все — тепер і твоє.<br />Твоя хроніка починається.
+              </p>
+              <p className={styles.doneHint}>
+                Вигляд і навігацію можна змінити у Профіль → Вигляд
+              </p>
+            </div>
             <button
-              className={styles.primaryBtn}
+              className={`${styles.primaryBtn} ${styles.primaryBtnFull}`}
               onClick={handleFinish}
               disabled={saving}
             >
-              {saving ? 'Зберігаємо…' : <>Розпочати <ChevronRight /></>}
+              {saving ? 'Зберігаємо…' : <>РОЗПОЧАТИ <ChevronRight /></>}
             </button>
           </div>
         )}
