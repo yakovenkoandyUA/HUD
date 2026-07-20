@@ -519,7 +519,10 @@ const MemoriesScreen: React.FC = () => {
         <>
           {filteredPlans.length === 0 ? (
             <div className={styles.empty}>
-              <span className={styles.emptyIcon}>🗺️</span>
+              <svg className={styles.emptyIcon} width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+                <path d="M36 10c-10.5 0-18 8.5-18 19 0 14 18 33 18 33s18-19 18-33c0-10.5-7.5-19-18-19z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
+                <circle cx="36" cy="29" r="6.5" stroke="currentColor" strokeWidth="2.5"/>
+              </svg>
               <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі планів немає' : 'Планів ще немає'}</p>
               <p className={styles.emptyHint}>Додай місце яке хочеш відвідати</p>
             </div>

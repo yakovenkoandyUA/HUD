@@ -339,8 +339,14 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
     return (
       <div className={styles.root}>
         <div className={styles.empty}>
-          <p>Немає планів чи спогадів з локацією</p>
-          <span>Додай місце при створенні</span>
+          <svg className={styles.emptyIcon} width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+            <polygon points="8,20 26,14 46,22 64,14 64,52 46,58 26,50 8,58" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
+            <line x1="26" y1="14" x2="26" y2="50" stroke="currentColor" strokeWidth="2.5"/>
+            <line x1="46" y1="22" x2="46" y2="58" stroke="currentColor" strokeWidth="2.5"/>
+            <circle cx="36" cy="34" r="5" stroke="currentColor" strokeWidth="2.5"/>
+          </svg>
+          <p className={styles.emptyTitle}>Немає планів чи спогадів з локацією</p>
+          <p className={styles.emptyHint}>Додай місце при створенні</p>
         </div>
       </div>
     )
