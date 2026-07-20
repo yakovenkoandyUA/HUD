@@ -12,10 +12,11 @@ import styles from './ProfilePage.module.css'
 // Category names that belong to income, not expense
 const INCOME_NAMES = new Set(['інвестиції', 'заощадження'])
 
+// #9CA3AF (grey) is reserved for the built-in "Інше" category — never assign to user categories
 const CAT_PALETTE = [
   '#22C55E', '#EAB308', '#8B5CF6', '#06B6D4', '#78716C',
   '#EF4444', '#D946EF', '#10B981', '#F472B6', '#3B82F6',
-  '#38BDF8', '#F97316', '#6366F1', '#0369A1', '#FB923C', '#9CA3AF',
+  '#38BDF8', '#F97316', '#6366F1', '#0369A1', '#FB923C',
 ]
 
 const ICON_OPTIONS = [
@@ -83,7 +84,7 @@ const WalletTab: React.FC = () => {
   const [addingCat, setAddingCat]   = useState(false)
   const [newCatValue, setNewCatValue] = useState('')
   const [newCatIcon, setNewCatIcon] = useState('ti-tag')
-  const [newCatColor, setNewCatColor] = useState('#9CA3AF')
+  const [newCatColor, setNewCatColor] = useState(CAT_PALETTE[0])
   const [iconPickerOpen, setIconPickerOpen] = useState(false)
   const [savingCat, setSavingCat]   = useState(false)
   const newCatRef = useRef<HTMLInputElement>(null)
