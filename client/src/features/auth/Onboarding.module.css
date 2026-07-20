@@ -1,10 +1,12 @@
 .root {
   min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   background: var(--bg);
   padding: 32px 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  overflow-y: auto;
 }
 
 .inner {
@@ -112,24 +114,18 @@
 
 .mimirAvatar {
   display: block;
+  height: 260px;
+  margin-bottom: 12px;
   object-fit: contain;
   user-select: none;
-  mix-blend-mode: multiply;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4));
   animation:
     onboardEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both,
     onboardFloat 4s ease-in-out infinite 0.55s;
 }
 
-.mimirAvatarLg {
-  height: 280px;
-  margin-bottom: 8px;
-}
-
-.mimirAvatarMd {
-  height: 210px;
-  margin-bottom: 14px;
-}
+.mimirAvatarLg { /* unified — same height as Md */ }
+.mimirAvatarMd { /* unified — same height as base */ }
 
 @keyframes onboardEnter {
   from { opacity: 0; transform: translateY(18px) scale(0.88); }
@@ -212,16 +208,97 @@
   margin-bottom: 10px;
 }
 
-/* ── Financial day grid (1–31) ── */
+/* ── Salary day picker — trigger + modal calendar ── */
 
-.dayGrid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
+.dayTrigger {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  width: 100%;
+  padding: 6px 10px 6px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.dayCell {
+.dayTrigger:active { opacity: 0.72; }
+
+.dayTriggerNum {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.dayTriggerSub {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.dayTriggerChevron {
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+}
+
+/* ── Calendar inside Modal ── */
+
+.calModal {
+  padding: 4px 0 8px;
+}
+
+.calNavRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.calNavBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.calNavBtn:hover { background: var(--bg3); color: var(--text); }
+
+.calMonthLabel {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calDow {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  padding: 2px 0 8px;
+}
+
+.calEmpty { /* placeholder */ }
+
+.calDay {
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -229,20 +306,25 @@
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--text2);
-  background: var(--surface);
-  border: 1.5px solid var(--border);
+  background: transparent;
+  border: 1.5px solid transparent;
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.dayCell:active { transform: scale(0.92); }
+.calDay:active { transform: scale(0.88); }
 
-.dayCellOn {
+.calDayOn {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-wash-md);
+}
+
+.calDayToday {
+  color: var(--text);
+  font-weight: 600;
 }
 
 /* ── Category chips ── */
@@ -250,35 +332,35 @@
 .catGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .catChip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
+  gap: 5px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
   border-radius: 20px;
-  font-size: 13px;
-  color: var(--text2);
+  font-size: 12px;
+  color: var(--text3);
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.catChip:active { transform: scale(0.96); }
+.catChip:active { transform: scale(0.94); }
 
 .catChipOn {
   border-color: var(--accent);
   color: var(--text);
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
 }
 
 .catDot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -429,28 +511,137 @@
   width: 100%;
 }
 
-/* ── Progress dots ── */
+/* ── Step progress bar (global, top of .inner) ── */
 
-.dots {
-  display: flex;
-  gap: 7px;
-  justify-content: center;
-  margin-top: 28px;
+.progressWrap {
+  width: 100%;
+  padding-bottom: 20px;
 }
 
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border2);
-  transition: background 0.2s ease, transform 0.2s ease, width 0.2s ease;
+.progressTrack {
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-bottom: 7px;
 }
 
-.dotActive {
+.progressFill {
+  height: 100%;
   background: var(--accent);
-  transform: scale(1.4);
+  border-radius: 1px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dotDone {
-  background: color-mix(in srgb, var(--accent) 40%, var(--border2));
+.progressLabel {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text3);
 }
+
+/* ── Step 4: Finance — layout classes ── */
+
+.stepLeft {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.stepHeaderRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.mimirSm {
+  height: 100px;
+  width: auto;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.4));
+  animation: onboardEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.stepHeaderText {
+  flex: 1;
+  text-align: left;
+}
+
+.stepTitleSm {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 5px;
+  line-height: 1.25;
+}
+
+.stepSubSm {
+  font-size: 12px;
+  color: var(--text3);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Input card (salary day) ── */
+
+.inputCard {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+
+.inputCardHint {
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
+/* ── Show more categories ── */
+
+.showMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  margin-top: 8px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.showMoreBtn:active { opacity: 0.7; }
+
+.catGridMore { margin-top: 6px; }
+
+/* ── Step footer (count + wide CTA) ── */
+
+.stepFooter {
+  width: 100%;
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.selectedCount {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.04em;
+}
+
+.primaryBtnWide { width: 100%; }

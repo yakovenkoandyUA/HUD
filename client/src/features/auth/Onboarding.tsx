@@ -11,6 +11,18 @@ const MONTHS_UA = [
   'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень',
 ]
 
+const POPULAR_CAT_NAMES = new Set([
+  'Продукти','Житло','Транспорт','Заклади','Комунальні','Побут','Підписки','Розваги',
+])
+
+const STEP_PROGRESS: Record<number, { label: string; pct: number }> = {
+  2: { label: 'Крок 1 / 5', pct: 20 },
+  3: { label: 'Крок 2 / 5', pct: 40 },
+  4: { label: 'Крок 3 / 5', pct: 60 },
+  5: { label: 'Крок 4 / 5', pct: 80 },
+  6: { label: 'Крок 5 / 5', pct: 100 },
+}
+
 interface SalaryDayPickerProps {
   value: number
   onChange: (day: number) => void
@@ -63,11 +75,8 @@ const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) =>
   return (
     <>
       <button type="button" className={styles.dayTrigger} onClick={() => setOpen(true)}>
-        <span className={styles.dayTriggerNum}>{value}</span>
-        <span className={styles.dayTriggerLabel}>
-          <span className={styles.dayTriggerTitle}>числа кожного місяця</span>
-          <span className={styles.dayTriggerSub}>торкніться щоб змінити</span>
-        </span>
+        <span className={styles.dayTriggerNum}>{value}-го</span>
+        <span className={styles.dayTriggerSub}>числа</span>
         <span className={styles.dayTriggerChevron}><ChevronRight /></span>
       </button>
 
@@ -114,11 +123,6 @@ const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) =>
   )
 }
 
-// Steps 1–3: fullscreen intro/permission slides (no dots)
-// Steps 4–7: setup slides (dots shown, count 1–4)
-const SETUP_STEPS = 4
-const SETUP_STEP_OFFSET = 3 // first setup step is step 4
-
 const HABIT_PRESETS = ['Спорт', 'Читання', 'Медитація', 'Вода', 'Йога', 'Прогулянка', 'Сон']
 
 /**
@@ -144,6 +148,7 @@ const OnboardingScreen: React.FC = () => {
   // Step 4 — Finance
   const [salaryDay, setSalaryDay] = useState(activeProfile?.salaryDay ?? 1)
   const [selectedCatIds, setSelectedCatIds] = useState<Set<string>>(new Set())
+  const [showAllCats, setShowAllCats] = useState(false)
   const catsInitRef = useRef(false)
   const catsFetchRef = useRef(false)
 
@@ -263,12 +268,23 @@ const OnboardingScreen: React.FC = () => {
     </svg>
   )
 
-  // Dots only for setup steps (4–7)
-  const setupDotIndex = step > SETUP_STEP_OFFSET ? step - SETUP_STEP_OFFSET : null
+  const progress = STEP_PROGRESS[step] ?? null
+  const popularCats = topLevelCats.filter(c => POPULAR_CAT_NAMES.has(c.name))
+  const otherCats   = topLevelCats.filter(c => !POPULAR_CAT_NAMES.has(c.name))
 
   return (
     <div className={styles.root}>
       <div className={styles.inner}>
+
+        {/* ── Step progress bar (steps 2–6) ─────────────────── */}
+        {progress && (
+          <div className={styles.progressWrap}>
+            <div className={styles.progressTrack}>
+              <div className={styles.progressFill} style={{ width: `${progress.pct}%` }} />
+            </div>
+            <span className={styles.progressLabel}>{progress.label}</span>
+          </div>
+        )}
 
         {/* ── Step 1: Welcome (fullscreen) ──────────────────── */}
         {step === 1 && (
@@ -347,21 +363,25 @@ const OnboardingScreen: React.FC = () => {
 
         {/* ── Step 4: Finance setup ─────────────────────────── */}
         {step === 4 && (
-          <div className={styles.step}>
-            <img
-              src="/mimir/mimir-pointing.png"
-              alt="Mimir"
-              className={`${styles.mimirAvatar} ${styles.mimirAvatarMd}`}
-              draggable={false}
-            />
-            <h2 className={styles.stepTitle}>Налаштуємо фінанси</h2>
-            <p className={styles.stepSub}>Два питання щоб Finance одразу працював на тебе.</p>
+          <div className={`${styles.step} ${styles.stepLeft}`}>
 
-            <div className={styles.section}>
-              <span className={styles.sectionLabel}>ДЕНЬ ЗАРПЛАТИ</span>
-              <SalaryDayPicker value={salaryDay} onChange={setSalaryDay} />
+            {/* Header: small Mimir + title */}
+            <div className={styles.stepHeaderRow}>
+              <img src="/mimir/mimir-pointing.png" alt="Mimir" className={styles.mimirSm} draggable={false} />
+              <div className={styles.stepHeaderText}>
+                <h2 className={styles.stepTitleSm}>Налаштуємо фінанси</h2>
+                <p className={styles.stepSubSm}>День зарплати і основні витрати — і Finance готовий.</p>
+              </div>
             </div>
 
+            {/* Salary day card */}
+            <div className={styles.inputCard}>
+              <span className={styles.sectionLabel}>ДЕНЬ ЗАРПЛАТИ</span>
+              <SalaryDayPicker value={salaryDay} onChange={setSalaryDay} />
+              <span className={styles.inputCardHint}>Для розрахунку місячного циклу</span>
+            </div>
+
+            {/* Categories */}
             <div className={styles.section}>
               <span className={styles.sectionLabel}>НА ЩО ВИТРАЧАЄШ?</span>
               {catLoading && topLevelCats.length === 0 ? (
@@ -369,29 +389,53 @@ const OnboardingScreen: React.FC = () => {
                   {[1,2,3,4,5,6].map(i => <span key={i} className={styles.catSkeletonChip} />)}
                 </div>
               ) : (
-                <div className={styles.catGrid}>
-                  {topLevelCats.map(cat => {
-                    const on = selectedCatIds.has(cat._id)
-                    return (
-                      <button
-                        key={cat._id}
-                        type="button"
-                        className={`${styles.catChip} ${on ? styles.catChipOn : ''}`}
-                        onClick={() => toggleCat(cat._id)}
-                        aria-pressed={on}
-                      >
-                        <span className={styles.catDot} style={{ background: cat.color }} />
-                        {cat.name}
-                      </button>
-                    )
-                  })}
-                </div>
+                <>
+                  <div className={styles.catGrid}>
+                    {(popularCats.length > 0 ? popularCats : topLevelCats).map(cat => {
+                      const on = selectedCatIds.has(cat._id)
+                      return (
+                        <button key={cat._id} type="button"
+                          className={`${styles.catChip} ${on ? styles.catChipOn : ''}`}
+                          onClick={() => toggleCat(cat._id)} aria-pressed={on}>
+                          <span className={styles.catDot} style={{ background: cat.color }} />
+                          {cat.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {otherCats.length > 0 && !showAllCats && (
+                    <button type="button" className={styles.showMoreBtn} onClick={() => setShowAllCats(true)}>
+                      + Ще {otherCats.length} категорій
+                    </button>
+                  )}
+                  {showAllCats && (
+                    <div className={`${styles.catGrid} ${styles.catGridMore}`}>
+                      {otherCats.map(cat => {
+                        const on = selectedCatIds.has(cat._id)
+                        return (
+                          <button key={cat._id} type="button"
+                            className={`${styles.catChip} ${on ? styles.catChipOn : ''}`}
+                            onClick={() => toggleCat(cat._id)} aria-pressed={on}>
+                            <span className={styles.catDot} style={{ background: cat.color }} />
+                            {cat.name}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
-            <button className={styles.primaryBtn} onClick={() => setStep(5)}>
-              Далі <ChevronRight />
-            </button>
+            {/* Footer: selected count + CTA */}
+            <div className={styles.stepFooter}>
+              <span className={styles.selectedCount}>
+                Обрано: {selectedCatIds.size}
+              </span>
+              <button className={`${styles.primaryBtn} ${styles.primaryBtnWide}`} onClick={() => setStep(5)}>
+                Далі <ChevronRight />
+              </button>
+            </div>
           </div>
         )}
 
@@ -506,17 +550,6 @@ const OnboardingScreen: React.FC = () => {
           </div>
         )}
 
-        {/* ── Progress dots — тільки для setup steps 4–7 ────── */}
-        {setupDotIndex !== null && (
-          <div className={styles.dots}>
-            {Array.from({ length: SETUP_STEPS }, (_, i) => (
-              <span
-                key={i}
-                className={`${styles.dot} ${i + 1 === setupDotIndex ? styles.dotActive : i + 1 < setupDotIndex ? styles.dotDone : ''}`}
-              />
-            ))}
-          </div>
-        )}
 
       </div>
     </div>
