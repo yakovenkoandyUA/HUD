@@ -22,18 +22,6 @@ import type { PlanLocation } from '@/features/memories/store/plansStore'
 import { authFetch } from '@/shared/services/api'
 import styles from './MemoryDetail.module.css'
 
-interface FsqDetails {
-  fsqId: string
-  openNow: boolean | null
-  hoursDisplay: string | null
-  tel: string | null
-  website: string | null
-  category: string | null
-  rating: number | null
-  price: number | null
-}
-
-type PlaceDetailsState = FsqDetails | 'loading' | 'not_found' | 'error'
 
 const MONTHS_UA_SHORT = [
   'Січ', 'Лют', 'Бер', 'Квіт', 'Трав', 'Черв',
@@ -52,7 +40,7 @@ function formatMemoryDate(iso: string): string {
  *
  * n=1 : featured full-width (span 2)
  * n=2 : both portrait/square → side-by-side (span 1); ≥1 landscape detected → both full-width (span 2)
- * n=3 : featured full-width (span 2); supporting photos by ratio
+ * n=3 : featured full-width (span 2); supporting photos always side-by-side (span 1)
  * n=4 : balanced 2×2 (all span 1); landscape photo breaks to span 2
  * n≥5 : featured span 2; landscape span 2; portrait/square span 1
  *
@@ -74,11 +62,16 @@ function buildLayouts(
     return anyLandscape ? [2, 2] : [1, 1]
   }
 
+  if (n === 3) {
+    // fixed editorial: hero + pair below — supporting photos always side-by-side
+    return photos.map((_, i): 1 | 2 => (i === featuredIndex ? 2 : 1))
+  }
+
   if (n === 4) {
     return photos.map((_, i): 1 | 2 => (isL(i) ? 2 : 1))
   }
 
-  // n=3 and n≥5: featured span 2, landscape span 2, rest span 1
+  // n≥5: featured span 2, landscape span 2, rest span 1
   return photos.map((_, i): 1 | 2 => (i === featuredIndex || isL(i) ? 2 : 1))
 }
 
@@ -126,7 +119,7 @@ const PhotoItem: React.FC<PhotoItemProps> = ({ photo, span, ratio, onTap, onSetC
   return (
     <div
       className={`${styles.photoItem} ${span === 2 ? styles.photoSpan2 : styles.photoSpan1}`}
-      style={{ aspectRatio: ratio ?? 0.8 }}
+      style={{ aspectRatio: span === 2 ? Math.max(ratio ?? 1, 1) : (ratio ?? 0.8) }}
       {...longPress}
     >
       {!loaded && <div className={styles.photoSkeleton} />}
@@ -469,26 +462,6 @@ const MemoryDetailScreen: React.FC = () => {
 
   const [addingPlace, setAddingPlace]   = useState(false)
 
-  const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null)
-  const [placeDetails, setPlaceDetails] = useState<Record<string, PlaceDetailsState>>({})
-
-  const fetchPlaceDetails = useCallback(async (place: MemoryPlace) => {
-    const key = place.id
-    if (placeDetails[key]) return
-    setPlaceDetails(prev => ({ ...prev, [key]: 'loading' }))
-    try {
-      const res = await authFetch(
-        `/api/places/lookup?name=${encodeURIComponent(place.name)}&lat=${place.lat}&lng=${place.lng}`
-      )
-      if (res.status === 404) { setPlaceDetails(prev => ({ ...prev, [key]: 'not_found' })); return }
-      if (!res.ok) { setPlaceDetails(prev => ({ ...prev, [key]: 'error' })); return }
-      const data: FsqDetails = await res.json()
-      setPlaceDetails(prev => ({ ...prev, [key]: data }))
-    } catch {
-      setPlaceDetails(prev => ({ ...prev, [key]: 'error' }))
-    }
-  }, [placeDetails])
-
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFilesChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -728,129 +701,48 @@ const MemoryDetailScreen: React.FC = () => {
 					</div>
 
 					{(memory.places ?? []).length > 0 && (
-						<div className={styles.placesScroll}>
+						<div className={styles.placesGrid}>
 							{(memory.places ?? []).map(place => {
-								const isExpanded = expandedPlaceId === place.id
-								const details    = placeDetails[place.id]
-								const fsq        = details && details !== 'loading' && details !== 'not_found' && details !== 'error' ? details : null
-
 								const hasCoords = !!(place.lat && place.lng)
-								// show chevron only if FSQ not yet tried, loading, or returned data
-								const hasFsqOrPending = details === undefined || details === 'loading' || fsq !== null
-								const handleCardClick = () => {
-									if (!hasCoords || !hasFsqOrPending) return
-									if (isExpanded) { setExpandedPlaceId(null); return }
-									setExpandedPlaceId(place.id)
-									fetchPlaceDetails(place)
-								}
-
 								return (
-									<div key={place.id} className={`${styles.placeCard} ${isExpanded ? styles.placeCardExpanded : ''}`}>
-										<button
-											type="button"
-											className={styles.placeCardMain}
-											onClick={handleCardClick}
-											style={(!hasCoords || !hasFsqOrPending) ? { cursor: 'default' } : undefined}
-										>
-											<div className={styles.placeCardPin}>
-												<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-													<path d="M9 1.5a5.5 5.5 0 015.5 5.5C14.5 11.5 9 16.5 9 16.5S3.5 11.5 3.5 7A5.5 5.5 0 019 1.5Z" stroke="currentColor" strokeWidth="1.4"/>
-													<circle cx="9" cy="7" r="2.2" fill="currentColor"/>
-												</svg>
-											</div>
-											<div className={styles.placeCardBody}>
-												<span className={styles.placeCardName}>{place.name}</span>
-												{place.address && (
-													<span className={styles.placeCardAddr}>{place.address}</span>
-												)}
-											</div>
-											{hasCoords && hasFsqOrPending && (
-												<svg
-													className={`${styles.placeCardChevron} ${isExpanded ? styles.placeCardChevronOpen : ''}`}
-													width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
-												>
-													<path d="M3.5 5.5L7 9l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-												</svg>
-											)}
-										</button>
-
-										{/* "На карті" — always visible, no accordion needed */}
-										{hasCoords && (
+									<div key={place.id} className={styles.placeGridItem}>
+										{hasCoords ? (
 											<a
 												href={`https://www.google.com/maps?q=${place.lat},${place.lng}`}
 												target="_blank" rel="noreferrer"
-												className={styles.placeCardMapLinkInline}
+												className={styles.placeGridLink}
 											>
-												<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-													<path d="M6 1a3 3 0 013 3c0 2.5-3 7-3 7S3 6.5 3 4a3 3 0 013-3Z" stroke="currentColor" strokeWidth="1.2"/>
-												</svg>
-												На карті
-											</a>
-										)}
-
-										{/* Details accordion — FSQ enrichment only */}
-										<div className={`${styles.placeDetails} ${isExpanded ? styles.placeDetailsOpen : ''}`}>
-											{details === 'loading' && (
-												<div className={styles.placeDetailsLinks}>
-													<span className={styles.placeDetailsSpinner} />
+												<div className={styles.placeGridIcon}>
+													<svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+														<path d="M9 1.5a5.5 5.5 0 015.5 5.5C14.5 11.5 9 16.5 9 16.5S3.5 11.5 3.5 7A5.5 5.5 0 019 1.5Z" stroke="currentColor" strokeWidth="1.4"/>
+														<circle cx="9" cy="7" r="2.2" fill="currentColor"/>
+													</svg>
 												</div>
-											)}
-											{fsq && (
-												<>
-													{(fsq.category || fsq.openNow !== null) && (
-														<div className={styles.placeDetailsRow}>
-															{fsq.category && <span className={styles.placeDetailsCat}>{fsq.category}</span>}
-															{fsq.openNow !== null && (
-																<span className={`${styles.placeDetailsStatus} ${fsq.openNow ? styles.placeDetailsOpen2 : styles.placeDetailsClosed}`}>
-																	{fsq.openNow ? 'ВІДКРИТО' : 'ЗАЧИНЕНО'}
-																</span>
-															)}
-														</div>
-													)}
-													{fsq.hoursDisplay && <span className={styles.placeDetailsHours}>{fsq.hoursDisplay}</span>}
-													{(fsq.tel || fsq.website) && (
-														<div className={styles.placeDetailsLinks}>
-															{fsq.tel && (
-																<a href={`tel:${fsq.tel}`} className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
-																	<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-																		<path d="M2 2.5C2 2 2.5 1.5 3 1.5h1.5l1 2.5L4 5c.8 1.6 2.4 3.2 4 4l1-1.5 2.5 1V10c0 .5-.5 1-1 1C4.7 11 1 7.3 1 3c0-.28.22-.5.5-.5z" stroke="currentColor" strokeWidth="1.1"/>
-																	</svg>
-																	{fsq.tel}
-																</a>
-															)}
-															{fsq.website && (
-																<a href={fsq.website} target="_blank" rel="noreferrer" className={styles.placeCardMapLink} onClick={e => e.stopPropagation()}>
-																	<svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-																		<circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.1"/>
-																		<path d="M6 1.5C6 1.5 4.5 3 4.5 6S6 10.5 6 10.5M6 1.5C6 1.5 7.5 3 7.5 6S6 10.5 6 10.5M1.5 6h9" stroke="currentColor" strokeWidth="1.1"/>
-																	</svg>
-																	{new URL(fsq.website).hostname.replace('www.', '')}
-																</a>
-															)}
-														</div>
-													)}
-													{fsq.rating !== null && fsq.rating !== undefined && (
-														<span className={styles.placeDetailsRating}>
-															{fsq.rating.toFixed(1)}
-															<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
-																<path d="M6 1l1.5 3H11L8.5 6.5 9.5 10 6 8l-3.5 2 1-3.5L1 4h3.5z"/>
-															</svg>
-														</span>
-													)}
-												</>
-											)}
-										</div>
-
-										<button
-											type="button"
-											className={styles.placeCardRemove}
-											onClick={e => { e.stopPropagation(); handleRemovePlace(place.id) }}
-											aria-label="Видалити місце"
-										>
-											<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-												<path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-											</svg>
-										</button>
+												<span className={styles.placeGridName}>{place.name}</span>
+											</a>
+										) : (
+											<div className={styles.placeGridLink} style={{ cursor: 'default' }}>
+												<div className={styles.placeGridIcon}>
+													<svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+														<path d="M9 1.5a5.5 5.5 0 015.5 5.5C14.5 11.5 9 16.5 9 16.5S3.5 11.5 3.5 7A5.5 5.5 0 019 1.5Z" stroke="currentColor" strokeWidth="1.4"/>
+														<circle cx="9" cy="7" r="2.2" fill="currentColor"/>
+													</svg>
+												</div>
+												<span className={styles.placeGridName}>{place.name}</span>
+											</div>
+										)}
+										{isOwner && (
+											<button
+												type="button"
+												className={styles.placeGridRemove}
+												onClick={e => { e.stopPropagation(); handleRemovePlace(place.id) }}
+												aria-label="Видалити місце"
+											>
+												<svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+													<path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+												</svg>
+											</button>
+										)}
 									</div>
 								)
 							})}
