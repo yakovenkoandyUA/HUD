@@ -1,9 +1,118 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { authFetch } from '@/shared/services/api'
+import Modal from '@/shared/components/ui/Modal'
 import styles from './Onboarding.module.css'
+
+const MONTHS_UA = [
+  'Січень','Лютий','Березень','Квітень','Травень','Червень',
+  'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень',
+]
+
+interface SalaryDayPickerProps {
+  value: number
+  onChange: (day: number) => void
+}
+
+/** Компактний тригер + Modal-календар для вибору дня місяця */
+const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) => {
+  const [open, setOpen]         = useState(false)
+  const [viewMonth, setViewMonth] = useState(() => new Date().getMonth())
+  const [viewYear, setViewYear]   = useState(() => new Date().getFullYear())
+
+  const daysInMonth = useMemo(
+    () => new Date(viewYear, viewMonth + 1, 0).getDate(),
+    [viewYear, viewMonth],
+  )
+  const firstDow = useMemo(() => {
+    const d = new Date(viewYear, viewMonth, 1).getDay()
+    return d === 0 ? 6 : d - 1
+  }, [viewYear, viewMonth])
+
+  const todayDate = new Date().getDate()
+  const todayMonth = new Date().getMonth()
+  const todayYear  = new Date().getFullYear()
+
+  const goToPrev = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1) }
+    else setViewMonth(m => m - 1)
+  }
+  const goToNext = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1) }
+    else setViewMonth(m => m + 1)
+  }
+
+  const ChevronRight = () => (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+  const ArrowLeft = () => (
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden="true">
+      <path d="M8 1L2 8l6 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+  const ArrowRight = () => (
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden="true">
+      <path d="M2 1l6 7-6 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+
+  return (
+    <>
+      <button type="button" className={styles.dayTrigger} onClick={() => setOpen(true)}>
+        <span className={styles.dayTriggerNum}>{value}</span>
+        <span className={styles.dayTriggerLabel}>
+          <span className={styles.dayTriggerTitle}>числа кожного місяця</span>
+          <span className={styles.dayTriggerSub}>торкніться щоб змінити</span>
+        </span>
+        <span className={styles.dayTriggerChevron}><ChevronRight /></span>
+      </button>
+
+      <Modal isOpen={open} onClose={() => setOpen(false)} title="День зарплати" draggable>
+        <div className={styles.calModal}>
+          <div className={styles.calNavRow}>
+            <button type="button" className={styles.calNavBtn} onClick={goToPrev} aria-label="Попередній місяць">
+              <ArrowLeft />
+            </button>
+            <span className={styles.calMonthLabel}>{MONTHS_UA[viewMonth]} {viewYear}</span>
+            <button type="button" className={styles.calNavBtn} onClick={goToNext} aria-label="Наступний місяць">
+              <ArrowRight />
+            </button>
+          </div>
+          <div className={styles.calGrid}>
+            {['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(d => (
+              <span key={d} className={styles.calDow}>{d}</span>
+            ))}
+            {Array.from({ length: firstDow }, (_, i) => (
+              <span key={`e${i}`} className={styles.calEmpty} />
+            ))}
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const d = i + 1
+              const isToday = d === todayDate && viewMonth === todayMonth && viewYear === todayYear
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  className={[
+                    styles.calDay,
+                    value === d ? styles.calDayOn : '',
+                    isToday && value !== d ? styles.calDayToday : '',
+                  ].join(' ')}
+                  onClick={() => { onChange(d); setOpen(false) }}
+                >
+                  {d}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </Modal>
+    </>
+  )
+}
 
 // Steps 1–3: fullscreen intro/permission slides (no dots)
 // Steps 4–7: setup slides (dots shown, count 1–4)
@@ -45,7 +154,6 @@ const OnboardingScreen: React.FC = () => {
   // Step 6 — Plan
   const [planDest, setPlanDest] = useState('')
 
-  const firstName = activeProfile?.name?.split(' ')[0] ?? 'друже'
   const topLevelCats = allCats.filter(c => !c.parentId)
 
   // Fetch categories when entering step 4
@@ -174,13 +282,13 @@ const OnboardingScreen: React.FC = () => {
             <div className={styles.slideCopy}>
               <h1 className={styles.wordmark}>MIMIR</h1>
               <p className={styles.tagline}>DRINK DEEP</p>
-              <p className={styles.greeting}>Привіт, {firstName}!</p>
+              <p className={styles.greeting}>Занурся глибше.</p>
               <p className={styles.desc}>
-                Особистий органайзер для тих, хто цінує кожен момент — фінанси, звички, спогади, все в одному місці.
+                Особистий простір для пам'яті, фінансів, звичок і всього, що формує твоє життя.
               </p>
             </div>
             <button className={`${styles.primaryBtn} ${styles.primaryBtnFull}`} onClick={() => setStep(2)}>
-              Розпочати <ChevronRight />
+              РОЗПОЧАТИ <ChevronRight />
             </button>
           </div>
         )}
@@ -251,19 +359,7 @@ const OnboardingScreen: React.FC = () => {
 
             <div className={styles.section}>
               <span className={styles.sectionLabel}>ДЕНЬ ЗАРПЛАТИ</span>
-              <div className={styles.dayGrid}>
-                {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                  <button
-                    key={d}
-                    type="button"
-                    className={`${styles.dayCell} ${salaryDay === d ? styles.dayCellOn : ''}`}
-                    onClick={() => setSalaryDay(d)}
-                    aria-pressed={salaryDay === d}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
+              <SalaryDayPicker value={salaryDay} onChange={setSalaryDay} />
             </div>
 
             <div className={styles.section}>
