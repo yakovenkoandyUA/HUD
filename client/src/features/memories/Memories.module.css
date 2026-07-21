@@ -365,7 +365,7 @@
 }
 
 
-/* ── 3-column memories grid (grouped timeline + search results) ── */
+/* ── 3-column memories grid ── */
 .memoriesGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -394,7 +394,6 @@
   width: 100%;
   height: 100%;
   background: var(--surface2);
-  /* inline style overrides with titleGradient() */
 }
 
 .cardPhotoCount {

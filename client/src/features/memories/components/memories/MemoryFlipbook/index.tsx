@@ -96,6 +96,7 @@ const MemoryFlipbook: React.FC<MemoryFlipbookProps> = ({
                 <article
                   key={m.id}
                   className={styles.polaroid}
+                  data-stacked={m.photos.length >= 5 ? '' : undefined}
                   onClick={() => onNavigate(m.id)}
                   role="button"
                   tabIndex={0}

@@ -37,7 +37,7 @@ const CameraIcon: React.FC = () => (
 const VISIBLE_CATS = 10
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
-  const { categories, fetchCategories } = useCategoryStore()
+  const { categories, fetchCategories, categoryUsage, trackCategoryUsage } = useCategoryStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const canScan = useCanUseFeature('receiptScanner')
@@ -63,7 +63,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
   const activeCategories = categories.filter(c => c.isActive)
-  const parentCats       = activeCategories.filter(c => !c.parentId)
+  const parentCats = activeCategories
+    .filter(c => !c.parentId)
+    .slice()
+    .sort((a, b) => (categoryUsage[b._id] ?? 0) - (categoryUsage[a._id] ?? 0))
   const selectedCat      = parentCats.find(c => c._id === selectedCatId) ?? null
   const subCats          = selectedCatId
     ? activeCategories.filter(c => c.parentId === selectedCatId)
@@ -88,6 +91,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
     const desc = description.trim() || finalCat.name
     const categoryName = (selectedCat ?? finalCat).name.toLowerCase()
     const subcategoryName = selectedSubCat ? selectedSubCat.name : null
+    if (selectedCatId) trackCategoryUsage(selectedCatId)
     onExpense(parseFloat(amount), desc, categoryName, selectedSpaceId, subcategoryName, isToday ? undefined : date)
     setAmount('')
     setDescription('')

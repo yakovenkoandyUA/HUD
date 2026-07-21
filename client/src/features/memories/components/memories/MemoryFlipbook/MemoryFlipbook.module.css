@@ -69,29 +69,60 @@
 .polaroid {
   flex-shrink: 0;
   width: 152px;
-  background: #f5f2ec;
-  border-radius: 4px;
-  padding: 8px 8px 0;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.2);
+  position: relative;
+  background: #F0EAE0;
+  border: 1px solid rgba(120, 100, 70, 0.18);
+  border-radius: 3px;
+  padding: 9px 9px 0;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.06),
+    0 8px 22px rgba(0,0,0,0.22),
+    0 2px 5px rgba(0,0,0,0.12);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   outline: none;
 }
 
+/* Subtle per-card rotation */
+.polaroid:nth-child(3n+1) { transform: rotate(-0.7deg); }
+.polaroid:nth-child(3n+2) { transform: rotate(0deg); }
+.polaroid:nth-child(3n)   { transform: rotate(0.6deg); }
+
 .polaroid:active {
-  transform: scale(0.96);
-  box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+  transform: scale(0.96) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Stacked effect for 5+ photos */
+.polaroid[data-stacked]::before,
+.polaroid[data-stacked]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  border: 1px solid rgba(120,100,70,0.13);
+  z-index: -1;
+}
+.polaroid[data-stacked]::before {
+  background: #E8E2D6;
+  transform: rotate(2.5deg) translate(3px, 2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.polaroid[data-stacked]::after {
+  background: #E2DCD0;
+  transform: rotate(-1.8deg) translate(-2px, 3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
 }
 
 /* Photo inside polaroid */
 .photoFrame {
   position: relative;
-  width: 136px;
-  height: 136px;
+  width: 134px;
+  height: 134px;
   overflow: hidden;
-  border-radius: 2px;
-  background: #ccc;
+  border-radius: 1px;
+  background: var(--surface2);
 }
 
 .photo {
@@ -191,16 +222,16 @@
 
 /* Caption below photo (polaroid white space) */
 .caption {
-  padding: 9px 4px 10px;
+  padding: 8px 4px 14px;
   text-align: center;
 }
 
 .captionTitle {
   font-family: var(--font-display);
   font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: #1a1612;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #2A2420;
   margin: 0 0 3px;
   white-space: nowrap;
   overflow: hidden;
@@ -211,7 +242,7 @@
 .captionDate {
   font-family: var(--font-mono);
   font-size: 9px;
-  color: #6b6560;
+  color: #6B5B4A;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
