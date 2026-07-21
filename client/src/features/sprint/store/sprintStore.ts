@@ -221,6 +221,7 @@ function taskBody(item: Partial<UnifiedTodo> & { type?: string }): Record<string
     }),
     ...(item.imageUrls?.length      && { imageUrls:      item.imageUrls }),
     ...(item.imagePublicIds?.length && { imagePublicIds: item.imagePublicIds }),
+    ...(item.spaceId !== undefined  && { spaceId:        item.spaceId ?? null }),
   }
 }
 
