@@ -48,6 +48,7 @@ function serializeSpace(
         return u ? memberPublic(u, m.role) : null
       })
       .filter(Boolean),
+    notes:          space.notes ?? '',
     modules:        space.modules ?? [],
     vehicleProfile: space.vehicleProfile ?? null,
     homeProfile:    space.homeProfile    ?? null,
@@ -188,7 +189,7 @@ export async function updateSpace(req: Request, res: Response): Promise<void> {
     const space = await Space.findOne({ _id: req.params.id, ownerId: req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
 
-    const allowed = ['name', 'type', 'color', 'emoji', 'coverUrl', 'coverPosition', 'budget', 'budgetCurrency', 'archived', 'modules'] as const
+    const allowed = ['name', 'type', 'color', 'emoji', 'notes', 'coverUrl', 'coverPosition', 'budget', 'budgetCurrency', 'archived', 'modules'] as const
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (space as unknown as Record<string, unknown>)[key] = req.body[key]
     })

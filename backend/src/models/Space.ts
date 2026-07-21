@@ -75,6 +75,7 @@ export interface ISpace extends Document {
   homeProfile:    IHomeProfile | null
   petProfile:     IPetProfile | null
   tripProfile:    ITripProfile | null
+  notes:          string
   archived:       boolean
   createdAt:      Date
 }

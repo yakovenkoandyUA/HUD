@@ -19,6 +19,7 @@ const CAT_PALETTE = [
   '#38BDF8', '#F97316', '#6366F1', '#0369A1', '#FB923C',
 ]
 
+
 const ICON_OPTIONS = [
   'ti-shopping-cart', 'ti-coffee', 'ti-building', 'ti-home', 'ti-bolt',
   'ti-pill', 'ti-sparkles', 'ti-barbell', 'ti-shirt', 'ti-car',
@@ -54,6 +55,12 @@ const XSmallIcon: React.FC = () => (
   </svg>
 )
 
+const ChevronIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={className} aria-hidden="true">
+    <path d="M2 4.5l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
 /**
  * WalletTab
  * ---------
@@ -74,6 +81,7 @@ const WalletTab: React.FC = () => {
   const [salaryDay, setSalaryDay]   = useState(activeProfile?.salaryDay ?? 1)
   const [savingSalary, setSavingSalary] = useState(false)
   const salaryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [dayPickerOpen, setDayPickerOpen] = useState(false)
 
   // Monthly spend limit
   const [limitInput, setLimitInput]   = useState(activeProfile?.monthlySpendLimit != null ? String(activeProfile.monthlySpendLimit) : '')
@@ -90,6 +98,7 @@ const WalletTab: React.FC = () => {
   const newCatRef = useRef<HTMLInputElement>(null)
 
   const [catTab, setCatTab] = useState<'expense' | 'income'>('expense')
+  const [catsOpen, setCatsOpen] = useState(true)
 
   const [migrateOpen, setMigrateOpen] = useState(false)
   const [migrateFrom, setMigrateFrom] = useState<Category | null>(null)
@@ -428,45 +437,27 @@ const WalletTab: React.FC = () => {
         )}
       </div>
 
-      {/* ── Salary day ── */}
+      {/* ── Budget (merged) ── */}
       <div className={styles.settingsCard}>
         <div className={styles.cardTitle}>
-          ДЕНЬ НАДХОДЖЕНЬ
-          {savingSalary && <span className={styles.pushSub} style={{ marginLeft: 8, textTransform: 'none', fontFamily: 'var(--font-ui)' }}>Зберігаю...</span>}
+          БЮДЖЕТ
+          {(savingSalary || savingLimit) && <span className={styles.pushSub} style={{ marginLeft: 8, textTransform: 'none', fontFamily: 'var(--font-ui)' }}>Зберігаю...</span>}
         </div>
         <div className={styles.cardRow}>
           <div>
-            <div className={styles.cardRowLabel}>Число місяця</div>
+            <div className={styles.cardRowLabel}>День надходжень</div>
             <div className={styles.pushSub}>Від цього числа рахується денний бюджет</div>
           </div>
-          <div className={styles.salaryStepperCompact}>
-            <button
-              type="button"
-              className={styles.salaryStepCompactBtn}
-              onClick={() => handleSalaryDayChange(salaryDay - 1)}
-              disabled={salaryDay <= 1}
-            >
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
+          <button
+            type="button"
+            className={styles.salaryDayTrigger}
+            onClick={() => setDayPickerOpen(true)}
+          >
             <span className={styles.salaryNumCompact}>{salaryDay}</span>
-            <button
-              type="button"
-              className={styles.salaryStepCompactBtn}
-              onClick={() => handleSalaryDayChange(salaryDay + 1)}
-              disabled={salaryDay >= 31}
-            >
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          </div>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
         </div>
-      </div>
-
-      {/* ── Monthly spend limit ── */}
-      <div className={styles.settingsCard}>
-        <div className={styles.cardTitle}>
-          МІСЯЧНИЙ ЛІМІТ ВИТРАТ
-          {savingLimit && <span className={styles.pushSub} style={{ marginLeft: 8, textTransform: 'none', fontFamily: 'var(--font-ui)' }}>Зберігаю...</span>}
-        </div>
+        <div className={styles.cardDivider} />
         <div className={styles.cardRow}>
           <div>
             <div className={styles.cardRowLabel}>Бюджет на місяць (₴)</div>
@@ -484,129 +475,148 @@ const WalletTab: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Categories ── */}
-      <div className={styles.settingsCard}>
-        {/* Tab switcher */}
-        <div className={styles.catTabBar}>
-          <button
-            type="button"
-            className={`${styles.catTabBtn} ${catTab === 'expense' ? styles.catTabBtnActive : ''}`}
-            onClick={() => setCatTab('expense')}
-          >
-            Витрати
-          </button>
-          <button
-            type="button"
-            className={`${styles.catTabBtn} ${catTab === 'income' ? styles.catTabBtnActive : ''}`}
-            onClick={() => setCatTab('income')}
-          >
-            Поповнення
-          </button>
+      <Modal isOpen={dayPickerOpen} onClose={() => setDayPickerOpen(false)} title="День надходжень">
+        <div className={styles.dayPickerGrid}>
+          {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+            <button
+              key={day}
+              type="button"
+              className={`${styles.dayPickerCell} ${day === salaryDay ? styles.dayPickerCellActive : ''}`}
+              onClick={() => { handleSalaryDayChange(day); setDayPickerOpen(false) }}
+            >
+              {day}
+            </button>
+          ))}
         </div>
+        <p className={styles.dayPickerHint}>Оберіть число місяця коли приходить основне поповнення</p>
+      </Modal>
 
-        {catTab === 'expense' ? (
-          <>
-            <div className={styles.cardTitle}>
-              БАЗОВІ
-              <span className={styles.navPinCount}>{defaultCats.filter(c => c.isActive).length}/{defaultCats.length}</span>
-            </div>
-            <div className={styles.cardPadded}>
-              <div className={styles.catGrid}>
-                {defaultCats.map(cat => (
-                  <CatCard key={cat._id} cat={cat} onToggle={() => setSubModalCat(cat)} />
-                ))}
-              </div>
-            </div>
+      {/* ── Categories (collapsible) ── */}
+      <div className={styles.settingsCard}>
+        <button
+          type="button"
+          className={styles.subAccordionBtn}
+          onClick={() => setCatsOpen(v => !v)}
+          aria-expanded={catsOpen}
+        >
+          <span className={styles.subAccordionLabel}>КАТЕГОРІЇ</span>
+          <span className={styles.subAccordionCount}>{activeCount} / {expenseCats.length} активно</span>
+          <ChevronIcon className={`${styles.subAccordionChevron} ${catsOpen ? styles.subAccordionChevronOpen : ''}`} />
+        </button>
 
-            {customCats.length > 0 || !addingCat ? (
-              <>
-                <div className={styles.cardDivider} />
-                <div className={styles.cardTitle}>
-                  МОЇ
-                  <span className={styles.navPinCount}>{customCats.filter(c => c.isActive).length}/{customCats.length}</span>
+        <div className={`${styles.catAccordionBody} ${catsOpen ? styles.catAccordionBodyOpen : ''}`}>
+          {/* Tab switcher */}
+          <div className={styles.catTabBar}>
+            <button
+              type="button"
+              className={`${styles.catTabBtn} ${catTab === 'expense' ? styles.catTabBtnActive : ''}`}
+              onClick={() => setCatTab('expense')}
+            >
+              Витрати
+            </button>
+            <button
+              type="button"
+              className={`${styles.catTabBtn} ${catTab === 'income' ? styles.catTabBtnActive : ''}`}
+              onClick={() => setCatTab('income')}
+            >
+              Поповнення
+            </button>
+          </div>
+
+          {catTab === 'expense' ? (
+            <>
+              <div className={styles.cardPadded}>
+                <div className={styles.catGrid}>
+                  {defaultCats.map(cat => (
+                    <CatCard key={cat._id} cat={cat} onToggle={() => setSubModalCat(cat)} />
+                  ))}
                 </div>
-              </>
-            ) : null}
-            <div className={styles.cardPadded}>
-              <div className={styles.catGrid}>
-                {customCats.map(cat => (
-                  <CatCard key={cat._id} cat={cat} onToggle={() => setSubModalCat(cat)} onDelete={() => deleteCat(cat._id)} />
-                ))}
-                {addingCat ? (
-                  <div className={styles.addCatCard}>
-                    <div className={styles.addCatRow}>
-                      <div className={styles.addCatIconWrap}>
-                        <button
-                          type="button"
-                          className={styles.addCatIconBtn}
-                          style={{ '--cat-color': newCatColor } as React.CSSProperties}
-                          onMouseDown={e => e.preventDefault()}
-                          onClick={() => setIconPickerOpen(v => !v)}
-                          aria-label="Вибрати іконку"
-                        >
-                          <i className={`ti ${newCatIcon}`} />
+              </div>
+
+              <div className={styles.cardDivider} />
+              <div className={styles.cardPadded}>
+                <div className={styles.catGrid}>
+                  <span className={`${styles.catGroupLabel} ${styles.catGroupLabelMine}`}>
+                    МОЇ
+                    <span className={styles.navPinCount}>{customCats.filter(c => c.isActive).length}/{customCats.length}</span>
+                  </span>
+                  {customCats.map(cat => (
+                    <CatCard key={cat._id} cat={cat} onToggle={() => setSubModalCat(cat)} onDelete={() => deleteCat(cat._id)} />
+                  ))}
+                  {addingCat ? (
+                    <div className={styles.addCatCard}>
+                      <div className={styles.addCatRow}>
+                        <div className={styles.addCatIconWrap}>
+                          <button
+                            type="button"
+                            className={styles.addCatIconBtn}
+                            style={{ '--cat-color': newCatColor } as React.CSSProperties}
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => setIconPickerOpen(v => !v)}
+                            aria-label="Вибрати іконку"
+                          >
+                            <i className={`ti ${newCatIcon}`} />
+                          </button>
+                        </div>
+                        <input
+                          ref={newCatRef}
+                          type="text"
+                          value={newCatValue}
+                          onChange={e => setNewCatValue(e.target.value)}
+                          onBlur={() => { if (!newCatValue.trim() && !iconPickerOpen) setAddingCat(false) }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') { e.preventDefault(); saveNewCat() }
+                            if (e.key === 'Escape') { setNewCatValue(''); setAddingCat(false); setIconPickerOpen(false) }
+                          }}
+                          className={styles.addCatInput}
+                          placeholder="Назва категорії"
+                          maxLength={24}
+                          disabled={savingCat}
+                        />
+                        <button type="button" className={styles.addCatSaveBtn} onMouseDown={e => e.preventDefault()} onClick={saveNewCat} disabled={savingCat || !newCatValue.trim()}>
+                          <CheckIcon />
+                        </button>
+                        <button type="button" className={styles.addCatCancelBtn} onMouseDown={e => e.preventDefault()} onClick={() => { setAddingCat(false); setNewCatValue(''); setIconPickerOpen(false) }}>
+                          <XSmallIcon />
                         </button>
                       </div>
-                      <input
-                        ref={newCatRef}
-                        type="text"
-                        value={newCatValue}
-                        onChange={e => setNewCatValue(e.target.value)}
-                        onBlur={() => { if (!newCatValue.trim() && !iconPickerOpen) setAddingCat(false) }}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') { e.preventDefault(); saveNewCat() }
-                          if (e.key === 'Escape') { setNewCatValue(''); setAddingCat(false); setIconPickerOpen(false) }
-                        }}
-                        className={styles.addCatInput}
-                        placeholder="Назва категорії"
-                        maxLength={24}
-                        disabled={savingCat}
-                      />
-                      <button type="button" className={styles.addCatSaveBtn} onMouseDown={e => e.preventDefault()} onClick={saveNewCat} disabled={savingCat || !newCatValue.trim()}>
-                        <CheckIcon />
-                      </button>
-                      <button type="button" className={styles.addCatCancelBtn} onMouseDown={e => e.preventDefault()} onClick={() => { setAddingCat(false); setNewCatValue(''); setIconPickerOpen(false) }}>
-                        <XSmallIcon />
-                      </button>
+                      {iconPickerOpen && (
+                        <div className={styles.iconPicker}>
+                          {ICON_OPTIONS.map(icon => (
+                            <button
+                              key={icon}
+                              type="button"
+                              className={`${styles.iconPickerBtn} ${newCatIcon === icon ? styles.iconPickerBtnActive : ''}`}
+                              style={newCatIcon === icon ? { '--cat-color': newCatColor } as React.CSSProperties : undefined}
+                              onMouseDown={e => e.preventDefault()}
+                              onClick={() => { setNewCatIcon(icon); setIconPickerOpen(false) }}
+                              aria-label={icon}
+                            >
+                              <i className={`ti ${icon}`} />
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {iconPickerOpen && (
-                      <div className={styles.iconPicker}>
-                        {ICON_OPTIONS.map(icon => (
-                          <button
-                            key={icon}
-                            type="button"
-                            className={`${styles.iconPickerBtn} ${newCatIcon === icon ? styles.iconPickerBtnActive : ''}`}
-                            style={newCatIcon === icon ? { '--cat-color': newCatColor } as React.CSSProperties : undefined}
-                            onMouseDown={e => e.preventDefault()}
-                            onClick={() => { setNewCatIcon(icon); setIconPickerOpen(false) }}
-                            aria-label={icon}
-                          >
-                            <i className={`ti ${icon}`} />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.addCatBtn}
-                    onClick={() => {
-                      const usedColors = categories.filter(c => !c.parentId).map(c => c.color)
-                      setNewCatColor(pickColor(usedColors))
-                      setNewCatIcon('ti-tag')
-                      setAddingCat(true)
-                    }}
-                  >
-                    <PlusIcon /><span>Нова</span>
-                  </button>
-                )}
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.addCatBtn}
+                      onClick={() => {
+                        const usedColors = categories.filter(c => !c.parentId).map(c => c.color)
+                        setNewCatColor(pickColor(usedColors))
+                        setNewCatIcon('ti-tag')
+                        setAddingCat(true)
+                      }}
+                    >
+                      <PlusIcon /><span>Нова</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className={styles.totalActive}><span>{activeCount} активних категорій</span></div>
-          </>
-        ) : (
-          <>
+              <div className={styles.totalActive}><span>{activeCount} активних категорій</span></div>
+            </>
+          ) : (
             <div className={styles.cardPadded}>
               <p className={styles.pushSub} style={{ marginBottom: 8 }}>
                 Ці категорії доступні при поповненні балансу. Вони завжди активні.
@@ -624,8 +634,8 @@ const WalletTab: React.FC = () => {
                 ))}
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── SubCategory modal ── */}

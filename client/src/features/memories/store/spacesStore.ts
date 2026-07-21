@@ -80,6 +80,7 @@ export interface Space {
   homeProfile:    HomeProfile | null
   petProfile:     PetProfile | null
   tripProfile:    TripProfile | null
+  notes:          string
   archived:       boolean
   createdAt:      string
   memoriesCount:  number
@@ -97,6 +98,7 @@ export interface SpaceInput {
   coverPosition?:  string
   budget?:         number | null
   budgetCurrency?: string
+  notes?:          string
   modules?:        string[]
   archived?:       boolean
 }

@@ -1,0 +1,219 @@
+.flipbook {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Month section */
+.monthSection {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.monthHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 14px;
+}
+
+.monthDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text4);
+  flex-shrink: 0;
+}
+
+.monthDotCurrent {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.monthLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  white-space: nowrap;
+}
+
+.monthLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.monthCount {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text4);
+}
+
+/* Horizontal slider */
+.slider {
+  display: flex;
+  gap: 14px;
+  padding: 4px 16px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.slider::-webkit-scrollbar { display: none; }
+
+/* Polaroid card */
+.polaroid {
+  flex-shrink: 0;
+  width: 152px;
+  background: #f5f2ec;
+  border-radius: 4px;
+  padding: 8px 8px 0;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.polaroid:active {
+  transform: scale(0.96);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+}
+
+/* Photo inside polaroid */
+.photoFrame {
+  position: relative;
+  width: 136px;
+  height: 136px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #ccc;
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photoPlaceholder {
+  width: 100%;
+  height: 100%;
+}
+
+/* Overlays on photo */
+.photoBadge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 20px;
+  padding: 2px 6px 2px 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255,255,255,0.9);
+}
+
+.companions {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.companionAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(0,0,0,0.4);
+  margin-left: -5px;
+}
+.companionAvatar:last-child { margin-left: 0; }
+
+.companionInitial {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  margin-left: -5px;
+}
+.companionInitial:last-child { margin-left: 0; }
+
+.ownerBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ownerAvatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ownerInitial {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Caption below photo (polaroid white space) */
+.caption {
+  padding: 9px 4px 10px;
+  text-align: center;
+}
+
+.captionTitle {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #1a1612;
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.captionDate {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #6b6560;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

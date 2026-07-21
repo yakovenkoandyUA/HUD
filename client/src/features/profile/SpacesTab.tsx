@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
-import type { Space, SpaceType } from '@/features/memories/store/spacesStore'
+import type { Space, SpaceType, VehicleProfile, PetProfile, TripProfile } from '@/features/memories/store/spacesStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
@@ -34,6 +35,20 @@ const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
   { value: 'shared',  label: 'Спільний'   },
 ]
 
+const PET_SPECIES = [
+  { value: 'dog',    label: 'Собака' },
+  { value: 'cat',    label: 'Кіт'    },
+  { value: 'bird',   label: 'Птах'   },
+  { value: 'rabbit', label: 'Кролик' },
+  { value: 'other',  label: 'Інший'  },
+] as const
+
+const TRIP_STATUS = [
+  { value: 'planning',  label: 'Планується' },
+  { value: 'ongoing',   label: 'Зараз'      },
+  { value: 'completed', label: 'Завершена'  },
+] as const
+
 const COLORS = [
   '#9b59b6', '#3498db', '#2ecc71', '#e74c3c',
   '#f39c12', '#1abc9c', '#e91e8c', '#607d8b',
@@ -51,7 +66,9 @@ const SpacesTab: React.FC = () => {
     spaces, archivedSpaces, loading,
     fetchSpaces, fetchArchived, createSpace, updateSpace, deleteSpace,
     addMember, removeMember, archiveSpace, unarchiveSpace,
+    setVehicleProfile, setPetProfile, setTripProfile,
   } = useSpacesStore()
+  const navigate = useNavigate()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const { limits, can, isAtLimit } = usePlan()
@@ -87,6 +104,24 @@ const SpacesTab: React.FC = () => {
   const [editingName, setEditingName] = useState(false)
   const [nameInput,   setNameInput]   = useState('')
   const nameInputRef = useRef<HTMLInputElement>(null)
+
+  // ── Notes (description) ──
+  const [notesInput, setNotesInput] = useState('')
+
+  // ── Vehicle profile edit (detail) ──
+  const [vMake,  setVMake]  = useState('')
+  const [vModel, setVModel] = useState('')
+  const [vYear,  setVYear]  = useState('')
+  const [vPlate, setVPlate] = useState('')
+
+  // ── Pet profile edit (detail) ──
+  const [pName,    setPName]    = useState('')
+  const [pSpecies, setPSpecies] = useState('')
+  const [pBreed,   setPBreed]   = useState('')
+
+  // ── Trip profile edit (detail) ──
+  const [tDest,   setTDest]   = useState('')
+  const [tStatus, setTStatus] = useState<'planning' | 'ongoing' | 'completed'>('planning')
 
   // ── Archived accordion ──
   const [archivedOpen, setArchivedOpen] = useState(false)
@@ -286,6 +321,123 @@ const SpacesTab: React.FC = () => {
 
   const myId = activeProfile?.id ?? ''
 
+  const openDetail = (space: Space) => {
+    setMemberInput('')
+    setNotesInput(space.notes ?? '')
+    if (space.vehicleProfile) {
+      setVMake(space.vehicleProfile.make ?? '')
+      setVModel(space.vehicleProfile.model ?? '')
+      setVYear(space.vehicleProfile.year != null ? String(space.vehicleProfile.year) : '')
+      setVPlate(space.vehicleProfile.plateNumber ?? '')
+    }
+    if (space.petProfile) {
+      setPName(space.petProfile.name ?? '')
+      setPSpecies(space.petProfile.species ?? '')
+      setPBreed(space.petProfile.breed ?? '')
+    }
+    if (space.tripProfile) {
+      setTDest(space.tripProfile.destination ?? '')
+      setTStatus(space.tripProfile.status ?? 'planning')
+    }
+    setDetailSpace(space)
+  }
+
+  const handleSaveNotes = () => {
+    if (!detailSpace || notesInput === (detailSpace.notes ?? '')) return
+    let cancelled = false
+    const run = async () => {
+      try {
+        await updateSpace(detailSpace.id, { notes: notesInput })
+      } catch {
+        if (!cancelled) showToast('Помилка збереження', 'error')
+      }
+    }
+    run()
+    return () => { cancelled = true }
+  }
+
+  const handleSaveVehicleProfile = () => {
+    if (!detailSpace) return
+    const cur = detailSpace.vehicleProfile
+    const body: Record<string, unknown> = {}
+    if (vMake.trim()  !== (cur?.make          ?? '')) body.make        = vMake.trim()
+    if (vModel.trim() !== (cur?.model         ?? '')) body.model       = vModel.trim()
+    const yr = parseInt(vYear)
+    if (!isNaN(yr) && yr !== cur?.year)               body.year        = yr
+    if (vPlate.trim() !== (cur?.plateNumber   ?? '')) body.plateNumber = vPlate.trim().toUpperCase()
+    if (!Object.keys(body).length) return
+    let cancelled = false
+    const run = async () => {
+      try {
+        const res = await authFetch(`/api/spaces/${detailSpace.id}/vehicle/profile`, {
+          method: 'PATCH', body: JSON.stringify(body),
+        })
+        if (res.ok && !cancelled) {
+          const updated: VehicleProfile = await res.json()
+          setVehicleProfile(detailSpace.id, updated)
+          showToast('Збережено', 'success')
+        }
+      } catch {
+        if (!cancelled) showToast('Помилка збереження', 'error')
+      }
+    }
+    run()
+    return () => { cancelled = true }
+  }
+
+  const handleSavePetProfile = () => {
+    if (!detailSpace) return
+    const cur = detailSpace.petProfile
+    const body: Record<string, unknown> = {}
+    if (pName.trim()  !== (cur?.name    ?? '')) body.name    = pName.trim()
+    if (pSpecies      !== (cur?.species ?? '')) body.species = pSpecies
+    if (pBreed.trim() !== (cur?.breed   ?? '')) body.breed   = pBreed.trim()
+    if (!Object.keys(body).length) return
+    let cancelled = false
+    const run = async () => {
+      try {
+        const res = await authFetch(`/api/spaces/${detailSpace.id}/pet/profile`, {
+          method: 'PATCH', body: JSON.stringify(body),
+        })
+        if (res.ok && !cancelled) {
+          const updated: PetProfile = await res.json()
+          setPetProfile(detailSpace.id, updated)
+          showToast('Збережено', 'success')
+        }
+      } catch {
+        if (!cancelled) showToast('Помилка збереження', 'error')
+      }
+    }
+    run()
+    return () => { cancelled = true }
+  }
+
+  const handleSaveTripProfile = () => {
+    if (!detailSpace) return
+    const cur = detailSpace.tripProfile
+    const body: Record<string, unknown> = {}
+    if (tDest.trim() !== (cur?.destination ?? '')) body.destination = tDest.trim()
+    if (tStatus      !== (cur?.status      ?? 'planning')) body.status = tStatus
+    if (!Object.keys(body).length) return
+    let cancelled = false
+    const run = async () => {
+      try {
+        const res = await authFetch(`/api/spaces/${detailSpace.id}/trip/profile`, {
+          method: 'PATCH', body: JSON.stringify(body),
+        })
+        if (res.ok && !cancelled) {
+          const updated: TripProfile = await res.json()
+          setTripProfile(detailSpace.id, updated)
+          showToast('Збережено', 'success')
+        }
+      } catch {
+        if (!cancelled) showToast('Помилка збереження', 'error')
+      }
+    }
+    run()
+    return () => { cancelled = true }
+  }
+
   return (
     <div className={styles.root}>
 
@@ -337,33 +489,24 @@ const SpacesTab: React.FC = () => {
               type="button"
               className={styles.spaceCard}
               style={{ '--space-color': space.color, '--type-color': typeColor } as React.CSSProperties}
-              onClick={() => { setMemberInput(''); setDetailSpace(space) }}
+              onClick={() => openDetail(space)}
             >
               <div className={styles.spaceIconZone}>
                 {cfg && <img src={cfg.iconSrc} alt="" className={styles.spaceIconImg} draggable={false} />}
               </div>
-
               <div className={styles.spaceInfo}>
                 <span className={styles.spaceName}>{space.name}</span>
                 <span className={styles.spaceType}>
                   {TYPE_OPTIONS.find(t => t.value === space.type)?.label ?? space.type}
-                  {' · '}
-                  {space.members.length} {space.members.length === 1 ? 'учасник' : 'учасники'}
+                  {space.members.length > 1 && ` · ${space.members.length}`}
                 </span>
-                {metrics.length > 0 && (
-                  <span className={styles.spaceMetrics}>{metrics.join(' · ')}</span>
-                )}
-                {relativeTime && (
-                  <span className={styles.spaceActivity}>{relativeTime}</span>
-                )}
-                {metrics.length === 0 && !relativeTime && (
-                  <span className={styles.spaceEmpty}>Активності ще немає</span>
-                )}
+                {metrics.length > 0
+                  ? <span className={styles.spaceMetrics}>{metrics.join(' · ')}</span>
+                  : relativeTime
+                    ? <span className={styles.spaceActivity}>{relativeTime}</span>
+                    : <span className={styles.spaceEmpty}>Активності ще немає</span>
+                }
               </div>
-
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" className={styles.spaceChevron}>
-                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
             </button>
           )
         })}
@@ -639,16 +782,126 @@ const SpacesTab: React.FC = () => {
                         </svg>
                       </button>
                     )}
+                    <button
+                      type="button"
+                      className={styles.openSpaceBtn}
+                      onClick={() => { setDetailSpace(null); navigate(`/spaces/${detailSpace.id}`) }}
+                      aria-label="Відкрити простір"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M5 2h7v7M12 2L6 8"/>
+                        <path d="M8 5H2v7h7V8"/>
+                      </svg>
+                    </button>
                   </div>
                 )}
                 <span className={styles.detailType}>
                   {TYPE_OPTIONS.find(t => t.value === detailSpace.type)?.label ?? detailSpace.type}
                 </span>
+                {(detailSpace.memoriesCount > 0 || detailSpace.openTasksCount > 0 || detailSpace.notesCount > 0) && (
+                  <div className={styles.detailMetrics}>
+                    {detailSpace.memoriesCount  > 0 && <span className={styles.detailMetricBadge}>{detailSpace.memoriesCount} {detailSpace.memoriesCount === 1 ? 'спогад' : 'спогади'}</span>}
+                    {detailSpace.openTasksCount > 0 && <span className={styles.detailMetricBadge}>{detailSpace.openTasksCount} {detailSpace.openTasksCount === 1 ? 'задача' : 'задачі'}</span>}
+                    {detailSpace.notesCount     > 0 && <span className={styles.detailMetricBadge}>{detailSpace.notesCount} {detailSpace.notesCount === 1 ? 'нотатка' : 'нотатки'}</span>}
+                  </div>
+                )}
               </div>
             </div>
 
+            {/* Color (owner only) */}
+            {detailSpace.ownerId === myId && (
+              <>
+                <label className={styles.fieldLabel} style={{ marginTop: 20 }}>КОЛІР</label>
+                <div className={styles.colorRow}>
+                  {COLORS.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`${styles.colorDot} ${detailSpace.color === c ? styles.colorDotOn : ''}`}
+                      style={{ background: c }}
+                      onClick={() => updateSpace(detailSpace.id, { color: c })}
+                      aria-label={c}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Notes / description (owner only) */}
+            {detailSpace.ownerId === myId && (
+              <>
+                <label className={styles.fieldLabel} style={{ marginTop: 16 }}>ОПИС</label>
+                <textarea
+                  className={styles.notesArea}
+                  value={notesInput}
+                  onChange={e => setNotesInput(e.target.value)}
+                  onBlur={handleSaveNotes}
+                  placeholder="Короткий опис простору…"
+                  rows={2}
+                  maxLength={300}
+                />
+              </>
+            )}
+
+            {/* Vehicle profile */}
+            {detailSpace.type === 'vehicle' && (
+              <>
+                <hr className={styles.profileDivider} />
+                <p className={styles.profileSectionLabel}>ПРО АВТОМОБІЛЬ</p>
+                <div className={styles.fieldGrid2}>
+                  <input className={styles.input} value={vMake}  onChange={e => setVMake(e.target.value)}  onBlur={handleSaveVehicleProfile} placeholder="Марка"         maxLength={40} />
+                  <input className={styles.input} value={vModel} onChange={e => setVModel(e.target.value)} onBlur={handleSaveVehicleProfile} placeholder="Модель"        maxLength={40} />
+                  <input className={styles.input} value={vYear}  onChange={e => setVYear(e.target.value)}  onBlur={handleSaveVehicleProfile} placeholder="Рік"    type="number" min={1900} max={new Date().getFullYear() + 1} />
+                  <input className={styles.input} value={vPlate} onChange={e => setVPlate(e.target.value)} onBlur={handleSaveVehicleProfile} placeholder="Держ. номер"   maxLength={10} />
+                </div>
+              </>
+            )}
+
+            {/* Pet profile */}
+            {detailSpace.type === 'pet' && (
+              <>
+                <hr className={styles.profileDivider} />
+                <p className={styles.profileSectionLabel}>ПРО УЛЮБЛЕНЦЯ</p>
+                <input className={styles.input} value={pName}  onChange={e => setPName(e.target.value)}  onBlur={handleSavePetProfile} placeholder="Ім'я тварини"  maxLength={40} />
+                <div className={styles.chipRow}>
+                  {PET_SPECIES.map(s => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      className={`${styles.chip} ${pSpecies === s.value ? styles.chipOn : ''}`}
+                      onClick={() => { setPSpecies(pSpecies === s.value ? '' : s.value); setTimeout(handleSavePetProfile, 0) }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <input className={styles.input} value={pBreed} onChange={e => setPBreed(e.target.value)} onBlur={handleSavePetProfile} placeholder="Порода (опційно)" maxLength={40} />
+              </>
+            )}
+
+            {/* Trip profile */}
+            {detailSpace.type === 'trip' && (
+              <>
+                <hr className={styles.profileDivider} />
+                <p className={styles.profileSectionLabel}>ДЕТАЛІ ПОЇЗДКИ</p>
+                <input className={styles.input} value={tDest} onChange={e => setTDest(e.target.value)} onBlur={handleSaveTripProfile} placeholder="Куди їдемо?" maxLength={80} />
+                <div className={styles.chipRow} style={{ marginBottom: 16 }}>
+                  {TRIP_STATUS.map(s => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      className={`${styles.chip} ${tStatus === s.value ? styles.chipOn : ''}`}
+                      onClick={() => { setTStatus(s.value); setTimeout(handleSaveTripProfile, 0) }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
             {/* Members */}
-            <label className={styles.fieldLabel} style={{ marginTop: 20 }}>УЧАСНИКИ</label>
+            <label className={styles.fieldLabel} style={{ marginTop: 4 }}>УЧАСНИКИ</label>
             <div className={styles.memberList}>
               {detailSpace.members.map(m => (
                 <div key={m.userId} className={styles.memberRow}>

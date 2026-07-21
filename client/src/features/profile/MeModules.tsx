@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useProfileStore } from '@/shared/store/profileStore'
+import SpacesTab from './SpacesTab'
 import styles from './ProfilePage.module.css'
 
 const MEDIA_TABS: { id: string; label: string; sub: string; wip?: boolean }[] = [
@@ -51,6 +52,9 @@ const MeModules: React.FC = () => {
 
   return (
     <>
+      {/* ── Простори section ── */}
+      <SpacesTab />
+
       {/* ── Медіа accordion ── */}
       <div className={styles.subAccordion}>
         <button
@@ -143,6 +147,7 @@ const MeModules: React.FC = () => {
           })}
         </div>
       </div>
+
     </>
   )
 }

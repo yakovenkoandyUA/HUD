@@ -7,6 +7,7 @@ import PlanForm from './components/memories/PlanForm'
 import MemoryMap from './components/memories/MemoryMap'
 import TripExpensesSheet from './components/memories/TripExpensesSheet'
 import FlashbackModal from './components/memories/FlashbackModal'
+import MemoryFlipbook from './components/memories/MemoryFlipbook'
 import type { AddMemoryData } from './components/memories/AddMemoryModal'
 import type { Memory } from './types/memory'
 import { useMemoriesStore } from '@/features/memories/store/memoriesStore'
@@ -124,6 +125,15 @@ const MemoriesScreen: React.FC = () => {
   const [showFlashback, setShowFlashback] = useState(false)
   const [statSheet, setStatSheet]         = useState<'count' | 'photos' | 'locations' | 'distance' | null>(null)
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null)
+  const [selectedTag, setSelectedTag]     = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'grid' | 'flipbook'>(
+    () => (localStorage.getItem('memories-view-mode') as 'grid' | 'flipbook') ?? 'grid'
+  )
+
+  const handleViewMode = (mode: 'grid' | 'flipbook') => {
+    setViewMode(mode)
+    localStorage.setItem('memories-view-mode', mode)
+  }
 
   const { spaces, fetchSpaces } = useSpacesStore()
   useEffect(() => { fetchSpaces() }, [fetchSpaces])
@@ -153,7 +163,18 @@ const MemoriesScreen: React.FC = () => {
     [plans, selectedSpaceId]
   )
 
-  const grouped = useMemo(() => groupByMonth(filteredMemories), [filteredMemories])
+  const allTags = useMemo(() => {
+    const set = new Set<string>()
+    filteredMemories.forEach(m => (m.tags ?? []).forEach(t => set.add(t)))
+    return [...set].sort()
+  }, [filteredMemories])
+
+  const tagFilteredMemories = useMemo(
+    () => selectedTag ? filteredMemories.filter(m => (m.tags ?? []).includes(selectedTag)) : filteredMemories,
+    [filteredMemories, selectedTag]
+  )
+
+  const grouped = useMemo(() => groupByMonth(tagFilteredMemories), [tagFilteredMemories])
 
   const thisDay = useMemo(() => {
     const now   = new Date()
@@ -348,7 +369,7 @@ const MemoriesScreen: React.FC = () => {
           <button
             type="button"
             className={`${styles.spaceFilterChip} ${!selectedSpaceId ? styles.spaceFilterChipAll : ''}`}
-            onClick={() => setSelectedSpaceId(null)}
+            onClick={() => { setSelectedSpaceId(null); setSelectedTag(null) }}
           >
             Всі
           </button>
@@ -358,10 +379,33 @@ const MemoriesScreen: React.FC = () => {
               type="button"
               className={styles.spaceFilterChip}
               style={selectedSpaceId === s.id ? { borderColor: s.color, color: s.color } : undefined}
-              onClick={() => setSelectedSpaceId(prev => prev === s.id ? null : s.id)}
+              onClick={() => { setSelectedSpaceId(prev => prev === s.id ? null : s.id); setSelectedTag(null) }}
             >
               <span className={styles.spaceFilterDot} style={{ background: s.color }} />
               {s.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Tag filter strip (memories tab only) ── */}
+      {activeTab === 'memories' && allTags.length > 0 && (
+        <div className={styles.tagFilterRow}>
+          <button
+            type="button"
+            className={`${styles.tagChip} ${!selectedTag ? styles.tagChipActive : ''}`}
+            onClick={() => setSelectedTag(null)}
+          >
+            Всі
+          </button>
+          {allTags.map(tag => (
+            <button
+              key={tag}
+              type="button"
+              className={`${styles.tagChip} ${selectedTag === tag ? styles.tagChipActive : ''}`}
+              onClick={() => setSelectedTag(prev => prev === tag ? null : tag)}
+            >
+              {tag}
             </button>
           ))}
         </div>
@@ -399,25 +443,53 @@ const MemoriesScreen: React.FC = () => {
             <div className={styles.timeline}>
               {/* Stats row — інтерактивний */}
               <div className={styles.statsRow}>
-                <button className={styles.statBtn} onClick={() => setStatSheet('count')}>
-                  <b className={styles.statNum}>{stats.count}</b> спогадів
-                </button>
-                <span className={styles.statsDot}>·</span>
-                <button className={styles.statBtn} onClick={() => setStatSheet('photos')}>
-                  <b className={styles.statNum}>{stats.totalPhotos}</b> фото
-                </button>
-                <span className={styles.statsDot}>·</span>
-                <button className={styles.statBtn} onClick={() => setStatSheet('locations')}>
-                  <b className={styles.statNum}>{stats.uniqueLocations}</b> місць
-                </button>
-                {stats.totalDistanceKm > 0 && (
-                  <>
-                    <span className={styles.statsDot}>·</span>
-                    <button className={styles.statBtn} onClick={() => setStatSheet('distance')}>
-                      <b className={styles.statNum}>{stats.totalDistanceKm}</b> км
-                    </button>
-                  </>
-                )}
+                <div className={styles.statsLeft}>
+                  <button className={styles.statBtn} onClick={() => setStatSheet('count')}>
+                    <b className={styles.statNum}>{stats.count}</b> спогадів
+                  </button>
+                  <span className={styles.statsDot}>·</span>
+                  <button className={styles.statBtn} onClick={() => setStatSheet('photos')}>
+                    <b className={styles.statNum}>{stats.totalPhotos}</b> фото
+                  </button>
+                  <span className={styles.statsDot}>·</span>
+                  <button className={styles.statBtn} onClick={() => setStatSheet('locations')}>
+                    <b className={styles.statNum}>{stats.uniqueLocations}</b> місць
+                  </button>
+                  {stats.totalDistanceKm > 0 && (
+                    <>
+                      <span className={styles.statsDot}>·</span>
+                      <button className={styles.statBtn} onClick={() => setStatSheet('distance')}>
+                        <b className={styles.statNum}>{stats.totalDistanceKm}</b> км
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className={styles.viewToggle}>
+                  <button
+                    type="button"
+                    className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.viewToggleBtnActive : ''}`}
+                    onClick={() => handleViewMode('grid')}
+                    aria-label="Сітка"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                      <rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                      <rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                      <rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.viewToggleBtn} ${viewMode === 'flipbook' ? styles.viewToggleBtnActive : ''}`}
+                    onClick={() => handleViewMode('flipbook')}
+                    aria-label="Журнал"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <rect x="1" y="1.5" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+                      <path d="M3.5 5h7M3.5 7.5h7M3.5 10h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {/* This Day banner — покращений */}
@@ -458,69 +530,78 @@ const MemoriesScreen: React.FC = () => {
               )}
 
               {/* Grouped timeline */}
-              {grouped.map(([monthLabel, items]) => (
-                <div key={monthLabel} className={styles.monthSection}>
-                  <div className={styles.monthHeader}>
-                    <div className={`${styles.monthDot} ${monthLabel === currentMonthKey ? styles.monthDotCurrent : ''}`} />
-                    <span className={styles.monthLabel}>{monthLabel}</span>
-                    <div className={styles.monthLine} />
-                    <span className={styles.monthCount}>{items.length}</span>
-                  </div>
+              {viewMode === 'flipbook' ? (
+                <MemoryFlipbook
+                  memories={tagFilteredMemories}
+                  companionMap={companionMap}
+                  onNavigate={id => navigate(`/memories/${id}`)}
+                  currentMonthKey={currentMonthKey}
+                />
+              ) : (
+                grouped.map(([monthLabel, items]) => (
+                  <div key={monthLabel} className={styles.monthSection}>
+                    <div className={styles.monthHeader}>
+                      <div className={`${styles.monthDot} ${monthLabel === currentMonthKey ? styles.monthDotCurrent : ''}`} />
+                      <span className={styles.monthLabel}>{monthLabel}</span>
+                      <div className={styles.monthLine} />
+                      <span className={styles.monthCount}>{items.length}</span>
+                    </div>
 
-                  <div className={styles.memoriesGrid}>
-                    {items.map(m => (
-                      <div
-                        key={m.id}
-                        className={styles.card}
-                        onClick={() => navigate(`/memories/${m.id}`)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={e => e.key === 'Enter' && navigate(`/memories/${m.id}`)}
-                      >
-                        {coverSrc(m) ? (
-                          <img src={coverSrc(m)!} alt={m.title} className={styles.cardImg} loading="lazy" />
-                        ) : (
-                          <div className={styles.cardPlaceholder} style={{ background: titleGradient(m.title) }} />
-                        )}
-                        <div className={styles.cardGrad} />
-                        <div className={styles.cardInfo}>
-                          <p className={styles.cardTitle}>{m.title}</p>
-                          <p className={styles.cardDate}>{tripDateLabel(m)}</p>
+                    <div className={styles.memoriesGrid}>
+                      {items.map(m => (
+                        <div
+                          key={m.id}
+                          className={styles.card}
+                          onClick={() => navigate(`/memories/${m.id}`)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={e => e.key === 'Enter' && navigate(`/memories/${m.id}`)}
+                        >
+                          {coverSrc(m) ? (
+                            <img src={coverSrc(m)!} alt={m.title} className={styles.cardImg} loading="lazy" />
+                          ) : (
+                            <div className={styles.cardPlaceholder} style={{ background: titleGradient(m.title) }} />
+                          )}
+                          <div className={styles.cardGrad} />
+                          <div className={styles.cardInfo}>
+                            <p className={styles.cardTitle}>{m.title}</p>
+                            <p className={styles.cardDate}>{tripDateLabel(m)}</p>
+                          </div>
+                          {m.photos.length > 0 && (
+                            <div className={styles.cardPhotoCount}>
+                              <svg width="9" height="9" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <rect x="1.5" y="2.5" width="11" height="9" rx="1.3" stroke="currentColor" strokeWidth="1.3" />
+                                <circle cx="4.7" cy="5.5" r="1" fill="currentColor" />
+                                <path d="M2 9.5l3-3 2 2 2.5-3 2.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              {m.photos.length}
+                            </div>
+                          )}
+                          {m.ownerName && (
+                            <div className={styles.cardOwnerBadge} title={m.ownerName}>
+                              {m.ownerAvatarUrl
+                                ? <img src={m.ownerAvatarUrl} alt={m.ownerName} className={styles.cardOwnerAvatar} />
+                                : <span className={styles.cardOwnerInitial}>{m.ownerName[0]}</span>
+                              }
+                            </div>
+                          )}
+                          {(m.withProfiles ?? []).length > 0 && (
+                            <div className={styles.cardCompanions}>
+                              {(m.withProfiles ?? []).slice(0, 3).map(id => {
+                                const c = companionMap[id]
+                                if (!c) return null
+                                return c.avatarUrl
+                                  ? <img key={id} src={c.avatarUrl} alt={c.name} className={styles.cardCompanionAvatar} title={c.name} />
+                                  : <span key={id} className={styles.cardCompanionInitial} title={c.name}>{c.name[0]?.toUpperCase()}</span>
+                              })}
+                            </div>
+                          )}
                         </div>
-                        {m.photos.length > 0 && (
-                          <div className={styles.cardPhotoCount}>
-                            <svg width="9" height="9" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                              <rect x="1.5" y="2.5" width="11" height="9" rx="1.3" stroke="currentColor" strokeWidth="1.3" />
-                              <circle cx="4.7" cy="5.5" r="1" fill="currentColor" />
-                              <path d="M2 9.5l3-3 2 2 2.5-3 2.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            {m.photos.length}
-                          </div>
-                        )}
-                        {m.ownerName && (
-                          <div className={styles.cardOwnerBadge} title={m.ownerName}>
-                            {m.ownerAvatarUrl
-                              ? <img src={m.ownerAvatarUrl} alt={m.ownerName} className={styles.cardOwnerAvatar} />
-                              : <span className={styles.cardOwnerInitial}>{m.ownerName[0]}</span>
-                            }
-                          </div>
-                        )}
-                        {(m.withProfiles ?? []).length > 0 && (
-                          <div className={styles.cardCompanions}>
-                            {(m.withProfiles ?? []).slice(0, 3).map(id => {
-                              const c = companionMap[id]
-                              if (!c) return null
-                              return c.avatarUrl
-                                ? <img key={id} src={c.avatarUrl} alt={c.name} className={styles.cardCompanionAvatar} title={c.name} />
-                                : <span key={id} className={styles.cardCompanionInitial} title={c.name}>{c.name[0]?.toUpperCase()}</span>
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
 
