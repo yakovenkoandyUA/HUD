@@ -58,104 +58,79 @@
 }
 
 .body {
-  padding: 16px 16px 4px;
+  padding: 14px 16px 4px;
   display: flex;
   flex-direction: column;
-
+  gap: 0;
 }
 
-/* ── Date row ── */
+/* ── Pill chips row ── */
 
-.dateRow {
+.pillsRow {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  padding: 7px 11px;
   background: var(--surface);
   border: 1px solid var(--border2);
-  padding: 14px 14px;
-  color: var(--text2);
-  font-family: var(--font-ui);
-  font-size: 13px;
+  border-radius: 20px;
   cursor: pointer;
-  text-align: left;
-  min-height: 48px;
-}
-
-.dateRowValue { color: var(--text); font-weight: 600; flex: 1; }
-.dateRowPlaceholder { color: var(--text3); flex: 1; }
-
-.rowClear {
-  margin-left: auto;
-  opacity: 0.5;
-  display: flex;
-  align-items: center;
   color: var(--text3);
-}
-.dateRow:hover .rowClear { opacity: 1; }
-
-/* ── Full-width toggle rows (time / reminder) ── */
-
-.toggleRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  padding: 14px 14px;
-  cursor: pointer;
-  text-align: left;
-  min-height: 52px;
-  transition: background 0.15s, border-color 0.15s;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
 }
 
-.toggleRow:active {
-  background: var(--bg2);
+.pill:active {
+  background: var(--tint-accent-xs);
 }
 
-.toggleRowActive {
-  background: var(--surface2);
-  border-color: var(--accent);
+.pillActive {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  color: var(--text);
 }
 
-.toggleIcon {
+.pillActive .pillIcon { color: var(--accent); }
+
+.pillIcon {
   flex-shrink: 0;
   color: var(--text3);
+  transition: color 0.15s;
 }
 
-.toggleRowActive .toggleIcon {
-  color: var(--accent);
-}
-
-.toggleRowLabel {
-  flex: 1;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text3);
-}
-
-.toggleRowActive .toggleRowLabel {
-  color: var(--accent);
+.pillLabel {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: inherit;
 }
 
-.chevron {
-  flex-shrink: 0;
+.pillPlaceholder {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text3);
-  opacity: 0.5;
 }
 
-.toggleClear {
-  flex-shrink: 0;
+.pillClear {
   display: flex;
   align-items: center;
-  padding: 4px;
-  color: var(--accent);
-  opacity: 0.7;
+  margin-left: 2px;
+  color: var(--text3);
+  opacity: 0.5;
+  padding: 2px;
 }
-.toggleClear:hover { opacity: 1; }
+.pillClear:hover { opacity: 1; }
 
 /* ── Accordion (time picker / reminder editor) ── */
 
@@ -164,18 +139,20 @@
   overflow: hidden;
   opacity: 0;
   transition: max-height 280ms ease-in-out, opacity 200ms ease-in-out;
+  margin-top: 0;
 }
 
 .accordionOpen {
   max-height: 480px;
   opacity: 1;
+  margin-top: 10px;
 }
 
 .accordionInner {
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 12px;
-  padding: 8px 12px 12px;
+  padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;

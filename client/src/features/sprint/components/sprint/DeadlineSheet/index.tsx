@@ -117,56 +117,77 @@ const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, min
         </div>
 
         <div className={styles.body}>
-          {/* Date */}
-          <button type="button" className={styles.dateRow} onClick={() => setShowDatePicker(true)}>
-            <svg width="14" height="14" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-              <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-              <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            </svg>
-            <span className={draftDate ? styles.dateRowValue : styles.dateRowPlaceholder}>
-              {draftDate ? formatDate(draftDate) : 'Обрати дату'}
-            </span>
-            {draftDate && (
-              <span
-                className={styles.rowClear}
-                role="button"
-                onClick={e => { e.stopPropagation(); setDraftDate(null); setTimeOn(false); setReminderOn(false) }}
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                  <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </span>
-            )}
-          </button>
+          {/* ── Pill chips ── */}
+          <div className={styles.pillsRow}>
+            {/* Date pill */}
+            <button type="button" className={`${styles.pill} ${draftDate ? styles.pillActive : ''}`} onClick={() => setShowDatePicker(true)}>
+              <svg className={styles.pillIcon} width="13" height="13" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+              {draftDate
+                ? <span className={styles.pillLabel}>{formatDate(draftDate)}</span>
+                : <span className={styles.pillPlaceholder}>Дата</span>
+              }
+              {draftDate && (
+                <span
+                  className={styles.pillClear}
+                  role="button"
+                  onClick={e => { e.stopPropagation(); setDraftDate(null); setTimeOn(false); setReminderOn(false) }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+              )}
+            </button>
 
+            {draftDate && (
+              <>
+                {/* Time pill */}
+                <button type="button" className={`${styles.pill} ${timeOn ? styles.pillActive : ''}`} onClick={handleTimeRowTap}>
+                  <svg className={styles.pillIcon} width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                    <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3" />
+                    <path d="M7.5 4.5v3.25l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {timeOn
+                    ? <span className={styles.pillLabel}>{draftTime}</span>
+                    : <span className={styles.pillPlaceholder}>Час</span>
+                  }
+                  {timeOn && (
+                    <span className={styles.pillClear} role="button" onClick={handleTimeRemove} aria-label="Прибрати час">
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </span>
+                  )}
+                </button>
+
+                {/* Reminder pill */}
+                <button type="button" className={`${styles.pill} ${reminderOn ? styles.pillActive : ''}`} onClick={handleReminderRowTap}>
+                  <svg className={styles.pillIcon} width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                    <path d="M7.5 2a5 5 0 015 5v2.5l1 1.5H1.5l1-1.5V7a5 5 0 015-5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                    <path d="M6 12.5a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
+                  {reminderOn
+                    ? <span className={styles.pillLabel}>{formatReminderPhrase(Number(reminderAmount) || 1, reminderUnit)}</span>
+                    : <span className={styles.pillPlaceholder}>Нагадати</span>
+                  }
+                  {reminderOn && (
+                    <span className={styles.pillClear} role="button" onClick={handleReminderRemove} aria-label="Прибрати нагадування">
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </span>
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* ── Accordions ── */}
           {draftDate && (
             <>
-              {/* ── Time row (full-width tappable) ── */}
-              <button
-                type="button"
-                className={`${styles.toggleRow} ${timeOn ? styles.toggleRowActive : ''}`}
-                onClick={handleTimeRowTap}
-              >
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true" className={styles.toggleIcon}>
-                  <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3" />
-                  <path d="M7.5 4.5v3.25l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className={styles.toggleRowLabel}>
-                  {timeOn ? draftTime : 'Час'}
-                </span>
-                {timeOn ? (
-                  <span className={styles.toggleClear} onClick={handleTimeRemove} role="button" aria-label="Прибрати час">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </span>
-                ) : (
-                  <svg width="8" height="12" viewBox="0 0 6 10" fill="none" className={styles.chevron} aria-hidden="true">
-                    <path d="M1 1.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </button>
-
               <div className={`${styles.accordionWrap} ${timeOn && timeEditing ? styles.accordionOpen : ''}`}>
                 <div className={styles.accordionInner}>
                   <TimeWheelRow value={draftTime} onChange={setDraftTime} />
@@ -175,32 +196,6 @@ const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, min
                   </button>
                 </div>
               </div>
-
-              {/* ── Reminder row (full-width tappable) ── */}
-              <button
-                type="button"
-                className={`${styles.toggleRow} ${reminderOn ? styles.toggleRowActive : ''}`}
-                onClick={handleReminderRowTap}
-              >
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true" className={styles.toggleIcon}>
-                  <path d="M7.5 2a5 5 0 015 5v2.5l1 1.5H1.5l1-1.5V7a5 5 0 015-5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                  <path d="M6 12.5a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                </svg>
-                <span className={styles.toggleRowLabel}>
-                  {reminderOn ? formatReminderPhrase(Number(reminderAmount) || 1, reminderUnit) : 'Нагадати'}
-                </span>
-                {reminderOn ? (
-                  <span className={styles.toggleClear} onClick={handleReminderRemove} role="button" aria-label="Прибрати нагадування">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </span>
-                ) : (
-                  <svg width="8" height="12" viewBox="0 0 6 10" fill="none" className={styles.chevron} aria-hidden="true">
-                    <path d="M1 1.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </button>
 
               <div className={`${styles.accordionWrap} ${reminderOn && reminderEditing ? styles.accordionOpen : ''}`}>
                 <div className={styles.accordionInner}>
