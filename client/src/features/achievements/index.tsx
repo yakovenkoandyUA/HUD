@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { ACHIEVEMENTS_BY_ID } from '@/shared/data/achievements'
-import { useAchievementProgress, useAchievementScore } from './hooks/useAchievementProgress'
-import { getLevel, getNextLevel, getLevelProgress } from './levels'
+import { useAchievementProgress } from './hooks/useAchievementProgress'
 import type { AchievementCategory } from './types'
 import AchievementMap from './components/AchievementMap'
 import AchievementCard from './components/AchievementCard'
@@ -31,12 +30,7 @@ const AchievementsTab: React.FC = () => {
   const [activeTab, setActiveTab] = useState<CategoryTab>('memory')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const all   = useAchievementProgress()
-  const score = useAchievementScore()
-  const level    = getLevel(score.earned)
-  const nextLvl  = getNextLevel(score.earned)
-  const progress = getLevelProgress(score.earned)
-
+  const all      = useAchievementProgress()
   const filtered = all.filter(a => a.category === activeTab)
 
   const setPending = () => {
@@ -59,39 +53,6 @@ const AchievementsTab: React.FC = () => {
           TEST АЧІВКА
         </button>
       )}
-      {/* ── Hero card ── */}
-      <div className={styles.heroCard}>
-        <div className={styles.heroImgWrap}>
-          <img src={`/achive/level-${level.level}.png`} alt="" className={styles.heroImg} draggable={false}
-            onError={(e) => { (e.target as HTMLImageElement).src = '/achive/achive-treaser.png' }}
-          />
-        </div>
-        <div className={styles.heroBody}>
-          <div className={styles.heroScore}>
-            <span className={styles.heroScoreEarned}>РІВЕНЬ {level.level}</span>
-          </div>
-          <div className={styles.heroProgressWrap}>
-            <div className={styles.heroProgressFill} style={{ width: `${progress}%` }} />
-          </div>
-          <p className={styles.heroSub}>
-            {nextLvl
-              ? <><span className={styles.heroSubCurrent}>{score.earned}</span>{' / '}{nextLvl.minRunes}{' рун'}</>
-              : <><span className={styles.heroSubCurrent}>{score.earned}</span>{' рун · МАКСИМУМ'}</>
-            }
-          </p>
-        </div>
-        <div className={styles.heroBadge}>
-          <img
-            src={`/achive/profile/level-${level.level}.png`}
-            alt={level.label}
-            className={styles.heroBadgeImg}
-            draggable={false}
-          />
-          <span className={styles.heroBadgeLabel} style={{ color: level.color, borderColor: level.color }}>
-            {level.label}
-          </span>
-        </div>
-      </div>
 
       {/* ── Category tabs ── */}
       <div className={styles.tabsWrap}>

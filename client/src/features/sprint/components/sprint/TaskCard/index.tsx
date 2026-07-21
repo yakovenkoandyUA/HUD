@@ -114,7 +114,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const hasLabels    = (item.labels ?? []).length > 0
   const hasDueDate   = !!item.dueDate
   const isOverdue    = hasDueDate && !item.done && getDueDateDiff(item.dueDate!) < 0
-  const hasExtras    = hasLabels || hasDueDate || hasMissed || !!taskSpace
+  const hasExtras    = hasLabels || hasDueDate || hasMissed
   const showBar      = checkTotal > 0 && checkPct > 0
 
   // Swipe-to-delete
@@ -359,6 +359,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                 {item.type === 'shopping' && item.priority && item.priority !== 'normal' && checkTotal > 0 && !item.done && (
                   <span className={styles.metaSep}>·</span>
                 )}
+                {taskSpace && (
+                  <span className={styles.spaceChip} style={{ '--space-color': taskSpace.color } as React.CSSProperties}>
+                    <span className={styles.spaceChipDot} style={{ background: taskSpace.color }} />
+                    {taskSpace.name}
+                  </span>
+                )}
                 {checkTotal > 0 && !item.done && (
                   <span className={styles.checklistBadge}>{checkDone}/{checkTotal}</span>
                 )}
@@ -400,12 +406,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
                 {hasMissed && !item.done && (
                   <span className={`${styles.missedBadge} ${missedLevel === 'danger' ? styles.missedBadgeDanger : ''}`}>
                     Пропущено {missedDays} {getDayWord(missedDays)}
-                  </span>
-                )}
-                {taskSpace && (
-                  <span className={styles.spaceChip}>
-                    <span className={styles.spaceChipDot} style={{ background: taskSpace.color }} />
-                    {taskSpace.name}
                   </span>
                 )}
               </div>

@@ -485,19 +485,25 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                           ) : (
                             <>
                               <span
-                                className={styles.titleEditable}
+                                className={`${styles.titleEditable} ${styles.descTitle}`}
                                 onClick={e => handleTitleClick(e, t)}
                               >
                                 {t.title ?? (receipt ? receipt.store : (t.subcategory ?? t.description))}
                               </span>
-                              {(receipt || isRecurring) && t.category && (
-                                <span className={styles.txCategory}> · {t.category}</span>
-                              )}
                               {t.type === 'topup' && t.incomeCategory && (
                                 <span className={styles.incomeChip}>
                                   {INCOME_LABEL[t.incomeCategory] ?? t.incomeCategory}
                                 </span>
                               )}
+                              {t.spaceId && (() => {
+                                const sp = spaces.find(s => s.id === t.spaceId)
+                                return sp ? (
+                                  <div className={styles.spaceBadge} style={{ '--space-color': sp.color } as React.CSSProperties}>
+                                    <span className={styles.spaceDot} style={{ background: sp.color }} />
+                                    <span className={styles.spaceName}>{sp.name}</span>
+                                  </div>
+                                ) : null
+                              })()}
                             </>
                           )}
                         </div>
@@ -506,15 +512,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                             <span className={styles.descSub}>{t.description}</span>
                           </div>
                         )}
-                        {t.spaceId && (() => {
-                          const sp = spaces.find(s => s.id === t.spaceId)
-                          return sp ? (
-                            <div className={styles.spaceBadge}>
-                              <span className={styles.spaceDot} style={{ background: sp.color }} />
-                              <span className={styles.spaceName}>{sp.name}</span>
-                            </div>
-                          ) : null
-                        })()}
                       </div>
                     </div>
                     <div className={styles.right}>

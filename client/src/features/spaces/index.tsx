@@ -719,6 +719,73 @@ const SpaceDetailScreen: React.FC = () => {
           onProfileUpdate={p => setPetProfile(space.id, p)}
         />
       )}
+
+      {/* ── Shared modules for typed spaces (pet / home) ── */}
+      {(space?.type === 'pet' || space?.type === 'home') && !loading && (
+        <div className={styles.content}>
+          {spaceTasks.length > 0 && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>ЗАДАЧІ</h2>
+              <div className={styles.tasksList}>
+                {spaceTasks.map(t => (
+                  <div key={t._id} className={`${styles.spaceTask} ${t.done ? styles.spaceTaskDone : ''}`}>
+                    <button
+                      type="button"
+                      className={styles.taskCheckbox}
+                      style={t.done ? colorVar : undefined}
+                      onClick={() => handleToggleTask(t)}
+                      aria-label={t.done ? 'Позначити незроблено' : 'Позначити зроблено'}
+                    >
+                      {t.done && (
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M1.5 5l2.5 2.5 4.5-4"/>
+                        </svg>
+                      )}
+                    </button>
+                    <span className={styles.taskTitle}>{t.title}</span>
+                    <button
+                      type="button"
+                      className={styles.taskDeleteBtn}
+                      onClick={() => handleDeleteTask(t._id)}
+                      aria-label="Видалити задачу"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {spaceTxs.length > 0 && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>ВИТРАТИ</h2>
+              <div className={styles.txSummary} style={colorVar}>
+                <span className={styles.txSummaryLabel}>Разом витрат</span>
+                <span className={styles.txSummaryAmount}>
+                  ₴{formatTxAmount(spaceTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0))}
+                </span>
+              </div>
+              <div className={styles.txList}>
+                {spaceTxs.map(t => (
+                  <div key={t._id} className={`${styles.spaceTx} ${t.type === 'income' ? styles.spaceTxIncome : ''}`}>
+                    <div className={styles.txLeft}>
+                      <span className={styles.txTitle}>{t.title || t.desc || t.category || '—'}</span>
+                      <span className={styles.txDate}>{t.date.slice(0, 10)}</span>
+                    </div>
+                    <span className={styles.txAmount}>
+                      {t.type === 'income' ? '+' : '−'}₴{formatTxAmount(t.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+
       {space?.type === 'trip' && (
         <TripSpaceView
           spaceId={spaceId!}

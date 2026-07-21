@@ -65,6 +65,7 @@ function fromApi(raw: ApiTransaction): Transaction {
     createdAt: raw.createdAt,
     recurringId: raw.recurringId ?? null,
     tripMemoryId: raw.tripMemoryId ?? null,
+    spaceId: raw.spaceId ?? null,
     subcategory: raw.subcategory ?? null,
   }
 }
@@ -122,6 +123,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       amount,
       description,
       incomeCategory: incomeCategory ?? null,
+      spaceId: spaceId ?? null,
       date: new Date().toISOString(),
     }
     set(s => {
@@ -151,6 +153,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       category,
       date: date ? `${date}T12:00:00.000Z` : new Date().toISOString(),
       tripMemoryId: tripMemoryId ?? null,
+      spaceId: spaceId ?? null,
       subcategory: subcategory ?? null,
     }
     set(s => {

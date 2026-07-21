@@ -2,8 +2,8 @@ import React, { useCallback, useRef, useState, useEffect } from 'react'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
-import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
-import { getLevel } from '@/features/achievements/levels'
+import { useAchievementScore } from '@/features/achievements/hooks/useAchievementProgress'
+import { getLevel, getNextLevel, getLevelProgress } from '@/features/achievements/levels'
 import AchievementsTab from '@/features/achievements'
 import styles from './ProfilePage.module.css'
 
@@ -123,14 +123,18 @@ const MeTab: React.FC = () => {
 
   if (!activeProfile) return null
 
-  const runeScore = useRuneScore()
-  const level = getLevel(runeScore)
+  const score    = useAchievementScore()
+  const level    = getLevel(score.earned)
+  const nextLvl  = getNextLevel(score.earned)
+  const progress = getLevelProgress(score.earned)
 
   return (
     <div className={styles.tabContent}>
-      {/* ── Profile hero card ── */}
+      {/* ── Unified identity card ── */}
       <div className={styles.heroCard}>
-        <div className={styles.avatarCol}>
+
+        {/* Top: avatar + identity */}
+        <div className={styles.identityRow}>
           <div className={styles.avatarWrap}>
             <button
               type="button"
@@ -151,61 +155,99 @@ const MeTab: React.FC = () => {
             </div>
             <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleAvatarChange} />
           </div>
+
+          <div className={styles.profileCol}>
+            {editingName ? (
+              <div className={styles.nameEditRow}>
+                <input
+                  ref={nameRef}
+                  type="text"
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  onBlur={saveName}
+                  onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') { setNameInput(activeProfile.name); setEditingName(false) } }}
+                  className={styles.nameInput}
+                  maxLength={32}
+                  disabled={savingName}
+                />
+                <button type="button" className={styles.nameConfirmBtn} onClick={saveName} disabled={savingName}><CheckIcon /></button>
+              </div>
+            ) : (
+              <button type="button" className={styles.nameBtn} onClick={() => { setNameInput(activeProfile.name); setEditingName(true) }}>
+                {activeProfile.name}
+                <span className={styles.namePencil}><PencilIcon /></span>
+              </button>
+            )}
+
+            {editingUsername ? (
+              <div className={styles.usernameEditRow}>
+                <span className={styles.usernameAt}>@</span>
+                <input
+                  ref={usernameRef}
+                  type="text"
+                  value={usernameInput}
+                  onChange={e => setUsernameInput(e.target.value.toLowerCase())}
+                  onBlur={saveUsername}
+                  onKeyDown={e => { if (e.key === 'Enter') saveUsername(); if (e.key === 'Escape') { setUsernameInput(activeProfile.username); setEditingUsername(false) } }}
+                  className={styles.usernameInput}
+                  maxLength={30}
+                  disabled={savingUsername}
+                  autoCapitalize="none"
+                />
+                <button type="button" className={styles.nameConfirmBtn} onClick={saveUsername} disabled={savingUsername}><CheckIcon /></button>
+              </div>
+            ) : (
+              <button type="button" className={styles.usernameBtn} onClick={() => { setUsernameInput(activeProfile.username); setEditingUsername(true) }}>
+                @{activeProfile.username}
+                <span className={styles.namePencil}><PencilIcon /></span>
+              </button>
+            )}
+
+            {activeProfile.email && (
+              <span className={styles.emailLabel}>{activeProfile.email}</span>
+            )}
+          </div>
+
+          <img src="/achive/achive-hero.png" alt="" className={styles.runeImg} draggable={false} />
         </div>
 
-        <div className={styles.profileCol}>
-          {editingName ? (
-            <div className={styles.nameEditRow}>
-              <input
-                ref={nameRef}
-                type="text"
-                value={nameInput}
-                onChange={e => setNameInput(e.target.value)}
-                onBlur={saveName}
-                onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') { setNameInput(activeProfile.name); setEditingName(false) } }}
-                className={styles.nameInput}
-                maxLength={32}
-                disabled={savingName}
-              />
-              <button type="button" className={styles.nameConfirmBtn} onClick={saveName} disabled={savingName}><CheckIcon /></button>
-            </div>
-          ) : (
-            <button type="button" className={styles.nameBtn} onClick={() => { setNameInput(activeProfile.name); setEditingName(true) }}>
-              {activeProfile.name}
-              <span className={styles.namePencil}><PencilIcon /></span>
-            </button>
-          )}
+        {/* Divider */}
+        <div className={styles.heroDivider} />
 
-          {editingUsername ? (
-            <div className={styles.usernameEditRow}>
-              <span className={styles.usernameAt}>@</span>
-              <input
-                ref={usernameRef}
-                type="text"
-                value={usernameInput}
-                onChange={e => setUsernameInput(e.target.value.toLowerCase())}
-                onBlur={saveUsername}
-                onKeyDown={e => { if (e.key === 'Enter') saveUsername(); if (e.key === 'Escape') { setUsernameInput(activeProfile.username); setEditingUsername(false) } }}
-                className={styles.usernameInput}
-                maxLength={30}
-                disabled={savingUsername}
-                autoCapitalize="none"
-              />
-              <button type="button" className={styles.nameConfirmBtn} onClick={saveUsername} disabled={savingUsername}><CheckIcon /></button>
+        {/* Bottom: level + progress + badge */}
+        <div className={styles.levelRow}>
+          <img
+            src={`/achive/level-${level.level}.png`}
+            alt=""
+            className={styles.levelImg}
+            draggable={false}
+            onError={(e) => { (e.target as HTMLImageElement).src = '/achive/achive-treaser.png' }}
+          />
+          <div className={styles.levelBody}>
+            <span className={styles.levelTitle}>РІВЕНЬ {level.level}</span>
+            <div className={styles.levelProgressWrap}>
+              <div className={styles.levelProgressFill} style={{ width: `${progress}%` }} />
             </div>
-          ) : (
-            <button type="button" className={styles.usernameBtn} onClick={() => { setUsernameInput(activeProfile.username); setEditingUsername(true) }}>
-              @{activeProfile.username}
-              <span className={styles.namePencil}><PencilIcon /></span>
-            </button>
-          )}
-
-          {activeProfile.email && (
-            <span className={styles.emailLabel}>{activeProfile.email}</span>
-          )}
+            <p className={styles.levelSub}>
+              {nextLvl
+                ? <><span className={styles.levelSubCurrent}>{score.earned}</span>{' / '}{nextLvl.minRunes}{' рун'}</>
+                : <><span className={styles.levelSubCurrent}>{score.earned}</span>{' рун · МАКСИМУМ'}</>
+              }
+            </p>
+          </div>
+          <div className={styles.levelBadge}>
+            <img
+              src={`/achive/profile/level-${level.level}.png`}
+              alt={level.label}
+              className={styles.levelBadgeImg}
+              draggable={false}
+            />
+            <span className={styles.levelBadgeLabel} style={{ color: level.color, borderColor: level.color }}>
+              {level.label}
+            </span>
+          </div>
         </div>
 
-        <img src="/achive/achive-hero.png" alt="" className={styles.runeImg} draggable={false} />
       </div>
 
       <AchievementsTab />

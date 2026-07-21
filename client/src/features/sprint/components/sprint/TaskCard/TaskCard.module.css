@@ -37,7 +37,7 @@
 
 .inner {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 11px 14px;
 }
@@ -223,15 +223,20 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  padding: 1px 6px 1px 4px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 50%, transparent);
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 10%, transparent);
   font-family: var(--font-ui);
-  font-size: 10px;
-  color: var(--text3);
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--space-color, var(--accent)) 90%, var(--text1));
   white-space: nowrap;
 }
 
 .spaceChipDot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -290,7 +295,7 @@
   border: none;
   cursor: pointer;
   transition: color 0.15s;
-  align-self: flex-start;
+
 }
 .del:hover { color: var(--accent); }
 
@@ -303,7 +308,7 @@
   border: none;
   cursor: grab;
   touch-action: none;
-  align-self: flex-start;
+
   transition: color 0.15s;
 }
 .dragHandle:active { cursor: grabbing; color: var(--text2); }
