@@ -31,11 +31,10 @@ export async function getTasks(req: Request, res: Response): Promise<void> {
   const myTasks = await SprintTask.find(myFilter).sort({ createdAt: 1 })
 
   // Tasks assigned to me by others (no week filter — show regardless)
-  const assignedTasks = await SprintTask.find({
-    assignedTo: myId,
-    userId: { $ne: myId },
-    deletedAt: null,
-  }).sort({ createdAt: 1 })
+  // When filtering by spaceId, apply same filter so assigned tasks from other spaces are excluded
+  const assignedFilter: Record<string, unknown> = { assignedTo: myId, userId: { $ne: myId }, deletedAt: null }
+  if (req.query.spaceId) assignedFilter.spaceId = req.query.spaceId
+  const assignedTasks = await SprintTask.find(assignedFilter).sort({ createdAt: 1 })
 
   // Attach ownerName for assigned tasks
   let enrichedAssigned: (typeof assignedTasks[0] & { ownerName?: string })[] = []
@@ -64,8 +63,9 @@ export async function getTasks(req: Request, res: Response): Promise<void> {
     return obj
   })
 
-  // Unified fetch (no week filter) — also include legacy TodoItem records
-  const todos = (!week && !year)
+  // Unified fetch (no week filter, no spaceId) — also include legacy TodoItem records
+  // TodoItem has no spaceId — exclude when fetching for a specific space
+  const todos = (!week && !year && !req.query.spaceId)
     ? await TodoItem.find({ userId: myId }).sort({ createdAt: 1 })
     : []
 
