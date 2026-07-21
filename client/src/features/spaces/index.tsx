@@ -55,12 +55,7 @@ interface SpaceCtx {
   taskEmptyDesc:   string
 }
 
-interface SpaceTask {
-  _id: string
-  title: string
-  done: boolean
-  createdAt: string
-}
+import type { SpaceTask } from './types'
 
 interface SpaceTx {
   _id: string

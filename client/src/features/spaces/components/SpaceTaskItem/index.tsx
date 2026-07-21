@@ -1,5 +1,5 @@
 import React from 'react'
-import type { SpaceTask } from '@/features/memories/store/spacesStore'
+import type { SpaceTask } from '@/features/spaces/types'
 import styles from './SpaceTaskItem.module.css'
 
 /**
