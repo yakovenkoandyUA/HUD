@@ -84,7 +84,7 @@ interface FinanceState {
   addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null, subcategory?: string | null, date?: string) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
-  patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => void
+  patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => Promise<void>
   tagTripExpenses: (ids: string[], tripMemoryId: string) => void
   setSyncStatus: (s: SyncStatus) => void
 }
@@ -181,7 +181,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       return { transactions }
     }),
 
-  patchTransaction: (id, patch) => {
+  patchTransaction: async (id, patch) => {
     const s = get()
     const tx = s.transactions.find(t => t.id === id)
     if (!tx) return
@@ -190,12 +190,32 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     const delta = tx.type === 'topup'
       ? nextAmount - prevAmount
       : prevAmount - nextAmount
+    const prev = { description: tx.description, amount: tx.amount, title: tx.title }
     set(s2 => {
       const transactions = s2.transactions.map(t => t.id === id ? { ...t, ...patch } : t)
       const balance = s2.balance + delta
       writeCache(transactions, balance)
       return { balance, transactions }
     })
+    try {
+      const body: Record<string, unknown> = {}
+      if (patch.description !== undefined) body.desc = patch.description
+      if (patch.amount      !== undefined) body.amount = patch.amount
+      if (patch.title       !== undefined) body.title = patch.title
+      const res = await authFetch(`/api/transactions/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error('patch failed')
+    } catch {
+      const rollbackDelta = -(delta)
+      set(s2 => {
+        const transactions = s2.transactions.map(t => t.id === id ? { ...t, ...prev } : t)
+        const balance = s2.balance + rollbackDelta
+        writeCache(transactions, balance)
+        return { balance, transactions }
+      })
+    }
   },
 
   tagTripExpenses: (ids, tripMemoryId) => {

@@ -433,7 +433,9 @@ const MemoryDetailScreen: React.FC = () => {
   // Deep-link entry (e.g. from Timeline) can land here before memoriesStore was ever populated.
   useEffect(() => {
     if (memories.length === 0) fetchMemories()
-  }, [memories.length, fetchMemories])
+  // run once on mount — якщо store порожній (прямий URL), підвантажуємо всі спогади
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!id) return

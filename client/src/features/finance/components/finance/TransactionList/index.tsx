@@ -346,19 +346,9 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
     setSavingReceipt(true)
     const newDesc   = JSON.stringify({ store: receiptModalData.store, items: editingItems })
     const newAmount = Math.round(receiptNewTotal * 100) / 100
-    const prevDesc   = selectedReceiptTx.description
-    const prevAmount = selectedReceiptTx.amount
-    patchTransaction(selectedReceiptTx.id, { description: newDesc, amount: newAmount })
     try {
-      const res = await authFetch(`/api/transactions/${selectedReceiptTx.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ desc: newDesc, amount: newAmount }),
-      })
-      if (!res.ok) throw new Error()
-      // Keep modal open with updated tx reflected via store
+      await patchTransaction(selectedReceiptTx.id, { description: newDesc, amount: newAmount })
       setSelectedReceiptTx(prev => prev ? { ...prev, description: newDesc, amount: newAmount } : null)
-    } catch {
-      patchTransaction(selectedReceiptTx.id, { description: prevDesc, amount: prevAmount })
     } finally {
       setSavingReceipt(false)
     }
