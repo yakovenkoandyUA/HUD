@@ -244,7 +244,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (!token || !isSupported || isSubscribed || !activeProfile?.isVerified) return
+    if (!token || !activeProfile || !isSupported || isSubscribed) return
     async function trySubscribe() {
       const perm = Notification.permission
       if (perm === 'denied') return
@@ -256,7 +256,7 @@ const App: React.FC = () => {
     }
     trySubscribe()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, isSupported, isSubscribed])
+  }, [token, activeProfile, isSupported, isSubscribed])
 
   useEffect(() => {
     if (!token || !activeProfile || activeProfile.city || cityAutoLocateRef.current) return

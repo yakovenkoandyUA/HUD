@@ -30,8 +30,22 @@ export function usePushSubscription() {
     }
     setIsSupported(true)
     navigator.serviceWorker.ready.then((reg) =>
-      reg.pushManager.getSubscription().then((sub) => {
+      reg.pushManager.getSubscription().then(async (sub) => {
         console.log('[push] existing subscription:', sub ? sub.endpoint.slice(-20) : 'none')
+        if (sub) {
+          // Re-sync with backend on every init — handles case where backend lost the
+          // subscription (expired 410 cleanup, DB issue) while browser still has it
+          try {
+            const json = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } }
+            await authFetch('/api/push/subscribe', {
+              method: 'POST',
+              body: JSON.stringify(json),
+            })
+            console.log('[push] subscription re-synced with backend ✓')
+          } catch {
+            // ignore — App.tsx will call subscribe() again when needed
+          }
+        }
         setIsSubscribed(!!sub)
       })
     )
