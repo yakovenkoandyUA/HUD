@@ -122,7 +122,7 @@ Bottom sheet з журналом змін. Відкривається з `Profil
 
 ### ProfileDrawer
 Slide-in panel from the left, triggered by the avatar in AppHeader.
-- Порядок: Вигляд → Система → Модулі → Близькі → **Тариф** → Адмін (admin only) → **Акаунт** (внизу, шестерня)
+- Порядок: Вигляд → Система → Модулі → **Близькі** → **Тариф** → Адмін (admin only) → **Акаунт** (внизу, шестерня)
 - "Тариф" → `/profile?tab=plan` (підписка, ліміти)
 - "Акаунт" → `/profile/account` (дані, юридичне, небезпечна зона)
 - При `uiStore.updateAvailable` — рядок оновлення під Акаунтом → `ChangelogSheet`

@@ -298,30 +298,30 @@
 /* ── Category tab switcher ── */
 .catTabBar {
   display: flex;
-  gap: 4px;
-  padding: 10px 14px 0;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
 }
 
 .catTabBtn {
   flex: 1;
-  padding: 7px 0;
+  padding: 11px 4px 10px;
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text3);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s;
 }
 .catTabBtn:hover { color: var(--text2); }
 .catTabBtnActive {
   color: var(--accent);
-  background: var(--accent-wash-md);
-  border-color: var(--tint-accent-lg);
+  border-bottom-color: var(--accent);
 }
 
 .catGrid {
@@ -329,6 +329,36 @@
   flex-wrap: wrap;
   gap: 6px;
   padding: 2px 0;
+}
+
+.catGroupLabel {
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.catGroupLabel:first-child { padding-top: 2px; }
+
+.catGroupLabelMine {
+  color: color-mix(in srgb, var(--accent) 65%, var(--text3));
+}
+
+.catAccordionBody {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 320ms ease-in-out, opacity 240ms ease-in-out;
+}
+.catAccordionBodyOpen {
+  max-height: 2400px;
+  opacity: 1;
 }
 
 /* ── CatCard pill ── */
@@ -1086,6 +1116,9 @@
 
 .familySearchWrap {
   margin-top: 4px;
+}
+
+.familySearchInputRow {
   position: relative;
 }
 
@@ -1317,18 +1350,20 @@
 .settingsCard {
   border-top: 1px solid var(--border);
   overflow: hidden;
-  background: var(--surface);
+
 }
 
 .cardTitle {
-  padding: 9px 14px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text3);
-  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--accent) 70%, var(--text2));
 }
 
 .cardSubTitle {
@@ -1440,7 +1475,6 @@
 
 .cardPadded {
   padding: 14px;
-  background: var(--surface);
 }
 
 /* ── Logout button ── */
@@ -1687,6 +1721,56 @@
   min-width: 28px;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+
+.salaryDayTrigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+.salaryDayTrigger:hover { background: var(--surface); color: var(--accent); }
+
+.dayPickerGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  padding: 4px 0 12px;
+}
+
+.dayPickerCell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.dayPickerCell:hover { background: var(--surface); color: var(--accent); border-color: var(--accent); }
+
+.dayPickerCellActive {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dayPickerHint {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  margin: 0;
+  padding-bottom: 4px;
 }
 
 /* ── Nav style picker ── */

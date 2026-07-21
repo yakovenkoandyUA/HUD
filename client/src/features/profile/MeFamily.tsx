@@ -1,7 +1,9 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useFamilyStore, type FamilyMember } from '@/shared/store/familyStore'
+import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import KynGraph from './components/KynGraph'
 import styles from './ProfilePage.module.css'
 
 /**
@@ -11,22 +13,25 @@ import styles from './ProfilePage.module.css'
  */
 
 const RELATION_TYPES: { value: string; label: string }[] = [
-  { value: 'partner',  label: 'Партнер'  },
-  { value: 'friend',   label: 'Друг'     },
-  { value: 'family',   label: 'Родина'   },
-  { value: 'colleague', label: 'Колега'  },
+  { value: 'partner',  label: 'Дівчина/Хлопець' },
+  { value: 'friend',   label: 'Друг'             },
+  { value: 'family',   label: "Сім'я"            },
+  { value: 'colleague', label: 'Колега'          },
 ]
 
 const RELATION_LABELS: Record<string, string> = {
-  partner:  'Партнер',
+  partner:  'Дівчина/Хлопець',
   friend:   'Друг',
-  family:   'Родина',
+  family:   "Сім'я",
   colleague:'Колега',
 }
 
 const MeFamily: React.FC = () => {
   const { showToast } = useUiStore()
-  const { accepted, pendingSent, pendingReceived, searchResults, searchUsers, sendRequest, acceptRequest, removeLink, clearSearch } = useFamilyStore()
+  const { activeProfile } = useProfileStore()
+  const { accepted, pendingSent, pendingReceived, searchResults, searchUsers, sendRequest, acceptRequest, removeLink, clearSearch, fetchFamily } = useFamilyStore()
+
+  useEffect(() => { fetchFamily() }, [fetchFamily])
   const [familySearch, setFamilySearch]   = useState('')
   const [familyLoading, setFamilyLoading] = useState(false)
   const [pendingUser, setPendingUser]     = useState<FamilyMember | null>(null)
@@ -93,30 +98,13 @@ const MeFamily: React.FC = () => {
         </div>
       )}
 
-      {accepted.length > 0 && (
-        <div className={styles.familyList}>
-          {accepted.map(l => (
-            <div key={l.linkId} className={styles.familyMember}>
-              <div className={styles.familyAvatar}>
-                {l.avatarUrl
-                  ? <img src={l.avatarUrl} alt={l.name} className={styles.familyAvatarImg} />
-                  : <span className={styles.familyAvatarInitial}>{l.name[0]}</span>}
-              </div>
-              <div className={styles.familyInfo}>
-                <span className={styles.familyName}>{l.name}</span>
-                <span className={styles.familyUsername}>
-                  @{l.username}
-                  {l.relationshipType && (
-                    <span className={styles.familyRelTag}>{RELATION_LABELS[l.relationshipType] ?? l.relationshipType}</span>
-                  )}
-                </span>
-              </div>
-              <button type="button" className={styles.familyRemoveBtn} onClick={() => handleFamilyRemove(l.linkId)}>
-                <svg width="12" height="12" viewBox="0 0 10 10" fill="none"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </button>
-            </div>
-          ))}
-        </div>
+      {/* ── Graph (shows empty state when no accepted members) ── */}
+      {activeProfile && (
+        <KynGraph
+          me={{ name: activeProfile.name, avatarUrl: activeProfile.avatarUrl ?? null }}
+          members={accepted}
+          onRemove={handleFamilyRemove}
+        />
       )}
 
       {pendingSent.length > 0 && (
@@ -140,34 +128,30 @@ const MeFamily: React.FC = () => {
         </div>
       )}
 
-      {accepted.length === 0 && pendingReceived.length === 0 && pendingSent.length === 0 && (
-        <div className={styles.cardRow}>
-          <span className={styles.pushSub}>Ще немає близьких. Знайди когось нижче.</span>
-        </div>
-      )}
-
       <div className={styles.cardDivider} />
       <div className={styles.cardPadded}>
         <div className={styles.familySearchWrap}>
-          <input
-            className={`${styles.familySearchInput} ${familySearch ? styles.familySearchInputWithClear : ''}`}
-            type="text"
-            placeholder="Пошук по логіну..."
-            value={familySearch}
-            onChange={e => handleFamilySearch(e.target.value)}
-          />
-          {familySearch && (
-            <button
-              type="button"
-              className={styles.familySearchClear}
-              onClick={() => { setFamilySearch(''); clearSearch(); setPendingUser(null) }}
-              aria-label="Очистити пошук"
-            >
-              <svg width="12" height="12" viewBox="0 0 10 10" fill="none">
-                <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-            </button>
-          )}
+          <div className={styles.familySearchInputRow}>
+            <input
+              className={`${styles.familySearchInput} ${familySearch ? styles.familySearchInputWithClear : ''}`}
+              type="text"
+              placeholder="Пошук по логіну..."
+              value={familySearch}
+              onChange={e => handleFamilySearch(e.target.value)}
+            />
+            {familySearch && (
+              <button
+                type="button"
+                className={styles.familySearchClear}
+                onClick={() => { setFamilySearch(''); clearSearch(); setPendingUser(null) }}
+                aria-label="Очистити пошук"
+              >
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="none">
+                  <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
+          </div>
 
           {/* Search results — pick a user to proceed */}
           {!pendingUser && familySearch && searchResults.length > 0 && (

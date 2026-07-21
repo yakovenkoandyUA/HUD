@@ -116,14 +116,14 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
           />
           <DrawerItem
             icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="1.5" y="1.5" width="6.5" height="6.5" rx="1.5"/><rect x="10" y="1.5" width="6.5" height="6.5" rx="1.5"/><rect x="1.5" y="10" width="6.5" height="6.5" rx="1.5"/><rect x="10" y="10" width="6.5" height="6.5" rx="1.5"/></svg>}
-            label="Модулі"
-            sub="Медіа, спорт та інше"
+            label="Простори"
+            sub="Медіа, спорт, простори"
             onClick={() => go('/profile/modules')}
           />
           <DrawerItem
             icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="6.5" cy="6" r="2.5"/><path d="M2 17c0-2.8 2-4.5 4.5-4.5S11 14.2 11 17"/><circle cx="13" cy="6.5" r="2"/><path d="M11.5 12.5c.4-.1.9-.2 1.5-.2 2 0 3.5 1.4 3.5 3.7"/></svg>}
             label="Близькі"
-            sub="Запити, учасники"
+            sub="Твоє коло, зв'язки"
             badge={familyPending > 0 ? familyPending : undefined}
             onClick={() => go('/profile/family')}
           />
