@@ -339,6 +339,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           createdAt: t.createdAt ?? new Date().toISOString(),
           ...(labelObjs.length && { labels: labelObjs }),
           ...(t.dueDate && { dueDate: t.dueDate }),
+          ...(t.checklist?.length && { checklist: t.checklist as ChecklistItem[] }),
           deletedAt: (t as unknown as { deletedAt?: string }).deletedAt,
         }
       })

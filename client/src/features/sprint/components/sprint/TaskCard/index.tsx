@@ -128,6 +128,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
 
   const [confirmClose, setConfirmClose]   = useState(false)
   const [confirmReturn, setConfirmReturn] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   // Keep latest prop refs so imperative handlers don't go stale
   const onDeleteRef  = useRef(onDelete)
@@ -428,7 +429,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
               </svg>
             </button>
           )}
-          <button type="button" className={styles.del} onClick={triggerDelete} aria-label="Delete">
+          <button type="button" className={styles.del} onClick={() => setConfirmDelete(true)} aria-label="Delete">
             ✕
           </button>
         </div>
@@ -449,6 +450,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
             <div className={styles.confirmBtns}>
               <button type="button" className={styles.confirmNo} onClick={() => setConfirmReturn(false)}>Ні</button>
               <button type="button" className={styles.confirmYes} onClick={handleConfirmReturn}>Так</button>
+            </div>
+          </div>
+        )}
+
+        {confirmDelete && (
+          <div className={styles.confirmBanner}>
+            <span className={styles.confirmText}>
+              {item.type === 'sprint' ? 'Видалити квест?' : item.type === 'shopping' ? 'Видалити покупку?' : 'Видалити задачу?'}
+            </span>
+            <div className={styles.confirmBtns}>
+              <button type="button" className={styles.confirmNo} onClick={() => setConfirmDelete(false)}>Ні</button>
+              <button type="button" className={styles.confirmYes} onClick={() => { setConfirmDelete(false); triggerDelete() }}>Так</button>
             </div>
           </div>
         )}
