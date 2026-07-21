@@ -577,3 +577,44 @@
   -webkit-tap-highlight-color: transparent;
 }
 .imageAddBtn:hover { color: var(--text2); }
+
+/* ── Inline deadline editors (time / reminder accordion) ── */
+
+.deadlineAccordion {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 280ms ease-in-out, opacity 200ms ease-in-out;
+}
+
+.deadlineAccordionOpen {
+  max-height: 400px;
+  opacity: 1;
+}
+
+.deadlineAccordionInner {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.deadlineConfirmBtn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
