@@ -366,7 +366,7 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
         </button>
         <button
           type="button"
-          className={`${styles.compassBtn} ${Math.abs(bearing) > 2 ? styles.compassBtnVisible : ''}`}
+          className={`${styles.compassBtn} ${Math.abs(bearing) > 2 ? styles.compassBtnRotated : ''}`}
           onClick={resetNorth}
           aria-label="На північ"
         >
@@ -392,6 +392,7 @@ const MemoryMap: React.FC<MemoryMapProps> = ({ plans, memories }) => {
             onLoad={handleLoad}
             onZoomEnd={recompute}
             onMoveEnd={() => { recompute(); setBearing(mapRef.current?.getBearing() ?? 0) }}
+            onRotate={() => setBearing(mapRef.current?.getBearing() ?? 0)}
             onRotateEnd={() => setBearing(mapRef.current?.getBearing() ?? 0)}
           >
             <NavigationControl position="top-right" showCompass={false} />

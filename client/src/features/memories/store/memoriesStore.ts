@@ -56,6 +56,7 @@ function toMemory(d: Record<string, any>): Memory {
 interface MemoriesState {
   memories: Memory[]
   isLoading: boolean
+  _deletingIds: Set<string>
   fetchMemories: () => Promise<void>
   addMemory: (memory: Omit<Memory, 'id' | 'createdAt' | 'userId'>) => Promise<string>
   updateMemory: (id: string, updates: Partial<Omit<Memory, 'id' | 'createdAt'>>) => Promise<void>
@@ -67,9 +68,10 @@ interface MemoriesState {
   fetchRelated: (memoryId: string) => Promise<Memory[]>
 }
 
-export const useMemoriesStore = create<MemoriesState>()((set) => ({
+export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
   memories: [],
   isLoading: true,
+  _deletingIds: new Set<string>(),
 
   fetchMemories: async () => {
     if (!getToken()) { set({ isLoading: false }); return }
@@ -77,7 +79,8 @@ export const useMemoriesStore = create<MemoriesState>()((set) => ({
       const res = await authFetch('/api/memories')
       if (!res.ok) return
       const data = await res.json()
-      set({ memories: data.map(toMemory) })
+      const deletingIds = get()._deletingIds
+      set({ memories: data.map(toMemory).filter((m: Memory) => !deletingIds.has(m.id)) })
     } finally {
       set({ isLoading: false })
     }
@@ -106,8 +109,19 @@ export const useMemoriesStore = create<MemoriesState>()((set) => ({
   },
 
   deleteMemory: async (id) => {
-    set(s => ({ memories: s.memories.filter(m => m.id !== id) }))
-    await authFetch(`/api/memories/${id}`, { method: 'DELETE' })
+    set(s => ({
+      memories: s.memories.filter(m => m.id !== id),
+      _deletingIds: new Set([...s._deletingIds, id]),
+    }))
+    try {
+      await authFetch(`/api/memories/${id}`, { method: 'DELETE' })
+    } finally {
+      set(s => {
+        const ids = new Set(s._deletingIds)
+        ids.delete(id)
+        return { _deletingIds: ids }
+      })
+    }
   },
 
   addPhoto: async (memoryId, photo) => {

@@ -115,6 +115,18 @@
   width: 100%;
 }
 
+/* ── Large variant (no F1 module) ── */
+
+.cardLarge {
+  flex: 0 0 95px;
+  width: 95px;
+}
+
+.avatarLarge {
+  width: 85px;
+  height: 85px;
+}
+
 /* ── Active state (current space route) ── */
 
 .cardActive .avatar {

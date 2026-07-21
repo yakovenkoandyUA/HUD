@@ -1471,3 +1471,51 @@
 }
 .imageAddBtn:hover { border-color: var(--text2); color: var(--text2); }
 .imageAddBtn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Простір ── */
+.spaceChipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.spaceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.spaceChipActive {
+  border-color: color-mix(in srgb, var(--chip-color, var(--accent)) 60%, var(--border2));
+  background: color-mix(in srgb, var(--chip-color, var(--accent)) 10%, var(--surface));
+  color: var(--text);
+}
+
+.spaceChipEmoji {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.spaceChipName {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spaceChipCheck {
+  color: var(--accent);
+  flex-shrink: 0;
+}

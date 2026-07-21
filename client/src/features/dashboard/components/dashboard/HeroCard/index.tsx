@@ -17,7 +17,6 @@ import styles from './HeroCard.module.css'
  * @prop {number[]}    sparklineData      — витрати за 7 днів (oldest→newest)
  * @prop {number|null} monthlyBudget      — місячний бюджет (null = не задано)
  * @prop {number}      thisMonthExpenses  — витрати за поточний календарний місяць
- * @prop {number}      lastMonthExpenses  — витрати за попередній місяць
  * @prop {number}      upcomingTotal      — сума активних майбутніх регулярних платежів
  * @prop {number}      upcomingCount      — кількість таких платежів
  */
@@ -28,7 +27,6 @@ interface HeroCardProps {
   sparklineData?:    number[]
   monthlyBudget?:    number | null
   thisMonthExpenses: number
-  lastMonthExpenses: number
   upcomingTotal:     number
   upcomingCount:     number
 }
@@ -162,7 +160,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
 
   return (
     <div className={styles.splitCard}>
-      {/* Left — баланс + сьогодні */}
+      {/* Left — баланс + today chip */}
       <div className={styles.splitLeft}>
         <div>
           <span className={styles.balanceAmount}>
@@ -170,9 +168,9 @@ const HeroCard: React.FC<HeroCardProps> = ({
           </span>
           <div className={styles.balanceSubLabel}>цей місяць</div>
         </div>
-        <div className={styles.splitToday}>
+        <div className={styles.splitTodayChip}>
           <span className={`${styles.splitTodayValue} ${todayOver ? styles.statValueOver : ''}`}>
-            {fmt(todaySpent)} ₴
+            {fmt(todaySpent)}{dailyBudget > 0 ? ` / ${fmt(dailyBudget)}` : ''} ₴
           </span>
           <span className={styles.splitTodayLabel}>сьогодні</span>
         </div>

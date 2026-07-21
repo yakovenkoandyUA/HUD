@@ -112,7 +112,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/appearance" element={<ProfileSubPage title="ВИГЛЯД"><MeAppearance /></ProfileSubPage>} />
           <Route path="/profile/modules"    element={<ProfileSubPage title="ПРОСТОРИ"><MeModules /></ProfileSubPage>} />
-          <Route path="/profile/family"     element={<ProfileSubPage title="БЛИЗЬКІ"><MeFamily /></ProfileSubPage>} />
+          <Route path="/profile/family"     element={<MeFamily />} />
           <Route path="/profile/account"    element={<ProfileSubPage title="НАЛАШТУВАННЯ"><MeAccount /></ProfileSubPage>} />
           <Route path="/profile/admin"      element={<ProfileSubPage title="АДМІН"><AdminTab /></ProfileSubPage>} />
           <Route path="/notes" element={<NotesScreen />} />

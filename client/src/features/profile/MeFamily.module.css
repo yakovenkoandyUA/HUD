@@ -1,0 +1,109 @@
+/* ── Search toggle button (header right) ── */
+.searchToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.searchToggleBtn:hover { color: var(--text); background: var(--surface); }
+.searchToggleBtnActive { color: var(--accent); }
+
+/* ── Animated search bar below header ── */
+.searchBar {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 280ms ease-in-out, opacity 200ms ease-in-out;
+  background: var(--bg);
+  border-bottom: 1px solid transparent;
+}
+
+.searchBarOpen {
+  max-height: 600px;
+  opacity: 1;
+  border-bottom-color: var(--border);
+}
+
+/* ── Input row ── */
+.searchInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 16px 0;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+}
+
+.searchInputIcon {
+  flex-shrink: 0;
+  color: var(--text3);
+}
+
+.searchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  min-width: 0;
+}
+.searchInput::placeholder { color: var(--text3); }
+
+.searchClearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--text3);
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.searchClearBtn:hover { color: var(--text); }
+
+/* ── Results dropdown ── */
+.searchResults {
+  margin: 8px 16px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.searchResultItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+  border-top: 1px solid var(--border);
+}
+.searchResultItem:first-child { border-top: none; }
+.searchResultItem:hover { background: var(--surface2); }
+
+.searchNoResults {
+  margin: 6px 16px 12px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+}

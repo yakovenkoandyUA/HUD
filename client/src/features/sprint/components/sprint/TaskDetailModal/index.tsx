@@ -4,6 +4,7 @@ import { useModalHistory } from '@/shared/hooks/useModalHistory'
 import { authFetch } from '@/shared/services/api'
 import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { usePlan } from '@/shared/hooks/usePlan'
 import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
@@ -113,11 +114,13 @@ function formatReminderLabel(reminder: { amount: number; unit: string }): string
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
   const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem, deleteItem } = useSprintStore()
   const { accepted, fetchFamily } = useFamilyStore()
+  const { spaces, fetchSpaces } = useSpacesStore()
   const { limits } = usePlan()
   const maxImages = limits.maxTaskImages
 
   useEffect(() => {
     if (taskId && accepted.length === 0) fetchFamily()
+    if (taskId && spaces.length === 0) fetchSpaces()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId])
 
@@ -763,6 +766,35 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   )}
                 </div>
               </>
+            )}
+
+            {/* ── ПРОСТІР ── */}
+            {spaces.length > 0 && (
+              <div className={styles.section}>
+                <p className={styles.sectionLabel}>Простір</p>
+                <div className={styles.spaceChipsRow}>
+                  {spaces.filter(s => !s.archived).map(space => {
+                    const isActive = task.spaceId === space.id
+                    return (
+                      <button
+                        key={space.id}
+                        type="button"
+                        className={`${styles.spaceChip} ${isActive ? styles.spaceChipActive : ''}`}
+                        style={isActive ? { '--chip-color': space.color } as React.CSSProperties : undefined}
+                        onClick={() => updateTask(task.id, { spaceId: isActive ? null : space.id })}
+                      >
+                        <span className={styles.spaceChipEmoji}>{space.emoji}</span>
+                        <span className={styles.spaceChipName}>{space.name}</span>
+                        {isActive && (
+                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none" className={styles.spaceChipCheck}>
+                            <path d="M2 5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             )}
 
             {/* ── ВИКОНАВЦІ (тільки для власних задач, коли є сімейні зв'язки) ── */}

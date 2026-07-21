@@ -42,6 +42,21 @@
   opacity: 1;
 }
 
+/* ── Decorative vertical rune (right-edge watermark) ── */
+.decoRune {
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 85%;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.14;
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: screen;
+}
+
 /* ── Sparkles ── */
 .sparkles {
   position: absolute;

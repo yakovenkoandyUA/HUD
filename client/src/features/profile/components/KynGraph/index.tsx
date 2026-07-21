@@ -18,6 +18,8 @@ export const REL_LABELS: Record<string, string> = {
 
 const CENTER_R = 30
 const NODE_R   = 22
+const VERT_GAP = 110
+const H_SPACING_BASE = 80
 
 function relColor(type: string | null): string {
   if (!type || !REL_COLORS[type]) return 'var(--text3)'
@@ -33,8 +35,8 @@ interface Props {
 /**
  * KynGraph
  * --------
- * SVG radial graph of connections (КИН).
- * Center = current user. Surrounding nodes = accepted links.
+ * SVG top-down graph of connections (КИН).
+ * "Я" node at top center, connected members below in a horizontal row.
  * Tap a node to open a popup with info + remove option.
  *
  * Props:
@@ -64,18 +66,24 @@ const KynGraph: React.FC<Props> = ({ me, members, onRemove }) => {
   }
 
   const count = members.length
-  const orbitR = count <= 3 ? 90 : count <= 6 ? 110 : 130
-  const vb = orbitR + 60
+  const hSpacing = count > 5 ? 68 : H_SPACING_BASE
+  const memberY = VERT_GAP
 
   const nodes = members.map((m, i) => {
-    const angle = (2 * Math.PI * i) / count - Math.PI / 2
-    return { ...m, x: orbitR * Math.cos(angle), y: orbitR * Math.sin(angle) }
+    const x = (i - (count - 1) / 2) * hSpacing
+    return { ...m, x, y: memberY }
   })
+
+  const halfW = Math.max(60, ((count - 1) * hSpacing) / 2 + NODE_R + 40)
+  const svgTop    = CENTER_R + 22
+  const svgBottom = memberY + NODE_R + 36
+  const vbWidth  = halfW * 2
+  const vbHeight = svgTop + svgBottom
 
   return (
     <div className={styles.wrap} onClick={() => setSelected(null)}>
       <svg
-        viewBox={`${-vb} ${-vb} ${vb * 2} ${vb * 2}`}
+        viewBox={`${-halfW} ${-svgTop} ${vbWidth} ${vbHeight}`}
         className={styles.svg}
       >
         <defs>
@@ -89,19 +97,55 @@ const KynGraph: React.FC<Props> = ({ me, members, onRemove }) => {
           ))}
         </defs>
 
-        {/* ── Edges ── */}
+        {/* ── Edges — from bottom of center to top of each member ── */}
         {nodes.map(n => (
           <line
             key={`edge-${n.id}`}
-            x1={0} y1={0}
-            x2={n.x} y2={n.y}
+            x1={0} y1={CENTER_R}
+            x2={n.x} y2={n.y - NODE_R}
             stroke={relColor(n.relationshipType)}
             strokeWidth={1.5}
             strokeOpacity={0.45}
           />
         ))}
 
-        {/* ── Surrounding nodes ── */}
+        {/* ── Center node (me) ── */}
+        <circle
+          cx={0} cy={0}
+          r={CENTER_R}
+          fill="var(--surface)"
+          stroke="var(--accent)"
+          strokeWidth={2}
+        />
+        {me.avatarUrl ? (
+          <image
+            href={me.avatarUrl}
+            x={-CENTER_R} y={-CENTER_R}
+            width={CENTER_R * 2} height={CENTER_R * 2}
+            clipPath="url(#kyn-me-clip)"
+            preserveAspectRatio="xMidYMid slice"
+          />
+        ) : (
+          <text
+            x={0} y={0}
+            textAnchor="middle"
+            dominantBaseline="central"
+            className={styles.meInitial}
+            fill="var(--accent)"
+          >
+            {me.name[0].toUpperCase()}
+          </text>
+        )}
+        <text
+          x={0} y={CENTER_R + 13}
+          textAnchor="middle"
+          className={styles.meLabel}
+          fill="var(--text)"
+        >
+          Я
+        </text>
+
+        {/* ── Member nodes ── */}
         {nodes.map(n => {
           const c = relColor(n.relationshipType)
           const isSelected = selected?.linkId === n.linkId
@@ -113,7 +157,6 @@ const KynGraph: React.FC<Props> = ({ me, members, onRemove }) => {
               role="button"
               aria-label={n.name}
             >
-              {/* Hit area */}
               <circle cx={n.x} cy={n.y} r={NODE_R + 6} fill="transparent" />
               <circle
                 cx={n.x} cy={n.y}
@@ -162,42 +205,6 @@ const KynGraph: React.FC<Props> = ({ me, members, onRemove }) => {
             </g>
           )
         })}
-
-        {/* ── Center node (me) ── */}
-        <circle
-          cx={0} cy={0}
-          r={CENTER_R}
-          fill="var(--surface)"
-          stroke="var(--accent)"
-          strokeWidth={2}
-        />
-        {me.avatarUrl ? (
-          <image
-            href={me.avatarUrl}
-            x={-CENTER_R} y={-CENTER_R}
-            width={CENTER_R * 2} height={CENTER_R * 2}
-            clipPath="url(#kyn-me-clip)"
-            preserveAspectRatio="xMidYMid slice"
-          />
-        ) : (
-          <text
-            x={0} y={0}
-            textAnchor="middle"
-            dominantBaseline="central"
-            className={styles.meInitial}
-            fill="var(--accent)"
-          >
-            {me.name[0].toUpperCase()}
-          </text>
-        )}
-        <text
-          x={0} y={CENTER_R + 13}
-          textAnchor="middle"
-          className={styles.meLabel}
-          fill="var(--text)"
-        >
-          Я
-        </text>
       </svg>
 
       {/* ── Node popup ── */}

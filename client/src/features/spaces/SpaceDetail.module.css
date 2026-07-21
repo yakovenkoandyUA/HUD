@@ -183,7 +183,7 @@
   cursor: pointer;
   flex-shrink: 0;
   margin-left: auto;
-  align-self: center;
+  align-self: flex-start;
   opacity: 0.75;
   transition: opacity 0.15s;
 }
@@ -900,52 +900,83 @@
 .tasksList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
 .spaceTask {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
   transition: opacity 0.15s;
 }
 
+.taskSwipeReveal {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  background: var(--negative);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.taskSlideContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  background: var(--bg);
+}
+
 .spaceTaskDone {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .taskCheckbox {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  border: 1.5px solid var(--border);
-  background: transparent;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.taskCheckBox {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--border2);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--space-color, var(--accent));
+  transition: border-color 0.15s, background 0.15s;
 }
-.spaceTaskDone .taskCheckbox {
-  background: var(--space-color, var(--accent));
+
+.spaceTaskDone .taskCheckBox {
   border-color: var(--space-color, var(--accent));
-  color: #fff;
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 14%, transparent);
 }
 
 .taskTitle {
   flex: 1;
+  font-family: var(--font-body);
   font-size: 14px;
   color: var(--text);
-  line-height: 1.4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .spaceTaskDone .taskTitle {
   text-decoration: line-through;
-  color: var(--text-secondary);
+  color: var(--text3);
 }
 
 .taskDeleteBtn {
@@ -957,7 +988,7 @@
   border-radius: 50%;
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text3);
   cursor: pointer;
   opacity: 0.4;
   transition: opacity 0.15s;
@@ -994,54 +1025,86 @@
 .txList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
+
+.txDateHeader {
+  padding: 14px 0 6px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.txDateHeader:first-child { padding-top: 4px; }
 
 .spaceTx {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 12px;
-  border-radius: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
 }
+.spaceTx:last-child { border-bottom: none; }
 
 .txLeft {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 10px;
   flex: 1;
   min-width: 0;
 }
 
+.txTypeIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--cat-color) 15%, var(--bg3));
+  flex-shrink: 0;
+  color: var(--cat-color);
+}
+
+.txContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .txTitle {
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: 14px;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.txSub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
 .txDate {
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-secondary);
-  opacity: 0.65;
+  font-size: 11px;
+  color: var(--text3);
 }
 
 .txAmount {
-  font-family: var(--font-ui);
+  font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-secondary);
   flex-shrink: 0;
   margin-left: 12px;
 }
 
-.spaceTxIncome .txAmount {
-  color: #2ecc71;
-}
+.txAmountPos { color: var(--positive); }
+.txAmountNeg { color: var(--negative); }
 
 /* ── Not found ── */
 .notFound {

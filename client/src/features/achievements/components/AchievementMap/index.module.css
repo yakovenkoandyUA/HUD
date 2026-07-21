@@ -1,9 +1,9 @@
 /* ── Card ── */
 
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  /* background: var(--surface); */
+  /* border: 1px solid var(--border); */
+  /* border-radius: 16px; */
   overflow: hidden;
 }
 
@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px 0;
+  padding: 12px 16px;
 }
 
 .cardTitle {
@@ -82,7 +82,7 @@
   width: 100%;
   padding-bottom: 140%;
   overflow: visible;
-  background: #0a0806;
+
 }
 
 .canvas::before {

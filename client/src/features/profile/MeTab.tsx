@@ -20,8 +20,8 @@ const CheckIcon: React.FC = () => (
   </svg>
 )
 
-const PencilIcon: React.FC = () => (
-  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+const EditIcon: React.FC = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
     <path d="M9.5 2L12 4.5 5 11.5H2.5V9L9.5 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
     <path d="M8 3.5l2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
   </svg>
@@ -30,14 +30,14 @@ const PencilIcon: React.FC = () => (
 /**
  * MeTab
  * -----
- * Вкладка "Профіль" — hero-картка (аватар/ім'я/нікнейм/email).
- * Утиліти акаунту (Експорт/Юридичне/Небезпечна зона) — на /profile/account через ProfileDrawer → Акаунт.
+ * Вкладка "Профіль" — hero-картка (аватар / ім'я / нікнейм).
+ * Єдина кнопка редагування у верхньому-правому куті хіро-картки.
+ * Рівень, прогрес, ранг — в нижній секції картки.
  */
 const MeTab: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
   const { showToast, setUpdateAvailable } = useUiStore()
 
-  // Check for SW updates each time MeTab mounts (background check)
   useEffect(() => {
     let cancelled = false
     const checkForUpdate = async () => {
@@ -48,7 +48,6 @@ const MeTab: React.FC = () => {
       } catch {/* silent */}
     }
     checkForUpdate()
-
     const onControllerChange = () => { if (!cancelled) setUpdateAvailable(true) }
     navigator.serviceWorker?.addEventListener('controllerchange', onControllerChange)
     return () => {
@@ -60,18 +59,22 @@ const MeTab: React.FC = () => {
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
-  const nameRef = useRef<HTMLInputElement>(null)
-  const [nameInput, setNameInput]       = useState(activeProfile?.name ?? '')
-  const [editingName, setEditingName]   = useState(false)
-  const [savingName, setSavingName]     = useState(false)
-
+  const nameRef     = useRef<HTMLInputElement>(null)
   const usernameRef = useRef<HTMLInputElement>(null)
+
+  const [nameInput, setNameInput]             = useState(activeProfile?.name ?? '')
   const [usernameInput, setUsernameInput]     = useState(activeProfile?.username ?? '')
-  const [editingUsername, setEditingUsername] = useState(false)
+  const [heroEditing, setHeroEditing]         = useState(false)
+  const [savingName, setSavingName]           = useState(false)
   const [savingUsername, setSavingUsername]   = useState(false)
 
-  useEffect(() => { if (editingName) nameRef.current?.focus() }, [editingName])
-  useEffect(() => { if (editingUsername) usernameRef.current?.focus() }, [editingUsername])
+  useEffect(() => {
+    if (heroEditing) {
+      setNameInput(activeProfile?.name ?? '')
+      setUsernameInput(activeProfile?.username ?? '')
+      setTimeout(() => nameRef.current?.focus(), 50)
+    }
+  }, [heroEditing]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAvatarChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -91,7 +94,7 @@ const MeTab: React.FC = () => {
 
   const saveName = useCallback(async () => {
     const trimmed = nameInput.trim()
-    if (!trimmed || trimmed === activeProfile?.name) { setEditingName(false); return }
+    if (!trimmed || trimmed === activeProfile?.name) return
     setSavingName(true)
     try {
       await updateProfile({ name: trimmed })
@@ -101,13 +104,12 @@ const MeTab: React.FC = () => {
       setNameInput(activeProfile?.name ?? '')
     } finally {
       setSavingName(false)
-      setEditingName(false)
     }
   }, [nameInput, activeProfile?.name, updateProfile, showToast])
 
   const saveUsername = useCallback(async () => {
     const trimmed = usernameInput.trim().toLowerCase()
-    if (!trimmed || trimmed === activeProfile?.username) { setEditingUsername(false); return }
+    if (!trimmed || trimmed === activeProfile?.username) return
     setSavingUsername(true)
     try {
       await updateProfile({ username: trimmed })
@@ -117,9 +119,13 @@ const MeTab: React.FC = () => {
       setUsernameInput(activeProfile?.username ?? '')
     } finally {
       setSavingUsername(false)
-      setEditingUsername(false)
     }
   }, [usernameInput, activeProfile?.username, updateProfile, showToast])
+
+  const handleSaveAll = useCallback(async () => {
+    await Promise.allSettled([saveName(), saveUsername()])
+    setHeroEditing(false)
+  }, [saveName, saveUsername])
 
   if (!activeProfile) return null
 
@@ -130,10 +136,9 @@ const MeTab: React.FC = () => {
 
   return (
     <div className={styles.tabContent}>
-      {/* ── Unified identity card ── */}
       <div className={styles.heroCard}>
 
-        {/* Top: avatar + identity */}
+        {/* ── Top: avatar + identity + edit button ── */}
         <div className={styles.identityRow}>
           <div className={styles.avatarWrap}>
             <button
@@ -144,11 +149,10 @@ const MeTab: React.FC = () => {
               disabled={uploadingAvatar}
               aria-label="Змінити аватар"
             >
-              {activeProfile.avatarUrl ? (
-                <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
-              ) : (
-                <span className={styles.avatarInitial}>{activeProfile.name[0].toUpperCase()}</span>
-              )}
+              {activeProfile.avatarUrl
+                ? <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
+                : <span className={styles.avatarInitial}>{activeProfile.name[0].toUpperCase()}</span>
+              }
             </button>
             <div className={styles.avatarBadge} aria-hidden="true">
               {uploadingAvatar ? <div className={styles.spinner} /> : <CameraIcon />}
@@ -157,72 +161,58 @@ const MeTab: React.FC = () => {
           </div>
 
           <div className={styles.profileCol}>
-            {editingName ? (
-              <div className={styles.nameEditRow}>
+            {heroEditing ? (
+              <>
                 <input
                   ref={nameRef}
                   type="text"
                   value={nameInput}
                   onChange={e => setNameInput(e.target.value)}
-                  onBlur={saveName}
-                  onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') { setNameInput(activeProfile.name); setEditingName(false) } }}
-                  className={styles.nameInput}
+                  onKeyDown={e => { if (e.key === 'Enter') usernameRef.current?.focus() }}
+                  className={styles.heroNameInput}
                   maxLength={32}
                   disabled={savingName}
+                  placeholder="Ім'я"
                 />
-                <button type="button" className={styles.nameConfirmBtn} onClick={saveName} disabled={savingName}><CheckIcon /></button>
-              </div>
+                <div className={styles.heroUsernameInputRow}>
+                  <span className={styles.heroUsernameAt}>@</span>
+                  <input
+                    ref={usernameRef}
+                    type="text"
+                    value={usernameInput}
+                    onChange={e => setUsernameInput(e.target.value.toLowerCase())}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSaveAll(); if (e.key === 'Escape') setHeroEditing(false) }}
+                    className={styles.heroUsernameInput}
+                    maxLength={30}
+                    disabled={savingUsername}
+                    autoCapitalize="none"
+                  />
+                </div>
+              </>
             ) : (
-              <button type="button" className={styles.nameBtn} onClick={() => { setNameInput(activeProfile.name); setEditingName(true) }}>
-                {activeProfile.name}
-                <span className={styles.namePencil}><PencilIcon /></span>
-              </button>
-            )}
-
-            {editingUsername ? (
-              <div className={styles.usernameEditRow}>
-                <span className={styles.usernameAt}>@</span>
-                <input
-                  ref={usernameRef}
-                  type="text"
-                  value={usernameInput}
-                  onChange={e => setUsernameInput(e.target.value.toLowerCase())}
-                  onBlur={saveUsername}
-                  onKeyDown={e => { if (e.key === 'Enter') saveUsername(); if (e.key === 'Escape') { setUsernameInput(activeProfile.username); setEditingUsername(false) } }}
-                  className={styles.usernameInput}
-                  maxLength={30}
-                  disabled={savingUsername}
-                  autoCapitalize="none"
-                />
-                <button type="button" className={styles.nameConfirmBtn} onClick={saveUsername} disabled={savingUsername}><CheckIcon /></button>
-              </div>
-            ) : (
-              <button type="button" className={styles.usernameBtn} onClick={() => { setUsernameInput(activeProfile.username); setEditingUsername(true) }}>
-                @{activeProfile.username}
-                <span className={styles.namePencil}><PencilIcon /></span>
-              </button>
-            )}
-
-            {activeProfile.email && (
-              <span className={styles.emailLabel}>{activeProfile.email}</span>
+              <>
+                <span className={styles.profileName}>{activeProfile.name}</span>
+                <span className={styles.profileUsername}>@{activeProfile.username}</span>
+              </>
             )}
           </div>
 
-          <img src="/achive/achive-hero.png" alt="" className={styles.runeImg} draggable={false} />
+          <button
+            type="button"
+            className={`${styles.heroEditBtn} ${heroEditing ? styles.heroEditBtnActive : ''}`}
+            onClick={heroEditing ? handleSaveAll : () => setHeroEditing(true)}
+            aria-label={heroEditing ? 'Зберегти' : 'Редагувати'}
+            disabled={savingName || savingUsername}
+          >
+            {heroEditing ? <CheckIcon /> : <EditIcon />}
+          </button>
         </div>
 
-        {/* Divider */}
+        {/* ── Divider ── */}
         <div className={styles.heroDivider} />
 
-        {/* Bottom: level + progress + badge */}
+        {/* ── Level + progress + badge ── */}
         <div className={styles.levelRow}>
-          <img
-            src={`/achive/level-${level.level}.png`}
-            alt=""
-            className={styles.levelImg}
-            draggable={false}
-            onError={(e) => { (e.target as HTMLImageElement).src = '/achive/achive-treaser.png' }}
-          />
           <div className={styles.levelBody}>
             <span className={styles.levelTitle}>РІВЕНЬ {level.level}</span>
             <div className={styles.levelProgressWrap}>
@@ -235,12 +225,14 @@ const MeTab: React.FC = () => {
               }
             </p>
           </div>
+
           <div className={styles.levelBadge}>
             <img
               src={`/achive/profile/level-${level.level}.png`}
               alt={level.label}
               className={styles.levelBadgeImg}
               draggable={false}
+              onError={(e) => { (e.target as HTMLImageElement).src = '/achive/achive-treaser.png' }}
             />
             <span className={styles.levelBadgeLabel} style={{ color: level.color, borderColor: level.color }}>
               {level.label}

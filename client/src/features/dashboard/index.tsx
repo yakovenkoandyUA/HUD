@@ -126,13 +126,8 @@ const Dashboard: React.FC = () => {
     .filter((t) => t.type === 'expense' && t.date.startsWith(today))
     .reduce((sum, t) => sum + t.amount, 0)
   const thisMonthPrefix  = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`
-  const lastMonthDate    = new Date(todayDate.getFullYear(), todayDate.getMonth() - 1, 1)
-  const lastMonthPrefix  = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`
   const thisMonthExpenses = transactions
     .filter(t => t.type === 'expense' && t.date.startsWith(thisMonthPrefix))
-    .reduce((s, t) => s + t.amount, 0)
-  const lastMonthExpenses = transactions
-    .filter(t => t.type === 'expense' && t.date.startsWith(lastMonthPrefix))
     .reduce((s, t) => s + t.amount, 0)
 
   const isDoneToday = (t: (typeof sprintItems)[number]) =>
@@ -159,8 +154,8 @@ const Dashboard: React.FC = () => {
       .reduce((sum, t) => sum + t.amount, 0)
   })
 
-  const handleExpense = (amount: number, description: string, category?: string) => {
-    addExpense(amount, description, category as ExpenseCategory | undefined)
+  const handleExpense = (amount: number, description: string, category?: string, spaceId?: string | null, subcategory?: string | null, date?: string) => {
+    addExpense(amount, description, category as ExpenseCategory | undefined, undefined, spaceId, subcategory, date)
     useAchievementsStore.getState().unlock('first-transaction')
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')
@@ -190,7 +185,7 @@ const Dashboard: React.FC = () => {
         />
 
         {/* 2 — Spaces: compact horizontal strip */}
-        <SpacesStrip />
+        <SpacesStrip f1Enabled={f1Enabled} />
 
         {/* Mimir hint (height:0, floats over content) */}
         {!welcomeSeen ? (
@@ -258,7 +253,6 @@ const Dashboard: React.FC = () => {
             sparklineData={sparklineData}
             monthlyBudget={monthlyBudget}
             thisMonthExpenses={thisMonthExpenses}
-            lastMonthExpenses={lastMonthExpenses}
             upcomingTotal={upcomingTotal}
             upcomingCount={upcomingCount}
           />

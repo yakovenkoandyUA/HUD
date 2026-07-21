@@ -70,6 +70,9 @@ const AchievementUnlockedModal: React.FC = () => {
         className={`${styles.card} ${visible ? styles.cardVisible : ''}`}
         onClick={e => e.stopPropagation()}
       >
+        {/* Decorative vertical rune — right-edge watermark */}
+        <img src="/achive/achive-hero.png" alt="" className={styles.decoRune} draggable={false} aria-hidden="true" />
+
         {/* Sparkles */}
         <div className={styles.sparkles} aria-hidden="true">
           <svg className={`${styles.sparkle} ${styles.sparkle1}`} width="14" height="14" viewBox="0 0 16 16" fill="none">

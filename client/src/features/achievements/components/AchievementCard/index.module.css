@@ -12,8 +12,8 @@
 }
 
 .cardUnlocked {
-	border-color: var(--accent-border-strong);
-	background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+	/* border-color: color-mix(in srgb, var(--positive) 35%, var(--border)); */
+	background: color-mix(in srgb, var(--positive) 3%, var(--surface));
 }
 
 /* ── Badge ── */
@@ -142,14 +142,20 @@
 	color: var(--text3);
 }
 
-.rewardUnlocked {
-	color: var(--accent);
-	border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-	background: color-mix(in srgb, var(--accent) 8%, var(--bg));
-}
-
-.check {
-	color: var(--accent);
+.obtainedBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 9px;
+	border-radius: 20px;
+	border: 1px solid color-mix(in srgb, var(--positive) 50%, transparent);
+	background: color-mix(in srgb, var(--positive) 10%, transparent);
+	color: var(--positive);
+	font-family: var(--font-ui);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.07em;
+	white-space: nowrap;
 }
 
 .chevron {

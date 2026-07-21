@@ -15,7 +15,11 @@ import styles from './SpacesStrip.module.css'
  * -----------
  * Горизонтальний ряд карток просторів на Dashboard.
  * Кнопка "+" відкриває sheet для створення нового простору (template → form).
+ * @prop {boolean} [f1Enabled] — якщо false, аватари рендеряться 85px (більше місця без F1 блоку)
  */
+interface SpacesStripProps {
+  f1Enabled?: boolean
+}
 
 const COLORS = [
   '#9b59b6', '#3498db', '#2ecc71', '#e74c3c',
@@ -37,7 +41,7 @@ const PlusIcon: React.FC = () => (
   </svg>
 )
 
-const SpacesStrip: React.FC = () => {
+const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
   const { spaces, loading: spacesLoading, fetchSpaces, createSpace } = useSpacesStore()
   const { showToast } = useUiStore()
   const navigate  = useNavigate()
@@ -118,8 +122,8 @@ const SpacesStrip: React.FC = () => {
 
       <div className={styles.grid}>
         {spaces.length === 0 && !spacesLoading && (
-          <button type="button" className={`${styles.card} ${styles.addCard}`} onClick={openSheet}>
-            <span className={styles.avatar}>
+          <button type="button" className={`${styles.card} ${styles.addCard} ${!f1Enabled ? styles.cardLarge : ''}`} onClick={openSheet}>
+            <span className={!f1Enabled ? `${styles.avatar} ${styles.avatarLarge}` : styles.avatar}>
               <PlusIcon />
             </span>
             <span className={styles.cardName}>Перший простір</span>
@@ -137,11 +141,11 @@ const SpacesStrip: React.FC = () => {
             <button
               key={space.id}
               type="button"
-              className={`${styles.card} ${space.id === activeSpaceId ? styles.cardActive : ''}`}
+              className={`${styles.card} ${space.id === activeSpaceId ? styles.cardActive : ''} ${!f1Enabled ? styles.cardLarge : ''}`}
               style={{ '--space-color': space.color } as React.CSSProperties}
               onClick={() => navigate(`/spaces/${space.id}`)}
             >
-              <span className={styles.avatar}>
+              <span className={!f1Enabled ? `${styles.avatar} ${styles.avatarLarge}` : styles.avatar}>
                 {profilePhoto
                   ? <img src={profilePhoto} className={styles.profilePhoto} alt="" aria-hidden="true" />
                   : <img src={cfg.iconSrc} className={styles.emblemImg} alt="" aria-hidden="true" />
@@ -154,11 +158,11 @@ const SpacesStrip: React.FC = () => {
 
         <button
           type="button"
-          className={`${styles.card} ${styles.addCard}`}
+          className={`${styles.card} ${styles.addCard} ${!f1Enabled ? styles.cardLarge : ''}`}
           onClick={openSheet}
           aria-label="Додати простір"
         >
-          <span className={styles.avatar}>
+          <span className={!f1Enabled ? `${styles.avatar} ${styles.avatarLarge}` : styles.avatar}>
             <PlusIcon />
           </span>
           <span className={styles.cardName}>Додати</span>

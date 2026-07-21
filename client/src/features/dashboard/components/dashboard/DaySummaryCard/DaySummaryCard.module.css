@@ -16,7 +16,7 @@
   flex-direction: column;
   gap: 3px;
   padding: 10px 12px 10px;
-  background: var(--surface);
+  background: var(--bg3);
   border: 1px solid var(--border);
   border-radius: var(--radius, 10px);
   text-align: left;
