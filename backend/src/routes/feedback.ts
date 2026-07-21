@@ -7,10 +7,9 @@ router.use(requireAuth)
 
 // POST /api/feedback
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-  const { message, imageUrl, page } = req.body as {
+  const { message, imageUrl } = req.body as {
     message: string
     imageUrl?: string
-    page?: string
   }
 
   if (!message?.trim()) {
@@ -32,9 +31,8 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     : req.userId
 
   const lines = [
-    `📬 *Новий фідбек — MIMIR*`,
+    `📬 Новий фідбек — MIMIR`,
     `👤 ${who}`,
-    page ? `📍 ${page}` : '',
     ``,
     message.trim(),
   ].filter(Boolean)
@@ -50,7 +48,6 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
           chat_id: chatId,
           photo: imageUrl,
           caption: text,
-          parse_mode: 'Markdown',
         }),
       })
       if (!r.ok) throw new Error(await r.text())
@@ -61,7 +58,6 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         body: JSON.stringify({
           chat_id: chatId,
           text,
-          parse_mode: 'Markdown',
         }),
       })
       if (!r.ok) throw new Error(await r.text())

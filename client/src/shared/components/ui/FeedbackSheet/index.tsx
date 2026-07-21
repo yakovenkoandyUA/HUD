@@ -38,7 +38,7 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
     if (!message.trim()) return
     setLoading(true)
     try {
-      await authFetch('/api/feedback', {
+      const res = await authFetch('/api/feedback', {
         method: 'POST',
         body: JSON.stringify({
           message: message.trim(),
@@ -46,6 +46,7 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
           page: location.pathname,
         }),
       })
+      if (!res.ok) throw new Error(`${res.status}`)
       showToast('Фідбек надіслано, дякую!', 'success')
       handleClose()
     } catch {
