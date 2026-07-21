@@ -4,6 +4,7 @@ import BottomNav from '@/shared/components/layout/BottomNav'
 import ToastContainer from '@/shared/components/ui/Toast'
 import AchievementUnlockedModal from '@/shared/components/ui/AchievementUnlockedModal'
 import MimirAchievementLayer from '@/shared/components/ui/MimirAchievementLayer'
+import AutoUnlockWatcher from '@/shared/components/ui/AutoUnlockWatcher'
 import PinLock from '@/shared/components/ui/PinLock'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
@@ -284,6 +285,7 @@ const App: React.FC = () => {
       <ToastContainer />
       <AchievementUnlockedModal />
       <MimirAchievementLayer />
+      <AutoUnlockWatcher />
       {(isInstallable || isIOS) && !isDismissed && (
         <PwaInstallBanner isIOS={isIOS} onInstall={promptInstall} onDismiss={dismiss} />
       )}

@@ -4,10 +4,13 @@ import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { useGoalsStore } from '@/features/finance/store/goalsStore'
 import { useSprintStore } from '@/features/sprint/store/sprintStore'
+import { useSprintStreakStore } from '@/features/sprint/store/sprintStreakStore'
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { ACHIEVEMENT_DEFS, ACHIEVEMENT_BY_ID } from '../data'
 import type { AchievementWithStatus, AchievementStatus } from '../types'
+
+const EMPTY_UNLOCKED: { id: string }[] = []
 
 function distinctDates(dates: string[]): number {
   return new Set(dates.map(d => d.slice(0, 10))).size
@@ -53,8 +56,9 @@ export function useAchievementProgress(): AchievementWithStatus[] {
   const transactions = useFinanceStore(s => s.transactions)
   const goals        = useGoalsStore(s => s.goals)
   const sprintItems  = useSprintStore(s => s.items)
+  const doneDates    = useSprintStreakStore(s => s.doneDates)
   const watchItems   = useWatchlistStore(s => s.items)
-  const unlocked     = useProfileStore(s => s.activeProfile?.unlockedAchievements ?? [])
+  const unlocked     = useProfileStore(s => s.activeProfile?.unlockedAchievements ?? EMPTY_UNLOCKED)
 
   const unlockedIds = useMemo(() => new Set(unlocked.map(u => u.id)), [unlocked])
 
@@ -122,9 +126,9 @@ export function useAchievementProgress(): AchievementWithStatus[] {
       'three-steps':       doneTasks.length,
       'ten-steps':         doneTasks.length,
       'completed-path':    doneSprint.length,
-      'seven-days-fire':   0, // streak tracking not yet implemented
-      'return-after-fail': 0, // overdue-task detection not yet implemented
-      'three-day-chain':   0, // daily streak not yet implemented
+      'seven-days-fire':   currentStreak(doneDates),
+      'return-after-fail': sprintItems.filter(i => i.done && i.dueDate && i.dueDate < today).length,
+      'three-day-chain':   currentStreak(doneDates),
       'big-sprint':        maxDoneInOneSprint,
       'three-quests':      doneSprint.length,
 
@@ -161,7 +165,7 @@ export function useAchievementProgress(): AchievementWithStatus[] {
       const order: Record<AchievementStatus, number> = { unlocked: 0, in_progress: 1, locked: 2, hidden: 3 }
       return order[a.status] - order[b.status]
     })
-  }, [memories, spaces, transactions, goals, sprintItems, watchItems, unlockedIds])
+  }, [memories, spaces, transactions, goals, sprintItems, doneDates, watchItems, unlockedIds])
 }
 
 export function useAchievementById(id: string): AchievementWithStatus | undefined {
@@ -191,7 +195,7 @@ export function useAutoUnlock() {
   const { activeProfile } = useProfileStore()
 
   return useMemo(() => {
-    const unlocked = new Set((activeProfile?.unlockedAchievements ?? []).map(u => u.id))
+    const unlocked = new Set((activeProfile?.unlockedAchievements ?? EMPTY_UNLOCKED).map(u => u.id))
     const toUnlock = all.filter(a => a.status === 'unlocked' && !unlocked.has(a.id) && !ACHIEVEMENT_BY_ID[a.id]?.hidden)
     return toUnlock
   }, [all, activeProfile])

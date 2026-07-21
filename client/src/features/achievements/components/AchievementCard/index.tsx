@@ -1,5 +1,4 @@
 import React from 'react'
-import { useUiStore } from '@/shared/store/uiStore'
 import type { AchievementWithStatus } from '../../types'
 import styles from './index.module.css'
 
@@ -11,9 +10,6 @@ const RUNE_SRC: Record<string, string> = {
   watchlist: '/achive/mimir-runes-transparent/rune-watchlist.png',
 }
 
-const RING_R_CARD = 22
-const CIRC        = 2 * Math.PI * RING_R_CARD
-
 interface AchievementCardProps {
   achievement: AchievementWithStatus
 }
@@ -22,31 +18,25 @@ interface AchievementCardProps {
  * AchievementCard
  * ---------------
  * List card below the tree. Three visual variants driven by status:
- * - unlocked  → dark gold badge + checkmark
- * - in_progress → stone badge + progress bar + "N/M"
- * - locked/hidden → dim badge + lock icon + chevron
+ * - unlocked    → gold rune badge + checkmark
+ * - in_progress → dimmed rune badge + progress bar + "N/M"
+ * - locked/hidden → block/question badge
  *
  * Props:
  * @prop {AchievementWithStatus} achievement
  */
 const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
   const { status, progress, target, title, description, reward } = achievement
-  const isUnlocked    = status === 'unlocked'
-  const isInProgress  = status === 'in_progress'
-  const isLocked      = status === 'locked'
-  const isHidden      = status === 'hidden'
+  const isUnlocked   = status === 'unlocked'
+  const isInProgress = status === 'in_progress'
+  const isLocked     = status === 'locked'
+  const isHidden     = status === 'hidden'
 
-  const fraction  = target > 0 ? progress / target : 0
-  const arcFill   = fraction * CIRC
-  const RING_W    = 3
-  const svgSize   = (RING_R_CARD + RING_W) * 2 + 4
-  const cx        = svgSize / 2
-  const cy        = svgSize / 2
+  const fraction = target > 0 ? Math.min(progress / target, 1) : 0
 
-  const runeSrc  = RUNE_SRC[achievement.category]
-  const isDark   = useUiStore(s => ['velvet','cyber','noir','arctic'].includes(s.theme))
-  const blockSrc    = isDark ? '/achive/achive-block-light.png'    : '/achive/achive-block-dark.png'
-  const questionSrc = isDark ? '/achive/achive-question-light.png' : '/achive/achive-question-dark.png'
+  const runeSrc     = RUNE_SRC[achievement.category]
+  const blockSrc    = '/achive/achive-block-dark.png'
+  const questionSrc = '/achive/achive-question-dark.png'
 
   return (
     <div className={`${styles.card} ${isUnlocked ? styles.cardUnlocked : ''}`}>
@@ -60,22 +50,14 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
           <div className={styles.badgeImgWrap}>
             <img src={blockSrc} alt="" className={styles.badgeImg} draggable={false} />
           </div>
-        ) : isUnlocked ? (
-          <div className={`${styles.badgeRuneWrap} ${styles.badgeRuneWrapUnlocked}`}>
-            <img src={runeSrc} alt="" className={styles.badgeRuneImg} draggable={false} />
-          </div>
         ) : (
-          <div className={styles.badgeRuneWrap}>
-            <img src={runeSrc} alt="" className={`${styles.badgeRuneImg} ${styles.badgeRuneImgDim}`} draggable={false} />
-            <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} className={styles.badgeArcOverlay} aria-hidden="true">
-              <circle cx={cx} cy={cy} r={RING_R_CARD} fill="none" className={styles.ringTrack} strokeWidth={RING_W} />
-              <circle cx={cx} cy={cy} r={RING_R_CARD} fill="none" className={styles.ringArc}
-                strokeWidth={RING_W}
-                strokeDasharray={`${arcFill} ${CIRC}`}
-                transform={`rotate(-90 ${cx} ${cy})`}
-                strokeLinecap="round"
-              />
-            </svg>
+          <div className={`${styles.badgeRuneWrap} ${isUnlocked ? styles.badgeRuneWrapUnlocked : ''}`}>
+            <img
+              src={runeSrc}
+              alt=""
+              className={`${styles.badgeRuneImg} ${!isUnlocked ? styles.badgeRuneImgDim : ''}`}
+              draggable={false}
+            />
           </div>
         )}
       </div>
@@ -94,7 +76,12 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
         </span>
 
         {isInProgress && (
-          <span className={styles.progressLabel}>{progress} / {target}</span>
+          <>
+            <div className={styles.progressBar}>
+              <div className={styles.progressFill} style={{ width: `${fraction * 100}%` }} />
+            </div>
+            <span className={styles.progressLabel}>{progress} / {target}</span>
+          </>
         )}
       </div>
 
@@ -102,7 +89,6 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
       <div className={styles.right}>
         <div className={`${styles.reward} ${isUnlocked ? styles.rewardUnlocked : ''}`}>
           <span>+{reward}</span>
-          {/* rune diamond icon */}
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
             <path d="M5 0.5L9.5 5L5 9.5L0.5 5Z"
               fill={isUnlocked ? 'currentColor' : 'none'}

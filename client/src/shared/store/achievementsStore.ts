@@ -2,8 +2,51 @@ import { create } from 'zustand'
 import { useProfileStore } from './profileStore'
 import { ACHIEVEMENTS_BY_ID, type Achievement } from '@/shared/data/achievements'
 import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
+import type { AchievementCategory } from '@/features/achievements/types'
 import { getLevel, type Level } from '@/features/achievements/levels'
 import { getMimirHistory } from '@/shared/utils/mimirHistory'
+import type { DoodleVariant } from '@/shared/components/ui/DoodleIllustration'
+
+const CATEGORY_COLORS: Record<AchievementCategory, string> = {
+  memory:    'var(--negative)',
+  spaces:    'var(--accent)',
+  finance:   'var(--accent)',
+  sprint:    'var(--gold)',
+  watchlist: 'var(--orange, var(--accent))',
+}
+
+const CATEGORY_ILLUSTRATIONS: Record<AchievementCategory, DoodleVariant> = {
+  memory:    'memories',
+  spaces:    'memories',
+  finance:   'finance',
+  sprint:    'sprint',
+  watchlist: 'watchlist',
+}
+
+const CATEGORY_ROUTES: Record<AchievementCategory, string> = {
+  memory:    '/memories',
+  spaces:    '/memories',
+  finance:   '/finance',
+  sprint:    '/sprint',
+  watchlist: '/watchlist',
+}
+
+/** Resolve display Achievement from either catalog */
+function resolveAchievement(id: string): Achievement | null {
+  const basic = ACHIEVEMENTS_BY_ID[id]
+  if (basic) return basic
+  const rich = ACHIEVEMENT_BY_ID[id]
+  if (!rich) return null
+  return {
+    id,
+    title: rich.title,
+    description: rich.description,
+    hint: rich.description,
+    route: CATEGORY_ROUTES[rich.category],
+    color: CATEGORY_COLORS[rich.category],
+    illustration: CATEGORY_ILLUSTRATIONS[rich.category],
+  }
+}
 
 /**
  * achievementsStore
@@ -36,7 +79,7 @@ export const useAchievementsStore = create<AchievementsState>()((set) => ({
   mimirAchievementDialogue: null,
 
   unlock: (id) => {
-    const achievement = ACHIEVEMENTS_BY_ID[id]
+    const achievement = resolveAchievement(id)
     if (!achievement) return
 
     const { activeProfile, updateProfile } = useProfileStore.getState()

@@ -118,23 +118,16 @@ const SpacesStrip: React.FC = () => {
 
       <div className={styles.grid}>
         {spaces.length === 0 && !spacesLoading && (
-          <button type="button" className={styles.emptyCard} onClick={openSheet}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
-              <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
-            </svg>
-            <span className={styles.emptyCardText}>
-              <span className={styles.emptyCardTitle}>Перший простір</span>
-              <span className={styles.emptyCardSub}>авто, дім, техніка…</span>
+          <button type="button" className={`${styles.card} ${styles.addCard}`} onClick={openSheet}>
+            <span className={styles.avatar}>
+              <PlusIcon />
             </span>
+            <span className={styles.cardName}>Перший простір</span>
           </button>
         )}
 
         {spaces.map(space => {
-          const cfg = SPACE_TYPE_CONFIG[space.type]
-          const typeLabel = cfg?.label ?? space.type
-          const memberCount = space.members.length
-          const meta = memberCount > 1 ? `${memberCount} учасники` : typeLabel
+          const cfg = SPACE_TYPE_CONFIG[space.type] ?? SPACE_TYPE_CONFIG['blank']
           const profilePhoto =
             space.type === 'pet'     ? (space.petProfile?.photoUrl     || null) :
             space.type === 'vehicle' ? (space.vehicleProfile?.photoUrl || null) :
@@ -148,19 +141,13 @@ const SpacesStrip: React.FC = () => {
               style={{ '--space-color': space.color } as React.CSSProperties}
               onClick={() => navigate(`/spaces/${space.id}`)}
             >
-              <span className={styles.iconWrap}>
+              <span className={styles.avatar}>
                 {profilePhoto
                   ? <img src={profilePhoto} className={styles.profilePhoto} alt="" aria-hidden="true" />
-                  : cfg && <img src={cfg.iconSrc} width={35} height={35} alt="" aria-hidden="true" />
+                  : <img src={cfg.iconSrc} className={styles.emblemImg} alt="" aria-hidden="true" />
                 }
               </span>
-              <span className={styles.textStack}>
-                <span className={styles.name}>{space.name}</span>
-                <span className={styles.meta}>
-                  <span className={styles.metaDot} aria-hidden="true" />
-                  {meta}
-                </span>
-              </span>
+              <span className={styles.cardName}>{space.name}</span>
             </button>
           )
         })}
@@ -171,8 +158,10 @@ const SpacesStrip: React.FC = () => {
           onClick={openSheet}
           aria-label="Додати простір"
         >
-          <span className={styles.iconWrap}><PlusIcon /></span>
-          <span className={styles.name}>Додати</span>
+          <span className={styles.avatar}>
+            <PlusIcon />
+          </span>
+          <span className={styles.cardName}>Додати</span>
         </button>
       </div>
 

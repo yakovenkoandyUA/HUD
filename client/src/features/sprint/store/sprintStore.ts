@@ -3,6 +3,7 @@ import type { UnifiedTodo, SprintTag, TodoPriority, SprintLabel, ChecklistItem, 
 import { getToken, authFetch, isBackendConfigured } from '@/shared/services/api'
 import { isRecurring, calcStreak } from '../utils/sprint'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { useSprintStreakStore } from './sprintStreakStore'
 
 const DEFAULT_LABELS: SprintLabel[] = [
   { id: 'default-1', title: '',        color: '#216E4E' },
@@ -689,6 +690,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
       const newLog = [...(item.completionLog ?? []), completionDateStr]
       set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done: true, completionLog: newLog } : i) }))
+      useSprintStreakStore.getState().recordToday()
       if (calcStreak({ ...item, completionLog: newLog }) >= 7) {
         useAchievementsStore.getState().unlock('streak-7')
       }
@@ -707,6 +709,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     }
 
     const done = !item.done
+    if (done) useSprintStreakStore.getState().recordToday()
     set(s => ({ items: s.items.map(i => i.id === id ? { ...i, done } : i) }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch(`/api/sprint/tasks/${id}`, {

@@ -158,7 +158,8 @@ interface EditMemoryModalProps {
   isTrip: boolean
   coverUrl: string
   withProfiles: string[]
-  onSave: (title: string, location: PlanLocation, date: string, dateEnd: string | null, isTrip: boolean, withProfiles: string[]) => void
+  tags: string[]
+  onSave: (title: string, location: PlanLocation, date: string, dateEnd: string | null, isTrip: boolean, withProfiles: string[], tags: string[]) => void
   onChangeCover: (url: string, attribution?: string) => void
   onClose: () => void
 }
@@ -173,7 +174,7 @@ const formatDisplayDate = (iso: string) => {
 const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   title: initTitle, location: initLoc, lat: initLat, lng: initLng,
   date: initDate, dateEnd: initDateEnd, isTrip: initIsTrip,
-  coverUrl, withProfiles: initWithProfiles, onSave, onChangeCover, onClose,
+  coverUrl, withProfiles: initWithProfiles, tags: initTags, onSave, onChangeCover, onClose,
 }) => {
   const [title, setTitle]         = useState(initTitle)
   const [location, setLocation]   = useState<PlanLocation>({
@@ -183,6 +184,7 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   const [dateEnd, setDateEnd]     = useState<string | null>(initDateEnd)
   const [isTrip, setIsTrip]       = useState(initIsTrip)
   const [withProfiles, setWithProfiles] = useState<string[]>(initWithProfiles)
+  const [tags, setTags]           = useState<string[]>(initTags)
   const [showPicker, setShowPicker]       = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
   const [showUnsplash, setShowUnsplash]   = useState(false)
@@ -205,6 +207,16 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
 
   const toggleCompanion = (uid: string) =>
     setWithProfiles(prev => prev.includes(uid) ? prev.filter(x => x !== uid) : [...prev, uid])
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const val = e.currentTarget.value.trim().toLowerCase().replace(/\s+/g, '')
+      if (val && !tags.includes(val)) setTags(prev => [...prev, val])
+      e.currentTarget.value = ''
+    }
+  }
+  const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag))
 
   const handleClose = () => {
     setVisible(false)
@@ -350,11 +362,31 @@ const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
               </div>
             </>
           )}
+          <label className={styles.editLabel}>ТЕГИ</label>
+          {tags.length > 0 && (
+            <div className={styles.editTagList}>
+              {tags.map(tag => (
+                <span key={tag} className={styles.editTag}>
+                  #{tag}
+                  <button type="button" className={styles.editTagRemove} onClick={() => removeTag(tag)} aria-label={`Видалити тег ${tag}`}>
+                    <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                      <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <input
+            className={styles.editInput}
+            placeholder="Додати тег (Enter або ,)"
+            onKeyDown={handleTagKeyDown}
+          />
           <button
             type="button"
             className={styles.editSave}
             disabled={!title.trim()}
-            onClick={() => { onSave(title.trim(), location, date, isTrip ? dateEnd : null, isTrip, withProfiles); handleClose() }}
+            onClick={() => { onSave(title.trim(), location, date, isTrip ? dateEnd : null, isTrip, withProfiles, tags); handleClose() }}
           >
             ЗБЕРЕГТИ
           </button>
@@ -852,7 +884,8 @@ const MemoryDetailScreen: React.FC = () => {
 					isTrip={memory.isTrip ?? false}
 					coverUrl={memory.coverUrl ?? ''}
 					withProfiles={memory.withProfiles ?? []}
-					onSave={(title, location, date, dateEnd, isTrip, withProfiles) =>
+					tags={memory.tags ?? []}
+					onSave={(title, location, date, dateEnd, isTrip, withProfiles, tags) =>
 						updateMemory(id!, {
 							title,
 							location: location.address || location.name || undefined,
@@ -862,6 +895,7 @@ const MemoryDetailScreen: React.FC = () => {
 							dateEnd,
 							isTrip,
 							withProfiles,
+							tags: tags.length ? tags : undefined,
 						})
 					}
 					onChangeCover={(url, attribution) => {

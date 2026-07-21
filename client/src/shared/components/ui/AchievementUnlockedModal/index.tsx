@@ -1,76 +1,141 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { useProfileStore } from '@/shared/store/profileStore'
+import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
 import styles from './AchievementUnlockedModal.module.css'
 
-const AUTO_DISMISS_MS = 3200
+const AUTO_DISMISS_MS = 6000
 
-const TROPHY_PATH = 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
-
-const StarPath = 'M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z'
+const RUNE_SRC: Record<string, string> = {
+  memory:    '/achive/mimir-runes-transparent/rune-memory.png',
+  spaces:    '/achive/mimir-runes-transparent/rune-spaces.png',
+  finance:   '/achive/mimir-runes-transparent/rune-finance.png',
+  sprint:    '/achive/mimir-runes-transparent/rune-sprint.png',
+  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.png',
+}
 
 /**
  * AchievementUnlockedModal
  * ------------------------
- * Неблокуючий toast-банер зверху екрана при розблокуванні досягнення
- * (`achievementsStore.pending`) і за ним — картка підвищення рівня
- * (`pendingLevel`), якщо це сталося в той самий момент. Без backdrop —
- * не перериває взаємодію з рештою застосунку. Авто-закриття або тап.
+ * Святковий центрований оверлей при розблокуванні досягнення.
+ * Показує руну категорії, назву, flavor text, кількість зароблених рун і
+ * порядковий номер ачівки в криниці. Level up вбудований в ту ж картку.
+ * Авто-закриття через 6с або тап на overlay/кнопку.
  * Монтується один раз глобально в App.tsx.
  */
 const AchievementUnlockedModal: React.FC = () => {
-  const pending      = useAchievementsStore(s => s.pending)
-  const pendingLevel = useAchievementsStore(s => s.pendingLevel)
-  const dismiss      = useAchievementsStore(s => s.dismiss)
-  const dismissLevel = useAchievementsStore(s => s.dismissLevel)
+  const pending        = useAchievementsStore(s => s.pending)
+  const pendingLevel   = useAchievementsStore(s => s.pendingLevel)
+  const dismiss        = useAchievementsStore(s => s.dismiss)
+  const dismissLevel   = useAchievementsStore(s => s.dismissLevel)
+  const unlockedCount  = useProfileStore(s => s.activeProfile?.unlockedAchievements?.length ?? 0)
 
-  const showAchievement = !!pending
-  const showLevel       = !pending && !!pendingLevel
+  const [visible, setVisible] = useState(false)
 
-  useEffect(() => {
-    if (!showAchievement) return
-    const t = setTimeout(dismiss, AUTO_DISMISS_MS)
-    return () => clearTimeout(t)
-  }, [showAchievement, dismiss])
+  const isOpen = !!pending
 
   useEffect(() => {
-    if (!showLevel) return
-    const t = setTimeout(dismissLevel, AUTO_DISMISS_MS)
+    if (isOpen) {
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+    } else {
+      setVisible(false)
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const t = setTimeout(handleClose, AUTO_DISMISS_MS)
     return () => clearTimeout(t)
-  }, [showLevel, dismissLevel])
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (showAchievement) {
-    return (
-      <div className={styles.banner} onClick={dismiss} role="button" aria-label="Закрити">
-        <div className={styles.badge} style={{ '--badge-color': pending!.color } as React.CSSProperties}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d={TROPHY_PATH} fill="currentColor"/>
-          </svg>
-        </div>
-        <div className={styles.text}>
-          <p className={styles.kicker}>ДОСЯГНЕННЯ РОЗБЛОКОВАНО</p>
-          <p className={styles.title}>{pending!.title}</p>
-        </div>
-      </div>
-    )
+  const handleClose = () => {
+    dismiss()
+    if (pendingLevel) dismissLevel()
   }
 
-  if (showLevel) {
-    return (
-      <div className={styles.banner} onClick={dismissLevel} role="button" aria-label="Закрити">
-        <div className={styles.badge} style={{ '--badge-color': pendingLevel!.color } as React.CSSProperties}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d={StarPath} fill="currentColor"/>
+  if (!pending) return null
+
+  const meta     = ACHIEVEMENT_BY_ID[pending.id]
+  const category = meta?.category ?? 'memory'
+  const runeSrc  = RUNE_SRC[category]
+  const reward      = meta?.reward ?? 0
+  const totalAch    = Object.keys(ACHIEVEMENT_BY_ID).length
+
+  return (
+    <div
+      className={`${styles.overlay} ${visible ? styles.overlayVisible : ''}`}
+      onClick={handleClose}
+    >
+      <div
+        className={`${styles.card} ${visible ? styles.cardVisible : ''}`}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Sparkles */}
+        <div className={styles.sparkles} aria-hidden="true">
+          <svg className={`${styles.sparkle} ${styles.sparkle1}`} width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1v14M1 8h14M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <svg className={`${styles.sparkle} ${styles.sparkle2}`} width="10" height="10" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1v14M1 8h14M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <svg className={`${styles.sparkle} ${styles.sparkle3}`} width="8" height="8" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1v14M1 8h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+          <svg className={`${styles.sparkle} ${styles.sparkle4}`} width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1v14M1 8h14M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
         </div>
-        <div className={styles.text}>
-          <p className={styles.kicker}>НОВИЙ РІВЕНЬ — {pendingLevel!.level}</p>
-          <p className={styles.title}>{pendingLevel!.label}</p>
-        </div>
-      </div>
-    )
-  }
 
-  return null
+        {/* Rune image */}
+        <div className={styles.runeWrap} style={{ '--ach-color': pending.color } as React.CSSProperties}>
+          <div className={styles.runeGlow} />
+          {runeSrc
+            ? <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
+            : <div className={styles.runeFallback} style={{ color: pending.color }}>✦</div>
+          }
+        </div>
+
+        {/* Header */}
+        <p className={styles.kicker}>ДОСЯГНЕННЯ РОЗБЛОКОВАНО</p>
+        <p className={styles.title} style={{ color: pending.color }}>{pending.title}</p>
+
+        {/* Flavor quote */}
+        {(meta?.flavor ?? pending.description) && (
+          <p className={styles.flavor}>«{meta?.flavor ?? pending.description}»</p>
+        )}
+
+        {/* Stats row */}
+        <div className={styles.stats}>
+          <div className={styles.statItem}>
+            <span className={styles.statValue} style={{ color: pending.color }}>+{reward}</span>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true" style={{ color: pending.color }}>
+              <path d="M5 0.5L9.5 5L5 9.5L0.5 5Z" fill="currentColor"/>
+            </svg>
+            <span className={styles.statLabel}>РУН</span>
+          </div>
+          <div className={styles.statDivider} />
+          <div className={styles.statItem}>
+            <span className={styles.statValue}>{unlockedCount}<span className={styles.statTotal}> / {totalAch}</span></span>
+            <span className={styles.statLabel}>ВІДКРИТО</span>
+          </div>
+        </div>
+
+        {/* Level up */}
+        {pendingLevel && (
+          <div className={styles.levelUp} style={{ '--level-color': pendingLevel.color } as React.CSSProperties}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 1l2 5h5l-4 3 1.5 5L8 11l-4.5 3L5 9 1 6h5z" fill="currentColor"/>
+            </svg>
+            <span>Новий рівень — <strong>{pendingLevel.label}</strong></span>
+          </div>
+        )}
+
+        <button type="button" className={styles.closeBtn} onClick={handleClose}>
+          Закрити
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default AchievementUnlockedModal

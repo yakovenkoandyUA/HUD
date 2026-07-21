@@ -80,8 +80,26 @@
 .canvas {
   position: relative;
   width: 100%;
-  padding-bottom: 140%;  /* aspect ratio ~1:1.1 */
+  padding-bottom: 140%;
   overflow: visible;
+  background: #0a0806;
+}
+
+.canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 40% at 50% 52%, rgba(160, 95, 12, 0.38) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 30% at 50% 90%, rgba(100, 55, 8, 0.22) 0%, transparent 65%);
+  animation: treeGlow 5s ease-in-out infinite;
+}
+
+@keyframes treeGlow {
+  0%, 100% { opacity: 0.75; }
+  50%       { opacity: 1;    }
 }
 
 .treeImg {
@@ -89,14 +107,17 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 0;
-  opacity: 0.85;
+  object-fit: contain;
+  object-position: center top;
+  opacity: 0.92;
   user-select: none;
+  z-index: 1;
 }
 
-.treeImgLight { mix-blend-mode: multiply; }
-.treeImgDark  { filter: invert(1) hue-rotate(180deg) contrast(150%); mix-blend-mode: screen; }
+/* transparent PNG — light themes: multiply blends amber into paper bg */
+.treeImgLight { mix-blend-mode: multiply; opacity: 0.88; }
+/* dark themes: tree glows naturally on dark surface */
+.treeImgDark  { opacity: 0.95; }
 
 
 /* ── Connection lines SVG ── */
@@ -107,24 +128,26 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: 2;
 }
 
 .connLit {
-  stroke: color-mix(in srgb, var(--accent) 60%, var(--text3));
-  stroke-width: 0.6;
-  opacity: 0.55;
+  stroke: color-mix(in srgb, var(--accent) 40%, var(--text3));
+  stroke-width: 0.5;
+  opacity: 0.3;
 }
 
 .connDim {
   stroke: var(--border);
   stroke-width: 0.4;
-  opacity: 0.3;
+  opacity: 0.15;
 }
 
 /* ── Node button ── */
 
 .node {
   position: absolute;
+  z-index: 3;
   transform: translate(-50%, -50%);
   background: transparent;
   border: none;
@@ -154,7 +177,7 @@
 
 .badgeImg {
   display: block;
-  width: 55px;
+  width: 50px;
   object-fit: contain;
   user-select: none;
   filter: brightness(1.6);
@@ -164,7 +187,7 @@
 :global([data-theme="cyber"]) .badgeImg,
 :global([data-theme="noir"]) .badgeImg,
 :global([data-theme="arctic"]) .badgeImg {
-  filter: brightness(1);
+  filter: brightness(1.3);
 }
 
 /* ── Near (question mark) pulse animation ── */

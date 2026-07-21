@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { ACHIEVEMENTS_BY_ID } from '@/shared/data/achievements'
 import { useAchievementProgress, useAchievementScore } from './hooks/useAchievementProgress'
 import { getLevel, getNextLevel, getLevelProgress } from './levels'
 import type { AchievementCategory } from './types'
@@ -37,12 +39,26 @@ const AchievementsTab: React.FC = () => {
 
   const filtered = all.filter(a => a.category === activeTab)
 
+  const setPending = () => {
+    const ach = ACHIEVEMENTS_BY_ID[Object.keys(ACHIEVEMENTS_BY_ID)[0]]
+    if (ach) useAchievementsStore.setState({ pending: ach })
+  }
+
   const handleNodeClick = (id: string) => {
     setSelectedId(prev => prev === id ? null : id)
   }
 
   return (
     <div className={styles.root}>
+      {import.meta.env.DEV && (
+        <button
+          type="button"
+          onClick={setPending}
+          style={{ position: 'fixed', bottom: 80, right: 16, zIndex: 9999, padding: '8px 12px', background: 'var(--accent)', color: 'var(--bg)', borderRadius: 8, border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+        >
+          TEST АЧІВКА
+        </button>
+      )}
       {/* ── Hero card ── */}
       <div className={styles.heroCard}>
         <div className={styles.heroImgWrap}>

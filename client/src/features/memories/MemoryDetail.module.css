@@ -871,6 +871,37 @@
 	opacity: 0.4;
 }
 
+/* ── Edit modal tags ── */
+.editTagList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
+.editTag {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 8px 4px 10px;
+	background: var(--surface2);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--accent);
+}
+
+.editTagRemove {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text3);
+	padding: 1px;
+	transition: color 0.15s;
+}
+.editTagRemove:hover { color: var(--text1); }
+
 /* ── Edit modal companions (З КИМ) ── */
 .editCompanions {
 	display: flex;
