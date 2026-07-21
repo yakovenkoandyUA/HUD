@@ -19,12 +19,6 @@ const RELATION_TYPES: { value: string; label: string }[] = [
   { value: 'colleague', label: 'Колега'          },
 ]
 
-const RELATION_LABELS: Record<string, string> = {
-  partner:  'Дівчина/Хлопець',
-  friend:   'Друг',
-  family:   "Сім'я",
-  colleague:'Колега',
-}
 
 const MeFamily: React.FC = () => {
   const { showToast } = useUiStore()
