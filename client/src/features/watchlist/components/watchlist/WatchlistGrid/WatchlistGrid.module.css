@@ -1,64 +1,189 @@
 .grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px 12px;
-  padding: 12px 16px 24px;
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	gap: 14px 12px;
+	padding: 12px 16px 24px;
 }
 
 /* Each card fades + slides up on mount */
 .grid > * {
-  animation: cardIn 0.22s ease-out both;
+	animation: cardIn 0.22s ease-out both;
 }
 
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 /* Stagger first 12 cards (3 cols × 4 rows) */
-.grid > *:nth-child(1)  { animation-delay:   0ms }
-.grid > *:nth-child(2)  { animation-delay:  25ms }
-.grid > *:nth-child(3)  { animation-delay:  50ms }
-.grid > *:nth-child(4)  { animation-delay:  75ms }
-.grid > *:nth-child(5)  { animation-delay: 100ms }
-.grid > *:nth-child(6)  { animation-delay: 125ms }
-.grid > *:nth-child(7)  { animation-delay: 150ms }
-.grid > *:nth-child(8)  { animation-delay: 175ms }
-.grid > *:nth-child(9)  { animation-delay: 200ms }
-.grid > *:nth-child(10) { animation-delay: 225ms }
-.grid > *:nth-child(11) { animation-delay: 250ms }
-.grid > *:nth-child(12) { animation-delay: 275ms }
+.grid > *:nth-child(1) {
+	animation-delay: 0ms;
+}
+.grid > *:nth-child(2) {
+	animation-delay: 25ms;
+}
+.grid > *:nth-child(3) {
+	animation-delay: 50ms;
+}
+.grid > *:nth-child(4) {
+	animation-delay: 75ms;
+}
+.grid > *:nth-child(5) {
+	animation-delay: 100ms;
+}
+.grid > *:nth-child(6) {
+	animation-delay: 125ms;
+}
+.grid > *:nth-child(7) {
+	animation-delay: 150ms;
+}
+.grid > *:nth-child(8) {
+	animation-delay: 175ms;
+}
+.grid > *:nth-child(9) {
+	animation-delay: 200ms;
+}
+.grid > *:nth-child(10) {
+	animation-delay: 225ms;
+}
+.grid > *:nth-child(11) {
+	animation-delay: 250ms;
+}
+.grid > *:nth-child(12) {
+	animation-delay: 275ms;
+}
 
 .empty {
-  padding: 48px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
+	padding: 48px 24px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	text-align: center;
+	position: relative;
 }
-.emptyIcon { font-size: 36px; }
+
+/* TV light beam cone from left edge — trapezoid shape via clip-path */
+.tvScreen {
+	position: fixed;
+	top: 35%;
+	left: -90px;
+	width: 62vw;
+	height: 30vh;
+	background: linear-gradient(to right, rgba(160, 200, 255, 0.5) 0%, rgba(120, 170, 255, 0.22) 45%, transparent 75%);
+	/* narrow on left (TV source), wide on right (spreads toward viewer) */
+	clip-path: polygon(0 38%, 0 62%, 100% 100%, 100% 0%);
+	pointer-events: none;
+	mix-blend-mode: screen;
+	animation: tvFlicker 3.2s ease-in-out infinite;
+	z-index: 0;
+}
+
+@keyframes tvFlicker {
+	0% {
+		opacity: 0.75;
+	}
+	18% {
+		opacity: 1;
+	}
+	32% {
+		opacity: 0.55;
+	}
+	50% {
+		opacity: 0.95;
+	}
+	65% {
+		opacity: 0.6;
+	}
+	80% {
+		opacity: 0.85;
+	}
+	100% {
+		opacity: 0.75;
+	}
+}
+.emptyIcon {
+	font-size: 36px;
+}
+
+.emptyImgWrap {
+	animation: mimirFloat 5s ease-in-out infinite;
+}
+
+@keyframes mimirFloat {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-7px);
+	}
+}
 
 .emptyImg {
-  width: 200px;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
-  animation: emptyFloat 4s ease-in-out infinite;
+	width: 200px;
+	height: auto;
+	object-fit: contain;
+	display: block;
+	animation:
+		mimirBody 9s ease-in-out infinite
 }
 
-@keyframes emptyFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-6px); }
+/* subtle sway + munch moments */
+@keyframes mimirBody {
+	0% {
+		transform: rotate(0deg) scale(1);
+	}
+	10% {
+		transform: rotate(-1.2deg) scale(1);
+	}
+	22% {
+		transform: rotate(0.6deg) scale(1);
+	}
+	38% {
+		transform: rotate(-1deg) scale(1);
+	}
+	52% {
+		transform: rotate(0.4deg) scale(1.025);
+	}
+	57% {
+		transform: rotate(0.4deg) scale(1);
+	}
+	70% {
+		transform: rotate(-0.8deg) scale(1);
+	}
+	85% {
+		transform: rotate(0.5deg) scale(1);
+	}
+	100% {
+		transform: rotate(0deg) scale(1);
+	}
+}
+
+/* blue screen flicker — light from TV */
+@keyframes mimirGlow {
+	0%,
+	100% {
+		filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.35)) drop-shadow(0 -6px 14px rgba(60, 110, 230, 0));
+	}
+	50% {
+		filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.25)) drop-shadow(0 -6px 20px rgba(60, 110, 230, 0.4));
+	}
 }
 .emptyText {
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text2);
+	font-family: var(--font-ui);
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text2);
 }
 .emptyHint {
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--text3);
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--text3);
 }

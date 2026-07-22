@@ -41,6 +41,7 @@ interface RecipesState {
   updateRecipe: (id: string, data: Partial<Omit<Recipe, 'id'>>) => Promise<void>
   deleteRecipe: (id: string) => Promise<void>
   toggleWishlist: (id: string) => void
+  reset: () => void
 }
 
 export const useRecipesStore = create<RecipesState>()(
@@ -125,6 +126,8 @@ export const useRecipesStore = create<RecipesState>()(
         }))
         await authFetch(`/api/recipes/${id}/cook`, { method: 'POST' })
       },
+
+      reset: () => set({ wishlistIds: [] }),
 
       toggleWishlist: (id) => {
         set(s => ({

@@ -93,8 +93,6 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/payment/result" element={<PaymentResult />} />
-        <Route path="/profile-select" element={<Navigate to="/login" replace />} />
-
         {/* Protected — require token */}
         <Route element={<ProtectedRoute />}>
           <Route path="/onboarding" element={<OnboardingScreen />} />
@@ -149,7 +147,6 @@ const NavGuard: React.FC = () => {
   if (/^\/profile\/.+/.test(pathname)) return null
   if (pathname === '/login') return null
   if (pathname === '/register') return null
-  if (pathname === '/profile-select') return null
   if (pathname === '/onboarding') return null
   return <BottomNav />
 }
@@ -261,19 +258,23 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!token || !activeProfile || activeProfile.city || cityAutoLocateRef.current) return
     if (!navigator.geolocation) return
-    cityAutoLocateRef.current = true
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const found = await reverseGeocodeCity(pos.coords.latitude, pos.coords.longitude)
-          if (found) await updateProfile({ city: found })
-        } catch {
-          // мовчки ігноруємо — користувач завжди може задати місто вручну в налаштуваннях
-        }
-      },
-      () => {},
-      { timeout: 8000 }
-    )
+    // Only auto-locate if permission was already granted — never show the browser dialog automatically
+    navigator.permissions?.query({ name: 'geolocation' }).then(status => {
+      if (status.state !== 'granted') return
+      cityAutoLocateRef.current = true
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const found = await reverseGeocodeCity(pos.coords.latitude, pos.coords.longitude)
+            if (found) await updateProfile({ city: found })
+          } catch {
+            // ignore — user can set city manually in settings
+          }
+        },
+        () => {},
+        { timeout: 8000 },
+      )
+    }).catch(() => {})
   }, [token, activeProfile, updateProfile])
 
   return (

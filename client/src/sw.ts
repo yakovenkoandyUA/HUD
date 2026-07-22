@@ -2,7 +2,7 @@
 /// <reference lib="es2015" />
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
-import { NetworkFirst, CacheFirst, NetworkOnly } from 'workbox-strategies'
+import { CacheFirst, NetworkOnly } from 'workbox-strategies'
 import { BackgroundSyncPlugin } from 'workbox-background-sync'
 import { ExpirationPlugin } from 'workbox-expiration'
 
@@ -13,19 +13,16 @@ cleanupOutdatedCaches()
 // ── Static assets: CacheFirst (JS/CSS/icons/fonts) ───────────────────────────
 precacheAndRoute(self.__WB_MANIFEST)
 
-// ── API GET calls: NetworkFirst, fallback to cache (30s timeout) ─────────────
+// ── API calls: NetworkOnly — authenticated responses must never be cached ─────
+// Caching user-specific API responses would allow cross-account data leaks
+// on shared devices (SW cache is not cleared by browser's clear site data
+// when only cookies/localStorage are wiped).
 const API_URL = 'https://hud-production.up.railway.app'
 
 registerRoute(
   ({ url, request }) =>
     url.origin === API_URL && request.method === 'GET',
-  new NetworkFirst({
-    cacheName: 'api-cache-v1',
-    networkTimeoutSeconds: 8,
-    plugins: [
-      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 5 * 60 }),
-    ],
-  })
+  new NetworkOnly()
 )
 
 // ── API write calls (POST/PATCH/PUT/DELETE): NetworkOnly + Background Sync ───
@@ -54,7 +51,20 @@ registerRoute(
 
 // ── SW lifecycle ─────────────────────────────────────────────────────────────
 self.addEventListener('install', () => { self.skipWaiting() })
-self.addEventListener('activate', (event) => { event.waitUntil(self.clients.claim()) })
+self.addEventListener('activate', (event) => {
+  // Delete legacy api-cache-v1 that may contain private API responses
+  // from before the NetworkOnly migration was deployed
+  event.waitUntil(
+    caches.delete('api-cache-v1').then(() => self.clients.claim())
+  )
+})
+
+// ── Clear stale API cache on logout ──────────────────────────────────────────
+self.addEventListener('message', (event: ExtendableMessageEvent) => {
+  if ((event.data as { type?: string } | undefined)?.type === 'CLEAR_API_CACHE') {
+    event.waitUntil(caches.delete('api-cache-v1'))
+  }
+})
 
 // ── Push notifications ───────────────────────────────────────────────────────
 self.addEventListener('push', (event: PushEvent) => {

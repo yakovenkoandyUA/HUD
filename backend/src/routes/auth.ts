@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import {
   register, loginEmail, googleAuth,
-  verify, me, getProfiles, selectProfile, updateMe, changePassword,
+  verify, me, updateMe, changePassword,
   setPin, removePin, verifyPin,
   verifyEmail, resendVerification,
   getAllUsers, adminSetPlan, adminDeleteUser, refresh, logout,
@@ -41,9 +41,5 @@ router.post('/change-password', requireAuth, validate(changePasswordSchema), cha
 router.get('/admin/users',              requireAuth, requireAdmin, getAllUsers)
 router.patch('/admin/users/:id/plan',  requireAuth, requireAdmin, adminSetPlan)
 router.delete('/admin/users/:id',      requireAuth, requireAdmin, adminDeleteUser)
-
-// Multi-profile legacy
-router.get('/profiles', getProfiles)
-router.post('/select', selectProfile)
 
 export default router

@@ -20,6 +20,7 @@ interface CategoryState {
   removeCategory: (id: string) => void
   toggleActive: (id: string) => Promise<void>
   trackCategoryUsage: (id: string) => void
+  reset: () => void
 }
 
 export const useCategoryStore = create<CategoryState>()(
@@ -65,6 +66,8 @@ export const useCategoryStore = create<CategoryState>()(
           set(s => ({ categories: s.categories.map(c => c._id === id ? { ...c, isActive: cat.isActive } : c) }))
         }
       },
+
+      reset: () => set({ categoryUsage: {} }),
 
       trackCategoryUsage: (id: string) => {
         set(s => ({

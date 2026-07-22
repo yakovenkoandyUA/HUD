@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
-import { useSprintStore } from '@/features/sprint/store/sprintStore'
+import { clearUserState } from '@/shared/utils/clearUserState'
 import { saveRefreshToken, clearRefreshToken, authFetch } from '@/shared/services/api'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
@@ -50,16 +50,13 @@ export interface Profile {
 }
 
 interface ProfileState {
-  profiles: Profile[]
   activeProfile: Profile | null
   token: string | null
   pinLocked: boolean
 
-  fetchProfiles: () => Promise<void>
   refreshProfile: () => Promise<void>
   loginWithEmail: (username: string, password: string) => Promise<void>
   register: (email: string, password: string, name: string, username: string) => Promise<void>
-  selectProfile: (username: string) => Promise<void>
   logout: () => void
   uploadAvatar: (file: File) => Promise<void>
   updateProfile: (patch: { name?: string; avatarUrl?: string; f1Enabled?: boolean; salaryDay?: number; monthlySpendLimit?: number | null; username?: string; city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean; weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean; sprintTutorialShownCount?: number; weekdayLongPressShownCount?: number; swipeDismissShownCount?: number; onboardingCompleted?: boolean; mimirSeenHints?: string[] }) => Promise<void>
@@ -105,28 +102,9 @@ async function apiDelete(path: string, token: string) {
 export const useProfileStore = create<ProfileState>()(
   persist(
     (set, get) => ({
-      profiles: [],
       activeProfile: null,
       token: null,
       pinLocked: false,
-
-      fetchProfiles: async () => {
-        if (!BASE_URL) return
-        try {
-          const res = await fetch(`${BASE_URL}/api/auth/profiles`)
-          if (!res.ok) return
-          const profiles = await res.json() as Profile[]
-          const { activeProfile } = get()
-          // Merge server data with persisted profile — keep hasPIN/email which aren't in public list
-          const serverProfile = activeProfile
-            ? profiles.find(p => p.id === activeProfile.id)
-            : null
-          const freshActive = activeProfile
-            ? (serverProfile ? { ...activeProfile, ...serverProfile, hasPIN: activeProfile.hasPIN } : activeProfile)
-            : null
-          set({ profiles, activeProfile: freshActive })
-        } catch { /* offline — use cached */ }
-      },
 
       refreshProfile: async () => {
         const { token, activeProfile } = get()
@@ -163,23 +141,18 @@ export const useProfileStore = create<ProfileState>()(
         set({ token, activeProfile: user, pinLocked: false })
       },
 
-      selectProfile: async (username: string) => {
-        if (!BASE_URL) throw new Error('API not configured')
-        const res = await fetch(`${BASE_URL}/api/auth/select`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username }),
-        })
-        if (!res.ok) throw new Error('Failed to select profile')
-        const { token, user, refreshToken } = await res.json() as { token: string; user: Profile; refreshToken?: string }
-        if (refreshToken) saveRefreshToken(refreshToken)
-        useSprintStore.getState().clearItems()
-        set({ token, activeProfile: user, pinLocked: false })
-      },
-
       logout: () => {
         const { token } = get()
+        // Clear auth state first to block any in-flight authenticated requests
+        set({ token: null, activeProfile: null, pinLocked: false })
         clearRefreshToken()
+        // Clear all user-scoped stores and persistence before navigation
+        clearUserState()
+        // Defense-in-depth: purge any legacy SW api-cache-v1 entries
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.controller?.postMessage({ type: 'CLEAR_API_CACHE' })
+        }
+        // Fire-and-forget backend logout — local session is already cleared above
         if (BASE_URL) {
           fetch(`${BASE_URL}/api/auth/logout`, {
             method: 'POST',
@@ -187,7 +160,6 @@ export const useProfileStore = create<ProfileState>()(
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }).catch(() => {})
         }
-        set({ token: null, activeProfile: null, pinLocked: false })
       },
 
       uploadAvatar: async (file: File) => {
@@ -295,7 +267,7 @@ export const useProfileStore = create<ProfileState>()(
     }),
     {
       name: 'profile-storage',
-      partialize: (s) => ({ token: s.token, activeProfile: s.activeProfile, profiles: s.profiles }),
+      partialize: (s) => ({ token: s.token, activeProfile: s.activeProfile }),
     }
   )
 )

@@ -11,12 +11,15 @@ import { persist } from 'zustand/middleware'
 interface SprintStreakState {
   doneDates: string[]
   recordToday: () => void
+  reset: () => void
 }
 
 export const useSprintStreakStore = create<SprintStreakState>()(
   persist(
     (set, get) => ({
       doneDates: [],
+      reset: () => set({ doneDates: [] }),
+
       recordToday: () => {
         const today = new Date().toISOString().slice(0, 10)
         if (!get().doneDates.includes(today)) {

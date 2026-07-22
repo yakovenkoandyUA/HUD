@@ -469,22 +469,6 @@ export async function me(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** GET /auth/profiles — public list of all profiles */
-export async function getProfiles(req: Request, res: Response): Promise<void> {
-  try {
-    const users = await User.find({}, { name: 1, username: 1, avatarUrl: 1, role: 1, f1Enabled: 1 }).sort({ name: 1 })
-    res.json(users.map(u => ({
-      id: (u._id as { toString(): string }).toString(),
-      name: u.name,
-      username: u.username,
-      avatarUrl: u.avatarUrl,
-      role: u.role,
-      f1Enabled: u.f1Enabled ?? false,
-    })))
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch profiles' })
-  }
-}
 
 /** GET /auth/admin/users — admin-only list of all registered users with plan + family groups */
 export async function getAllUsers(req: Request, res: Response): Promise<void> {
@@ -578,29 +562,6 @@ export async function adminDeleteUser(req: Request, res: Response): Promise<void
   }
 }
 
-/** POST /auth/select — pick a profile, receive JWT (no password) — legacy */
-export async function selectProfile(req: Request, res: Response): Promise<void> {
-  const { username } = req.body as { username?: string }
-  if (!username) {
-    res.status(400).json({ error: 'username required' })
-    return
-  }
-
-  try {
-    const user = await User.findOne({ username })
-    if (!user) {
-      res.status(404).json({ error: 'Profile not found' })
-      return
-    }
-
-    const userId = (user._id as { toString(): string }).toString()
-    await seedCategoriesForUser(userId)
-
-    await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user))
-  } catch {
-    res.status(500).json({ error: 'Failed to select profile' })
-  }
-}
 
 /** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {

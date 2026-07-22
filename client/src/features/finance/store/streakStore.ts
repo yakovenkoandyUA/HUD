@@ -5,6 +5,7 @@ interface StreakStore {
   currentStreak: number
   lastCheckedDate: string // 'YYYY-MM-DD'
   checkToday: (todayExpense: number, dailyBudget: number) => void
+  reset: () => void
 }
 
 function todayISO(): string {
@@ -17,6 +18,8 @@ export const useStreakStore = create<StreakStore>()(
     (set, get) => ({
       currentStreak: 0,
       lastCheckedDate: '',
+
+      reset: () => set({ currentStreak: 0, lastCheckedDate: '' }),
 
       checkToday: (todayExpense, dailyBudget) => {
         const today = todayISO()

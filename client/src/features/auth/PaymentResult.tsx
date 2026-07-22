@@ -18,7 +18,7 @@ const POLL_MAX_ATTEMPTS = 10
 const PaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams()
   const navigate        = useNavigate()
-  const { fetchProfiles } = useProfileStore()
+  const { refreshProfile } = useProfileStore()
 
   const orderReference = searchParams.get('orderReference')
 
@@ -42,7 +42,7 @@ const PaymentResult: React.FC = () => {
         if (cancelledRef.current) return
 
         if (status === 'paid') {
-          await fetchProfiles()
+          await refreshProfile()
           if (!cancelledRef.current) setUiState('paid')
           return
         }
@@ -75,7 +75,7 @@ const PaymentResult: React.FC = () => {
 
     void poll()
     return () => { cancelledRef.current = true }
-  }, [orderReference, fetchProfiles])
+  }, [orderReference, refreshProfile])
 
   const dotsCount = (attempts % 3) + 1
   const dots = '.'.repeat(dotsCount)

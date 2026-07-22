@@ -21,7 +21,10 @@ const WatchlistGrid: React.FC<WatchlistGridProps> = ({ items, onTap }) => {
   if (!items.length) {
     return (
       <div className={styles.empty}>
-        <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyImg} draggable={false} />
+        <div className={styles.tvScreen} aria-hidden="true" />
+        <div className={styles.emptyImgWrap}>
+          <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyImg} draggable={false} />
+        </div>
         <p className={styles.emptyText}>Список порожній</p>
         <p className={styles.emptyHint}>Знайди щось цікаве через пошук вище</p>
       </div>

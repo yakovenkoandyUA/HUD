@@ -87,6 +87,7 @@ interface FinanceState {
   patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => Promise<void>
   tagTripExpenses: (ids: string[], tripMemoryId: string) => void
   setSyncStatus: (s: SyncStatus) => void
+  reset: () => void
 }
 
 const cached = readCache()
@@ -95,6 +96,11 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
   balance: cached?.balance ?? 0,
   transactions: cached?.transactions ?? [],
   syncStatus: 'local' as SyncStatus,
+
+  reset: () => {
+    sessionStorage.removeItem(CACHE_KEY)
+    set({ transactions: [], balance: 0, syncStatus: 'local' })
+  },
 
   setSyncStatus: (syncStatus) => set({ syncStatus }),
 

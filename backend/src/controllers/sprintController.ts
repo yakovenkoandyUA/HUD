@@ -2,16 +2,21 @@ import { Request, Response } from 'express'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
 import { User } from '../models/User'
+import { Space } from '../models/Space'
 import { sendPushToUser } from '../services/webpush'
 import { destroyImages } from '../utils/cloudinary'
 
-const TASK_ALLOWED = [
+// Fields the task owner can update
+const OWNER_ALLOWED = [
   'title', 'done', 'priority', 'category', 'labels', 'dueDate', 'dueTime', 'description',
   'checklist', 'order', 'tag', 'weekStart', 'weekNumber', 'year',
   'repeat', 'nextDue', 'repeatDay', 'repeatConfig', 'repeatStartDate',
   'completionHistory', 'reminder', 'isPinned', 'assignedTo', 'timeOfDay', 'spaceId',
   'imageUrls', 'imagePublicIds',
 ]
+
+// Fields an assignee (non-owner) can update
+const ASSIGNEE_ALLOWED = ['done', 'completionHistory', 'timeOfDay']
 
 // Зміна дедлайну/часу/повторення/нагадування скидає прапорець "вже надіслано" — щоб нагадування пересчиталось
 const REMINDER_RESET_FIELDS = ['dueDate', 'dueTime', 'nextDue', 'reminder']
@@ -95,18 +100,33 @@ export async function createTask(req: Request, res: Response): Promise<void> {
 }
 
 export async function updateTask(req: Request, res: Response): Promise<void> {
-  // Try SprintTask first — owner OR assignee can update
+  // Try SprintTask first — owner OR assignee can update (with different field sets)
   const task = await SprintTask.findOne({
     _id: req.params.id,
     $or: [{ userId: req.userId }, { assignedTo: req.userId }],
     deletedAt: null,
   })
   if (task) {
+    const isOwner = task.userId === req.userId
+    const allowedFields = isOwner ? OWNER_ALLOWED : ASSIGNEE_ALLOWED
+
+    // Validate spaceId change: requester must be owner/member of the target space
+    if (isOwner && req.body.spaceId !== undefined && req.body.spaceId !== task.spaceId) {
+      const newSpaceId = req.body.spaceId as string | null
+      if (newSpaceId) {
+        const space = await Space.findOne({
+          _id: newSpaceId,
+          $or: [{ ownerId: req.userId }, { 'members.userId': req.userId }],
+        })
+        if (!space) { res.status(403).json({ error: 'No access to target space' }); return }
+      }
+    }
+
     const prevAssigned: string[] = task.assignedTo ?? []
-    TASK_ALLOWED.forEach(key => {
+    allowedFields.forEach(key => {
       if (req.body[key] !== undefined) (task as unknown as Record<string, unknown>)[key] = req.body[key]
     })
-    if (touchesReminderSchedule(req.body)) task.reminderSent = false
+    if (isOwner && touchesReminderSchedule(req.body)) task.reminderSent = false
     await task.save()
     res.json(task)
 
