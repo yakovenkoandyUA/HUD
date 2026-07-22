@@ -93,7 +93,7 @@ export const useUiStore = create<UiState>()(
       name: 'hud-ui',
       version: 3,
       migrate: (persisted: unknown, version: number) => {
-        const s = persisted as Partial<UiState> & { theme?: string }
+        const s = persisted as Partial<Omit<UiState, 'theme'>> & { theme?: string }
         // v0→v1: pill was experimental default; reset to classic
         if (version < 1 && s.navStyle === 'pill') s.navStyle = 'classic'
         // v1→v2: japan renamed to mimir
