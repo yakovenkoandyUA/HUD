@@ -74,6 +74,7 @@
 	position: fixed;
 	top: 35%;
 	left: -90px;
+
 	width: 62vw;
 	height: 30vh;
 	background: linear-gradient(to right, rgba(160, 200, 255, 0.5) 0%, rgba(120, 170, 255, 0.22) 45%, transparent 75%);
@@ -83,6 +84,10 @@
 	mix-blend-mode: screen;
 	animation: tvFlicker 3.2s ease-in-out infinite;
 	z-index: 0;
+}
+
+.tvScreenHigh {
+	top: 14%;
 }
 
 @keyframes tvFlicker {

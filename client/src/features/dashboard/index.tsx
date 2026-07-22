@@ -184,29 +184,16 @@ const Dashboard: React.FC = () => {
           todayTeasers={todayTeasers}
         />
 
-        {/* First-visit Mimir — inline card under weather, does NOT cover content */}
+        {/* First-visit Mimir — floats over content via portal */}
         {!welcomeSeen && (
-          <div className={styles.mimirWelcomeCard}>
-            <img
-              src="/mimir/mimir-excited.png"
-              alt=""
-              className={styles.mimirWelcomeAvatar}
-              draggable={false}
+          <div className={styles.mimirFloat}>
+            <MimirHint
+              pose="excited"
+              textKey={getMimirText('dashboard_first_visit', mimirMode)}
+              oneTime
+              portal
+              onDismiss={() => { firstVisitInSession.current = true; markWelcomeSeen() }}
             />
-            <div className={styles.mimirWelcomeBubble}>
-              <p className={styles.mimirWelcomeText}>{getMimirText('dashboard_first_visit', mimirMode)}</p>
-              <span className={styles.mimirWelcomeSig}>— Мімір</span>
-            </div>
-            <button
-              type="button"
-              className={styles.mimirWelcomeClose}
-              onClick={() => { firstVisitInSession.current = true; markWelcomeSeen() }}
-              aria-label="Сховати"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
           </div>
         )}
 

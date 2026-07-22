@@ -183,7 +183,7 @@
   filter: brightness(1.6);
 }
 
-:global([data-theme="velvet"]) .badgeImg,
+:global([data-theme="aurum"]) .badgeImg,
 :global([data-theme="cyber"]) .badgeImg,
 :global([data-theme="noir"]) .badgeImg,
 :global([data-theme="arctic"]) .badgeImg {
@@ -206,7 +206,7 @@
   animation: nearPulseLight 2.6s ease-in-out infinite;
 }
 
-:global([data-theme="velvet"]) .badgeImgNear,
+:global([data-theme="aurum"]) .badgeImgNear,
 :global([data-theme="cyber"]) .badgeImgNear,
 :global([data-theme="noir"]) .badgeImgNear,
 :global([data-theme="arctic"]) .badgeImgNear {

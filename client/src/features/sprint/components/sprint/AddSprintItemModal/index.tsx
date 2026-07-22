@@ -501,7 +501,12 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                     <button
                       type="button"
                       className={styles.metaChip}
-                      onClick={() => { setNewReminderAmount(1); setNewReminderUnit('days'); setShowFormReminderPicker(true) }}
+                      onClick={() => {
+                        setNewReminderAmount(1); setNewReminderUnit('days'); setShowFormReminderPicker(true)
+                        if ('Notification' in window && Notification.permission === 'default') {
+                          Notification.requestPermission().catch(() => {})
+                        }
+                      }}
                     >
                       <svg width="10" height="10" viewBox="0 0 16 18" fill="none">
                         <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -542,7 +547,12 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                   <button
                     type="button"
                     className={`${styles.metaChip} ${newReminder ? styles.metaChipActive : ''}`}
-                    onClick={() => { setShowReminderEditor(v => !v); setShowTimeEditor(false) }}
+                    onClick={() => {
+                      if (!newReminder && 'Notification' in window && Notification.permission === 'default') {
+                        Notification.requestPermission().catch(() => {})
+                      }
+                      setShowReminderEditor(v => !v); setShowTimeEditor(false)
+                    }}
                   >
                     <svg width="10" height="10" viewBox="0 0 16 18" fill="none">
                       <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>

@@ -7,7 +7,7 @@ interface Toast {
   type: 'success' | 'error' | 'info'
 }
 
-export type Theme = 'velvet' | 'japan' | 'cyber' | 'noir' | 'pixel' | 'arctic'
+export type Theme = 'aurum' | 'mimir' | 'cyber' | 'noir' | 'pixel' | 'arctic'
 export type NavStyle = 'classic' | 'pill' | 'hub'
 export type NavLabelMode = 'always' | 'active' | 'never'
 export type MimirMode = 'wise' | 'witty' | 'dark'
@@ -53,7 +53,7 @@ export const useUiStore = create<UiState>()(
       modalDepth: 0,
       pushModal: () => set((s) => ({ modalDepth: s.modalDepth + 1 })),
       popModal: () => set((s) => ({ modalDepth: Math.max(0, s.modalDepth - 1) })),
-      theme: 'velvet',
+      theme: 'aurum',
       navStyle: 'classic',
       navLabelMode: 'always',
       pinnedSections: DEFAULT_PINNED_SECTIONS,
@@ -91,11 +91,15 @@ export const useUiStore = create<UiState>()(
     }),
     {
       name: 'hud-ui',
-      version: 1,
-      migrate: (persisted: unknown) => {
-        const s = persisted as Partial<UiState>
+      version: 3,
+      migrate: (persisted: unknown, version: number) => {
+        const s = persisted as Partial<UiState> & { theme?: string }
         // v0→v1: pill was experimental default; reset to classic
-        if (s.navStyle === 'pill') s.navStyle = 'classic'
+        if (version < 1 && s.navStyle === 'pill') s.navStyle = 'classic'
+        // v1→v2: japan renamed to mimir
+        if (s.theme === 'japan') s.theme = 'mimir' as Theme
+        // v2→v3: velvet renamed to aurum
+        if (s.theme === 'velvet') s.theme = 'aurum' as Theme
         return s as UiState
       },
       partialize: (s) => ({ theme: s.theme, navStyle: s.navStyle, navLabelMode: s.navLabelMode, pinnedSections: s.pinnedSections, pinnedProfileTabs: s.pinnedProfileTabs, mimirMode: s.mimirMode, mimirFrequency: s.mimirFrequency }),

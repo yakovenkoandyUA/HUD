@@ -64,16 +64,13 @@
 :global([data-theme='cyber']) .cardPhoto {
   background-position-y: 160px;
 }
-:global([data-theme='japan']) .cardPhoto {
-  background-position-y: 200px;
-}
 :global([data-theme='arctic']) .cardPhoto {
   background-position: 10px 0;
 }
-:global([data-theme='velvet']) .cardPhoto {
+:global([data-theme='aurum']) .cardPhoto {
   background-position: 168px -20px;
 }
-:global([data-theme='velvet']) .cardPhoto::before {
+:global([data-theme='aurum']) .cardPhoto::before {
   background: linear-gradient(
     to right,
     var(--surface) 24%,
@@ -81,7 +78,7 @@
     transparent 78%
   );
 }
-:global([data-theme='velvet']) .cardPhoto::after {
+:global([data-theme='aurum']) .cardPhoto::after {
   background: linear-gradient(to top, color-mix(in srgb, var(--bg) 92%, transparent) 0%, transparent 100%);
 }
 :global([data-theme='pixel']) .cardPhoto {
@@ -129,12 +126,12 @@
 }
 
 /* ── Velvet: Cinzel + golden glow pulse ──────────────────────── */
-:global([data-theme='velvet']) .time {
+:global([data-theme='aurum']) .time {
   font-family: 'Cinzel', serif;
   color: var(--gold);
-  animation: velvetGlow 3s ease-in-out infinite;
+  animation: aurumGlow 3s ease-in-out infinite;
 }
-@keyframes velvetGlow {
+@keyframes aurumGlow {
   0%, 100% { text-shadow: 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent); }
   50%       { text-shadow: 0 0 10px color-mix(in srgb, var(--gold) 65%, transparent), 0 0 22px color-mix(in srgb, var(--gold) 25%, transparent); }
 }
@@ -192,17 +189,6 @@
   50%       { filter: brightness(1.35) hue-rotate(18deg); }
 }
 
-/* ── Japan: Cormorant Garamond + soft sakura fade ────────────── */
-:global([data-theme='japan']) .time {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 15px;
-  font-style: italic;
-  animation: japanFade 2.5s ease-in-out infinite;
-}
-@keyframes japanFade {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.55; }
-}
 
 .weatherChip {
   display: flex;
@@ -356,46 +342,40 @@
 
 /* ── Dark themes — lift dim text inside the banner ───────────── */
 
-:global([data-theme='velvet']) .weatherDesc,
+:global([data-theme='aurum']) .weatherDesc,
 :global([data-theme='cyber'])  .weatherDesc,
 :global([data-theme='noir'])   .weatherDesc,
 :global([data-theme='arctic']) .weatherDesc { color: var(--text2); }
 
-:global([data-theme='velvet']) .todayLabel,
+:global([data-theme='aurum']) .todayLabel,
 :global([data-theme='cyber'])  .todayLabel,
 :global([data-theme='noir'])   .todayLabel,
 :global([data-theme='arctic']) .todayLabel { color: var(--text2); }
 
-:global([data-theme='velvet']) .todayLink,
+:global([data-theme='aurum']) .todayLink,
 :global([data-theme='cyber'])  .todayLink,
 :global([data-theme='noir'])   .todayLink,
 :global([data-theme='arctic']) .todayLink { color: var(--text); }
 
-:global([data-theme='velvet']) .todayEmpty,
+:global([data-theme='aurum']) .todayEmpty,
 :global([data-theme='cyber'])  .todayEmpty,
 :global([data-theme='noir'])   .todayEmpty,
 :global([data-theme='arctic']) .todayEmpty { color: var(--text2); }
 
 /* ── Velvet — no bright yellow, use gold + opacity ───────────── */
 
-:global([data-theme='velvet']) .todayLabel {
+:global([data-theme='aurum']) .todayLabel {
   color: color-mix(in srgb, var(--gold) 70%, var(--text3));
 }
-:global([data-theme='velvet']) .todayDot {
+:global([data-theme='aurum']) .todayDot {
   border-color: var(--gold);
 }
 
 /* ── Per-theme: date text + weather temperature ──────────────── */
 
-:global([data-theme='velvet']) .date,
-:global([data-theme='velvet']) .weatherTemp { font-family: 'Cinzel', serif; }
+:global([data-theme='aurum']) .date,
+:global([data-theme='aurum']) .weatherTemp { font-family: 'Cinzel', serif; }
 
-:global([data-theme='japan']) .date,
-:global([data-theme='japan']) .weatherTemp,
-:global([data-theme='japan']) .weatherDesc  { font-family: 'Cormorant Garamond', serif; font-style: italic; }
-:global([data-theme='japan']) .date         { font-size: 20px; }
-:global([data-theme='japan']) .weatherTemp  { font-size: 20px; font-style: italic; }
-:global([data-theme='japan']) .weatherDesc  { font-size: 10px; text-transform: none; letter-spacing: 0.02em; }
 
 :global([data-theme='cyber']) .date         { font-family: 'Orbitron', monospace; font-size: 14px; }
 :global([data-theme='cyber']) .weatherTemp  { font-family: 'Orbitron', monospace; font-size: 20px; }

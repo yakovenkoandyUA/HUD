@@ -40,13 +40,13 @@
 }
 
 /* Velvet surface override: cells near-black, neutral border */
-:global([data-theme='velvet']) .cell {
+:global([data-theme='aurum']) .cell {
   background: linear-gradient(145deg, rgba(14, 15, 25, 0.98), rgba(10, 11, 19, 0.98));
   border-color: rgba(75, 82, 115, 0.48);
 }
 
-:global([data-theme='velvet']) .cell:hover,
-:global([data-theme='velvet']) .cell:active {
+:global([data-theme='aurum']) .cell:hover,
+:global([data-theme='aurum']) .cell:active {
   background: rgba(18, 21, 36, 0.98);
 }
 
@@ -75,7 +75,7 @@
 :global([data-theme='noir'])   .cellLabel,
 :global([data-theme='arctic']) .cellLabel { color: var(--text2); }
 /* Velvet: neutral grey (not golden --text2) */
-:global([data-theme='velvet']) .cellLabel { color: #b9b9be; }
+:global([data-theme='aurum']) .cellLabel { color: #b9b9be; }
 
 /* ── Category icons (semantic color — theme-independent) ─────── */
 
@@ -114,10 +114,10 @@
 :global([data-theme='noir'])   .cellValDim,
 :global([data-theme='arctic']) .cellValDim { color: var(--text2); }
 /* Velvet: neutral primary (near-black bg provides contrast, no need to dim) */
-:global([data-theme='velvet']) .cellVal    { color: #f1f1f3; }
-:global([data-theme='velvet']) .cellValDim { color: #f1f1f3; }
+:global([data-theme='aurum']) .cellVal    { color: #f1f1f3; }
+:global([data-theme='aurum']) .cellValDim { color: #f1f1f3; }
 /* Quest accent number must win over the generic cellVal override above */
-:global([data-theme='velvet']) .cellValQuest { font-size: 22px; line-height: 1; }
+:global([data-theme='aurum']) .cellValQuest { font-size: 22px; line-height: 1; }
 
 /* Quest: large coloured number */
 .cellValQuest {
@@ -150,7 +150,7 @@
 :global([data-theme='noir'])   .cellSub,
 :global([data-theme='arctic']) .cellSub { color: var(--text2); }
 /* Velvet: muted neutral (not golden --text2) */
-:global([data-theme='velvet']) .cellSub { color: #96969e; }
+:global([data-theme='aurum']) .cellSub { color: #96969e; }
 
 /* Functional accent subs — same colours in all themes */
 .cellSubQuest { color: var(--cat-quest); font-weight: 600; }
@@ -159,10 +159,10 @@
 .cellSubNote  { color: var(--cat-note);  font-weight: 500; }
 
 /* Velvet: accent subs must win over the generic .cellSub override (same specificity, later wins) */
-:global([data-theme='velvet']) .cellSubQuest { color: var(--cat-quest); }
-:global([data-theme='velvet']) .cellSubShop  { color: var(--cat-shop);  }
-:global([data-theme='velvet']) .cellSubMeal  { color: var(--cat-meal);  }
-:global([data-theme='velvet']) .cellSubNote  { color: var(--cat-note);  }
+:global([data-theme='aurum']) .cellSubQuest { color: var(--cat-quest); }
+:global([data-theme='aurum']) .cellSubShop  { color: var(--cat-shop);  }
+:global([data-theme='aurum']) .cellSubMeal  { color: var(--cat-meal);  }
+:global([data-theme='aurum']) .cellSubNote  { color: var(--cat-note);  }
 :global([data-theme='cyber']) .cellSubQuest { color: var(--cat-quest); }
 :global([data-theme='cyber']) .cellSubShop  { color: var(--cat-shop);  }
 :global([data-theme='cyber']) .cellSubMeal  { color: var(--cat-meal);  }

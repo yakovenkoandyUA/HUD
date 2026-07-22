@@ -28,7 +28,7 @@
   stroke: var(--positive);
 }
 
-:global([data-theme="velvet"]) .ringTrack {
+:global([data-theme="aurum"]) .ringTrack {
   stroke: color-mix(in srgb, var(--surface2) 60%, transparent);
 }
 
@@ -44,6 +44,6 @@
   color: var(--positive);
 }
 
-:global([data-theme="velvet"]) .ringIcon {
+:global([data-theme="aurum"]) .ringIcon {
   color: var(--surface2);
 }

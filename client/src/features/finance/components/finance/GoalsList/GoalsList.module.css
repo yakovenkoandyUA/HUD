@@ -120,7 +120,7 @@
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.goalCard:hover { border-color: var(--gold); }
+.goalCard:hover { border-color: var(--accent); }
 
 .ring {
   flex-shrink: 0;
@@ -182,9 +182,9 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid var(--gold);
+  border: 1px solid var(--accent);
   background: transparent;
-  color: var(--gold);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +192,7 @@
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s;
 }
-.plusBtn:hover { background: var(--gold-dim); }
+.plusBtn:hover { background: var(--tint-accent-sm); }
 
 /* ── Quick deposit inline form ── */
 .quickDeposit {
@@ -217,7 +217,7 @@
   outline: none;
   min-width: 0;
 }
-.depositInput:focus { border-color: var(--gold); }
+.depositInput:focus { border-color: var(--accent); }
 .depositInput::placeholder { color: var(--text3); }
 
 .depositConfirm {
@@ -225,8 +225,8 @@
   height: 34px;
   border-radius: var(--radius);
   border: none;
-  background: var(--gold);
-  color: #000;
+  background: var(--accent);
+  color: #fff;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
@@ -267,9 +267,9 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 1px solid var(--gold);
-  /* background: var(--gold-dim); */
-  color: var(--gold);
+  border: 1px solid var(--accent);
+  /* background: var(--tint-accent-sm); */
+  color: var(--accent);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;

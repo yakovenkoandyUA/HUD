@@ -5,8 +5,7 @@ import { ALL_NAV_SECTIONS, PROFILE_TABS } from '@/shared/components/layout/Botto
 import type { Theme, NavStyle, NavLabelMode } from '@/shared/store/uiStore'
 import { NAV_STYLE_MAX_PINNED } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
-import { useAchievementScore } from '@/features/achievements/hooks/useAchievementProgress'
-import { getUnlockedThemes, THEME_UNLOCK_LEVEL } from '@/features/achievements/levels'
+import { getUnlockedThemes, THEME_UNLOCK_CONDITIONS } from '@/features/achievements/levels'
 import styles from './ProfilePage.module.css'
 
 interface ThemePalette {
@@ -22,12 +21,12 @@ interface ThemePalette {
 }
 
 const PALETTES: ThemePalette[] = [
-  { id: 'velvet', name: 'VELVET', bg: '#0d0f1a', surface: '#1e2235', border: '#2e3450', accent: '#d4a017', second: '#6a4fc8', gold: '#d4a017', text: '#e8d5a0' },
-  { id: 'japan',  name: 'JAPAN',  bg: '#F5F0EB', surface: '#EDE8E2', border: '#D5CEC5', accent: '#C8102E', second: '#1a1a1a', gold: '#8B7355',  text: '#1a1a1a' },
+  { id: 'aurum', name: 'AURUM', bg: '#090d18', surface: '#141a2b', border: '#2b3550', accent: '#e09a30', second: '#b94b6a', gold: '#d9b45d', text: '#f0eadc' },
+  { id: 'mimir',  name: 'MIMIR',  bg: '#f3f0eb', surface: '#faf8f4', border: '#d8d3cb', accent: '#d9365f', second: '#3a5a8c', gold: '#9b7740',  text: '#181a22' },
   { id: 'cyber',  name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', second: '#00d4ff', gold: '#f0a020',  text: '#d8eaf8' },
   { id: 'noir',   name: 'NOIR',   bg: '#080808', surface: '#1a1a1a', border: '#2a2a2a', accent: '#d0d0d0', second: '#606060', gold: '#c8c8c8',  text: '#ebebeb' },
   { id: 'pixel',  name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', second: '#1848c8', gold: '#e8a020',  text: '#181028' },
-  { id: 'arctic', name: 'ARCTIC', bg: '#1e2330', surface: '#313a4e', border: '#4a5570', accent: '#88c0d0', second: '#b48ead', gold: '#ebcb8b',  text: '#eceff4' },
+  { id: 'arctic', name: 'ARCTIC', bg: '#101722', surface: '#1e2b3f', border: '#2a4053', accent: '#79d4e6', second: '#b48ead', gold: '#d8c58f',  text: '#eef5f8' },
 ]
 
 /** Ansuz rune for hub preview */
@@ -142,16 +141,19 @@ const LockIcon: React.FC = () => (
  * MeAppearance
  * ------------
  * Підекран "Вигляд" вкладки "Я": теми + стиль навігації + закріплені розділи.
- * Теми відкриваються за рівнями досягнень: velvet і japan доступні одразу,
+ * Теми відкриваються за рівнями досягнень: aurum і mimir доступні одразу,
  * решта — за рівнями 3, 5, 7, 9.
  */
 const MeAppearance: React.FC = () => {
   const { activeProfile } = useProfileStore()
   const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections, pinnedProfileTabs, setPinnedProfileTabs } = useUiStore()
   const { showToast } = useUiStore()
-  const score = useAchievementScore()
   const isAdmin = activeProfile?.role === 'admin'
-  const unlockedThemes = isAdmin ? PALETTES.map(p => p.id) : getUnlockedThemes(score.earned)
+  const unlockedAchievementIds = new Set((activeProfile?.unlockedAchievements ?? []).map(u => u.id))
+  const onboardingCompleted = activeProfile?.onboardingCompleted ?? false
+  const unlockedThemes = isAdmin
+    ? PALETTES.map(p => p.id)
+    : getUnlockedThemes(unlockedAchievementIds, onboardingCompleted)
 
   return (
     <>
@@ -160,7 +162,7 @@ const MeAppearance: React.FC = () => {
           {PALETTES.map(p => {
             const isActive = theme === p.id
             const isUnlocked = unlockedThemes.includes(p.id)
-            const unlockLevel = THEME_UNLOCK_LEVEL[p.id] ?? 1
+            const unlockHint = THEME_UNLOCK_CONDITIONS[p.id]?.hint ?? ''
             return (
               <button
                 key={p.id}
@@ -174,7 +176,7 @@ const MeAppearance: React.FC = () => {
                 }}
                 onClick={() => {
                   if (!isUnlocked) {
-                    showToast(`Розблокується на рівні ${unlockLevel}`, 'info')
+                    showToast(unlockHint, 'info')
                     return
                   }
                   setTheme(p.id)
@@ -205,7 +207,7 @@ const MeAppearance: React.FC = () => {
                 {!isUnlocked && (
                   <span className={styles.themeLockBadge} style={{ color: p.text, background: `${p.bg}cc` }}>
                     <LockIcon />
-                    {unlockLevel} рівень
+                    {unlockHint}
                   </span>
                 )}
               </button>

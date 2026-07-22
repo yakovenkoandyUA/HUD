@@ -100,34 +100,34 @@
 }
 
 
-/* ── CASTLE 🏰 ─────────────────────────────────────────────────────────────── */
-[data-theme="velvet"] {
-  --bg:         #0d0f1a;
-  --bg2:        #121520;
-  --bg3:        #181c28;
-  --surface:    #1e2235;
-  --surface2:   #252a40;
-  --border:     #2e3450;
-  --border2:    #3a4260;
+/* ── VELVET 🍷 ─────────────────────────────────────────────────────────────── */
+[data-theme="aurum"] {
+  --bg:         #090d18;
+  --bg2:        #0e1220;
+  --bg3:        #131829;
+  --surface:    #141a2b;
+  --surface2:   #1b2237;
+  --border:     #2b3550;
+  --border2:    #3a4666;
 
-  --accent:      #c99a2e;
-  --accent-dim:  #8f6b1d;
-  --accent-glow: rgba(201, 154, 46, 0.30);
-  --accent-soft: rgba(201, 154, 46, 0.12);
+  --accent:      #e09a30;
+  --accent-dim:  #a87020;
+  --accent-glow: rgba(224, 154, 48, 0.30);
+  --accent-soft: rgba(224, 154, 48, 0.12);
 
-  --second:      #6a4fc8;
-  --second-soft: rgba(106, 79, 200, 0.20);
+  --second:      #b94b6a;
+  --second-soft: rgba(185, 75, 106, 0.20);
 
-  /* gold — окремо від accent: Мімір / мудрість / досягнення / premuim */
-  --gold:        #e0b95a;
-  --gold-dim:    rgba(224, 185, 90, 0.16);
+  /* gold — декоративний: заголовки секцій, ранг, досягнення, преміум */
+  --gold:        #d9b45d;
+  --gold-dim:    rgba(217, 180, 93, 0.16);
 
   --task-quest:    var(--accent);
   --task-shopping: var(--second);
 
-  --text:   #e8d5a0;
-  --text2:  #a89060;
-  --text3:  #6a5830;
+  --text:   #f0eadc;
+  --text2:  #aeb5c8;
+  --text3:  #69738c;
 
   --f1-back: #000;
 
@@ -142,85 +142,54 @@
   --font-display: 'Cinzel', 'Bebas Neue', serif;
 }
 
-/* ── JAPAN 🎌 ──────────────────────────────────────────────────────────────── */
-[data-theme="japan"] {
-  /* Більше контрасту між шарами — картки тепер помітно виділяються на фоні */
-  --bg:         #F5F0EB;
-  --bg2:        #EDE7DF;
-  --bg3:        #E4DDD3;
-  --surface:    #D8D0C4;
-  --surface2:   #CEC6BA;
-  --border:     #BDB5A8;
-  --border2:    #AFA79A;
+/* ── MIMIR ᚨ ─────────────────────────────────────────────────────────────── */
+[data-theme="mimir"] {
+  --bg:         #f3f0eb;
+  --bg2:        #ede9e3;
+  --bg3:        #e6e1da;
+  --surface:    #faf8f4;
+  --surface2:   #e9e5df;
+  --border:     #d8d3cb;
+  --border2:    #c5beb4;
 
-  --accent:      #C8102E;
-  --accent-dim:  #8b0b1f;
-  --accent-glow: rgba(200, 16, 46, 0.20);
-  --accent-soft: rgba(200, 16, 46, 0.08);
+  --accent:      #d9365f;
+  --accent-dim:  #9e2948;
+  --accent-glow: rgba(217, 54, 95, 0.20);
+  --accent-soft: rgba(217, 54, 95, 0.08);
 
-  /* Kon (紺) — традиційний японський індиго замість чорного */
-  --second:      #1F3A5F;
-  --second-soft: rgba(31, 58, 95, 0.10);
+  --second:      #3a5a8c;
+  --second-soft: rgba(58, 90, 140, 0.10);
 
-  --gold:        #8B7355;
-  --gold-dim:    rgba(139, 115, 85, 0.15);
+  --gold:        #9b7740;
+  --gold-dim:    rgba(155, 119, 64, 0.15);
 
   --task-quest:    var(--accent);
-  --task-shopping: var(--gold);
+  --task-shopping: var(--second);
 
-  --text:   #1a1a1a;
-  --text2:  #5a5450;
-  --text3:  #8a8480;
+  --text:   #181a22;
+  --text2:  #5f6470;
+  --text3:  #9297a2;
 
-  --f1-back: #F5F0EB;
+  --f1-back: #f3f0eb;
 
-  --learning:      #1F3A5F;
-  --learning-soft: rgba(31, 58, 95, 0.10);
+  --learning:      #3a5a8c;
+  --learning-soft: rgba(58, 90, 140, 0.10);
 
   --positive:      #2d6a4f;
   --positive-soft: rgba(45, 106, 79, 0.12);
-  --negative:      #C8102E;
-  --negative-soft: rgba(200, 16, 46, 0.08);
+  --negative:      #c82020;
+  --negative-soft: rgba(200, 32, 32, 0.08);
 
-  --font-display: 'Cormorant Garamond', 'Bebas Neue', serif;
+  --font-display: 'Furore', 'Oswald', sans-serif;
 
   --tap-bg: rgba(0, 0, 0, 0.05);
 }
 
-/* Japan: washi paper ruled lines + ink accent top stripe */
-[data-theme="japan"] body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 1;
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 27px,
-    rgba(139, 115, 85, 0.10) 28px
-  );
-}
-
-[data-theme="japan"] body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  pointer-events: none;
-  z-index: 0;
-  background: linear-gradient(90deg, var(--accent) 0%, transparent 70%);
-  opacity: 0.55;
-}
-
 /* Texture/atmosphere effects off on pages with their own bg */
-[data-theme="velvet"][data-page="f1"] body::after,
-[data-theme="velvet"][data-page="memories"] body::after,
-[data-theme="velvet"][data-page="watchlist"] body::after,
-[data-theme="velvet"][data-page="recipes"] body::after { display: none; }
+[data-theme="aurum"][data-page="f1"] body::after,
+[data-theme="aurum"][data-page="memories"] body::after,
+[data-theme="aurum"][data-page="watchlist"] body::after,
+[data-theme="aurum"][data-page="recipes"] body::after { display: none; }
 
 [data-theme="pixel"][data-page="recipes"] body::after { display: none; }
 [data-theme="cyber"][data-page="recipes"] body::after { display: none; }
@@ -367,7 +336,7 @@
 }
 
 /* ── Light-theme overrides for --cat-* (WCAG AA on light surfaces) ── */
-[data-theme="japan"],
+[data-theme="mimir"],
 [data-theme="pixel"] {
   --cat-quest: #c01028;
   --cat-shop:  #5830a8;
@@ -393,33 +362,33 @@
 
 /* ── ARCTIC ❄ (Nord — cool polar blues + aurora borealis) ──────────────────── */
 [data-theme="arctic"] {
-  --bg:         #1e2330;
-  --bg2:        #242a38;
-  --bg3:        #2a3040;
-  --surface:    #313a4e;
-  --surface2:   #384354;
-  --border:     #4a5570;
-  --border2:    #586280;
+  --bg:         #101722;
+  --bg2:        #141c2a;
+  --bg3:        #182333;
+  --surface:    #1e2b3f;
+  --surface2:   #243348;
+  --border:     #2a4053;
+  --border2:    #39566c;
 
-  --accent:      #88c0d0;
-  --accent-dim:  #5e8fa0;
-  --accent-glow: rgba(136, 192, 208, 0.30);
-  --accent-soft: rgba(136, 192, 208, 0.10);
+  --accent:      #79d4e6;
+  --accent-dim:  #4b9caf;
+  --accent-glow: rgba(121, 212, 230, 0.30);
+  --accent-soft: rgba(121, 212, 230, 0.10);
 
   --second:      #b48ead;
   --second-soft: rgba(180, 142, 173, 0.18);
 
-  --gold:        #ebcb8b;
-  --gold-dim:    rgba(235, 203, 139, 0.18);
+  --gold:        #d8c58f;
+  --gold-dim:    rgba(216, 197, 143, 0.18);
 
   --task-quest:    var(--accent);
   --task-shopping: var(--second);
 
-  --text:   #eceff4;
-  --text2:  #9aa8bc;
-  --text3:  #5a6478;
+  --text:   #eef5f8;
+  --text2:  #a7bac5;
+  --text3:  #687d89;
 
-  --f1-back: #1e2330;
+  --f1-back: #101722;
 
   --learning:      #81a1c1;
   --learning-soft: rgba(129, 161, 193, 0.15);
@@ -434,15 +403,17 @@
      Philosopher має повний кириличний набір і цифри, тож фолбек був ідентичний
      і непомітний для кирилиці — лишаємо тільки його. */
   --font-display: 'Philosopher', serif;
+
+  --fab-icon-color: #0d1420;
 }
 
 /* Arctic: gradient body + sea glow at bottom */
 [data-theme="arctic"] body {
   background:
-    radial-gradient(ellipse 150% 22% at 50% 104%, rgba(136,192,208,0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 80%  14% at 22% 110%, rgba(180,142,173,0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 70%  12% at 78% 112%, rgba(136,192,208,0.04) 0%, transparent 55%),
-    linear-gradient(180deg, #191c2a 0%, #1e1a30 100%);
+    radial-gradient(ellipse 150% 22% at 50% 104%, rgba(121,212,230,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 80%  14% at 22% 110%, rgba(180,142,173,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 70%  12% at 78% 112%, rgba(121,212,230,0.03) 0%, transparent 55%),
+    linear-gradient(180deg, #0d1420 0%, #101722 100%);
   background-attachment: fixed;
 }
 
@@ -484,10 +455,11 @@
   animation: auroraShift 10s ease-in-out infinite;
 }
 
+
 /* ── Theme atmosphere effects ───────────────────────────────────────────────── */
 
 
-[data-theme="velvet"] body::after {
+[data-theme="aurum"] body::after {
   content: '';
   position: fixed;
   inset: 0;

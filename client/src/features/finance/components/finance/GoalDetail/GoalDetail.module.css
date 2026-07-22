@@ -113,8 +113,8 @@
 .input::placeholder { color: var(--text3); }
 
 .contribBtn {
-  background: var(--gold);
-  color: #000;
+  background: var(--accent);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   padding: 10px 16px;

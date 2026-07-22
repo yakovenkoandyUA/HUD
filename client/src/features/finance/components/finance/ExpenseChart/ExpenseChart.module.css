@@ -52,8 +52,8 @@
 }
 
 .switchActive {
-  color: var(--gold);
-  background: var(--gold-dim);
+  color: var(--accent);
+  background: var(--tint-accent-sm);
 }
 
 /* ── Chart body ── */

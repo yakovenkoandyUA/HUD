@@ -79,7 +79,7 @@
 /* dark themes: hero separates more clearly from page bg */
 [data-theme="cyber"] .hero:not(.heroCovered),
 [data-theme="midnight"] .hero:not(.heroCovered),
-[data-theme="velvet"] .hero:not(.heroCovered) {
+[data-theme="aurum"] .hero:not(.heroCovered) {
   background: color-mix(in srgb, var(--space-color, var(--accent)) 12%, var(--surface));
   border-bottom-color: color-mix(in srgb, var(--space-color, var(--accent)) 28%, transparent);
 }

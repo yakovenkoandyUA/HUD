@@ -103,19 +103,19 @@
 }
 
 .stepLabelActive {
-  color: var(--gold);
+  color: var(--accent);
 }
 
 .stepDot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--gold);
+  background: var(--accent);
   flex-shrink: 0;
 }
 
 .stepDotActive {
-  background: var(--gold);
+  background: var(--accent);
 }
 
 .stepLine {
@@ -130,7 +130,7 @@
   position: absolute;
   inset: 0;
   width: 0;
-  background: var(--gold);
+  background: var(--accent);
   transition: width 0.3s ease;
 }
 

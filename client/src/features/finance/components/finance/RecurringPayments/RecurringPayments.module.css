@@ -192,9 +192,9 @@
 }
 
 .currencyActive {
-  background: var(--gold-dim);
-  border-color: rgba(220, 201, 169, 0.4);
-  color: var(--gold);
+  background: var(--tint-accent-sm);
+  border-color: var(--accent-border-strong);
+  color: var(--accent);
 }
 
 .conversionHint {

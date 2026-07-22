@@ -37,7 +37,7 @@
   flex-shrink: 0;
 }
 .stat:active { opacity: 0.7; }
-.statActive  { background: color-mix(in srgb, var(--gold) 10%, transparent); }
+.statActive  { background: var(--tint-accent-10); }
 
 .statNum {
   font-family: var(--font-mono);
@@ -57,8 +57,8 @@
   transition: color 0.15s;
 }
 
-.statActive .statNum  { color: var(--gold); }
-.statActive .statLabel { color: var(--gold); opacity: 0.85; }
+.statActive .statNum  { color: var(--accent); }
+.statActive .statLabel { color: var(--accent); opacity: 0.85; }
 
 .statSep {
   font-family: var(--font-ui);
@@ -180,8 +180,8 @@
 .tab:hover { color: var(--text2); }
 
 .tabActive {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .tabIcon {

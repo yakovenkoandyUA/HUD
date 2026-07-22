@@ -7,14 +7,13 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { SPACE_TYPE_CONFIG } from '@/features/spaces/data/spaceTypes'
 import { SPACE_TEMPLATES } from '@/features/profile/spaceTemplates'
-import PillSelector from '@/shared/components/ui/PillSelector'
 import styles from './SpacesStrip.module.css'
 
 /**
  * SpacesStrip
  * -----------
  * Горизонтальний ряд карток просторів на Dashboard.
- * Кнопка "+" відкриває sheet для створення нового простору (template → form).
+ * Кнопка "+" відкриває single-step sheet з вибором типу + форма.
  * @prop {boolean} [f1Enabled] — якщо false, аватари рендеряться 85px (більше місця без F1 блоку)
  */
 interface SpacesStripProps {
@@ -26,14 +25,8 @@ const COLORS = [
   '#f39c12', '#1abc9c', '#e91e8c', '#607d8b',
 ]
 
-const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
-  { value: 'trip',    label: 'Поїздка'    },
-  { value: 'vehicle', label: 'Авто'       },
-  { value: 'home',    label: 'Дім'        },
-  { value: 'pet',     label: 'Улюбленець' },
-  { value: 'sports',  label: 'Спорт'      },
-  { value: 'shared',  label: 'Спільний'   },
-]
+// Types shown in the picker — 6 cards in 3×2 grid
+const PICKER_TYPES: SpaceType[] = ['trip', 'vehicle', 'home', 'pet', 'sports', 'shared']
 
 const PlusIcon: React.FC = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
@@ -52,11 +45,13 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
 
   // ── Sheet state ──
   const [open, setOpen]     = useState(false)
-  const [step, setStep]     = useState<'template' | 'form'>('template')
   const [name, setName]     = useState('')
   const [type, setType]     = useState<SpaceType>('shared')
   const [color, setColor]   = useState(COLORS[0])
   const [saving, setSaving] = useState(false)
+
+  // Track if name was auto-filled so we can replace on type change
+  const nameIsDefault = useRef(false)
 
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(() => setOpen(false), { enabled: open, overlayRef })
@@ -80,14 +75,30 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
   }, [])
 
   const openSheet = () => {
-    setName(''); setType('shared'); setColor(COLORS[0])
-    setStep('template')
+    const tpl = SPACE_TEMPLATES.find(t => t.type === 'shared')
+    setName(tpl?.defaultName ?? '')
+    nameIsDefault.current = true
+    setType('shared')
+    setColor(tpl?.color ?? COLORS[0])
     setOpen(true)
   }
 
-  const pickTemplate = (tpl: typeof SPACE_TEMPLATES[number] | null) => {
-    if (tpl) { setName(tpl.defaultName); setType(tpl.type); setColor(tpl.color) }
-    setStep('form')
+  const pickType = (t: SpaceType) => {
+    setType(t)
+    const tpl = SPACE_TEMPLATES.find(s => s.type === t)
+    const cfg = SPACE_TYPE_CONFIG[t]
+    // Auto-fill color always
+    const newColor = tpl?.color ?? cfg.color
+    setColor(newColor)
+    // Auto-fill name only if still default
+    if (nameIsDefault.current) {
+      setName(tpl?.defaultName ?? '')
+    }
+  }
+
+  const handleNameChange = (val: string) => {
+    nameIsDefault.current = false
+    setName(val)
   }
 
   const handleCreate = () => {
@@ -174,85 +185,66 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
         <div className={styles.overlay} ref={overlayRef} onClick={() => setOpen(false)}>
           <div className={styles.sheet} ref={sheetRef} onClick={e => e.stopPropagation()}>
             <div className={styles.sheetHandle} />
+            <h3 className={styles.sheetTitle}>Новий простір</h3>
 
-            {step === 'template' ? (
-              <>
-                <h3 className={styles.sheetTitle}>Новий простір</h3>
-                <div className={styles.templateGrid}>
-                  {SPACE_TEMPLATES.map(tpl => (
-                    <button key={tpl.id} type="button" className={styles.templateBtn} onClick={() => pickTemplate(tpl)}>
-                      <span className={styles.templateDot} style={{ background: `${tpl.color}22`, color: tpl.color }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <rect x="3" y="3" width="18" height="18" rx="3"/>
-                        </svg>
-                      </span>
-                      <span className={styles.templateLabel}>{tpl.label}</span>
-                    </button>
-                  ))}
-                  <button type="button" className={styles.templateBtn} onClick={() => pickTemplate(null)}>
-                    <span className={styles.templateDot} style={{ background: 'var(--bg)', color: 'var(--text3)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M12 5v14M5 12h14"/>
-                      </svg>
-                    </span>
-                    <span className={styles.templateLabel}>Свій</span>
+            {/* Name */}
+            <span className={styles.fieldLabel}>НАЗВА</span>
+            <input
+              className={styles.fieldInput}
+              value={name}
+              onChange={e => handleNameChange(e.target.value)}
+              placeholder="Мій простір"
+              autoFocus
+              onKeyDown={e => e.key === 'Enter' && handleCreate()}
+            />
+
+            {/* Type picker */}
+            <span className={styles.fieldLabel}>ТИП</span>
+            <div className={styles.typeGrid}>
+              {PICKER_TYPES.map(t => {
+                const cfg = SPACE_TYPE_CONFIG[t]
+                const isActive = type === t
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    className={`${styles.typeCard} ${isActive ? styles.typeCardActive : ''}`}
+                    style={{ '--tc': cfg.color } as React.CSSProperties}
+                    onClick={() => pickType(t)}
+                  >
+                    <div className={styles.typeImgWrap}>
+                      <img src={cfg.iconSrc} className={styles.typeImg} alt="" aria-hidden="true" />
+                    </div>
+                    <span className={styles.typeLabel}>{cfg.label}</span>
                   </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <button type="button" className={styles.backBtn} onClick={() => setStep('template')}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M15 18l-6-6 6-6"/>
-                    </svg>
-                    Назад
-                  </button>
-                  <h3 className={styles.sheetTitle} style={{ margin: 0 }}>Новий простір</h3>
-                </div>
+                )
+              })}
+            </div>
 
-                <span className={styles.fieldLabel}>НАЗВА</span>
-                <input
-                  className={styles.fieldInput}
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Мій простір"
-                  autoFocus
-                  onKeyDown={e => e.key === 'Enter' && handleCreate()}
-                />
-
-                <span className={styles.fieldLabel}>ТИП</span>
-                <PillSelector
-                  options={TYPE_OPTIONS}
-                  value={type}
-                  onChange={v => setType(v as SpaceType)}
-                />
-
-                <span className={styles.fieldLabel}>КОЛІР</span>
-                <div className={styles.colorRow}>
-                  {COLORS.map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      className={`${styles.colorSwatch} ${color === c ? styles.colorSwatchActive : ''}`}
-                      style={{ background: c }}
-                      onClick={() => setColor(c)}
-                      aria-label={c}
-                    />
-                  ))}
-                </div>
-
+            {/* Color */}
+            <span className={styles.fieldLabel}>КОЛІР</span>
+            <div className={styles.colorRow}>
+              {COLORS.map(c => (
                 <button
+                  key={c}
                   type="button"
-                  className={styles.primaryBtn}
-                  style={{ background: color }}
-                  onClick={handleCreate}
-                  disabled={saving || !name.trim()}
-                >
-                  {saving ? 'Створюємо…' : 'Створити простір'}
-                </button>
-              </>
-            )}
+                  className={`${styles.colorSwatch} ${color === c ? styles.colorSwatchActive : ''}`}
+                  style={{ background: c }}
+                  onClick={() => setColor(c)}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              style={{ background: color }}
+              onClick={handleCreate}
+              disabled={saving || !name.trim()}
+            >
+              {saving ? 'Створюємо…' : 'Створити простір'}
+            </button>
           </div>
         </div>,
         document.body

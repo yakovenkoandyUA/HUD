@@ -132,8 +132,8 @@
 }
 
 .tabActive {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .tabActions {

@@ -268,8 +268,8 @@
 
 /* ── Velvet: gold tones ─────────────────────────────────────── */
 
-:global([data-theme='velvet']) .balanceCurrency  { color: var(--gold); }
-:global([data-theme='velvet']) .statValueAccent  { color: var(--gold); }
+:global([data-theme='aurum']) .balanceCurrency  { color: var(--gold); }
+:global([data-theme='aurum']) .statValueAccent  { color: var(--gold); }
 
 /* ── Pixel: vivid red bg — white text ───────────────────────── */
 
@@ -296,13 +296,13 @@
 
 /* ── Japan: light bg — dark text ───────────────────────────── */
 
-:global([data-theme='japan']) .balanceAmount     { color: var(--text); }
-:global([data-theme='japan']) .balanceCurrency   { color: var(--accent); }
-:global([data-theme='japan']) .balanceSubLabel   { color: var(--surface2); }
-:global([data-theme='japan']) .statValue         { color: var(--text); }
-:global([data-theme='japan']) .statValueAccent   { color: var(--accent); }
-:global([data-theme='japan']) .statSub           { color: var(--surface2); }
-:global([data-theme='japan']) .statLabel         { color: var(--surface2); }
+:global([data-theme='mimir']) .balanceAmount     { color: var(--text); }
+:global([data-theme='mimir']) .balanceCurrency   { color: var(--accent); }
+:global([data-theme='mimir']) .balanceSubLabel   { color: var(--surface2); }
+:global([data-theme='mimir']) .statValue         { color: var(--text); }
+:global([data-theme='mimir']) .statValueAccent   { color: var(--accent); }
+:global([data-theme='mimir']) .statSub           { color: var(--surface2); }
+:global([data-theme='mimir']) .statLabel         { color: var(--surface2); }
 
 /* ── Cyber: dark neon bg — boost label visibility ───────────── */
 

@@ -120,7 +120,7 @@
 }
 
 /* Light themes: cream icons need to be darkened */
-:global([data-theme="japan"]) .spaceIconImg,
+:global([data-theme="mimir"]) .spaceIconImg,
 :global([data-theme="pixel"]) .spaceIconImg {
   filter: brightness(0) opacity(0.5);
 }
@@ -598,7 +598,7 @@
 }
 
 /* Light themes: darken cream icons in icon zone */
-:global([data-theme="japan"]) .templateIconZone img,
+:global([data-theme="mimir"]) .templateIconZone img,
 :global([data-theme="pixel"]) .templateIconZone img {
   filter: brightness(0) opacity(0.55);
 }

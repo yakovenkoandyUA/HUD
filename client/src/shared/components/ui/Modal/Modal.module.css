@@ -55,6 +55,34 @@
   background: var(--border2);
 }
 
+/* ── Swipe hint (top, medium-height modals only) ── */
+.swipeHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.swipeHintVisible {
+  opacity: 0.75;
+  transform: translateY(0);
+  animation: swipeHintBounce 1.8s ease-in-out 0.4s infinite;
+}
+
+@keyframes swipeHintBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(3px); }
+}
+
 /* ── Header ── */
 .header {
   display: flex;

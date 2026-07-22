@@ -40,10 +40,10 @@ function formatTimeParts(d: Date): { hh: string; mm: string } {
 }
 
 const THEME_PHOTOS: Partial<Record<string, string>> = {
-  velvet: '/theme/lunar.webp',
+  aurum: '/theme/lunar.webp',
   cyber:  '/theme/cyber.webp',
   noir:   '/theme/noir.webp',
-  japan:  '/theme/japan.webp',
+  mimir:  '/theme/mimir.webp',
   pixel:  '/theme/pixel.webp',
   arctic: '/theme/arctic.webp',
 }
@@ -60,6 +60,27 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
     const id = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    if (profile?.city || !navigator.geolocation) return
+    navigator.permissions?.query({ name: 'geolocation' }).then(status => {
+      if (status.state !== 'granted') return
+      setGeoState('loading')
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const city = await reverseGeocodeCity(pos.coords.latitude, pos.coords.longitude)
+            if (city) await updateProfile({ city })
+            setGeoState('idle')
+          } catch {
+            setGeoState('idle')
+          }
+        },
+        () => setGeoState('denied'),
+        { timeout: 8000 },
+      )
+    }).catch(() => {})
+  }, [profile?.city, updateProfile])
 
   const dateStr     = formatDateOnly(now)
   const { hh, mm }  = formatTimeParts(now)

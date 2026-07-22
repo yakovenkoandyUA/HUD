@@ -69,7 +69,7 @@ const F1Screen: React.FC = () => {
   })()
   const bgRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const showBg = theme !== 'japan'
+  const showBg = theme !== 'mimir'
 
   useEffect(() => {
     fetchPredictions()

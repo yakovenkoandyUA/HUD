@@ -19,7 +19,7 @@
   object-fit: contain;
 }
 /* Трек-SVG має хардкоджений stroke="white" — невидимий на світлих темах без інверсії */
-:global([data-theme="japan"]) .watermark { filter: invert(1); opacity: 0.04; }
+:global([data-theme="mimir"]) .watermark { filter: invert(1); opacity: 0.04; }
 :global([data-theme="pixel"]) .watermark { filter: invert(1); opacity: 0.05; }
 
 /* ── Header row: flag + name ── */

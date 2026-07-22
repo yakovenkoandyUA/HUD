@@ -2,41 +2,50 @@
 
 ## Теми
 
-6 тем: **velvet** (default) / **japan** / **cyber** / **noir** / **pixel** / **arctic**
+6 тем: **aurum** (default) / **mimir** / **cyber** / **noir** / **pixel** / **arctic**
 Перемикання через `data-theme` атрибут на `<html>`.
 Зберігається в `uiStore` → `localStorage` (ключ `hud-ui`).
 
 ```tsx
 // uiStore.ts
-theme: 'velvet' | 'japan' | 'cyber' | 'noir' | 'pixel' | 'arctic'
+theme: 'aurum' | 'mimir' | 'cyber' | 'noir' | 'pixel' | 'arctic'
 setTheme: (theme) => void
 ```
 
-### velvet (default)
-Темно-синє з золотом. Середньовічна бібліотека.
+### aurum (default)
+Midnight navy + warm gold accent + wine secondary + antique gold decorative. Класична темна тема MIMIR.
+- `--accent` (warm gold #e09a30): CTA, FAB, active nav, selected chips, progress, focus ring
+- `--second` (wine): secondary interactive — task-shopping, теплий контраст до gold
+- `--gold` (antique gold #d9b45d): ТІЛЬКИ декоративне — заголовки секцій, ранг, досягнення, рейтингові зірки, F1 подіум
+- `--text` (ivory), `--text2` (cool blue-gray), `--text3` (muted slate)
+- Cinzel font-display для класичної типографіки
 ```css
-[data-theme="velvet"] {
-  --bg: #0d0f1a;  --surface: #1e2235;  --surface2: #252a40;
-  --accent: #c99a2e;  --accent-dim: #8f6b1d;
-  --gold: #e0b95a;  --gold-dim: rgba(224,185,90,0.16);
-  --text: #e8d5a0;  --text2: #a89060;  --text3: #6a5830;
+[data-theme="aurum"] {
+  --bg: #090d18;  --surface: #141a2b;  --surface2: #1b2237;
+  --accent: #e09a30;  --accent-dim: #a87020;
+  --second: #b94b6a;  --second-soft: rgba(185,75,106,0.20);
+  --gold: #d9b45d;  --gold-dim: rgba(217,180,93,0.16);
+  --text: #f0eadc;  --text2: #aeb5c8;  --text3: #69738c;
+  --border: #2b3550;  --border2: #3a4666;
   --font-display: 'Cinzel', 'Bebas Neue', serif;
 }
 ```
 
-### japan
-Світлий пергамент, червоний акцент. Японська рукопис.
+### mimir
+Базова світла тема MIMIR. Пергаментний фон, малиновий accent, нордична типографіка.
+Замінила japan у v2 (`uiStore persist version 2` — migration japan→mimir).
 ```css
-[data-theme="japan"] {
-  --bg: #F5F0EB;  --surface: #D8D0C4;  --surface2: #CEC6BA;
-  --accent: #C8102E;  --accent-dim: #8b0b1f;
-  --gold: #8B7355;
-  --text: #1a1a1a;  --text2: #5a5450;  --text3: #8a8480;
-  --font-display: 'Cormorant Garamond', 'Bebas Neue', serif;
+[data-theme="mimir"] {
+  --bg: #f3f0eb;  --surface: #faf8f4;  --surface2: #e9e5df;
+  --accent: #d9365f;  --accent-dim: #9e2948;
+  --gold: #9b7740;
+  --text: #181a22;  --text2: #5f6470;  --text3: #9297a2;
+  --border: #d8d3cb;  --border2: #c5beb4;
+  --font-display: 'Furore', 'Oswald', sans-serif;
 }
-/* body::after — washi ruled lines; body::before — червона пляма зверху */
 ```
-F1 banner: **light** (`LIGHT_THEMES = new Set(['pixel', 'japan'])`)
+F1 banner: **light** (`LIGHT_THEMES = new Set(['pixel', 'mimir'])`)
+Без декоративних текстур (жодного body::after/before).
 
 ### cyber
 Темно-синій неон, рожевий акцент. Кіберпанк.
@@ -114,8 +123,7 @@ F1 banner: **dark** (arctic — світлий акцент на темному 
 ### Per-theme font-display overrides
 | Тема | font-display |
 |------|--------------|
-| velvet | `'Cinzel', 'Bebas Neue', serif` |
-| japan | `'Cormorant Garamond', 'Bebas Neue', serif` |
+| aurum | `'Cinzel', 'Bebas Neue', serif` |
 | pixel | `'Press Start 2P', monospace` |
 | arctic | `'Philosopher', serif` |
 | cyber, noir | успадковує `:root` (`Furore`) |

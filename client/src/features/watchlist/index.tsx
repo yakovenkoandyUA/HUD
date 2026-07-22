@@ -441,6 +441,7 @@ const Watchlist: React.FC = () => {
               pose={MIMIR_DIALOGUE.watchlist_empty.pose}
               textKey={getMimirText('watchlist_empty', mimirMode)}
               onDismiss={() => { setShowWatchlistEmpty(false); markDailyShown(userId, 'watchlist_empty') }}
+              portal
             />
           </div>
         )}
@@ -568,7 +569,7 @@ const Watchlist: React.FC = () => {
               </div>
             ) : (
               <div key={`${tab}-${activeStatus ?? ''}-${[...activeGenres].join(',')}-${sortBy}-${watchScope}`} className={styles.contentAnimated}>
-                <WatchlistGrid items={tabItems} onTap={setSelected} />
+                <WatchlistGrid items={tabItems} onTap={setSelected} hasHero={isMedia && watchingItems.length > 0} />
               </div>
             )}
           </>

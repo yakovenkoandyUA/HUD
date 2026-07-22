@@ -12,19 +12,18 @@ import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import FabHint from '@/shared/components/ui/FabHint'
 import { useRecipesStore } from '@/features/recipes/store/recipesStore'
 import { useProfileStore } from '@/shared/store/profileStore'
+import { useFamilyStore } from '@/shared/store/familyStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import type { Recipe, RecipeScope } from '@/shared/types'
 import styles from './Recipes.module.css'
 
 const GHOST_COUNT = 6
 
-const SCOPE_TABS: { value: RecipeScope; label: string }[] = [
+const ALL_SCOPE_TABS: { value: RecipeScope; label: string }[] = [
   { value: 'mine',   label: 'МОЄ'       },
-  { value: 'family', label: "СІМ'Я"     },
+  { value: 'family', label: 'БЛИЗЬКІ'   },
   { value: 'all',    label: 'СПІЛЬНОТА' },
 ]
-
-const SCOPE_ORDER: RecipeScope[] = ['mine', 'family', 'all']
 
 /**
  * Recipes
@@ -36,7 +35,12 @@ const Recipes: React.FC = () => {
   const navigate = useNavigate()
   const { recipes, scope, wishlistIds, isLoading: recipesLoading, fetchRecipes, setScope, addRecipe, updateRecipe } = useRecipesStore()
   const { activeProfile } = useProfileStore()
+  const { accepted: familyAccepted, fetchFamily } = useFamilyStore()
   const { showToast } = useUiStore()
+
+  const hasFamily = familyAccepted.length > 0
+  const scopeTabs = hasFamily ? ALL_SCOPE_TABS : ALL_SCOPE_TABS.filter(t => t.value !== 'family')
+  const scopeOrder = scopeTabs.map(t => t.value)
 
   const [showForm, setShowForm]           = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
@@ -46,14 +50,20 @@ const Recipes: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showIngredientSearch, setShowIngredientSearch] = useState(false)
 
-  const scopeIndex = SCOPE_ORDER.indexOf(scope)
+  const scopeIndex = scopeOrder.indexOf(scope) === -1 ? 0 : scopeOrder.indexOf(scope)
   const swipeRef = useSwipeTabs({
-    count: SCOPE_ORDER.length,
+    count: scopeOrder.length,
     activeIndex: scopeIndex,
-    onChange: i => handleScopeChange(SCOPE_ORDER[i]),
+    onChange: i => handleScopeChange(scopeOrder[i] as RecipeScope),
   })
 
   useEffect(() => { fetchRecipes() }, [fetchRecipes])
+  useEffect(() => { fetchFamily() }, [fetchFamily])
+
+  // якщо scope 'family' але відносин нема — переключити на 'mine'
+  useEffect(() => {
+    if (!hasFamily && scope === 'family') setScope('mine')
+  }, [hasFamily, scope, setScope])
 
   const handleScopeChange = (next: RecipeScope) => {
     setSavedOnly(false)
@@ -123,7 +133,7 @@ const Recipes: React.FC = () => {
       {/* ── Tab row — sticky, outside scrollable content ── */}
       <div className={styles.tabRow}>
         <div className={styles.tabs}>
-          {SCOPE_TABS.map(t => (
+          {scopeTabs.map(t => (
             <button
               key={t.value}
               type="button"

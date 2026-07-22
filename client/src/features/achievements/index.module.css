@@ -248,7 +248,7 @@
 
 /* ── Dark-theme overrides for hero card ── */
 
-:global([data-theme="velvet"]) .heroCard,
+:global([data-theme="aurum"]) .heroCard,
 :global([data-theme="cyber"]) .heroCard,
 :global([data-theme="noir"]) .heroCard {
   background: linear-gradient(135deg, rgba(14, 15, 23, 0.94), rgba(11, 12, 19, 0.90));
@@ -258,7 +258,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-:global([data-theme="velvet"]) .heroImg,
+:global([data-theme="aurum"]) .heroImg,
 :global([data-theme="cyber"]) .heroImg,
 :global([data-theme="noir"]) .heroImg {
   mix-blend-mode: screen;
@@ -266,7 +266,7 @@
   opacity: 0.96;
 }
 
-:global([data-theme="velvet"]) .heroImgWrap::after,
+:global([data-theme="aurum"]) .heroImgWrap::after,
 :global([data-theme="cyber"]) .heroImgWrap::after,
 :global([data-theme="noir"]) .heroImgWrap::after {
   background: radial-gradient(circle, rgba(255, 184, 52, 0.24), transparent 68%);
@@ -274,25 +274,25 @@
 
 
 
-:global([data-theme="velvet"]) .heroScoreEarned,
+:global([data-theme="aurum"]) .heroScoreEarned,
 :global([data-theme="cyber"]) .heroScoreEarned,
 :global([data-theme="noir"]) .heroScoreEarned {
   color: #edf2ff;
 }
 
-:global([data-theme="velvet"]) .heroScoreSep,
+:global([data-theme="aurum"]) .heroScoreSep,
 :global([data-theme="cyber"]) .heroScoreSep,
 :global([data-theme="noir"]) .heroScoreSep {
   color: #9c8450;
 }
 
-:global([data-theme="velvet"]) .heroScoreMax,
+:global([data-theme="aurum"]) .heroScoreMax,
 :global([data-theme="cyber"]) .heroScoreMax,
 :global([data-theme="noir"]) .heroScoreMax {
   color: #8fa0b5;
 }
 
-:global([data-theme="velvet"]) .heroSub,
+:global([data-theme="aurum"]) .heroSub,
 :global([data-theme="cyber"]) .heroSub,
 :global([data-theme="noir"]) .heroSub {
   color: rgba(205, 210, 225, 0.68);

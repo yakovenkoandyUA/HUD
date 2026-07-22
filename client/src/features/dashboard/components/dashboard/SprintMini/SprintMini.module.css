@@ -85,7 +85,7 @@
 	border-color: var(--second);
 }
 
-:global([data-theme="japan"]) .checkbox {
+:global([data-theme="mimir"]) .checkbox {
 	border-color: rgba(0, 0, 0, 0.15);
 }
 

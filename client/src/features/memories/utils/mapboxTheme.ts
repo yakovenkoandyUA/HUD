@@ -1,6 +1,6 @@
 import type { Theme } from '@/shared/store/uiStore'
 
-const DARK_THEMES: Theme[] = ['velvet', 'cyber', 'noir', 'arctic']
+const DARK_THEMES: Theme[] = ['aurum', 'cyber', 'noir', 'arctic']
 
 /**
  * getLightPresetForTheme

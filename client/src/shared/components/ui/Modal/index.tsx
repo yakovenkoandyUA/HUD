@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useModalHistory } from '@/shared/hooks/useModalHistory'
 import { useProfileStore } from '@/shared/store/profileStore'
-import hintStyles from '../../../hooks/useSwipeToDismiss.module.css'
 import styles from './Modal.module.css'
 
 /**
@@ -43,7 +42,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
 
   const drag        = useRef({ startY: 0, startTime: 0, active: false })
   const dragClosing = useRef(false)
-  const hintElRef   = useRef<HTMLDivElement | null>(null)
+  const [showHint, setShowHint] = useState(false)
 
   // Body scroll lock — tied to mounted, not isOpen, so it stays locked during close animation
   useEffect(() => {
@@ -94,9 +93,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
     return () => el.removeEventListener('focusin', onFocusIn)
   }, [mounted])
 
-  // Global hint: "свайпни вниз щоб закрити" — зникає на першому реальному свайп-закритті
-  // будь-якої draggable-модалки, або після SWIPE_DISMISS_HINT_LIMIT показів поспіль —
-  // навіть якщо юзер завжди закриває через × чи тап по фону і ніколи не свайпає.
+  // Hint "свайпни вниз щоб закрити" — тільки для модалок середньої висоти (≤55% viewport).
+  // Рендериться inline (вгорі), виміри беруться після rAF щоб layout вже був завершений.
   useEffect(() => {
     if (!draggable || !mounted) return
     const profile = useProfileStore.getState().activeProfile
@@ -104,27 +102,23 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
     const shownCount = profile?.swipeDismissShownCount ?? 0
     if (shownCount >= SWIPE_DISMISS_HINT_LIMIT) return
 
-    // Skip hint for tall modals (>55% of viewport) — it overlaps content and feels wrong
-    const modalHeight = modalRef.current?.getBoundingClientRect().height ?? 0
-    if (modalHeight > window.innerHeight * 0.55) return
-
-    const hint = document.createElement('div')
-    hint.className = hintStyles.hint
-    hint.textContent = '↓ Свайпни вниз щоб закрити'
-    document.body.appendChild(hint)
-    const t = requestAnimationFrame(() => hint.classList.add(hintStyles.hintVisible))
-    hintElRef.current = hint
-
-    const nextCount = shownCount + 1
-    useProfileStore.getState().updateProfile({
-      swipeDismissShownCount: nextCount,
-      ...(nextCount >= SWIPE_DISMISS_HINT_LIMIT ? { swipeDismissTutorialSeen: true } : {}),
+    let cancelled = false
+    const t = requestAnimationFrame(() => {
+      if (cancelled) return
+      const modalHeight = modalRef.current?.getBoundingClientRect().height ?? 0
+      if (modalHeight > window.innerHeight * 0.55) return
+      setShowHint(true)
+      const nextCount = shownCount + 1
+      useProfileStore.getState().updateProfile({
+        swipeDismissShownCount: nextCount,
+        ...(nextCount >= SWIPE_DISMISS_HINT_LIMIT ? { swipeDismissTutorialSeen: true } : {}),
+      })
     })
 
     return () => {
+      cancelled = true
       cancelAnimationFrame(t)
-      hint.remove()
-      if (hintElRef.current === hint) hintElRef.current = null
+      setShowHint(false)
     }
   }, [draggable, mounted])
 
@@ -174,7 +168,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
           overlayRef.current.style.transition = 'opacity 0.3s ease'
           overlayRef.current.style.opacity    = '0'
         }
-        if (hintElRef.current) { hintElRef.current.remove(); hintElRef.current = null }
+        setShowHint(false)
         if (!useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) {
           useProfileStore.getState().updateProfile({ swipeDismissTutorialSeen: true })
         }
@@ -224,6 +218,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
         {draggable && (
           <div ref={handleRef} className={styles.dragHandle}>
             <span className={styles.dragBar} />
+          </div>
+        )}
+        {showHint && (
+          <div className={`${styles.swipeHint} ${showHint ? styles.swipeHintVisible : ''}`}>
+            ↓ Свайпни вниз щоб закрити
           </div>
         )}
         {title && (

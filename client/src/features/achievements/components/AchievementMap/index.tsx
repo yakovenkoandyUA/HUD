@@ -111,7 +111,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
 }) => {
   const [showInfo, setShowInfo] = useState(false)
 
-  const isDark  = ['noir', 'cyber', 'velvet', 'arctic'].includes(useUiStore(s => s.theme))
+  const isDark  = ['noir', 'cyber', 'aurum', 'arctic'].includes(useUiStore(s => s.theme))
 
   const nodes       = TREE_NODES[category] ?? TREE_NODES.all
   const connections = TREE_CONNECTIONS[category] ?? TREE_CONNECTIONS.all

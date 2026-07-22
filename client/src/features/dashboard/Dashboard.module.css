@@ -159,12 +159,12 @@
 
 /* ── Dark themes: section labels/links readable ── */
 
-:global([data-theme='velvet']) .sectionLabel,
+:global([data-theme='aurum']) .sectionLabel,
 :global([data-theme='cyber'])  .sectionLabel,
 :global([data-theme='noir'])   .sectionLabel,
 :global([data-theme='arctic']) .sectionLabel { color: var(--text2); }
 
-:global([data-theme='velvet']) .sectionLink,
+:global([data-theme='aurum']) .sectionLink,
 :global([data-theme='cyber'])  .sectionLink,
 :global([data-theme='noir'])   .sectionLink,
 :global([data-theme='arctic']) .sectionLink { color: var(--text2); }
@@ -220,7 +220,7 @@
   height: 38px;
   border-radius: 50%;
   background: var(--accent);
-  color: #fff;
+  color: var(--fab-icon-color, #fff);
   display: flex;
   align-items: center;
   justify-content: center;

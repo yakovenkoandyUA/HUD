@@ -42,12 +42,12 @@ const CarHero: React.FC = () => {
     camera.lookAt(0, 0.3, 0)
 
     // ── Theme-aware lighting ──────────────────────────────────────────────────
-    const isJapan = () => document.documentElement.getAttribute('data-theme') === 'japan'
+    const isLight = () => ['mimir', 'pixel'].includes(document.documentElement.getAttribute('data-theme') ?? '')
 
-    const ambientLight = new THREE.AmbientLight(0xfff5e0, isJapan() ? 0.3 : 0.6)
+    const ambientLight = new THREE.AmbientLight(0xfff5e0, isLight() ? 0.3 : 0.6)
     scene.add(ambientLight)
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, isJapan() ? 0.6 : 1.2)
+    const dirLight = new THREE.DirectionalLight(0xffffff, isLight() ? 0.6 : 1.2)
     dirLight.position.set(5, 8, 3)
     scene.add(dirLight)
 
@@ -56,9 +56,9 @@ const CarHero: React.FC = () => {
     scene.add(pointLight)
 
     const themeObserver = new MutationObserver(() => {
-      const japan = isJapan()
-      ambientLight.intensity = japan ? 0.3 : 0.6
-      dirLight.intensity = japan ? 0.6 : 1.2
+      const light = isLight()
+      ambientLight.intensity = light ? 0.3 : 0.6
+      dirLight.intensity = light ? 0.6 : 1.2
     })
     themeObserver.observe(document.documentElement, {
       attributes: true,

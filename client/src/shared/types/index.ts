@@ -1,4 +1,5 @@
-export type Theme = 'retro' | 'warm' | 'dark' | 'japan' | 'heroes'
+/** @deprecated — use Theme from uiStore instead */
+export type Theme = 'retro' | 'warm' | 'dark' | 'mimir' | 'heroes'
 
 /** @deprecated — kept for legacy transaction data; new categories come from the backend */
 export type ExpenseCategory =

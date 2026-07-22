@@ -48,7 +48,7 @@ interface ProfileState {
 ```ts
 // persist: 'hud-ui' (localStorage)
 interface UiState {
-  theme: 'velvet'|'japan'|'cyber'|'noir'|'pixel'|'arctic'
+  theme: 'velvet'|'mimir'|'cyber'|'noir'|'pixel'|'arctic'
   navStyle: 'classic'|'pill'|'hub'
   updateAvailable: boolean
   // toast

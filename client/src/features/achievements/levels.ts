@@ -19,17 +19,20 @@ export const LEVELS: Level[] = [
   { level: 10, minRunes: 1010, label: 'МІМІР',       color: 'var(--gold)' },
 ]
 
-/** Themes available without any level requirement */
-export const DEFAULT_THEMES = ['velvet', 'japan'] as const
+/** Themes available without any requirement */
+export const DEFAULT_THEMES = ['aurum', 'mimir'] as const
 
-/** Which level each theme first becomes available */
-export const THEME_UNLOCK_LEVEL: Record<string, number> = {
-  velvet: 1,
-  japan:  1,
-  arctic: 3,
-  noir:   5,
-  cyber:  7,
-  pixel:  9,
+/**
+ * Trigger-based unlock conditions per theme.
+ * `hint` — shown in the lock badge.
+ */
+export const THEME_UNLOCK_CONDITIONS: Record<string, { hint: string }> = {
+  aurum: { hint: 'Доступна одразу' },
+  mimir:  { hint: 'Доступна одразу' },
+  noir:   { hint: 'Після onboarding' },
+  arctic: { hint: 'Після першого досягнення' },
+  cyber:  { hint: 'Заверши перший квест' },
+  pixel:  { hint: '7 днів задач поспіль' },
 }
 
 export function getLevel(earned: number): Level {
@@ -51,12 +54,23 @@ export function getLevelProgress(earned: number): number {
   return Math.round((done / span) * 100)
 }
 
-export function getUnlockedThemes(earned: number): string[] {
-  const unlocked = new Set<string>(DEFAULT_THEMES)
-  for (const lvl of LEVELS) {
-    if (earned >= lvl.minRunes && lvl.unlocksTheme) {
-      unlocked.add(lvl.unlocksTheme)
-    }
-  }
-  return Array.from(unlocked)
+/**
+ * Returns the set of theme ids available to the user based on their progress.
+ * Triggers (in order of ease):
+ *   aurum, mimir — always
+ *   noir          — onboarding completed
+ *   arctic        — at least 1 achievement unlocked
+ *   cyber         — 'completed-path' achievement (first quest finished)
+ *   pixel         — 'seven-days-fire' achievement (7 consecutive sprint days)
+ */
+export function getUnlockedThemes(
+  unlockedIds: ReadonlySet<string>,
+  onboardingCompleted: boolean,
+): string[] {
+  const unlocked: string[] = [...DEFAULT_THEMES]
+  if (onboardingCompleted)                     unlocked.push('noir')
+  if (unlockedIds.size >= 1)                   unlocked.push('arctic')
+  if (unlockedIds.has('completed-path'))        unlocked.push('cyber')
+  if (unlockedIds.has('seven-days-fire'))       unlocked.push('pixel')
+  return unlocked
 }
