@@ -372,7 +372,7 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 - [ ] **Space тижневий дайджест** — backend cron (щонеділі) → push нотифікація: "Japan Trip: 3 задачі, 2 спогади, 12 000₴ витрат цього тижня"
 - [x] **ШІ-асистент per Space** — кнопка в хедері `SpaceDetail` → bottom sheet → SSE чат; `POST /api/ai/space-chat` приймає `spaceId` + `messages[]`; system prompt залежить від `space.type` (vehicle → механік, trip → travel planner, project → PM); Claude Haiku; контекст: назва/тип + останні 5 подій/задач/нотаток
 
-### ✅ Dashboard + UI polish (2026-07-13)
+### ✅ Dashboard + UI polish (2026-07-13, 2026-07-21)
 
 - **HeroCard — фінанс блок:** видалено bar chart; замінено на stat strip (Сьогодні / 7 днів / Пік з назвою дня). Фон `var(--accent-soft)`. Контраст тексту налагоджено по всіх 6 темах: noir — `var(--surface)` фон як у решти блоків; pixel — білий текст; arctic/japan — dark text overrides; cyber — `var(--text)` для лейблів; velvet — золота ₴ і peak accent.
 - **F1 RaceCountdownStrip — баннер:** виправлено `LIGHT_THEMES`: arctic видалено (баннер dark), japan залишено (баннер light). `new Set(['pixel', 'japan'])`.
@@ -381,6 +381,16 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 - **SpacesStrip — назва картки:** `-webkit-line-clamp` змінено з 1 на 2 рядки.
 - **SpacesStrip — створення простору:** кнопка "Додати" тепер відкриває inline sheet (template → form) замість переходу на `/profile?tab=spaces`. Реалізовано через `createPortal(…, document.body)` щоб уникнути overflow/transform stacking context. `useSwipeToDismiss` для drag-to-close.
 - **AchievementsTab — XP display:** змінено з `"60 рун · до рівня 3: 20"` на `"60 / 2000 рун"` (game-style). `score.earned` — більший і яскравий (`.heroSubCurrent`), total — приглушений. Шрифт `var(--font-mono)`.
+
+### ✅ HeroCard, SpacesStrip, Memories, Profile polish (2026-07-21)
+
+- **HeroCard redesign:** без бюджету — 30/70 split: ліво баланс + "today chip" (витрачено / денний бюджет), право SVG area chart (7 днів). З бюджетом — full-width: progress bar + 3 стати. Видалено bar chart і `upcomingTotal`/`upcomingCount` відображення з картки.
+- **SpacesStrip — 85px avatars:** при `f1Enabled=false` аватари в SpacesStrip рендеряться через клас `.avatarLarge` (85px замість 64px) — більше місця без F1 блоку.
+- **Profile readability:** username і email в hero-картці профілю отримали колір `var(--text2)` замість `var(--text3)` — кращий контраст.
+- **Cyber theme surface:** `--surface` змінено з `#0a1628` на `#0e1828` — злегка тепліший, менш агресивний.
+- **memoriesStore `_deletingIds`:** виправлена race condition — при паралельному `deleteMemory` + `fetchMemories` список міг показати щойно видалений елемент. `_deletingIds: Set<string>` фільтрує результати fetch.
+- **Achievements — UX cleanup:** видалено тестову кнопку "Unlock All"; celebration modal отримав плавніший enter/exit; картки ачівок відсортовані по категоріям.
+- **DeadlineSheet redesign:** перероблено з vertical radio-list на pill-chips (PillSelector) для вибору часового інтервалу нагадування.
 
 ### ✅ Типізовані Space-вʼюхи (2026-07-11)
 
@@ -427,6 +437,58 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 
 ---
 
+---
+
+## Функціональний аудит сторінок (2026-07-21)
+
+> Відомі UX-прогалини і шорсткості по кожній сторінці після аудиту коду.
+
+### Dashboard
+- **HeroCard — баланс vs витрати:** `displayed` анімує `balance` (топап − витрати всіх часів), але лейбл "цей місяць" — семантичний розрив. Без бюджету юзер бачить загальний баланс але думає що це місячна витрата.
+- **FAB — немає "Спогад":** в expandable FAB є Витрата / Квест / Покупка / Нотатка, але немає швидкого додавання спогаду — часта дія в поїздках.
+- **MimirHint — нема fallback:** якщо `useMimirAiHint` ще завантажується і `welcomeSeen=true`, між першим рендером і відповіддю AI — порожній mimirFloat (невидима висота 0 але DOM-елемент є).
+
+### Finance
+- **patchTransaction не відправляє на бекенд:** `patchTransaction` оновлює локальний стор але `authFetch` не викликається — зміни description/amount через inline редагування не зберігаються при наступному fetchTransactions.
+- **Кеш sessionStorage обмежений 200 транзакціями:** якщо юзер робить `fetchTransactions(month)` для різних місяців — кожен раз fetchuje знову без кешу, але і не показує stale-стан.
+- **addTopup/addExpense — немає error rollback:** якщо POST /api/transactions повертає помилку, транзакція лишається у стані з temp UUID і syncStatus 'error' — немає відкату.
+
+### Sprint (Квести)
+- **AddSprintItemModal deadline chips:** після рефакторингу на inline chips (commit e262113), DeadlineSheet видалено і дата/час/нагадування — inline в форму. Перевірити що `draftTime` правильно ініціалізується при відкритті форми для існуючих задач.
+- **Drag-to-reorder (useSprintDrag):** не реалізовано для задач в SpaceDetail — там порядок фіксований по `createdAt`.
+- **TrashBin soft-delete:** TTL 24г на бекенді — юзер може не встигнути відновити якщо не знає про кошик.
+
+### Memories
+- **fetchRelated:** `GET /api/memories/:id/related` — незрозуміло що повертає (за тегами? локацією?). Не використовується в жодному компоненті крім виклику в store.
+- **MemoryMap — пустий стан:** якщо у юзера 0 спогадів і 0 планів — карта показує глобус без пінів, нема underlay hint.
+- **EditMemoryModal `withProfiles`:** при редагуванні зображення `withProfiles` не передається якщо поле не чіпали — перевірити що PATCH не скидає учасників.
+
+### Spaces
+- **SpaceDetailScreen — дублювання транзакцій DOM:** спагетті-рендер — spaceTx рендерується двічі: один раз для `pet/home` (рядки 896–931), другий раз для generic spaces (рядки 1202–1237). Якщо `type === 'pet'` але є і модуль 'finance' — покаже обидва блоки.
+- **SpacesStrip — `general` тип відсутній в TYPE_OPTIONS:** форма дозволяє вибрати `shared/trip/vehicle/home/pet/sports`, але `SPACE_TYPE_CONFIG` має `blank`. Якщо space.type = 'general' — `cfg` = undefined → `?? SPACE_TYPE_CONFIG['blank']` рятує, але тип 'general' недоступний при створенні.
+- **TripSpaceView — без quick actions:** на відміну від Vehicle/Home/Pet — TripSpaceView не має власних quick action кнопок (задачі, нотатки, спогади); для trip-space потрібно використовувати generic actions block — але він захований для `type !== 'vehicle' && type !== 'home' && type !== 'pet'`... Перевірити: `trip` попадає під generic блок (рядок 944 умова).
+
+### Recipes
+- **AI генератор — gate через PaywallGate:** кнопка AI в FAB recipes приховується за PaywallGate, але при натисканні без плану — поведінка залежить від `useCanUseFeature` — перевірити що показується UpgradePrompt, а не silent fail.
+- **RecipeDetail "Шеф":** ChefChatSheet не закривається свайпом якщо юзер свайпає по тексту чату (стандартна проблема SSE+scroll).
+
+### Watchlist
+- **Книги (Books):** тогл в профілі disabled, placeholder при відкритті табу — фактично повністю нереалізовано (UI).
+- **WatchlistStatsSheet:** рахує "реальну тривалість" через TMDB, але для anime/books — логіка тривалості інша (серія anime ≠ серія серіалу).
+
+### Profile
+- **ChangelogSheet workflow:** задокументовано що потрібно дописувати `CHANGELOG` перед кожним пушем — на практиці часто пропускається. Немає валідації в pre-push hook.
+- **MeAccount / export:** JSON export включає всі колекції але не включає VehicleEvent, HomeEvent, PetEvent — нові моделі після фази legal.
+
+### Achievements
+- **Локальний стор:** досягнення зберігаються тільки в localStorage — при логіні на новому пристрої або clearing storage всі досягнення скидаються. Бекенд-синхронізація відсутня.
+- **useAchievementProgress:** читає дані з кількох stores синхронно — при першому рендері stores ще порожні, прогрес = 0. Може викликати false unlock при першому mount (stores ще не завантажили дані, потім data load → прогрес стрибає).
+
+### F1
+- **OpenF1 polling на `/f1/live`:** якщо гонки немає (between seasons) — polling idle з помилками 404. Перевірити graceful handling.
+
+---
+
 ## Технічний борг — залишок
 
 | Задача | Статус |
@@ -434,4 +496,9 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 | Верифікація email | ✅ Закрито (mimir-hud.tech + Resend) |
 | MongoDB M10+ | 🟢 Некритично поки < 100 юзерів |
 | Семантичні токени (міграція CSS) | ✅ Закрито — 15 нових токенів, 94 заміни у 37 файлах |
-| Усі інші | ✅ Закрито |
+| `patchTransaction` — немає authFetch на бекенд | 🔴 Баг — локальні зміни губляться після fetchTransactions |
+| MeAccount export — VehicleEvent/HomeEvent/PetEvent | 🟡 Пропуск після Phase 3A |
+| Achievements localStorage — немає бекенд sync | 🟡 Ризик при зміні пристрою |
+| ChangelogSheet — ручний процес, немає pre-push hook | 🟡 Процесний борг |
+| SpaceDetail — дублювання tx-блоку для pet/home | 🟡 Код-борг (не баг для поточних юзерів) |
+| Usі інші | ✅ Закрито |

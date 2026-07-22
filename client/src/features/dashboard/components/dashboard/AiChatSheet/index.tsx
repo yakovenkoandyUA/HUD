@@ -5,13 +5,14 @@ import { getToken } from '@/shared/services/api'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
 import styles from './AiChatSheet.module.css'
 
+const MIMIR_EMPTY_SRC   = '/mimir/mimir-idle.png'
 const MIMIR_THINKING_SRC = '/mimir/mimir-thinking.png'
 
 /**
  * AiChatSheet
  * -----------
  * Bottom-sheet AI асистент MIMIR. Streaming відповіді через SSE.
- * Розпізнає домен питання (фінанси/задачі/рецепти/watchlist) і підвантажує контекст.
+ * Розпізнає домен питання (фінанси/задачі/рецепти/медіа) і підвантажує контекст.
  * Підтримує AI-дії: створення нотаток і квестів через природну мову.
  *
  * Props:
@@ -76,7 +77,7 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
   const inputRef   = useRef<HTMLTextAreaElement>(null)
   const abortRef   = useRef<AbortController | null>(null)
 
-  useSwipeToDismiss(onClose, { enabled: isOpen, bodyRef, overlayRef, sheetRef })
+  useSwipeToDismiss(onClose, { enabled: mounted, bodyRef, overlayRef, sheetRef })
   useModalHistory(onClose, isOpen)
 
   useEffect(() => {
@@ -220,8 +221,8 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
         <div ref={bodyRef} className={styles.body}>
           {messages.length === 0 ? (
             <div className={styles.empty}>
-              <img src={MIMIR_THINKING_SRC} alt="Mimir" className={styles.emptyMimir} draggable={false} />
-              <p className={styles.emptyText}>Запитай мене про свої фінанси,<br/>задачі, рецепти або watchlist.</p>
+              <img src={MIMIR_EMPTY_SRC} alt="Mimir" className={styles.emptyMimir} draggable={false} />
+              <p className={styles.emptyText}>Я допоможу знайти відповідь у твоїх фінансах,<br/>задачах, рецептах і медіа.</p>
               <div className={styles.suggestions}>
                 {SUGGESTIONS.map(s => (
                   <button

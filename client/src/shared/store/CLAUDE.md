@@ -112,6 +112,70 @@ interface AchievementsState {
 
 ---
 
+---
+
+## memoriesStore (`features/memories/store/memoriesStore.ts`)
+
+```ts
+// persist: НЕ персистується
+interface MemoriesState {
+  memories: Memory[]
+  isLoading: boolean
+  _deletingIds: Set<string>   // ← race-condition guard
+  // actions
+  fetchMemories(): Promise<void>
+  addMemory(m: Omit<Memory, 'id' | 'createdAt' | 'userId'>): Promise<string>
+  updateMemory(id: string, updates: Partial<...>): Promise<void>
+  deleteMemory(id: string): Promise<void>
+  addPhoto(memoryId, photo): Promise<void>
+  deletePhoto(memoryId, photoId): Promise<void>
+  setCover(memoryId, photoUrl): Promise<void>
+  updatePhoto(memoryId, photoId, updates): Promise<void>
+  fetchRelated(memoryId): Promise<Memory[]>
+}
+```
+
+**`_deletingIds` — race condition guard:**
+Коли `deleteMemory` викликається і потім одразу стартує `fetchMemories`, новий fetch може повернути ще-не-видалений елемент з бекенду (реплікаційна затримка або повільна відповідь).
+`_deletingIds: Set<string>` містить id елементів що знаходяться в процесі DELETE. `fetchMemories` фільтрує результати через `filter(m => !deletingIds.has(m.id))`. Після завершення DELETE (в `finally`) id видаляється з Set.
+Шаблон:
+```ts
+deleteMemory: async (id) => {
+  set(s => ({ memories: s.memories.filter(m => m.id !== id), _deletingIds: new Set([...s._deletingIds, id]) }))
+  try { await authFetch(`/api/memories/${id}`, { method: 'DELETE' }) }
+  finally { set(s => { const ids = new Set(s._deletingIds); ids.delete(id); return { _deletingIds: ids } }) }
+}
+```
+
+---
+
+## financeStore (`features/finance/store/financeStore.ts`)
+
+```ts
+// persist: sessionStorage 'hud-finance-v1' (тільки дефолтний запит без фільтру)
+interface FinanceState {
+  balance: number
+  transactions: Transaction[]
+  syncStatus: 'local' | 'syncing' | 'synced' | 'error'
+  // actions
+  fetchTransactions(month?: string): Promise<void>
+  addTopup(amount, desc, incomeCategory?, spaceId?): void
+  addExpense(amount, desc, category?, tripMemoryId?, spaceId?, subcategory?, date?): void
+  deleteTransaction(id): void
+  renameTransaction(id, title): void
+  patchTransaction(id, patch): void
+  tagTripExpenses(ids, tripMemoryId): void
+  setSyncStatus(s): void
+}
+```
+
+- Optimistic updates для всіх мутацій: UI оновлюється одразу, потім синхронізується з бекендом
+- Транзакції кешуються в `sessionStorage` (max 200 записів у пам'яті)
+- `fetchTransactions(month)` — якщо передано місяць, кеш НЕ оновлюється (фільтрований результат)
+- `tagTripExpenses` — bulk PATCH: optimistic update + паралельний PATCH для кожного id (fire-and-forget з `.catch(() => {})`)
+
+---
+
 ## Правила
 
 - Для нового store в `shared/` — тільки якщо він потрібен у 5+ різних фічах

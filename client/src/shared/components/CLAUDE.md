@@ -114,6 +114,8 @@ Slide-down toast при розблокуванні ачівки (non-blocking, �
 - AI-кнопка — PaywallGate для `aiChat` фічі + requireVerified
 - PWA update — пульсуюча крапка на аватарі при `uiStore.updateAvailable`
 
+**Примітка про `uiStore.mimirMode`:** Dashboard читає `mimirMode` з uiStore для вибору тексту діалогів Міміра (`getMimirText(key, mimirMode)`). Три режими: `'dark'|'witty'|'wise'`. Зберігається в `uiStore` (localStorage `hud-ui`).
+
 ### ChangelogSheet (`features/profile/components/ChangelogSheet`)
 Bottom sheet з журналом змін. Відкривається з `ProfileDrawer` при наявності оновлення PWA.
 Дані: `shared/data/changelog.ts` — `CHANGELOG: ChangelogEntry[]` + `APP_VERSION`.

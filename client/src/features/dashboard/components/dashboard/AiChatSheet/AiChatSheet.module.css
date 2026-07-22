@@ -103,8 +103,29 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 20px 0;
+  padding: 8px 0 20px;
+  position: relative;
 }
+
+.empty::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(
+    circle at 50% 48%,
+    rgba(74, 170, 210, 0.12) 0%,
+    rgba(74, 170, 210, 0.05) 28%,
+    transparent 58%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.empty > * { position: relative; z-index: 1; }
 
 .emptyIcon {
   color: var(--accent);
@@ -112,15 +133,16 @@
 }
 
 .emptyMimir {
-  height: 140px;
-  width: auto;
+  width: clamp(190px, 45vw, 250px);
+  height: auto;
   object-fit: contain;
   user-select: none;
   animation:
     mimirEnterChat 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both,
-    mimirFloatChat 2.4s ease-in-out infinite 0.6s,
-    eyeGlowChat 1.8s ease-in-out infinite;
-  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5));
+    mimirFloatChat 2.4s ease-in-out infinite 0.6s;
+  filter:
+    drop-shadow(0 0 14px rgba(65, 180, 220, 0.16))
+    drop-shadow(0 10px 22px rgba(0, 0, 0, 0.42));
 }
 
 .thinkingMimir {
@@ -163,7 +185,7 @@
 .emptyText {
   font-family: var(--font-ui);
   font-size: 13px;
-  color: var(--text3);
+  color: var(--text2);
   text-align: center;
   line-height: 1.6;
   margin: 0;
