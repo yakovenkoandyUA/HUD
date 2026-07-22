@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import { clearUserState } from '@/shared/utils/clearUserState'
+import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { saveRefreshToken, clearRefreshToken, authFetch } from '@/shared/services/api'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
@@ -180,12 +181,7 @@ export const useProfileStore = create<ProfileState>()(
         }
 
         const updated = { ...activeProfile, ...patch }
-        set({
-          activeProfile: updated,
-          profiles: get().profiles.map(p =>
-            p.username === activeProfile.username ? { ...p, ...patch } : p
-          ),
-        })
+        set({ activeProfile: updated })
       },
 
       changePassword: async (currentPassword: string, newPassword: string) => {

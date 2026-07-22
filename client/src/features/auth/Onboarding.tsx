@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
-import { useCategoryStore } from '@/features/finance/store/categoryStore'
+import { useUiStore, type MimirMode } from '@/shared/store/uiStore'
+import { SPACE_TYPE_CONFIG } from '@/features/spaces/data/spaceTypes'
+import type { SpaceType } from '@/features/memories/store/spacesStore'
 import { authFetch } from '@/shared/services/api'
 import styles from './Onboarding.module.css'
 
@@ -11,16 +13,53 @@ const MONTHS_UA = [
   'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень',
 ]
 
-const POPULAR_CAT_NAMES = new Set([
-  'Продукти','Житло','Транспорт','Заклади','Комунальні','Побут','Підписки','Розваги',
-])
+type Direction = 'spaces' | 'memories' | 'tasks' | 'finance' | 'overview'
+
+const DIRECTIONS: { id: Direction; label: string; desc: string; icon: React.ReactNode }[] = [
+  {
+    id: 'spaces', label: 'Простори', desc: 'Авто, дім, улюбленець, поїздки',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  },
+  {
+    id: 'memories', label: 'Спогади', desc: 'Фото, поїздки і важливі моменти',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>,
+  },
+  {
+    id: 'tasks', label: 'Задачі й звички', desc: 'Рутини, цілі і щоденні справи',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>,
+  },
+  {
+    id: 'finance', label: 'Фінанси', desc: 'Бюджет, витрати і накопичення',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>,
+  },
+  {
+    id: 'overview', label: 'Огляд усього', desc: 'Покажи мені що є',
+    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
+  },
+]
+
+const SPACE_PRESETS: { type: SpaceType; label: string; desc: string }[] = [
+  { type: 'home',    label: 'Дім',        desc: 'Ремонти, оплати, документи' },
+  { type: 'pet',     label: 'Улюбленець', desc: 'Ветеринар, щеплення, догляд' },
+  { type: 'vehicle', label: 'Авто',       desc: 'ТО, заправки, документи' },
+  { type: 'trip',    label: 'Поїздка',    desc: 'Маршрут, місця, витрати' },
+  { type: 'sports',  label: 'Спорт',      desc: 'Результати й прогрес' },
+  { type: 'shared',  label: 'Спільний',   desc: 'Разом з кимось' },
+]
+
+const HABIT_PRESETS = ['Спорт', 'Читання', 'Медитація', 'Вода', 'Йога', 'Прогулянка', 'Сон']
+
+const MIMIR_MODES: { id: MimirMode; title: string; sub: string; desc: string }[] = [
+  { id: 'wise',  title: 'МУДРИЙ',  sub: 'WISE',  desc: 'Спокійний і точний' },
+  { id: 'witty', title: 'БАЛАГУР', sub: 'WITTY', desc: 'Іронічний, але на твоєму боці' },
+  { id: 'dark',  title: 'ТЕМНИЙ',  sub: 'DARK',  desc: 'Без прикрас і зайвих сентиментів' },
+]
 
 const STEP_PROGRESS: Record<number, { label: string; pct: number }> = {
-  2: { label: 'Крок 1 / 5', pct: 20 },
-  3: { label: 'Крок 2 / 5', pct: 40 },
-  4: { label: 'Крок 3 / 5', pct: 60 },
-  5: { label: 'Крок 4 / 5', pct: 80 },
-  6: { label: 'Крок 5 / 5', pct: 100 },
+  2: { label: 'Крок 1 / 4', pct: 25 },
+  3: { label: 'Крок 2 / 4', pct: 50 },
+  4: { label: 'Крок 3 / 4', pct: 75 },
+  5: { label: 'Крок 4 / 4', pct: 100 },
 }
 
 interface SalaryDayPickerProps {
@@ -30,7 +69,7 @@ interface SalaryDayPickerProps {
 
 /** Компактний тригер + Modal-календар для вибору дня місяця */
 const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) => {
-  const [open, setOpen]         = useState(false)
+  const [open, setOpen]           = useState(false)
   const [viewMonth, setViewMonth] = useState(() => new Date().getMonth())
   const [viewYear, setViewYear]   = useState(() => new Date().getFullYear())
 
@@ -43,7 +82,7 @@ const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) =>
     return d === 0 ? 6 : d - 1
   }, [viewYear, viewMonth])
 
-  const todayDate = new Date().getDate()
+  const todayDate  = new Date().getDate()
   const todayMonth = new Date().getMonth()
   const todayYear  = new Date().getFullYear()
 
@@ -56,21 +95,9 @@ const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) =>
     else setViewMonth(m => m + 1)
   }
 
-  const ChevronRight = () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  )
-  const ArrowLeft = () => (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden="true">
-      <path d="M8 1L2 8l6 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  )
-  const ArrowRight = () => (
-    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden="true">
-      <path d="M2 1l6 7-6 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  )
+  const ArrowLeft  = () => <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden="true"><path d="M8 1L2 8l6 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  const ArrowRight = () => <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden="true"><path d="M2 1l6 7-6 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  const ChevronRight = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
 
   return (
     <>
@@ -90,13 +117,9 @@ const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) =>
             <div className={styles.calSheetHandle} />
             <div className={styles.calSheetTitle}>День зарплати</div>
             <div className={styles.calNavRow}>
-              <button type="button" className={styles.calNavBtn} onClick={goToPrev} aria-label="Попередній місяць">
-                <ArrowLeft />
-              </button>
+              <button type="button" className={styles.calNavBtn} onClick={goToPrev} aria-label="Попередній місяць"><ArrowLeft /></button>
               <span className={styles.calMonthLabel}>{MONTHS_UA[viewMonth]} {viewYear}</span>
-              <button type="button" className={styles.calNavBtn} onClick={goToNext} aria-label="Наступний місяць">
-                <ArrowRight />
-              </button>
+              <button type="button" className={styles.calNavBtn} onClick={goToNext} aria-label="Наступний місяць"><ArrowRight /></button>
             </div>
             <div className={styles.calGrid}>
               {['Пн','Вт','Ср','Чт','Пт','Сб','Нд'].map(d => (
@@ -132,117 +155,82 @@ const SalaryDayPicker: React.FC<SalaryDayPickerProps> = ({ value, onChange }) =>
   )
 }
 
-const HABIT_PRESETS = ['Спорт', 'Читання', 'Медитація', 'Вода', 'Йога', 'Прогулянка', 'Сон']
-
 /**
  * OnboardingScreen
  * ----------------
- * 7-крокове налаштування при першому вході.
- * Крок 1 — Welcome (fullscreen, mimir-welcome)
- * Крок 2 — Location permission (fullscreen, mimir-location)
- * Крок 3 — Notifications permission (fullscreen, mimir-notifications)
- * Крок 4 — Фінанси: день зарплати + категорії витрат
- * Крок 5 — Перша звичка (preset-чіпи або свій варіант)
- * Крок 6 — Перший план (куди мрієш поїхати, skippable)
- * Крок 7 — Готово → зберігає все і переходить на Dashboard
+ * 6-крокове налаштування при першому вході.
+ * Крок 1 — Welcome (fullscreen)
+ * Крок 2 — Напрям (з чого почнемо?)
+ * Крок 3 — Перший простір (тип → назва, skippable)
+ * Крок 4 — Перша дія (залежить від напряму; пропускається якщо spaces + простір створено)
+ * Крок 5 — Характер Міміра (WISE / WITTY / DARK)
+ * Крок 6 — Готово (summary + CTA)
  */
 const OnboardingScreen: React.FC = () => {
   const navigate = useNavigate()
   const { activeProfile, updateProfile } = useProfileStore()
-  const { categories: allCats, fetchCategories, loading: catLoading } = useCategoryStore()
+  const { setMimirMode: saveMode } = useUiStore()
 
-  const [step, setStep] = useState(1)
+  const [step, setStep]   = useState(1)
   const [saving, setSaving] = useState(false)
 
-  // Step 4 — Finance
-  const [salaryDay, setSalaryDay] = useState(activeProfile?.salaryDay ?? 1)
-  const [selectedCatIds, setSelectedCatIds] = useState<Set<string>>(new Set())
-  const [showAllCats, setShowAllCats] = useState(false)
-  const catsInitRef = useRef(false)
-  const catsFetchRef = useRef(false)
+  // Step 2 — direction
+  const [direction, setDirection] = useState<Direction>('tasks')
 
-  // Step 5 — Habit
+  // Step 3 — space
+  const [spaceType, setSpaceType] = useState<SpaceType | null>(null)
+  const [spaceName, setSpaceName] = useState('')
+
+  // Step 4 — first action
   const [habitPreset, setHabitPreset] = useState<string | null>(null)
   const [habitCustom, setHabitCustom] = useState('')
+  const [salaryDay, setSalaryDay]     = useState(activeProfile?.salaryDay ?? 1)
+  const [monthlyBudget, setMonthlyBudget] = useState('')
+  const [memoryPlan, setMemoryPlan]   = useState('')
 
-  // Step 6 — Plan
-  const [planDest, setPlanDest] = useState('')
+  // Step 5 — mimir mode
+  const [mimirMode, setMimirMode] = useState<MimirMode>('wise')
 
-  const topLevelCats = allCats.filter(c => !c.parentId)
-
-  // Fetch categories when entering step 4
-  useEffect(() => {
-    if (step !== 4 || catsFetchRef.current) return
-    catsFetchRef.current = true
-    let cancelled = false
-    const load = async () => {
-      if (allCats.length === 0) await fetchCategories()
-      if (!cancelled) { /* categories will trigger the init effect below */ }
-    }
-    load()
-    return () => { cancelled = true }
-  }, [step, allCats.length, fetchCategories])
-
-  // Initialize selected category IDs once categories are loaded
-  useEffect(() => {
-    if (topLevelCats.length === 0 || catsInitRef.current) return
-    let cancelled = false
-    const init = async () => {
-      if (!cancelled) {
-        catsInitRef.current = true
-        setSelectedCatIds(new Set(topLevelCats.map(c => c._id)))
-      }
-    }
-    init()
-    return () => { cancelled = true }
-  }, [topLevelCats])
-
-  const toggleCat = (id: string) => {
-    setSelectedCatIds(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
+  const habitTitle = habitPreset ?? (habitCustom.trim() || null)
+  const spaceCreated = spaceType !== null && spaceName.trim().length > 0
 
   const selectPreset = (p: string) => {
     setHabitPreset(prev => prev === p ? null : p)
     setHabitCustom('')
   }
 
-  const habitTitle = habitPreset ?? (habitCustom.trim() || null)
-
-  const handleGeoPermission = () => {
-    navigator.geolocation?.getCurrentPosition(() => {}, () => {})
-    setStep(3)
-  }
-
-  const handleNotifPermission = async () => {
-    if ('Notification' in window) {
-      await Notification.requestPermission().catch(() => {})
+  const goNextFromSpace = (skipped: boolean) => {
+    if (!skipped && spaceCreated && direction === 'spaces') {
+      setStep(5)
+    } else {
+      setStep(4)
     }
-    setStep(4)
   }
 
   const handleFinish = async () => {
     setSaving(true)
     try {
-      const profileSave = updateProfile({ salaryDay, onboardingCompleted: true })
-      const timeout = new Promise<void>((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 6000),
-      )
-      await Promise.race([profileSave, timeout])
+      saveMode(mimirMode)
 
-      // Fire-and-forget secondary tasks — don't block navigation
-      topLevelCats
-        .filter(c => !selectedCatIds.has(c._id))
-        .forEach(c => {
-          authFetch(`/api/categories/${c._id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ isActive: false }),
-          }).catch(() => {})
-        })
+      const profilePatch: Parameters<typeof updateProfile>[0] = {
+        onboardingCompleted: true,
+      }
+      if (direction === 'finance') profilePatch.salaryDay = salaryDay
+
+      const profileSave = updateProfile(profilePatch)
+      await Promise.race([
+        profileSave,
+        new Promise<void>((_, r) => setTimeout(() => r(new Error('timeout')), 6000)),
+      ])
+
+      if (spaceCreated && spaceType) {
+        const cfg = SPACE_TYPE_CONFIG[spaceType]
+        authFetch('/api/spaces', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: spaceName.trim(), type: spaceType, color: cfg?.color ?? '#6C63FF' }),
+        }).catch(() => {})
+      }
 
       if (habitTitle) {
         authFetch('/api/sprint/tasks', {
@@ -252,15 +240,20 @@ const OnboardingScreen: React.FC = () => {
         }).catch(() => {})
       }
 
-      if (planDest.trim()) {
+      if (memoryPlan.trim()) {
         authFetch('/api/plans', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: planDest.trim(), status: 'want' }),
+          body: JSON.stringify({ name: memoryPlan.trim(), status: 'want' }),
         }).catch(() => {})
       }
+
+      if (monthlyBudget && !isNaN(+monthlyBudget) && +monthlyBudget > 0) {
+        updateProfile({ monthlySpendLimit: +monthlyBudget }).catch(() => {})
+      }
+
     } catch {
-      // ignore — navigate anyway so user is never stuck
+      // ignore — navigate anyway
     } finally {
       navigate('/', { replace: true })
     }
@@ -273,14 +266,27 @@ const OnboardingScreen: React.FC = () => {
   )
 
   const progress = STEP_PROGRESS[step] ?? null
-  const popularCats = topLevelCats.filter(c => POPULAR_CAT_NAMES.has(c.name))
-  const otherCats   = topLevelCats.filter(c => !POPULAR_CAT_NAMES.has(c.name))
+
+  // Summary items for done step
+  const summaryItems = useMemo(() => {
+    const items: string[] = []
+    if (spaceCreated) items.push(`Простір «${spaceName.trim()}»`)
+    if (habitTitle) items.push(`Звичка «${habitTitle}»`)
+    if (memoryPlan.trim()) items.push(`План «${memoryPlan.trim()}»`)
+    if (monthlyBudget && +monthlyBudget > 0) items.push(`Бюджет ${monthlyBudget} ₴/місяць`)
+    const modeLabel = MIMIR_MODES.find(m => m.id === mimirMode)?.title ?? 'Мудрий'
+    items.push(`Мімір: ${modeLabel}`)
+    return items
+  }, [spaceCreated, spaceName, habitTitle, memoryPlan, monthlyBudget, mimirMode])
+
+  // Determine if step 4 action direction is habit-type
+  const actionIsHabit = direction === 'tasks' || direction === 'overview' || (direction === 'spaces' && !spaceCreated)
 
   return (
     <div className={styles.root}>
       <div className={styles.inner}>
 
-        {/* ── Step progress bar (steps 2–6) ─────────────────── */}
+        {/* ── Progress bar (steps 2–5) ───────────────────────── */}
         {progress && (
           <div className={styles.progressWrap}>
             <div className={styles.progressTrack}>
@@ -290,7 +296,7 @@ const OnboardingScreen: React.FC = () => {
           </div>
         )}
 
-        {/* ── Step 1: Welcome (fullscreen) ──────────────────── */}
+        {/* ── Step 1: Welcome ────────────────────────────────── */}
         {step === 1 && (
           <div className={styles.slideHero}>
             <img
@@ -313,181 +319,46 @@ const OnboardingScreen: React.FC = () => {
           </div>
         )}
 
-        {/* ── Step 2: Location permission (fullscreen) ──────── */}
+        {/* ── Step 2: Direction ──────────────────────────────── */}
         {step === 2 && (
-          <div className={styles.slideHero}>
-            <img
-              src="/mimir/mimir-location.png"
-              alt="Mimir"
-              className={styles.slideHeroImg}
-              draggable={false}
-            />
-            <div className={styles.slideCopy}>
-              <h2 className={styles.slideTitle}>Погода по-твоєму</h2>
-              <p className={styles.slideDesc}>
-                Мімір використовує геолокацію щоб показувати погоду для твого міста. Без реклами, без збору даних.
-              </p>
-            </div>
-            <div className={styles.slideActions}>
-              <button className={styles.slideSkipBtn} onClick={() => setStep(3)}>
-                Пропустити
-              </button>
-              <button className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`} onClick={handleGeoPermission}>
-                Дозволити <ChevronRight />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Step 3: Notifications permission (fullscreen) ─── */}
-        {step === 3 && (
-          <div className={styles.slideHero}>
-            <img
-              src="/mimir/mimir-notifications.png"
-              alt="Mimir"
-              className={styles.slideHeroImg}
-              draggable={false}
-            />
-            <div className={styles.slideCopy}>
-              <h2 className={styles.slideTitle}>Нагадує коли треба</h2>
-              <p className={styles.slideDesc}>
-                Дозволь Міміру надсилати нагадування про задачі і звички. Можна вимкнути будь-коли.
-              </p>
-            </div>
-            <div className={styles.slideActions}>
-              <button className={styles.slideSkipBtn} onClick={() => setStep(4)}>
-                Пропустити
-              </button>
-              <button className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`} onClick={handleNotifPermission}>
-                Увімкнути <ChevronRight />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Step 4: Finance setup ─────────────────────────── */}
-        {step === 4 && (
           <div className={`${styles.step} ${styles.stepLeft}`}>
-
-            {/* Header: small Mimir + title */}
             <div className={styles.stepHeaderRow}>
-              <img src="/mimir/mimir-pointing.png" alt="Mimir" className={styles.mimirSm} draggable={false} />
+              <img src="/mimir/mimir-pointing.png" alt="" className={styles.mimirSm} draggable={false} />
               <div className={styles.stepHeaderText}>
-                <h2 className={styles.stepTitleSm}>Налаштуємо фінанси</h2>
-                <p className={styles.stepSubSm}>День зарплати і основні витрати — і Finance готовий.</p>
+                <h2 className={styles.stepTitleSm}>З чого почнемо?</h2>
+                <p className={styles.stepSubSm}>Обери напрям — налаштуємо разом.</p>
               </div>
             </div>
 
-            {/* Salary day card */}
-            <div className={styles.inputCard}>
-              <span className={styles.sectionLabel}>ДЕНЬ ЗАРПЛАТИ</span>
-              <SalaryDayPicker value={salaryDay} onChange={setSalaryDay} />
-              <span className={styles.inputCardHint}>Для розрахунку місячного циклу</span>
-            </div>
-
-            {/* Categories */}
-            <div className={styles.section}>
-              <span className={styles.sectionLabel}>НА ЩО ВИТРАЧАЄШ?</span>
-              {catLoading && topLevelCats.length === 0 ? (
-                <div className={styles.catSkeleton}>
-                  {[1,2,3,4,5,6].map(i => <span key={i} className={styles.catSkeletonChip} />)}
-                </div>
-              ) : (
-                <>
-                  <div className={styles.catGrid}>
-                    {(popularCats.length > 0 ? popularCats : topLevelCats).map(cat => {
-                      const on = selectedCatIds.has(cat._id)
-                      return (
-                        <button key={cat._id} type="button"
-                          className={`${styles.catChip} ${on ? styles.catChipOn : ''}`}
-                          onClick={() => toggleCat(cat._id)} aria-pressed={on}>
-                          <span className={styles.catDot} style={{ background: cat.color }} />
-                          {cat.name}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {otherCats.length > 0 && !showAllCats && (
-                    <button type="button" className={styles.showMoreBtn} onClick={() => setShowAllCats(true)}>
-                      + Ще {otherCats.length} категорій
-                    </button>
-                  )}
-                  {showAllCats && (
-                    <div className={`${styles.catGrid} ${styles.catGridMore}`}>
-                      {otherCats.map(cat => {
-                        const on = selectedCatIds.has(cat._id)
-                        return (
-                          <button key={cat._id} type="button"
-                            className={`${styles.catChip} ${on ? styles.catChipOn : ''}`}
-                            onClick={() => toggleCat(cat._id)} aria-pressed={on}>
-                            <span className={styles.catDot} style={{ background: cat.color }} />
-                            {cat.name}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Footer: selected count + CTA */}
-            <div className={styles.stepFooter}>
-              <span className={styles.selectedCount}>
-                Обрано: {selectedCatIds.size}
-              </span>
-              <button className={`${styles.primaryBtn} ${styles.primaryBtnWide}`} onClick={() => setStep(5)}>
-                Далі <ChevronRight />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Step 5: First habit ───────────────────────────── */}
-        {step === 5 && (
-          <div className={styles.step}>
-            <img
-              src="/mimir/mimir-writing.png"
-              alt="Mimir"
-              className={`${styles.mimirAvatar} ${styles.mimirAvatarMd}`}
-              draggable={false}
-            />
-            <h2 className={styles.stepTitle}>Перша звичка</h2>
-            <p className={styles.stepSub}>Обери або напиши свій варіант — одразу з'явиться в щоденнику.</p>
-
-            <div className={styles.presets}>
-              {HABIT_PRESETS.map(p => (
+            <div className={styles.directionList}>
+              {DIRECTIONS.map(d => (
                 <button
-                  key={p}
+                  key={d.id}
                   type="button"
-                  className={`${styles.presetChip} ${habitPreset === p ? styles.presetChipOn : ''}`}
-                  onClick={() => selectPreset(p)}
-                  aria-pressed={habitPreset === p}
+                  className={`${styles.directionItem} ${direction === d.id ? styles.directionItemOn : ''}`}
+                  onClick={() => setDirection(d.id)}
+                  aria-pressed={direction === d.id}
                 >
-                  {p}
+                  <span className={styles.directionItemIcon}>{d.icon}</span>
+                  <span className={styles.directionItemText}>
+                    <span className={styles.directionLabel}>{d.label}</span>
+                    <span className={styles.directionDesc}>{d.desc}</span>
+                  </span>
+                  <span className={styles.directionCheck} aria-hidden="true">
+                    {direction === d.id && (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 8l3.5 3.5L13 4"/>
+                      </svg>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>
 
-            {!habitPreset && (
-              <input
-                className={styles.textInput}
-                type="text"
-                placeholder="або напиши свій варіант…"
-                value={habitCustom}
-                onChange={e => setHabitCustom(e.target.value)}
-                maxLength={60}
-              />
-            )}
-
-            <div className={styles.slideActions}>
-              <button className={styles.slideSkipBtn} onClick={() => setStep(6)}>
-                Пропустити
-              </button>
+            <div className={styles.stepFooter}>
               <button
-                className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`}
-                onClick={() => setStep(6)}
-                disabled={!habitTitle}
+                className={`${styles.primaryBtn} ${styles.primaryBtnWide}`}
+                onClick={() => setStep(3)}
               >
                 ДАЛІ <ChevronRight />
               </button>
@@ -495,41 +366,244 @@ const OnboardingScreen: React.FC = () => {
           </div>
         )}
 
-        {/* ── Step 6: First plan ────────────────────────────── */}
-        {step === 6 && (
-          <div className={styles.step}>
-            <img
-              src="/mimir/mimir-location.png"
-              alt="Mimir"
-              className={`${styles.mimirAvatar} ${styles.mimirAvatarMd}`}
-              draggable={false}
-            />
-            <h2 className={styles.stepTitle}>Куди мрієш поїхати?</h2>
-            <p className={styles.stepSub}>Збережемо як перший план у розділі Спогади.</p>
+        {/* ── Step 3: First space ────────────────────────────── */}
+        {step === 3 && (
+          <div className={`${styles.step} ${styles.stepLeft}`}>
+            <div className={styles.stepHeaderRow}>
+              <img src="/mimir/mimir-pointing.png" alt="" className={styles.mimirSm} draggable={false} />
+              <div className={styles.stepHeaderText}>
+                <h2 className={styles.stepTitleSm}>Перший простір</h2>
+                <p className={styles.stepSubSm}>Контекст для всього важливого в твоєму житті.</p>
+              </div>
+            </div>
 
-            <input
-              className={styles.textInput}
-              type="text"
-              placeholder="Наприклад, Барселона…"
-              value={planDest}
-              onChange={e => setPlanDest(e.target.value)}
-              maxLength={80}
-              autoFocus
-            />
+            <span className={styles.sectionLabel}>ТИП ПРОСТОРУ</span>
+            <div className={styles.spacePresetGrid}>
+              {SPACE_PRESETS.map(s => {
+                const cfg = SPACE_TYPE_CONFIG[s.type]
+                return (
+                  <button
+                    key={s.type}
+                    type="button"
+                    className={`${styles.spacePresetChip} ${spaceType === s.type ? styles.spacePresetChipOn : ''}`}
+                    onClick={() => {
+                      setSpaceType(prev => prev === s.type ? null : s.type)
+                      if (!spaceName) setSpaceName(s.label)
+                    }}
+                    aria-pressed={spaceType === s.type}
+                  >
+                    <span
+                      className={styles.spacePresetDot}
+                      style={{ background: cfg?.color ?? 'var(--accent)' }}
+                    />
+                    <span className={styles.spacePresetLabel}>{s.label}</span>
+                    <span className={styles.spacePresetDesc}>{s.desc}</span>
+                  </button>
+                )
+              })}
+            </div>
 
-            <div className={styles.slideActions}>
-              <button className={styles.slideSkipBtn} onClick={() => setStep(7)}>
+            {spaceType && (
+              <div className={styles.section}>
+                <span className={styles.sectionLabel}>НАЗВА</span>
+                <input
+                  className={styles.textInput}
+                  type="text"
+                  placeholder="Наприклад, Фібі або Моя Tesla…"
+                  value={spaceName}
+                  onChange={e => setSpaceName(e.target.value)}
+                  maxLength={50}
+                  autoFocus
+                />
+              </div>
+            )}
+
+            <div className={styles.slideActions} style={{ marginTop: 'auto', paddingTop: 16 }}>
+              <button className={styles.slideSkipBtn} onClick={() => {
+                setSpaceType(null)
+                setSpaceName('')
+                goNextFromSpace(true)
+              }}>
                 Пропустити
               </button>
-              <button className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`} onClick={() => setStep(7)}>
+              <button
+                className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`}
+                onClick={() => goNextFromSpace(false)}
+                disabled={spaceType !== null && !spaceName.trim()}
+              >
                 ДАЛІ <ChevronRight />
               </button>
             </div>
           </div>
         )}
 
-        {/* ── Step 7: Done ──────────────────────────────────── */}
-        {step === 7 && (
+        {/* ── Step 4: First action (direction-dependent) ──────── */}
+        {step === 4 && (
+          <div className={styles.step}>
+
+            {/* Habit step (tasks / overview / spaces-skipped) */}
+            {actionIsHabit && (
+              <>
+                <img
+                  src="/mimir/mimir-writing.png"
+                  alt=""
+                  className={styles.mimirAvatar}
+                  draggable={false}
+                />
+                <h2 className={styles.stepTitle}>Перша звичка</h2>
+                <p className={styles.stepSub}>Обери або напиши свій варіант — одразу з'явиться в щоденнику.</p>
+
+                <div className={styles.presets}>
+                  {HABIT_PRESETS.map(p => (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`${styles.presetChip} ${habitPreset === p ? styles.presetChipOn : ''}`}
+                      onClick={() => selectPreset(p)}
+                      aria-pressed={habitPreset === p}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+
+                {!habitPreset && (
+                  <input
+                    className={styles.textInput}
+                    type="text"
+                    placeholder="або напиши свій варіант…"
+                    value={habitCustom}
+                    onChange={e => setHabitCustom(e.target.value)}
+                    maxLength={60}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Finance step */}
+            {direction === 'finance' && (
+              <>
+                <img
+                  src="/mimir/mimir-pointing.png"
+                  alt=""
+                  className={styles.mimirAvatar}
+                  draggable={false}
+                />
+                <h2 className={styles.stepTitle}>Налаштуємо фінанси</h2>
+                <p className={styles.stepSub}>День зарплати і щомісячний бюджет.</p>
+
+                <div className={styles.section} style={{ textAlign: 'left', width: '100%' }}>
+                  <span className={styles.sectionLabel}>ДЕНЬ ЗАРПЛАТИ</span>
+                  <div className={styles.inputCard}>
+                    <SalaryDayPicker value={salaryDay} onChange={setSalaryDay} />
+                    <span className={styles.inputCardHint}>Для розрахунку місячного циклу</span>
+                  </div>
+                </div>
+
+                <div className={styles.section} style={{ textAlign: 'left', width: '100%' }}>
+                  <span className={styles.sectionLabel}>МІСЯЧНИЙ БЮДЖЕТ (необов'язково)</span>
+                  <input
+                    className={styles.textInput}
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="0 ₴"
+                    value={monthlyBudget}
+                    onChange={e => setMonthlyBudget(e.target.value)}
+                    min={0}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Memories step */}
+            {direction === 'memories' && (
+              <>
+                <img
+                  src="/mimir/mimir-location.png"
+                  alt=""
+                  className={styles.mimirAvatar}
+                  draggable={false}
+                />
+                <h2 className={styles.stepTitle}>Перший план</h2>
+                <p className={styles.stepSub}>Куди мрієш поїхати або що хочеш побачити?</p>
+
+                <input
+                  className={styles.textInput}
+                  type="text"
+                  placeholder="Наприклад, Барселона…"
+                  value={memoryPlan}
+                  onChange={e => setMemoryPlan(e.target.value)}
+                  maxLength={80}
+                  autoFocus
+                />
+              </>
+            )}
+
+            <div className={styles.slideActions} style={{ marginTop: 'auto' }}>
+              <button className={styles.slideSkipBtn} onClick={() => setStep(5)}>
+                Пропустити
+              </button>
+              <button
+                className={`${styles.primaryBtn} ${styles.primaryBtnFlex}`}
+                onClick={() => setStep(5)}
+              >
+                ДАЛІ <ChevronRight />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 5: Mimir character ─────────────────────────── */}
+        {step === 5 && (
+          <div className={`${styles.step} ${styles.stepLeft}`}>
+            <div className={styles.stepHeaderRow}>
+              <img src="/mimir/mimir-welcome.png" alt="" className={styles.mimirSm} draggable={false} />
+              <div className={styles.stepHeaderText}>
+                <h2 className={styles.stepTitleSm}>Яким Мімір буде поруч?</h2>
+                <p className={styles.stepSubSm}>Завжди можна змінити у Профіль → Мімір.</p>
+              </div>
+            </div>
+
+            <div className={styles.mimirModes}>
+              {MIMIR_MODES.map(m => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`${styles.mimirModeCard} ${mimirMode === m.id ? styles.mimirModeCardOn : ''}`}
+                  onClick={() => setMimirMode(m.id)}
+                  aria-pressed={mimirMode === m.id}
+                >
+                  <span className={styles.mimirModeCardInner}>
+                    <span className={styles.mimirModeCardTitles}>
+                      <span className={styles.mimirModeCardTitle}>{m.title}</span>
+                      <span className={styles.mimirModeCardSub}>{m.sub}</span>
+                    </span>
+                    <span className={styles.mimirModeCardDesc}>{m.desc}</span>
+                  </span>
+                  <span className={styles.directionCheck} aria-hidden="true">
+                    {mimirMode === m.id && (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 8l3.5 3.5L13 4"/>
+                      </svg>
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.stepFooter}>
+              <button
+                className={`${styles.primaryBtn} ${styles.primaryBtnWide}`}
+                onClick={() => setStep(6)}
+              >
+                ДАЛІ <ChevronRight />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 6: Done ────────────────────────────────────── */}
+        {step === 6 && (
           <div className={styles.slideHero}>
             <img
               src="/mimir/mimir-celebrating.png"
@@ -542,20 +616,30 @@ const OnboardingScreen: React.FC = () => {
               <p className={styles.doneDesc}>
                 Мімір пам'ятає все — тепер і твоє.<br />Твоя хроніка починається.
               </p>
-              <p className={styles.doneHint}>
-                Вигляд і навігацію можна змінити у Профіль → Вигляд
-              </p>
             </div>
+
+            {summaryItems.length > 0 && (
+              <div className={styles.summaryCard}>
+                {summaryItems.map((item, i) => (
+                  <div key={i} className={styles.summaryItem}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M2 7l3.5 3.5L12 3"/>
+                    </svg>
+                    <span className={styles.summaryText}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <button
               className={`${styles.primaryBtn} ${styles.primaryBtnFull}`}
               onClick={handleFinish}
               disabled={saving}
             >
-              {saving ? 'Зберігаємо…' : <>РОЗПОЧАТИ <ChevronRight /></>}
+              {saving ? 'Зберігаємо…' : <>ПЕРЕЙТИ ДО MIMIR <ChevronRight /></>}
             </button>
           </div>
         )}
-
 
       </div>
     </div>
