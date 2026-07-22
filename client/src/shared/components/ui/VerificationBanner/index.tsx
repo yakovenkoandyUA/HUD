@@ -14,8 +14,15 @@ const VerificationBanner: React.FC = () => {
   const { showToast } = useUiStore()
   const [dismissed, setDismissed] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [ready, setReady] = useState(false)
 
-  if (!activeProfile?.email || activeProfile.isVerified || dismissed) return null
+  // Defer 4s so it doesn't appear simultaneously with Mimir first-visit card
+  React.useEffect(() => {
+    const id = setTimeout(() => setReady(true), 4000)
+    return () => clearTimeout(id)
+  }, [])
+
+  if (!ready || !activeProfile?.email || activeProfile.isVerified || dismissed) return null
 
   const handleResend = async () => {
     if (loading) return

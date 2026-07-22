@@ -92,6 +92,9 @@ const DeadlineSheet: React.FC<DeadlineSheetProps> = ({ date, time, reminder, min
     if (!reminderOn) {
       setReminderOn(true)
       setReminderEditing(true)
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {})
+      }
     } else {
       setReminderEditing(v => !v)
     }

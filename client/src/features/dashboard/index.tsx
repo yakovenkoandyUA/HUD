@@ -184,20 +184,37 @@ const Dashboard: React.FC = () => {
           todayTeasers={todayTeasers}
         />
 
+        {/* First-visit Mimir — inline card under weather, does NOT cover content */}
+        {!welcomeSeen && (
+          <div className={styles.mimirWelcomeCard}>
+            <img
+              src="/mimir/mimir-excited.png"
+              alt=""
+              className={styles.mimirWelcomeAvatar}
+              draggable={false}
+            />
+            <div className={styles.mimirWelcomeBubble}>
+              <p className={styles.mimirWelcomeText}>{getMimirText('dashboard_first_visit', mimirMode)}</p>
+              <span className={styles.mimirWelcomeSig}>— Мімір</span>
+            </div>
+            <button
+              type="button"
+              className={styles.mimirWelcomeClose}
+              onClick={() => { firstVisitInSession.current = true; markWelcomeSeen() }}
+              aria-label="Сховати"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        )}
+
         {/* 2 — Spaces: compact horizontal strip */}
         <SpacesStrip f1Enabled={f1Enabled} />
 
-        {/* Mimir hint (height:0, floats over content) */}
-        {!welcomeSeen ? (
-          <div className={styles.mimirFloat}>
-            <MimirHint
-              pose={MIMIR_DIALOGUE.dashboard_first_visit.pose}
-              oneTime
-              textKey={getMimirText('dashboard_first_visit', mimirMode)}
-              onDismiss={() => { firstVisitInSession.current = true; markWelcomeSeen() }}
-            />
-          </div>
-        ) : aiHint ? (
+        {/* Daily / AI hints — float (occasional, acceptable to overlay) */}
+        {welcomeSeen && (aiHint ? (
           <div className={styles.mimirFloat}>
             <MimirHint
               pose={aiHint.pose as MimirPose}
@@ -215,7 +232,7 @@ const Dashboard: React.FC = () => {
               onDismiss={() => { setShowDailyGreeting(false); markDailyShown(userId, 'dashboard_daily_greeting') }}
             />
           </div>
-        ) : null}
+        ) : null)}
 
         {/* 4 — Status tiles: 2×2 grid */}
         <div className={styles.tilesWrap}>

@@ -218,6 +218,26 @@
 }
 .weatherChip:active { opacity: 0.7; }
 
+.geoPrompt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 4px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--text3);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  transition: opacity 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.geoPrompt:hover { opacity: 0.85; }
+.geoPrompt:active { opacity: 0.6; }
+.geoPrompt:disabled { opacity: 0.5; cursor: default; }
+
 .weatherIcon {
   width: 40px;
   object-fit: contain;

@@ -25,6 +25,75 @@
   pointer-events: none;
 }
 
+/* ── First-visit Mimir inline welcome card ──────────────────── */
+
+.mimirWelcomeCard {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 38px 10px 12px;
+  animation: dashSlideUp 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.mimirWelcomeAvatar {
+  width: auto;
+  height: 72px;
+  flex-shrink: 0;
+  object-fit: contain;
+  user-select: none;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.35));
+  animation: mimirWelcomeBounce 3.6s ease-in-out infinite 0.4s;
+}
+
+@keyframes mimirWelcomeBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
+
+.mimirWelcomeBubble {
+  flex: 1;
+  min-width: 0;
+}
+
+.mimirWelcomeText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  font-style: italic;
+  margin: 0 0 4px;
+}
+
+.mimirWelcomeSig {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+.mimirWelcomeClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mimirWelcomeClose:hover { color: var(--text2); background: var(--bg3); }
+
 /* ── Staggered card entrance ────────────────────────────────── */
 
 @keyframes dashSlideUp {
