@@ -22,7 +22,7 @@ export const F1_RACES_2026: F1RaceSchedule[] = [
 	{ round: 11, name: 'Hungarian GP', circuit: 'Hungaroring', raceUtc: '2026-07-26T13:00:00Z' },
 	{ round: 12, name: 'Dutch GP', circuit: 'Zandvoort', raceUtc: '2026-08-23T13:00:00Z' },
 	{ round: 13, name: 'Italian GP', circuit: 'Monza', raceUtc: '2026-09-06T13:00:00Z' },
-	{ round: 14, name: 'Spain GP', circuit: 'Circuito de Madring', raceUtc: '2026-09-13T13:00:00Z' },
+	{ round: 14, name: 'Madrid GP', circuit: 'Circuito de Madrid', raceUtc: '2026-09-13T13:00:00Z' },
 	{ round: 15, name: 'Azerbaijan GP', circuit: 'Baku City Circuit', raceUtc: '2026-09-26T10:00:00Z' },
 	{ round: 16, name: 'Singapore GP', circuit: 'Marina Bay', raceUtc: '2026-10-11T12:00:00Z' },
 	{ round: 17, name: 'United States GP', circuit: 'Circuit of the Americas', raceUtc: '2026-10-25T20:00:00Z' },

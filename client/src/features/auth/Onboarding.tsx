@@ -207,56 +207,53 @@ const OnboardingScreen: React.FC = () => {
     }
   }
 
-  const handleFinish = async () => {
+  const handleFinish = () => {
     setSaving(true)
-    try {
-      saveMode(mimirMode)
+    saveMode(mimirMode)
 
-      const profilePatch: Parameters<typeof updateProfile>[0] = {
-        onboardingCompleted: true,
-      }
-      if (direction === 'finance') profilePatch.salaryDay = salaryDay
-
-      const profileSave = updateProfile(profilePatch)
-      await Promise.race([
-        profileSave,
-        new Promise<void>((_, r) => setTimeout(() => r(new Error('timeout')), 6000)),
-      ])
-
-      if (spaceCreated && spaceType) {
-        const cfg = SPACE_TYPE_CONFIG[spaceType]
-        authFetch('/api/spaces', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: spaceName.trim(), type: spaceType, color: cfg?.color ?? '#6C63FF' }),
-        }).catch(() => {})
-      }
-
-      if (habitTitle) {
-        authFetch('/api/sprint/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: habitTitle, type: 'routine', repeat: 'daily', priority: 'normal' }),
-        }).catch(() => {})
-      }
-
-      if (memoryPlan.trim()) {
-        authFetch('/api/plans', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: memoryPlan.trim(), status: 'want' }),
-        }).catch(() => {})
-      }
-
-      if (monthlyBudget && !isNaN(+monthlyBudget) && +monthlyBudget > 0) {
-        updateProfile({ monthlySpendLimit: +monthlyBudget }).catch(() => {})
-      }
-
-    } catch {
-      // ignore — navigate anyway
-    } finally {
-      navigate('/', { replace: true })
+    // Optimistically mark onboarding done in local store — prevents infinite redirect if PATCH is slow/fails
+    const { activeProfile: current } = useProfileStore.getState()
+    if (current) {
+      useProfileStore.setState({
+        activeProfile: { ...current, onboardingCompleted: true, ...(direction === 'finance' ? { salaryDay } : {}) },
+      })
     }
+
+    // Fire all network saves as background fire-and-forget
+    const patch: Parameters<typeof updateProfile>[0] = { onboardingCompleted: true }
+    if (direction === 'finance') patch.salaryDay = salaryDay
+    updateProfile(patch).catch(() => {})
+
+    if (spaceCreated && spaceType) {
+      const cfg = SPACE_TYPE_CONFIG[spaceType]
+      authFetch('/api/spaces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: spaceName.trim(), type: spaceType, color: cfg?.color ?? '#6C63FF' }),
+      }).catch(() => {})
+    }
+
+    if (habitTitle) {
+      authFetch('/api/sprint/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: habitTitle, type: 'routine', repeat: 'daily', priority: 'normal' }),
+      }).catch(() => {})
+    }
+
+    if (memoryPlan.trim()) {
+      authFetch('/api/plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: memoryPlan.trim(), status: 'want' }),
+      }).catch(() => {})
+    }
+
+    if (monthlyBudget && !isNaN(+monthlyBudget) && +monthlyBudget > 0) {
+      updateProfile({ monthlySpendLimit: +monthlyBudget }).catch(() => {})
+    }
+
+    navigate('/', { replace: true })
   }
 
   const ChevronRight = () => (

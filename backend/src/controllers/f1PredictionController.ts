@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import F1Prediction from '../models/F1Prediction'
+import { F1_RACES_2026 } from '../data/f1Season2026'
 
 export async function getPredictions(req: Request, res: Response): Promise<void> {
   const items = await F1Prediction.find({ userId: req.userId }).sort({ raceRound: 1 })
@@ -17,6 +18,13 @@ export async function savePrediction(req: Request, res: Response): Promise<void>
     driverOfTheDay?: string | null
     safetyCarPick?: boolean | null
   }
+
+  const race = F1_RACES_2026.find(r => r.round === raceRound)
+  if (race && new Date() >= new Date(race.raceUtc)) {
+    res.status(403).json({ error: 'Prediction deadline has passed for this race' })
+    return
+  }
+
   const item = await F1Prediction.findOneAndUpdate(
     { raceId, userId: req.userId },
     { raceName, raceRound, p1, p2, p3, constructorPick, driverOfTheDay, safetyCarPick, savedAt, result: null },
