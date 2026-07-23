@@ -354,27 +354,35 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 11px 14px;
+  padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
   color: var(--text);
   background: var(--surface);
-  font-size: 13px;
-  letter-spacing: 0.04em;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.12s, border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
   text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
-.actionBtn::before {
-  content: '+';
-  font-size: 16px;
-  line-height: 1;
+.actionBtnIcon {
   color: var(--space-color, var(--accent));
-  font-weight: 400;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
-.actionBtn:active { opacity: 0.65; transform: scale(0.97); }
-.actionBtn:hover  { border-color: color-mix(in srgb, var(--space-color, var(--accent)) 40%, transparent); }
+.actionBtnPlus {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--text3);
+}
+.actionBtn:active {
+  border-color: color-mix(in srgb, var(--space-color, var(--accent)) 50%, var(--border));
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 5%, var(--surface));
+}
+.actionBtn:hover { border-color: color-mix(in srgb, var(--space-color, var(--accent)) 40%, transparent); }
 
 .actionBtnMimir {
   grid-column: 1 / -1;
@@ -384,7 +392,41 @@
   justify-content: center;
   font-weight: 500;
 }
-.actionBtnMimir::before { display: none; }
+
+/* Мімір-кнопка для trip — компактний пілюль, менш домінантний */
+.actionBtnMimirTrip {
+  grid-column: 1 / -1;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 0.73rem;
+  color: var(--text3);
+  border-color: var(--border);
+  background: none;
+}
+.actionBtnMimirTrip:active {
+  color: var(--space-color, var(--accent));
+  border-color: color-mix(in srgb, var(--space-color, var(--accent)) 40%, transparent);
+  background: color-mix(in srgb, var(--space-color, var(--accent)) 5%, transparent);
+}
+
+/* "скоро" кнопки — dimmed, disabled */
+.actionBtnSoon {
+  opacity: 0.45;
+  cursor: default;
+}
+.actionBtnSoon:active { background: var(--surface); border-color: var(--border); }
+
+.soonTag {
+  margin-left: auto;
+  font-family: var(--font-ui);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+  opacity: 0.7;
+}
 
 /* ── Content ── */
 .content {

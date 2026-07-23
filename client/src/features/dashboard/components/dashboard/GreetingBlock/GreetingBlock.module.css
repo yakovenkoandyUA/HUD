@@ -5,12 +5,14 @@
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius, 12px);
+  /* border-radius: var(--radius, 12px); */
   min-height: 145px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
+
+.cardCompact { min-height: 130px; }
 
 .cardPhoto {
   background-size: cover;
@@ -325,6 +327,26 @@
 .todayEmpty {
   color: var(--text3);
   font-weight: 400;
+}
+
+.todayActions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.hiddenBadge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 10px;
+  padding: 2px 6px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 /* ── Noir — lift secondary text ──────────────────────────────── */

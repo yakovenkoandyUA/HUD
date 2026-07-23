@@ -22,6 +22,7 @@ interface GreetingBlockProps {
   onWeatherClick?: (weather: WeatherData) => void
   onOpenDay: () => void
   todayTeasers?: string[]
+  todayTeasersTotal?: number
 }
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
@@ -48,7 +49,7 @@ const THEME_PHOTOS: Partial<Record<string, string>> = {
   arctic: '/theme/arctic.webp',
 }
 
-const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay, todayTeasers }) => {
+const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay, todayTeasers, todayTeasersTotal }) => {
   const profile       = useProfileStore(s => s.activeProfile)
   const updateProfile = useProfileStore(s => s.updateProfile)
   const theme         = useUiStore(s => s.theme)
@@ -87,6 +88,9 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
   const photoUrl    = THEME_PHOTOS[theme]
   const showGeoPrompt = !profile?.city && !weather && geoState !== 'denied'
 
+  const shownCount  = todayTeasers?.length ?? 0
+  const hiddenCount = (todayTeasersTotal ?? 0) > shownCount ? (todayTeasersTotal ?? 0) - shownCount : 0
+
   const handleGeoRequest = () => {
     if (!navigator.geolocation || geoState === 'loading') return
     setGeoState('loading')
@@ -107,7 +111,7 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
 
   return (
     <div
-      className={`${styles.card} ${photoUrl ? styles.cardPhoto : ''}`}
+      className={`${styles.card} ${photoUrl ? styles.cardPhoto : ''} ${shownCount === 1 ? styles.cardCompact : ''}`}
       style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}
     >
       {/* Top: date + weather */}
@@ -159,12 +163,17 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
                   <span className={styles.todayText}>{title}</span>
                 </div>
                 {isLast && (
-                  <button type="button" className={styles.todayLink} onClick={onOpenDay}>
-                    детальніше
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M9 18l6-6-6-6"/>
-                    </svg>
-                  </button>
+                  <div className={styles.todayActions}>
+                    {hiddenCount > 0 && (
+                      <span className={styles.hiddenBadge}>+{hiddenCount}</span>
+                    )}
+                    <button type="button" className={styles.todayLink} onClick={onOpenDay}>
+                      детальніше
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 18l6-6-6-6"/>
+                      </svg>
+                    </button>
+                  </div>
                 )}
               </div>
             )

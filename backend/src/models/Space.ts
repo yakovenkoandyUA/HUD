@@ -53,10 +53,11 @@ export interface IPetProfile {
 
 export interface ITripProfile {
   destination: string
+  origin:      string
   startDate:   string | null
   endDate:     string | null
   travelers:   number | null
-  status:      'planning' | 'ongoing' | 'completed'
+  status:      'planning' | 'booked' | 'ongoing' | 'completed'
 }
 
 export interface ISpace extends Document {
@@ -131,10 +132,11 @@ const petProfileSchema = new Schema<IPetProfile>({
 
 const tripProfileSchema = new Schema<ITripProfile>({
   destination: { type: String, default: '' },
+  origin:      { type: String, default: '' },
   startDate:   { type: String, default: null },
   endDate:     { type: String, default: null },
   travelers:   { type: Number, default: null },
-  status:      { type: String, enum: ['planning', 'ongoing', 'completed'], default: 'planning' },
+  status:      { type: String, enum: ['planning', 'booked', 'ongoing', 'completed'], default: 'planning' },
 }, { _id: false })
 
 const schema = new Schema<ISpace>({

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { usePetStore, type PetEvent, type PetEventInput, type PetEventType } from '../../store/petStore'
-import type { PetProfile, PetFoodItem, Space } from '@/features/memories/store/spacesStore'
+import type { PetProfile, PetFoodItem } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
@@ -9,13 +9,28 @@ import styles from './PetSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+interface SpaceTx {
+  _id:       string
+  type:      'income' | 'expense'
+  amount:    number
+  desc:      string
+  title?:    string
+  category?: string
+  date:      string
+}
+
 interface Props {
   spaceId:         string
   color:           string
   spaceName:       string
   profile:         PetProfile | null
   onProfileUpdate: (p: PetProfile) => void
-  space:           Space
+  coverUrl?:       string
+  coverPosition?:  string
+  isOwner?:        boolean
+  onEditSpace?:    () => void
+  onBack?:         () => void
+  spaceTxs?:       SpaceTx[]
 }
 
 type SheetType = 'vet_visit' | 'vaccination' | 'medication' | 'grooming' | 'weight' | 'note' | null
@@ -31,9 +46,16 @@ const EVENT_LABELS: Record<PetEventType, string> = {
   note:        'Нотатка',
 }
 
+const MONTHS_SHORT = ['січ.','лют.','бер.','квіт.','трав.','черв.','лип.','серп.','вер.','жов.','лист.','груд.']
+
 function fmtDate(iso: string): string {
   const [y, m, d] = iso.slice(0, 10).split('-')
   return `${d}.${m}.${y}`
+}
+
+function fmtDateShort(iso: string): string {
+  const [, m, d] = iso.slice(0, 10).split('-')
+  return `${parseInt(d)} ${MONTHS_SHORT[parseInt(m) - 1]}`
 }
 
 function fmtCost(n: number | null, currency: string): string {
@@ -48,12 +70,11 @@ function todayISO(): string {
 
 function calcAge(birthDate: string | null): string {
   if (!birthDate) return ''
-  const birth = new Date(birthDate)
-  const now = new Date()
+  const birth  = new Date(birthDate)
+  const now    = new Date()
   const months = (now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth()
   if (months < 12) return `${months} міс.`
-  const years = Math.floor(months / 12)
-  return `${years} р.`
+  return `${Math.floor(months / 12)} р.`
 }
 
 // ── Event icon ─────────────────────────────────────────────────────────────
@@ -90,43 +111,26 @@ function EventIcon({ type }: { type: PetEventType }) {
     case 'weight':
       return (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-          <path d="M12 6v6l4 2"/>
+          <circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 1.5"/>
         </svg>
       )
     default:
       return (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <line x1="8" y1="6" x2="21" y2="6"/>
-          <line x1="8" y1="12" x2="21" y2="12"/>
-          <line x1="8" y1="18" x2="21" y2="18"/>
-          <line x1="3" y1="6" x2="3.01" y2="6"/>
-          <line x1="3" y1="12" x2="3.01" y2="12"/>
-          <line x1="3" y1="18" x2="3.01" y2="18"/>
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
         </svg>
       )
   }
 }
 
-// ── Weight trend ──────────────────────────────────────────────────────────
-
-function calcWeightTrend(events: PetEvent[]): { latest: number; delta: number } | null {
-  const weights = [...events]
-    .filter(e => e.type === 'weight' && e.weight != null)
-    .sort((a, b) => a.date.localeCompare(b.date))
-  if (weights.length < 2) return null
-  const latest = weights[weights.length - 1].weight!
-  const prev   = weights[weights.length - 2].weight!
-  return { latest, delta: Math.round((latest - prev) * 10) / 10 }
-}
-
-// ── Upcoming (nextDue) block ───────────────────────────────────────────────
+// ── Upcoming helpers ────────────────────────────────────────────────────────
 
 function daysUntil(isoDate: string): number {
   const then = new Date(isoDate)
   const now  = new Date()
-  then.setHours(0, 0, 0, 0)
-  now.setHours(0, 0, 0, 0)
+  then.setHours(0, 0, 0, 0); now.setHours(0, 0, 0, 0)
   return Math.round((then.getTime() - now.getTime()) / 86_400_000)
 }
 
@@ -137,17 +141,12 @@ function pluralDays(n: number): string {
   return 'днів'
 }
 
-interface UpcomingItem {
-  label:   string
-  date:    string
-  daysLeft: number
-}
+interface UpcomingItem { label: string; date: string; daysLeft: number }
 
 function getUpcoming(events: PetEvent[]): UpcomingItem[] {
   const today = new Date().toISOString().slice(0, 10)
   const seen  = new Set<string>()
   const items: UpcomingItem[] = []
-
   for (const e of events) {
     if (!e.nextDue) continue
     const key = `${e.type}:${e.nextDue}`
@@ -155,27 +154,10 @@ function getUpcoming(events: PetEvent[]): UpcomingItem[] {
     seen.add(key)
     const days = daysUntil(e.nextDue)
     if (days > 90) continue
-    const typeLabel = EVENT_LABELS[e.type]
-    items.push({ label: typeLabel, date: e.nextDue, daysLeft: days })
+    items.push({ label: EVENT_LABELS[e.type], date: e.nextDue, daysLeft: days })
   }
-
   items.sort((a, b) => a.daysLeft - b.daysLeft)
   return items.filter(i => i.date >= today || i.daysLeft >= -7)
-}
-
-// ── Empty state ────────────────────────────────────────────────────────────
-
-function EmptyEvents({ onVet, onVacc }: { onVet: () => void; onVacc: () => void }) {
-  return (
-    <div className={styles.empty}>
-      <p className={styles.emptyTitle}>Хронологія порожня</p>
-      <p className={styles.emptyText}>Додай першу подію, щоб почати хронологію життя улюбленця.</p>
-      <div className={styles.emptyCtaRow}>
-        <button type="button" className={styles.emptyCtaBtn} onClick={onVet}>+ Ветеринар</button>
-        <button type="button" className={styles.emptyCtaBtn} onClick={onVacc}>+ Щеплення</button>
-      </div>
-    </div>
-  )
 }
 
 // ── Add event sheet ────────────────────────────────────────────────────────
@@ -197,14 +179,14 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
   const [currency, setCurrency]     = useState<'UAH' | 'USD' | 'EUR'>('UAH')
   const [clinic, setClinic]         = useState('')
   const [notes, setNotes]           = useState('')
-  const [nextDue, setNextDue]           = useState('')
-  const [weight, setWeight]             = useState('')
-  const [medName, setMedName]           = useState('')
-  const [dateOpen, setDateOpen]         = useState(false)
-  const [nextDueOpen, setNextDueOpen]   = useState(false)
-  const [busy, setBusy]                 = useState(false)
-  const [mounted, setMounted]           = useState(false)
-  const [visible, setVisible]           = useState(false)
+  const [nextDue, setNextDue]       = useState('')
+  const [weight, setWeight]         = useState('')
+  const [medName, setMedName]       = useState('')
+  const [dateOpen, setDateOpen]     = useState(false)
+  const [nextDueOpen, setNextDueOpen] = useState(false)
+  const [busy, setBusy]             = useState(false)
+  const [mounted, setMounted]       = useState(false)
+  const [visible, setVisible]       = useState(false)
 
   const sheetRef   = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -234,7 +216,7 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
         type: type as PetEventType,
         date,
         title: title || EVENT_LABELS[type as PetEventType],
-        cost:           cost   ? parseFloat(cost)   : null,
+        cost:           cost    ? parseFloat(cost)   : null,
         currency,
         clinic:         clinic  || undefined,
         notes:          notes   || undefined,
@@ -271,12 +253,7 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
         <div ref={bodyRef} className={styles.sheetBody}>
           <div className={styles.field}>
             <label className={styles.fieldLabel}>НАЗВА</label>
-            <input
-              className={styles.fieldInput}
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder={EVENT_LABELS[type as PetEventType]}
-            />
+            <input className={styles.fieldInput} value={title} onChange={e => setTitle(e.target.value)} placeholder={EVENT_LABELS[type as PetEventType]} />
           </div>
 
           <div className={styles.field}>
@@ -290,15 +267,7 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
           {type === 'weight' && (
             <div className={styles.field}>
               <label className={styles.fieldLabel}>ВАГА (кг)</label>
-              <input
-                className={styles.fieldInput}
-                type="number"
-                inputMode="decimal"
-                step="0.1"
-                value={weight}
-                onChange={e => setWeight(e.target.value)}
-                placeholder="0.0"
-              />
+              <input className={styles.fieldInput} type="number" inputMode="decimal" step="0.1" value={weight} onChange={e => setWeight(e.target.value)} placeholder="0.0" />
             </div>
           )}
 
@@ -306,23 +275,10 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
             <div className={styles.field}>
               <label className={styles.fieldLabel}>ВАРТІСТЬ</label>
               <div className={styles.costRow}>
-                <input
-                  className={`${styles.fieldInput} ${styles.costInput}`}
-                  type="number"
-                  inputMode="decimal"
-                  value={cost}
-                  onChange={e => setCost(e.target.value)}
-                  placeholder="0"
-                />
+                <input className={`${styles.fieldInput} ${styles.costInput}`} type="number" inputMode="decimal" value={cost} onChange={e => setCost(e.target.value)} placeholder="0" />
                 <div className={styles.currencyPills}>
                   {CURRENCY_OPTIONS.map(c => (
-                    <button
-                      key={c} type="button"
-                      className={`${styles.currencyPill} ${currency === c ? styles.currencyPillOn : ''}`}
-                      onClick={() => setCurrency(c)}
-                    >
-                      {c}
-                    </button>
+                    <button key={c} type="button" className={`${styles.currencyPill} ${currency === c ? styles.currencyPillOn : ''}`} onClick={() => setCurrency(c)}>{c}</button>
                   ))}
                 </div>
               </div>
@@ -332,24 +288,14 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
           {(type === 'vet_visit' || type === 'vaccination' || type === 'grooming') && (
             <div className={styles.field}>
               <label className={styles.fieldLabel}>КЛІНІКА / ЗАКЛАД</label>
-              <input
-                className={styles.fieldInput}
-                value={clinic}
-                onChange={e => setClinic(e.target.value)}
-                placeholder="—"
-              />
+              <input className={styles.fieldInput} value={clinic} onChange={e => setClinic(e.target.value)} placeholder="—" />
             </div>
           )}
 
           {type === 'medication' && (
             <div className={styles.field}>
               <label className={styles.fieldLabel}>НАЗВА ПРЕПАРАТУ</label>
-              <input
-                className={styles.fieldInput}
-                value={medName}
-                onChange={e => setMedName(e.target.value)}
-                placeholder="—"
-              />
+              <input className={styles.fieldInput} value={medName} onChange={e => setMedName(e.target.value)} placeholder="—" />
             </div>
           )}
 
@@ -365,24 +311,12 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
 
           <div className={styles.field}>
             <label className={styles.fieldLabel}>НОТАТКА</label>
-            <textarea
-              className={`${styles.fieldInput} ${styles.fieldTextarea}`}
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Деталі…"
-              rows={3}
-            />
+            <textarea className={`${styles.fieldInput} ${styles.fieldTextarea}`} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Деталі…" rows={3} />
           </div>
         </div>
 
         <div className={styles.sheetFooter}>
-          <button
-            type="button"
-            className={styles.saveBtn}
-            style={{ background: color }}
-            onClick={handleSave}
-            disabled={busy || !date}
-          >
+          <button type="button" className={styles.saveBtn} style={{ background: color }} onClick={handleSave} disabled={busy || !date}>
             {busy ? 'Збереження…' : 'Зберегти'}
           </button>
         </div>
@@ -418,23 +352,22 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
   const [mounted, setMounted]   = useState(false)
   const [visible, setVisible]   = useState(false)
 
-  // ── Avatar crop state ──
   const [pendingImgSrc, setPendingImgSrc] = useState<string | null>(null)
   const [cropOffset, setCropOffset]       = useState({ x: 0, y: 0 })
   const [cropScale, setCropScale]         = useState(1)
   const [cropBusy, setCropBusy]           = useState(false)
   const [naturalSize, setNaturalSize]     = useState({ w: 0, h: 0 })
 
-  const sheetRef      = useRef<HTMLDivElement>(null)
-  const overlayRef    = useRef<HTMLDivElement>(null)
-  const bodyRef       = useRef<HTMLDivElement>(null)
-  const fileInputRef  = useRef<HTMLInputElement>(null)
-  const cropCircleRef = useRef<HTMLDivElement>(null)
-  const cropImgRef    = useRef<HTMLImageElement>(null)
+  const sheetRef       = useRef<HTMLDivElement>(null)
+  const overlayRef     = useRef<HTMLDivElement>(null)
+  const bodyRef        = useRef<HTMLDivElement>(null)
+  const fileInputRef   = useRef<HTMLInputElement>(null)
+  const cropCircleRef  = useRef<HTMLDivElement>(null)
+  const cropImgRef     = useRef<HTMLImageElement>(null)
   const cropOverlayRef = useRef<HTMLDivElement>(null)
-  const cropDragRef   = useRef<{ startX: number; startY: number; startOffX: number; startOffY: number } | null>(null)
-  const pointersRef   = useRef<Map<number, { x: number; y: number }>>(new Map())
-  const pinchStartRef = useRef<{ dist: number; scale: number } | null>(null)
+  const cropDragRef    = useRef<{ startX: number; startY: number; startOffX: number; startOffY: number } | null>(null)
+  const pointersRef    = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const pinchStartRef  = useRef<{ dist: number; scale: number } | null>(null)
 
   useSwipeToDismiss(onClose, { enabled: isOpen && !pendingImgSrc, bodyRef, overlayRef, sheetRef })
 
@@ -448,9 +381,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
       setPhotoUrl(profile?.photoUrl ?? '')
       setChipNum(profile?.chipNumber ?? '')
       setPassport(profile?.passportNumber ?? '')
-      setPendingImgSrc(null)
-      setCropOffset({ x: 0, y: 0 })
-      setCropScale(1)
+      setPendingImgSrc(null); setCropOffset({ x: 0, y: 0 }); setCropScale(1)
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
@@ -460,7 +391,6 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
     }
   }, [isOpen, profile, spaceName])
 
-  // Stop native touch events inside crop overlay from triggering swipe-dismiss
   useEffect(() => {
     if (!pendingImgSrc || !cropOverlayRef.current) return
     const el = cropOverlayRef.current
@@ -473,21 +403,17 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
     }
   }, [pendingImgSrc])
 
-  // ── Crop handlers ──
-
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (pendingImgSrc) URL.revokeObjectURL(pendingImgSrc)
     setPendingImgSrc(URL.createObjectURL(file))
-    setCropOffset({ x: 0, y: 0 })
-    setCropScale(1)
+    setCropOffset({ x: 0, y: 0 }); setCropScale(1)
     e.target.value = ''
   }
 
   const handleCropImgLoad = () => {
-    const img    = cropImgRef.current
-    const circle = cropCircleRef.current
+    const img = cropImgRef.current; const circle = cropCircleRef.current
     if (!img || !circle) return
     const size  = circle.offsetWidth
     const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight)
@@ -530,8 +456,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
       cropDragRef.current = { startX: pts[0].x, startY: pts[0].y, startOffX: cropOffset.x, startOffY: cropOffset.y }
       pinchStartRef.current = null
     } else if (pts.length === 0) {
-      cropDragRef.current = null
-      pinchStartRef.current = null
+      cropDragRef.current = null; pinchStartRef.current = null
     }
   }
 
@@ -544,29 +469,23 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
     if (!cropImgRef.current || !cropCircleRef.current || !pendingImgSrc) return
     setCropBusy(true)
     try {
-      const size      = 400
-      const canvas    = document.createElement('canvas')
-      canvas.width    = size
-      canvas.height   = size
-      const ctx       = canvas.getContext('2d')!
-      ctx.beginPath()
-      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
-      ctx.clip()
+      const size = 400
+      const canvas = document.createElement('canvas')
+      canvas.width = size; canvas.height = size
+      const ctx = canvas.getContext('2d')!
+      ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip()
       const circleSize = cropCircleRef.current.offsetWidth
-      const drawW = naturalSize.w * cropScale
-      const drawH = naturalSize.h * cropScale
-      const drawX = (circleSize - drawW) / 2 + cropOffset.x
-      const drawY = (circleSize - drawH) / 2 + cropOffset.y
+      const drawW = naturalSize.w * cropScale; const drawH = naturalSize.h * cropScale
+      const drawX = (circleSize - drawW) / 2 + cropOffset.x; const drawY = (circleSize - drawH) / 2 + cropOffset.y
       const ratio = size / circleSize
       ctx.drawImage(cropImgRef.current, drawX * ratio, drawY * ratio, drawW * ratio, drawH * ratio)
       const blob = await new Promise<Blob>((resolve, reject) =>
         canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.92)
       )
       const file = new File([blob], 'pet-avatar.jpg', { type: 'image/jpeg' })
-      const url  = await uploadToCloudinary(file, 'spaces')
+      const url = await uploadToCloudinary(file, 'spaces')
       setPhotoUrl(url)
-      URL.revokeObjectURL(pendingImgSrc)
-      setPendingImgSrc(null)
+      URL.revokeObjectURL(pendingImgSrc); setPendingImgSrc(null)
     } catch {
       showToast('Помилка завантаження — спробуй ще раз', 'error')
     } finally {
@@ -576,9 +495,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
 
   const handleCropCancel = () => {
     if (pendingImgSrc) URL.revokeObjectURL(pendingImgSrc)
-    setPendingImgSrc(null)
-    setCropOffset({ x: 0, y: 0 })
-    setCropScale(1)
+    setPendingImgSrc(null); setCropOffset({ x: 0, y: 0 }); setCropScale(1)
   }
 
   const handleSave = async () => {
@@ -614,7 +531,6 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
         <div className={styles.handle} />
 
         {pendingImgSrc ? (
-          /* ── Crop mode ── */
           <>
             <div className={styles.sheetHeader}>
               <span className={styles.sheetTitle}>КАДРУВАННЯ ФОТО</span>
@@ -654,7 +570,6 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
             </div>
           </>
         ) : (
-          /* ── Edit mode ── */
           <>
             <div className={styles.sheetHeader}>
               <span className={styles.sheetTitle}>ПРОФІЛЬ УЛЮБЛЕНЦЯ</span>
@@ -664,10 +579,8 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
             </div>
 
             <div ref={bodyRef} className={styles.sheetBody}>
-              {/* ── Avatar hero row ── */}
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
               <div className={styles.avatarHero}>
-                {/* Left: avatar circle */}
                 <div className={styles.avatarSection}>
                   <div className={styles.avatarWrap} onClick={() => fileInputRef.current?.click()}>
                     <div className={styles.avatarCircle}>
@@ -683,40 +596,22 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
                     </div>
                   </div>
                   {photoUrl && (
-                    <button type="button" className={styles.avatarRemoveBtn} onClick={() => setPhotoUrl('')}>
-                      Видалити фото
-                    </button>
+                    <button type="button" className={styles.avatarRemoveBtn} onClick={() => setPhotoUrl('')}>Видалити фото</button>
                   )}
                 </div>
 
-                {/* Right: name + species + breed */}
                 <div className={styles.avatarFields}>
                   <div className={styles.field}>
                     <label className={styles.fieldLabel}>КЛИЧКА</label>
-                    <input
-                      className={styles.fieldInput}
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      placeholder="—"
-                    />
+                    <input className={styles.fieldInput} value={name} onChange={e => setName(e.target.value)} placeholder="—" />
                   </div>
                   <div className={styles.field}>
                     <label className={styles.fieldLabel}>ВИД</label>
-                    <input
-                      className={styles.fieldInput}
-                      value={species}
-                      onChange={e => setSpecies(e.target.value)}
-                      placeholder="Кіт, Собака…"
-                    />
+                    <input className={styles.fieldInput} value={species} onChange={e => setSpecies(e.target.value)} placeholder="Кіт, Собака…" />
                   </div>
                   <div className={styles.field}>
                     <label className={styles.fieldLabel}>ПОРОДА</label>
-                    <input
-                      className={styles.fieldInput}
-                      value={breed}
-                      onChange={e => setBreed(e.target.value)}
-                      placeholder="—"
-                    />
+                    <input className={styles.fieldInput} value={breed} onChange={e => setBreed(e.target.value)} placeholder="—" />
                   </div>
                 </div>
               </div>
@@ -731,315 +626,28 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
                 </div>
                 <div className={styles.field}>
                   <label className={styles.fieldLabel}>ВАГА (кг)</label>
-                  <input
-                    className={styles.fieldInput}
-                    type="number"
-                    inputMode="decimal"
-                    step="0.1"
-                    value={weight}
-                    onChange={e => setWeight(e.target.value)}
-                    placeholder="—"
-                  />
+                  <input className={styles.fieldInput} type="number" inputMode="decimal" step="0.1" value={weight} onChange={e => setWeight(e.target.value)} placeholder="—" />
                 </div>
               </div>
 
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>НОМЕР МІКРОЧІПА</label>
-                <input
-                  className={styles.fieldInput}
-                  value={chipNum}
-                  onChange={e => setChipNum(e.target.value)}
-                  placeholder="—"
-                />
+                <input className={styles.fieldInput} value={chipNum} onChange={e => setChipNum(e.target.value)} placeholder="—" />
               </div>
-
               <div className={styles.field}>
                 <label className={styles.fieldLabel}>НОМЕР ПАСПОРТА</label>
-                <input
-                  className={styles.fieldInput}
-                  value={passport}
-                  onChange={e => setPassport(e.target.value)}
-                  placeholder="—"
-                />
+                <input className={styles.fieldInput} value={passport} onChange={e => setPassport(e.target.value)} placeholder="—" />
               </div>
             </div>
 
             <div className={styles.sheetFooter}>
-              <button
-                type="button"
-                className={styles.saveBtn}
-                style={{ background: color }}
-                onClick={handleSave}
-                disabled={busy}
-              >
+              <button type="button" className={styles.saveBtn} style={{ background: color }} onClick={handleSave} disabled={busy}>
                 {busy ? 'Збереження…' : 'Зберегти'}
               </button>
             </div>
           </>
         )}
       </div>
-    </div>
-  )
-}
-
-// ── Main component ─────────────────────────────────────────────────────────
-
-/**
- * PetSpaceView
- * ------------
- * Типізований вид для просторів типу 'pet'. Показує профіль улюбленця
- * (кличка, вид/порода, вік, вага) та хронологію подій
- * (ветеринар, щеплення, ліки, грумінг, вага).
- *
- * @prop spaceId         — ID простору
- * @prop color           — колір простору для акцентів
- * @prop profile         — поточний petProfile (з Space)
- * @prop onProfileUpdate — callback після збереження профілю
- */
-const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onProfileUpdate, space }) => {
-  const showToast = useUiStore(s => s.showToast)
-  const { eventsBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile } = usePetStore()
-
-  const [addSheet, setAddSheet]       = useState<SheetType>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
-
-  const events = eventsBySpace[spaceId] ?? []
-
-  useEffect(() => {
-    let cancelled = false
-    const load = async () => {
-      await fetchEvents(spaceId)
-    }
-    if (!cancelled) load()
-    return () => { cancelled = true }
-  }, [spaceId, fetchEvents])
-
-  const handleCreate = async (data: PetEventInput) => {
-    try {
-      await createEvent(spaceId, data)
-      showToast('Додано', 'success')
-    } catch {
-      showToast('Помилка збереження', 'error')
-      throw new Error('Failed')
-    }
-  }
-
-  const handleDelete = async (eventId: string) => {
-    deleteEvent(spaceId, eventId)
-    showToast('Видалено', 'success')
-  }
-
-  const handleProfileSave = async (data: Partial<PetProfile>) => {
-    try {
-      const updated = await updateProfile(spaceId, data)
-      onProfileUpdate(updated)
-      showToast('Збережено', 'success')
-    } catch {
-      showToast('Помилка збереження', 'error')
-      throw new Error('Failed')
-    }
-  }
-
-  const isProfileEmpty = !profile?.name && !profile?.species && !profile?.breed && !profile?.birthDate && profile?.weight == null
-  const colorVar = { '--space-color': color } as React.CSSProperties
-
-  return (
-    <div className={styles.root} style={colorVar}>
-
-      {/* ── Profile section ── */}
-      <div className={styles.profileSection}>
-        <div className={styles.profileSectionHeader}>
-          <span className={styles.sectionTitle}>ПРОФІЛЬ УЛЮБЛЕНЦЯ</span>
-          {!isProfileEmpty && (
-            <button type="button" className={styles.profileEditBtn} onClick={() => setProfileOpen(true)} aria-label="Редагувати профіль">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
-          )}
-        </div>
-
-        {isProfileEmpty ? (
-          <div className={styles.profileSetupCard}>
-            <div className={styles.profileSetupRows}>
-              <div className={styles.profileSetupRow}>
-                <span className={styles.profileSetupIcon}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </span>
-                <span className={styles.profileSetupContent}>
-                  <span className={styles.profileSetupLabel}>Кличка</span>
-                  <span className={styles.profileSetupValue}>не вказано</span>
-                </span>
-              </div>
-              <div className={styles.profileSetupRow}>
-                <span className={styles.profileSetupIcon}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="14" r="5"/><circle cx="5" cy="8" r="2"/><circle cx="19" cy="8" r="2"/><circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/></svg>
-                </span>
-                <span className={styles.profileSetupContent}>
-                  <span className={styles.profileSetupLabel}>Вид / порода</span>
-                  <span className={styles.profileSetupValue}>не вказано</span>
-                </span>
-              </div>
-              <div className={styles.profileSetupRow}>
-                <span className={styles.profileSetupIcon}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                </span>
-                <span className={styles.profileSetupContent}>
-                  <span className={styles.profileSetupLabel}>Дата народження</span>
-                  <span className={styles.profileSetupValue}>не вказано</span>
-                </span>
-              </div>
-            </div>
-            <button type="button" className={styles.profileSetupBtn} onClick={() => setProfileOpen(true)}>
-              Заповнити профіль
-            </button>
-          </div>
-        ) : (
-          <div className={styles.profileCard}>
-            {profile?.photoUrl && (
-              <img src={profile.photoUrl} alt={profile.name || ''} className={styles.profilePhoto} />
-            )}
-            <div className={styles.profileInfo}>
-              <div className={styles.profileName}>{profile?.name || '—'}</div>
-              <div className={styles.profileMeta}>
-                {profile?.species && <span className={styles.speciesBadge}>{profile.species}</span>}
-                {profile?.breed   && <span className={styles.metaItem}>{profile.breed}</span>}
-                {profile?.birthDate && <span className={styles.metaItem}>{calcAge(profile.birthDate)}</span>}
-                {profile?.weight != null && <span className={styles.metaItem}>{profile.weight} кг</span>}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Quick actions ── */}
-      <div className={styles.actionsSection}>
-        <span className={styles.sectionTitle}>ШВИДКІ ДІЇ</span>
-        <div className={styles.actionsGrid}>
-          {([
-            { type: 'vet_visit'   as SheetType, label: 'Ветеринар', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-            { type: 'vaccination' as SheetType, label: 'Щеплення',  icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 17 3-3-3-3M15 17h6M18 14v6"/><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/></svg> },
-            { type: 'medication'  as SheetType, label: 'Ліки',      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="16" cy="16" r="6"/><path d="m12.5 19.5 7-7"/><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/></svg> },
-            { type: 'grooming'    as SheetType, label: 'Грумінг',   icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
-            { type: 'weight'      as SheetType, label: 'Вага',      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 1.5"/></svg> },
-            { type: 'note'        as SheetType, label: 'Нотатка',   icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> },
-          ] as const).map(a => (
-            <button key={a.type} type="button" className={styles.actionBtn} onClick={() => setAddSheet(a.type)}>
-              <span className={styles.actionBtnIcon}>{a.icon}</span>
-              {a.label}
-              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
-            </button>
-          ))}
-          <button type="button" className={`${styles.actionBtn} ${styles.actionBtnMimir}`} onClick={() => setChatOpen(true)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            Мімір
-          </button>
-        </div>
-      </div>
-
-      {/* ── Weight trend ── */}
-      {(() => {
-        const trend = calcWeightTrend(events)
-        if (!trend) return null
-        const up = trend.delta > 0
-        const eq = trend.delta === 0
-        return (
-          <div className={styles.weightTrendRow} style={colorVar}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 1.5"/></svg>
-            <span className={styles.weightTrendVal}>{trend.latest} кг</span>
-            {!eq && (
-              <span className={`${styles.weightTrendDelta} ${up ? styles.weightTrendUp : styles.weightTrendDown}`}>
-                {up ? '▲' : '▼'} {Math.abs(trend.delta)} кг
-              </span>
-            )}
-          </div>
-        )
-      })()}
-
-      {/* ── Upcoming (nextDue) ── */}
-      {(() => {
-        const upcoming = getUpcoming(events)
-        if (upcoming.length === 0) return null
-        return (
-          <div className={styles.upcomingBlock} style={colorVar}>
-            <span className={styles.sectionTitle}>НАЙБЛИЖЧЕ</span>
-            <div className={styles.upcomingList}>
-              {upcoming.map((item, i) => {
-                const overdue = item.daysLeft < 0
-                const soon    = item.daysLeft >= 0 && item.daysLeft <= 3
-                return (
-                  <div key={i} className={styles.upcomingItem}>
-                    <span className={`${styles.upcomingDot} ${overdue ? styles.upcomingDotDanger : soon ? styles.upcomingDotWarn : ''}`} />
-                    <span className={styles.upcomingLabel}>{item.label}</span>
-                    <span className={styles.upcomingDate}>{fmtDate(item.date)}</span>
-                    <span className={`${styles.upcomingDays} ${overdue ? styles.upcomingDaysDanger : soon ? styles.upcomingDaysWarn : ''}`}>
-                      {overdue
-                        ? `${Math.abs(item.daysLeft)} ${pluralDays(item.daysLeft)} тому`
-                        : item.daysLeft === 0
-                          ? 'сьогодні'
-                          : `${item.daysLeft} ${pluralDays(item.daysLeft)}`}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })()}
-
-      {/* ── Food log ── */}
-      <FoodLog
-        foodLog={profile?.foodLog ?? []}
-        color={color}
-        onSave={async (foodLog) => {
-          await handleProfileSave({ foodLog })
-        }}
-      />
-
-      {/* ── Events list ── */}
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>ХРОНОЛОГІЯ</h3>
-        {loading && events.length === 0 ? (
-          <div className={styles.loadingRow}>
-            <span className={styles.loadingDot} style={{ background: color }} />
-          </div>
-        ) : events.length === 0 ? (
-          <EmptyEvents onVet={() => setAddSheet('vet_visit')} onVacc={() => setAddSheet('vaccination')} />
-        ) : (
-          <div className={styles.eventList}>
-            {events.map(event => (
-              <PetEventRow
-                key={event._id}
-                event={event}
-                color={color}
-                onDelete={() => handleDelete(event._id)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <AddEventSheet
-        isOpen={addSheet !== null}
-        type={addSheet}
-        onClose={() => setAddSheet(null)}
-        onSave={handleCreate}
-        color={color}
-      />
-
-      <ProfileEditSheet
-        isOpen={profileOpen}
-        profile={profile}
-        spaceName={spaceName}
-        onClose={() => setProfileOpen(false)}
-        onSave={handleProfileSave}
-        color={color}
-      />
-
-      <SpaceChatSheet isOpen={chatOpen} onClose={() => setChatOpen(false)} space={space} />
     </div>
   )
 }
@@ -1073,11 +681,7 @@ async function searchPetFood(q: string): Promise<PetFoodSuggestion[]> {
     const data = await res.json() as { products?: { product_name?: string; brands?: string; image_small_url?: string }[] }
     return (data.products ?? [])
       .filter(p => p.product_name)
-      .map(p => ({
-        name:     p.product_name ?? '',
-        brand:    p.brands?.split(',')[0].trim() ?? '',
-        imageUrl: p.image_small_url ?? '',
-      }))
+      .map(p => ({ name: p.product_name ?? '', brand: p.brands?.split(',')[0].trim() ?? '', imageUrl: p.image_small_url ?? '' }))
   } catch { return [] }
 }
 
@@ -1088,15 +692,15 @@ interface FoodLogProps {
 }
 
 const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
-  const [open, setOpen]           = useState(false)
-  const [addName, setAddName]     = useState('')
-  const [addBrand, setAddBrand]   = useState('')
+  const [open, setOpen]         = useState(false)
+  const [addName, setAddName]   = useState('')
+  const [addBrand, setAddBrand] = useState('')
   const [addImageUrl, setAddImageUrl] = useState('')
-  const [addReact, setAddReact]   = useState<Reaction>('yes')
-  const [saving, setSaving]       = useState(false)
-  const [filter, setFilter]       = useState<'all' | Reaction>('all')
+  const [addReact, setAddReact] = useState<Reaction>('yes')
+  const [saving, setSaving]     = useState(false)
+  const [filter, setFilter]     = useState<'all' | Reaction>('all')
   const [suggestions, setSuggestions] = useState<PetFoodSuggestion[]>([])
-  const [showSug, setShowSug]         = useState(false)
+  const [showSug, setShowSug]   = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const colorVar = { '--space-color': color } as React.CSSProperties
@@ -1106,22 +710,17 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       const results = await searchPetFood(val)
-      setSuggestions(results)
-      setShowSug(results.length > 0)
+      setSuggestions(results); setShowSug(results.length > 0)
     }, 400)
   }
 
   const handlePickSuggestion = (s: PetFoodSuggestion) => {
-    setAddName(s.name)
-    setAddBrand(s.brand)
-    setAddImageUrl(s.imageUrl)
-    setShowSug(false)
+    setAddName(s.name); setAddBrand(s.brand); setAddImageUrl(s.imageUrl); setShowSug(false)
   }
 
   const handleAdd = async () => {
     if (!addName.trim()) return
-    setSaving(true)
-    setShowSug(false)
+    setSaving(true); setShowSug(false)
     const item: PetFoodItem = { id: genId(), name: addName.trim(), brand: addBrand.trim(), reaction: addReact, notes: '', imageUrl: addImageUrl }
     try { await onSave([...foodLog, item]) } finally { setSaving(false) }
     setAddName(''); setAddBrand(''); setAddReact('yes'); setAddImageUrl('')
@@ -1133,9 +732,7 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
     await onSave(foodLog.map(f => f.id === id ? { ...f, reaction: nextReaction(f.reaction) } : f))
   }
 
-  const handleDelete = async (id: string) => {
-    await onSave(foodLog.filter(f => f.id !== id))
-  }
+  const handleDelete = async (id: string) => { await onSave(foodLog.filter(f => f.id !== id)) }
 
   const visible = filter === 'all' ? foodLog : foodLog.filter(f => f.reaction === filter)
 
@@ -1146,8 +743,7 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
         <div className={styles.foodFilters}>
           {(['all', ...REACTIONS] as const).map(f => (
             <button
-              key={f}
-              type="button"
+              key={f} type="button"
               className={`${styles.foodFilterBtn} ${filter === f ? styles.foodFilterBtnOn : ''}`}
               onClick={() => setFilter(f)}
               style={filter === f && f !== 'all' ? { color: REACTION_META[f].color, borderColor: REACTION_META[f].color } : undefined}
@@ -1164,21 +760,12 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
             const meta = REACTION_META[item.reaction]
             return (
               <div key={item.id} className={styles.foodRow}>
-                {item.imageUrl
-                  ? <img src={item.imageUrl} alt="" className={styles.foodImg} />
-                  : <div className={styles.foodImgPlaceholder} />
-                }
+                {item.imageUrl ? <img src={item.imageUrl} alt="" className={styles.foodImg} /> : <div className={styles.foodImgPlaceholder} />}
                 <div className={styles.foodMain}>
                   <span className={styles.foodName}>{item.name}</span>
                   {item.brand && <span className={styles.foodBrand}>{item.brand}</span>}
                 </div>
-                <button
-                  type="button"
-                  className={styles.foodReactionPill}
-                  style={{ background: meta.color + '1a', borderColor: meta.color, color: meta.color }}
-                  onClick={() => handleCycleReaction(item.id)}
-                  title="Тап — змінити"
-                >
+                <button type="button" className={styles.foodReactionPill} style={{ background: meta.color + '1a', borderColor: meta.color, color: meta.color }} onClick={() => handleCycleReaction(item.id)} title="Тап — змінити">
                   {meta.label}
                 </button>
                 <button type="button" className={styles.foodDeleteBtn} onClick={() => handleDelete(item.id)}>
@@ -1190,12 +777,8 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
         </div>
       )}
 
-      {visible.length === 0 && filter !== 'all' && (
-        <p className={styles.foodEmpty}>Немає позицій у цій категорії</p>
-      )}
-      {foodLog.length === 0 && filter === 'all' && (
-        <p className={styles.foodEmpty}>Додай перший корм щоб відстежувати раціон</p>
-      )}
+      {visible.length === 0 && filter !== 'all' && <p className={styles.foodEmpty}>Немає позицій у цій категорії</p>}
+      {foodLog.length === 0 && filter === 'all' && <p className={styles.foodEmpty}>Додай перший корм щоб відстежувати раціон</p>}
 
       <div className={`${styles.foodAddRow} ${open ? styles.foodAddRowOpen : ''}`}>
         {open ? (
@@ -1214,10 +797,7 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
                 <div className={styles.foodSuggestions}>
                   {suggestions.map((s, i) => (
                     <button key={i} type="button" className={styles.foodSugItem} onMouseDown={() => handlePickSuggestion(s)}>
-                      {s.imageUrl
-                        ? <img src={s.imageUrl} alt="" className={styles.foodSugImg} />
-                        : <div className={styles.foodSugImgPlaceholder} />
-                      }
+                      {s.imageUrl ? <img src={s.imageUrl} alt="" className={styles.foodSugImg} /> : <div className={styles.foodSugImgPlaceholder} />}
                       <div className={styles.foodSugText}>
                         <span className={styles.foodSugName}>{s.name}</span>
                         {s.brand && <span className={styles.foodSugBrand}>{s.brand}</span>}
@@ -1227,36 +807,19 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
                 </div>
               )}
             </div>
-            <input
-              className={styles.foodInput}
-              placeholder="Бренд (необов'язково)"
-              value={addBrand}
-              onChange={e => setAddBrand(e.target.value)}
-            />
+            <input className={styles.foodInput} placeholder="Бренд (необов'язково)" value={addBrand} onChange={e => setAddBrand(e.target.value)} />
             <div className={styles.foodReactRow}>
               {REACTIONS.map(r => (
-                <button
-                  key={r}
-                  type="button"
+                <button key={r} type="button"
                   className={`${styles.foodReactChoice} ${addReact === r ? styles.foodReactChoiceOn : ''}`}
                   style={addReact === r ? { background: REACTION_META[r].color + '20', borderColor: REACTION_META[r].color, color: REACTION_META[r].color } : undefined}
                   onClick={() => setAddReact(r)}
-                >
-                  {REACTION_META[r].label}
-                </button>
+                >{REACTION_META[r].label}</button>
               ))}
             </div>
             <div className={styles.foodAddBtns}>
               <button type="button" className={styles.foodCancelBtn} onClick={() => { setOpen(false); setAddName(''); setAddBrand(''); setShowSug(false) }}>Скасувати</button>
-              <button
-                type="button"
-                className={styles.foodSaveBtn}
-                style={{ background: color }}
-                onClick={handleAdd}
-                disabled={!addName.trim() || saving}
-              >
-                {saving ? '…' : 'Додати'}
-              </button>
+              <button type="button" className={styles.foodSaveBtn} style={{ background: color }} onClick={handleAdd} disabled={!addName.trim() || saving}>{saving ? '…' : 'Додати'}</button>
             </div>
           </>
         ) : (
@@ -1272,66 +835,418 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
 
 // ── Event row ──────────────────────────────────────────────────────────────
 
-interface EventRowProps {
-  event:    PetEvent
-  color:    string
-  onDelete: () => void
-}
+interface EventRowProps { event: PetEvent; color: string; onDelete: () => void }
 
 const PetEventRow: React.FC<EventRowProps> = ({ event, color, onDelete }) => {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handleDelete = () => {
-    if (confirmDelete) {
-      onDelete()
-    } else {
-      setConfirmDelete(true)
-      setTimeout(() => setConfirmDelete(false), 2500)
-    }
+    if (confirmDelete) { onDelete() }
+    else { setConfirmDelete(true); setTimeout(() => setConfirmDelete(false), 2500) }
   }
 
   return (
     <div className={styles.eventRow}>
-      <div className={styles.eventIcon} style={{ color }}>
-        <EventIcon type={event.type} />
-      </div>
+      <div className={styles.eventIcon} style={{ color }}><EventIcon type={event.type} /></div>
       <div className={styles.eventMain}>
         <div className={styles.eventTitle}>{event.title || EVENT_LABELS[event.type]}</div>
         <div className={styles.eventMeta}>
           <span className={styles.eventType}>{EVENT_LABELS[event.type]}</span>
-          {event.clinic && <span className={styles.eventMetaDot}>·</span>}
-          {event.clinic && <span>{event.clinic}</span>}
-          {event.medicationName && <span className={styles.eventMetaDot}>·</span>}
-          {event.medicationName && <span>{event.medicationName}</span>}
-          {event.nextDue && (
-            <>
-              <span className={styles.eventMetaDot}>·</span>
-              <span>наст. {fmtDate(event.nextDue)}</span>
-            </>
-          )}
+          {event.clinic && <><span className={styles.eventMetaDot}>·</span><span>{event.clinic}</span></>}
+          {event.medicationName && <><span className={styles.eventMetaDot}>·</span><span>{event.medicationName}</span></>}
+          {event.nextDue && <><span className={styles.eventMetaDot}>·</span><span>наст. {fmtDate(event.nextDue)}</span></>}
         </div>
-        {event.weight != null && (
-          <div className={styles.eventNotes}>{event.weight} кг</div>
-        )}
+        {event.weight != null && <div className={styles.eventNotes}>{event.weight} кг</div>}
         {event.notes && <div className={styles.eventNotes}>{event.notes}</div>}
       </div>
       <div className={styles.eventRight}>
         <div className={styles.eventDate}>{fmtDate(event.date)}</div>
-        {event.cost != null && (
-          <div className={styles.eventCost}>{fmtCost(event.cost, event.currency)}</div>
-        )}
+        {event.cost != null && <div className={styles.eventCost}>{fmtCost(event.cost, event.currency)}</div>}
       </div>
-      <button
-        type="button"
-        className={`${styles.deleteBtn} ${confirmDelete ? styles.deleteBtnConfirm : ''}`}
-        onClick={handleDelete}
-        aria-label="Видалити"
-      >
+      <button type="button" className={`${styles.deleteBtn} ${confirmDelete ? styles.deleteBtnConfirm : ''}`} onClick={handleDelete} aria-label="Видалити">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
         </svg>
       </button>
+    </div>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
+
+/**
+ * PetSpaceView
+ * ------------
+ * Типізований вид для просторів типу 'pet'. Compact hero зі status strip,
+ * metrics row (вага/щеплення/витрати), profile card, ЗДОРОВ'Я,
+ * реорганізовані quick actions, хронологія, раціон, витрати.
+ *
+ * @prop spaceId         — ID простору
+ * @prop color           — колір простору для акцентів
+ * @prop spaceName       — назва простору
+ * @prop profile         — поточний petProfile
+ * @prop onProfileUpdate — callback після збереження профілю
+ * @prop coverUrl        — URL обкладинки
+ * @prop coverPosition   — позиція обкладинки
+ * @prop isOwner         — чи поточний юзер є власником
+ * @prop onEditSpace     — відкрити шторку редагування простору
+ * @prop onBack          — навігація назад
+ * @prop spaceTxs        — транзакції простору
+ */
+const PetSpaceView: React.FC<Props> = ({
+  spaceId, color, spaceName, profile, onProfileUpdate,
+  coverUrl, coverPosition, isOwner, onEditSpace, onBack, spaceTxs = [],
+}) => {
+  const showToast = useUiStore(s => s.showToast)
+  const { eventsBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile } = usePetStore()
+
+  const [addSheet, setAddSheet]       = useState<SheetType>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+
+  const events = eventsBySpace[spaceId] ?? []
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => { if (!cancelled) await fetchEvents(spaceId) }
+    load()
+    return () => { cancelled = true }
+  }, [spaceId, fetchEvents])
+
+  const handleCreate = async (data: PetEventInput) => {
+    try {
+      await createEvent(spaceId, data)
+      showToast('Додано', 'success')
+    } catch {
+      showToast('Помилка збереження', 'error')
+      throw new Error('Failed')
+    }
+  }
+
+  const handleDelete = async (eventId: string) => {
+    deleteEvent(spaceId, eventId)
+    showToast('Видалено', 'success')
+  }
+
+  const handleProfileSave = async (data: Partial<PetProfile>) => {
+    try {
+      const updated = await updateProfile(spaceId, data)
+      onProfileUpdate(updated)
+      showToast('Збережено', 'success')
+    } catch {
+      showToast('Помилка збереження', 'error')
+      throw new Error('Failed')
+    }
+  }
+
+  // ── Derived ──
+
+  const age          = calcAge(profile?.birthDate ?? null)
+  const upcoming     = getUpcoming(events)
+  const nextUpcoming = upcoming[0] ?? null
+
+  const monthlyExpenses = (() => {
+    const now      = new Date()
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    return spaceTxs
+      .filter(t => t.type === 'expense' && t.date.slice(0, 7) === monthStr)
+      .reduce((s, t) => s + t.amount, 0)
+  })()
+
+  const healthItems = (() => {
+    const items: { label: string; value: string; urgent: boolean }[] = []
+    const nextVacc = [...events]
+      .filter(e => e.type === 'vaccination' && e.nextDue)
+      .sort((a, b) => (a.nextDue ?? '').localeCompare(b.nextDue ?? ''))[0]
+    if (nextVacc?.nextDue) {
+      items.push({ label: 'Наступне щеплення', value: fmtDate(nextVacc.nextDue), urgent: daysUntil(nextVacc.nextDue) <= 7 })
+    }
+    const lastVet = [...events].filter(e => e.type === 'vet_visit').sort((a, b) => b.date.localeCompare(a.date))[0]
+    if (lastVet) {
+      items.push({ label: 'Останній візит', value: fmtDate(lastVet.date), urgent: false })
+    }
+    if (profile?.weight != null) {
+      items.push({ label: 'Поточна вага', value: `${profile.weight} кг`, urgent: false })
+    }
+    return items
+  })()
+
+  const isProfileEmpty = !profile?.name && !profile?.species && !profile?.breed && !profile?.birthDate && profile?.weight == null
+
+  const colorVar = { '--space-color': color } as React.CSSProperties
+
+  return (
+    <div className={styles.root} style={colorVar}>
+
+      {/* ── Compact hero ── */}
+      <div className={`${styles.hero} ${coverUrl ? styles.heroCovered : ''}`}>
+        {coverUrl && (
+          <img src={coverUrl} alt="" className={styles.heroCoverImg} style={{ objectPosition: `center ${coverPosition ?? 'center'}` }} aria-hidden="true" />
+        )}
+        <div className={styles.heroCoverOverlay} />
+
+        <button type="button" className={styles.heroBackBtn} onClick={onBack} aria-label="Назад">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4l-5 5 5 5"/>
+          </svg>
+        </button>
+
+        {!coverUrl && (
+          <span className={styles.heroEmblem} aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="14" r="5"/><circle cx="5" cy="8" r="2"/><circle cx="19" cy="8" r="2"/>
+              <circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/>
+            </svg>
+          </span>
+        )}
+
+        <div className={styles.heroContent}>
+          <h1 className={`${styles.heroName} ${coverUrl ? styles.heroNameCovered : ''}`}>{spaceName}</h1>
+          <span className={styles.heroTypeLabel}>Улюбленець</span>
+          {(age || profile?.weight != null || nextUpcoming) && (
+            <div className={styles.heroStatus}>
+              {age && <span className={styles.heroStatusItem}>{age}</span>}
+              {profile?.weight != null && (
+                <><span className={styles.heroStatusDot}>·</span><span className={styles.heroStatusItem}>{profile.weight} кг</span></>
+              )}
+              {nextUpcoming && (
+                <><span className={styles.heroStatusDot}>·</span><span className={styles.heroStatusItem}>{nextUpcoming.label} {fmtDateShort(nextUpcoming.date)}</span></>
+              )}
+            </div>
+          )}
+        </div>
+
+        {isOwner && (
+          <button type="button" className={styles.heroEditBtn} onClick={onEditSpace} aria-label="Редагувати простір">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* ── Metrics row ── */}
+      <div className={styles.metricsRow}>
+        <div className={styles.metricCard}>
+          <span className={styles.metricVal}>{profile?.weight != null ? profile.weight : '—'}</span>
+          <span className={styles.metricLabel}>кг вага</span>
+        </div>
+        <div className={styles.metricCard}>
+          {nextUpcoming
+            ? <>
+                <span className={styles.metricVal}>{fmtDateShort(nextUpcoming.date)}</span>
+                <span className={`${styles.metricLabel} ${nextUpcoming.daysLeft <= 7 ? styles.metricLabelUrgent : ''}`}>
+                  {nextUpcoming.label.toLowerCase()}
+                </span>
+              </>
+            : <><span className={styles.metricVal}>—</span><span className={styles.metricLabel}>щеплення</span></>
+          }
+        </div>
+        <div className={styles.metricCard}>
+          <span className={styles.metricVal}>{monthlyExpenses > 0 ? `₴${Math.round(monthlyExpenses)}` : '—'}</span>
+          <span className={styles.metricLabel}>за місяць</span>
+        </div>
+      </div>
+
+      {/* ── Profile card ── */}
+      <div className={styles.profileSection}>
+        <div className={styles.profileSectionHeader}>
+          <span className={styles.sectionTitle}>ПРОФІЛЬ УЛЮБЛЕНЦЯ</span>
+          {!isProfileEmpty && (
+            <button type="button" className={styles.profileEditBtn} onClick={() => setProfileOpen(true)} aria-label="Редагувати профіль">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {isProfileEmpty ? (
+          <div className={styles.profileSetupCard}>
+            <div className={styles.profileSetupRows}>
+              {[
+                { label: 'Кличка', value: 'не вказано' },
+                { label: 'Вид / порода', value: 'не вказано' },
+                { label: 'Дата народження', value: 'не вказано' },
+              ].map(row => (
+                <div key={row.label} className={styles.profileSetupRow}>
+                  <span className={styles.profileSetupLabel}>{row.label}</span>
+                  <span className={styles.profileSetupValue}>{row.value}</span>
+                </div>
+              ))}
+            </div>
+            <button type="button" className={styles.profileSetupBtn} onClick={() => setProfileOpen(true)}>Заповнити профіль</button>
+          </div>
+        ) : (
+          <div className={styles.profileCard} onClick={() => setProfileOpen(true)}>
+            {profile?.photoUrl
+              ? <img src={profile.photoUrl} alt={profile.name || ''} className={styles.profilePhoto} />
+              : (
+                <div className={styles.profilePhotoPlaceholder}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="14" r="5"/><circle cx="5" cy="8" r="2"/><circle cx="19" cy="8" r="2"/><circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/>
+                  </svg>
+                </div>
+              )
+            }
+            <div className={styles.profileInfo}>
+              <div className={styles.profileName}>{profile?.name || '—'}</div>
+              <div className={styles.profileMetaRow}>
+                {profile?.species    && <span className={styles.speciesBadge}>{profile.species}</span>}
+                {profile?.breed      && <span className={styles.metaItem}>{profile.breed}</span>}
+                {profile?.birthDate  && <span className={styles.metaItem}>{calcAge(profile.birthDate)}</span>}
+                {profile?.weight != null && <span className={styles.metaItem}>{profile.weight} кг</span>}
+              </div>
+              {(profile?.birthDate || profile?.chipNumber) && (
+                <div className={styles.profileDetailsRow}>
+                  {profile.birthDate && (
+                    <span className={styles.profileDetail}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      {fmtDate(profile.birthDate)}
+                    </span>
+                  )}
+                  {profile.chipNumber && (
+                    <span className={styles.profileDetail}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="8" width="20" height="8" rx="2"/><path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M6 16v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2"/><path d="M10 12h4"/></svg>
+                      чіп {profile.chipNumber.slice(0, 8)}{profile.chipNumber.length > 8 ? '…' : ''}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.profileChevron} aria-hidden="true">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* ── Health block ── */}
+      {!loading && healthItems.length > 0 && (
+        <div className={styles.healthBlock}>
+          <span className={styles.sectionTitle}>ЗДОРОВ'Я</span>
+          <div className={styles.healthRows}>
+            {healthItems.map(item => (
+              <div key={item.label} className={styles.healthRow}>
+                <span className={styles.healthRowLabel}>{item.label}</span>
+                <span className={`${styles.healthRowValue} ${item.urgent ? styles.healthRowValueUrgent : ''}`}>{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Quick actions ── */}
+      <div className={styles.actionsSection}>
+        <span className={styles.sectionTitle}>ШВИДКІ ДІЇ</span>
+
+        <div className={styles.actionsSecondary}>
+          {([
+            { type: 'vet_visit'   as SheetType, label: 'Ветеринар', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+            { type: 'vaccination' as SheetType, label: 'Щеплення',  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 17 3-3-3-3M15 17h6M18 14v6"/><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/></svg> },
+            { type: 'medication'  as SheetType, label: 'Ліки',      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="16" cy="16" r="6"/><path d="m12.5 19.5 7-7"/><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/></svg> },
+            { type: 'weight'      as SheetType, label: 'Вага',      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 1.5"/></svg> },
+            { type: 'grooming'    as SheetType, label: 'Грумінг',   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
+            { type: 'note'        as SheetType, label: 'Нотатка',   icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> },
+          ] as const).map(a => (
+            <button key={a.type} type="button" className={styles.actionBtnSecondary} onClick={() => setAddSheet(a.type)}>
+              <span className={styles.actionBtnSecIcon}>{a.icon}</span>
+              {a.label}
+              <svg width="10" height="10" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Chronology ── */}
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>ХРОНОЛОГІЯ</h3>
+        {loading && events.length === 0 ? (
+          <div className={styles.loadingRow}>
+            <span className={styles.loadingDot} style={{ background: color }} />
+          </div>
+        ) : events.length === 0 ? (
+          <div className={styles.emptyCompact}>
+            <p className={styles.emptyCompactText}>Хронологія порожня — додай першу подію</p>
+            <div className={styles.emptyCompactBtns}>
+              <button type="button" className={styles.emptyCtaBtn} onClick={() => setAddSheet('vet_visit')}>+ Ветеринар</button>
+              <button type="button" className={styles.emptyCtaBtn} onClick={() => setAddSheet('vaccination')}>+ Щеплення</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {upcoming.length > 0 && (
+              <div className={styles.upcomingBlock}>
+                <span className={styles.upcomingTitle}>НАЙБЛИЖЧЕ</span>
+                {upcoming.map((item, i) => {
+                  const overdue = item.daysLeft < 0
+                  const soon    = item.daysLeft >= 0 && item.daysLeft <= 3
+                  return (
+                    <div key={i} className={styles.upcomingItem}>
+                      <span className={`${styles.upcomingDot} ${overdue ? styles.upcomingDotDanger : soon ? styles.upcomingDotWarn : ''}`} />
+                      <span className={styles.upcomingLabel}>{item.label}</span>
+                      <span className={styles.upcomingDate}>{fmtDate(item.date)}</span>
+                      <span className={`${styles.upcomingDays} ${overdue ? styles.upcomingDaysDanger : soon ? styles.upcomingDaysWarn : ''}`}>
+                        {overdue
+                          ? `${Math.abs(item.daysLeft)} ${pluralDays(item.daysLeft)} тому`
+                          : item.daysLeft === 0 ? 'сьогодні'
+                          : `${item.daysLeft} ${pluralDays(item.daysLeft)}`}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <div className={styles.eventList}>
+              {events.map(event => (
+                <PetEventRow key={event._id} event={event} color={color} onDelete={() => handleDelete(event._id)} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── Food log ── */}
+      <FoodLog foodLog={profile?.foodLog ?? []} color={color} onSave={async (foodLog) => { await handleProfileSave({ foodLog }) }} />
+
+      {/* ── Expenses ── */}
+      {spaceTxs.length > 0 && (
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>ВИТРАТИ</h3>
+          <div className={styles.txList}>
+            {spaceTxs.map((t, idx) => {
+              const curDate  = t.date.slice(0, 10)
+              const prevDate = idx > 0 ? spaceTxs[idx - 1].date.slice(0, 10) : null
+              const isIncome = t.type === 'income'
+              const catColor = isIncome ? 'var(--positive)' : 'var(--negative)'
+              return (
+                <React.Fragment key={t._id}>
+                  {curDate !== prevDate && <div className={styles.txDateHeader}>{curDate}</div>}
+                  <div className={styles.spaceTx}>
+                    <div className={styles.txLeft}>
+                      <div className={styles.txTypeIcon} style={{ '--cat-color': catColor } as React.CSSProperties}>
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          {isIncome ? <path d="M8 13V3M3 8l5-5 5 5"/> : <path d="M8 3v10M3 8l5 5 5-5"/>}
+                        </svg>
+                      </div>
+                      <div className={styles.txContent}>
+                        <span className={styles.txTitle}>{t.title || t.desc || t.category || '—'}</span>
+                        {t.category && <span className={styles.txSub}>{t.category}</span>}
+                      </div>
+                    </div>
+                    <span className={`${styles.txAmount} ${isIncome ? styles.txAmountPos : styles.txAmountNeg}`}>
+                      {isIncome ? '+' : '−'}₴{t.amount.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </React.Fragment>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <AddEventSheet isOpen={addSheet !== null} type={addSheet} onClose={() => setAddSheet(null)} onSave={handleCreate} color={color} />
+      <ProfileEditSheet isOpen={profileOpen} profile={profile} spaceName={spaceName} onClose={() => setProfileOpen(false)} onSave={handleProfileSave} color={color} />
     </div>
   )
 }

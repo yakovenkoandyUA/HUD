@@ -178,11 +178,13 @@ const VehicleMedallion: React.FC = () => {
       <path d="M11,43 L15,45 L11,47 L7,45 Z" fill="currentColor" opacity="0.4"/>
       {/* Inner filled circle */}
       <circle cx="45" cy="45" r="34" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.5" opacity="0.65"/>
-      {/* Car icon centered (scale 1.5, offset 27,27) */}
-      <g transform="translate(27,27) scale(1.5)" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.9">
-        <path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h11l4 4v4a2 2 0 0 1-2 2h-2"/>
-        <circle cx="7.5" cy="17.5" r="2.5"/>
-        <circle cx="17.5" cy="17.5" r="2.5"/>
+      {/* Car icon centered */}
+      <g transform="translate(27,28) scale(1.5)" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.9">
+        <path d="M2 13l3-6h10l3 6v3H2v-3z"/>
+        <path d="M6 7l1.2-2h7.6L16 7"/>
+        <path d="M2 13h18"/>
+        <circle cx="6.5" cy="16" r="1.8"/>
+        <circle cx="15.5" cy="16" r="1.8"/>
       </g>
     </svg>
   )
@@ -586,24 +588,16 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile }) =
         {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
         <div className={styles.twoCol}>
           <div>
-            <label className={styles.fieldLabel}>ПРОБІГ (км)</label>
-            <input className={styles.fieldInput} type="number" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="123 450" />
-          </div>
-          <div>
             <label className={styles.fieldLabel}>ЛІТРИ</label>
             <input className={styles.fieldInput} type="number" value={liters} onChange={e => setLiters(e.target.value)} placeholder="45.0" />
-          </div>
-        </div>
-        <div className={styles.twoCol}>
-          <div>
-            <label className={styles.fieldLabel}>СУМА (₴)</label>
-            <input className={styles.fieldInput} type="number" value={cost} onChange={e => setCost(e.target.value)} placeholder="1 800" />
           </div>
           <div>
             <label className={styles.fieldLabel}>ПАЛЬНЕ</label>
             <input className={styles.fieldInput} value={fuelType} onChange={e => setFuelType(e.target.value)} placeholder="А-95" />
           </div>
         </div>
+        <label className={styles.fieldLabel}>СУМА (₴)</label>
+        <input className={styles.fieldInput} type="number" value={cost} onChange={e => setCost(e.target.value)} placeholder="1 800" />
         <label className={styles.fieldLabel}>АЗС</label>
         <div className={styles.stationRow}>
           <input className={styles.fieldInput} value={vendor} onChange={e => setVendor(e.target.value)} placeholder="WOG, ОККО…" />
@@ -620,6 +614,8 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile }) =
             </svg>
           </a>
         </div>
+        <label className={styles.fieldLabel} style={{ marginTop: '8px', opacity: 0.6 }}>ПРОБІГ (км) — необов'язково</label>
+        <input className={styles.fieldInput} type="number" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="123 450" style={{ opacity: 0.7 }} />
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
@@ -1123,14 +1119,14 @@ const VehicleSpaceView: React.FC<Props> = ({
   const ACTION_CARDS = [
     {
       key: 'fuel' as SheetType,
-      label: '+ Заправка',
-      desc: 'Додати заправку',
+      label: 'Заправка',
+      desc: 'Записати заправку',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M3 22h12M15 8h2a2 2 0 0 1 2 2v6a1 1 0 0 0 2 0V9l-2-2"/></svg>,
     },
     {
       key: 'maintenance' as SheetType,
-      label: '+ ТО / ремонт',
-      desc: 'Додати обслуговування',
+      label: 'ТО / ремонт',
+      desc: 'Записати обслуговування',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
     },
     {

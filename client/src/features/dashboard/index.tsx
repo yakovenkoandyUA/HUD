@@ -167,10 +167,9 @@ const Dashboard: React.FC = () => {
     setFabOpen(false)
   }
 
-  const todayTeasers = routineItems
-    .filter(r => !isDoneToday(r))
-    .slice(0, 2)
-    .map(r => r.title)
+  const pendingRoutines   = routineItems.filter(r => !isDoneToday(r))
+  const todayTeasers      = pendingRoutines.slice(0, 2).map(r => r.title)
+  const todayTeasersTotal = pendingRoutines.length
 
   return (
     <div className={styles.screen}>
@@ -182,6 +181,7 @@ const Dashboard: React.FC = () => {
           onWeatherClick={(d) => { setWeatherData(d); setWeatherOpen(true) }}
           onOpenDay={() => setShowDay(true)}
           todayTeasers={todayTeasers}
+          todayTeasersTotal={todayTeasersTotal}
         />
 
         {/* First-visit Mimir — floats over content via portal */}

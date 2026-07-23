@@ -57,10 +57,11 @@ export interface PetProfile {
 
 export interface TripProfile {
   destination: string
+  origin:      string
   startDate:   string | null
   endDate:     string | null
   travelers:   number | null
-  status:      'planning' | 'ongoing' | 'completed'
+  status:      'planning' | 'booked' | 'ongoing' | 'completed'
 }
 
 export interface Space {

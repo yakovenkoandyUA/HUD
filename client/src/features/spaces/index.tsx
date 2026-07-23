@@ -24,6 +24,7 @@ import PetSpaceView from './components/PetSpaceView'
 import TripSpaceView from './components/TripSpaceView'
 import SpaceChatSheet from './components/SpaceChatSheet'
 import SpaceTaskItem from './components/SpaceTaskItem'
+import MimirIcon from '@/shared/components/ui/MimirIcon'
 import styles from './SpaceDetail.module.css'
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -757,7 +758,6 @@ const SpaceDetailScreen: React.FC = () => {
           onEditSpace={openEdit}
           onBack={() => navigate(-1)}
           spaceTxs={spaceTxs ?? []}
-          space={space}
         />
       )}
 
@@ -775,7 +775,7 @@ const SpaceDetailScreen: React.FC = () => {
             </section>
           )}
 
-          {(spaceTxs?.length ?? 0) > 0 && (
+          {(spaceTxs?.length ?? 0) > 0 && space?.type !== 'pet' && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>ВИТРАТИ</h2>
               <div className={styles.txList}>
@@ -827,7 +827,62 @@ const SpaceDetailScreen: React.FC = () => {
       )}
 
       {/* ── Quick actions (generic spaces only) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && (
+      {space?.type === 'trip' && (
+      <div className={styles.actions} style={colorVar}>
+        {/* Row 1 */}
+        <button type="button" className={`${styles.actionBtn} ${styles.actionBtnSoon}`} style={colorVar} disabled>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </span>
+          Квиток
+          <span className={styles.soonTag}>скоро</span>
+        </button>
+        <button type="button" className={`${styles.actionBtn} ${styles.actionBtnSoon}`} style={colorVar} disabled>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </span>
+          Проживання
+          <span className={styles.soonTag}>скоро</span>
+        </button>
+        {/* Row 2 */}
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddPlanOpen(true)}>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>
+          </span>
+          Місце
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+        </button>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={handleOpenTaskInput}>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </span>
+          Задача
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+        </button>
+        {/* Row 3 */}
+        <button type="button" className={`${styles.actionBtn} ${styles.actionBtnSoon}`} style={colorVar} disabled>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          </span>
+          Витрата
+          <span className={styles.soonTag}>скоро</span>
+        </button>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </span>
+          Спогад
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+        </button>
+        {/* Mimir — compact pill */}
+        <button type="button" className={`${styles.actionBtn} ${styles.actionBtnMimirTrip}`} style={colorVar} onClick={() => setChatOpen(true)}>
+          <MimirIcon size={13} />
+          Запитати Міміра
+        </button>
+      </div>
+      )}
+
+      {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && space?.type !== 'trip' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
           <span className={styles.actionBtnIcon}>
@@ -858,9 +913,7 @@ const SpaceDetailScreen: React.FC = () => {
           <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
         <button type="button" className={`${styles.actionBtn} ${styles.actionBtnMimir}`} style={colorVar} onClick={() => setChatOpen(true)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
+          <MimirIcon size={14} />
           Мімір
         </button>
       </div>
