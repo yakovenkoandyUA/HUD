@@ -20,18 +20,20 @@ export interface SpaceLinkedTx {
 }
 
 interface Props {
-  spaceId:       string
-  color:         string
-  spaceName:     string
-  memoriesCount: number
-  plansCount:    number
-  tasksCount:    number
-  membersCount:  number
-  modules:       string[]
-  spaceTxs:      SpaceLinkedTx[]
-  isOwner:       boolean
-  onEditSpace:   () => void
-  onBack:        () => void
+  spaceId:        string
+  color:          string
+  spaceName:      string
+  memoriesCount:  number
+  plansCount:     number
+  tasksCount:     number
+  membersCount:   number
+  modules:        string[]
+  spaceTxs:       SpaceLinkedTx[]
+  isOwner:        boolean
+  coverUrl?:      string
+  coverPosition?: string
+  onEditSpace:    () => void
+  onBack:         () => void
 }
 
 type SheetType = 'fuel' | 'maintenance' | 'document' | 'note' | null
@@ -193,16 +195,19 @@ const VehicleMedallion: React.FC = () => {
 // ── VehicleHero ────────────────────────────────────────────────────────────
 
 interface HeroProps {
-  spaceId:   string
-  spaceName: string
-  color:     string
-  profile:   VehicleProfile | null
-  lastEvent: VehicleEvent | null
-  isOwner:   boolean
-  onBack:    () => void
+  spaceId:        string
+  spaceName:      string
+  color:          string
+  profile:        VehicleProfile | null
+  lastEvent:      VehicleEvent | null
+  isOwner:        boolean
+  coverUrl?:      string
+  coverPosition?: string
+  onBack:         () => void
+  onEditSpace:    () => void
 }
 
-const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, lastEvent, isOwner, onBack }) => {
+const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, lastEvent, isOwner, coverUrl, coverPosition, onBack, onEditSpace }) => {
   const [editOpen, setEditOpen] = useState(false)
   const [form, setForm]         = useState<Partial<VehicleProfile>>({})
   const [saving, setSaving]     = useState(false)
@@ -270,23 +275,43 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
 
   return (
     <>
-      {/* ── Nav bar ── */}
-      <div className={styles.vehicleNavBar}>
-        <button type="button" className={styles.vehicleNavBack} onClick={onBack} aria-label="Назад">
+      {/* ── Hero banner ── */}
+      <div
+        className={`${styles.vehicleHero} ${coverUrl ? styles.vehicleHeroCovered : ''}`}
+        style={coverUrl ? undefined : colorVar}
+      >
+        {coverUrl && (
+          <img
+            src={coverUrl}
+            alt=""
+            className={styles.vehicleHeroCoverImg}
+            style={{ objectPosition: `center ${coverPosition ?? 'center'}` }}
+            aria-hidden="true"
+          />
+        )}
+        <div className={styles.vehicleHeroCoverOverlay} style={coverUrl ? undefined : colorVar} />
+
+        <button type="button" className={styles.vehicleHeroBackBtn} onClick={onBack} aria-label="Назад">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M11 4l-5 5 5 5"/>
           </svg>
         </button>
-        <span className={styles.vehicleNavTitle}>{spaceName}</span>
+
         {isOwner && (
-          <button type="button" className={styles.vehicleNavEdit} onClick={openEdit} aria-label="Редагувати профіль авто">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <button type="button" className={styles.vehicleHeroEditBtn} onClick={onEditSpace} aria-label="Редагувати простір">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
             </svg>
           </button>
         )}
+
+        <div className={styles.vehicleHeroContent}>
+          <span className={`${styles.vehicleHeroTypeLabel} ${coverUrl ? styles.vehicleHeroTypeLabelCovered : ''}`}>АВТО</span>
+          <h1 className={`${styles.vehicleHeroName} ${coverUrl ? styles.vehicleHeroNameCovered : ''}`}>{spaceName}</h1>
+        </div>
       </div>
 
+      {/* ── Vehicle profile card ── */}
       <div className={styles.vehicleHeroCard} style={colorVar}>
         <div className={styles.vehicleMedallion}>
           {profile?.photoUrl
@@ -296,7 +321,6 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
         </div>
 
         <div className={styles.vehicleHeroInfo}>
-          <span className={styles.vehicleHeroTypeBadge}>АВТО</span>
           {profile?.make || profile?.model ? (
             <span className={styles.vehicleHeroSubtitle}>
               {[profile.make, profile.model, profile.year].filter(Boolean).join(' ')}
@@ -321,6 +345,14 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
             </div>
           </div>
         </div>
+
+        {isOwner && (
+          <button type="button" className={styles.vehicleProfileEditBtn} onClick={openEdit} aria-label="Редагувати профіль авто">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       {editOpen && (
@@ -982,7 +1014,7 @@ const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spac
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M3 22h12"/>
             </svg>
-            Додати заправку
+            Заправитись
           </button>
           <button type="button" className={styles.vehicleEmptyCtaSecondary} style={colorVar} onClick={onAddMaintenance}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1060,7 +1092,7 @@ const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spac
  */
 const VehicleSpaceView: React.FC<Props> = ({
   spaceId, color, spaceName, memoriesCount, plansCount, tasksCount, membersCount,
-  modules, spaceTxs, isOwner, onEditSpace: _onEditSpace, onBack,
+  modules, spaceTxs, isOwner, coverUrl, coverPosition, onEditSpace, onBack,
 }) => {
   const [sheet, setSheet] = useState<SheetType>(null)
   const { fetchEvents, fetchStats, eventsBySpace, statsBySpace, loading } = useVehicleStore()
@@ -1119,13 +1151,13 @@ const VehicleSpaceView: React.FC<Props> = ({
   const ACTION_CARDS = [
     {
       key: 'fuel' as SheetType,
-      label: 'Заправитись',
+      label: '+ Заправитись',
       desc: 'Записати заправку',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M3 22h12M15 8h2a2 2 0 0 1 2 2v6a1 1 0 0 0 2 0V9l-2-2"/></svg>,
     },
     {
       key: 'maintenance' as SheetType,
-      label: 'ТО / ремонт',
+      label: '+ ТО / ремонт',
       desc: 'Записати обслуговування',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
     },
@@ -1161,6 +1193,9 @@ const VehicleSpaceView: React.FC<Props> = ({
         profile={profile}
         lastEvent={lastEvent}
         isOwner={isOwner}
+        coverUrl={coverUrl}
+        coverPosition={coverPosition}
+        onEditSpace={onEditSpace}
         onBack={onBack}
       />
 

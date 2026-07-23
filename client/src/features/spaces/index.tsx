@@ -741,6 +741,8 @@ const SpaceDetailScreen: React.FC = () => {
           modules={space.modules ?? []}
           spaceTxs={spaceTxs ?? []}
           isOwner={isOwner}
+          coverUrl={space.coverUrl}
+          coverPosition={space.coverPosition}
           onEditSpace={openEdit}
           onBack={() => navigate(-1)}
         />

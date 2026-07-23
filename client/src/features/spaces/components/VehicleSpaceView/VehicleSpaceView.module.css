@@ -814,6 +814,81 @@
   padding: 12px 12px 60px;
 }
 
+/* ── Hero banner (photo or color bg, like Pet) ── */
+.vehicleHero {
+  position: relative;
+  min-height: 140px;
+  padding: 52px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  background: var(--surface);
+  margin: -12px -12px 0;
+}
+.vehicleHeroCovered { min-height: 200px; }
+.vehicleHeroCoverImg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; pointer-events: none; user-select: none;
+}
+.vehicleHeroCoverOverlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.62) 100%);
+  pointer-events: none;
+}
+.vehicleHeroBackBtn {
+  position: absolute; top: 14px; left: 14px;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(0,0,0,0.28); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: opacity 0.15s; z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+}
+.vehicleHeroBackBtn:active { opacity: 0.65; }
+.vehicleHeroEditBtn {
+  position: absolute; top: 14px; right: 14px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(0,0,0,0.28); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: opacity 0.15s; z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+}
+.vehicleHeroEditBtn:active { opacity: 0.65; }
+.vehicleHeroContent { position: relative; z-index: 2; }
+.vehicleHeroName {
+  font-family: var(--font-furore); font-size: 1.55rem;
+  color: var(--text); margin: 0; line-height: 1.1;
+}
+.vehicleHeroNameCovered { color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,0.5); }
+.vehicleHeroTypeLabel {
+  font-family: var(--font-ui); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--space-color); opacity: 0.75; text-transform: uppercase; display: block; margin-bottom: 6px;
+}
+.vehicleHeroTypeLabelCovered { color: rgba(255,255,255,0.75); opacity: 1; }
+
+/* ── Vehicle profile card edit button ── */
+.vehicleProfileEditBtn {
+  flex-shrink: 0;
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vehicleProfileEditBtn:hover {
+  color: var(--space-color);
+  border-color: var(--space-color);
+}
+
 /* ── Hero card ── */
 .vehicleHeroCard {
   display: flex;
