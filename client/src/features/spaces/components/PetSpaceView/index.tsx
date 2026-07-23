@@ -1214,7 +1214,9 @@ const PetSpaceView: React.FC<Props> = ({
               )
             }
             <div className={styles.profileInfo}>
-              <div className={styles.profileName}>{profile?.name || '—'}</div>
+              {profile?.name && profile.name.trim().toLowerCase() !== spaceName.trim().toLowerCase() && (
+                <div className={styles.profileName}>{profile.name}</div>
+              )}
               <div className={styles.profileMetaRow}>
                 {profile?.species    && <span className={styles.speciesBadge}>{profile.species}</span>}
                 {profile?.breed      && <span className={styles.metaItem}>{profile.breed}</span>}
