@@ -407,7 +407,7 @@ const SpaceDetailScreen: React.FC = () => {
   }, [noteText, spaceId, addNote])
 
   const handleDeleteNote = async (noteId: string) => {
-    setSpaceNotes(prev => prev.filter(n => n._id !== noteId))
+    setSpaceNotes(prev => prev?.filter(n => n._id !== noteId) ?? [])
     await deleteNote(noteId)
   }
 
@@ -436,7 +436,7 @@ const SpaceDetailScreen: React.FC = () => {
         })
         if (!cancelled && res.ok) {
           const created = await res.json() as SpaceTask
-          setSpaceTasks(prev => [...prev, created])
+          setSpaceTasks(prev => [...(prev ?? []), created])
           setTaskInputText('')
           setShowTaskInput(false)
         }
@@ -449,7 +449,7 @@ const SpaceDetailScreen: React.FC = () => {
   }, [taskInputText, spaceId, savingTask])
 
   const handleToggleTask = async (task: SpaceTask) => {
-    setSpaceTasks(prev => prev.map(t => t._id === task._id ? { ...t, done: !t.done } : t))
+    setSpaceTasks(prev => prev?.map(t => t._id === task._id ? { ...t, done: !t.done } : t) ?? [])
     await authFetch(`/api/sprint/tasks/${task._id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -458,7 +458,7 @@ const SpaceDetailScreen: React.FC = () => {
   }
 
   const handleDeleteTask = async (taskId: string) => {
-    setSpaceTasks(prev => prev.filter(t => t._id !== taskId))
+    setSpaceTasks(prev => prev?.filter(t => t._id !== taskId) ?? [])
     await authFetch(`/api/sprint/tasks/${taskId}`, { method: 'DELETE' })
   }
 
@@ -664,7 +664,7 @@ const SpaceDetailScreen: React.FC = () => {
           )
         }
         if (spent > 0) {
-          const expenses    = spaceTxs.filter(t => t.type === 'expense')
+          const expenses    = (spaceTxs ?? []).filter(t => t.type === 'expense')
           const showSuggest = !budgetSuggestDismissed && expenses.length >= 20
           let suggested: number | null = null
           if (showSuggest) {
@@ -676,7 +676,7 @@ const SpaceDetailScreen: React.FC = () => {
           }
           const months = (() => {
             if (!showSuggest) return ''
-            const expenses2 = spaceTxs.filter(t => t.type === 'expense')
+            const expenses2 = (spaceTxs ?? []).filter(t => t.type === 'expense')
             const dates2    = expenses2.map(t => new Date(t.date).getTime()).sort((a, b) => a - b)
             const spanDays2 = (dates2[dates2.length - 1] - dates2[0]) / 86_400_000
             const m         = Math.round(spanDays2 / 30)
@@ -779,9 +779,9 @@ const SpaceDetailScreen: React.FC = () => {
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>ВИТРАТИ</h2>
               <div className={styles.txList}>
-                {spaceTxs.map((t, idx) => {
+                {(spaceTxs ?? []).map((t, idx) => {
                   const curDate  = t.date.slice(0, 10)
-                  const prevDate = idx > 0 ? spaceTxs[idx - 1].date.slice(0, 10) : null
+                  const prevDate = idx > 0 ? spaceTxs![idx - 1].date.slice(0, 10) : null
                   const isIncome = t.type === 'income'
                   const catColor = isIncome ? 'var(--positive)' : 'var(--negative)'
                   return (

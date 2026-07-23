@@ -138,7 +138,7 @@ const SpacesTab: React.FC = () => {
 
   // ── Trip profile edit (detail) ──
   const [tDest,   setTDest]   = useState('')
-  const [tStatus, setTStatus] = useState<'planning' | 'ongoing' | 'completed'>('planning')
+  const [tStatus, setTStatus] = useState<'planning' | 'booked' | 'ongoing' | 'completed'>('planning')
 
   // ── Archived accordion ──
   const [archivedOpen, setArchivedOpen] = useState(false)
