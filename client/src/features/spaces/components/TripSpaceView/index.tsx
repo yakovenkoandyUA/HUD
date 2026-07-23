@@ -25,13 +25,12 @@ interface SpaceTx {
 }
 
 interface Props {
-  spaceId:         string
-  color:           string
-  profile:         TripProfile | null
-  onProfileUpdate: (p: TripProfile) => void
-  spaceTxs:        SpaceTx[]
-  canCycleCover?:  boolean
-  onCycleCover?:   () => void
+  spaceId:           string
+  color:             string
+  profile:           TripProfile | null
+  onProfileUpdate:   (p: TripProfile) => void
+  spaceTxs:          SpaceTx[]
+  onOpenCoverPicker?: () => void
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -319,7 +318,7 @@ const PlaceChip: React.FC<{ place: TripPlace; color: string; onDelete: (id: stri
  * @prop onProfileUpdate — callback після збереження профілю
  * @prop spaceTxs        — транзакції простору (з SpaceDetail)
  */
-const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate, spaceTxs, canCycleCover, onCycleCover }) => {
+const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate, spaceTxs, onOpenCoverPicker }) => {
   const showToast = useUiStore(s => s.showToast)
   const { updateProfile } = useTripStore()
   const { tickets, load: loadTickets, remove: removeTicket }           = useTicketStore()
@@ -372,11 +371,11 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
 
       {/* ── Route card ── */}
       <div className={styles.tripCard}>
-        {canCycleCover && (
-          <button type="button" className={styles.cycleCoverBtn} onClick={onCycleCover} aria-label="Інше фото">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        {onOpenCoverPicker && (
+          <button type="button" className={styles.cycleCoverBtn} onClick={onOpenCoverPicker} aria-label="Обкладинка">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
             </svg>
           </button>
         )}

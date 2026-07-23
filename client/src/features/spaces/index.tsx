@@ -22,6 +22,7 @@ import VehicleSpaceView from './components/VehicleSpaceView'
 import PetSpaceView from './components/PetSpaceView'
 import PlantSpaceView from './components/PlantSpaceView'
 import TripSpaceView from './components/TripSpaceView'
+import TripCoverSheet from './components/TripCoverSheet'
 import AddTicketSheet from './components/AddTicketSheet'
 import AddAccommodationSheet from './components/AddAccommodationSheet'
 import AddPlaceSheet from './components/AddPlaceSheet'
@@ -218,6 +219,8 @@ const SpaceDetailScreen: React.FC = () => {
   const [editModules, setEditModules] = useState<string[]>([])
   const [editSaving, setEditSaving]               = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false)
 
   // ── Unsplash auto-hero for trip spaces ──
   const [unsplashPhotos, setUnsplashPhotos]   = useState<Array<{ url: string; attribution: string }>>([])
@@ -863,13 +866,22 @@ const SpaceDetailScreen: React.FC = () => {
           profile={space.tripProfile}
           onProfileUpdate={p => setTripProfile(space.id, p)}
           spaceTxs={spaceTxs ?? []}
-          canCycleCover={unsplashPhotos.length > 1}
-          onCycleCover={() => {
-            const newIdx = (unsplashIndex + 1) % unsplashPhotos.length
-            setUnsplashIndex(newIdx)
-            const photo = unsplashPhotos[newIdx]
-            if (photo && spaceId) updateSpace(spaceId, { coverUrl: photo.url })
+          onOpenCoverPicker={() => setCoverPickerOpen(true)}
+        />
+      )}
+
+      {space?.type === 'trip' && (
+        <TripCoverSheet
+          isOpen={coverPickerOpen}
+          onClose={() => setCoverPickerOpen(false)}
+          photos={unsplashPhotos}
+          selectedUrl={space?.coverUrl ?? ''}
+          onSelect={url => {
+            const idx = unsplashPhotos.findIndex(p => p.url === url)
+            setUnsplashIndex(idx >= 0 ? idx : 0)
+            updateSpace(spaceId!, { coverUrl: url })
           }}
+          onUploadOwn={url => updateSpace(spaceId!, { coverUrl: url })}
         />
       )}
 
