@@ -1119,7 +1119,7 @@ const VehicleSpaceView: React.FC<Props> = ({
   const ACTION_CARDS = [
     {
       key: 'fuel' as SheetType,
-      label: 'Заправка',
+      label: 'Заправитись',
       desc: 'Записати заправку',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M3 22h12M15 8h2a2 2 0 0 1 2 2v6a1 1 0 0 0 2 0V9l-2-2"/></svg>,
     },
