@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { authFetch } from '@/shared/services/api'
 
-export type SpaceType = 'shared' | 'trip' | 'sports' | 'vehicle' | 'pet' | 'plant' | 'blank'
+export type SpaceType = 'shared' | 'trip' | 'sports' | 'vehicle' | 'pet' | 'plant' | 'home' | 'blank'
 
 export interface SpaceMember {
   userId:    string
