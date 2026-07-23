@@ -36,12 +36,11 @@ export async function create(req: Request, res: Response): Promise<void> {
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
-  const item = await Transaction.findOneAndUpdate(
-    { _id: req.params.id, userId: req.userId },
-    req.body,
-    { new: true }
-  )
+  const item = await Transaction.findOne({ _id: req.params.id, userId: req.userId })
   if (!item) { res.status(404).json({ error: 'Not found' }); return }
+  const allowed = ['desc', 'amount', 'title', 'category', 'subcategory', 'date', 'tripMemoryId', 'spaceId']
+  allowed.forEach(k => { if (req.body[k] !== undefined) (item as unknown as Record<string, unknown>)[k] = req.body[k] })
+  await item.save()
   res.json(item)
 }
 

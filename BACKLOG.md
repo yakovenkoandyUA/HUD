@@ -303,14 +303,13 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 - ~~Видимий банер внизу Profile → таб "Я" з кнопкою ОНОВИТИ (`window.location.reload()`)~~ → **замінено** на рядок оновлення в `ProfileDrawer` під пунктом "Налаштування" з відкриттям `ChangelogSheet` (журнал змін перед перезавантаженням)
 - `uiStore.updateAvailable` — сет через `controllerchange` event Service Worker
 
-### 9. 💳 Білінг Phase 4B — WayForPay Checkout (backend)
-`POST /api/billing/checkout` — генерація WayForPay payment URL, HMAC підпис, повертає `{ paymentUrl, orderReference }`. Тест в sandbox перед релізом.
+### 9-11. 💳 Білінг Phase 4B/4C/5A — WayForPay Checkout + Callback
+> **⏸ НА ПАУЗІ — виконати тільки за явною вказівкою розробника**
+> Поточна монетизація: Monobank банка + ручний апгрейд плану через адмін-панель. WayForPay підключається коли буде ~20 перших платників і ФОП відкрито.
 
-### 10. 💳 Білінг Phase 4C — Frontend Upgrade Flow
-PlanTab реальні кнопки → redirect на WayForPay hosted page. `/payment/result` публічна сторінка з polling статусу замовлення.
-
-### 11. 💳 Білінг Phase 5A — Callback Verification
-`POST /api/billing/wayforpay/callback` (public) — HMAC-MD5 верифікація підпису, idempotency через ProcessedBillingEvent, оновлення BillingOrder + User.plan після успішної оплати.
+- **4B:** `POST /api/billing/checkout` — генерація WayForPay payment URL, HMAC підпис
+- **4C:** PlanTab реальні кнопки → redirect на WayForPay hosted page, `/payment/result` з polling
+- **5A:** `POST /api/billing/wayforpay/callback` — HMAC-MD5 верифікація, idempotency, оновлення плану
 
 ### 12. 🚗 Vehicle Space MVP
 
@@ -464,7 +463,7 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 - **EditMemoryModal `withProfiles`:** при редагуванні зображення `withProfiles` не передається якщо поле не чіпали — перевірити що PATCH не скидає учасників.
 
 ### Spaces
-- **SpaceDetailScreen — дублювання транзакцій DOM:** спагетті-рендер — spaceTx рендерується двічі: один раз для `pet/home` (рядки 896–931), другий раз для generic spaces (рядки 1202–1237). Якщо `type === 'pet'` але є і модуль 'finance' — покаже обидва блоки.
+- ~~**SpaceDetailScreen — дублювання транзакцій DOM**~~ ✅ Закрито — `trip` додано до exclusion list generic content block (2026-07-23).
 - **SpacesStrip — `general` тип відсутній в TYPE_OPTIONS:** форма дозволяє вибрати `shared/trip/vehicle/home/pet/sports`, але `SPACE_TYPE_CONFIG` має `blank`. Якщо space.type = 'general' — `cfg` = undefined → `?? SPACE_TYPE_CONFIG['blank']` рятує, але тип 'general' недоступний при створенні.
 - **TripSpaceView — без quick actions:** на відміну від Vehicle/Home/Pet — TripSpaceView не має власних quick action кнопок (задачі, нотатки, спогади); для trip-space потрібно використовувати generic actions block — але він захований для `type !== 'vehicle' && type !== 'home' && type !== 'pet'`... Перевірити: `trip` попадає під generic блок (рядок 944 умова).
 
@@ -473,15 +472,15 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 - **RecipeDetail "Шеф":** ChefChatSheet не закривається свайпом якщо юзер свайпає по тексту чату (стандартна проблема SSE+scroll).
 
 ### Watchlist
-- **Книги (Books):** тогл в профілі disabled, placeholder при відкритті табу — фактично повністю нереалізовано (UI).
+- ~~**Книги (Books):**~~ ✅ Реалізовано (backlog був застарілий).
 - **WatchlistStatsSheet:** рахує "реальну тривалість" через TMDB, але для anime/books — логіка тривалості інша (серія anime ≠ серія серіалу).
 
 ### Profile
 - **ChangelogSheet workflow:** задокументовано що потрібно дописувати `CHANGELOG` перед кожним пушем — на практиці часто пропускається. Немає валідації в pre-push hook.
-- **MeAccount / export:** JSON export включає всі колекції але не включає VehicleEvent, HomeEvent, PetEvent — нові моделі після фази legal.
+- ~~**MeAccount / export:**~~ ✅ Закрито — VehicleEvent/HomeEvent/PetEvent додані до `/api/user/export` (2026-07-23).
 
 ### Achievements
-- **Локальний стор:** досягнення зберігаються тільки в localStorage — при логіні на новому пристрої або clearing storage всі досягнення скидаються. Бекенд-синхронізація відсутня.
+- ~~**Локальний стор**~~ ✅ Вже синкаються через `achievementsStore.unlock()` → `profileStore.updateProfile({ unlockedAchievements })` → `PATCH /api/auth/me` (backlog був застарілий).
 - **useAchievementProgress:** читає дані з кількох stores синхронно — при першому рендері stores ще порожні, прогрес = 0. Може викликати false unlock при першому mount (stores ще не завантажили дані, потім data load → прогрес стрибає).
 
 ### F1
@@ -496,9 +495,9 @@ PlanTab реальні кнопки → redirect на WayForPay hosted page. `/p
 | Верифікація email | ✅ Закрито (mimir-hud.tech + Resend) |
 | MongoDB M10+ | 🟢 Некритично поки < 100 юзерів |
 | Семантичні токени (міграція CSS) | ✅ Закрито — 15 нових токенів, 94 заміни у 37 файлах |
-| `patchTransaction` — немає authFetch на бекенд | 🔴 Баг — локальні зміни губляться після fetchTransactions |
-| MeAccount export — VehicleEvent/HomeEvent/PetEvent | 🟡 Пропуск після Phase 3A |
-| Achievements localStorage — немає бекенд sync | 🟡 Ризик при зміні пристрою |
+| `patchTransaction` — немає authFetch на бекенд | ✅ Закрито — authFetch вже є; додано whitelist-фільтр на backend update (2026-07-23) |
+| MeAccount export — VehicleEvent/HomeEvent/PetEvent | ✅ Закрито — додано до `/api/user/export` (2026-07-23) |
+| Achievements localStorage — немає бекенд sync | ✅ Закрито — вже синкаються через profileStore → `PATCH /api/auth/me` (backlog був застарілий) |
 | ChangelogSheet — ручний процес, немає pre-push hook | 🟡 Процесний борг |
-| SpaceDetail — дублювання tx-блоку для pet/home | 🟡 Код-борг (не баг для поточних юзерів) |
+| SpaceDetail — дублювання generic content для trip/home/pet | ✅ Закрито — trip додано до exclusion list (2026-07-23) |
 | Usі інші | ✅ Закрито |

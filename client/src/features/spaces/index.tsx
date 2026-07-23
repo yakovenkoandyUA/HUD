@@ -961,7 +961,7 @@ const SpaceDetailScreen: React.FC = () => {
       </div>
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && (
+      {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && space?.type !== 'trip' && (
       <div className={styles.content}>
 
         {/* ── Members ── */}

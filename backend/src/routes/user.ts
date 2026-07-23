@@ -16,6 +16,9 @@ import MoodLog from '../models/MoodLog'
 import Note from '../models/Note'
 import FinancialReport from '../models/FinancialReport'
 import { Space } from '../models/Space'
+import { VehicleEvent } from '../models/VehicleEvent'
+import { HomeEvent } from '../models/HomeEvent'
+import { PetEvent } from '../models/PetEvent'
 
 const router = Router()
 
@@ -43,6 +46,9 @@ router.get('/export', async (req: Request, res: Response) => {
       notes,
       reports,
       spaces,
+      vehicleEvents,
+      homeEvents,
+      petEvents,
     ] = await Promise.all([
       User.findById(uid).lean(),
       Memory.find({ userId: uid }).lean(),
@@ -59,6 +65,9 @@ router.get('/export', async (req: Request, res: Response) => {
       Note.find({ userId: uid }).lean(),
       FinancialReport.find({ userId: uid }).lean(),
       Space.find({ $or: [{ ownerId: uid }, { 'members.userId': uid }] }).lean(),
+      VehicleEvent.find({ userId: uid }).lean(),
+      HomeEvent.find({ userId: uid }).lean(),
+      PetEvent.find({ userId: uid }).lean(),
     ])
 
     if (!user) { res.status(404).json({ error: 'User not found' }); return }
@@ -93,6 +102,9 @@ router.get('/export', async (req: Request, res: Response) => {
       notes,
       financialReports: reports,
       spaces,
+      vehicleEvents,
+      homeEvents,
+      petEvents,
     }
 
     const filename = `mimir-export-${new Date().toISOString().slice(0, 10)}.json`
