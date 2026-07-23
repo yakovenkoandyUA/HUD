@@ -44,8 +44,10 @@ const VISIBLE_COUNT = 5
 
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
   const { categories, fetchCategories } = useCategoryStore()
-  const [period, setPeriod]             = useState<Period>('month')
-  const [showAll, setShowAll]           = useState(false)
+  const [period, setPeriod] = useState<Period>(
+    () => (localStorage.getItem('expense-chart-period') as Period | null) ?? 'month'
+  )
+  const [showAll, setShowAll] = useState(false)
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
@@ -106,14 +108,14 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
           <button
             type="button"
             className={`${styles.switchBtn} ${period === 'month' ? styles.switchActive : ''}`}
-            onClick={() => { setPeriod('month'); setShowAll(false) }}
+            onClick={() => { setPeriod('month'); localStorage.setItem('expense-chart-period', 'month'); setShowAll(false) }}
           >
             Місяць
           </button>
           <button
             type="button"
             className={`${styles.switchBtn} ${period === 'week' ? styles.switchActive : ''}`}
-            onClick={() => { setPeriod('week'); setShowAll(false) }}
+            onClick={() => { setPeriod('week'); localStorage.setItem('expense-chart-period', 'week'); setShowAll(false) }}
           >
             Тиждень
           </button>
