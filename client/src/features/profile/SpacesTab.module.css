@@ -107,7 +107,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 80px;
+  height: 110px;
   background: color-mix(in srgb, var(--type-color, var(--accent)) 14%, var(--surface));
   border-bottom: 1px solid color-mix(in srgb, var(--type-color, var(--accent)) 18%, transparent);
   overflow: hidden;
@@ -145,8 +145,8 @@
 .spaceInfo {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 8px 10px 10px;
+  gap: 1px;
+  padding: 6px 10px 8px;
   min-width: 0;
 }
 
@@ -637,7 +637,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 68px;
+  height: 110px;
   background: color-mix(in srgb, var(--type-color, var(--accent)) 14%, var(--surface));
   border-bottom: 1px solid color-mix(in srgb, var(--type-color, var(--accent)) 18%, transparent);
   transition: background 0.15s ease;
@@ -661,10 +661,10 @@
 }
 
 .templateCardBody {
-  padding: 10px 12px 12px;
+  padding: 7px 10px 9px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .templateLabel {
