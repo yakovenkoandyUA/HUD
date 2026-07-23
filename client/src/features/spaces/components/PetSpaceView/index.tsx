@@ -5,6 +5,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
+import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
 import styles from './PetSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -978,10 +979,14 @@ const PetSpaceView: React.FC<Props> = ({
     <div className={styles.root} style={colorVar}>
 
       {/* ── Compact hero ── */}
-      <div className={`${styles.hero} ${coverUrl ? styles.heroCovered : ''}`}>
-        {coverUrl && (
-          <img src={coverUrl} alt="" className={styles.heroCoverImg} style={{ objectPosition: `center ${coverPosition ?? 'center'}` }} aria-hidden="true" />
-        )}
+      <div className={`${styles.hero} ${styles.heroCovered}`}>
+        <img
+          src={coverUrl ?? SPACE_TYPE_CONFIG.pet.iconSrc}
+          alt=""
+          className={styles.heroCoverImg}
+          style={{ objectPosition: coverUrl ? `center ${coverPosition ?? 'center'}` : 'center center' }}
+          aria-hidden="true"
+        />
         <div className={styles.heroCoverOverlay} />
 
         <button type="button" className={styles.heroBackBtn} onClick={onBack} aria-label="Назад">
@@ -989,15 +994,6 @@ const PetSpaceView: React.FC<Props> = ({
             <path d="M11 4l-5 5 5 5"/>
           </svg>
         </button>
-
-        {!coverUrl && (
-          <span className={styles.heroEmblem} aria-hidden="true">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="14" r="5"/><circle cx="5" cy="8" r="2"/><circle cx="19" cy="8" r="2"/>
-              <circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/>
-            </svg>
-          </span>
-        )}
 
         <div className={styles.heroContent}>
           <h1 className={`${styles.heroName} ${coverUrl ? styles.heroNameCovered : ''}`}>{spaceName}</h1>

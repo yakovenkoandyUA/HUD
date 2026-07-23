@@ -6,6 +6,7 @@ import { useProfileStore } from '@/shared/store/profileStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { useImageUpload } from '@/shared/hooks/useImageUpload'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
+import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
 import styles from './VehicleSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -280,19 +281,14 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
   return (
     <>
       {/* ── Hero banner ── */}
-      <div
-        className={`${styles.vehicleHero} ${coverUrl ? styles.vehicleHeroCovered : ''}`}
-        style={coverUrl ? undefined : colorVar}
-      >
-        {coverUrl && (
-          <img
-            src={coverUrl}
-            alt=""
-            className={styles.vehicleHeroCoverImg}
-            style={{ objectPosition: `center ${coverPosition ?? 'center'}` }}
-            aria-hidden="true"
-          />
-        )}
+      <div className={`${styles.vehicleHero} ${styles.vehicleHeroCovered}`}>
+        <img
+          src={coverUrl ?? SPACE_TYPE_CONFIG.vehicle.iconSrc}
+          alt=""
+          className={styles.vehicleHeroCoverImg}
+          style={{ objectPosition: coverUrl ? `center ${coverPosition ?? 'center'}` : 'center center' }}
+          aria-hidden="true"
+        />
         <div className={styles.vehicleHeroCoverOverlay} style={coverUrl ? undefined : colorVar} />
 
         <button type="button" className={styles.vehicleHeroBackBtn} onClick={onBack} aria-label="Назад">
