@@ -25,7 +25,7 @@ const COLORS = [
   '#f39c12', '#1abc9c', '#e91e8c', '#607d8b',
 ]
 
-const PICKER_TYPES: SpaceType[] = ['trip', 'vehicle', 'home', 'pet', 'sports']
+const PICKER_TYPES: SpaceType[] = ['trip', 'vehicle', 'home', 'pet', 'sports', 'blank']
 
 const PlusIcon: React.FC = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">

@@ -1,6 +1,6 @@
 import { Schema, model, Document } from 'mongoose'
 
-export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle' | 'home' | 'pet'
+export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle' | 'home' | 'pet' | 'blank'
 
 export interface ISpaceMember {
   userId: string
@@ -141,7 +141,7 @@ const tripProfileSchema = new Schema<ITripProfile>({
 
 const schema = new Schema<ISpace>({
   name:           { type: String, required: true, trim: true, maxlength: 60 },
-  type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle','home','pet'], default: 'shared' },
+  type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle','home','pet','blank'], default: 'shared' },
   color:          { type: String, default: '#9b59b6' },
   emoji:          { type: String, default: '' },
   coverUrl:       { type: String, default: '' },
