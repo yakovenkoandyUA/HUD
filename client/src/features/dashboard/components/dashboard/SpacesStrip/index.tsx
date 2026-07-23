@@ -132,8 +132,8 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
 
       <div className={styles.grid}>
         {spaces.length === 0 && !spacesLoading && (
-          <button type="button" className={`${styles.card} ${styles.addCard} ${!f1Enabled ? styles.cardLarge : ''}`} onClick={openSheet}>
-            <span className={!f1Enabled ? `${styles.avatar} ${styles.avatarLarge}` : styles.avatar}>
+          <button type="button" className={`${styles.card} ${styles.addCard}`} onClick={openSheet}>
+            <span className={styles.avatar}>
               <PlusIcon />
             </span>
             <span className={styles.cardName}>Перший простір</span>
@@ -166,17 +166,19 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
           )
         })}
 
-        <button
-          type="button"
-          className={`${styles.card} ${styles.addCard} ${!f1Enabled ? styles.cardLarge : ''}`}
-          onClick={openSheet}
-          aria-label="Додати простір"
-        >
-          <span className={!f1Enabled ? `${styles.avatar} ${styles.avatarLarge}` : styles.avatar}>
-            <PlusIcon />
-          </span>
-          <span className={styles.cardName}>Додати</span>
-        </button>
+        {spaces.length > 0 && (
+          <button
+            type="button"
+            className={`${styles.card} ${styles.addCard} ${!f1Enabled ? styles.cardLarge : ''}`}
+            onClick={openSheet}
+            aria-label="Додати простір"
+          >
+            <span className={!f1Enabled ? `${styles.avatar} ${styles.avatarLarge}` : styles.avatar}>
+              <PlusIcon />
+            </span>
+            <span className={styles.cardName}>Додати</span>
+          </button>
+        )}
       </div>
 
       {/* ── Create space sheet (portal → body to escape overflow/transform) ── */}
