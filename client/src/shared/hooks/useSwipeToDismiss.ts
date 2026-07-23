@@ -54,78 +54,97 @@ export function useSwipeToDismiss(
 
   useEffect(() => {
     if (!enabled) return
-    const sheet = (externalRef?.current ?? internalRef.current) as HTMLElement | null
-    if (!sheet) return
 
-    let startY     = 0
-    let startTime  = 0
-    let currentY   = 0
-    let isDragging = false
+    let rafId: number
+    let detach: (() => void) | undefined
 
-    const scrollEl = () => bodyRef?.current ?? sheet
+    const attach = () => {
+      const sheet = (externalRef?.current ?? internalRef.current) as HTMLElement | null
+      // Sheet may still be null if caller gates JSX behind a `mounted` flag;
+      // retry after next paint when React has processed the setMounted(true) re-render.
+      if (!sheet) return
 
-    const onTouchStart = (e: TouchEvent) => {
-      if (scrollEl().scrollTop > 0) return
-      startY     = e.touches[0].clientY
-      startTime  = Date.now()
-      currentY   = startY
-      isDragging = true
-      sheet.style.transition = 'none'
-      if (overlayRef?.current) overlayRef.current.style.transition = 'none'
-    }
+      let startY     = 0
+      let startTime  = 0
+      let currentY   = 0
+      let isDragging = false
 
-    const onTouchMove = (e: TouchEvent) => {
-      if (!isDragging) return
-      if (scrollEl().scrollTop > 0) {
+      const scrollEl = () => bodyRef?.current ?? sheet
+
+      const onTouchStart = (e: TouchEvent) => {
+        if (scrollEl().scrollTop > 0) return
+        startY     = e.touches[0].clientY
+        startTime  = Date.now()
+        currentY   = startY
+        isDragging = true
+        sheet.style.transition = 'none'
+        if (overlayRef?.current) overlayRef.current.style.transition = 'none'
+      }
+
+      const onTouchMove = (e: TouchEvent) => {
+        if (!isDragging) return
+        if (scrollEl().scrollTop > 0) {
+          isDragging = false
+          sheet.style.transform = ''
+          return
+        }
+        currentY = e.touches[0].clientY
+        const delta = Math.max(0, currentY - startY)
+        sheet.style.transform = `translateY(${Math.min(delta * 0.4, 120)}px)`
+        if (overlayRef?.current) {
+          overlayRef.current.style.opacity = String(Math.max(0, 1 - delta / 400))
+        }
+        if (delta > 10) e.preventDefault()
+      }
+
+      const onTouchEnd = () => {
+        if (!isDragging) return
         isDragging = false
-        sheet.style.transform = ''
-        return
-      }
-      currentY = e.touches[0].clientY
-      const delta = Math.max(0, currentY - startY)
-      sheet.style.transform = `translateY(${Math.min(delta * 0.4, 120)}px)`
-      if (overlayRef?.current) {
-        overlayRef.current.style.opacity = String(Math.max(0, 1 - delta / 400))
-      }
-      if (delta > 10) e.preventDefault()
-    }
+        const delta    = currentY - startY
+        const velocity = delta / Math.max(1, Date.now() - startTime)
 
-    const onTouchEnd = () => {
-      if (!isDragging) return
-      isDragging = false
-      const delta    = currentY - startY
-      const velocity = delta / Math.max(1, Date.now() - startTime)
+        if (delta >= 80 || (delta > 60 && velocity > 0.5)) {
+          sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
+          sheet.style.transform  = 'translateY(100%)'
+          if (overlayRef?.current) {
+            overlayRef.current.style.transition = 'opacity 0.3s ease'
+            overlayRef.current.style.opacity    = '0'
+          }
+          if (hintElRef.current) { hintElRef.current.remove(); hintElRef.current = null }
+          if (!useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) {
+            useProfileStore.getState().updateProfile({ swipeDismissTutorialSeen: true })
+          }
+          setTimeout(() => onCloseRef.current(), 280)
+        } else {
+          sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
+          sheet.style.transform  = ''
+          if (overlayRef?.current) {
+            overlayRef.current.style.transition = 'opacity 0.3s ease'
+            overlayRef.current.style.opacity    = ''
+          }
+        }
+      }
 
-      if (delta >= 80 || (delta > 60 && velocity > 0.5)) {
-        sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
-        sheet.style.transform  = 'translateY(100%)'
-        if (overlayRef?.current) {
-          overlayRef.current.style.transition = 'opacity 0.3s ease'
-          overlayRef.current.style.opacity    = '0'
-        }
-        if (hintElRef.current) { hintElRef.current.remove(); hintElRef.current = null }
-        if (!useProfileStore.getState().activeProfile?.swipeDismissTutorialSeen) {
-          useProfileStore.getState().updateProfile({ swipeDismissTutorialSeen: true })
-        }
-        setTimeout(() => onCloseRef.current(), 280)
-      } else {
-        sheet.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)'
-        sheet.style.transform  = ''
-        if (overlayRef?.current) {
-          overlayRef.current.style.transition = 'opacity 0.3s ease'
-          overlayRef.current.style.opacity    = ''
-        }
+      sheet.addEventListener('touchstart', onTouchStart, { passive: true  })
+      sheet.addEventListener('touchmove',  onTouchMove,  { passive: false })
+      sheet.addEventListener('touchend',   onTouchEnd,   { passive: true  })
+
+      detach = () => {
+        sheet.removeEventListener('touchstart', onTouchStart)
+        sheet.removeEventListener('touchmove',  onTouchMove)
+        sheet.removeEventListener('touchend',   onTouchEnd)
       }
     }
 
-    sheet.addEventListener('touchstart', onTouchStart, { passive: true  })
-    sheet.addEventListener('touchmove',  onTouchMove,  { passive: false })
-    sheet.addEventListener('touchend',   onTouchEnd,   { passive: true  })
+    attach()
+    // If ref was null (mounted-gated JSX), retry after next paint
+    if (!detach) {
+      rafId = requestAnimationFrame(attach)
+    }
 
     return () => {
-      sheet.removeEventListener('touchstart', onTouchStart)
-      sheet.removeEventListener('touchmove',  onTouchMove)
-      sheet.removeEventListener('touchend',   onTouchEnd)
+      cancelAnimationFrame(rafId)
+      detach?.()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled])
