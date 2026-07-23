@@ -33,3 +33,6 @@ export const INCOME_CATEGORIES: IncomeCategory[] = [
 ]
 
 export const INCOME_CAT_NAMES = new Set(INCOME_CATEGORIES.map(c => c.label.toLowerCase()))
+
+/** Category names that are income-only and must be excluded from the expense form. */
+export const INCOME_ONLY_NAMES = new Set(['інвестиції', 'заощадження'])

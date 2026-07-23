@@ -4,6 +4,7 @@ import Button from '@/shared/components/ui/Button'
 import ReceiptScanner from '../ReceiptScanner'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
+import { INCOME_ONLY_NAMES } from '@/features/finance/constants'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
@@ -65,6 +66,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const activeCategories = categories.filter(c => c.isActive)
   const parentCats = activeCategories
     .filter(c => !c.parentId)
+    .filter(c => !INCOME_ONLY_NAMES.has(c.name.toLowerCase()))
     .slice()
     .sort((a, b) => (categoryUsage[b._id] ?? 0) - (categoryUsage[a._id] ?? 0))
   const selectedCat      = parentCats.find(c => c._id === selectedCatId) ?? null

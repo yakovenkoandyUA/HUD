@@ -5,12 +5,9 @@ import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { useBankStore } from '@/features/finance/store/bankStore'
 import { authFetch } from '@/shared/services/api'
 import Modal from '@/shared/components/ui/Modal'
-import { INCOME_CATEGORIES } from '@/features/finance/constants'
+import { INCOME_CATEGORIES, INCOME_ONLY_NAMES } from '@/features/finance/constants'
 import type { Category } from '@/shared/types'
 import styles from './ProfilePage.module.css'
-
-// Category names that belong to income, not expense
-const INCOME_NAMES = new Set(['інвестиції', 'заощадження'])
 
 // #9CA3AF (grey) is reserved for the built-in "Інше" category — never assign to user categories
 const CAT_PALETTE = [
@@ -296,7 +293,7 @@ const WalletTab: React.FC = () => {
   if (!activeProfile) return null
 
   const topLevelCats     = categories.filter(c => !c.parentId)
-  const expenseCats      = topLevelCats.filter(c => !INCOME_NAMES.has(c.name.toLowerCase()))
+  const expenseCats      = topLevelCats.filter(c => !INCOME_ONLY_NAMES.has(c.name.toLowerCase()))
   const defaultCats      = expenseCats.filter(c => c.isDefault)
   const customCats       = expenseCats.filter(c => !c.isDefault)
   const activeCount      = expenseCats.filter(c => c.isActive).length
