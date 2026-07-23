@@ -35,9 +35,4 @@ export const SPACE_TEMPLATES: SpaceTemplate[] = [
     defaultName: 'Тренування',
     description: 'Результати й прогрес',
   },
-  {
-    id: 'shared', label: 'Спільний', type: 'shared', color: '#64748b',
-    defaultName: 'Спільний простір',
-    description: 'Спільний простір',
-  },
 ]

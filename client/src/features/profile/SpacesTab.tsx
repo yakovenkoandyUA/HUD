@@ -32,7 +32,6 @@ const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
   { value: 'home',    label: 'Дім'        },
   { value: 'pet',     label: 'Улюбленець' },
   { value: 'sports',  label: 'Спорт'      },
-  { value: 'shared',  label: 'Спільний'   },
 ]
 
 const PET_SPECIES = [
@@ -80,7 +79,7 @@ const SpacesTab: React.FC = () => {
 
   // ── Create form ──
   const [newName, setNewName]   = useState('')
-  const [newType, setNewType]   = useState<SpaceType>('shared')
+  const [newType, setNewType]   = useState<SpaceType>('trip')
   const [newColor, setNewColor] = useState(COLORS[0])
   const [creating, setCreating] = useState(false)
   const [fromTemplate, setFromTemplate] = useState(false)
@@ -148,7 +147,7 @@ const SpacesTab: React.FC = () => {
   }
 
   const openCreate = () => {
-    setNewName(''); setNewType('shared'); setNewColor(COLORS[0])
+    setNewName(''); setNewType('trip'); setNewColor(COLORS[0])
     setFromTemplate(false)
     resetProfileFields()
     setCreateStep('template')
