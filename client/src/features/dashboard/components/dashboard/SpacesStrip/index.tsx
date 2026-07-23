@@ -122,7 +122,7 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
     <section className={styles.root}>
       <div className={styles.headerRow}>
         <h2 className={styles.title}>ПРОСТОРИ</h2>
-        <button type="button" className={styles.seeAll} onClick={() => navigate('/profile?tab=spaces')}>
+        <button type="button" className={styles.seeAll} onClick={() => navigate('/profile/modules')}>
           всі
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 18l6-6-6-6"/>
