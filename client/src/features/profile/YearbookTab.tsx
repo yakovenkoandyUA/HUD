@@ -53,13 +53,20 @@ const VEHICLE_TYPE_LABELS: Record<string, string> = {
   note:        'нотатки',
 }
 
+const MOOD_META = {
+  up:   { label: 'НАСТРІЙ ПОКРАЩУЄТЬСЯ', cls: styles.moodPillUp,   path: 'M6 10V2M2 6l4-4 4 4' },
+  down: { label: 'НАСТРІЙ ЗНИЖУЄТЬСЯ',   cls: styles.moodPillDown, path: 'M6 2v8M2 6l4 4 4-4' },
+  flat: { label: 'НАСТРІЙ СТАБІЛЬНИЙ',   cls: styles.moodPillFlat, path: 'M2 6h8M8 4l2 2-2 2' },
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 /**
  * YearbookTab
  * -----------
  * Atmospheric yearly/seasonal/monthly wrap — замінює Timeline в Хроніці.
- * 5 секцій (Cover / Подорожі / Медіа / Кухня / Фінанси) з mesh-gradient фонами.
+ * Секції: Cover / Подорожі / Медіа / Кухня / F1 / Авто / Фінанси.
+ * Секції з нульовими даними не рендеряться.
  * Period picker: МІСЯЦЬ / СЕЗОН / РІК + навігаційні стрілки.
  */
 const YearbookTab: React.FC = () => {
@@ -130,6 +137,12 @@ const YearbookTab: React.FC = () => {
   const handleGenerate = () => { generateYearbook(year, period) }
 
   const s = report?.sections
+
+  // Data presence checks — skip sections that have nothing to show
+  const hasTravelData = s ? (s.memoriesCount > 0 || s.placesVisitedCount > 0) : false
+  const hasMediaData  = s ? (s.moviesWatched + s.seriesWatched + s.animeWatched > 0) : false
+  const hasFoodData   = s ? s.recipesCookedCount > 0 : false
+  const hasF1Data     = s?.f1 ? (s.f1.points > 0 || s.f1.predictionsCount > 0) : false
 
   return (
     <div className={styles.wrap}>
@@ -208,6 +221,17 @@ const YearbookTab: React.FC = () => {
                 <span className={styles.statNum}>{s.memoriesCount}</span>
                 <span className={styles.statUnit}>СПОГАДІВ</span>
               </div>
+              {s.moodTrend && (() => {
+                const m = MOOD_META[s.moodTrend as keyof typeof MOOD_META]
+                return m ? (
+                  <div className={`${styles.moodPill} ${m.cls}`}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <path d={m.path} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span>{m.label}</span>
+                  </div>
+                ) : null
+              })()}
               <div className={styles.aiBox}>
                 <span className={styles.aiBoxLabel}>AI НАРАТИВ · НЕЗАБАРОМ</span>
               </div>
@@ -215,66 +239,88 @@ const YearbookTab: React.FC = () => {
           </div>
 
           {/* ── 2. Подорожі ── */}
-          <div className={`${styles.section} ${styles.sectionTravel}`}>
-            <div className={styles.sectionInner}>
-              <span className={styles.eyebrow}>ПОДОРОЖІ</span>
-              <div className={styles.statBlock}>
-                <span className={styles.statNum}>{s.memoriesCount + s.placesVisitedCount}</span>
-                <span className={styles.statUnit}>МІСЦЬ</span>
-              </div>
-              {s.placesVisitedCount > 0 && (
-                <p className={styles.subText}>{s.placesVisitedCount} нових планів відвідано</p>
-              )}
-              {s.topPlaces.length > 0 && (
-                <div className={styles.pills}>
-                  {s.topPlaces.map((p, i) => (
-                    <span key={i} className={styles.pill}>{p}</span>
-                  ))}
-                </div>
-              )}
-              <div className={styles.aiBox}>
-                <span className={styles.aiBoxLabel}>AI НАРАТИВ · НЕЗАБАРОМ</span>
+          {hasTravelData && (
+            <div className={`${styles.section} ${styles.sectionTravel}`}>
+              <div className={styles.sectionInner}>
+                <span className={styles.eyebrow}>ПОДОРОЖІ</span>
+                {s.placesVisitedCount > 0 ? (
+                  <>
+                    <div className={styles.statBlock}>
+                      <span className={styles.statNum}>{s.placesVisitedCount}</span>
+                      <span className={styles.statUnit}>МІСЦЬ ВІДВІДАНО</span>
+                    </div>
+                    {s.memoriesCount > 0 && (
+                      <p className={styles.subText}>{s.memoriesCount} спогадів збережено</p>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.statBlock}>
+                    <span className={styles.statNum}>{s.memoriesCount}</span>
+                    <span className={styles.statUnit}>СПОГАДІВ</span>
+                  </div>
+                )}
+                {s.topPlaces.length > 0 && (
+                  <div className={styles.pills}>
+                    {s.topPlaces.map((p, i) => (
+                      <span key={i} className={styles.pill}>{p}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           {/* ── 3. Медіа ── */}
-          <div className={`${styles.section} ${styles.sectionMedia}`}>
-            <div className={styles.sectionInner}>
-              <span className={styles.eyebrow}>МЕДІА</span>
-              <div className={styles.statBlock}>
-                <span className={styles.statNum}>{s.moviesWatched + s.seriesWatched + s.animeWatched}</span>
-                <span className={styles.statUnit}>ПЕРЕГЛЯНУТО</span>
-              </div>
-              <div className={styles.subStats}>
-                {s.moviesWatched   > 0 && <span>{s.moviesWatched} фільмів</span>}
-                {s.seriesWatched   > 0 && <span>{s.seriesWatched} серіалів</span>}
-                {s.animeWatched    > 0 && <span>{s.animeWatched} аніме</span>}
-              </div>
-              <div className={styles.aiBox}>
-                <span className={styles.aiBoxLabel}>AI НАРАТИВ · НЕЗАБАРОМ</span>
+          {hasMediaData && (
+            <div className={`${styles.section} ${styles.sectionMedia}`}>
+              <div className={styles.sectionInner}>
+                <span className={styles.eyebrow}>МЕДІА</span>
+                <div className={styles.statBlock}>
+                  <span className={styles.statNum}>{s.moviesWatched + s.seriesWatched + s.animeWatched}</span>
+                  <span className={styles.statUnit}>ПЕРЕГЛЯНУТО</span>
+                </div>
+                <div className={styles.subStats}>
+                  {s.moviesWatched   > 0 && <span>{s.moviesWatched} фільмів</span>}
+                  {s.seriesWatched   > 0 && <span>{s.seriesWatched} серіалів</span>}
+                  {s.animeWatched    > 0 && <span>{s.animeWatched} аніме</span>}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* ── 4. Кухня ── */}
-          <div className={`${styles.section} ${styles.sectionFood}`}>
-            <div className={styles.sectionInner}>
-              <span className={styles.eyebrow}>КУХНЯ</span>
-              <div className={styles.statBlock}>
-                <span className={styles.statNum}>{s.recipesCookedCount}</span>
-                <span className={styles.statUnit}>СТРАВ</span>
-              </div>
-              {s.uniqueRecipesCount > 0 && (
-                <p className={styles.subText}>{s.uniqueRecipesCount} унікальних рецептів</p>
-              )}
-              <div className={styles.aiBox}>
-                <span className={styles.aiBoxLabel}>AI НАРАТИВ · НЕЗАБАРОМ</span>
+          {hasFoodData && (
+            <div className={`${styles.section} ${styles.sectionFood}`}>
+              <div className={styles.sectionInner}>
+                <span className={styles.eyebrow}>КУХНЯ</span>
+                <div className={styles.statBlock}>
+                  <span className={styles.statNum}>{s.recipesCookedCount}</span>
+                  <span className={styles.statUnit}>СТРАВ</span>
+                </div>
+                {s.uniqueRecipesCount > 0 && (
+                  <p className={styles.subText}>{s.uniqueRecipesCount} унікальних рецептів</p>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* ── 5. Авто (conditional) ── */}
+          {/* ── 5. F1 ── */}
+          {hasF1Data && s.f1 && (
+            <div className={`${styles.section} ${styles.sectionF1}`}>
+              <div className={styles.sectionInner}>
+                <span className={styles.eyebrow}>ФОРМУЛА 1</span>
+                <div className={styles.statBlock}>
+                  <span className={styles.statNum}>{s.f1.predictionsCount}</span>
+                  <span className={styles.statUnit}>ПРОГНОЗІВ</span>
+                </div>
+                {s.f1.points > 0 && (
+                  <p className={styles.subText}>{s.f1.points} очок набрано</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── 6. Авто ── */}
           {s.vehicleStats && (
             <div className={`${styles.section} ${styles.sectionVehicle}`}>
               <div className={styles.sectionInner}>
@@ -293,7 +339,7 @@ const YearbookTab: React.FC = () => {
             </div>
           )}
 
-          {/* ── 6. Фінанси ── */}
+          {/* ── 7. Фінанси ── */}
           <div className={`${styles.section} ${styles.sectionFinance} ${styles.sectionLast}`}>
             <div className={styles.sectionInner}>
               <span className={styles.eyebrow}>ФІНАНСИ</span>
@@ -308,9 +354,6 @@ const YearbookTab: React.FC = () => {
                   ))}
                 </div>
               )}
-              <div className={styles.aiBox}>
-                <span className={styles.aiBoxLabel}>AI НАРАТИВ · НЕЗАБАРОМ</span>
-              </div>
             </div>
           </div>
 

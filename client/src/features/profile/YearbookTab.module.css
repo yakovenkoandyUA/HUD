@@ -298,6 +298,26 @@
   text-transform: uppercase;
 }
 
+/* ── Mood trend pill ── */
+.moodPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.1);
+  color: var(--s-text2);
+}
+.moodPillUp   { background: rgba(75,200,100,0.22); color: rgba(160,255,160,0.92); }
+.moodPillDown { background: rgba(200,75,75,0.22);  color: rgba(255,160,160,0.92); }
+.moodPillFlat { background: rgba(255,255,255,0.1); color: var(--s-text2); }
+
 /* ── NOISE helper (shared SVG texture) ── */
 .section {
   --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
@@ -369,6 +389,17 @@
 }
 
 /* ── Фінанси — red + teal + noise (mesher.app, static) ── */
+/* ── F1 — dark charcoal + racing red/orange ── */
+.sectionF1 {
+  background-color: hsla(0,0%,10%,1);
+  background-image:
+    var(--noise),
+    radial-gradient(circle at 20% 80%, hsla(3,100%,50%,1)  0%, transparent 40%),
+    radial-gradient(circle at 80% 20%, hsla(25,100%,55%,1) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, hsla(0,0%,8%,1)    0%, transparent 60%);
+  background-blend-mode: overlay, normal, normal, normal;
+}
+
 /* ── Авто — graphite + electric blue + noise ── */
 .sectionVehicle {
   background-color: hsla(220,15%,18%,1);
