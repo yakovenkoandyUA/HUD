@@ -464,624 +464,571 @@ const SpacesTab: React.FC = () => {
   }
 
   return (
-    <div className={styles.root}>
+		<div className={styles.root}>
+			{/* ── Header ── */}
+			<div className={styles.header}>
+				<span className={styles.title}>
+					ПРОСТОРИ
+					{limits.maxSpaces !== -1 && (
+						<span className={styles.titleCount}>
+							{' '}
+							{spaces.length}/{limits.maxSpaces}
+						</span>
+					)}
+				</span>
+				{isAtLimit('maxSpaces', spaces.length) ? (
+					<UpgradePrompt limitKey="maxSpaces" currentCount={spaces.length} compact />
+				) : (
+					<button type="button" className={styles.addBtn} onClick={openCreate} aria-label="Створити простір">
+						<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+							<path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+						</svg>
+					</button>
+				)}
+			</div>
+			{!can('sharedSpaces') && <p className={styles.sharedHint}>Спільні простори доступні з плану Shared Life</p>}
 
-      {/* ── Header ── */}
-      <div className={styles.header}>
-        <span className={styles.title}>
-          ПРОСТОРИ
-          {limits.maxSpaces !== -1 && (
-            <span className={styles.titleCount}> {spaces.length}/{limits.maxSpaces}</span>
-          )}
-        </span>
-        {isAtLimit('maxSpaces', spaces.length) ? (
-          <UpgradePrompt limitKey="maxSpaces" currentCount={spaces.length} compact />
-        ) : (
-          <button type="button" className={styles.addBtn} onClick={openCreate} aria-label="Створити простір">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-          </button>
-        )}
-      </div>
-      {!can('sharedSpaces') && (
-        <p className={styles.sharedHint}>Спільні простори доступні з плану Shared Life</p>
-      )}
+			{/* ── Empty state ── */}
+			{!loading && spaces.length === 0 && (
+				<div className={styles.empty}>
+					<p className={styles.emptyText}>Просторів ще немає.</p>
+					<p className={styles.emptySub}>Створи перший — поїздку, хобі або спільний з партнером.</p>
+					<button type="button" className={styles.emptyBtn} onClick={openCreate}>
+						Створити простір
+					</button>
+				</div>
+			)}
 
-      {/* ── Empty state ── */}
-      {!loading && spaces.length === 0 && (
-        <div className={styles.empty}>
-          <p className={styles.emptyText}>Просторів ще немає.</p>
-          <p className={styles.emptySub}>Створи перший — поїздку, хобі або спільний з партнером.</p>
-          <button type="button" className={styles.emptyBtn} onClick={openCreate}>Створити простір</button>
-        </div>
-      )}
+			{/* ── Spaces list ── */}
+			<div className={styles.list}>
+				{spaces.map(space => {
+					const cfg = SPACE_TYPE_CONFIG[space.type]
+					const typeColor = cfg?.color ?? '#888'
 
-      {/* ── Spaces list ── */}
-      <div className={styles.list}>
-        {spaces.map(space => {
-          const cfg      = SPACE_TYPE_CONFIG[space.type]
-          const typeColor = cfg?.color ?? '#888'
-          const metrics: string[] = []
-          if (space.memoriesCount  > 0) metrics.push(`${space.memoriesCount} ${space.memoriesCount === 1 ? 'спогад' : 'спогади'}`)
-          if (space.openTasksCount > 0) metrics.push(`${space.openTasksCount} ${space.openTasksCount === 1 ? 'задача' : 'задачі'}`)
-          if (space.notesCount     > 0) metrics.push(`${space.notesCount} ${space.notesCount === 1 ? 'нотатка' : 'нотатки'}`)
-          const relativeTime = formatRelative(space.lastActivityAt)
+					return (
+						<button
+							key={space.id}
+							type="button"
+							className={styles.spaceCard}
+							style={{ '--space-color': space.color, '--type-color': typeColor } as React.CSSProperties}
+							onClick={() => openDetail(space)}
+						>
+							<div className={styles.spaceIconZone}>{cfg && <img src={cfg.iconSrc} alt="" className={cfg.isCover ? styles.spaceIconImgCover : styles.spaceIconImg} draggable={false} />}</div>
+							<div className={styles.spaceInfo}>
+								<span className={styles.spaceName}>{space.name}</span>
+							</div>
+						</button>
+					)
+				})}
+			</div>
 
-          return (
-            <button
-              key={space.id}
-              type="button"
-              className={styles.spaceCard}
-              style={{ '--space-color': space.color, '--type-color': typeColor } as React.CSSProperties}
-              onClick={() => openDetail(space)}
-            >
-              <div className={styles.spaceIconZone}>
-                {cfg && (
-                  <img
-                    src={cfg.iconSrc}
-                    alt=""
-                    className={cfg.isCover ? styles.spaceIconImgCover : styles.spaceIconImg}
-                    draggable={false}
-                  />
-                )}
-              </div>
-              <div className={styles.spaceInfo}>
-                <span className={styles.spaceName}>{space.name}</span>
-                <span className={styles.spaceType}>
-                  {TYPE_OPTIONS.find(t => t.value === space.type)?.label ?? space.type}
-                  {space.members.length > 1 && ` · ${space.members.length}`}
-                </span>
-                {metrics.length > 0
-                  ? <span className={styles.spaceMetrics}>{metrics.join(' · ')}</span>
-                  : relativeTime
-                    ? <span className={styles.spaceActivity}>{relativeTime}</span>
-                    : <span className={styles.spaceEmpty}>Активності ще немає</span>
-                }
-              </div>
-            </button>
-          )
-        })}
-      </div>
+			{/* ── Archived accordion ── */}
+			<button type="button" className={styles.archivedToggle} onClick={toggleArchived}>
+				<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+					<rect x="1" y="4" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+					<path d="M1 6.5h12" stroke="currentColor" strokeWidth="1.4" />
+					<path d="M4 1.5h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+					<path d="M5.5 3h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+				</svg>
+				<span>Архів</span>
+				<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" className={`${styles.archivedChevron} ${archivedOpen ? styles.archivedChevronOpen : ''}`}>
+					<path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+				</svg>
+			</button>
 
-      {/* ── Archived accordion ── */}
-      <button type="button" className={styles.archivedToggle} onClick={toggleArchived}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <rect x="1" y="4" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
-          <path d="M1 6.5h12" stroke="currentColor" strokeWidth="1.4"/>
-          <path d="M4 1.5h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-          <path d="M5.5 3h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-        </svg>
-        <span>Архів</span>
-        <svg
-          width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"
-          className={`${styles.archivedChevron} ${archivedOpen ? styles.archivedChevronOpen : ''}`}
-        >
-          <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
+			<div className={`${styles.archivedList} ${archivedOpen ? styles.archivedListOpen : ''}`}>
+				{archivedSpaces.length === 0 ? (
+					<p className={styles.archivedEmpty}>Архівованих просторів немає</p>
+				) : (
+					archivedSpaces.map(space => (
+						<div key={space.id} className={styles.archivedCard}>
+							<span className={styles.spaceColorDot} style={{ background: space.color }} />
+							<span className={styles.spaceInfo}>
+								<span className={styles.spaceName}>{space.name}</span>
+								<span className={styles.spaceType}>{TYPE_OPTIONS.find(t => t.value === space.type)?.label ?? space.type}</span>
+							</span>
+							<button type="button" className={styles.unarchiveBtn} onClick={() => handleUnarchive(space.id)} aria-label="Відновити простір">
+								<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+									<path d="M7 11V3M4 6l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+								</svg>
+							</button>
+						</div>
+					))
+				)}
+			</div>
 
-      <div className={`${styles.archivedList} ${archivedOpen ? styles.archivedListOpen : ''}`}>
-        {archivedSpaces.length === 0 ? (
-          <p className={styles.archivedEmpty}>Архівованих просторів немає</p>
-        ) : (
-          archivedSpaces.map(space => (
-            <div key={space.id} className={styles.archivedCard}>
-              <span className={styles.spaceColorDot} style={{ background: space.color }} />
-              <span className={styles.spaceInfo}>
-                <span className={styles.spaceName}>{space.name}</span>
-                <span className={styles.spaceType}>
-                  {TYPE_OPTIONS.find(t => t.value === space.type)?.label ?? space.type}
-                </span>
-              </span>
-              <button
-                type="button"
-                className={styles.unarchiveBtn}
-                onClick={() => handleUnarchive(space.id)}
-                aria-label="Відновити простір"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M7 11V3M4 6l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          ))
-        )}
-      </div>
+			{/* ══ Create Sheet ══ */}
+			{createOpen && (
+				<div className={styles.overlay} ref={createOverlayRef} onClick={() => setCreateOpen(false)}>
+					<div
+						className={styles.sheet}
+						ref={createSheetRef}
+						onClick={e => e.stopPropagation()}
+						onAnimationEnd={e => {
+							e.currentTarget.style.animation = 'none'
+						}}
+					>
+						<div className={styles.sheetHandle} />
 
-      {/* ══ Create Sheet ══ */}
-      {createOpen && (
-        <div className={styles.overlay} ref={createOverlayRef} onClick={() => setCreateOpen(false)}>
-          <div className={styles.sheet} ref={createSheetRef} onClick={e => e.stopPropagation()} onAnimationEnd={e => { e.currentTarget.style.animation = 'none' }}>
-            <div className={styles.sheetHandle} />
+						{createStep === 'template' ? (
+							<>
+								<h2 className={styles.sheetTitle}>Який простір?</h2>
+								<div className={styles.templateGrid}>
+									{SPACE_TEMPLATES.map(tpl => {
+										const cfg = SPACE_TYPE_CONFIG[tpl.type]
+										return (
+											<button key={tpl.id} type="button" className={styles.templateCard} style={{ '--type-color': cfg?.color ?? '#888' } as React.CSSProperties} onClick={() => pickTemplate(tpl)}>
+												<div className={styles.templateIconZone}>
+													{cfg && (
+														<img
+															src={cfg.iconSrc}
+															alt=""
+															aria-hidden="true"
+															className={cfg.isCover ? styles.templateIconImgCover : undefined}
+															width={cfg.isCover ? undefined : 70}
+															height={cfg.isCover ? undefined : 70}
+														/>
+													)}
+												</div>
+												<div className={styles.templateCardBody}>
+													<span className={styles.templateLabel}>{tpl.label}</span>
+												</div>
+											</button>
+										)
+									})}
+									<button
+										type="button"
+										className={`${styles.templateCard} ${styles.templateCardBlank}`}
+										style={{ '--type-color': '#71717a' } as React.CSSProperties}
+										onClick={() => pickTemplate(null)}
+									>
+										<div className={styles.templateIconZone}>
+											<img src="/space-identifiers-transparent/space_personal.png" alt="" aria-hidden="true" className={styles.templateIconImgCover} />
+										</div>
+										<div className={styles.templateCardBody}>
+											<span className={styles.templateLabel}>Свій простір</span>
+										</div>
+									</button>
+								</div>
+							</>
+						) : (
+							<>
+								<div className={styles.formBack}>
+									<button type="button" className={styles.formBackBtn} onClick={() => setCreateStep('template')}>
+										<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+											<path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+										</svg>
+									</button>
+									<h2 className={styles.sheetTitle} style={{ margin: 0 }}>
+										Новий простір
+									</h2>
+								</div>
 
-            {createStep === 'template' ? (
-              <>
-                <h2 className={styles.sheetTitle}>Який простір?</h2>
-                <div className={styles.templateGrid}>
-                  {SPACE_TEMPLATES.map(tpl => {
-                    const cfg = SPACE_TYPE_CONFIG[tpl.type]
-                    return (
-                      <button
-                        key={tpl.id}
-                        type="button"
-                        className={styles.templateCard}
-                        style={{ '--type-color': cfg?.color ?? '#888' } as React.CSSProperties}
-                        onClick={() => pickTemplate(tpl)}
-                      >
-                        <div className={styles.templateIconZone}>
-                          {cfg && (
-                            <img
-                              src={cfg.iconSrc}
-                              alt=""
-                              aria-hidden="true"
-                              className={cfg.isCover ? styles.templateIconImgCover : undefined}
-                              width={cfg.isCover ? undefined : 70}
-                              height={cfg.isCover ? undefined : 70}
-                            />
-                          )}
-                        </div>
-                        <div className={styles.templateCardBody}>
-                          <span className={styles.templateLabel}>{tpl.label}</span>
-                          <span className={styles.templateDesc}>{tpl.description}</span>
-                        </div>
-                      </button>
-                    )
-                  })}
-                  <button
-                    type="button"
-                    className={`${styles.templateCard} ${styles.templateCardBlank}`}
-                    style={{ '--type-color': '#71717a' } as React.CSSProperties}
-                    onClick={() => pickTemplate(null)}
-                  >
-                    <div className={styles.templateIconZone}>
-                      <img src="/space-identifiers-transparent/space_personal.png" alt="" aria-hidden="true" className={styles.templateIconImgCover} />
-                    </div>
-                    <div className={styles.templateCardBody}>
-                      <span className={styles.templateLabel}>Власний</span>
-                      <span className={styles.templateDesc}>Почати з нуля</span>
-                    </div>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className={styles.formBack}>
-                  <button type="button" className={styles.formBackBtn} onClick={() => setCreateStep('template')}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                  <h2 className={styles.sheetTitle} style={{ margin: 0 }}>Новий простір</h2>
-                </div>
+								<label className={styles.fieldLabel}>НАЗВА</label>
+								<input className={styles.input} value={newName} onChange={e => setNewName(e.target.value)} placeholder="Наприклад, Japan Trip 2027…" maxLength={60} autoFocus />
 
-                <label className={styles.fieldLabel}>НАЗВА</label>
-                <input
-                  className={styles.input}
-                  value={newName}
-                  onChange={e => setNewName(e.target.value)}
-                  placeholder="Наприклад, Japan Trip 2027…"
-                  maxLength={60}
-                  autoFocus
-                />
+								{!fromTemplate && (
+									<>
+										<label className={styles.fieldLabel}>ТИП</label>
+										<PillSelector options={TYPE_OPTIONS} value={newType} onChange={v => setNewType(v as SpaceType)} className={styles.typePicker} />
+									</>
+								)}
 
-                {!fromTemplate && (
-                  <>
-                    <label className={styles.fieldLabel}>ТИП</label>
-                    <PillSelector
-                      options={TYPE_OPTIONS}
-                      value={newType}
-                      onChange={v => setNewType(v as SpaceType)}
-                      className={styles.typePicker}
-                    />
-                  </>
-                )}
+								<label className={styles.fieldLabel}>КОЛІР</label>
+								<div className={styles.colorRow}>
+									{COLORS.map(c => (
+										<button key={c} type="button" className={`${styles.colorDot} ${newColor === c ? styles.colorDotOn : ''}`} style={{ background: c }} onClick={() => setNewColor(c)} aria-label={c} />
+									))}
+								</div>
 
-                <label className={styles.fieldLabel}>КОЛІР</label>
-                <div className={styles.colorRow}>
-                  {COLORS.map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      className={`${styles.colorDot} ${newColor === c ? styles.colorDotOn : ''}`}
-                      style={{ background: c }}
-                      onClick={() => setNewColor(c)}
-                      aria-label={c}
-                    />
-                  ))}
-                </div>
+								{/* ── Модулі ── */}
+								<hr className={styles.profileDivider} />
+								<p className={styles.profileSectionLabel}>МОДУЛІ</p>
+								<div className={styles.chipRow}>
+									{MODULES.map(mod => (
+										<button
+											key={mod.id}
+											type="button"
+											className={`${styles.chip} ${newModules.includes(mod.id) ? styles.chipOn : ''}`}
+											onClick={() => setNewModules(prev => (prev.includes(mod.id) ? prev.filter(m => m !== mod.id) : [...prev, mod.id]))}
+										>
+											{mod.label}
+										</button>
+									))}
+								</div>
 
-                {/* ── Модулі ── */}
-                <hr className={styles.profileDivider} />
-                <p className={styles.profileSectionLabel}>МОДУЛІ</p>
-                <div className={styles.chipRow}>
-                  {MODULES.map(mod => (
-                    <button
-                      key={mod.id}
-                      type="button"
-                      className={`${styles.chip} ${newModules.includes(mod.id) ? styles.chipOn : ''}`}
-                      onClick={() => setNewModules(prev =>
-                        prev.includes(mod.id) ? prev.filter(m => m !== mod.id) : [...prev, mod.id]
-                      )}
-                    >
-                      {mod.label}
-                    </button>
-                  ))}
-                </div>
+								{/* ── Учасники (family) ── */}
+								{family.length > 0 && (
+									<>
+										<p className={styles.profileSectionLabel}>УЧАСНИКИ</p>
+										<div className={styles.familyPickRow}>
+											{family.map(m => {
+												const on = newMembers.includes(m.username)
+												return (
+													<button
+														key={m.id}
+														type="button"
+														className={`${styles.familyPickChip} ${on ? styles.familyPickChipOn : ''}`}
+														onClick={() => setNewMembers(prev => (prev.includes(m.username) ? prev.filter(u => u !== m.username) : [...prev, m.username]))}
+													>
+														<div className={styles.memberAvatar} style={{ width: 28, height: 28 }}>
+															{m.avatarUrl ? (
+																<img src={m.avatarUrl} alt={m.name} className={styles.memberAvatarImg} />
+															) : (
+																<span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)' }}>{m.name[0]?.toUpperCase()}</span>
+															)}
+														</div>
+														<span className={styles.familyPickName}>{m.name}</span>
+														{on && (
+															<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+																<path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+															</svg>
+														)}
+													</button>
+												)
+											})}
+										</div>
+									</>
+								)}
 
-                {/* ── Учасники (family) ── */}
-                {family.length > 0 && (
-                  <>
-                    <p className={styles.profileSectionLabel}>УЧАСНИКИ</p>
-                    <div className={styles.familyPickRow}>
-                      {family.map(m => {
-                        const on = newMembers.includes(m.username)
-                        return (
-                          <button
-                            key={m.id}
-                            type="button"
-                            className={`${styles.familyPickChip} ${on ? styles.familyPickChipOn : ''}`}
-                            onClick={() => setNewMembers(prev =>
-                              prev.includes(m.username) ? prev.filter(u => u !== m.username) : [...prev, m.username]
-                            )}
-                          >
-                            <div className={styles.memberAvatar} style={{ width: 28, height: 28 }}>
-                              {m.avatarUrl
-                                ? <img src={m.avatarUrl} alt={m.name} className={styles.memberAvatarImg} />
-                                : <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)' }}>{m.name[0]?.toUpperCase()}</span>
-                              }
-                            </div>
-                            <span className={styles.familyPickName}>{m.name}</span>
-                            {on && (
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </>
-                )}
+								{/* ── Авто: додаткові поля ── */}
+								{newType === 'vehicle' && (
+									<>
+										<hr className={styles.profileDivider} />
+										<p className={styles.profileSectionLabel}>ПРО АВТОМОБІЛЬ</p>
+										<div className={styles.fieldGrid2}>
+											<input className={styles.input} value={vehicleMake} onChange={e => setVehicleMake(e.target.value)} placeholder="Марка" maxLength={40} />
+											<input className={styles.input} value={vehicleModel} onChange={e => setVehicleModel(e.target.value)} placeholder="Модель" maxLength={40} />
+											<input
+												className={styles.input}
+												value={vehicleYear}
+												onChange={e => setVehicleYear(e.target.value)}
+												placeholder="Рік"
+												type="number"
+												min={1900}
+												max={new Date().getFullYear() + 1}
+											/>
+											<input className={styles.input} value={vehiclePlate} onChange={e => setVehiclePlate(e.target.value)} placeholder="Держ. номер" maxLength={10} />
+										</div>
+									</>
+								)}
 
-                {/* ── Авто: додаткові поля ── */}
-                {newType === 'vehicle' && (
-                  <>
-                    <hr className={styles.profileDivider} />
-                    <p className={styles.profileSectionLabel}>ПРО АВТОМОБІЛЬ</p>
-                    <div className={styles.fieldGrid2}>
-                      <input
-                        className={styles.input}
-                        value={vehicleMake}
-                        onChange={e => setVehicleMake(e.target.value)}
-                        placeholder="Марка"
-                        maxLength={40}
-                      />
-                      <input
-                        className={styles.input}
-                        value={vehicleModel}
-                        onChange={e => setVehicleModel(e.target.value)}
-                        placeholder="Модель"
-                        maxLength={40}
-                      />
-                      <input
-                        className={styles.input}
-                        value={vehicleYear}
-                        onChange={e => setVehicleYear(e.target.value)}
-                        placeholder="Рік"
-                        type="number"
-                        min={1900}
-                        max={new Date().getFullYear() + 1}
-                      />
-                      <input
-                        className={styles.input}
-                        value={vehiclePlate}
-                        onChange={e => setVehiclePlate(e.target.value)}
-                        placeholder="Держ. номер"
-                        maxLength={10}
-                      />
-                    </div>
-                  </>
-                )}
+								{/* ── Улюбленець: додаткові поля ── */}
+								{newType === 'pet' && (
+									<>
+										<hr className={styles.profileDivider} />
+										<p className={styles.profileSectionLabel}>ПРО УЛЮБЛЕНЦЯ</p>
+										<input className={styles.input} value={petName} onChange={e => setPetName(e.target.value)} placeholder="Ім'я тварини" maxLength={40} />
+										<div className={styles.chipRow}>
+											{(
+												[
+													{ value: 'dog', label: 'Собака' },
+													{ value: 'cat', label: 'Кіт' },
+													{ value: 'bird', label: 'Птах' },
+													{ value: 'rabbit', label: 'Кролик' },
+													{ value: 'other', label: 'Інший' },
+												] as const
+											).map(s => (
+												<button
+													key={s.value}
+													type="button"
+													className={`${styles.chip} ${petSpecies === s.value ? styles.chipOn : ''}`}
+													onClick={() => setPetSpecies(petSpecies === s.value ? '' : s.value)}
+												>
+													{s.label}
+												</button>
+											))}
+										</div>
+										<input className={styles.input} value={petBreed} onChange={e => setPetBreed(e.target.value)} placeholder="Порода (опційно)" maxLength={40} />
+									</>
+								)}
 
-                {/* ── Улюбленець: додаткові поля ── */}
-                {newType === 'pet' && (
-                  <>
-                    <hr className={styles.profileDivider} />
-                    <p className={styles.profileSectionLabel}>ПРО УЛЮБЛЕНЦЯ</p>
-                    <input
-                      className={styles.input}
-                      value={petName}
-                      onChange={e => setPetName(e.target.value)}
-                      placeholder="Ім'я тварини"
-                      maxLength={40}
-                    />
-                    <div className={styles.chipRow}>
-                      {([
-                        { value: 'dog',    label: 'Собака' },
-                        { value: 'cat',    label: 'Кіт'    },
-                        { value: 'bird',   label: 'Птах'   },
-                        { value: 'rabbit', label: 'Кролик' },
-                        { value: 'other',  label: 'Інший'  },
-                      ] as const).map(s => (
-                        <button
-                          key={s.value}
-                          type="button"
-                          className={`${styles.chip} ${petSpecies === s.value ? styles.chipOn : ''}`}
-                          onClick={() => setPetSpecies(petSpecies === s.value ? '' : s.value)}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                    <input
-                      className={styles.input}
-                      value={petBreed}
-                      onChange={e => setPetBreed(e.target.value)}
-                      placeholder="Порода (опційно)"
-                      maxLength={40}
-                    />
-                  </>
-                )}
+								<button type="button" className={styles.primaryBtn} onClick={handleCreate} disabled={creating || !newName.trim()}>
+									{creating ? 'Створюємо…' : 'Створити'}
+								</button>
+							</>
+						)}
+					</div>
+				</div>
+			)}
 
-                <button
-                  type="button"
-                  className={styles.primaryBtn}
-                  onClick={handleCreate}
-                  disabled={creating || !newName.trim()}
-                >
-                  {creating ? 'Створюємо…' : 'Створити'}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+			{/* ══ Detail Sheet ══ */}
+			{detailSpace && (
+				<div className={styles.overlay} ref={detailOverlayRef} onClick={() => setDetailSpace(null)}>
+					<div
+						className={styles.sheet}
+						ref={detailSheetRef}
+						onClick={e => e.stopPropagation()}
+						onAnimationEnd={e => {
+							e.currentTarget.style.animation = 'none'
+						}}
+					>
+						<div className={styles.sheetHandle} />
 
-      {/* ══ Detail Sheet ══ */}
-      {detailSpace && (
-        <div className={styles.overlay} ref={detailOverlayRef} onClick={() => setDetailSpace(null)}>
-          <div className={styles.sheet} ref={detailSheetRef} onClick={e => e.stopPropagation()} onAnimationEnd={e => { e.currentTarget.style.animation = 'none' }}>
-            <div className={styles.sheetHandle} />
+						<div className={styles.detailHeader}>
+							<span className={styles.detailColor} style={{ background: detailSpace.color }} />
+							<div className={styles.detailTitleWrap}>
+								{editingName ? (
+									<input
+										ref={nameInputRef}
+										className={styles.nameInput}
+										value={nameInput}
+										onChange={e => setNameInput(e.target.value)}
+										onBlur={handleSaveName}
+										onKeyDown={e => {
+											if (e.key === 'Enter') {
+												e.preventDefault()
+												handleSaveName()
+											}
+											if (e.key === 'Escape') setEditingName(false)
+										}}
+										autoFocus
+										maxLength={60}
+									/>
+								) : (
+									<div className={styles.nameRow}>
+										<h2 className={styles.sheetTitle} style={{ marginBottom: 0 }}>
+											{detailSpace.name}
+										</h2>
+										{detailSpace.ownerId === myId && (
+											<button
+												type="button"
+												className={styles.editNameBtn}
+												onClick={() => {
+													setEditingName(true)
+													setNameInput(detailSpace.name)
+												}}
+												aria-label="Редагувати назву"
+											>
+												<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+													<path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z" />
+												</svg>
+											</button>
+										)}
+										<button
+											type="button"
+											className={styles.openSpaceBtn}
+											onClick={() => {
+												setDetailSpace(null)
+												navigate(`/spaces/${detailSpace.id}`)
+											}}
+											aria-label="Відкрити простір"
+										>
+											<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+												<path d="M5 2h7v7M12 2L6 8" />
+												<path d="M8 5H2v7h7V8" />
+											</svg>
+										</button>
+									</div>
+								)}
+								<span className={styles.detailType}>{TYPE_OPTIONS.find(t => t.value === detailSpace.type)?.label ?? detailSpace.type}</span>
+								{(detailSpace.memoriesCount > 0 || detailSpace.openTasksCount > 0 || detailSpace.notesCount > 0) && (
+									<div className={styles.detailMetrics}>
+										{detailSpace.memoriesCount > 0 && (
+											<span className={styles.detailMetricBadge}>
+												{detailSpace.memoriesCount} {detailSpace.memoriesCount === 1 ? 'спогад' : 'спогади'}
+											</span>
+										)}
+										{detailSpace.openTasksCount > 0 && (
+											<span className={styles.detailMetricBadge}>
+												{detailSpace.openTasksCount} {detailSpace.openTasksCount === 1 ? 'задача' : 'задачі'}
+											</span>
+										)}
+										{detailSpace.notesCount > 0 && (
+											<span className={styles.detailMetricBadge}>
+												{detailSpace.notesCount} {detailSpace.notesCount === 1 ? 'нотатка' : 'нотатки'}
+											</span>
+										)}
+									</div>
+								)}
+							</div>
+						</div>
 
-            <div className={styles.detailHeader}>
-              <span className={styles.detailColor} style={{ background: detailSpace.color }} />
-              <div className={styles.detailTitleWrap}>
-                {editingName ? (
-                  <input
-                    ref={nameInputRef}
-                    className={styles.nameInput}
-                    value={nameInput}
-                    onChange={e => setNameInput(e.target.value)}
-                    onBlur={handleSaveName}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') { e.preventDefault(); handleSaveName() }
-                      if (e.key === 'Escape') setEditingName(false)
-                    }}
-                    autoFocus
-                    maxLength={60}
-                  />
-                ) : (
-                  <div className={styles.nameRow}>
-                    <h2 className={styles.sheetTitle} style={{ marginBottom: 0 }}>{detailSpace.name}</h2>
-                    {detailSpace.ownerId === myId && (
-                      <button
-                        type="button"
-                        className={styles.editNameBtn}
-                        onClick={() => { setEditingName(true); setNameInput(detailSpace.name) }}
-                        aria-label="Редагувати назву"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13l-3 1 1-3 8.5-8.5z"/>
-                        </svg>
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className={styles.openSpaceBtn}
-                      onClick={() => { setDetailSpace(null); navigate(`/spaces/${detailSpace.id}`) }}
-                      aria-label="Відкрити простір"
-                    >
-                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M5 2h7v7M12 2L6 8"/>
-                        <path d="M8 5H2v7h7V8"/>
-                      </svg>
-                    </button>
-                  </div>
-                )}
-                <span className={styles.detailType}>
-                  {TYPE_OPTIONS.find(t => t.value === detailSpace.type)?.label ?? detailSpace.type}
-                </span>
-                {(detailSpace.memoriesCount > 0 || detailSpace.openTasksCount > 0 || detailSpace.notesCount > 0) && (
-                  <div className={styles.detailMetrics}>
-                    {detailSpace.memoriesCount  > 0 && <span className={styles.detailMetricBadge}>{detailSpace.memoriesCount} {detailSpace.memoriesCount === 1 ? 'спогад' : 'спогади'}</span>}
-                    {detailSpace.openTasksCount > 0 && <span className={styles.detailMetricBadge}>{detailSpace.openTasksCount} {detailSpace.openTasksCount === 1 ? 'задача' : 'задачі'}</span>}
-                    {detailSpace.notesCount     > 0 && <span className={styles.detailMetricBadge}>{detailSpace.notesCount} {detailSpace.notesCount === 1 ? 'нотатка' : 'нотатки'}</span>}
-                  </div>
-                )}
-              </div>
-            </div>
+						{/* Color (owner only) */}
+						{detailSpace.ownerId === myId && (
+							<>
+								<label className={styles.fieldLabel} style={{ marginTop: 20 }}>
+									КОЛІР
+								</label>
+								<div className={styles.colorRow}>
+									{COLORS.map(c => (
+										<button
+											key={c}
+											type="button"
+											className={`${styles.colorDot} ${detailSpace.color === c ? styles.colorDotOn : ''}`}
+											style={{ background: c }}
+											onClick={() => updateSpace(detailSpace.id, { color: c })}
+											aria-label={c}
+										/>
+									))}
+								</div>
+							</>
+						)}
 
-            {/* Color (owner only) */}
-            {detailSpace.ownerId === myId && (
-              <>
-                <label className={styles.fieldLabel} style={{ marginTop: 20 }}>КОЛІР</label>
-                <div className={styles.colorRow}>
-                  {COLORS.map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      className={`${styles.colorDot} ${detailSpace.color === c ? styles.colorDotOn : ''}`}
-                      style={{ background: c }}
-                      onClick={() => updateSpace(detailSpace.id, { color: c })}
-                      aria-label={c}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+						{/* Notes / description (owner only) */}
+						{detailSpace.ownerId === myId && (
+							<>
+								<label className={styles.fieldLabel} style={{ marginTop: 16 }}>
+									ОПИС
+								</label>
+								<textarea
+									className={styles.notesArea}
+									value={notesInput}
+									onChange={e => setNotesInput(e.target.value)}
+									onBlur={handleSaveNotes}
+									placeholder="Короткий опис простору…"
+									rows={2}
+									maxLength={300}
+								/>
+							</>
+						)}
 
-            {/* Notes / description (owner only) */}
-            {detailSpace.ownerId === myId && (
-              <>
-                <label className={styles.fieldLabel} style={{ marginTop: 16 }}>ОПИС</label>
-                <textarea
-                  className={styles.notesArea}
-                  value={notesInput}
-                  onChange={e => setNotesInput(e.target.value)}
-                  onBlur={handleSaveNotes}
-                  placeholder="Короткий опис простору…"
-                  rows={2}
-                  maxLength={300}
-                />
-              </>
-            )}
+						{/* Vehicle profile */}
+						{detailSpace.type === 'vehicle' && (
+							<>
+								<hr className={styles.profileDivider} />
+								<p className={styles.profileSectionLabel}>ПРО АВТОМОБІЛЬ</p>
+								<div className={styles.fieldGrid2}>
+									<input className={styles.input} value={vMake} onChange={e => setVMake(e.target.value)} onBlur={handleSaveVehicleProfile} placeholder="Марка" maxLength={40} />
+									<input className={styles.input} value={vModel} onChange={e => setVModel(e.target.value)} onBlur={handleSaveVehicleProfile} placeholder="Модель" maxLength={40} />
+									<input
+										className={styles.input}
+										value={vYear}
+										onChange={e => setVYear(e.target.value)}
+										onBlur={handleSaveVehicleProfile}
+										placeholder="Рік"
+										type="number"
+										min={1900}
+										max={new Date().getFullYear() + 1}
+									/>
+									<input className={styles.input} value={vPlate} onChange={e => setVPlate(e.target.value)} onBlur={handleSaveVehicleProfile} placeholder="Держ. номер" maxLength={10} />
+								</div>
+							</>
+						)}
 
-            {/* Vehicle profile */}
-            {detailSpace.type === 'vehicle' && (
-              <>
-                <hr className={styles.profileDivider} />
-                <p className={styles.profileSectionLabel}>ПРО АВТОМОБІЛЬ</p>
-                <div className={styles.fieldGrid2}>
-                  <input className={styles.input} value={vMake}  onChange={e => setVMake(e.target.value)}  onBlur={handleSaveVehicleProfile} placeholder="Марка"         maxLength={40} />
-                  <input className={styles.input} value={vModel} onChange={e => setVModel(e.target.value)} onBlur={handleSaveVehicleProfile} placeholder="Модель"        maxLength={40} />
-                  <input className={styles.input} value={vYear}  onChange={e => setVYear(e.target.value)}  onBlur={handleSaveVehicleProfile} placeholder="Рік"    type="number" min={1900} max={new Date().getFullYear() + 1} />
-                  <input className={styles.input} value={vPlate} onChange={e => setVPlate(e.target.value)} onBlur={handleSaveVehicleProfile} placeholder="Держ. номер"   maxLength={10} />
-                </div>
-              </>
-            )}
+						{/* Pet profile */}
+						{detailSpace.type === 'pet' && (
+							<>
+								<hr className={styles.profileDivider} />
+								<p className={styles.profileSectionLabel}>ПРО УЛЮБЛЕНЦЯ</p>
+								<input className={styles.input} value={pName} onChange={e => setPName(e.target.value)} onBlur={handleSavePetProfile} placeholder="Ім'я тварини" maxLength={40} />
+								<div className={styles.chipRow}>
+									{PET_SPECIES.map(s => (
+										<button
+											key={s.value}
+											type="button"
+											className={`${styles.chip} ${pSpecies === s.value ? styles.chipOn : ''}`}
+											onClick={() => {
+												setPSpecies(pSpecies === s.value ? '' : s.value)
+												setTimeout(handleSavePetProfile, 0)
+											}}
+										>
+											{s.label}
+										</button>
+									))}
+								</div>
+								<input className={styles.input} value={pBreed} onChange={e => setPBreed(e.target.value)} onBlur={handleSavePetProfile} placeholder="Порода (опційно)" maxLength={40} />
+							</>
+						)}
 
-            {/* Pet profile */}
-            {detailSpace.type === 'pet' && (
-              <>
-                <hr className={styles.profileDivider} />
-                <p className={styles.profileSectionLabel}>ПРО УЛЮБЛЕНЦЯ</p>
-                <input className={styles.input} value={pName}  onChange={e => setPName(e.target.value)}  onBlur={handleSavePetProfile} placeholder="Ім'я тварини"  maxLength={40} />
-                <div className={styles.chipRow}>
-                  {PET_SPECIES.map(s => (
-                    <button
-                      key={s.value}
-                      type="button"
-                      className={`${styles.chip} ${pSpecies === s.value ? styles.chipOn : ''}`}
-                      onClick={() => { setPSpecies(pSpecies === s.value ? '' : s.value); setTimeout(handleSavePetProfile, 0) }}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-                <input className={styles.input} value={pBreed} onChange={e => setPBreed(e.target.value)} onBlur={handleSavePetProfile} placeholder="Порода (опційно)" maxLength={40} />
-              </>
-            )}
+						{/* Trip profile */}
+						{detailSpace.type === 'trip' && (
+							<>
+								<hr className={styles.profileDivider} />
+								<p className={styles.profileSectionLabel}>ДЕТАЛІ ПОЇЗДКИ</p>
+								<input className={styles.input} value={tDest} onChange={e => setTDest(e.target.value)} onBlur={handleSaveTripProfile} placeholder="Куди їдемо?" maxLength={80} />
+								<div className={styles.chipRow} style={{ marginBottom: 16 }}>
+									{TRIP_STATUS.map(s => (
+										<button
+											key={s.value}
+											type="button"
+											className={`${styles.chip} ${tStatus === s.value ? styles.chipOn : ''}`}
+											onClick={() => {
+												setTStatus(s.value)
+												setTimeout(handleSaveTripProfile, 0)
+											}}
+										>
+											{s.label}
+										</button>
+									))}
+								</div>
+							</>
+						)}
 
-            {/* Trip profile */}
-            {detailSpace.type === 'trip' && (
-              <>
-                <hr className={styles.profileDivider} />
-                <p className={styles.profileSectionLabel}>ДЕТАЛІ ПОЇЗДКИ</p>
-                <input className={styles.input} value={tDest} onChange={e => setTDest(e.target.value)} onBlur={handleSaveTripProfile} placeholder="Куди їдемо?" maxLength={80} />
-                <div className={styles.chipRow} style={{ marginBottom: 16 }}>
-                  {TRIP_STATUS.map(s => (
-                    <button
-                      key={s.value}
-                      type="button"
-                      className={`${styles.chip} ${tStatus === s.value ? styles.chipOn : ''}`}
-                      onClick={() => { setTStatus(s.value); setTimeout(handleSaveTripProfile, 0) }}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+						{/* Members */}
+						<label className={styles.fieldLabel} style={{ marginTop: 4 }}>
+							УЧАСНИКИ
+						</label>
+						<div className={styles.memberList}>
+							{detailSpace.members.map(m => (
+								<div key={m.userId} className={styles.memberRow}>
+									<div className={styles.memberAvatar}>
+										{m.avatarUrl ? <img src={m.avatarUrl} alt={m.name} className={styles.memberAvatarImg} /> : <span className={styles.memberInitial}>{m.name[0]?.toUpperCase()}</span>}
+									</div>
+									<div className={styles.memberInfo}>
+										<span className={styles.memberName}>{m.name}</span>
+										<span className={styles.memberUsername}>@{m.username}</span>
+									</div>
+									{m.role === 'owner' ? (
+										<span className={styles.ownerBadge}>власник</span>
+									) : (
+										(detailSpace.ownerId === myId || m.userId === myId) && (
+											<button type="button" className={styles.removeBtn} onClick={() => handleRemoveMember(detailSpace.id, m.userId)} aria-label="Видалити">
+												<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+													<path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+												</svg>
+											</button>
+										)
+									)}
+								</div>
+							))}
+						</div>
 
-            {/* Members */}
-            <label className={styles.fieldLabel} style={{ marginTop: 4 }}>УЧАСНИКИ</label>
-            <div className={styles.memberList}>
-              {detailSpace.members.map(m => (
-                <div key={m.userId} className={styles.memberRow}>
-                  <div className={styles.memberAvatar}>
-                    {m.avatarUrl
-                      ? <img src={m.avatarUrl} alt={m.name} className={styles.memberAvatarImg} />
-                      : <span className={styles.memberInitial}>{m.name[0]?.toUpperCase()}</span>
-                    }
-                  </div>
-                  <div className={styles.memberInfo}>
-                    <span className={styles.memberName}>{m.name}</span>
-                    <span className={styles.memberUsername}>@{m.username}</span>
-                  </div>
-                  {m.role === 'owner'
-                    ? <span className={styles.ownerBadge}>власник</span>
-                    : (detailSpace.ownerId === myId || m.userId === myId) && (
-                        <button
-                          type="button"
-                          className={styles.removeBtn}
-                          onClick={() => handleRemoveMember(detailSpace.id, m.userId)}
-                          aria-label="Видалити"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                            <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                          </svg>
-                        </button>
-                      )
-                  }
-                </div>
-              ))}
-            </div>
+						{/* Add member (owner only) */}
+						{detailSpace.ownerId === myId && (
+							<>
+								<label className={styles.fieldLabel} style={{ marginTop: 16 }}>
+									ДОДАТИ УЧАСНИКА
+								</label>
+								<div className={styles.addMemberRow}>
+									<input
+										className={styles.input}
+										value={memberInput}
+										onChange={e => setMemberInput(e.target.value)}
+										placeholder="username"
+										onKeyDown={e => {
+											if (e.key === 'Enter') handleAddMember()
+										}}
+									/>
+									<button type="button" className={styles.addMemberBtn} onClick={handleAddMember} disabled={addingMember || !memberInput.trim()}>
+										{addingMember ? '…' : 'Додати'}
+									</button>
+								</div>
+							</>
+						)}
 
-            {/* Add member (owner only) */}
-            {detailSpace.ownerId === myId && (
-              <>
-                <label className={styles.fieldLabel} style={{ marginTop: 16 }}>ДОДАТИ УЧАСНИКА</label>
-                <div className={styles.addMemberRow}>
-                  <input
-                    className={styles.input}
-                    value={memberInput}
-                    onChange={e => setMemberInput(e.target.value)}
-                    placeholder="username"
-                    onKeyDown={e => { if (e.key === 'Enter') handleAddMember() }}
-                  />
-                  <button
-                    type="button"
-                    className={styles.addMemberBtn}
-                    onClick={handleAddMember}
-                    disabled={addingMember || !memberInput.trim()}
-                  >
-                    {addingMember ? '…' : 'Додати'}
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Archive + Delete (owner only) */}
-            {detailSpace.ownerId === myId && (
-              <div className={styles.ownerActions}>
-                <button
-                  type="button"
-                  className={styles.archiveBtn}
-                  onClick={() => handleArchive(detailSpace)}
-                >
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                    <rect x="1" y="4.5" width="13" height="9.5" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
-                    <path d="M1 7.5h13" stroke="currentColor" strokeWidth="1.4"/>
-                    <path d="M4.5 1.5h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                    <path d="M6 3h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                  </svg>
-                  Архівувати
-                </button>
-                <button
-                  type="button"
-                  className={styles.deleteBtn}
-                  onClick={() => handleDelete(detailSpace)}
-                >
-                  Видалити
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  )
+						{/* Archive + Delete (owner only) */}
+						{detailSpace.ownerId === myId && (
+							<div className={styles.ownerActions}>
+								<button type="button" className={styles.archiveBtn} onClick={() => handleArchive(detailSpace)}>
+									<svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+										<rect x="1" y="4.5" width="13" height="9.5" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+										<path d="M1 7.5h13" stroke="currentColor" strokeWidth="1.4" />
+										<path d="M4.5 1.5h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+										<path d="M6 3h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+									</svg>
+									Архівувати
+								</button>
+								<button type="button" className={styles.deleteBtn} onClick={() => handleDelete(detailSpace)}>
+									Видалити
+								</button>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+		</div>
+	)
 }
 
 export default SpacesTab
