@@ -164,16 +164,17 @@ function getUpcoming(events: PetEvent[]): UpcomingItem[] {
 // ── Add event sheet ────────────────────────────────────────────────────────
 
 interface AddSheetProps {
-  isOpen:  boolean
-  type:    SheetType
-  onClose: () => void
-  onSave:  (data: PetEventInput) => Promise<void>
-  color:   string
+  isOpen:     boolean
+  type:       SheetType
+  onClose:    () => void
+  onSave:     (data: PetEventInput) => Promise<void>
+  color:      string
+  editEvent?: PetEvent
 }
 
 const CURRENCY_OPTIONS = ['UAH', 'USD', 'EUR'] as const
 
-const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave, color }) => {
+const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave, color, editEvent }) => {
   const [date, setDate]             = useState(todayISO)
   const [title, setTitle]           = useState('')
   const [cost, setCost]             = useState('')
@@ -183,11 +184,15 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
   const [nextDue, setNextDue]       = useState('')
   const [weight, setWeight]         = useState('')
   const [medName, setMedName]       = useState('')
+  const [attachments, setAttachments] = useState<string[]>([])
   const [dateOpen, setDateOpen]     = useState(false)
   const [nextDueOpen, setNextDueOpen] = useState(false)
+  const [uploading, setUploading]   = useState(false)
   const [busy, setBusy]             = useState(false)
   const [mounted, setMounted]       = useState(false)
   const [visible, setVisible]       = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { showToast } = useUiStore()
 
   const sheetRef   = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -198,16 +203,44 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
   useEffect(() => {
     if (isOpen) {
       setMounted(true)
-      setDate(todayISO())
-      setTitle(''); setCost(''); setClinic(''); setNotes('')
-      setNextDue(''); setWeight(''); setMedName('')
+      if (editEvent) {
+        setDate(editEvent.date)
+        setTitle(editEvent.title || '')
+        setCost(editEvent.cost != null ? String(editEvent.cost) : '')
+        setCurrency(editEvent.currency ?? 'UAH')
+        setClinic(editEvent.clinic || '')
+        setNotes(editEvent.notes || '')
+        setNextDue(editEvent.nextDue || '')
+        setWeight(editEvent.weight != null ? String(editEvent.weight) : '')
+        setMedName(editEvent.medicationName || '')
+        setAttachments(editEvent.attachments ?? [])
+      } else {
+        setDate(todayISO())
+        setTitle(''); setCost(''); setClinic(''); setNotes('')
+        setNextDue(''); setWeight(''); setMedName(''); setAttachments([])
+      }
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
       setVisible(false)
       const t = setTimeout(() => setMounted(false), 320)
       return () => clearTimeout(t)
     }
-  }, [isOpen])
+  }, [isOpen, editEvent])
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file, 'pet-attachments')
+      setAttachments(prev => [...prev, url])
+    } catch {
+      showToast('Помилка завантаження', 'error')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const handleSave = async () => {
     if (!type || !date) return
@@ -224,6 +257,7 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
         nextDue:        nextDue || null,
         weight:         weight  ? parseFloat(weight) : null,
         medicationName: medName || undefined,
+        attachments,
       }
       await onSave(payload)
       onClose()
@@ -245,7 +279,7 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
       <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
         <div className={styles.handle} />
         <div className={styles.sheetHeader}>
-          <span className={styles.sheetTitle}>{EVENT_LABELS[type as PetEventType]?.toUpperCase()}</span>
+          <span className={styles.sheetTitle}>{editEvent ? `РЕДАГУВАТИ: ${EVENT_LABELS[type as PetEventType]?.toUpperCase()}` : EVENT_LABELS[type as PetEventType]?.toUpperCase()}</span>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
@@ -314,11 +348,35 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
             <label className={styles.fieldLabel}>НОТАТКА</label>
             <textarea className={`${styles.fieldInput} ${styles.fieldTextarea}`} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Деталі…" rows={3} />
           </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>ФОТО / ДОКУМЕНТИ</label>
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+            {attachments.length > 0 && (
+              <div className={styles.attachList}>
+                {attachments.map((url, i) => (
+                  <div key={url} className={styles.attachThumb}>
+                    <img src={url} alt={`фото ${i + 1}`} className={styles.attachImg} />
+                    <button type="button" className={styles.attachRemove} onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))} aria-label="Видалити">
+                      <svg width="10" height="10" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button type="button" className={styles.attachBtn} onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              {uploading
+                ? <span className={styles.attachSpinner} />
+                : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              }
+              {uploading ? 'Завантаження…' : 'Додати фото'}
+            </button>
+          </div>
         </div>
 
         <div className={styles.sheetFooter}>
           <button type="button" className={styles.saveBtn} style={{ background: color }} onClick={handleSave} disabled={busy || !date}>
-            {busy ? 'Збереження…' : 'Зберегти'}
+            {busy ? 'Збереження…' : editEvent ? 'Оновити' : 'Зберегти'}
           </button>
         </div>
       </div>
@@ -702,6 +760,9 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
   const [filter, setFilter]     = useState<'all' | Reaction>('all')
   const [suggestions, setSuggestions] = useState<PetFoodSuggestion[]>([])
   const [showSug, setShowSug]   = useState(false)
+  const [editingFoodId, setEditingFoodId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editBrand, setEditBrand] = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const colorVar = { '--space-color': color } as React.CSSProperties
@@ -735,6 +796,16 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
 
   const handleDelete = async (id: string) => { await onSave(foodLog.filter(f => f.id !== id)) }
 
+  const startEditFood = (item: PetFoodItem) => {
+    setEditingFoodId(item.id); setEditName(item.name); setEditBrand(item.brand ?? '')
+  }
+
+  const handleSaveFood = async (id: string) => {
+    if (!editName.trim()) return
+    await onSave(foodLog.map(f => f.id === id ? { ...f, name: editName.trim(), brand: editBrand.trim() } : f))
+    setEditingFoodId(null)
+  }
+
   const visible = filter === 'all' ? foodLog : foodLog.filter(f => f.reaction === filter)
 
   return (
@@ -760,18 +831,36 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
           {visible.map(item => {
             const meta = REACTION_META[item.reaction]
             return (
-              <div key={item.id} className={styles.foodRow}>
+              <div key={item.id} className={`${styles.foodRow} ${editingFoodId === item.id ? styles.foodRowEditing : ''}`}>
                 {item.imageUrl ? <img src={item.imageUrl} alt="" className={styles.foodImg} /> : <div className={styles.foodImgPlaceholder} />}
-                <div className={styles.foodMain}>
-                  <span className={styles.foodName}>{item.name}</span>
-                  {item.brand && <span className={styles.foodBrand}>{item.brand}</span>}
-                </div>
-                <button type="button" className={styles.foodReactionPill} style={{ background: meta.color + '1a', borderColor: meta.color, color: meta.color }} onClick={() => handleCycleReaction(item.id)} title="Тап — змінити">
-                  {meta.label}
-                </button>
-                <button type="button" className={styles.foodDeleteBtn} onClick={() => handleDelete(item.id)}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                </button>
+                {editingFoodId === item.id ? (
+                  <div className={styles.foodEditForm}>
+                    <input className={styles.foodEditInput} value={editName} onChange={e => setEditName(e.target.value)} placeholder="Назва" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleSaveFood(item.id); if (e.key === 'Escape') setEditingFoodId(null) }} />
+                    <input className={styles.foodEditInput} value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд" onKeyDown={e => { if (e.key === 'Enter') handleSaveFood(item.id); if (e.key === 'Escape') setEditingFoodId(null) }} />
+                    <div className={styles.foodEditBtns}>
+                      <button type="button" className={styles.foodEditSave} style={colorVar} onClick={() => handleSaveFood(item.id)}>Зберегти</button>
+                      <button type="button" className={styles.foodEditCancel} onClick={() => setEditingFoodId(null)}>Скасувати</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.foodMain}>
+                    <span className={styles.foodName}>{item.name}</span>
+                    {item.brand && <span className={styles.foodBrand}>{item.brand}</span>}
+                  </div>
+                )}
+                {editingFoodId !== item.id && (
+                  <>
+                    <button type="button" className={styles.foodReactionPill} style={{ background: meta.color + '1a', borderColor: meta.color, color: meta.color }} onClick={() => handleCycleReaction(item.id)} title="Тап — змінити">
+                      {meta.label}
+                    </button>
+                    <button type="button" className={styles.foodEditBtn} onClick={() => startEditFood(item)} aria-label="Редагувати">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button type="button" className={styles.foodDeleteBtn} onClick={() => handleDelete(item.id)}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  </>
+                )}
               </div>
             )
           })}
@@ -836,9 +925,9 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
 
 // ── Event row ──────────────────────────────────────────────────────────────
 
-interface EventRowProps { event: PetEvent; color: string; onDelete: () => void }
+interface EventRowProps { event: PetEvent; color: string; onDelete: () => void; onEdit: () => void }
 
-const PetEventRow: React.FC<EventRowProps> = ({ event, color, onDelete }) => {
+const PetEventRow: React.FC<EventRowProps> = ({ event, color, onDelete, onEdit }) => {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handleDelete = () => {
@@ -859,16 +948,33 @@ const PetEventRow: React.FC<EventRowProps> = ({ event, color, onDelete }) => {
         </div>
         {event.weight != null && <div className={styles.eventNotes}>{event.weight} кг</div>}
         {event.notes && <div className={styles.eventNotes}>{event.notes}</div>}
+        {event.attachments?.length > 0 && (
+          <div className={styles.eventAttachments}>
+            {event.attachments.map((url, i) => (
+              <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                <img src={url} alt={`фото ${i + 1}`} className={styles.eventAttachThumb} />
+              </a>
+            ))}
+          </div>
+        )}
       </div>
       <div className={styles.eventRight}>
         <div className={styles.eventDate}>{fmtDate(event.date)}</div>
         {event.cost != null && <div className={styles.eventCost}>{fmtCost(event.cost, event.currency)}</div>}
+        <div className={styles.eventRowBtns}>
+          <button type="button" className={styles.editBtn} onClick={onEdit} aria-label="Редагувати">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button type="button" className={`${styles.deleteBtn} ${confirmDelete ? styles.deleteBtnConfirm : ''}`} onClick={handleDelete} aria-label="Видалити">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
+        </div>
       </div>
-      <button type="button" className={`${styles.deleteBtn} ${confirmDelete ? styles.deleteBtnConfirm : ''}`} onClick={handleDelete} aria-label="Видалити">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-        </svg>
-      </button>
     </div>
   )
 }
@@ -899,10 +1005,11 @@ const PetSpaceView: React.FC<Props> = ({
   coverUrl, coverPosition, isOwner, onEditSpace, onBack, spaceTxs = [],
 }) => {
   const showToast = useUiStore(s => s.showToast)
-  const { eventsBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile } = usePetStore()
+  const { eventsBySpace, loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile } = usePetStore()
 
-  const [addSheet, setAddSheet]       = useState<SheetType>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
+  const [addSheet, setAddSheet]           = useState<SheetType>(null)
+  const [editingEvent, setEditingEvent]   = useState<PetEvent | null>(null)
+  const [profileOpen, setProfileOpen]     = useState(false)
 
   const events = eventsBySpace[spaceId] ?? []
 
@@ -921,6 +1028,27 @@ const PetSpaceView: React.FC<Props> = ({
       showToast('Помилка збереження', 'error')
       throw new Error('Failed')
     }
+  }
+
+  const handleUpdate = async (data: PetEventInput) => {
+    if (!editingEvent) return
+    try {
+      await updateEvent(spaceId, editingEvent._id, data)
+      showToast('Оновлено', 'success')
+    } catch {
+      showToast('Помилка збереження', 'error')
+      throw new Error('Failed')
+    }
+  }
+
+  const openEdit = (event: PetEvent) => {
+    setEditingEvent(event)
+    setAddSheet(event.type as SheetType)
+  }
+
+  const closeSheet = () => {
+    setAddSheet(null)
+    setEditingEvent(null)
   }
 
   const handleDelete = async (eventId: string) => {
@@ -1195,7 +1323,7 @@ const PetSpaceView: React.FC<Props> = ({
             )}
             <div className={styles.eventList}>
               {events.map(event => (
-                <PetEventRow key={event._id} event={event} color={color} onDelete={() => handleDelete(event._id)} />
+                <PetEventRow key={event._id} event={event} color={color} onDelete={() => handleDelete(event._id)} onEdit={() => openEdit(event)} />
               ))}
             </div>
           </>
@@ -1241,7 +1369,14 @@ const PetSpaceView: React.FC<Props> = ({
         </div>
       )}
 
-      <AddEventSheet isOpen={addSheet !== null} type={addSheet} onClose={() => setAddSheet(null)} onSave={handleCreate} color={color} />
+      <AddEventSheet
+        isOpen={addSheet !== null}
+        type={addSheet}
+        onClose={closeSheet}
+        onSave={editingEvent ? handleUpdate : handleCreate}
+        color={color}
+        editEvent={editingEvent ?? undefined}
+      />
       <ProfileEditSheet isOpen={profileOpen} profile={profile} spaceName={spaceName} onClose={() => setProfileOpen(false)} onSave={handleProfileSave} color={color} />
     </div>
   )

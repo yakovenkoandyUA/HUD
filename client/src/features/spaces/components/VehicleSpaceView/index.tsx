@@ -37,7 +37,7 @@ interface Props {
   onBack:         () => void
 }
 
-type SheetType = 'fuel' | 'maintenance' | 'document' | 'note' | null
+type SheetType = 'fuel' | 'maintenance' | 'repair' | 'tire' | 'document' | 'note' | null
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -213,10 +213,11 @@ interface HeroProps {
 }
 
 const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, lastEvent, isOwner, coverUrl, coverPosition, onBack, onEditSpace }) => {
-  const [editOpen, setEditOpen] = useState(false)
-  const [form, setForm]         = useState<Partial<VehicleProfile>>({})
-  const [saving, setSaving]     = useState(false)
-  const [decoding, setDecoding] = useState(false)
+  const [editOpen, setEditOpen]           = useState(false)
+  const [form, setForm]                   = useState<Partial<VehicleProfile>>({})
+  const [saving, setSaving]               = useState(false)
+  const [decoding, setDecoding]           = useState(false)
+  const [purchaseDateOpen, setPurchaseDateOpen] = useState(false)
   const { showToast }           = useUiStore()
   const { updateProfile }       = useVehicleStore()
   const { setVehicleProfile }   = useSpacesStore()
@@ -394,6 +395,18 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
             <label className={styles.fieldLabel}>ДЕРЖ. НОМЕР</label>
             <input className={styles.fieldInput} value={form.plateNumber ?? ''} onChange={e => setForm(p => ({ ...p, plateNumber: e.target.value }))} placeholder="АА 1234 ВВ" />
 
+            <label className={styles.fieldLabel}>ДАТА КУПІВЛІ</label>
+            <button type="button" className={styles.dateField} onClick={() => setPurchaseDateOpen(true)}>
+              {form.purchaseDate ? fmtDate(form.purchaseDate) : 'Не вказано'}
+            </button>
+            {purchaseDateOpen && (
+              <CustomDatePicker
+                value={form.purchaseDate ?? ''}
+                onChange={d => { setForm(p => ({ ...p, purchaseDate: d })); setPurchaseDateOpen(false) }}
+                onClose={() => setPurchaseDateOpen(false)}
+              />
+            )}
+
             <label className={styles.fieldLabel}>VIN</label>
             <div className={styles.vinRow}>
               <input className={styles.fieldInput} value={form.vin ?? ''} onChange={e => setForm(p => ({ ...p, vin: e.target.value.toUpperCase() }))} placeholder="WBA3A5G50FN..." maxLength={17} />
@@ -556,24 +569,25 @@ const AttachmentsField: React.FC<AttachmentsFieldProps> = ({ value, onChange }) 
 // ── Event form sheets ──────────────────────────────────────────────────────
 
 interface SheetProps {
-  spaceId:  string
-  color:    string
-  onClose:  () => void
-  profile?: VehicleProfile | null
+  spaceId:    string
+  color:      string
+  onClose:    () => void
+  profile?:   VehicleProfile | null
+  editEvent?: VehicleEvent
 }
 
-const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile }) => {
-  const [date, setDate]         = useState(todayISO())
+const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, editEvent }) => {
+  const [date, setDate]         = useState(editEvent?.date ?? todayISO())
   const [dateOpen, setDateOpen] = useState(false)
-  const [mileage, setMileage]   = useState('')
-  const [liters, setLiters]     = useState('')
-  const [cost, setCost]         = useState('')
-  const [vendor, setVendor]     = useState('')
-  const [fuelType, setFuelType] = useState('')
+  const [mileage, setMileage]   = useState(editEvent?.mileage != null ? String(editEvent.mileage) : '')
+  const [liters, setLiters]     = useState(editEvent?.liters  != null ? String(editEvent.liters)  : '')
+  const [cost, setCost]         = useState(editEvent?.cost    != null ? String(editEvent.cost)    : '')
+  const [vendor, setVendor]     = useState(editEvent?.vendor    ?? '')
+  const [fuelType, setFuelType] = useState(editEvent?.fuelType  ?? '')
   const [saving, setSaving]     = useState(false)
-  const { createEvent, updateProfile } = useVehicleStore()
-  const { setVehicleProfile }          = useSpacesStore()
-  const { showToast }                  = useUiStore()
+  const { createEvent, updateEvent, updateProfile } = useVehicleStore()
+  const { setVehicleProfile }                       = useSpacesStore()
+  const { showToast }                               = useUiStore()
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
   const colorVar   = { '--space-color': color } as React.CSSProperties
@@ -593,13 +607,17 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile }) =
           vendor:   vendor.trim(),
           fuelType: fuelType.trim(),
         }
-        await createEvent(spaceId, data)
+        if (editEvent) {
+          await updateEvent(spaceId, editEvent._id, data)
+        } else {
+          await createEvent(spaceId, data)
+        }
         const newKm = mileage ? Number(mileage) : null
-        if (newKm && (profile?.currentMileage == null || newKm > profile.currentMileage)) {
+        if (!editEvent && newKm && (profile?.currentMileage == null || newKm > profile.currentMileage)) {
           const updated = await updateProfile(spaceId, { currentMileage: newKm })
           if (!cancelled) setVehicleProfile(spaceId, updated)
         }
-        if (!cancelled) { showToast('Заправку додано', 'success'); onClose() }
+        if (!cancelled) { showToast(editEvent ? 'Заправку оновлено' : 'Заправку додано', 'success'); onClose() }
       } catch {
         if (!cancelled) showToast('Помилка', 'error')
       } finally {
@@ -614,7 +632,7 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile }) =
     <div className={styles.overlay} ref={overlayRef} onClick={onClose}>
       <div className={styles.sheet} ref={sheetRef} onClick={e => e.stopPropagation()}>
         <div className={styles.sheetHandle} />
-        <h3 className={styles.sheetTitle}>Заправка</h3>
+        <h3 className={styles.sheetTitle}>{editEvent ? 'Редагувати заправку' : 'Заправка'}</h3>
         <label className={styles.fieldLabel}>ДАТА</label>
         <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>{fmtDate(date)}</button>
         {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
@@ -656,19 +674,19 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile }) =
   )
 }
 
-const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile }) => {
-  const [date, setDate]               = useState(todayISO())
+const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, editEvent }) => {
+  const [date, setDate]               = useState(editEvent?.date ?? todayISO())
   const [dateOpen, setDateOpen]       = useState(false)
-  const [mileage, setMileage]         = useState('')
-  const [cost, setCost]               = useState('')
-  const [vendor, setVendor]           = useState('')
-  const [notes, setNotes]             = useState('')
-  const [attachments, setAttachments] = useState<string[]>([])
+  const [mileage, setMileage]         = useState(editEvent?.mileage != null ? String(editEvent.mileage) : '')
+  const [cost, setCost]               = useState(editEvent?.cost    != null ? String(editEvent.cost)    : '')
+  const [vendor, setVendor]           = useState(editEvent?.vendor  ?? '')
+  const [notes, setNotes]             = useState(editEvent?.notes   ?? '')
+  const [attachments, setAttachments] = useState<string[]>(editEvent?.attachments ?? [])
   const [nextService, setNextService] = useState('')
   const [saving, setSaving]           = useState(false)
-  const { createEvent, updateProfile } = useVehicleStore()
-  const { setVehicleProfile }          = useSpacesStore()
-  const { showToast }                  = useUiStore()
+  const { createEvent, updateEvent, updateProfile } = useVehicleStore()
+  const { setVehicleProfile }                       = useSpacesStore()
+  const { showToast }                               = useUiStore()
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
   const colorVar   = { '--space-color': color } as React.CSSProperties
@@ -680,7 +698,7 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profi
     const save = async () => {
       setSaving(true)
       try {
-        await createEvent(spaceId, {
+        const data: VehicleEventInput = {
           type: 'maintenance', date,
           mileage:     mileage ? Number(mileage) : null,
           cost:        cost    ? Number(cost)    : null,
@@ -688,19 +706,24 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profi
           vendor:      vendor.trim(),
           notes:       notes.trim(),
           attachments,
-        })
-        const newKm = mileage ? Number(mileage) : null
-        const nextKm = nextService ? Number(nextService) : null
-        const shouldUpdateProfile =
-          (newKm && (profile?.currentMileage == null || newKm > profile.currentMileage)) || nextKm != null
-        if (shouldUpdateProfile) {
-          const patch: Partial<import('@/features/memories/store/spacesStore').VehicleProfile> = {}
-          if (newKm && (profile?.currentMileage == null || newKm > profile.currentMileage)) patch.currentMileage = newKm
-          if (nextKm != null) patch.nextServiceMileage = nextKm
-          const updated = await updateProfile(spaceId, patch)
-          if (!cancelled) setVehicleProfile(spaceId, updated)
         }
-        if (!cancelled) { showToast('ТО додано', 'success'); onClose() }
+        if (editEvent) {
+          await updateEvent(spaceId, editEvent._id, data)
+        } else {
+          await createEvent(spaceId, data)
+          const newKm = mileage ? Number(mileage) : null
+          const nextKm = nextService ? Number(nextService) : null
+          const shouldUpdateProfile =
+            (newKm && (profile?.currentMileage == null || newKm > profile.currentMileage)) || nextKm != null
+          if (shouldUpdateProfile) {
+            const patch: Partial<import('@/features/memories/store/spacesStore').VehicleProfile> = {}
+            if (newKm && (profile?.currentMileage == null || newKm > profile.currentMileage)) patch.currentMileage = newKm
+            if (nextKm != null) patch.nextServiceMileage = nextKm
+            const updated = await updateProfile(spaceId, patch)
+            if (!cancelled) setVehicleProfile(spaceId, updated)
+          }
+        }
+        if (!cancelled) { showToast(editEvent ? 'ТО оновлено' : 'ТО додано', 'success'); onClose() }
       } catch {
         if (!cancelled) showToast('Помилка', 'error')
       } finally {
@@ -715,7 +738,7 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profi
     <div className={styles.overlay} ref={overlayRef} onClick={onClose}>
       <div className={styles.sheet} ref={sheetRef} onClick={e => e.stopPropagation()}>
         <div className={styles.sheetHandle} />
-        <h3 className={styles.sheetTitle}>ТО / Ремонт</h3>
+        <h3 className={styles.sheetTitle}>{editEvent ? 'Редагувати ТО' : 'ТО / Ремонт'}</h3>
         <label className={styles.fieldLabel}>ДАТА</label>
         <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>{fmtDate(date)}</button>
         {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
@@ -733,14 +756,18 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profi
         <input className={styles.fieldInput} value={vendor} onChange={e => setVendor(e.target.value)} placeholder="СТО Авто-профі…" />
         <label className={styles.fieldLabel}>ЩО ЗРОБЛЕНО</label>
         <textarea className={styles.textarea} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Заміна масла та фільтрів…" rows={3} />
-        <label className={styles.fieldLabel}>НАСТУПНЕ ТО (км)</label>
-        <div className={styles.vinRow}>
-          <input className={styles.fieldInput} type="number" value={nextService} onChange={e => setNextService(e.target.value)} placeholder="Не встановлено" />
-          <div className={styles.quickBtns}>
-            <button type="button" className={styles.quickBtn} style={colorVar} onClick={() => setNextService(String(baseMileage + 10000))}>+10 000</button>
-            <button type="button" className={styles.quickBtn} style={colorVar} onClick={() => setNextService(String(baseMileage + 15000))}>+15 000</button>
-          </div>
-        </div>
+        {!editEvent && (
+          <>
+            <label className={styles.fieldLabel}>НАСТУПНЕ ТО (км)</label>
+            <div className={styles.vinRow}>
+              <input className={styles.fieldInput} type="number" value={nextService} onChange={e => setNextService(e.target.value)} placeholder="Не встановлено" />
+              <div className={styles.quickBtns}>
+                <button type="button" className={styles.quickBtn} style={colorVar} onClick={() => setNextService(String(baseMileage + 10000))}>+10 000</button>
+                <button type="button" className={styles.quickBtn} style={colorVar} onClick={() => setNextService(String(baseMileage + 15000))}>+15 000</button>
+              </div>
+            </div>
+          </>
+        )}
         <label className={styles.fieldLabel}>ФОТО / ЧЕК</label>
         <AttachmentsField value={attachments} onChange={setAttachments} />
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
@@ -751,16 +778,16 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profi
   )
 }
 
-const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
-  const [date, setDate]               = useState(todayISO())
+const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, editEvent }) => {
+  const [date, setDate]               = useState(editEvent?.date        ?? todayISO())
   const [dateOpen, setDateOpen]       = useState(false)
-  const [expiresAt, setExpiresAt]     = useState('')
+  const [expiresAt, setExpiresAt]     = useState(editEvent?.docExpiresAt ?? '')
   const [expiresOpen, setExpiresOpen] = useState(false)
-  const [docType, setDocType]         = useState('')
-  const [notes, setNotes]             = useState('')
-  const [attachments, setAttachments] = useState<string[]>([])
+  const [docType, setDocType]         = useState(editEvent?.docType      ?? '')
+  const [notes, setNotes]             = useState(editEvent?.notes        ?? '')
+  const [attachments, setAttachments] = useState<string[]>(editEvent?.attachments ?? [])
   const [saving, setSaving]           = useState(false)
-  const { createEvent }               = useVehicleStore()
+  const { createEvent, updateEvent }  = useVehicleStore()
   const { showToast }                 = useUiStore()
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
@@ -773,8 +800,13 @@ const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
     const save = async () => {
       setSaving(true)
       try {
-        await createEvent(spaceId, { type: 'document', date, docType: docType.trim(), docExpiresAt: expiresAt || null, notes: notes.trim(), attachments })
-        if (!cancelled) { showToast('Документ додано', 'success'); onClose() }
+        const data: VehicleEventInput = { type: 'document', date, docType: docType.trim(), docExpiresAt: expiresAt || null, notes: notes.trim(), attachments }
+        if (editEvent) {
+          await updateEvent(spaceId, editEvent._id, data)
+        } else {
+          await createEvent(spaceId, data)
+        }
+        if (!cancelled) { showToast(editEvent ? 'Документ оновлено' : 'Документ додано', 'success'); onClose() }
       } catch {
         if (!cancelled) showToast('Помилка', 'error')
       } finally {
@@ -789,7 +821,7 @@ const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
     <div className={styles.overlay} ref={overlayRef} onClick={onClose}>
       <div className={styles.sheet} ref={sheetRef} onClick={e => e.stopPropagation()}>
         <div className={styles.sheetHandle} />
-        <h3 className={styles.sheetTitle}>Документ</h3>
+        <h3 className={styles.sheetTitle}>{editEvent ? 'Редагувати документ' : 'Документ'}</h3>
         <label className={styles.fieldLabel}>ТИП ДОКУМЕНТА</label>
         <div className={styles.docTypeGrid}>
           {DOC_TYPES.map(t => (
@@ -817,16 +849,16 @@ const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
   )
 }
 
-const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
-  const [date, setDate]         = useState(todayISO())
+const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, editEvent }) => {
+  const [date, setDate]         = useState(editEvent?.date  ?? todayISO())
   const [dateOpen, setDateOpen] = useState(false)
-  const [notes, setNotes]       = useState('')
+  const [notes, setNotes]       = useState(editEvent?.notes ?? '')
   const [saving, setSaving]     = useState(false)
-  const { createEvent }   = useVehicleStore()
-  const { showToast }     = useUiStore()
-  const overlayRef        = useRef<HTMLDivElement>(null)
-  const sheetRef          = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
-  const colorVar          = { '--space-color': color } as React.CSSProperties
+  const { createEvent, updateEvent } = useVehicleStore()
+  const { showToast }                = useUiStore()
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
+  const colorVar   = { '--space-color': color } as React.CSSProperties
 
   const handleSave = () => {
     if (!notes.trim()) return
@@ -834,8 +866,12 @@ const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
     const save = async () => {
       setSaving(true)
       try {
-        await createEvent(spaceId, { type: 'note', date, notes: notes.trim() })
-        if (!cancelled) { showToast('Нотатку додано', 'success'); onClose() }
+        if (editEvent) {
+          await updateEvent(spaceId, editEvent._id, { type: 'note', date, notes: notes.trim() })
+        } else {
+          await createEvent(spaceId, { type: 'note', date, notes: notes.trim() })
+        }
+        if (!cancelled) { showToast(editEvent ? 'Нотатку оновлено' : 'Нотатку додано', 'success'); onClose() }
       } catch {
         if (!cancelled) showToast('Помилка', 'error')
       } finally {
@@ -850,7 +886,7 @@ const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
     <div className={styles.overlay} ref={overlayRef} onClick={onClose}>
       <div className={styles.sheet} ref={sheetRef} onClick={e => e.stopPropagation()}>
         <div className={styles.sheetHandle} />
-        <h3 className={styles.sheetTitle}>Нотатка</h3>
+        <h3 className={styles.sheetTitle}>{editEvent ? 'Редагувати нотатку' : 'Нотатка'}</h3>
         <label className={styles.fieldLabel}>ДАТА</label>
         <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>{fmtDate(date)}</button>
         {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
@@ -859,6 +895,265 @@ const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose }) => {
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !notes.trim()}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
+      </div>
+    </div>
+  )
+}
+
+// ── RepairSheet ────────────────────────────────────────────────────────────
+
+const RepairSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, editEvent }) => {
+  const [date, setDate]               = useState(editEvent?.date    ?? todayISO())
+  const [dateOpen, setDateOpen]       = useState(false)
+  const [mileage, setMileage]         = useState(editEvent?.mileage != null ? String(editEvent.mileage) : '')
+  const [cost, setCost]               = useState(editEvent?.cost    != null ? String(editEvent.cost)    : '')
+  const [vendor, setVendor]           = useState(editEvent?.vendor  ?? '')
+  const [notes, setNotes]             = useState(editEvent?.notes   ?? '')
+  const [attachments, setAttachments] = useState<string[]>(editEvent?.attachments ?? [])
+  const [saving, setSaving]           = useState(false)
+  const { createEvent, updateEvent, updateProfile } = useVehicleStore()
+  const { setVehicleProfile }                       = useSpacesStore()
+  const { showToast }                               = useUiStore()
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
+  const colorVar   = { '--space-color': color } as React.CSSProperties
+
+  const handleSave = () => {
+    if (!date) return
+    let cancelled = false
+    const save = async () => {
+      setSaving(true)
+      try {
+        const data: VehicleEventInput = {
+          type: 'repair', date,
+          mileage: mileage ? Number(mileage) : null,
+          cost:    cost    ? Number(cost)    : null,
+          currency: 'UAH', vendor: vendor.trim(), notes: notes.trim(), attachments,
+        }
+        if (editEvent) {
+          await updateEvent(spaceId, editEvent._id, data)
+        } else {
+          await createEvent(spaceId, data)
+          const newKm = mileage ? Number(mileage) : null
+          if (newKm && (profile?.currentMileage == null || newKm > profile.currentMileage)) {
+            const updated = await updateProfile(spaceId, { currentMileage: newKm })
+            if (!cancelled) setVehicleProfile(spaceId, updated)
+          }
+        }
+        if (!cancelled) { showToast(editEvent ? 'Ремонт оновлено' : 'Ремонт додано', 'success'); onClose() }
+      } catch {
+        if (!cancelled) showToast('Помилка', 'error')
+      } finally {
+        if (!cancelled) setSaving(false)
+      }
+    }
+    save()
+    return () => { cancelled = true }
+  }
+
+  return (
+    <div className={styles.overlay} ref={overlayRef} onClick={onClose}>
+      <div className={styles.sheet} ref={sheetRef} onClick={e => e.stopPropagation()}>
+        <div className={styles.sheetHandle} />
+        <h3 className={styles.sheetTitle}>{editEvent ? 'Редагувати ремонт' : 'Ремонт'}</h3>
+        <label className={styles.fieldLabel}>ДАТА</label>
+        <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>{fmtDate(date)}</button>
+        {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
+        <div className={styles.twoCol}>
+          <div>
+            <label className={styles.fieldLabel}>ПРОБІГ (км)</label>
+            <input className={styles.fieldInput} type="number" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="123 450" />
+          </div>
+          <div>
+            <label className={styles.fieldLabel}>СУМА (₴)</label>
+            <input className={styles.fieldInput} type="number" value={cost} onChange={e => setCost(e.target.value)} placeholder="5 000" />
+          </div>
+        </div>
+        <label className={styles.fieldLabel}>СЕРВІС</label>
+        <input className={styles.fieldInput} value={vendor} onChange={e => setVendor(e.target.value)} placeholder="СТО, майстер…" />
+        <label className={styles.fieldLabel}>ЩО ЗРОБЛЕНО</label>
+        <textarea className={styles.textarea} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Заміна амортизаторів…" rows={3} />
+        <label className={styles.fieldLabel}>ФОТО / ЧЕК</label>
+        <AttachmentsField value={attachments} onChange={setAttachments} />
+        <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
+          {saving ? 'Зберігаємо…' : 'Зберегти'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── TireSheet ──────────────────────────────────────────────────────────────
+
+const TireSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, editEvent }) => {
+  const [date, setDate]         = useState(editEvent?.date    ?? todayISO())
+  const [dateOpen, setDateOpen] = useState(false)
+  const [mileage, setMileage]   = useState(editEvent?.mileage != null ? String(editEvent.mileage) : '')
+  const [cost, setCost]         = useState(editEvent?.cost    != null ? String(editEvent.cost)    : '')
+  const [vendor, setVendor]     = useState(editEvent?.vendor  ?? '')
+  const [notes, setNotes]       = useState(editEvent?.notes   ?? '')
+  const [saving, setSaving]     = useState(false)
+  const { createEvent, updateEvent, updateProfile } = useVehicleStore()
+  const { setVehicleProfile }                       = useSpacesStore()
+  const { showToast }                               = useUiStore()
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
+  const colorVar   = { '--space-color': color } as React.CSSProperties
+
+  const handleSave = () => {
+    if (!date) return
+    let cancelled = false
+    const save = async () => {
+      setSaving(true)
+      try {
+        const data: VehicleEventInput = {
+          type: 'tire_change', date,
+          mileage: mileage ? Number(mileage) : null,
+          cost:    cost    ? Number(cost)    : null,
+          currency: 'UAH', vendor: vendor.trim(), notes: notes.trim(),
+        }
+        if (editEvent) {
+          await updateEvent(spaceId, editEvent._id, data)
+        } else {
+          await createEvent(spaceId, data)
+          const newKm = mileage ? Number(mileage) : null
+          if (newKm && (profile?.currentMileage == null || newKm > profile.currentMileage)) {
+            const updated = await updateProfile(spaceId, { currentMileage: newKm })
+            if (!cancelled) setVehicleProfile(spaceId, updated)
+          }
+        }
+        if (!cancelled) { showToast(editEvent ? 'Шини оновлено' : 'Шини додано', 'success'); onClose() }
+      } catch {
+        if (!cancelled) showToast('Помилка', 'error')
+      } finally {
+        if (!cancelled) setSaving(false)
+      }
+    }
+    save()
+    return () => { cancelled = true }
+  }
+
+  return (
+    <div className={styles.overlay} ref={overlayRef} onClick={onClose}>
+      <div className={styles.sheet} ref={sheetRef} onClick={e => e.stopPropagation()}>
+        <div className={styles.sheetHandle} />
+        <h3 className={styles.sheetTitle}>{editEvent ? 'Редагувати шини' : 'Заміна шин'}</h3>
+        <label className={styles.fieldLabel}>ДАТА</label>
+        <button type="button" className={styles.dateField} onClick={() => setDateOpen(true)}>{fmtDate(date)}</button>
+        {dateOpen && <CustomDatePicker value={date} onChange={d => { setDate(d); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
+        <div className={styles.twoCol}>
+          <div>
+            <label className={styles.fieldLabel}>ПРОБІГ (км)</label>
+            <input className={styles.fieldInput} type="number" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="123 450" />
+          </div>
+          <div>
+            <label className={styles.fieldLabel}>СУМА (₴)</label>
+            <input className={styles.fieldInput} type="number" value={cost} onChange={e => setCost(e.target.value)} placeholder="8 000" />
+          </div>
+        </div>
+        <label className={styles.fieldLabel}>ШИНОМОНТАЖ</label>
+        <input className={styles.fieldInput} value={vendor} onChange={e => setVendor(e.target.value)} placeholder="Назва сервісу…" />
+        <label className={styles.fieldLabel}>НОТАТКИ <span style={{ opacity: 0.5, fontSize: '10px' }}>(розмір, сезон…)</span></label>
+        <textarea className={styles.textarea} value={notes} onChange={e => setNotes(e.target.value)} placeholder="205/55 R16, літня…" rows={2} />
+        <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
+          {saving ? 'Зберігаємо…' : 'Зберегти'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── AllRecordsSheet ────────────────────────────────────────────────────────
+
+const ALL_FILTER_TYPES: Array<{ key: VehicleEventType | 'all'; label: string }> = [
+  { key: 'all',         label: 'Всі'       },
+  { key: 'fuel',        label: 'Заправка'  },
+  { key: 'maintenance', label: 'ТО'        },
+  { key: 'repair',      label: 'Ремонт'    },
+  { key: 'tire_change', label: 'Шини'      },
+  { key: 'document',    label: 'Документи' },
+  { key: 'note',        label: 'Нотатки'   },
+]
+
+interface AllRecordsProps {
+  events:   VehicleEvent[]
+  color:    string
+  onClose:  () => void
+  onEdit:   (event: VehicleEvent) => void
+  onDelete: (id: string) => void
+}
+
+const AllRecordsSheet: React.FC<AllRecordsProps> = ({ events, color, onClose, onEdit, onDelete }) => {
+  const [filter, setFilter] = useState<VehicleEventType | 'all'>('all')
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
+  const colorVar   = { '--space-color': color } as React.CSSProperties
+
+  const sorted   = [...events].sort((a, b) => b.date.localeCompare(a.date))
+  const filtered = filter === 'all' ? sorted : sorted.filter(e => e.type === filter)
+
+  // Show only filter chips that have matching events
+  const activeTypes = new Set(events.map(e => e.type))
+  const chips = ALL_FILTER_TYPES.filter(f => f.key === 'all' || activeTypes.has(f.key as VehicleEventType))
+
+  return (
+    <div className={styles.overlay} ref={overlayRef} onClick={onClose}>
+      <div className={`${styles.sheet} ${styles.sheetTall}`} ref={sheetRef} onClick={e => e.stopPropagation()}>
+        <div className={styles.sheetHandle} />
+        <h3 className={styles.sheetTitle}>Всі записи <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', opacity: 0.5 }}>({filtered.length})</span></h3>
+        <div className={styles.allRecordsFilter}>
+          {chips.map(f => (
+            <button
+              key={f.key}
+              type="button"
+              className={`${styles.allRecordsChip} ${filter === f.key ? styles.allRecordsChipActive : ''}`}
+              style={filter === f.key ? colorVar : undefined}
+              onClick={() => setFilter(f.key as VehicleEventType | 'all')}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className={styles.allRecordsList}>
+          {filtered.map(e => (
+            <div key={e._id} className={styles.timelineItem}>
+              <div className={styles.timelineIcon} style={colorVar}>
+                <EventIcon type={e.type} />
+              </div>
+              <div className={styles.timelineBody}>
+                <div className={styles.timelineTop}>
+                  <span className={styles.timelineType}>{EVENT_LABELS[e.type]}</span>
+                  <span className={styles.timelineDate}>{fmtDate(e.date)}</span>
+                </div>
+                <div className={styles.timelineMeta}>
+                  {e.cost    != null && <span className={styles.timelineCost}>{fmtCost(e.cost, e.currency)}</span>}
+                  {e.mileage != null && <span className={styles.timelineMileage}>{fmtMileage(e.mileage)}</span>}
+                  {e.liters  != null && <span>{e.liters} л</span>}
+                  {e.vendor  && <span>{e.vendor}</span>}
+                  {e.docType && <span>{e.docType}</span>}
+                  {e.docExpiresAt && <span className={styles.timelineExpiry}>до {fmtDate(e.docExpiresAt)}</span>}
+                </div>
+                {e.notes && <p className={styles.timelineNotes}>{e.notes}</p>}
+              </div>
+              <div className={styles.timelineActions}>
+                <button type="button" className={styles.timelineEditBtn} onClick={() => { onClose(); onEdit(e) }} aria-label="Редагувати">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button type="button" className={styles.timelineDeleteBtn} onClick={() => onDelete(e._id)} aria-label="Видалити">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <p className={styles.empty}>Немає записів цього типу</p>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -968,6 +1263,7 @@ interface TimelineProps {
   spaceId:          string
   onAddFuel:        () => void
   onAddMaintenance: () => void
+  onEdit:           (event: VehicleEvent) => void
 }
 
 function useCarIllustration(): string {
@@ -979,7 +1275,7 @@ function useCarIllustration(): string {
   return '/car/car-default.png'
 }
 
-const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spaceId, onAddFuel, onAddMaintenance }) => {
+const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spaceId, onAddFuel, onAddMaintenance, onEdit }) => {
   const { deleteEvent } = useVehicleStore()
   const { showToast }   = useUiStore()
   const carImg          = useCarIllustration()
@@ -1058,11 +1354,19 @@ const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spac
               </div>
             )}
           </div>
-          <button type="button" className={styles.timelineDeleteBtn} onClick={() => handleDelete(e._id)} aria-label="Видалити">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+          <div className={styles.timelineActions}>
+            <button type="button" className={styles.timelineEditBtn} onClick={() => onEdit(e)} aria-label="Редагувати">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button type="button" className={styles.timelineDeleteBtn} onClick={() => handleDelete(e._id)} aria-label="Видалити">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
         </div>
       ))}
     </div>
@@ -1094,7 +1398,20 @@ const VehicleSpaceView: React.FC<Props> = ({
   spaceId, color, spaceName, memoriesCount, plansCount, tasksCount, membersCount,
   modules, spaceTxs, isOwner, coverUrl, coverPosition, onEditSpace, onBack,
 }) => {
-  const [sheet, setSheet] = useState<SheetType>(null)
+  const [sheet, setSheet]               = useState<SheetType>(null)
+  const [editingEvent, setEditingEvent] = useState<VehicleEvent | null>(null)
+  const [allRecordsOpen, setAllRecordsOpen] = useState(false)
+
+  const closeSheet = () => { setSheet(null); setEditingEvent(null) }
+
+  const handleEditEvent = (event: VehicleEvent) => {
+    const typeToSheet: Partial<Record<VehicleEventType, SheetType>> = {
+      fuel: 'fuel', maintenance: 'maintenance', repair: 'repair',
+      tire_change: 'tire', document: 'document', note: 'note',
+    }
+    const s = typeToSheet[event.type]
+    if (s) { setEditingEvent(event); setSheet(s) }
+  }
   const { fetchEvents, fetchStats, eventsBySpace, statsBySpace, loading } = useVehicleStore()
   const stats = statsBySpace[spaceId]
   const space  = useSpacesStore(s => s.spaces.find(sp => sp.id === spaceId) ?? null)
@@ -1160,6 +1477,18 @@ const VehicleSpaceView: React.FC<Props> = ({
       label: '+ ТО / ремонт',
       desc: 'Записати обслуговування',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
+    },
+    {
+      key: 'repair' as SheetType,
+      label: '+ Ремонт',
+      desc: 'Записати ремонт',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>,
+    },
+    {
+      key: 'tire' as SheetType,
+      label: '+ Шини',
+      desc: 'Заміна шин',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="3" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="21" y2="12"/></svg>,
     },
     {
       key: 'document' as SheetType,
@@ -1308,7 +1637,7 @@ const VehicleSpaceView: React.FC<Props> = ({
         <div className={styles.vehicleTimelineHeader}>
           <h3 className={styles.vehicleTimelineTitle}>Хроніка</h3>
           {events.length > 0 && (
-            <button type="button" className={styles.vehicleTimelineAllLink} style={colorVar}>
+            <button type="button" className={styles.vehicleTimelineAllLink} style={colorVar} onClick={() => setAllRecordsOpen(true)}>
               Всі записи
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginLeft: 3 }}>
                 <path d="M5 3l4 4-4 4"/>
@@ -1323,14 +1652,28 @@ const VehicleSpaceView: React.FC<Props> = ({
           spaceId={spaceId}
           onAddFuel={() => setSheet('fuel')}
           onAddMaintenance={() => setSheet('maintenance')}
+          onEdit={handleEditEvent}
         />
       </div>
 
       {/* ── Action sheets ── */}
-      {sheet === 'fuel'        && <FuelSheet        spaceId={spaceId} color={color} onClose={() => setSheet(null)} profile={profile} />}
-      {sheet === 'maintenance' && <MaintenanceSheet spaceId={spaceId} color={color} onClose={() => setSheet(null)} profile={profile} />}
-      {sheet === 'document'    && <DocumentSheet    spaceId={spaceId} color={color} onClose={() => setSheet(null)} />}
-      {sheet === 'note'        && <NoteSheet        spaceId={spaceId} color={color} onClose={() => setSheet(null)} />}
+      {sheet === 'fuel'        && <FuelSheet        spaceId={spaceId} color={color} onClose={closeSheet} profile={profile} editEvent={editingEvent ?? undefined} />}
+      {sheet === 'maintenance' && <MaintenanceSheet spaceId={spaceId} color={color} onClose={closeSheet} profile={profile} editEvent={editingEvent ?? undefined} />}
+      {sheet === 'repair'      && <RepairSheet      spaceId={spaceId} color={color} onClose={closeSheet} profile={profile} editEvent={editingEvent ?? undefined} />}
+      {sheet === 'tire'        && <TireSheet        spaceId={spaceId} color={color} onClose={closeSheet} editEvent={editingEvent ?? undefined} />}
+      {sheet === 'document'    && <DocumentSheet    spaceId={spaceId} color={color} onClose={closeSheet} editEvent={editingEvent ?? undefined} />}
+      {sheet === 'note'        && <NoteSheet        spaceId={spaceId} color={color} onClose={closeSheet} editEvent={editingEvent ?? undefined} />}
+
+      {/* ── All records sheet ── */}
+      {allRecordsOpen && (
+        <AllRecordsSheet
+          events={events}
+          color={color}
+          onClose={() => setAllRecordsOpen(false)}
+          onEdit={handleEditEvent}
+          onDelete={(id: string) => { useVehicleStore.getState().deleteEvent(spaceId, id) }}
+        />
+      )}
     </div>
   )
 }

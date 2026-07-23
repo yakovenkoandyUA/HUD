@@ -1580,3 +1580,88 @@
   text-align: center;
   padding-top: 8px;
 }
+
+/* ── Timeline actions (edit + delete) ── */
+.timelineActions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.timelineItem:hover .timelineActions {
+  opacity: 1;
+}
+
+.timelineEditBtn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.timelineEditBtn:hover {
+  color: var(--accent);
+}
+
+/* ── Tall sheet variant (AllRecordsSheet) ── */
+.sheetTall {
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── AllRecordsSheet filter ── */
+.allRecordsFilter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 0 16px 12px;
+  margin: 0 -16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.allRecordsFilter::-webkit-scrollbar { display: none; }
+
+.allRecordsChip {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.allRecordsChipActive {
+  background: color-mix(in srgb, var(--space-color) 15%, transparent);
+  border-color: var(--space-color);
+  color: var(--space-color);
+}
+
+.allRecordsList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 16px;
+  margin: 0 -16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.empty {
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text3);
+  padding: 24px 0;
+}
