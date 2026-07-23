@@ -64,8 +64,17 @@ interface ReportStyleOption {
 
 const REPORT_STYLES: ReportStyleOption[] = [
   {
+    id: 'flash',
+    label: 'Флеш',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M10.5 2L5 10h6.5l-2 6L17 7h-6.5l2-5z"/>
+      </svg>
+    ),
+  },
+  {
     id: 'standard',
-    label: 'Стандартний',
+    label: 'Мімір',
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="2" y="10" width="3" height="6" rx="1"/>
@@ -75,55 +84,12 @@ const REPORT_STYLES: ReportStyleOption[] = [
     ),
   },
   {
-    id: 'coach',
-    label: 'Тренер',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M10.5 2L5 10h6.5l-2 6L17 7h-6.5l2-5z"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'yoda',
-    label: 'Мудрець',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M9 3C5.5 3 3 6 3 9s2.5 6 6 6 6-3 6-6-2.5-6-6-6z"/>
-        <circle cx="9" cy="9" r="2"/>
-        <path d="M9 3v2M9 13v2M3 9h2M13 9h2"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'kozak',
-    label: 'Козак',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M13.5 2.5L4.5 11.5"/>
-        <path d="M4.5 11.5l-2 4 4-2"/>
-        <path d="M11 5l2 2"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'motivator',
-    label: 'Мотиватор',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M11.5 2C8 2 5 5 4 8.5l5.5 5.5C13 13 16 10 16 6.5c0-2.5-2-4.5-4.5-4.5z"/>
-        <path d="M4 8.5L2 15l6.5-2"/>
-        <circle cx="11" cy="7" r="1" fill="currentColor" stroke="none"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'accountant',
-    label: 'Бухгалтер',
+    id: 'audit',
+    label: 'Аудит',
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="2" y="2" width="14" height="14" rx="2"/>
-        <line x1="9" y1="2" x2="9" y2="16"/>
-        <line x1="2" y1="9" x2="16" y2="9"/>
+        <path d="M5 7h8M5 10h6M5 13h4"/>
       </svg>
     ),
   },
@@ -313,7 +279,7 @@ const MeMimir: React.FC = () => {
       {/* ── Report style ── */}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>СТИЛЬ ЗВІТІВ</h2>
-        <p className={styles.freqDesc}>Манера в якій AI подає місячний звіт</p>
+        <p className={styles.freqDesc}>Флеш — 4–5 речень · Мімір — повний аналіз · Аудит — детально все</p>
         <div className={styles.reportGrid}>
           {REPORT_STYLES.map(s => (
             <button
