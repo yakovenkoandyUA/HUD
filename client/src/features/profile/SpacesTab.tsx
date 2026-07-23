@@ -9,6 +9,7 @@ import { usePlan } from '@/shared/hooks/usePlan'
 import UpgradePrompt from '@/shared/components/ui/UpgradePrompt'
 import PillSelector from '@/shared/components/ui/PillSelector'
 import { authFetch } from '@/shared/services/api'
+import { useFamilyStore } from '@/shared/store/familyStore'
 import { SPACE_TEMPLATES } from './spaceTemplates'
 import { SPACE_TYPE_CONFIG } from '@/features/spaces/data/spaceTypes'
 import styles from './SpacesTab.module.css'
@@ -24,6 +25,19 @@ function formatRelative(iso: string | null): string | null {
   if (days < 30) return `${Math.floor(days / 7)} тижні тому`
   if (days < 60) return '1 місяць тому'
   return `${Math.floor(days / 30)} місяці тому`
+}
+
+const MODULES = [
+  { id: 'finance', label: 'Фінанси' },
+  { id: 'tasks',   label: 'Квести'  },
+]
+
+const DEFAULT_MODULES: Partial<Record<SpaceType, string[]>> = {
+  trip:    ['finance'],
+  vehicle: ['finance', 'tasks'],
+  home:    ['finance', 'tasks'],
+  pet:     ['finance', 'tasks'],
+  sports:  ['tasks'],
 }
 
 const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
@@ -71,6 +85,8 @@ const SpacesTab: React.FC = () => {
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const { limits, can, isAtLimit } = usePlan()
+  const family = useFamilyStore(s => s.accepted)
+  const fetchFamily = useFamilyStore(s => s.fetchFamily)
 
   // ── Sheets state ──
   const [createOpen, setCreateOpen] = useState(false)
@@ -78,10 +94,12 @@ const SpacesTab: React.FC = () => {
   const [detailSpace, setDetailSpace] = useState<Space | null>(null)
 
   // ── Create form ──
-  const [newName, setNewName]   = useState('')
-  const [newType, setNewType]   = useState<SpaceType>('trip')
-  const [newColor, setNewColor] = useState(COLORS[0])
-  const [creating, setCreating] = useState(false)
+  const [newName, setNewName]           = useState('')
+  const [newType, setNewType]           = useState<SpaceType>('trip')
+  const [newColor, setNewColor]         = useState(COLORS[0])
+  const [newModules, setNewModules]     = useState<string[]>([])
+  const [newMembers, setNewMembers]     = useState<string[]>([])
+  const [creating, setCreating]         = useState(false)
   const [fromTemplate, setFromTemplate] = useState(false)
 
   // ── Vehicle profile fields (create) ──
@@ -133,6 +151,7 @@ const SpacesTab: React.FC = () => {
   const detailSheetRef = useSwipeToDismiss(() => setDetailSpace(null),  { enabled: !!detailSpace, overlayRef: detailOverlayRef })
 
   useEffect(() => { fetchSpaces() }, [fetchSpaces])
+  useEffect(() => { fetchFamily() }, [fetchFamily])
 
   // keep detailSpace in sync when store updates
   useEffect(() => {
@@ -148,6 +167,7 @@ const SpacesTab: React.FC = () => {
 
   const openCreate = () => {
     setNewName(''); setNewType('trip'); setNewColor(COLORS[0])
+    setNewModules([]); setNewMembers([])
     setFromTemplate(false)
     resetProfileFields()
     setCreateStep('template')
@@ -159,10 +179,13 @@ const SpacesTab: React.FC = () => {
       setNewName(tpl.defaultName)
       setNewType(tpl.type)
       setNewColor(tpl.color)
+      setNewModules(DEFAULT_MODULES[tpl.type] ?? [])
       setFromTemplate(true)
     } else {
+      setNewModules([])
       setFromTemplate(false)
     }
+    setNewMembers([])
     resetProfileFields()
     setCreateStep('form')
   }
@@ -180,7 +203,10 @@ const SpacesTab: React.FC = () => {
     if (!newName.trim() || creating) return
     setCreating(true)
     try {
-      const space = await createSpace({ name: newName.trim(), type: newType, color: newColor })
+      const space = await createSpace({ name: newName.trim(), type: newType, color: newColor, modules: newModules })
+      if (newMembers.length > 0) {
+        await Promise.allSettled(newMembers.map(username => addMember(space.id, username)))
+      }
 
       if (newType === 'vehicle') {
         const body: Record<string, unknown> = {}
@@ -648,6 +674,59 @@ const SpacesTab: React.FC = () => {
                     />
                   ))}
                 </div>
+
+                {/* ── Модулі ── */}
+                <hr className={styles.profileDivider} />
+                <p className={styles.profileSectionLabel}>МОДУЛІ</p>
+                <div className={styles.chipRow}>
+                  {MODULES.map(mod => (
+                    <button
+                      key={mod.id}
+                      type="button"
+                      className={`${styles.chip} ${newModules.includes(mod.id) ? styles.chipOn : ''}`}
+                      onClick={() => setNewModules(prev =>
+                        prev.includes(mod.id) ? prev.filter(m => m !== mod.id) : [...prev, mod.id]
+                      )}
+                    >
+                      {mod.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* ── Учасники (family) ── */}
+                {family.length > 0 && (
+                  <>
+                    <p className={styles.profileSectionLabel}>УЧАСНИКИ</p>
+                    <div className={styles.familyPickRow}>
+                      {family.map(m => {
+                        const on = newMembers.includes(m.username)
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            className={`${styles.familyPickChip} ${on ? styles.familyPickChipOn : ''}`}
+                            onClick={() => setNewMembers(prev =>
+                              prev.includes(m.username) ? prev.filter(u => u !== m.username) : [...prev, m.username]
+                            )}
+                          >
+                            <div className={styles.memberAvatar} style={{ width: 28, height: 28 }}>
+                              {m.avatarUrl
+                                ? <img src={m.avatarUrl} alt={m.name} className={styles.memberAvatarImg} />
+                                : <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)' }}>{m.name[0]?.toUpperCase()}</span>
+                              }
+                            </div>
+                            <span className={styles.familyPickName}>{m.name}</span>
+                            {on && (
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
 
                 {/* ── Авто: додаткові поля ── */}
                 {newType === 'vehicle' && (

@@ -326,6 +326,39 @@
   background: color-mix(in srgb, var(--accent) 10%, var(--bg));
 }
 
+/* ── Family member pick chips (create form) ── */
+.familyPickRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.familyPickChip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 5px 5px;
+  border: 1.5px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--text2);
+}
+
+.familyPickChipOn {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--accent);
+}
+
+.familyPickName {
+  font-size: 13px;
+  font-family: var(--font-ui);
+}
+
 /* ── Primary button ── */
 .primaryBtn {
   width: 100%;
