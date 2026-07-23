@@ -80,38 +80,41 @@
 
 /* ── Space cards grid ── */
 .list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   padding: 8px 14px 4px;
   gap: 10px;
 }
 
 .spaceCard {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: stretch;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--space-color, var(--accent));
-  border-radius: 14px;
+  padding: 0;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-top: 3px solid var(--space-color, var(--accent));
+  border-radius: 12px;
   cursor: pointer;
   text-align: left;
-  transition: background 0.12s ease;
-  -webkit-tap-highlight-color: transparent;
   overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.spaceCard:active { background: color-mix(in srgb, var(--space-color, var(--accent)) 8%, var(--surface)); }
+.spaceCard:active { background: color-mix(in srgb, var(--space-color, var(--accent)) 6%, var(--bg)); }
 
 .spaceIconZone {
-  width: 88px;
-  min-height: 88px;
-  flex-shrink: 0;
-  background: color-mix(in srgb, var(--type-color, var(--accent)) 10%, var(--bg));
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 80px;
+  background: color-mix(in srgb, var(--type-color, var(--accent)) 14%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--type-color, var(--accent)) 18%, transparent);
   overflow: hidden;
-  border-right: 1px solid color-mix(in srgb, var(--type-color, var(--accent)) 15%, transparent);
+  transition: background 0.15s ease;
+}
+.spaceCard:active .spaceIconZone {
+  background: color-mix(in srgb, var(--type-color, var(--accent)) 22%, var(--surface));
 }
 
 .spaceIconImg {
@@ -129,20 +132,22 @@
   user-select: none;
 }
 
-/* Light themes: cream icons need to be darkened */
+/* Light themes: cream icons need to be darkened (only emblem, not cover photos) */
 :global([data-theme="mimir"]) .spaceIconImg,
 :global([data-theme="pixel"]) .spaceIconImg {
   filter: brightness(0) opacity(0.5);
+}
+:global([data-theme="mimir"]) .spaceIconImgCover,
+:global([data-theme="pixel"]) .spaceIconImgCover {
+  filter: none;
 }
 
 .spaceInfo {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 2px;
-  padding: 12px 12px 12px 14px;
+  padding: 8px 10px 10px;
   min-width: 0;
-  flex: 1;
 }
 
 .spaceName {
