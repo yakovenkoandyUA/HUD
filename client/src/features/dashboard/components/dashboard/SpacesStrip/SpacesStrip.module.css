@@ -209,13 +209,14 @@
 .typeCard {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 6px 10px;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
   border-radius: 12px;
   border: 1.5px solid var(--border);
   background: var(--bg);
   cursor: pointer;
+  overflow: hidden;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -223,25 +224,20 @@
 
 .typeCardActive {
   border-color: var(--tc, var(--accent));
-  background: color-mix(in srgb, var(--tc, var(--accent)) 10%, var(--bg));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--tc, var(--accent)) 30%, transparent);
 }
 
 .typeImgWrap {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--tc, var(--accent)) 12%, var(--surface));
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1.2;
+  overflow: hidden;
   flex-shrink: 0;
 }
 
 .typeImg {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
@@ -251,6 +247,7 @@
   font-weight: 600;
   color: var(--text2);
   text-align: center;
+  padding: 7px 4px 8px;
 }
 .typeCardActive .typeLabel {
   color: var(--text);
