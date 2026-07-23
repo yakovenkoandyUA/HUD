@@ -14,18 +14,6 @@ import { SPACE_TEMPLATES } from './spaceTemplates'
 import { SPACE_TYPE_CONFIG } from '@/features/spaces/data/spaceTypes'
 import styles from './SpacesTab.module.css'
 
-function formatRelative(iso: string | null): string | null {
-  if (!iso) return null
-  const diff = Date.now() - new Date(iso).getTime()
-  const days = Math.floor(diff / 86_400_000)
-  if (days === 0) return 'сьогодні'
-  if (days === 1) return 'вчора'
-  if (days < 7)  return `${days} дні тому`
-  if (days < 14) return '1 тиждень тому'
-  if (days < 30) return `${Math.floor(days / 7)} тижні тому`
-  if (days < 60) return '1 місяць тому'
-  return `${Math.floor(days / 30)} місяці тому`
-}
 
 const MODULES = [
   { id: 'finance', label: 'Фінанси' },
