@@ -136,11 +136,14 @@ export function useSwipeToDismiss(
       }
     }
 
-    attach()
-    // If ref was null (mounted-gated JSX), retry after next paint
-    if (!detach) {
-      rafId = requestAnimationFrame(attach)
+    let retries = 0
+    const tryAttach = () => {
+      attach()
+      if (!detach && retries++ < 12) {
+        rafId = requestAnimationFrame(tryAttach)
+      }
     }
+    tryAttach()
 
     return () => {
       cancelAnimationFrame(rafId)

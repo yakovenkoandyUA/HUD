@@ -65,6 +65,43 @@
 
 .heroAccent { display: none; }
 
+.heroUnsplashRow {
+  position: absolute;
+  bottom: 6px;
+  right: 10px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.heroUnsplashAttribution {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.55);
+  pointer-events: none;
+  letter-spacing: 0.02em;
+}
+
+.heroUnsplashRefresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.heroUnsplashRefresh:active {
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+}
+
 /* glow behind the emblem badge */
 .hero:not(.heroCovered)::before {
   content: '';
@@ -792,7 +829,6 @@
   max-height: 90dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
 
 .sheetHandle {
