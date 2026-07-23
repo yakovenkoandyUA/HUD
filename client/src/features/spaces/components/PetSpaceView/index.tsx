@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { usePetStore, type PetEvent, type PetEventInput, type PetEventType } from '../../store/petStore'
-import type { PetProfile, PetFoodItem } from '@/features/memories/store/spacesStore'
+import type { PetProfile, PetFoodItem, Space } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
@@ -15,6 +15,7 @@ interface Props {
   spaceName:       string
   profile:         PetProfile | null
   onProfileUpdate: (p: PetProfile) => void
+  space:           Space
 }
 
 type SheetType = 'vet_visit' | 'vaccination' | 'medication' | 'grooming' | 'weight' | 'note' | null
@@ -795,7 +796,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceN
  * @prop profile         — поточний petProfile (з Space)
  * @prop onProfileUpdate — callback після збереження профілю
  */
-const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onProfileUpdate }) => {
+const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onProfileUpdate, space }) => {
   const showToast = useUiStore(s => s.showToast)
   const { eventsBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile } = usePetStore()
 
@@ -930,6 +931,12 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onP
               <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
             </button>
           ))}
+          <button type="button" className={`${styles.actionBtn} ${styles.actionBtnMimir}`} onClick={() => setChatOpen(true)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Мімір
+          </button>
         </div>
       </div>
 
@@ -1031,6 +1038,8 @@ const PetSpaceView: React.FC<Props> = ({ spaceId, color, spaceName, profile, onP
         onSave={handleProfileSave}
         color={color}
       />
+
+      <SpaceChatSheet isOpen={chatOpen} onClose={() => setChatOpen(false)} space={space} />
     </div>
   )
 }

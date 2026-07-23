@@ -25,8 +25,7 @@ const COLORS = [
   '#f39c12', '#1abc9c', '#e91e8c', '#607d8b',
 ]
 
-// Types shown in the picker — 6 cards in 3×2 grid
-const PICKER_TYPES: SpaceType[] = ['trip', 'vehicle', 'home', 'pet', 'sports', 'shared']
+const PICKER_TYPES: SpaceType[] = ['trip', 'vehicle', 'home', 'pet', 'sports']
 
 const PlusIcon: React.FC = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
@@ -46,7 +45,7 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
   // ── Sheet state ──
   const [open, setOpen]     = useState(false)
   const [name, setName]     = useState('')
-  const [type, setType]     = useState<SpaceType>('shared')
+  const [type, setType]     = useState<SpaceType>('trip')
   const [color, setColor]   = useState(COLORS[0])
   const [saving, setSaving] = useState(false)
 
@@ -75,10 +74,10 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
   }, [])
 
   const openSheet = () => {
-    const tpl = SPACE_TEMPLATES.find(t => t.type === 'shared')
+    const tpl = SPACE_TEMPLATES.find(t => t.type === 'trip')
     setName(tpl?.defaultName ?? '')
     nameIsDefault.current = true
-    setType('shared')
+    setType('trip')
     setColor(tpl?.color ?? COLORS[0])
     setOpen(true)
   }

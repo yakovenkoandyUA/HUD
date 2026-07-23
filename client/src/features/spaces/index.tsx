@@ -226,12 +226,13 @@ const SpaceDetailScreen: React.FC = () => {
   const { addNote, deleteNote } = useNotesStore()
 
   // ── Content state ──
+  // null = still loading; [] = loaded and empty
   const [space, setSpace]             = useState<Space | null>(null)
-  const [memories, setMemories]       = useState<Memory[]>([])
-  const [plans, setPlans]             = useState<Plan[]>([])
-  const [spaceNotes, setSpaceNotes]   = useState<Note[]>([])
-  const [spaceTasks, setSpaceTasks]   = useState<SpaceTask[]>([])
-  const [spaceTxs, setSpaceTxs]       = useState<SpaceTx[]>([])
+  const [memories, setMemories]       = useState<Memory[]   | null>(null)
+  const [plans, setPlans]             = useState<Plan[]     | null>(null)
+  const [spaceNotes, setSpaceNotes]   = useState<Note[]     | null>(null)
+  const [spaceTasks, setSpaceTasks]   = useState<SpaceTask[]| null>(null)
+  const [spaceTxs, setSpaceTxs]       = useState<SpaceTx[] | null>(null)
   const [loading, setLoading]         = useState(true)
 
   // ── Modals / Inputs ──
@@ -287,21 +288,40 @@ const SpaceDetailScreen: React.FC = () => {
       }
       if (!cancelled) setSpace(found)
 
-      const [memRes, planRes, noteRes, taskRes, txRes] = await Promise.all([
-        authFetch(`/api/memories?spaceId=${spaceId}`),
-        authFetch(`/api/plans?spaceId=${spaceId}`),
-        authFetch(`/api/notes?spaceId=${spaceId}`),
-        authFetch(`/api/sprint/tasks?spaceId=${spaceId}`),
-        authFetch(`/api/transactions?spaceId=${spaceId}`),
-      ])
-      if (!cancelled) {
-        if (memRes.ok) setMemories(await parseMemories(memRes))
-        if (planRes.ok) setPlans(await planRes.json() as Plan[])
-        if (noteRes.ok) setSpaceNotes(await noteRes.json() as Note[])
-        if (taskRes.ok) setSpaceTasks(await taskRes.json() as SpaceTask[])
-        if (txRes.ok) setSpaceTxs(await txRes.json() as SpaceTx[])
-        setLoading(false)
+      const spaceType  = found?.type
+      const needsFull  = spaceType !== 'vehicle' && spaceType !== 'home' && spaceType !== 'pet'
+      const needsTasks = spaceType !== 'vehicle'
+
+      // Typed spaces skip sections they never show — resolve immediately with empty
+      if (!needsFull)  { setMemories([]); setPlans([]); setSpaceNotes([]) }
+      if (!needsTasks) { setSpaceTasks([]) }
+
+      // Fire all needed requests in parallel; each section updates as its response arrives
+      const fetches: Promise<void>[] = []
+
+      if (needsFull) {
+        fetches.push(
+          authFetch(`/api/memories?spaceId=${spaceId}`)
+            .then(async r => { if (!cancelled && r.ok) setMemories(await parseMemories(r)) }),
+          authFetch(`/api/plans?spaceId=${spaceId}`)
+            .then(async r => { if (!cancelled && r.ok) setPlans(await r.json() as Plan[]) }),
+          authFetch(`/api/notes?spaceId=${spaceId}`)
+            .then(async r => { if (!cancelled && r.ok) setSpaceNotes(await r.json() as Note[]) }),
+        )
       }
+      if (needsTasks) {
+        fetches.push(
+          authFetch(`/api/sprint/tasks?spaceId=${spaceId}`)
+            .then(async r => { if (!cancelled && r.ok) setSpaceTasks(await r.json() as SpaceTask[]) }),
+        )
+      }
+      fetches.push(
+        authFetch(`/api/transactions?spaceId=${spaceId}`)
+          .then(async r => { if (!cancelled && r.ok) setSpaceTxs(await r.json() as SpaceTx[]) }),
+      )
+
+      await Promise.all(fetches)
+      if (!cancelled) setLoading(false)
     }
     load()
     return () => { cancelled = true }
@@ -548,8 +568,8 @@ const SpaceDetailScreen: React.FC = () => {
     <div className={styles.root}>
       <AppHeader />
 
-      {/* ── Hero (hidden for vehicle — it renders its own) ── */}
-      {space?.type !== 'vehicle' && <div
+      {/* ── Hero (hidden for vehicle + pet — they render their own) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && <div
         className={`${styles.hero} ${space?.coverUrl ? styles.heroCovered : ''}`}
         style={space?.coverUrl ? undefined : colorVar}
       >
@@ -569,7 +589,7 @@ const SpaceDetailScreen: React.FC = () => {
             <path d="M11 4l-5 5 5 5"/>
           </svg>
         </button>
-        {loading ? (
+        {!space ? (
           <div className={styles.heroSkeleton} />
         ) : (
           <>
@@ -601,26 +621,26 @@ const SpaceDetailScreen: React.FC = () => {
         const isTyped = ['home', 'pet', 'trip'].includes(space?.type ?? '')
         const showPlans = !isTyped || (space?.modules ?? []).includes('plans')
         const overviewItems = [
-          { num: memories.length,                desc: memories.length === 1 ? 'спогад' : memories.length < 5 ? 'спогади' : 'спогадів'    },
-          ...(showPlans ? [{ num: plans.length, desc: plans.length === 1 ? 'план' : plans.length < 5 ? 'плани' : 'планів' }] : []),
-          { num: spaceTasks.filter(t => !t.done).length, desc: 'активних задач' },
-          { num: space?.members.length ?? 0,     desc: (space?.members.length ?? 0) === 1 ? 'учасник' : 'учасників' },
+          { num: memories?.length ?? null,                desc: (memories?.length ?? 0) === 1 ? 'спогад' : (memories?.length ?? 0) < 5 ? 'спогади' : 'спогадів' },
+          ...(showPlans ? [{ num: plans?.length ?? null, desc: (plans?.length ?? 0) === 1 ? 'план' : (plans?.length ?? 0) < 5 ? 'плани' : 'планів' }] : []),
+          { num: spaceTasks != null ? spaceTasks.filter(t => !t.done).length : null, desc: 'активних задач' },
+          { num: space?.members.length ?? 0,              desc: (space?.members.length ?? 0) === 1 ? 'учасник' : 'учасників' },
         ]
         return (
           <div className={styles.overview}>
             {overviewItems.map(item => (
               <div key={item.desc} className={styles.overviewItem}>
-                <span className={styles.overviewNum}>{loading ? '—' : item.num}</span>
-                <span className={styles.overviewLabel}>{loading ? '…' : item.num === 0 ? `немає ${item.desc}` : item.desc}</span>
+                <span className={styles.overviewNum}>{item.num == null ? '—' : item.num}</span>
+                <span className={styles.overviewLabel}>{item.num == null ? '…' : item.num === 0 ? `немає ${item.desc}` : item.desc}</span>
               </div>
             ))}
           </div>
         )
       })()}
 
-      {/* ── Budget / spending block (hidden for vehicle) ── */}
-      {space?.type !== 'vehicle' && (() => {
-        const spent = spaceTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+      {/* ── Budget / spending block (hidden for vehicle + pet) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && (() => {
+        const spent = (spaceTxs ?? []).filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
         const sym   = space?.budgetCurrency === 'USD' ? '$' : space?.budgetCurrency === 'EUR' ? '€' : '₴'
         if (space?.budget != null) {
           const pct      = Math.min(100, (spent / space.budget) * 100)
@@ -705,12 +725,12 @@ const SpaceDetailScreen: React.FC = () => {
           spaceId={spaceId!}
           color={space.color}
           spaceName={space.name}
-          memoriesCount={memories.length}
-          plansCount={plans.length}
-          tasksCount={spaceTasks.length}
+          memoriesCount={memories?.length ?? 0}
+          plansCount={plans?.length ?? 0}
+          tasksCount={spaceTasks?.length ?? 0}
           membersCount={space.members.length}
           modules={space.modules ?? []}
-          spaceTxs={spaceTxs}
+          spaceTxs={spaceTxs ?? []}
           isOwner={isOwner}
           onEditSpace={openEdit}
           onBack={() => navigate(-1)}
@@ -731,24 +751,31 @@ const SpaceDetailScreen: React.FC = () => {
           spaceName={space.name}
           profile={space.petProfile}
           onProfileUpdate={p => setPetProfile(space.id, p)}
+          coverUrl={space.coverUrl}
+          coverPosition={space.coverPosition}
+          isOwner={isOwner}
+          onEditSpace={openEdit}
+          onBack={() => navigate(-1)}
+          spaceTxs={spaceTxs ?? []}
+          space={space}
         />
       )}
 
       {/* ── Shared modules for typed spaces (pet / home) ── */}
       {(space?.type === 'pet' || space?.type === 'home') && !loading && (
         <div className={styles.content}>
-          {spaceTasks.length > 0 && (
+          {(spaceTasks?.length ?? 0) > 0 && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>ЗАДАЧІ</h2>
               <div className={styles.tasksList}>
-                {spaceTasks.map(t => (
+                {(spaceTasks ?? []).map(t => (
                   <SpaceTaskItem key={t._id} task={t} spaceColor={space?.color} onToggle={handleToggleTask} onDelete={handleDeleteTask} />
                 ))}
               </div>
             </section>
           )}
 
-          {spaceTxs.length > 0 && (
+          {(spaceTxs?.length ?? 0) > 0 && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>ВИТРАТИ</h2>
               <div className={styles.txList}>
@@ -803,25 +830,36 @@ const SpaceDetailScreen: React.FC = () => {
       {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
           {ctx.memBtnLabel.replace('+ ', '')}
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddPlanOpen(true)}>
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </span>
           {ctx.planBtnLabel.replace('+ ', '')}
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={handleOpenNoteInput}>
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </span>
           Нотатка
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={handleOpenTaskInput}>
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </span>
           {ctx.taskBtnLabel.replace('+ ', '')}
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
         <button type="button" className={`${styles.actionBtn} ${styles.actionBtnMimir}`} style={colorVar} onClick={() => setChatOpen(true)}>
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M7 1.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"/>
-            <path d="M4.5 5.5h5M4.5 8h3"/>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           Мімір
         </button>
@@ -832,7 +870,7 @@ const SpaceDetailScreen: React.FC = () => {
       <div className={styles.content}>
 
         {/* ── Members ── */}
-        {!loading && (
+        {space && (
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>УЧАСНИКИ</h2>
             <div className={styles.members}>
@@ -892,7 +930,7 @@ const SpaceDetailScreen: React.FC = () => {
         {/* ── Memories ── */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>СПОГАДИ</h2>
-          {loading ? (
+          {memories === null ? (
             <div className={styles.memoriesGrid}>{[1,2,3,4].map(i => <div key={i} className={styles.skeleton} />)}</div>
           ) : memories.length === 0 ? (
             <div className={styles.empty}>
@@ -913,7 +951,7 @@ const SpaceDetailScreen: React.FC = () => {
         {/* ── Plans ── */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>ПЛАНИ</h2>
-          {loading ? (
+          {plans === null ? (
             <div className={styles.plansCol}>{[1,2].map(i => <div key={i} className={`${styles.skeleton} ${styles.skeletonPlan}`} />)}</div>
           ) : plans.length === 0 ? (
             <div className={styles.empty}>
@@ -961,7 +999,7 @@ const SpaceDetailScreen: React.FC = () => {
             </div>
           )}
 
-          {loading ? (
+          {spaceNotes === null ? (
             <div className={styles.plansCol}>{[1,2].map(i => <div key={i} className={`${styles.skeleton} ${styles.skeletonNote}`} />)}</div>
           ) : spaceNotes.length === 0 && !showNoteInput ? (
             <div className={styles.empty}>
@@ -1020,7 +1058,7 @@ const SpaceDetailScreen: React.FC = () => {
             </div>
           )}
 
-          {loading ? (
+          {spaceTasks === null ? (
             <div className={styles.plansCol}>{[1, 2].map(i => <div key={i} className={`${styles.skeleton} ${styles.skeletonNote}`} />)}</div>
           ) : spaceTasks.length === 0 && !showTaskInput ? (
             <div className={styles.empty}>
@@ -1045,7 +1083,7 @@ const SpaceDetailScreen: React.FC = () => {
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>ВИТРАТИ</h2>
 
-          {loading ? (
+          {spaceTxs === null ? (
             <div className={styles.plansCol}>{[1, 2].map(i => <div key={i} className={`${styles.skeleton} ${styles.skeletonNote}`} />)}</div>
           ) : spaceTxs.length === 0 ? (
             <div className={styles.empty}>
