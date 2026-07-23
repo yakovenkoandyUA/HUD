@@ -51,7 +51,7 @@
   border-top: 1px solid var(--tint-accent-lg);
   border-bottom: 1px solid var(--tint-accent-lg);
   overflow: hidden;
-  height: 120px;
+
 }
 
 .splitLeft {
