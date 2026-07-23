@@ -232,9 +232,6 @@ const YearbookTab: React.FC = () => {
                   </div>
                 ) : null
               })()}
-              <div className={styles.aiBox}>
-                <span className={styles.aiBoxLabel}>AI НАРАТИВ · НЕЗАБАРОМ</span>
-              </div>
             </div>
           </div>
 
