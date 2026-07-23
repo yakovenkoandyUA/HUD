@@ -842,9 +842,9 @@
 }
 
 .colorRow {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
   margin-top: 4px;
 }
 
@@ -854,9 +854,18 @@
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: transform 0.12s;
+  transition: transform 0.12s, border-color 0.12s;
+  flex-shrink: 0;
 }
-.colorDotOn { border-color: var(--text); transform: scale(1.15); }
+.colorDotDefault {
+  background: conic-gradient(
+    #b8860b 0deg, #ffd700 60deg, #fffacd 120deg,
+    #ffd700 180deg, #b8860b 240deg, #daa520 300deg, #b8860b 360deg
+  );
+  border: 2px dashed rgba(218,165,32,0.6);
+}
+.colorDotOn { border-color: #fff; transform: scale(1.18); }
+.colorDotDefault.colorDotOn { border-color: #fff; border-style: solid; }
 
 .saveBtn {
   width: 100%;

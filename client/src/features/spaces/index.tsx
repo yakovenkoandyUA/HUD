@@ -35,9 +35,13 @@ import styles from './SpaceDetail.module.css'
 // ── Constants ──────────────────────────────────────────────────────────────
 
 
+// '' = default (uses theme accent / gold)
 const COLORS = [
-  '#9b59b6', '#3498db', '#2ecc71', '#e74c3c',
-  '#f39c12', '#1abc9c', '#e91e8c', '#607d8b',
+  '',
+  '#7c3aed', '#2563eb', '#0ea5e9', '#0d9488',
+  '#059669', '#65a30d', '#d97706', '#ea580c',
+  '#e11d48', '#db2777', '#9333ea', '#475569',
+  '#b45309', '#78716c', '#0f766e',
 ]
 
 // ── Context config ─────────────────────────────────────────────────────────
@@ -520,7 +524,8 @@ const SpaceDetailScreen: React.FC = () => {
   }
 
   const ctx = SPACE_CONTEXT[space?.type ?? ''] ?? DEFAULT_CTX
-  const colorVar = { '--space-color': space?.color ?? 'var(--accent)' } as React.CSSProperties
+  const spaceColor = space?.color || 'var(--accent)'
+  const colorVar = { '--space-color': spaceColor } as React.CSSProperties
   const isOwner = space?.ownerId === myId
 
   return (
@@ -669,7 +674,7 @@ const SpaceDetailScreen: React.FC = () => {
       {space?.type === 'vehicle' && (
         <VehicleSpaceView
           spaceId={spaceId!}
-          color={space.color}
+          color={space.color || 'var(--accent)'}
           spaceName={space.name}
           memoriesCount={memories?.length ?? 0}
           plansCount={plans?.length ?? 0}
@@ -687,7 +692,7 @@ const SpaceDetailScreen: React.FC = () => {
       {space?.type === 'home' && (
         <HomeSpaceView
           spaceId={spaceId!}
-          color={space.color}
+          color={space.color || 'var(--accent)'}
           profile={space.homeProfile}
           onProfileUpdate={p => setHomeProfile(space.id, p)}
         />
@@ -695,7 +700,7 @@ const SpaceDetailScreen: React.FC = () => {
       {space?.type === 'pet' && (
         <PetSpaceView
           spaceId={spaceId!}
-          color={space.color}
+          color={space.color || 'var(--accent)'}
           spaceName={space.name}
           profile={space.petProfile}
           onProfileUpdate={p => setPetProfile(space.id, p)}
@@ -767,7 +772,7 @@ const SpaceDetailScreen: React.FC = () => {
       {space?.type === 'trip' && (
         <TripSpaceView
           spaceId={spaceId!}
-          color={space.color}
+          color={space.color || 'var(--accent)'}
           profile={space.tripProfile}
           onProfileUpdate={p => setTripProfile(space.id, p)}
           spaceTxs={spaceTxs ?? []}
@@ -836,25 +841,25 @@ const SpaceDetailScreen: React.FC = () => {
           <AddTicketSheet
             isOpen={addTicketOpen}
             spaceId={spaceId}
-            color={space.color}
+            color={space.color || 'var(--accent)'}
             onClose={() => setAddTicketOpen(false)}
           />
           <AddAccommodationSheet
             isOpen={addAccomOpen}
             spaceId={spaceId}
-            color={space.color}
+            color={space.color || 'var(--accent)'}
             onClose={() => setAddAccomOpen(false)}
           />
           <AddPlaceSheet
             isOpen={addTripPlaceOpen}
             spaceId={spaceId}
-            color={space.color}
+            color={space.color || 'var(--accent)'}
             onClose={() => setAddTripPlaceOpen(false)}
           />
           <AddSpaceExpenseSheet
             isOpen={addExpenseOpen}
             spaceId={spaceId}
-            color={space.color}
+            color={space.color || 'var(--accent)'}
             onClose={() => setAddExpenseOpen(false)}
             onExpenseAdded={tx => setSpaceTxs(prev => [tx, ...(prev ?? [])])}
           />
@@ -1194,12 +1199,12 @@ const SpaceDetailScreen: React.FC = () => {
             <div className={styles.colorRow}>
               {COLORS.map(c => (
                 <button
-                  key={c}
+                  key={c || 'default'}
                   type="button"
-                  className={`${styles.colorDot} ${editColor === c ? styles.colorDotOn : ''}`}
-                  style={{ background: c }}
+                  className={`${styles.colorDot} ${c === '' ? styles.colorDotDefault : ''} ${editColor === c ? styles.colorDotOn : ''}`}
+                  style={c ? { background: c } : undefined}
                   onClick={() => setEditColor(c)}
-                  aria-label={c}
+                  aria-label={c || 'За замовчуванням'}
                 />
               ))}
             </div>
