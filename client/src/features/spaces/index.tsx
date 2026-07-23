@@ -29,6 +29,7 @@ import AddSpaceExpenseSheet from './components/AddSpaceExpenseSheet'
 import SpaceChatSheet from './components/SpaceChatSheet'
 import SpaceTaskItem from './components/SpaceTaskItem'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
+import { SPACE_TYPE_CONFIG } from './data/spaceTypes'
 import styles from './SpaceDetail.module.css'
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -121,57 +122,6 @@ const DEFAULT_CTX: SpaceCtx = {
   taskEmptyTitle: 'Задач ще немає',    taskEmptyDesc: 'Додай першу задачу в цей простір.',
 }
 
-function SpaceEmblem({ type }: { type: SpaceType }) {
-  const s = { stroke: 'currentColor', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-  switch (type) {
-    case 'pet': return (
-      <svg width="36" height="36" viewBox="0 0 24 24" {...s}>
-        <circle cx="12" cy="14" r="5"/>
-        <circle cx="5"  cy="8"  r="2"/>
-        <circle cx="19" cy="8"  r="2"/>
-        <circle cx="8"  cy="5"  r="1.5"/>
-        <circle cx="16" cy="5"  r="1.5"/>
-      </svg>
-    )
-    case 'vehicle': return (
-      <svg width="36" height="36" viewBox="0 0 24 24" {...s}>
-        <circle cx="12" cy="12" r="9"/>
-        <circle cx="12" cy="12" r="3"/>
-        <line x1="12" y1="3"  x2="12" y2="9"/>
-        <line x1="12" y1="15" x2="12" y2="21"/>
-        <line x1="3"  y1="12" x2="9"  y2="12"/>
-        <line x1="15" y1="12" x2="21" y2="12"/>
-      </svg>
-    )
-    case 'home': return (
-      <svg width="36" height="36" viewBox="0 0 24 24" {...s}>
-        <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z"/>
-        <path d="M9 21V12h6v9"/>
-      </svg>
-    )
-    case 'trip': return (
-      <svg width="36" height="36" viewBox="0 0 24 24" {...s}>
-        <circle cx="12" cy="12" r="9"/>
-        <path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>
-        <path d="M12 12l-3-3 6-2-2 6-1-1z"/>
-      </svg>
-    )
-    case 'sports': return (
-      <svg width="36" height="36" viewBox="0 0 24 24" {...s}>
-        <circle cx="12" cy="12" r="9"/>
-        <circle cx="12" cy="12" r="3"/>
-        <line x1="12" y1="3"  x2="12" y2="9"/>
-        <line x1="12" y1="15" x2="12" y2="21"/>
-      </svg>
-    )
-    default: return (
-      <svg width="36" height="36" viewBox="0 0 24 24" {...s}>
-        <circle cx="12" cy="12" r="9"/>
-        <path d="M8 12h8M12 8v8"/>
-      </svg>
-    )
-  }
-}
 
 function formatTxAmount(amount: number): string {
   return amount.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
@@ -579,18 +529,15 @@ const SpaceDetailScreen: React.FC = () => {
 
       {/* ── Hero (hidden for vehicle + pet — they render their own) ── */}
       {space?.type !== 'vehicle' && space?.type !== 'pet' && <div
-        className={`${styles.hero} ${space?.coverUrl ? styles.heroCovered : ''}`}
-        style={space?.coverUrl ? undefined : colorVar}
+        className={`${styles.hero} ${styles.heroCovered}`}
       >
-        {space?.coverUrl && (
-          <img
-            src={space.coverUrl}
-            alt=""
-            className={styles.heroCoverImg}
-            style={{ objectPosition: `center ${space.coverPosition ?? 'center'}` }}
-            aria-hidden="true"
-          />
-        )}
+        <img
+          src={space?.coverUrl ?? SPACE_TYPE_CONFIG[space?.type ?? 'blank']?.iconSrc ?? SPACE_TYPE_CONFIG.blank.iconSrc}
+          alt=""
+          className={styles.heroCoverImg}
+          style={{ objectPosition: space?.coverUrl ? `center ${space.coverPosition ?? 'center'}` : 'center center' }}
+          aria-hidden="true"
+        />
         <div className={styles.heroCoverOverlay} style={space?.coverUrl ? undefined : colorVar} />
 
         <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
@@ -602,17 +549,11 @@ const SpaceDetailScreen: React.FC = () => {
           <div className={styles.heroSkeleton} />
         ) : (
           <>
-            {!space?.coverUrl && (
-              <span className={styles.heroEmoji}>
-                <SpaceEmblem type={space?.type ?? 'shared'} />
-              </span>
-            )}
             <div className={styles.heroInfo}>
-              <h1 className={`${styles.heroName} ${space?.coverUrl ? styles.heroNameCovered : ''}`}>{space?.name}</h1>
+              <h1 className={`${styles.heroName} ${styles.heroNameCovered}`}>{space?.name}</h1>
               <span className={styles.heroType} style={colorVar}>
                 {ctx.typeLabel || space?.type}
               </span>
-              {ctx.description && !space?.coverUrl && <p className={styles.heroDesc}>{ctx.description}</p>}
             </div>
             {isOwner && (
               <button type="button" className={styles.editBtn} onClick={openEdit} aria-label="Редагувати простір">
