@@ -66,6 +66,97 @@
 }
 .textarea:focus { border-color: var(--space-color); }
 
+/* ── Search ── */
+.searchWrap { position: relative; }
+
+.searchInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  color: var(--text3);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 11px 9px 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.searchInput:focus { border-color: var(--space-color); }
+
+.searchSpinner {
+  position: absolute;
+  right: 10px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--space-color);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 10;
+  list-style: none;
+  margin: 0; padding: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px 13px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.suggestion:last-child { border-bottom: none; }
+.suggestion:active { background: var(--surface2); }
+
+.suggestionName {
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.suggestionAddr {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0;
+}
+
 /* ── Category pills ── */
 .pills { display: flex; gap: 6px; flex-wrap: wrap; }
 

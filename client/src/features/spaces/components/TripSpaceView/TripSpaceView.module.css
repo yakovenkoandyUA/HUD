@@ -10,7 +10,27 @@
   display: flex;
   flex-direction: column;
   gap: 9px;
+  position: relative;
 }
+
+.cycleCoverBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cycleCoverBtn:active { color: var(--text); border-color: var(--text3); }
 
 /* ── Route row ── */
 .routeRow {

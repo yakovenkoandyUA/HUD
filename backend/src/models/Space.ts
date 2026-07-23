@@ -1,6 +1,6 @@
 import { Schema, model, Document } from 'mongoose'
 
-export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle' | 'home' | 'pet' | 'blank'
+export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle' | 'home' | 'pet' | 'plant' | 'blank'
 
 export interface ISpaceMember {
   userId: string
@@ -51,6 +51,20 @@ export interface IPetProfile {
   foodLog:        IPetFoodItem[]
 }
 
+export interface IPlantProfile {
+  commonName:           string
+  species:              string
+  location:             string
+  acquiredDate:         string | null
+  wateringIntervalDays: number | null
+  lastWateredAt:        string | null
+  lastFertilizedAt:     string | null
+  sunlight:             'low' | 'medium' | 'high' | null
+  photoUrl:             string
+  toxicToPets:          boolean | null
+  careNotes:            string
+}
+
 export interface ITripProfile {
   destination: string
   origin:      string
@@ -76,6 +90,7 @@ export interface ISpace extends Document {
   homeProfile:    IHomeProfile | null
   petProfile:     IPetProfile | null
   tripProfile:    ITripProfile | null
+  plantProfile:   IPlantProfile | null
   notes:          string
   archived:       boolean
   createdAt:      Date
@@ -130,6 +145,20 @@ const petProfileSchema = new Schema<IPetProfile>({
   foodLog:        { type: [petFoodItemSchema], default: [] },
 }, { _id: false })
 
+const plantProfileSchema = new Schema<IPlantProfile>({
+  commonName:           { type: String, default: '' },
+  species:              { type: String, default: '' },
+  location:             { type: String, default: '' },
+  acquiredDate:         { type: String, default: null },
+  wateringIntervalDays: { type: Number, default: null },
+  lastWateredAt:        { type: String, default: null },
+  lastFertilizedAt:     { type: String, default: null },
+  sunlight:             { type: String, enum: ['low', 'medium', 'high', null], default: null },
+  photoUrl:             { type: String, default: '' },
+  toxicToPets:          { type: Boolean, default: null },
+  careNotes:            { type: String, default: '' },
+}, { _id: false })
+
 const tripProfileSchema = new Schema<ITripProfile>({
   destination: { type: String, default: '' },
   origin:      { type: String, default: '' },
@@ -141,7 +170,7 @@ const tripProfileSchema = new Schema<ITripProfile>({
 
 const schema = new Schema<ISpace>({
   name:           { type: String, required: true, trim: true, maxlength: 60 },
-  type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle','home','pet','blank'], default: 'shared' },
+  type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle','home','pet','plant','blank'], default: 'shared' },
   color:          { type: String, default: '#9b59b6' },
   emoji:          { type: String, default: '' },
   coverUrl:       { type: String, default: '' },
@@ -155,6 +184,7 @@ const schema = new Schema<ISpace>({
   homeProfile:    { type: homeProfileSchema,    default: null },
   petProfile:     { type: petProfileSchema,     default: null },
   tripProfile:    { type: tripProfileSchema,    default: null },
+  plantProfile:   { type: plantProfileSchema,   default: null },
   archived:       { type: Boolean, default: false },
 }, { timestamps: true })
 

@@ -219,6 +219,12 @@ const SpaceDetailScreen: React.FC = () => {
   const [editSaving, setEditSaving]               = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  // ── Unsplash auto-hero for trip spaces ──
+  const [unsplashPhotos, setUnsplashPhotos]   = useState<Array<{ url: string; attribution: string }>>([])
+  const [unsplashIndex, setUnsplashIndex]     = useState(0)
+  const unsplashHeroUrl    = unsplashPhotos[unsplashIndex]?.url    ?? null
+  const unsplashAttribution = unsplashPhotos[unsplashIndex]?.attribution ?? null
+
   // ── Budget suggest ──
   const [budgetSuggestDismissed, setBudgetSuggestDismissed] = useState(
     () => !!localStorage.getItem(`budget-suggest-dismissed-${spaceId}`)
@@ -294,6 +300,32 @@ const SpaceDetailScreen: React.FC = () => {
     const updated = spaces.find(s => s.id === spaceId)
     if (updated) setSpace(updated)
   }, [spaces, spaceId])
+
+  // Unsplash auto-hero: fetch when trip space has destination but no custom cover
+  useEffect(() => {
+    if (space?.type !== 'trip') return
+    if (space.coverUrl) { setUnsplashPhotos([]); setUnsplashIndex(0); return }
+    const destination = space.tripProfile?.destination
+    if (!destination) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const key = import.meta.env.VITE_UNSPLASH_ACCESS_KEY as string
+        const res = await fetch(
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(destination)}&per_page=10&orientation=landscape`,
+          { headers: { Authorization: `Client-ID ${key}` } }
+        )
+        if (!res.ok) return
+        const data = await res.json() as { results: Array<{ urls: { regular: string }; user: { name: string } }> }
+        if (!cancelled && data.results?.length) {
+          setUnsplashPhotos(data.results.map(p => ({ url: p.urls.regular, attribution: `Photo by ${p.user.name} on Unsplash` })))
+          setUnsplashIndex(0)
+        }
+      } catch { /* silent */ }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [space?.type, space?.coverUrl, space?.tripProfile?.destination])
 
   useEffect(() => {
     if (showNoteInput) noteTextareaRef.current?.focus()
@@ -534,13 +566,31 @@ const SpaceDetailScreen: React.FC = () => {
         className={`${styles.hero} ${styles.heroCovered}`}
       >
         <img
-          src={space?.coverUrl || SPACE_TYPE_CONFIG[space?.type ?? 'blank']?.iconSrc || SPACE_TYPE_CONFIG.blank.iconSrc}
+          src={space?.coverUrl || unsplashHeroUrl || SPACE_TYPE_CONFIG[space?.type ?? 'blank']?.iconSrc || SPACE_TYPE_CONFIG.blank.iconSrc}
           alt=""
           className={styles.heroCoverImg}
-          style={{ objectPosition: space?.coverUrl ? `center ${space.coverPosition ?? 'center'}` : 'center center' }}
+          style={{ objectPosition: (space?.coverUrl || unsplashHeroUrl) ? `center ${space?.coverPosition ?? 'center'}` : 'center center' }}
           aria-hidden="true"
         />
-        <div className={styles.heroCoverOverlay} style={space?.coverUrl ? undefined : colorVar} />
+        <div className={styles.heroCoverOverlay} style={(space?.coverUrl || unsplashHeroUrl) ? undefined : colorVar} />
+        {unsplashAttribution && !space?.coverUrl && space?.type !== 'trip' && (
+          <div className={styles.heroUnsplashRow}>
+            {unsplashPhotos.length > 1 && (
+              <button
+                type="button"
+                className={styles.heroUnsplashRefresh}
+                onClick={() => setUnsplashIndex(i => (i + 1) % unsplashPhotos.length)}
+                aria-label="Інше фото"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+              </button>
+            )}
+            <span className={styles.heroUnsplashAttribution}>{unsplashAttribution}</span>
+          </div>
+        )}
 
         <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -773,6 +823,8 @@ const SpaceDetailScreen: React.FC = () => {
           profile={space.tripProfile}
           onProfileUpdate={p => setTripProfile(space.id, p)}
           spaceTxs={spaceTxs ?? []}
+          canCycleCover={unsplashPhotos.length > 1 && !space.coverUrl}
+          onCycleCover={() => setUnsplashIndex(i => (i + 1) % unsplashPhotos.length)}
         />
       )}
 
@@ -851,6 +903,7 @@ const SpaceDetailScreen: React.FC = () => {
             isOpen={addTripPlaceOpen}
             spaceId={spaceId}
             color={space.color || 'var(--accent)'}
+            destination={space.tripProfile?.destination || undefined}
             onClose={() => setAddTripPlaceOpen(false)}
           />
           <AddSpaceExpenseSheet

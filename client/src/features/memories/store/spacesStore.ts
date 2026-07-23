@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { authFetch } from '@/shared/services/api'
 
-export type SpaceType = 'shared' | 'trip' | 'sports' | 'vehicle' | 'home' | 'pet' | 'blank'
+export type SpaceType = 'shared' | 'trip' | 'sports' | 'vehicle' | 'pet' | 'plant' | 'blank'
 
 export interface SpaceMember {
   userId:    string
@@ -55,6 +55,20 @@ export interface PetProfile {
   foodLog:        PetFoodItem[]
 }
 
+export interface PlantProfile {
+  commonName:           string
+  species:              string
+  location:             string
+  acquiredDate:         string | null
+  wateringIntervalDays: number | null
+  lastWateredAt:        string | null
+  lastFertilizedAt:     string | null
+  sunlight:             'low' | 'medium' | 'high' | null
+  photoUrl:             string
+  toxicToPets:          boolean | null
+  careNotes:            string
+}
+
 export interface TripProfile {
   destination: string
   origin:      string
@@ -81,6 +95,7 @@ export interface Space {
   homeProfile:    HomeProfile | null
   petProfile:     PetProfile | null
   tripProfile:    TripProfile | null
+  plantProfile:   PlantProfile | null
   notes:          string
   archived:       boolean
   createdAt:      string
@@ -116,6 +131,7 @@ interface SpacesStore {
   setHomeProfile:       (id: string, profile: HomeProfile) => void
   setPetProfile:        (id: string, profile: PetProfile) => void
   setTripProfile:       (id: string, profile: TripProfile) => void
+  setPlantProfile:      (id: string, profile: PlantProfile) => void
   archiveSpace:         (id: string) => Promise<void>
   unarchiveSpace:(id: string) => Promise<void>
   deleteSpace:   (id: string) => Promise<void>
@@ -192,6 +208,12 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
   setTripProfile: (id, profile) => {
     set(s => ({
       spaces: s.spaces.map(sp => sp.id === id ? { ...sp, tripProfile: profile } : sp),
+    }))
+  },
+
+  setPlantProfile: (id, profile) => {
+    set(s => ({
+      spaces: s.spaces.map(sp => sp.id === id ? { ...sp, plantProfile: profile } : sp),
     }))
   },
 

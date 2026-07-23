@@ -76,7 +76,7 @@
   height: 60px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--space-color, var(--accent)) 14%, var(--surface));
-  border: 2px solid color-mix(in srgb, var(--space-color, var(--accent)) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 40%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -247,7 +247,6 @@
   font-weight: 600;
   color: var(--text2);
   text-align: center;
-  padding: 7px 4px 8px;
 }
 .typeCardActive .typeLabel {
   color: var(--text);
