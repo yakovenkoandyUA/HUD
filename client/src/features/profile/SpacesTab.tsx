@@ -635,10 +635,10 @@ const SpacesTab: React.FC = () => {
                     onClick={() => pickTemplate(null)}
                   >
                     <div className={styles.templateIconZone}>
-                      <img src="/mimir_space_icons_svg/blank-plus-dashed.svg" width={30} height={30} alt="" aria-hidden="true" />
+                      <img src="/space-identifiers-transparent/space_personal.png" alt="" aria-hidden="true" className={styles.templateIconImgCover} />
                     </div>
                     <div className={styles.templateCardBody}>
-                      <span className={styles.templateLabel}>Порожній</span>
+                      <span className={styles.templateLabel}>Власний</span>
                       <span className={styles.templateDesc}>Почати з нуля</span>
                     </div>
                   </button>
