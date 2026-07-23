@@ -156,8 +156,8 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
               onClick={() => navigate(`/spaces/${space.id}`)}
             >
               <span className={!f1Enabled ? `${styles.avatar} ${styles.avatarLarge}` : styles.avatar}>
-                {profilePhoto
-                  ? <img src={profilePhoto} className={styles.profilePhoto} alt="" aria-hidden="true" />
+                {profilePhoto || cfg.isCover
+                  ? <img src={profilePhoto ?? cfg.iconSrc} className={styles.profilePhoto} alt="" aria-hidden="true" />
                   : <img src={cfg.iconSrc} className={styles.emblemImg} alt="" aria-hidden="true" />
                 }
               </span>

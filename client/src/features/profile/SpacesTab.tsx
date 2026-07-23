@@ -517,7 +517,14 @@ const SpacesTab: React.FC = () => {
               onClick={() => openDetail(space)}
             >
               <div className={styles.spaceIconZone}>
-                {cfg && <img src={cfg.iconSrc} alt="" className={styles.spaceIconImg} draggable={false} />}
+                {cfg && (
+                  <img
+                    src={cfg.iconSrc}
+                    alt=""
+                    className={cfg.isCover ? styles.spaceIconImgCover : styles.spaceIconImg}
+                    draggable={false}
+                  />
+                )}
               </div>
               <div className={styles.spaceInfo}>
                 <span className={styles.spaceName}>{space.name}</span>

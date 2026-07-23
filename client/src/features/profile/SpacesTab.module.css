@@ -119,6 +119,14 @@
   user-select: none;
 }
 
+.spaceIconImgCover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+}
+
 /* Light themes: cream icons need to be darkened */
 :global([data-theme="mimir"]) .spaceIconImg,
 :global([data-theme="pixel"]) .spaceIconImg {
