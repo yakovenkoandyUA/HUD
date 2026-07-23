@@ -928,16 +928,6 @@
   gap: 3px;
 }
 
-.vehicleHeroName {
-  font-family: var(--font-furore);
-  font-size: 1rem;
-  color: var(--text);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .vehicleHeroTypeBadge {
   display: inline-block;
   font-family: var(--font-ui);

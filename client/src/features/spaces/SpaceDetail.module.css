@@ -58,7 +58,7 @@
 }
 
 /* all hero children need to sit above the cover/overlay layers */
-.hero > *:not(.heroCoverImg):not(.heroCoverOverlay) {
+.hero > *:not(.heroCoverImg):not(.heroCoverOverlay):not(.backBtn):not(.editBtn) {
   position: relative;
   z-index: 2;
 }
