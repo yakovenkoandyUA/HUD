@@ -6,14 +6,23 @@ import { useUiStore, type MimirMode } from '@/shared/store/uiStore'
 import { SPACE_TYPE_CONFIG } from '@/features/spaces/data/spaceTypes'
 import type { SpaceType } from '@/features/memories/store/spacesStore'
 import { authFetch } from '@/shared/services/api'
+import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
+import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import styles from './Onboarding.module.css'
+
+const DIRECTION_ROUTES: Record<Direction, string> = {
+  spaces:   '/spaces',
+  memories: '/memories',
+  tasks:    '/sprint',
+  finance:  '/finance',
+}
 
 const MONTHS_UA = [
   'Січень','Лютий','Березень','Квітень','Травень','Червень',
   'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень',
 ]
 
-type Direction = 'spaces' | 'memories' | 'tasks' | 'finance' | 'overview'
+type Direction = 'spaces' | 'memories' | 'tasks' | 'finance'
 
 const DIRECTIONS: { id: Direction; label: string; desc: string; icon: React.ReactNode }[] = [
   {
@@ -32,10 +41,6 @@ const DIRECTIONS: { id: Direction; label: string; desc: string; icon: React.Reac
     id: 'finance', label: 'Фінанси', desc: 'Бюджет, витрати і накопичення',
     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>,
   },
-  {
-    id: 'overview', label: 'Огляд усього', desc: 'Покажи мені що є',
-    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
-  },
 ]
 
 const SPACE_PRESETS: { type: SpaceType; label: string; desc: string }[] = [
@@ -44,7 +49,6 @@ const SPACE_PRESETS: { type: SpaceType; label: string; desc: string }[] = [
   { type: 'vehicle', label: 'Авто',       desc: 'ТО, заправки, документи' },
   { type: 'trip',    label: 'Поїздка',    desc: 'Маршрут, місця, витрати' },
   { type: 'sports',  label: 'Спорт',      desc: 'Результати й прогрес' },
-  { type: 'shared',  label: 'Спільний',   desc: 'Разом з кимось' },
 ]
 
 const HABIT_PRESETS = ['Спорт', 'Читання', 'Медитація', 'Вода', 'Йога', 'Прогулянка', 'Сон']
@@ -170,6 +174,7 @@ const OnboardingScreen: React.FC = () => {
   const navigate = useNavigate()
   const { activeProfile, updateProfile } = useProfileStore()
   const { setMimirMode: saveMode } = useUiStore()
+  const pwaInstall = usePwaInstall()
 
   const [step, setStep]   = useState(1)
   const [saving, setSaving] = useState(false)
@@ -191,12 +196,26 @@ const OnboardingScreen: React.FC = () => {
   // Step 5 — mimir mode
   const [mimirMode, setMimirMode] = useState<MimirMode>('wise')
 
+  // Step 6 — avatar
+  const [avatarUrl, setAvatarUrl] = useState(activeProfile?.avatarUrl ?? '')
+
   const habitTitle = habitPreset ?? (habitCustom.trim() || null)
   const spaceCreated = spaceType !== null && spaceName.trim().length > 0
 
   const selectPreset = (p: string) => {
     setHabitPreset(prev => prev === p ? null : p)
     setHabitCustom('')
+  }
+
+  const goBack = () => {
+    if (step === 2) setStep(1)
+    else if (step === 3) setStep(2)
+    else if (step === 4) setStep(3)
+    else if (step === 5) {
+      if (spaceCreated && direction === 'spaces') setStep(3)
+      else setStep(4)
+    }
+    else if (step === 6) setStep(5)
   }
 
   const goNextFromSpace = (skipped: boolean) => {
@@ -253,7 +272,7 @@ const OnboardingScreen: React.FC = () => {
       updateProfile({ monthlySpendLimit: +monthlyBudget }).catch(() => {})
     }
 
-    navigate('/', { replace: true })
+    navigate(DIRECTION_ROUTES[direction] ?? '/', { replace: true })
   }
 
   const ChevronRight = () => (
@@ -277,7 +296,7 @@ const OnboardingScreen: React.FC = () => {
   }, [spaceCreated, spaceName, habitTitle, memoryPlan, monthlyBudget, mimirMode])
 
   // Determine if step 4 action direction is habit-type
-  const actionIsHabit = direction === 'tasks' || direction === 'overview' || (direction === 'spaces' && !spaceCreated)
+  const actionIsHabit = direction === 'tasks' || (direction === 'spaces' && !spaceCreated)
 
   return (
     <div className={styles.root}>
@@ -286,6 +305,11 @@ const OnboardingScreen: React.FC = () => {
         {/* ── Progress bar (steps 2–5) ───────────────────────── */}
         {progress && (
           <div className={styles.progressWrap}>
+            <button type="button" className={styles.backBtn} onClick={goBack} aria-label="Назад">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path d="M11 4L6 9l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
             <div className={styles.progressTrack}>
               <div className={styles.progressFill} style={{ width: `${progress.pct}%` }} />
             </div>
@@ -369,8 +393,14 @@ const OnboardingScreen: React.FC = () => {
             <div className={styles.stepHeaderRow}>
               <img src="/mimir/mimir-pointing.png" alt="" className={styles.mimirSm} draggable={false} />
               <div className={styles.stepHeaderText}>
-                <h2 className={styles.stepTitleSm}>Перший простір</h2>
-                <p className={styles.stepSubSm}>Контекст для всього важливого в твоєму житті.</p>
+                <h2 className={styles.stepTitleSm}>
+                  {direction === 'spaces' ? 'Перший простір' : 'Додати простір?'}
+                </h2>
+                <p className={styles.stepSubSm}>
+                  {direction === 'spaces'
+                    ? 'Контекст для всього важливого в твоєму житті.'
+                    : 'Необов’язково — можна створити пізніше у розділі Простори.'}
+                </p>
               </div>
             </div>
 
@@ -521,13 +551,13 @@ const OnboardingScreen: React.FC = () => {
                   className={styles.mimirAvatar}
                   draggable={false}
                 />
-                <h2 className={styles.stepTitle}>Перший план</h2>
-                <p className={styles.stepSub}>Куди мрієш поїхати або що хочеш побачити?</p>
+                <h2 className={styles.stepTitle}>Куди хочеш поїхати?</h2>
+                <p className={styles.stepSub}>Збережемо як ціль подорожі — повернешся коли буде час.</p>
 
                 <input
                   className={styles.textInput}
                   type="text"
-                  placeholder="Наприклад, Барселона…"
+                  placeholder="Наприклад, Барселона або Київ…"
                   value={memoryPlan}
                   onChange={e => setMemoryPlan(e.target.value)}
                   maxLength={80}
@@ -615,6 +645,21 @@ const OnboardingScreen: React.FC = () => {
               </p>
             </div>
 
+            {/* Avatar upload */}
+            <div className={styles.doneAvatarWrap}>
+              <ImageUploadButton
+                currentUrl={avatarUrl || undefined}
+                folder="mimir/avatars"
+                onUpload={url => {
+                  setAvatarUrl(url)
+                  updateProfile({ avatarUrl: url }).catch(() => {})
+                }}
+                placeholder="Додати фото профілю"
+                variant="compact"
+              />
+              <span className={styles.doneAvatarHint}>необов'язково</span>
+            </div>
+
             {summaryItems.length > 0 && (
               <div className={styles.summaryCard}>
                 {summaryItems.map((item, i) => (
@@ -626,6 +671,26 @@ const OnboardingScreen: React.FC = () => {
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* Email verification reminder */}
+            {activeProfile?.isVerified === false && (
+              <div className={styles.verifyBanner}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                Перевір пошту — підтвердження розблокує деякі фічі
+              </div>
+            )}
+
+            {/* PWA install */}
+            {pwaInstall.isInstallable && (
+              <button
+                type="button"
+                className={styles.installBtn}
+                onClick={pwaInstall.promptInstall}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v13M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>
+                Встановити на екран
+              </button>
             )}
 
             <button
