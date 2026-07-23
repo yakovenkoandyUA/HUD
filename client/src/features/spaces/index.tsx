@@ -545,24 +545,20 @@ const SpaceDetailScreen: React.FC = () => {
             <path d="M11 4l-5 5 5 5"/>
           </svg>
         </button>
-        {!space ? (
-          <div className={styles.heroSkeleton} />
-        ) : (
-          <>
-            <div className={styles.heroInfo}>
-              <h1 className={`${styles.heroName} ${styles.heroNameCovered}`}>{space?.name}</h1>
-              <span className={styles.heroType} style={colorVar}>
-                {ctx.typeLabel || space?.type}
-              </span>
-            </div>
-            {isOwner && (
-              <button type="button" className={styles.editBtn} onClick={openEdit} aria-label="Редагувати простір">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
-                </svg>
-              </button>
-            )}
-          </>
+        {isOwner && (
+          <button type="button" className={styles.editBtn} onClick={openEdit} aria-label="Редагувати простір">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
+            </svg>
+          </button>
+        )}
+        {space && (
+          <div className={styles.heroInfo}>
+            <span className={styles.heroType} style={colorVar}>
+              {ctx.typeLabel || space?.type}
+            </span>
+            <h1 className={`${styles.heroName} ${styles.heroNameCovered}`}>{space?.name}</h1>
+          </div>
         )}
       </div>}
 

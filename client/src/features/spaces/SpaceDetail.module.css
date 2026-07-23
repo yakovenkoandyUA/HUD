@@ -17,8 +17,12 @@
 }
 
 .heroCovered {
-  min-height: 160px;
-  align-items: flex-end;
+  min-height: 200px;
+  padding: 52px 16px 16px;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 2px;
   background: transparent;
   border-bottom: none;
 }
@@ -88,8 +92,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--surface);
   color: var(--text);
@@ -102,19 +106,29 @@
 .backBtn:active { opacity: 0.5; }
 
 .heroCovered .backBtn {
-  background: rgba(0,0,0,0.32);
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(0,0,0,0.28);
   color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
   opacity: 1;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  z-index: 2;
 }
 
 .heroCovered .editBtn {
-  background: rgba(0,0,0,0.32);
-  color: #fff;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(0,0,0,0.28);
+  color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.15);
   opacity: 1;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  z-index: 2;
 }
 
 .heroCovered .heroType {
@@ -138,31 +152,42 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  flex: 1;
   min-width: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .heroName {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 1.55rem;
+  font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text);
   margin: 0;
+  line-height: 1.1;
   word-break: break-word;
 }
 
 .heroNameCovered {
   color: #fff;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  white-space: normal;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
 }
 
 .heroType {
-  font-size: 10px;
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--space-color, var(--accent));
-  opacity: 0.85;
+  opacity: 0.75;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.heroCovered .heroType {
+  color: rgba(255,255,255,0.75);
+  opacity: 1;
 }
 
 .heroDesc {
@@ -179,11 +204,9 @@
   border-radius: 50%;
   background: var(--surface);
   border: none;
-  color: var(--text-secondary);
+  color: var(--text2);
   cursor: pointer;
   flex-shrink: 0;
-  margin-left: auto;
-  align-self: flex-start;
   opacity: 0.75;
   transition: opacity 0.15s;
 }
