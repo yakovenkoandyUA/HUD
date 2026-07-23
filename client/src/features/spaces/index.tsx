@@ -19,8 +19,8 @@ import type { PlanInput } from '@/features/memories/store/plansStore'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import ProgressBar from '@/shared/components/ui/ProgressBar'
 import VehicleSpaceView from './components/VehicleSpaceView'
-import HomeSpaceView from './components/HomeSpaceView'
 import PetSpaceView from './components/PetSpaceView'
+import PlantSpaceView from './components/PlantSpaceView'
 import TripSpaceView from './components/TripSpaceView'
 import AddTicketSheet from './components/AddTicketSheet'
 import AddAccommodationSheet from './components/AddAccommodationSheet'
@@ -174,7 +174,7 @@ function formatNoteDate(iso: string): string {
 const SpaceDetailScreen: React.FC = () => {
   const navigate = useNavigate()
   const { spaceId } = useParams<{ spaceId: string }>()
-  const { spaces, fetchSpaces, updateSpace, deleteSpace, archiveSpace, addMember, removeMember, setHomeProfile, setPetProfile, setTripProfile } = useSpacesStore()
+  const { spaces, fetchSpaces, updateSpace, deleteSpace, archiveSpace, addMember, removeMember, setPetProfile, setTripProfile, setPlantProfile } = useSpacesStore()
   const myId = useProfileStore(s => s.activeProfile?.id ?? '')
   const { showToast } = useUiStore()
   const { addMemory }  = useMemoriesStore()
@@ -255,7 +255,7 @@ const SpaceDetailScreen: React.FC = () => {
       if (!cancelled) setSpace(found)
 
       const spaceType  = found?.type
-      const needsFull  = spaceType !== 'vehicle' && spaceType !== 'home' && spaceType !== 'pet'
+      const needsFull  = spaceType !== 'vehicle' && spaceType !== 'pet' && spaceType !== 'plant'
       const needsTasks = spaceType !== 'vehicle'
 
       // Typed spaces skip sections they never show — resolve immediately with empty
@@ -311,8 +311,33 @@ const SpaceDetailScreen: React.FC = () => {
     const load = async () => {
       try {
         const key = import.meta.env.VITE_UNSPLASH_ACCESS_KEY as string
+        const CITY_EN: Record<string, string> = {
+          'париж':'Paris','лондон':'London','рим':'Rome','берлін':'Berlin','відень':'Vienna',
+          'барселона':'Barcelona','прага':'Prague','амстердам':'Amsterdam','токіо':'Tokyo',
+          'нью-йорк':'New York','дубай':'Dubai','стамбул':'Istanbul','бангкок':'Bangkok',
+          'лісабон':'Lisbon','будапешт':'Budapest','варшава':'Warsaw','краків':'Krakow',
+          'мадрид':'Madrid','мілан':'Milan','венеція':'Venice',
+          'сінгапур':'Singapore','сеул':'Seoul','пекін':'Beijing','шанхай':'Shanghai',
+          'москва':'Moscow','санкт-петербург':'Saint Petersburg','київ':'Kyiv',
+          'львів':'Lviv','одеса':'Odesa','харків':'Kharkiv','дніпро':'Dnipro',
+          'женева':'Geneva','цюрих':'Zurich','брюссель':'Brussels','афіни':'Athens',
+          'дубровник':'Dubrovnik','котор':'Kotor','сплит':'Split','белград':'Belgrade',
+          'тіват':'Tivat','бар':'Bar','будва':'Budva','копенгаген':'Copenhagen',
+          'стокгольм':'Stockholm','осло':'Oslo','гельсінкі':'Helsinki','рейкявік':'Reykjavik',
+          'монреаль':'Montreal','ванкувер':'Vancouver','торонто':'Toronto','лос-анджелес':'Los Angeles',
+          'сан-франциско':'San Francisco','чикаго':'Chicago','маямі':'Miami',
+          'ріо':'Rio de Janeiro','буенос-айрес':'Buenos Aires','богота':'Bogota',
+          'дублін':'Dublin','едінбург':'Edinburgh','манчестер':'Manchester',
+          'марракеш':'Marrakech','каїр':'Cairo','кейптаун':'Cape Town',
+          'найробі':'Nairobi','бомбей':'Mumbai','делі':'Delhi','калькутта':'Kolkata',
+          'гонконг':'Hong Kong','тайпей':'Taipei','осака':'Osaka','кіото':'Kyoto',
+          'балі':'Bali','пхукет':'Phuket','ханой':'Hanoi','хошімін':'Ho Chi Minh City',
+          'сідней':'Sydney','мельбурн':'Melbourne','окленд':'Auckland',
+        }
+        const key_lower = destination.toLowerCase().trim()
+        const query = CITY_EN[key_lower] ?? destination
         const res = await fetch(
-          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(destination)}&per_page=10&orientation=landscape`,
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=30&orientation=landscape`,
           { headers: { Authorization: `Client-ID ${key}` } }
         )
         if (!res.ok) return
@@ -616,7 +641,7 @@ const SpaceDetailScreen: React.FC = () => {
 
       {/* ── Overview (hidden for vehicle + pet) ── */}
       {space?.type !== 'vehicle' && space?.type !== 'pet' && (() => {
-        const isTyped = ['home', 'pet', 'trip'].includes(space?.type ?? '')
+        const isTyped = ['plant', 'pet', 'trip'].includes(space?.type ?? '')
         const showPlans = !isTyped || (space?.modules ?? []).includes('plans')
         const overviewItems = [
           { num: memories?.length ?? null,                desc: (memories?.length ?? 0) === 1 ? 'спогад' : (memories?.length ?? 0) < 5 ? 'спогади' : 'спогадів' },
@@ -736,12 +761,12 @@ const SpaceDetailScreen: React.FC = () => {
           onBack={() => navigate(-1)}
         />
       )}
-      {space?.type === 'home' && (
-        <HomeSpaceView
+      {space?.type === 'plant' && (
+        <PlantSpaceView
           spaceId={spaceId!}
           color={space.color || 'var(--accent)'}
-          profile={space.homeProfile}
-          onProfileUpdate={p => setHomeProfile(space.id, p)}
+          profile={space.plantProfile}
+          onProfileUpdate={p => setPlantProfile(space.id, p)}
         />
       )}
       {space?.type === 'pet' && (
@@ -760,8 +785,8 @@ const SpaceDetailScreen: React.FC = () => {
         />
       )}
 
-      {/* ── Shared modules for typed spaces (pet / home) ── */}
-      {(space?.type === 'pet' || space?.type === 'home') && !loading && (
+      {/* ── Shared modules for typed spaces (pet / plant) ── */}
+      {(space?.type === 'pet' || space?.type === 'plant') && !loading && (
         <div className={styles.content}>
           {(spaceTasks?.length ?? 0) > 0 && (
             <section className={styles.section}>
@@ -916,7 +941,7 @@ const SpaceDetailScreen: React.FC = () => {
         </>
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && space?.type !== 'trip' && (
+      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
           <span className={styles.actionBtnIcon}>
@@ -953,7 +978,7 @@ const SpaceDetailScreen: React.FC = () => {
       </div>
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && space?.type !== 'trip' && (
+      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && (
       <div className={styles.content}>
 
         {/* ── Members ── */}
@@ -1309,7 +1334,7 @@ const SpaceDetailScreen: React.FC = () => {
             </div>
 
             {/* ── Modules (typed spaces only) ── */}
-            {(['vehicle', 'home', 'pet', 'trip'] as SpaceType[]).includes(editType) && (() => {
+            {(['vehicle', 'plant', 'pet', 'trip'] as SpaceType[]).includes(editType) && (() => {
               const ALL_MODULES: { key: string; label: string }[] = [
                 { key: 'finance',   label: 'Фінанси' },
                 { key: 'tasks',     label: 'Задачі' },
