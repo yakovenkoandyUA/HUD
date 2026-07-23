@@ -80,18 +80,19 @@
 
 /* ── Space cards grid ── */
 .list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   padding: 8px 14px 4px;
   gap: 10px;
 }
 
 .spaceCard {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-top: 3px solid var(--space-color, var(--accent));
+  border-left: 3px solid var(--space-color, var(--accent));
   border-radius: 14px;
   cursor: pointer;
   text-align: left;
@@ -102,14 +103,15 @@
 .spaceCard:active { background: color-mix(in srgb, var(--space-color, var(--accent)) 8%, var(--surface)); }
 
 .spaceIconZone {
-  width: 100%;
-  aspect-ratio: 1.1;
+  width: 88px;
+  min-height: 88px;
+  flex-shrink: 0;
   background: color-mix(in srgb, var(--type-color, var(--accent)) 10%, var(--bg));
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-bottom: 1px solid color-mix(in srgb, var(--type-color, var(--accent)) 15%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--type-color, var(--accent)) 15%, transparent);
 }
 
 .spaceIconImg {
@@ -136,9 +138,11 @@
 .spaceInfo {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 2px;
-  padding: 10px 10px 12px;
+  padding: 12px 12px 12px 14px;
   min-width: 0;
+  flex: 1;
 }
 
 .spaceName {
