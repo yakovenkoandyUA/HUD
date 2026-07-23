@@ -29,7 +29,7 @@ interface TicketStore {
   remove:     (spaceId: string, ticketId: string) => Promise<void>
 }
 
-export const useTicketStore = create<TicketStore>((set, get) => ({
+export const useTicketStore = create<TicketStore>((set) => ({
   tickets: {},
 
   load: async (spaceId) => {
