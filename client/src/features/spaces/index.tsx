@@ -301,12 +301,17 @@ const SpaceDetailScreen: React.FC = () => {
     if (updated) setSpace(updated)
   }, [spaces, spaceId])
 
-  // Unsplash auto-hero: fetch when trip space has destination but no custom cover
+  // Unsplash auto-hero: fetch when trip space has destination.
+  // If coverUrl is a cloudinary URL → don't fetch (user uploaded custom photo).
+  // If coverUrl is an unsplash URL (saved via cycling) → fetch + restore saved index.
   useEffect(() => {
     if (space?.type !== 'trip') return
-    if (space.coverUrl) { setUnsplashPhotos([]); setUnsplashIndex(0); return }
+    const cover = space.coverUrl ?? ''
+    const isCloudinary = cover && !cover.includes('images.unsplash.com')
+    if (isCloudinary) { setUnsplashPhotos([]); setUnsplashIndex(0); return }
     const destination = space.tripProfile?.destination
     if (!destination) return
+    const savedUnsplashUrl = cover  // '' or previously saved unsplash URL
     let cancelled = false
     const load = async () => {
       try {
@@ -322,7 +327,7 @@ const SpaceDetailScreen: React.FC = () => {
           'львів':'Lviv','одеса':'Odesa','харків':'Kharkiv','дніпро':'Dnipro',
           'женева':'Geneva','цюрих':'Zurich','брюссель':'Brussels','афіни':'Athens',
           'дубровник':'Dubrovnik','котор':'Kotor','сплит':'Split','белград':'Belgrade',
-          'тіват':'Tivat','бар':'Bar','будва':'Budva','копенгаген':'Copenhagen',
+          'тіват':'Tivat','бар':'Bar','будва':'Budва','копенгаген':'Copenhagen',
           'стокгольм':'Stockholm','осло':'Oslo','гельсінкі':'Helsinki','рейкявік':'Reykjavik',
           'монреаль':'Montreal','ванкувер':'Vancouver','торонто':'Toronto','лос-анджелес':'Los Angeles',
           'сан-франциско':'San Francisco','чикаго':'Chicago','маямі':'Miami',
@@ -343,14 +348,24 @@ const SpaceDetailScreen: React.FC = () => {
         if (!res.ok) return
         const data = await res.json() as { results: Array<{ urls: { regular: string }; user: { name: string } }> }
         if (!cancelled && data.results?.length) {
-          setUnsplashPhotos(data.results.map(p => ({ url: p.urls.regular, attribution: `Photo by ${p.user.name} on Unsplash` })))
-          setUnsplashIndex(0)
+          const photos = data.results.map(p => ({ url: p.urls.regular, attribution: `Photo by ${p.user.name} on Unsplash` }))
+          setUnsplashPhotos(photos)
+          // Restore previously selected photo if any
+          if (savedUnsplashUrl) {
+            const idx = photos.findIndex(p => p.url === savedUnsplashUrl)
+            setUnsplashIndex(idx >= 0 ? idx : 0)
+          } else {
+            setUnsplashIndex(0)
+          }
         }
       } catch { /* silent */ }
     }
     load()
     return () => { cancelled = true }
-  }, [space?.type, space?.coverUrl, space?.tripProfile?.destination])
+  // coverUrl intentionally excluded — we restore from its value captured at run time,
+  // not re-fetch every time the user cycles (which would cause a loop).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [space?.type, space?.tripProfile?.destination])
 
   useEffect(() => {
     if (showNoteInput) noteTextareaRef.current?.focus()
@@ -848,8 +863,13 @@ const SpaceDetailScreen: React.FC = () => {
           profile={space.tripProfile}
           onProfileUpdate={p => setTripProfile(space.id, p)}
           spaceTxs={spaceTxs ?? []}
-          canCycleCover={unsplashPhotos.length > 1 && !space.coverUrl}
-          onCycleCover={() => setUnsplashIndex(i => (i + 1) % unsplashPhotos.length)}
+          canCycleCover={unsplashPhotos.length > 1}
+          onCycleCover={() => {
+            const newIdx = (unsplashIndex + 1) % unsplashPhotos.length
+            setUnsplashIndex(newIdx)
+            const photo = unsplashPhotos[newIdx]
+            if (photo && spaceId) updateSpace(spaceId, { coverUrl: photo.url })
+          }}
         />
       )}
 
