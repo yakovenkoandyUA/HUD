@@ -35,13 +35,10 @@ import styles from './SpaceDetail.module.css'
 // ── Constants ──────────────────────────────────────────────────────────────
 
 
-// '' = default (uses theme accent / gold)
+// '' = default (uses theme accent)
 const COLORS = [
-  '',
-  '#7c3aed', '#2563eb', '#0ea5e9', '#0d9488',
-  '#059669', '#65a30d', '#d97706', '#ea580c',
-  '#e11d48', '#db2777', '#9333ea', '#475569',
-  '#b45309', '#78716c', '#0f766e',
+  '', '#7c3aed', '#2563eb', '#0ea5e9',
+  '#059669', '#d97706', '#e11d48', '#db2777',
 ]
 
 // ── Context config ─────────────────────────────────────────────────────────
