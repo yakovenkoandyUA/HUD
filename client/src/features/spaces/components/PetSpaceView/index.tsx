@@ -981,7 +981,7 @@ const PetSpaceView: React.FC<Props> = ({
       {/* ── Compact hero ── */}
       <div className={`${styles.hero} ${styles.heroCovered}`}>
         <img
-          src={coverUrl ?? SPACE_TYPE_CONFIG.pet.iconSrc}
+          src={coverUrl || SPACE_TYPE_CONFIG.pet.iconSrc}
           alt=""
           className={styles.heroCoverImg}
           style={{ objectPosition: coverUrl ? `center ${coverPosition ?? 'center'}` : 'center center' }}

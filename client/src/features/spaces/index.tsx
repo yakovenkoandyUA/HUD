@@ -532,7 +532,7 @@ const SpaceDetailScreen: React.FC = () => {
         className={`${styles.hero} ${styles.heroCovered}`}
       >
         <img
-          src={space?.coverUrl ?? SPACE_TYPE_CONFIG[space?.type ?? 'blank']?.iconSrc ?? SPACE_TYPE_CONFIG.blank.iconSrc}
+          src={space?.coverUrl || SPACE_TYPE_CONFIG[space?.type ?? 'blank']?.iconSrc || SPACE_TYPE_CONFIG.blank.iconSrc}
           alt=""
           className={styles.heroCoverImg}
           style={{ objectPosition: space?.coverUrl ? `center ${space.coverPosition ?? 'center'}` : 'center center' }}

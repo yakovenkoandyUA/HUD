@@ -283,7 +283,7 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
       {/* ── Hero banner ── */}
       <div className={`${styles.vehicleHero} ${styles.vehicleHeroCovered}`}>
         <img
-          src={coverUrl ?? SPACE_TYPE_CONFIG.vehicle.iconSrc}
+          src={coverUrl || SPACE_TYPE_CONFIG.vehicle.iconSrc}
           alt=""
           className={styles.vehicleHeroCoverImg}
           style={{ objectPosition: coverUrl ? `center ${coverPosition ?? 'center'}` : 'center center' }}
