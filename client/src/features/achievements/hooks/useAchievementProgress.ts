@@ -105,7 +105,7 @@ export function useAchievementProgress(): AchievementWithStatus[] {
       'living-space':       maxMemoriesInOneSpace(memories),
       'full-space':         maxMemoriesInOneSpace(memories),
       'first-auto':         spaces.filter(s => s.type === 'vehicle').length,
-      'first-home':         0,
+      'first-home':         spaces.filter(s => s.type === 'plant').length,
       'life-map':           distinctSpaceTypes(spaces),
 
       // ── Finance ───────────────────────────────────────────────────────────
