@@ -95,7 +95,7 @@ const PlanTab: React.FC = () => {
   const visibleFeatures = expanded ? FEATURES : FEATURES.slice(0, 7)
 
   const handleUpgrade = (plan: PlanDef) => {
-    const total = plan.priceMonthly * (cycle === 'annual' ? 12 : 1) * 100
+    const total = cycle === 'annual' ? plan.priceAnnualTotal : plan.priceMonthly
     window.open(`${MONOBANK_JAR}?amount=${total}`, '_blank', 'noopener,noreferrer')
   }
 
