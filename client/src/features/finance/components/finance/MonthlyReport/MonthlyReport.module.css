@@ -360,8 +360,94 @@
   line-height: 1.5;
 }
 
+/* ── Installation loading block ── */
+
+.installBlock {
+  margin: 10px 0 14px;
+  padding: 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.installHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.installTitle {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--gold, #c9a227);
+}
+
+.installPct {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.installTrack {
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.installFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold, #c9a227), var(--accent));
+  border-radius: 2px;
+  transition: width 0.35s ease-out;
+}
+
+.installPhase {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.installLog {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.installLogLine {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+
+.installLogDone {
+  color: var(--text3);
+}
+
+.installLogActive {
+  color: var(--gold, #c9a227);
+}
+
+/* ── AI content block ── */
+
 .aiBlock {
   margin-bottom: 12px;
+}
+
+.aiBlockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .aiDate {
@@ -369,6 +455,57 @@
   font-size: 9px;
   color: var(--text3);
 }
+
+.aiExpandBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.8;
+}
+.aiExpandBtn:hover { opacity: 1; }
+
+.aiContentCollapsed {
+  max-height: 88px;
+  overflow: hidden;
+  position: relative;
+}
+
+.aiContentFade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--bg3));
+  border-radius: 0 0 8px 8px;
+  pointer-events: none;
+}
+
+.aiExpandBtnBottom {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.aiExpandBtnBottom:hover { border-color: var(--accent); color: var(--accent); }
 
 .aiSpinner {
   width: 11px;

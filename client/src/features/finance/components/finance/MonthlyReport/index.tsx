@@ -123,7 +123,42 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const [aiLoading,     setAiLoading]     = useState(false)
   const [aiError,       setAiError]       = useState(false)
   const [aiGeneratedAt, setAiGeneratedAt] = useState<Date | null>(null)
+  const [aiTextExpanded, setAiTextExpanded] = useState(false)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loadingPhase, setLoadingPhase] = useState(0)
   const aiMonthRef = useRef('')
+  const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const LOADING_PHASES = [
+    'Збираю транзакції за місяць…',
+    'Аналізую категорії витрат…',
+    'Шукаю патерни по днях тижня…',
+    'Зіставляю з попереднім місяцем…',
+    'Формую несподіваний інсайт…',
+    'Пишу звіт…',
+  ]
+
+  useEffect(() => {
+    if (aiLoading) {
+      setLoadingProgress(0)
+      setLoadingPhase(0)
+      let progress = 0
+      loadingIntervalRef.current = setInterval(() => {
+        progress += Math.random() * 4 + 1
+        if (progress >= 93) { progress = 93; clearInterval(loadingIntervalRef.current!) }
+        setLoadingProgress(Math.min(progress, 93))
+        setLoadingPhase(Math.floor((Math.min(progress, 93) / 93) * (LOADING_PHASES.length - 1)))
+      }, 400)
+    } else {
+      if (loadingIntervalRef.current) clearInterval(loadingIntervalRef.current)
+      if (loadingProgress > 0) {
+        setLoadingProgress(100)
+        setTimeout(() => setLoadingProgress(0), 600)
+      }
+    }
+    return () => { if (loadingIntervalRef.current) clearInterval(loadingIntervalRef.current) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiLoading])
 
   const ym = toYearMonth(year, month)
 
@@ -173,6 +208,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
           const data = await res.json() as { content: string; generatedAt: string }
           setAiContent(data.content)
           setAiGeneratedAt(new Date(data.generatedAt))
+          setAiTextExpanded(true)
         } else {
           setAiError(true)
         }
@@ -278,7 +314,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
       <button
         type="button"
         className={styles.header}
-        onClick={() => setOpen(v => !v)}
+        onClick={() => { setOpen(v => { if (v) setAiTextExpanded(false); return !v }) }}
         aria-expanded={open}
       >
         <span className={styles.headerLeft}>
@@ -340,22 +376,61 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                   disabled={aiLoading}
                   title={aiContent ? 'Оновити аналіз' : 'Згенерувати AI аналіз'}
                 >
-                  {aiLoading ? <span className={styles.aiSpinner} /> : <MimirIcon size={12} />}
+                  <MimirIcon size={12} />
                   {aiContent ? 'Оновити' : 'Аналіз'}
                   {!activeProfile?.isVerified && <span className={styles.verifyBadge}>ВЕРИФІКАЦІЯ</span>}
                 </button>
               </div>
 
+              {/* AI loading block */}
+              {aiLoading && (
+                <div className={styles.installBlock}>
+                  <div className={styles.installHeader}>
+                    <span className={styles.installTitle}>MIMIR АНАЛІЗУЄ</span>
+                    <span className={styles.installPct}>{Math.round(loadingProgress)}%</span>
+                  </div>
+                  <div className={styles.installTrack}>
+                    <div className={styles.installFill} style={{ width: `${loadingProgress}%` }} />
+                  </div>
+                  <span className={styles.installPhase}>{LOADING_PHASES[loadingPhase]}</span>
+                  <div className={styles.installLog}>
+                    {LOADING_PHASES.slice(0, loadingPhase + 1).map((p, i) => (
+                      <span key={i} className={`${styles.installLogLine} ${i === loadingPhase ? styles.installLogActive : styles.installLogDone}`}>
+                        {i < loadingPhase ? '✓ ' : '› '}{p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* AI result + date */}
               {(aiContent || aiError) && (
                 <div className={styles.aiBlock}>
-                  {aiGeneratedAt && (
-                    <span className={styles.aiDate}>
-                      {aiGeneratedAt.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  )}
+                  <div className={styles.aiBlockHeader}>
+                    {aiGeneratedAt && (
+                      <span className={styles.aiDate}>
+                        {aiGeneratedAt.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                    {!aiTextExpanded && aiContent && (
+                      <button type="button" className={styles.aiExpandBtn} onClick={() => setAiTextExpanded(true)}>
+                        Читати повністю
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                    )}
+                  </div>
                   {aiError && <p className={styles.aiError}>Помилка генерації. Спробуйте ще раз.</p>}
-                  {aiContent && <div className={styles.aiContent}>{renderMarkdown(aiContent)}</div>}
+                  {aiContent && (
+                    <div className={`${styles.aiContent} ${!aiTextExpanded ? styles.aiContentCollapsed : ''}`}>
+                      {renderMarkdown(aiContent)}
+                      {!aiTextExpanded && <div className={styles.aiContentFade} />}
+                    </div>
+                  )}
+                  {!aiTextExpanded && aiContent && (
+                    <button type="button" className={styles.aiExpandBtnBottom} onClick={() => setAiTextExpanded(true)}>
+                      Розгорнути аналіз
+                    </button>
+                  )}
                 </div>
               )}
 
