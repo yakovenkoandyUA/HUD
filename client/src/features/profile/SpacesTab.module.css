@@ -289,9 +289,14 @@
 }
 .colorDot:active { transform: scale(0.9); }
 .colorDotOn {
-  border-color: var(--text);
-  transform: scale(1.15);
+  border-color: #fff;
+  transform: scale(1.18);
 }
+.colorDotDefault {
+  background: transparent;
+  border: 2px dashed var(--accent);
+}
+.colorDotDefault.colorDotOn { border-color: var(--accent); border-style: solid; }
 
 /* ── Profile sub-sections (vehicle / pet) ── */
 .profileDivider {

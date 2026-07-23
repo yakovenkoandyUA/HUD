@@ -37,8 +37,8 @@ import styles from './SpaceDetail.module.css'
 
 // '' = default (uses theme accent)
 const COLORS = [
-  '', '#7c3aed', '#2563eb', '#0ea5e9',
-  '#059669', '#d97706', '#e11d48', '#db2777',
+  '', '#7c3aed', '#2563eb', '#0ea5e9', '#059669',
+  '#d97706', '#f97316', '#e11d48', '#db2777', '#475569',
 ]
 
 // ── Context config ─────────────────────────────────────────────────────────

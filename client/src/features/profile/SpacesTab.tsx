@@ -50,9 +50,10 @@ const TRIP_STATUS = [
   { value: 'completed', label: 'Завершена'  },
 ] as const
 
+// '' = default (uses theme accent)
 const COLORS = [
-  '#9b59b6', '#3498db', '#2ecc71', '#e74c3c',
-  '#f39c12', '#1abc9c', '#e91e8c', '#607d8b',
+  '', '#7c3aed', '#2563eb', '#0ea5e9', '#059669',
+  '#d97706', '#f97316', '#e11d48', '#db2777', '#475569',
 ]
 
 /**
@@ -625,7 +626,7 @@ const SpacesTab: React.FC = () => {
 								<label className={styles.fieldLabel}>КОЛІР</label>
 								<div className={styles.colorRow}>
 									{COLORS.map(c => (
-										<button key={c} type="button" className={`${styles.colorDot} ${newColor === c ? styles.colorDotOn : ''}`} style={{ background: c }} onClick={() => setNewColor(c)} aria-label={c} />
+										<button key={c || 'default'} type="button" className={`${styles.colorDot} ${c === '' ? styles.colorDotDefault : ''} ${newColor === c ? styles.colorDotOn : ''}`} style={c ? { background: c } : undefined} onClick={() => setNewColor(c)} aria-label={c || 'За замовчуванням'} />
 									))}
 								</div>
 
@@ -841,12 +842,12 @@ const SpacesTab: React.FC = () => {
 								<div className={styles.colorRow}>
 									{COLORS.map(c => (
 										<button
-											key={c}
+											key={c || 'default'}
 											type="button"
-											className={`${styles.colorDot} ${detailSpace.color === c ? styles.colorDotOn : ''}`}
-											style={{ background: c }}
+											className={`${styles.colorDot} ${c === '' ? styles.colorDotDefault : ''} ${detailSpace.color === c ? styles.colorDotOn : ''}`}
+											style={c ? { background: c } : undefined}
 											onClick={() => updateSpace(detailSpace.id, { color: c })}
-											aria-label={c}
+											aria-label={c || 'За замовчуванням'}
 										/>
 									))}
 								</div>
