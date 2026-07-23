@@ -156,6 +156,11 @@ const VehicleMedallion: React.FC = () => {
   const ticks = [0, 45, 90, 135, 180, 225, 270, 315]
   return (
     <svg width="90" height="90" viewBox="0 0 90 90" fill="none" aria-hidden="true">
+      <defs>
+        <clipPath id="medallion-clip">
+          <circle cx="45" cy="45" r="33"/>
+        </clipPath>
+      </defs>
       {/* Outer decorative ring */}
       <circle cx="45" cy="45" r="43" stroke="currentColor" strokeWidth="0.8" opacity="0.3"/>
       {/* Tick marks */}
@@ -178,16 +183,15 @@ const VehicleMedallion: React.FC = () => {
       <path d="M79,43 L83,45 L79,47 L75,45 Z" fill="currentColor" opacity="0.4"/>
       <path d="M45,79 L47,83 L45,87 L43,83 Z" fill="currentColor" opacity="0.4"/>
       <path d="M11,43 L15,45 L11,47 L7,45 Z" fill="currentColor" opacity="0.4"/>
-      {/* Inner filled circle */}
-      <circle cx="45" cy="45" r="34" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.5" opacity="0.65"/>
-      {/* Car icon centered */}
-      <g transform="translate(27,28) scale(1.5)" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.9">
-        <path d="M2 13l3-6h10l3 6v3H2v-3z"/>
-        <path d="M6 7l1.2-2h7.6L16 7"/>
-        <path d="M2 13h18"/>
-        <circle cx="6.5" cy="16" r="1.8"/>
-        <circle cx="15.5" cy="16" r="1.8"/>
-      </g>
+      {/* Inner circle border */}
+      <circle cx="45" cy="45" r="34" fill="currentColor" fillOpacity="0.06" stroke="currentColor" strokeWidth="1.5" opacity="0.65"/>
+      {/* Car photo placeholder */}
+      <image
+        href="/scape_car.png"
+        x="12" y="12" width="66" height="66"
+        clipPath="url(#medallion-clip)"
+        preserveAspectRatio="xMidYMid meet"
+      />
     </svg>
   )
 }
