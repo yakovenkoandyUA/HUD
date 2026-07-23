@@ -22,6 +22,10 @@ import VehicleSpaceView from './components/VehicleSpaceView'
 import HomeSpaceView from './components/HomeSpaceView'
 import PetSpaceView from './components/PetSpaceView'
 import TripSpaceView from './components/TripSpaceView'
+import AddTicketSheet from './components/AddTicketSheet'
+import AddAccommodationSheet from './components/AddAccommodationSheet'
+import AddPlaceSheet from './components/AddPlaceSheet'
+import AddSpaceExpenseSheet from './components/AddSpaceExpenseSheet'
 import SpaceChatSheet from './components/SpaceChatSheet'
 import SpaceTaskItem from './components/SpaceTaskItem'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
@@ -237,8 +241,12 @@ const SpaceDetailScreen: React.FC = () => {
   const [loading, setLoading]         = useState(true)
 
   // ── Modals / Inputs ──
-  const [addMemOpen, setAddMemOpen]       = useState(false)
-  const [addPlanOpen, setAddPlanOpen]     = useState(false)
+  const [addMemOpen, setAddMemOpen]             = useState(false)
+  const [addPlanOpen, setAddPlanOpen]           = useState(false)
+  const [addTicketOpen, setAddTicketOpen]       = useState(false)
+  const [addAccomOpen, setAddAccomOpen]         = useState(false)
+  const [addTripPlaceOpen, setAddTripPlaceOpen] = useState(false)
+  const [addExpenseOpen, setAddExpenseOpen]     = useState(false)
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [noteText, setNoteText]           = useState('')
   const [showTaskInput, setShowTaskInput] = useState(false)
@@ -823,31 +831,32 @@ const SpaceDetailScreen: React.FC = () => {
           color={space.color}
           profile={space.tripProfile}
           onProfileUpdate={p => setTripProfile(space.id, p)}
+          spaceTxs={spaceTxs ?? []}
         />
       )}
 
-      {/* ── Quick actions (generic spaces only) ── */}
+      {/* ── Quick actions (trip space) ── */}
       {space?.type === 'trip' && (
       <div className={styles.actions} style={colorVar}>
         {/* Row 1 */}
-        <button type="button" className={`${styles.actionBtn} ${styles.actionBtnSoon}`} style={colorVar} disabled>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddTicketOpen(true)}>
           <span className={styles.actionBtnIcon}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
           </span>
           Квиток
-          <span className={styles.soonTag}>скоро</span>
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
-        <button type="button" className={`${styles.actionBtn} ${styles.actionBtnSoon}`} style={colorVar} disabled>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddAccomOpen(true)}>
           <span className={styles.actionBtnIcon}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </span>
           Проживання
-          <span className={styles.soonTag}>скоро</span>
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
         {/* Row 2 */}
-        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddPlanOpen(true)}>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddTripPlaceOpen(true)}>
           <span className={styles.actionBtnIcon}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
           </span>
           Місце
           <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
@@ -860,12 +869,12 @@ const SpaceDetailScreen: React.FC = () => {
           <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
         {/* Row 3 */}
-        <button type="button" className={`${styles.actionBtn} ${styles.actionBtnSoon}`} style={colorVar} disabled>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddExpenseOpen(true)}>
           <span className={styles.actionBtnIcon}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
           </span>
           Витрата
-          <span className={styles.soonTag}>скоро</span>
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
           <span className={styles.actionBtnIcon}>
@@ -880,6 +889,37 @@ const SpaceDetailScreen: React.FC = () => {
           Запитати Міміра
         </button>
       </div>
+      )}
+
+      {/* ── Trip sheets ── */}
+      {space?.type === 'trip' && spaceId && (
+        <>
+          <AddTicketSheet
+            isOpen={addTicketOpen}
+            spaceId={spaceId}
+            color={space.color}
+            onClose={() => setAddTicketOpen(false)}
+          />
+          <AddAccommodationSheet
+            isOpen={addAccomOpen}
+            spaceId={spaceId}
+            color={space.color}
+            onClose={() => setAddAccomOpen(false)}
+          />
+          <AddPlaceSheet
+            isOpen={addTripPlaceOpen}
+            spaceId={spaceId}
+            color={space.color}
+            onClose={() => setAddTripPlaceOpen(false)}
+          />
+          <AddSpaceExpenseSheet
+            isOpen={addExpenseOpen}
+            spaceId={spaceId}
+            color={space.color}
+            onClose={() => setAddExpenseOpen(false)}
+            onExpenseAdded={tx => setSpaceTxs(prev => [tx, ...(prev ?? [])])}
+          />
+        </>
       )}
 
       {space?.type !== 'vehicle' && space?.type !== 'home' && space?.type !== 'pet' && space?.type !== 'trip' && (

@@ -19,6 +19,9 @@ import {
   getPetEvents, createPetEvent, updatePetEvent, deletePetEvent,
 } from '../controllers/petController'
 import { getTripProfile, updateTripProfile } from '../controllers/tripController'
+import { getTickets, createTicket, updateTicket, deleteTicket } from '../controllers/ticketController'
+import { getAccommodations, createAccommodation, updateAccommodation, deleteAccommodation } from '../controllers/accommodationController'
+import { getTripPlaces, createTripPlace, updateTripPlace, deleteTripPlace } from '../controllers/tripPlaceController'
 
 const router = Router()
 router.use(requireAuth)
@@ -59,5 +62,17 @@ router.delete('/:id/pet/events/:eventId',              deletePetEvent)
 // trip
 router.get('/:id/trip/profile',                        getTripProfile)
 router.patch('/:id/trip/profile',                      updateTripProfile)
+router.get('/:id/tickets',                             getTickets)
+router.post('/:id/tickets',                            createTicket)
+router.patch('/:id/tickets/:ticketId',                 updateTicket)
+router.delete('/:id/tickets/:ticketId',                deleteTicket)
+router.get('/:id/accommodations',                      getAccommodations)
+router.post('/:id/accommodations',                     createAccommodation)
+router.patch('/:id/accommodations/:itemId',            updateAccommodation)
+router.delete('/:id/accommodations/:itemId',           deleteAccommodation)
+router.get('/:id/places',                              getTripPlaces)
+router.post('/:id/places',                             createTripPlace)
+router.patch('/:id/places/:placeId',                   updateTripPlace)
+router.delete('/:id/places/:placeId',                  deleteTripPlace)
 
 export default router

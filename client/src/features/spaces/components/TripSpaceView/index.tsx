@@ -1,6 +1,12 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTripStore } from '../../store/tripStore'
+import { useTicketStore } from '../../store/ticketStore'
+import { useAccommodationStore } from '../../store/accommodationStore'
+import { useTripPlaceStore } from '../../store/tripPlaceStore'
 import type { TripProfile } from '@/features/memories/store/spacesStore'
+import type { Ticket } from '../../store/ticketStore'
+import type { Accommodation } from '../../store/accommodationStore'
+import type { TripPlace } from '../../store/tripPlaceStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
@@ -8,11 +14,22 @@ import styles from './TripSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+interface SpaceTx {
+  _id:      string
+  type:     'income' | 'expense'
+  amount:   number
+  desc:     string
+  title?:   string
+  category?: string
+  date:     string
+}
+
 interface Props {
   spaceId:         string
   color:           string
   profile:         TripProfile | null
   onProfileUpdate: (p: TripProfile) => void
+  spaceTxs:        SpaceTx[]
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -29,6 +46,15 @@ const STATUS_COLORS: Record<string, string> = {
   booked:    '#27ae60',
   ongoing:   '#e67e22',
   completed: '#95a5a6',
+}
+
+const TRANSPORT_LABELS: Record<string, string> = {
+  plane: 'Літак', train: 'Поїзд', bus: 'Автобус', ferry: 'Пором', car: 'Авто',
+}
+
+const PLACE_LABELS: Record<string, string> = {
+  museum: 'Музей', restaurant: 'Ресторан', cafe: 'Кафе',
+  park: 'Парк', shop: 'Магазин', viewpoint: 'Оглядовий', hotel: 'Готель', other: 'Інше',
 }
 
 const MONTHS_SHORT = ['січ','лют','бер','квіт','трав','черв','лип','серп','вер','жов','лист','груд']
@@ -51,6 +77,10 @@ function calcDuration(start: string | null, end: string | null): string {
   if (days === 1) return '1 день'
   if (days >= 2 && days <= 4) return `${days} дні`
   return `${days} днів`
+}
+
+function fmtAmount(n: number): string {
+  return n.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
 // ── Edit sheet ─────────────────────────────────────────────────────────────
@@ -82,7 +112,7 @@ const TripEditSheet: React.FC<EditSheetProps> = ({ isOpen, profile, onClose, onS
 
   useSwipeToDismiss(onClose, { enabled: isOpen, bodyRef, overlayRef, sheetRef })
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setDestination(profile?.destination ?? '')
       setOrigin(profile?.origin ?? '')
@@ -139,21 +169,11 @@ const TripEditSheet: React.FC<EditSheetProps> = ({ isOpen, profile, onClose, onS
           <div className={styles.fieldRow}>
             <div className={styles.field}>
               <label className={styles.fieldLabel}>ЗВІДКИ</label>
-              <input
-                className={styles.fieldInput}
-                value={origin}
-                onChange={e => setOrigin(e.target.value)}
-                placeholder="Київ, Токіо…"
-              />
+              <input className={styles.fieldInput} value={origin} onChange={e => setOrigin(e.target.value)} placeholder="Київ, Токіо…" />
             </div>
             <div className={styles.field}>
               <label className={styles.fieldLabel}>КУДИ</label>
-              <input
-                className={styles.fieldInput}
-                value={destination}
-                onChange={e => setDestination(e.target.value)}
-                placeholder="Париж, Берлін…"
-              />
+              <input className={styles.fieldInput} value={destination} onChange={e => setDestination(e.target.value)} placeholder="Париж, Берлін…" />
             </div>
           </div>
 
@@ -204,13 +224,7 @@ const TripEditSheet: React.FC<EditSheetProps> = ({ isOpen, profile, onClose, onS
         </div>
 
         <div className={styles.sheetFooter}>
-          <button
-            type="button"
-            className={styles.saveBtn}
-            style={{ background: color }}
-            onClick={handleSave}
-            disabled={busy}
-          >
+          <button type="button" className={styles.saveBtn} style={{ background: color }} onClick={handleSave} disabled={busy}>
             {busy ? 'Збереження…' : 'Зберегти'}
           </button>
         </div>
@@ -219,25 +233,114 @@ const TripEditSheet: React.FC<EditSheetProps> = ({ isOpen, profile, onClose, onS
   )
 }
 
+// ── Ticket card ────────────────────────────────────────────────────────────
+
+const TicketCard: React.FC<{ ticket: Ticket; color: string; onDelete: (id: string) => void }> = ({ ticket, color, onDelete }) => {
+  const isNext = ticket.status !== 'used' && ticket.status !== 'cancelled'
+  return (
+    <div className={`${styles.ticketCard} ${isNext ? styles.ticketCardActive : ''}`} style={{ '--space-color': color } as React.CSSProperties}>
+      <div className={styles.ticketLeft}>
+        <span className={styles.ticketType}>{TRANSPORT_LABELS[ticket.transport] ?? ticket.transport}</span>
+        <div className={styles.ticketRoute}>
+          {ticket.from && <span>{ticket.from}</span>}
+          {ticket.from && ticket.to && (
+            <svg width="14" height="8" viewBox="0 0 22 10" fill="none" aria-hidden="true">
+              <path d="M1 5h18M15 1l5 4-5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          {ticket.to && <span>{ticket.to}</span>}
+        </div>
+        <div className={styles.ticketMeta}>
+          <span className={styles.ticketDate}>{fmtDate(ticket.date)}</span>
+          {ticket.departureTime && <span className={styles.ticketTime}>{ticket.departureTime}{ticket.arrivalTime ? ` → ${ticket.arrivalTime}` : ''}</span>}
+          {ticket.flightNumber && <span className={styles.ticketFlight}>{ticket.flightNumber}</span>}
+          {ticket.seat && <span className={styles.ticketSeat}>сид. {ticket.seat}</span>}
+          {ticket.bookingCode && <span className={styles.ticketCode}>{ticket.bookingCode}</span>}
+        </div>
+      </div>
+      <button type="button" className={styles.deleteBtn} onClick={() => onDelete(ticket._id)} aria-label="Видалити квиток">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
+  )
+}
+
+// ── Accommodation card ─────────────────────────────────────────────────────
+
+const AccomCard: React.FC<{ item: Accommodation; color: string; onDelete: (id: string) => void }> = ({ item, color, onDelete }) => (
+  <div className={styles.accomCard} style={{ '--space-color': color } as React.CSSProperties}>
+    <div className={styles.accomLeft}>
+      <span className={styles.accomName}>{item.name}</span>
+      {item.address && <span className={styles.accomAddress}>{item.address}</span>}
+      <div className={styles.accomMeta}>
+        {item.checkIn && <span className={styles.accomDate}>{fmtDate(item.checkIn)}{item.checkOut ? ` — ${fmtDate(item.checkOut)}` : ''}</span>}
+        {item.price != null && item.price > 0 && (
+          <span className={styles.accomPrice}>
+            {item.currency === 'UAH' ? '₴' : item.currency === 'USD' ? '$' : '€'}{fmtAmount(item.price)}
+          </span>
+        )}
+        {item.bookingCode && <span className={styles.accomCode}>{item.bookingCode}</span>}
+      </div>
+    </div>
+    <button type="button" className={styles.deleteBtn} onClick={() => onDelete(item._id)} aria-label="Видалити проживання">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button>
+  </div>
+)
+
+// ── Place chip ─────────────────────────────────────────────────────────────
+
+const PlaceChip: React.FC<{ place: TripPlace; color: string; onDelete: (id: string) => void }> = ({ place, color, onDelete }) => (
+  <div className={styles.placeChip} style={{ '--space-color': color } as React.CSSProperties}>
+    <div className={styles.placeLeft}>
+      <span className={styles.placeCategory}>{PLACE_LABELS[place.category] ?? place.category}</span>
+      <span className={styles.placeName}>{place.name}</span>
+      {place.address && <span className={styles.placeAddress}>{place.address}</span>}
+    </div>
+    <button type="button" className={styles.deleteBtn} onClick={() => onDelete(place._id)} aria-label="Видалити місце">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button>
+  </div>
+)
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 /**
  * TripSpaceView
  * -------------
- * Типізований вид для просторів типу 'trip'. Показує travel summary:
- * маршрут origin→destination, дати, тривалість, статус.
+ * Типізований вид для просторів типу 'trip'.
+ * Показує: route header, квитки, проживання, місця, витрати.
  *
  * @prop spaceId         — ID простору
  * @prop color           — колір простору для акцентів
- * @prop profile         — поточний tripProfile (з Space)
+ * @prop profile         — поточний tripProfile
  * @prop onProfileUpdate — callback після збереження профілю
+ * @prop spaceTxs        — транзакції простору (з SpaceDetail)
  */
-const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate }) => {
+const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate, spaceTxs }) => {
   const showToast = useUiStore(s => s.showToast)
   const { updateProfile } = useTripStore()
+  const { tickets, load: loadTickets, remove: removeTicket }           = useTicketStore()
+  const { items: accoms, load: loadAccoms, remove: removeAccom }       = useAccommodationStore()
+  const { places, load: loadPlaces, remove: removePlace }              = useTripPlaceStore()
   const [editOpen, setEditOpen] = useState(false)
 
-  const handleSave = async (data: Partial<TripProfile>) => {
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      await Promise.all([loadTickets(spaceId), loadAccoms(spaceId), loadPlaces(spaceId)])
+    }
+    load()
+    return () => { cancelled = true; void cancelled }
+  }, [spaceId, loadTickets, loadAccoms, loadPlaces])
+
+  const myTickets = tickets[spaceId] ?? []
+  const myAccoms  = accoms[spaceId]  ?? []
+  const myPlaces  = places[spaceId]  ?? []
+  const expenses  = spaceTxs.filter(t => t.type === 'expense')
+  const totalExp  = expenses.reduce((s, t) => s + t.amount, 0)
+
+  const handleSaveProfile = async (data: Partial<TripProfile>) => {
     try {
       const updated = await updateProfile(spaceId, data)
       onProfileUpdate(updated)
@@ -248,15 +351,25 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
     }
   }
 
+  const handleDeleteTicket = async (id: string) => {
+    try { await removeTicket(spaceId, id) } catch { showToast('Помилка видалення', 'error') }
+  }
+  const handleDeleteAccom = async (id: string) => {
+    try { await removeAccom(spaceId, id) } catch { showToast('Помилка видалення', 'error') }
+  }
+  const handleDeletePlace = async (id: string) => {
+    try { await removePlace(spaceId, id) } catch { showToast('Помилка видалення', 'error') }
+  }
+
   const duration    = calcDuration(profile?.startDate ?? null, profile?.endDate ?? null)
   const statusColor = profile?.status ? (STATUS_COLORS[profile.status] ?? color) : color
   const colorVar    = { '--space-color': color } as React.CSSProperties
 
   return (
     <div className={styles.root} style={colorVar}>
-      <div className={styles.tripCard}>
 
-        {/* ── Route line ── */}
+      {/* ── Route card ── */}
+      <div className={styles.tripCard}>
         <div className={styles.routeRow}>
           {profile?.origin ? (
             <>
@@ -271,7 +384,6 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
           </span>
         </div>
 
-        {/* ── Dates + duration ── */}
         {profile?.startDate && (
           <div className={styles.datesRow}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -285,13 +397,9 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
           </div>
         )}
 
-        {/* ── Status + travelers + edit ── */}
         <div className={styles.metaRow}>
           {profile?.status && (
-            <span
-              className={styles.statusBadge}
-              style={{ background: statusColor + '22', color: statusColor, borderColor: statusColor + '44' }}
-            >
+            <span className={styles.statusBadge} style={{ background: statusColor + '22', color: statusColor, borderColor: statusColor + '44' }}>
               {STATUS_LABELS[profile.status]}
             </span>
           )}
@@ -304,12 +412,7 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
               {profile.travelers}
             </span>
           )}
-          <button
-            type="button"
-            className={styles.editBtn}
-            onClick={() => setEditOpen(true)}
-            aria-label="Редагувати поїздку"
-          >
+          <button type="button" className={styles.editBtn} onClick={() => setEditOpen(true)} aria-label="Редагувати поїздку">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
@@ -318,11 +421,68 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
         </div>
       </div>
 
+      {/* ── Tickets ── */}
+      {myTickets.length > 0 && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>КВИТКИ</h2>
+          <div className={styles.ticketList}>
+            {myTickets.map(t => (
+              <TicketCard key={t._id} ticket={t} color={color} onDelete={handleDeleteTicket} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Accommodations ── */}
+      {myAccoms.length > 0 && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>ПРОЖИВАННЯ</h2>
+          <div className={styles.accomList}>
+            {myAccoms.map(a => (
+              <AccomCard key={a._id} item={a} color={color} onDelete={handleDeleteAccom} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Places ── */}
+      {myPlaces.length > 0 && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>МІСЦЯ</h2>
+          <div className={styles.placeList}>
+            {myPlaces.map(p => (
+              <PlaceChip key={p._id} place={p} color={color} onDelete={handleDeletePlace} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Expenses (Phase 3) ── */}
+      {expenses.length > 0 && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            ВИТРАТИ
+            <span className={styles.expenseTotal}>₴{fmtAmount(totalExp)}</span>
+          </h2>
+          <div className={styles.expenseList}>
+            {expenses.map(t => (
+              <div key={t._id} className={styles.expenseRow}>
+                <div className={styles.expenseLeft}>
+                  <span className={styles.expenseTitle}>{t.title || t.desc || '—'}</span>
+                  {t.category && <span className={styles.expenseCat}>{t.category}</span>}
+                </div>
+                <span className={styles.expenseAmount}>−₴{fmtAmount(t.amount)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <TripEditSheet
         isOpen={editOpen}
         profile={profile}
         onClose={() => setEditOpen(false)}
-        onSave={handleSave}
+        onSave={handleSaveProfile}
         color={color}
       />
     </div>

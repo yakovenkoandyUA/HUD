@@ -283,3 +283,248 @@
   color: var(--space-color);
   background: color-mix(in srgb, var(--space-color) 10%, var(--bg2));
 }
+
+/* ── Sections ── */
+.section {
+  padding: 14px 16px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sectionTitle {
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Ticket cards ── */
+.ticketList { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+
+.ticketCard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.15s;
+}
+.ticketCardActive {
+  border-color: color-mix(in srgb, var(--space-color) 35%, var(--border));
+}
+
+.ticketLeft { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+
+.ticketType {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--space-color);
+  text-transform: uppercase;
+}
+
+.ticketRoute {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.ticketRoute svg { color: var(--text3); flex-shrink: 0; }
+
+.ticketMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.ticketDate {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text2);
+}
+
+.ticketTime {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text2);
+}
+
+.ticketFlight, .ticketSeat {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text3);
+  padding: 2px 6px;
+  background: var(--surface2);
+  border-radius: 4px;
+}
+
+.ticketCode {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--space-color);
+  letter-spacing: 0.06em;
+}
+
+/* ── Accommodation cards ── */
+.accomList { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+
+.accomCard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.accomLeft { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+
+.accomName {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.accomAddress {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  color: var(--text3);
+}
+
+.accomMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 3px; }
+
+.accomDate { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text2); }
+
+.accomPrice { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; color: var(--space-color); }
+
+.accomCode {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text3);
+  padding: 2px 6px;
+  background: var(--surface2);
+  border-radius: 4px;
+}
+
+/* ── Places ── */
+.placeList { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; }
+
+.placeChip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.placeLeft { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.placeCategory {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--space-color);
+  text-transform: uppercase;
+}
+
+.placeName {
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.placeAddress {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--text3);
+}
+
+/* ── Expenses ── */
+.expenseTotal {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--negative);
+  font-weight: normal;
+  letter-spacing: 0;
+}
+
+.expenseList { display: flex; flex-direction: column; gap: 1px; padding-bottom: 8px; }
+
+.expenseRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+.expenseRow:last-child { border-bottom: none; }
+
+.expenseLeft { flex: 1; min-width: 0; }
+
+.expenseTitle {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expenseCat {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  color: var(--text3);
+}
+
+.expenseAmount {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--negative);
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+/* ── Delete button (shared) ── */
+.deleteBtn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.deleteBtn:active { color: var(--negative); }
