@@ -228,6 +228,15 @@
   display: flex; align-items: center; gap: 16px;
 }
 
+.waterBlockInline {
+  display: flex; align-items: center; gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+
+.profileWatering { margin-top: auto; }
+
 .waterInfo {
   display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0;
 }

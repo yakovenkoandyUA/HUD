@@ -133,9 +133,10 @@ function WaterDrop({ pct, status }: WaterDropProps) {
 interface WateringBlockProps {
   profile:       PlantProfile | null
   onOpenProfile: () => void
+  inline?:       boolean
 }
 
-function WateringBlock({ profile, onOpenProfile }: WateringBlockProps) {
+function WateringBlock({ profile, onOpenProfile, inline }: WateringBlockProps) {
   const status   = wateringStatus(profile)
   const days     = daysSince(profile?.lastWateredAt ?? null)
   const interval = profile?.wateringIntervalDays ?? null
@@ -147,13 +148,15 @@ function WateringBlock({ profile, onOpenProfile }: WateringBlockProps) {
 
   const daysLeft = (interval != null && days != null) ? Math.max(0, interval - days) : null
 
+  const blockClass = inline ? styles.waterBlockInline : styles.waterBlock
+
   if (status === 'unknown') {
     return (
-      <div className={styles.waterBlock}>
+      <div className={blockClass}>
         <WaterDrop pct={0} status="unknown" />
         <div className={styles.waterInfo}>
           <span className={styles.waterLabel}>Полив</span>
-          <button type="button" className={styles.waterSetupBtn} onClick={onOpenProfile}>
+          <button type="button" className={styles.waterSetupBtn} onClick={e => { e.stopPropagation(); onOpenProfile() }}>
             Налаштувати інтервал →
           </button>
         </div>
@@ -172,7 +175,7 @@ function WateringBlock({ profile, onOpenProfile }: WateringBlockProps) {
     : `через ${daysLeft}д`
 
   return (
-    <div className={styles.waterBlock}>
+    <div className={blockClass}>
       <WaterDrop pct={pct} status={status} />
       <div className={styles.waterInfo}>
         <span className={`${styles.waterLabel} ${status === 'overdue' ? styles.waterLabelOverdue : status === 'soon' ? styles.waterLabelSoon : ''}`}>
@@ -776,7 +779,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
   return (
     <div className={styles.root} style={colorVar}>
 
-      {/* ── Profile card ── */}
+      {/* ── Profile + watering unified card ── */}
       <div className={styles.profileCard} onClick={() => setProfileOpen(true)}>
         {profile?.photoUrl ? (
           <img src={profile.photoUrl} alt="" className={styles.profilePhoto} />
@@ -787,14 +790,9 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
             </svg>
           </div>
         )}
-        <div className={styles.profileOverlay} />
         <div className={styles.profileInfo}>
-          <div className={styles.profileName}>
-            {profile?.commonName || 'Моя рослина'}
-          </div>
-          {profile?.species && (
-            <div className={styles.profileSpecies}>{profile.species}</div>
-          )}
+          <div className={styles.profileName}>{profile?.commonName || 'Моя рослина'}</div>
+          {profile?.species && <div className={styles.profileSpecies}>{profile.species}</div>}
           {!profile?.commonName && !profile?.species ? (
             <button type="button" className={styles.profileHint} onClick={e => { e.stopPropagation(); setProfileOpen(true) }}>
               Додай назву, фото та інтервал поливу →
@@ -807,17 +805,16 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
                   {profile.location}
                 </span>
               )}
-              {profile?.sunlight && (
-                <span className={styles.metaItem}>{SUNLIGHT_LABELS[profile.sunlight]}</span>
-              )}
-              {profile?.acquiredDate && (
-                <span className={styles.metaItem}>з {fmtDate(profile.acquiredDate)}</span>
-              )}
-              {profile?.toxicToPets === true && (
-                <span className={styles.toxicBadge}>Токсична</span>
-              )}
+              {profile?.sunlight && <span className={styles.metaItem}>{SUNLIGHT_LABELS[profile.sunlight]}</span>}
+              {profile?.acquiredDate && <span className={styles.metaItem}>з {fmtDate(profile.acquiredDate)}</span>}
+              {profile?.toxicToPets === true && <span className={styles.toxicBadge}>Токсична</span>}
             </div>
           )}
+
+          {/* Watering inline */}
+          <div className={styles.profileWatering}>
+            <WateringBlock profile={profile} onOpenProfile={() => setProfileOpen(true)} inline />
+          </div>
         </div>
         <button type="button" className={styles.profileEditBtn} onClick={e => { e.stopPropagation(); setProfileOpen(true) }} aria-label="Редагувати">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -826,9 +823,6 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
           </svg>
         </button>
       </div>
-
-      {/* ── Watering block ── */}
-      <WateringBlock profile={profile} onOpenProfile={() => setProfileOpen(true)} />
 
       {/* ── Health check ── */}
       <HealthSection
