@@ -90,8 +90,25 @@
   background: color-mix(in srgb, var(--space-color) 10%, var(--bg2));
 }
 
-.photoRow { display: flex; align-items: center; gap: 10px; }
-.photoPreview { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0; }
+.photoFormRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: -16px -16px 0;
+  padding: 14px 16px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.photoThumbWrap { width: 90px; flex-shrink: 0; align-self: stretch; display: flex; }
+.photoThumbWrap > * { flex: 1; }
+
+.photoFields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
 
 .identifyBtn {
   display: flex; align-items: center; gap: 7px;

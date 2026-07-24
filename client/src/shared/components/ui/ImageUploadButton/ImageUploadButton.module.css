@@ -21,9 +21,11 @@
 
 /* ── Variants ──────────────────────────────────────────────────── */
 
-.square  { width: 100%; aspect-ratio: 1; }
-.wide    { width: 100%; aspect-ratio: 16 / 9; }
-.compact { width: 100%; height: 110px; }
+.square   { width: 100%; aspect-ratio: 1; }
+.wide     { width: 100%; aspect-ratio: 16 / 9; }
+.compact  { width: 100%; height: 110px; }
+.portrait { width: 100%; aspect-ratio: 3 / 4; }
+.fill     { width: 100%; height: 100%; }
 
 /* ── Image ─────────────────────────────────────────────────────── */
 
@@ -104,6 +106,7 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text3);
+  text-align: center;
 }
 
 /* ── Uploading overlay ─────────────────────────────────────────── */

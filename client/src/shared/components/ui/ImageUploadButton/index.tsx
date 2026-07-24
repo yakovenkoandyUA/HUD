@@ -23,7 +23,7 @@ interface ImageUploadButtonProps {
   folder: string
   onUpload: (url: string) => void
   placeholder?: string
-  variant?: 'square' | 'wide' | 'compact'
+  variant?: 'square' | 'wide' | 'compact' | 'portrait' | 'fill'
   objectPosition?: string
 }
 

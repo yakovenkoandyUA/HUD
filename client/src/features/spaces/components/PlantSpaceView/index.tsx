@@ -463,35 +463,33 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
         </div>
 
         <div ref={bodyRef} className={styles.sheetBody}>
-          {/* Photo + identify */}
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>ФОТО</label>
-            <div className={styles.photoRow}>
-              {photoUrl && <img src={photoUrl} alt="" className={styles.photoPreview} />}
-              <ImageUploadButton onUpload={url => setPhotoUrl(url)} currentUrl={photoUrl || undefined} folder="spaces" variant="wide" />
+          {/* Photo + name fields side-by-side */}
+          <div className={styles.photoFormRow}>
+            <div className={styles.photoThumbWrap}>
+              <ImageUploadButton onUpload={url => setPhotoUrl(url)} currentUrl={photoUrl || undefined} folder="spaces" variant="fill" />
             </div>
-            <button
-              type="button"
-              className={styles.identifyBtn}
-              style={{ borderColor: color + '55', color }}
-              onClick={() => onIdentify(photoUrl)}
-              disabled={identifying || !photoUrl}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-              </svg>
-              {identifying ? 'Визначення…' : 'Визначити вид'}
-            </button>
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>НАЗВА</label>
-            <input className={styles.fieldInput} value={commonName} onChange={e => setCommonName(e.target.value)} placeholder="Монстера, Фікус…" />
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.fieldLabel}>ВИД (НАУКОВА НАЗВА)</label>
-            <input className={styles.fieldInput} value={species} onChange={e => setSpecies(e.target.value)} placeholder="Monstera deliciosa…" />
+            <div className={styles.photoFields}>
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>НАЗВА</label>
+                <input className={styles.fieldInput} value={commonName} onChange={e => setCommonName(e.target.value)} placeholder="Монстера, Фікус…" />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>ВИД (НАУКОВА НАЗВА)</label>
+                <input className={styles.fieldInput} value={species} onChange={e => setSpecies(e.target.value)} placeholder="Monstera deliciosa…" />
+              </div>
+              <button
+                type="button"
+                className={styles.identifyBtn}
+                style={{ borderColor: color + '55', color }}
+                onClick={() => onIdentify(photoUrl)}
+                disabled={identifying || !photoUrl}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                {identifying ? 'Визначення…' : 'Визначити вид'}
+              </button>
+            </div>
           </div>
 
           <div className={styles.field}>
@@ -668,26 +666,44 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
             }
             const plant = searchData.data?.[0]
             if (plant) {
-              // Map watering frequency → days
+              const isUsable = (val: string | undefined) =>
+                !!val &&
+                val.length > 2 &&
+                !val.toLowerCase().includes('upgrade') &&
+                !val.includes('perenual.com') &&
+                !val.toLowerCase().includes('unknown')
+
+              // Map watering frequency → days + Ukrainian label
               const wateringMap: Record<string, number> = {
                 'Frequent': 3, 'Average': 7, 'Minimum': 14, 'None': 30,
               }
-              wateringIntervalDays = wateringMap[plant.watering] ?? wateringIntervalDays
+              const wateringLabel: Record<string, string> = {
+                'Frequent': 'Часто', 'Average': 'Помірно', 'Minimum': 'Рідко', 'None': 'Дуже рідко',
+              }
+              if (isUsable(plant.watering) && wateringMap[plant.watering] !== undefined) {
+                wateringIntervalDays = wateringMap[plant.watering]
+              }
 
-              // Map sunlight
+              // Map sunlight → enum + Ukrainian label
               const sunStr = (plant.sunlight?.[0] ?? '').toLowerCase()
-              if (sunStr.includes('full sun')) sunlight = 'high'
-              else if (sunStr.includes('part') || sunStr.includes('filtered')) sunlight = 'medium'
-              else if (sunStr.includes('shade') || sunStr.includes('low')) sunlight = 'low'
+              let sunlightLabel = ''
+              if (isUsable(plant.sunlight?.[0])) {
+                if (sunStr.includes('full sun'))                              { sunlight = 'high';   sunlightLabel = 'Пряме сонце' }
+                else if (sunStr.includes('part') || sunStr.includes('filtered')) { sunlight = 'medium'; sunlightLabel = 'Розсіяне світло' }
+                else if (sunStr.includes('shade') || sunStr.includes('low')) { sunlight = 'low';    sunlightLabel = 'Тінь / мало світла' }
+              }
 
               // Toxicity
               toxicToPets = plant.poisonous_to_pets === 1
 
-              // Care notes summary
+              // Care notes — only write values that actually mapped
               const parts: string[] = []
-              if (plant.watering)   parts.push(`Полив: ${plant.watering}`)
-              if (plant.care_level) parts.push(`Догляд: ${plant.care_level}`)
-              if (plant.sunlight?.[0]) parts.push(`Світло: ${plant.sunlight[0]}`)
+              if (wateringIntervalDays !== null && wateringLabel[plant.watering])
+                parts.push(`Полив: ${wateringLabel[plant.watering]}`)
+              if (sunlightLabel)
+                parts.push(`Світло: ${sunlightLabel}`)
+              if (isUsable(plant.care_level) && plant.care_level !== 'Unknown')
+                parts.push(`Догляд: ${plant.care_level}`)
               if (parts.length) careNotes = parts.join(' · ')
             }
           }
@@ -696,6 +712,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
 
       const updated = await updateProfile(spaceId, {
         species, commonName, careNotes, sunlight, wateringIntervalDays, toxicToPets,
+        photoUrl: currentPhotoUrl,
       })
       onProfileUpdate(updated)
       showToast(`Визначено: ${species}`, 'success')
