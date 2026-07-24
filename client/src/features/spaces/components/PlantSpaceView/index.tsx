@@ -693,14 +693,16 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
         ? !(toxicStr.includes('non-toxic') || toxicStr.includes('not toxic'))
         : null
 
-      // Care notes — ґрунт + світло, translated to Ukrainian
-      const [soilUk, lightUk] = await Promise.all([
+      // Care notes — полив + ґрунт + світло, translated to Ukrainian
+      const [wateringUk, soilUk, lightUk] = await Promise.all([
+        d.best_watering        ? translateToUk(d.best_watering)        : Promise.resolve(''),
         d.best_soil_type       ? translateToUk(d.best_soil_type)       : Promise.resolve(''),
         d.best_light_condition ? translateToUk(d.best_light_condition) : Promise.resolve(''),
       ])
       const parts: string[] = []
-      if (soilUk)  parts.push(`Ґрунт: ${soilUk}`)
-      if (lightUk) parts.push(`Світло: ${lightUk}`)
+      if (wateringUk) parts.push(`Полив: ${wateringUk}`)
+      if (soilUk)     parts.push(`Ґрунт: ${soilUk}`)
+      if (lightUk)    parts.push(`Світло: ${lightUk}`)
       const careNotes = parts.join('\n')
 
       const updated = await updateProfile(spaceId, {
