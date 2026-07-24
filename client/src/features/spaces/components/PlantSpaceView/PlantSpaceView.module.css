@@ -208,28 +208,34 @@
 }
 
 /* ── Quick actions ── */
-.actions {
-  display: flex;
-  gap: 6px;
-  padding: 10px 16px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.actionsSection {
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
-  scrollbar-width: none;
+  display: flex; flex-direction: column; gap: 8px;
 }
-.actions::-webkit-scrollbar { display: none; }
+
+.actionsGrid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
 
 .actionBtn {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid var(--border); border-radius: 20px;
-  background: var(--surface); color: var(--text2);
-  font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600;
-  white-space: nowrap; cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-  -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+  color: var(--text); font-family: var(--font-ui); font-size: 0.8rem;
+  font-weight: 500; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent; text-align: left;
 }
-.actionBtn:active { border-color: var(--space-color); color: var(--space-color); }
+.actionBtnIcon {
+  color: var(--space-color); display: flex; align-items: center; flex-shrink: 0;
+}
+.actionBtnPlus {
+  margin-left: auto; flex-shrink: 0; color: var(--text3);
+}
+.actionBtn:active {
+  border-color: color-mix(in srgb, var(--space-color) 50%, var(--border));
+  background: color-mix(in srgb, var(--space-color) 5%, var(--surface));
+}
 
 /* ── Section ── */
 .section { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
