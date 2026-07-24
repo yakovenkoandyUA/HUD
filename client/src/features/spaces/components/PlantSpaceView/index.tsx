@@ -622,8 +622,21 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     }
   }
 
-  const handleDelete = async (eventId: string) => {
-    await deleteEvent(spaceId, eventId)
+  const handleDelete = async (event: { _id: string; type: PlantEventType }) => {
+    await deleteEvent(spaceId, event._id)
+
+    if (event.type === 'watering' || event.type === 'fertilizing') {
+      const remaining = (eventsBySpace[spaceId] ?? [])
+        .filter(e => e._id !== event._id && e.type === event.type)
+        .sort((a, b) => b.date.localeCompare(a.date))
+      const lastDate = remaining[0]?.date ?? null
+      const patch = event.type === 'watering'
+        ? { lastWateredAt: lastDate }
+        : { lastFertilizedAt: lastDate }
+      const updated = await updateProfile(spaceId, patch)
+      onProfileUpdate(updated)
+    }
+
     showToast('Видалено', 'success')
   }
 
@@ -904,7 +917,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
         ) : (
           <div className={styles.eventList}>
             {events.map(event => (
-              <EventRow key={event._id} event={event} color={color} onDelete={() => handleDelete(event._id)} />
+              <EventRow key={event._id} event={event} color={color} onDelete={() => handleDelete(event)} />
             ))}
           </div>
         )}
