@@ -31,6 +31,7 @@ import AddSpaceExpenseSheet from './components/AddSpaceExpenseSheet'
 import SpaceChatSheet from './components/SpaceChatSheet'
 import SpaceTaskItem from './components/SpaceTaskItem'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
+import { useFamilyStore } from '@/shared/store/familyStore'
 import { SPACE_TYPE_CONFIG } from './data/spaceTypes'
 import styles from './SpaceDetail.module.css'
 
@@ -179,6 +180,8 @@ const SpaceDetailScreen: React.FC = () => {
   const { spaces, fetchSpaces, updateSpace, deleteSpace, archiveSpace, addMember, removeMember, setPetProfile, setTripProfile, setPlantProfile } = useSpacesStore()
   const myId = useProfileStore(s => s.activeProfile?.id ?? '')
   const { showToast } = useUiStore()
+  const family = useFamilyStore(s => s.accepted)
+  const fetchFamily = useFamilyStore(s => s.fetchFamily)
   const { addMemory }  = useMemoriesStore()
   const { addPlan }    = usePlansStore()
   const { addNote, deleteNote } = useNotesStore()
@@ -375,6 +378,8 @@ const SpaceDetailScreen: React.FC = () => {
   // not re-fetch every time the user cycles (which would cause a loop).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [space?.type, space?.tripProfile?.destination])
+
+  useEffect(() => { fetchFamily() }, [fetchFamily])
 
   useEffect(() => {
     if (showNoteInput) noteTextareaRef.current?.focus()
@@ -689,11 +694,16 @@ const SpaceDetailScreen: React.FC = () => {
       {space?.type !== 'vehicle' && space?.type !== 'pet' && (() => {
         const isTyped = ['plant', 'pet', 'trip'].includes(space?.type ?? '')
         const showPlans = !isTyped || (space?.modules ?? []).includes('plans')
+        const isPlant = space?.type === 'plant'
+        const memCount = memories?.length ?? 0
+        const memDesc = isPlant
+          ? (memCount === 1 ? 'момент' : memCount < 5 ? 'моменти' : 'моментів')
+          : (memCount === 1 ? 'спогад' : memCount < 5 ? 'спогади' : 'спогадів')
         const overviewItems = [
-          { num: memories?.length ?? null,                desc: (memories?.length ?? 0) === 1 ? 'спогад' : (memories?.length ?? 0) < 5 ? 'спогади' : 'спогадів' },
+          { num: memories?.length ?? null,                desc: memDesc },
           ...(showPlans ? [{ num: plans?.length ?? null, desc: (plans?.length ?? 0) === 1 ? 'план' : (plans?.length ?? 0) < 5 ? 'плани' : 'планів' }] : []),
           { num: spaceTasks != null ? spaceTasks.filter(t => !t.done).length : null, desc: 'активних задач' },
-          { num: space?.members.length ?? 0,              desc: (space?.members.length ?? 0) === 1 ? 'учасник' : 'учасників' },
+          ...(!isPlant ? [{ num: space?.members.length ?? 0, desc: (space?.members.length ?? 0) === 1 ? 'учасник' : 'учасників' }] : []),
         ]
         return (
           <div className={styles.overview}>

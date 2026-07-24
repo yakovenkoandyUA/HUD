@@ -169,27 +169,59 @@
 }
 .profileEditBtn:active { color: var(--space-color); }
 
-/* ── Watering badge ── */
-.waterBadge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 8px; border-radius: 10px; border: 1px solid;
-  font-family: var(--font-ui); font-size: 0.7rem; font-weight: 600;
-  margin-top: 4px; width: fit-content;
+/* ── Watering block ── */
+.waterBlock {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
 }
-.waterBadgeUnknown {
-  font-family: var(--font-ui); font-size: 0.7rem; color: var(--text3);
-  margin-top: 4px;
+
+.waterBlockUnknown {
+  display: flex; align-items: center; gap: 8px;
 }
-.waterBadgeOk { /* colored inline via style prop */ }
-.waterBadgeSoon {
-  border-color: rgba(245,158,11,0.4);
-  color: #d97706;
-  background: rgba(245,158,11,0.08);
+
+.waterBlockOk    { background: color-mix(in srgb, var(--space-color) 4%, transparent); }
+.waterBlockSoon  { background: rgba(245,158,11,0.05); }
+.waterBlockOverdue { background: rgba(239,68,68,0.05); }
+
+.waterDropIcon {
+  flex-shrink: 0;
+  color: var(--space-color);
 }
-.waterBadgeOverdue {
-  border-color: rgba(239,68,68,0.4);
-  color: #ef4444;
-  background: rgba(239,68,68,0.08);
+.waterBlockSoon  .waterDropIcon { color: #d97706; }
+.waterBlockOverdue .waterDropIcon { color: #ef4444; }
+
+.waterBlockRow {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.waterBlockLabel {
+  font-family: var(--font-ui); font-size: 0.8rem; font-weight: 500;
+  color: var(--text); flex: 1; min-width: 0;
+}
+.waterBlockUnknown .waterBlockLabel { color: var(--text3); font-weight: 400; }
+
+.waterBlockFraction {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--text3);
+  flex-shrink: 0;
+}
+
+.waterBlockCta {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 50%;
+  background: none; color: var(--text3); cursor: pointer;
+  flex-shrink: 0; transition: color 0.15s, border-color 0.15s;
+}
+.waterBlockCta:active { color: var(--space-color); border-color: var(--space-color); }
+
+.waterBar {
+  height: 4px; border-radius: 2px;
+  background: var(--border); overflow: hidden;
+}
+.waterBarFill {
+  height: 100%; border-radius: 2px;
+  transition: width 0.4s ease;
 }
 
 /* ── Care notes ── */

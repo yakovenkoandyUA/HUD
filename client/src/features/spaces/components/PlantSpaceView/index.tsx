@@ -77,31 +77,65 @@ function EventIcon({ type }: { type: PlantEventType }) {
   }
 }
 
-// ── Watering indicator ─────────────────────────────────────────────────────
+// ── Watering block ─────────────────────────────────────────────────────────
 
-function WateringBadge({ profile, color }: { profile: PlantProfile | null; color: string }) {
-  const status = wateringStatus(profile)
-  const days   = daysSince(profile?.lastWateredAt ?? null)
-  const interval = profile?.wateringIntervalDays
+interface WateringBlockProps {
+  profile:      PlantProfile | null
+  color:        string
+  onOpenProfile: () => void
+}
+
+function WateringBlock({ profile, color, onOpenProfile }: WateringBlockProps) {
+  const status   = wateringStatus(profile)
+  const days     = daysSince(profile?.lastWateredAt ?? null)
+  const interval = profile?.wateringIntervalDays ?? null
 
   if (status === 'unknown') {
-    return <span className={styles.waterBadgeUnknown}>Полив не налаштовано</span>
+    return (
+      <div className={styles.waterBlock}>
+        <div className={styles.waterBlockUnknown}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" className={styles.waterDropIcon}>
+            <path d="M12 2C6 2 2 8 2 13a10 10 0 0 0 20 0c0-5-4-11-10-11z"/>
+          </svg>
+          <span className={styles.waterBlockLabel}>Налаштуй інтервал поливу</span>
+          <button type="button" className={styles.waterBlockCta} onClick={onOpenProfile} aria-label="Налаштувати полив">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    )
   }
 
-  const statusClass = status === 'ok' ? styles.waterBadgeOk : status === 'soon' ? styles.waterBadgeSoon : styles.waterBadgeOverdue
-  const label = status === 'overdue'
-    ? `Потребує поливу (${days}д без поливу)`
+  const pct = Math.min(100, ((days ?? 0) / (interval ?? 1)) * 100)
+  const daysLeft = interval != null && days != null ? interval - days : null
+
+  const blockClass = status === 'overdue'
+    ? styles.waterBlockOverdue
     : status === 'soon'
-      ? `Скоро полив (${days}/${interval}д)`
-      : `Поливали ${days}д тому`
+      ? styles.waterBlockSoon
+      : styles.waterBlockOk
+
+  const label = status === 'overdue'
+    ? `Потребує поливу — ${days}д без поливу`
+    : status === 'soon'
+      ? `Скоро полив — через ${daysLeft}д`
+      : `Наступний полив — через ${daysLeft}д`
+
+  const barColor = status === 'overdue' ? '#ef4444' : status === 'soon' ? '#d97706' : color
 
   return (
-    <span className={`${styles.waterBadge} ${statusClass}`} style={status === 'ok' ? { borderColor: color + '44', color } : undefined}>
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-        <path d="M12 2C6 2 2 8 2 13a10 10 0 0 0 20 0c0-5-4-11-10-11z"/>
-      </svg>
-      {label}
-    </span>
+    <div className={`${styles.waterBlock} ${blockClass}`}>
+      <div className={styles.waterBlockRow}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" className={styles.waterDropIcon}>
+          <path d="M12 2C6 2 2 8 2 13a10 10 0 0 0 20 0c0-5-4-11-10-11z"/>
+        </svg>
+        <span className={styles.waterBlockLabel}>{label}</span>
+        <span className={styles.waterBlockFraction}>{days}/{interval}д</span>
+      </div>
+      <div className={styles.waterBar}>
+        <div className={styles.waterBarFill} style={{ width: `${pct}%`, background: barColor }} />
+      </div>
+    </div>
   )
 }
 
@@ -562,7 +596,6 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
               <span className={styles.toxicBadge}>Токсична</span>
             )}
           </div>
-          <WateringBadge profile={profile} color={color} />
         </div>
         <button type="button" className={styles.profileEditBtn} onClick={() => setProfileOpen(true)} aria-label="Редагувати">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -571,6 +604,9 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
           </svg>
         </button>
       </div>
+
+      {/* ── Watering block ── */}
+      <WateringBlock profile={profile} color={color} onOpenProfile={() => setProfileOpen(true)} />
 
       {/* ── Care notes from Perenual ── */}
       {profile?.careNotes && (
