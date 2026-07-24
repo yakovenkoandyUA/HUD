@@ -26,7 +26,7 @@ type Direction = 'spaces' | 'memories' | 'tasks' | 'finance'
 
 const DIRECTIONS: { id: Direction; label: string; desc: string; icon: React.ReactNode }[] = [
   {
-    id: 'spaces', label: 'Простори', desc: 'Авто, дім, улюбленець, поїздки',
+    id: 'spaces', label: 'Простори', desc: 'Авто, рослини, улюбленець, поїздки',
     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   },
   {
@@ -44,7 +44,7 @@ const DIRECTIONS: { id: Direction; label: string; desc: string; icon: React.Reac
 ]
 
 const SPACE_PRESETS: { type: SpaceType; label: string; desc: string }[] = [
-  { type: 'home',    label: 'Дім',        desc: 'Ремонти, оплати, документи' },
+  { type: 'plant',   label: 'Рослина',    desc: 'Полив, добрива, ідентифікація' },
   { type: 'pet',     label: 'Улюбленець', desc: 'Ветеринар, щеплення, догляд' },
   { type: 'vehicle', label: 'Авто',       desc: 'ТО, заправки, документи' },
   { type: 'trip',    label: 'Поїздка',    desc: 'Маршрут, місця, витрати' },

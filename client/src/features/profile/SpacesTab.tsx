@@ -23,7 +23,7 @@ const MODULES = [
 const DEFAULT_MODULES: Partial<Record<SpaceType, string[]>> = {
   trip:    ['finance'],
   vehicle: ['finance', 'tasks'],
-  home:    ['finance', 'tasks'],
+  plant:   ['tasks'],
   pet:     ['finance', 'tasks'],
   sports:  ['tasks'],
 }
@@ -31,7 +31,7 @@ const DEFAULT_MODULES: Partial<Record<SpaceType, string[]>> = {
 const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
   { value: 'trip',    label: 'Поїздка'    },
   { value: 'vehicle', label: 'Авто'       },
-  { value: 'home',    label: 'Дім'        },
+  { value: 'plant',   label: 'Рослина'    },
   { value: 'pet',     label: 'Улюбленець' },
   { value: 'sports',  label: 'Спорт'      },
 ]

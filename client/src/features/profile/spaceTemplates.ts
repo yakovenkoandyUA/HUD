@@ -21,9 +21,9 @@ export const SPACE_TEMPLATES: SpaceTemplate[] = [
     description: 'ТО, заправки, документи',
   },
   {
-    id: 'home', label: 'Дім', type: 'home', color: '#795548',
-    defaultName: 'Наш дім',
-    description: 'Ремонти, оплати, документи',
+    id: 'plant', label: 'Рослина', type: 'plant', color: '#16a34a',
+    defaultName: 'Моя рослина',
+    description: 'Полив, добрива, ідентифікація',
   },
   {
     id: 'pet', label: 'Улюбленець', type: 'pet', color: '#ff7043',
