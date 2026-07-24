@@ -579,7 +579,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
  * --------------
  * Вид для просторів типу 'plant'.
  * Показує профіль рослини, індикатор поливу, журнал подій.
- * Інтегрується з Plant.id (ідентифікація) та Perenual (care data).
+ * Інтегрується з Plant.id v3 (ідентифікація + care data + health assessment).
  *
  * @prop spaceId         — ID простору
  * @prop color           — колір простору
