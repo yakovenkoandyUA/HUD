@@ -627,7 +627,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     setIdentifying(true)
     try {
       const details = 'common_names,watering,best_watering,best_soil_type,best_light_condition,toxicity'
-      const idRes = await fetch(`https://plant.id/api/v3/identification?details=${details}&language=uk`, {
+      const idRes = await fetch(`https://plant.id/api/v3/identification?details=${details}&language=ua`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Api-Key': plantKey },
         body: JSON.stringify({ images: [currentPhotoUrl], classification_level: 'species' }),
@@ -812,14 +812,6 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
         onCheck={handleHealthCheck}
       />
 
-      {/* ── Care notes from Perenual ── */}
-      {profile?.careNotes && (
-        <div className={styles.careNotes}>
-          <span className={styles.careNotesLabel}>ДОГЛЯД</span>
-          <p className={styles.careNotesText}>{profile.careNotes}</p>
-        </div>
-      )}
-
       {/* ── Quick actions ── */}
       <div className={styles.actionsSection}>
         <span className={styles.sectionTitle}>ШВИДКІ ДІЇ</span>
@@ -840,6 +832,25 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
           ))}
         </div>
       </div>
+
+      {/* ── Care notes ── */}
+      {profile?.careNotes && (
+        <div className={styles.careNotes}>
+          <span className={styles.careNotesLabel}>ДОГЛЯД</span>
+          {profile.careNotes.split('\n').filter(Boolean).map((line, i) => {
+            const colon = line.indexOf(':')
+            if (colon === -1) return <p key={i} className={styles.careNotesText}>{line}</p>
+            const heading = line.slice(0, colon)
+            const body    = line.slice(colon + 1).trim()
+            return (
+              <div key={i} className={styles.careNotesItem}>
+                <span className={styles.careNotesItemLabel}>{heading}</span>
+                <p className={styles.careNotesText}>{body}</p>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* ── Event log ── */}
       <div className={styles.section}>

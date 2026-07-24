@@ -230,17 +230,25 @@
 
 /* ── Care notes ── */
 .careNotes {
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex; flex-direction: column; gap: 10px;
 }
 .careNotesLabel {
   font-family: var(--font-ui); font-size: 0.6rem; font-weight: 800;
   letter-spacing: 0.1em; color: var(--text3);
 }
+.careNotesItem {
+  display: flex; flex-direction: column; gap: 3px;
+}
+.careNotesItemLabel {
+  font-family: var(--font-ui); font-size: 0.65rem; font-weight: 800;
+  letter-spacing: 0.08em; color: var(--space-color);
+  text-transform: uppercase;
+}
 .careNotesText {
   font-family: var(--font-ui); font-size: 0.82rem; color: var(--text2);
-  line-height: 1.5; margin: 0; white-space: pre-line;
+  line-height: 1.5; margin: 0;
 }
 
 /* ── Health section ── */
