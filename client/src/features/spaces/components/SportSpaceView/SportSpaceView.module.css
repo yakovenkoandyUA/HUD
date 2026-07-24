@@ -109,19 +109,19 @@
 .statsRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--border);
   border-bottom: 1px solid var(--border);
 }
 
 .statCard {
-  background: var(--surface);
   padding: 14px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 3px;
+  border-right: 1px solid var(--border);
 }
+.statCard:last-child { border-right: none; }
 
 .statVal {
   font-family: var(--font-mono);
@@ -421,13 +421,15 @@
 /* ── Actions ── */
 .actionsSection {
   padding: 14px 18px 0;
+  display: flex;
+  gap: 8px;
 }
 
 .addWorkoutBtn {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
+  flex: 1;
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -442,6 +444,29 @@
 
 .plusIcon { margin-left: auto; }
 
+.importBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.importBtn:hover {
+  border-color: var(--space-color, var(--accent));
+  color: var(--space-color, var(--accent));
+}
+
+.hiddenInput { display: none; }
+
 /* ── Workout list ── */
 .workoutList {
   display: flex;
@@ -453,7 +478,7 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 8px 14px;
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-left: 3px solid var(--space-color, var(--accent));
@@ -490,7 +515,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .workoutTitle {
@@ -834,3 +859,123 @@
   transition: opacity 0.15s;
 }
 .saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Programs section ── */
+.programsSection {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.programsHeader {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.addProgramBtn {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: none; padding: 4px 0;
+  font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.addProgramBtn:active { opacity: 0.6; }
+.programsEmpty {
+  font-family: var(--font-ui); font-size: 0.78rem; color: var(--text3);
+  margin: 0; line-height: 1.5;
+}
+.programsList { display: flex; flex-direction: column; gap: 8px; }
+.programCard {
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; background: var(--surface);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.programCardTop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.programCardInfo { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.programCardName { font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.programCardCount { font-family: var(--font-ui); font-size: 0.72rem; color: var(--text3); }
+.programCardBtns { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.programEditBtn {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border: none; background: var(--bg2); border-radius: 8px; color: var(--text3);
+  cursor: pointer; transition: color 0.15s;
+}
+.programEditBtn:active { color: var(--space-color); }
+.programStartBtn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border: none; border-radius: 8px;
+  color: #fff; font-family: var(--font-ui); font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.programStartBtn:active { opacity: 0.8; }
+.programSessions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding-top: 6px; border-top: 1px solid var(--border);
+}
+.programSessionRow { display: flex; align-items: center; gap: 4px; }
+.programSessionDate { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text3); }
+.programSessionScore { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text2); font-weight: 600; }
+
+/* ── Program sheet ── */
+.exRow { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+.exNum {
+  width: 22px; height: 22px; flex-shrink: 0; margin-top: 9px;
+  border-radius: 50%; background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 0.68rem; color: var(--text3);
+}
+.exFields { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.exMeta { display: flex; gap: 6px; align-items: center; }
+.exSmall { width: 64px; flex-shrink: 0; }
+.exNotes { flex: 1; min-width: 0; }
+.exRemove {
+  width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  border: none; background: none; color: var(--text3); cursor: pointer; border-radius: 6px;
+  transition: color 0.15s; margin-top: 1px;
+}
+.exRemove:active { color: #ef4444; }
+.addExBtn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px; border: 1px dashed var(--border); border-radius: 8px;
+  background: none; color: var(--text3); font-family: var(--font-ui); font-size: 0.78rem;
+  cursor: pointer; width: 100%; transition: border-color 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.addExBtn:active { border-color: var(--space-color); color: var(--space-color); }
+.deleteProgramBtn {
+  width: 100%; padding: 10px; border: 1px solid rgba(239,68,68,0.4); border-radius: 10px;
+  background: rgba(239,68,68,0.06); color: #ef4444;
+  font-family: var(--font-ui); font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.deleteProgramBtn:active { opacity: 0.7; }
+
+/* ── Active workout ── */
+.activeWorkoutProgress {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px; border-bottom: 1px solid var(--border);
+}
+.activeWorkoutProgressBar {
+  flex: 1; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden;
+}
+.activeWorkoutProgressFill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+.activeWorkoutProgressLabel { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text3); flex-shrink: 0; }
+.activeExList { display: flex; flex-direction: column; gap: 4px; }
+.activeExRow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; text-align: left; width: 100%;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.activeExRowDone { background: var(--surface2); border-color: transparent; }
+.activeExCheck {
+  width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+.activeExCheckDone { border-color: transparent; }
+.activeExInfo { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.activeExName { font-family: var(--font-ui); font-size: 0.88rem; font-weight: 500; color: var(--text); }
+.activeExNameDone { color: var(--text3); text-decoration: line-through; }
+.activeExMeta { font-family: var(--font-ui); font-size: 0.72rem; color: var(--text3); }

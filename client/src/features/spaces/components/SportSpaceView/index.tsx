@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useSportStore, type SportEvent, type SportEventInput } from '../../store/sportStore'
+import { useSportStore, type SportEvent, type SportEventInput, type WorkoutProgram, type WorkoutExercise } from '../../store/sportStore'
 import type { SportProfile, SportPR } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
 import AddWorkoutSheet from '../AddWorkoutSheet'
+import { parseWorkoutFile } from '../../utils/parseWorkoutFile'
 import styles from './SportSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -315,6 +316,261 @@ const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
   )
 }
 
+// ── Program sheet (create / edit) ─────────────────────────────────────────
+
+function genId() { return Math.random().toString(36).slice(2, 10) }
+
+interface ProgramSheetProps {
+  isOpen:   boolean
+  color:    string
+  program:  WorkoutProgram | null
+  onClose:  () => void
+  onSave:   (name: string, exercises: WorkoutExercise[]) => Promise<void>
+  onDelete: (() => void) | null
+}
+
+const ProgramSheet: React.FC<ProgramSheetProps> = ({ isOpen, color, program, onClose, onSave, onDelete }) => {
+  const [name, setName]           = useState(program?.name ?? '')
+  const [exercises, setExercises] = useState<WorkoutExercise[]>(program?.exercises ?? [])
+  const [busy, setBusy]           = useState(false)
+  const [mounted, setMounted]     = useState(false)
+  const [visible, setVisible]     = useState(false)
+  const [confirmDel, setConfirmDel] = useState(false)
+
+  const sheetRef   = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const bodyRef    = useRef<HTMLDivElement>(null)
+
+  useSwipeToDismiss(onClose, { enabled: isOpen, bodyRef, overlayRef, sheetRef })
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(program?.name ?? '')
+      setExercises(program?.exercises ?? [])
+      setConfirmDel(false)
+      setMounted(true)
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+    } else {
+      setVisible(false)
+      const t = setTimeout(() => setMounted(false), 320)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen, program])
+
+  const addExercise = () => setExercises(prev => [...prev, { id: genId(), name: '', sets: null, reps: null }])
+
+  const updateEx = (id: string, patch: Partial<WorkoutExercise>) =>
+    setExercises(prev => prev.map(e => e.id === id ? { ...e, ...patch } : e))
+
+  const removeEx = (id: string) => setExercises(prev => prev.filter(e => e.id !== id))
+
+  const handleSave = async () => {
+    if (!name.trim() || exercises.length === 0) return
+    setBusy(true)
+    try { await onSave(name.trim(), exercises); onClose() }
+    finally { setBusy(false) }
+  }
+
+  if (!mounted) return null
+  const colorVar = { '--space-color': color } as React.CSSProperties
+
+  return (
+    <div ref={overlayRef} className={`${styles.overlay} ${visible ? styles.overlayVisible : ''}`} style={colorVar}
+      onClick={e => { if (e.target === overlayRef.current) onClose() }}>
+      <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
+        <div className={styles.handle} />
+        <div className={styles.sheetHeader}>
+          <span className={styles.sheetTitle}>{program ? 'РЕДАГУВАТИ ПРОГРАМУ' : 'НОВА ПРОГРАМА'}</span>
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div ref={bodyRef} className={styles.sheetBody}>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>НАЗВА</label>
+            <input className={styles.fieldInput} value={name} onChange={e => setName(e.target.value)} placeholder="Силова A, Кардіо…" />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>ВПРАВИ</label>
+            {exercises.map((ex, i) => (
+              <div key={ex.id} className={styles.exRow}>
+                <div className={styles.exNum}>{i + 1}</div>
+                <div className={styles.exFields}>
+                  <input
+                    className={styles.fieldInput}
+                    value={ex.name}
+                    onChange={e => updateEx(ex.id, { name: e.target.value })}
+                    placeholder="Назва вправи…"
+                  />
+                  <div className={styles.exMeta}>
+                    <input
+                      className={`${styles.fieldInput} ${styles.exSmall}`}
+                      type="number" inputMode="numeric" min="1"
+                      value={ex.sets ?? ''} onChange={e => updateEx(ex.id, { sets: e.target.value ? +e.target.value : null })}
+                      placeholder="Підх."
+                    />
+                    <input
+                      className={`${styles.fieldInput} ${styles.exSmall}`}
+                      type="number" inputMode="numeric" min="1"
+                      value={ex.reps ?? ''} onChange={e => updateEx(ex.id, { reps: e.target.value ? +e.target.value : null })}
+                      placeholder="Повт."
+                    />
+                    <input
+                      className={`${styles.fieldInput} ${styles.exNotes}`}
+                      value={ex.notes ?? ''}
+                      onChange={e => updateEx(ex.id, { notes: e.target.value })}
+                      placeholder="Нотатка…"
+                    />
+                    <button type="button" className={styles.exRemove} onClick={() => removeEx(ex.id)} aria-label="Видалити">
+                      <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button type="button" className={styles.addExBtn} onClick={addExercise}>
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+              Додати вправу
+            </button>
+          </div>
+
+          {onDelete && (
+            <button type="button" className={styles.deleteProgramBtn}
+              onClick={() => { if (confirmDel) onDelete(); else { setConfirmDel(true); setTimeout(() => setConfirmDel(false), 2500) } }}>
+              {confirmDel ? 'Підтвердити видалення' : 'Видалити програму'}
+            </button>
+          )}
+        </div>
+
+        <div className={styles.sheetFooter}>
+          <button type="button" className={styles.saveBtn} style={{ background: color }}
+            onClick={handleSave} disabled={busy || !name.trim() || exercises.length === 0}>
+            {busy ? 'Збереження…' : 'Зберегти'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Active workout sheet (step-by-step execution) ──────────────────────────
+
+interface ActiveWorkoutProps {
+  isOpen:   boolean
+  color:    string
+  program:  WorkoutProgram | null
+  onClose:  () => void
+  onFinish: (completedIds: string[]) => Promise<void>
+}
+
+const ActiveWorkoutSheet: React.FC<ActiveWorkoutProps> = ({ isOpen, color, program, onClose, onFinish }) => {
+  const [checked, setChecked]   = useState<Set<string>>(new Set())
+  const [busy, setBusy]         = useState(false)
+  const [mounted, setMounted]   = useState(false)
+  const [visible, setVisible]   = useState(false)
+
+  const sheetRef   = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const bodyRef    = useRef<HTMLDivElement>(null)
+
+  useSwipeToDismiss(onClose, { enabled: isOpen, bodyRef, overlayRef, sheetRef })
+
+  useEffect(() => {
+    if (isOpen) {
+      setChecked(new Set())
+      setBusy(false)
+      setMounted(true)
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+    } else {
+      setVisible(false)
+      const t = setTimeout(() => setMounted(false), 320)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen])
+
+  const toggle = (id: string) => setChecked(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+
+  const handleFinish = async () => {
+    setBusy(true)
+    try { await onFinish([...checked]); onClose() }
+    finally { setBusy(false) }
+  }
+
+  if (!mounted || !program) return null
+
+  const total    = program.exercises.length
+  const done     = checked.size
+  const allDone  = done === total
+  const colorVar = { '--space-color': color } as React.CSSProperties
+
+  return (
+    <div ref={overlayRef} className={`${styles.overlay} ${visible ? styles.overlayVisible : ''}`} style={colorVar}
+      onClick={e => { if (e.target === overlayRef.current) onClose() }}>
+      <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
+        <div className={styles.handle} />
+        <div className={styles.sheetHeader}>
+          <span className={styles.sheetTitle}>{program.name.toUpperCase()}</span>
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div className={styles.activeWorkoutProgress}>
+          <div className={styles.activeWorkoutProgressBar}>
+            <div className={styles.activeWorkoutProgressFill}
+              style={{ width: `${total > 0 ? (done / total) * 100 : 0}%`, background: color }} />
+          </div>
+          <span className={styles.activeWorkoutProgressLabel}>{done}/{total}</span>
+        </div>
+
+        <div ref={bodyRef} className={styles.sheetBody}>
+          <div className={styles.activeExList}>
+            {program.exercises.map((ex, i) => {
+              const isDone = checked.has(ex.id)
+              return (
+                <button
+                  key={ex.id}
+                  type="button"
+                  className={`${styles.activeExRow} ${isDone ? styles.activeExRowDone : ''}`}
+                  onClick={() => toggle(ex.id)}
+                >
+                  <div className={`${styles.activeExCheck} ${isDone ? styles.activeExCheckDone : ''}`} style={isDone ? { background: color, borderColor: color } : undefined}>
+                    {isDone && <svg width="10" height="10" viewBox="0 0 14 14" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M2 7l4 4 6-7"/></svg>}
+                  </div>
+                  <div className={styles.activeExInfo}>
+                    <span className={`${styles.activeExName} ${isDone ? styles.activeExNameDone : ''}`}>
+                      {i + 1}. {ex.name}
+                    </span>
+                    {(ex.sets || ex.reps || ex.notes) && (
+                      <span className={styles.activeExMeta}>
+                        {ex.sets && ex.reps ? `${ex.sets}×${ex.reps}` : ex.sets ? `${ex.sets} підходи` : ex.reps ? `${ex.reps} повт.` : ''}
+                        {ex.notes ? (ex.sets || ex.reps ? ` · ${ex.notes}` : ex.notes) : ''}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className={styles.sheetFooter}>
+          <button type="button" className={styles.saveBtn} style={{ background: allDone ? color : undefined }}
+            onClick={handleFinish} disabled={busy || done === 0}>
+            {busy ? 'Збереження…' : allDone ? 'Завершити тренування' : `Завершити (${done}/${total})`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Workout row ────────────────────────────────────────────────────────────
 
 interface WorkoutRowProps {
@@ -398,20 +654,34 @@ const SportSpaceView: React.FC<Props> = ({
   coverUrl, coverPosition, isOwner, onEditSpace, onBack, spaceTxs = [],
 }) => {
   const { showToast } = useUiStore()
-  const { eventsBySpace, loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile } = useSportStore()
+  const {
+    eventsBySpace, programsBySpace, sessionsBySpace,
+    loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile,
+    fetchPrograms, createProgram, updateProgram, deleteProgram,
+    fetchSessions, createSession,
+  } = useSportStore()
 
-  const [addOpen, setAddOpen]         = useState(false)
-  const [editingEvent, setEditingEvent] = useState<SportEvent | null>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
+  const [addOpen, setAddOpen]             = useState(false)
+  const [editingEvent, setEditingEvent]   = useState<SportEvent | null>(null)
+  const [importPrefill, setImportPrefill] = useState<SportEventInput | null>(null)
+  const gpxInputRef = useRef<HTMLInputElement>(null)
+  const [profileOpen, setProfileOpen]     = useState(false)
+  const [programSheetOpen, setProgramSheetOpen] = useState(false)
+  const [editingProgram, setEditingProgram]     = useState<WorkoutProgram | null>(null)
+  const [activeWorkout, setActiveWorkout]       = useState<WorkoutProgram | null>(null)
 
   const events = eventsBySpace[spaceId] ?? []
 
   useEffect(() => {
     let cancelled = false
-    const load = async () => { if (!cancelled) await fetchEvents(spaceId) }
+    const load = async () => {
+      if (!cancelled) await fetchEvents(spaceId)
+      if (!cancelled) await fetchPrograms(spaceId)
+      if (!cancelled) await fetchSessions(spaceId)
+    }
     load()
     return () => { cancelled = true }
-  }, [spaceId, fetchEvents])
+  }, [spaceId, fetchEvents, fetchPrograms, fetchSessions])
 
   const handleCreate = async (data: SportEventInput) => {
     try {
@@ -442,6 +712,21 @@ const SportSpaceView: React.FC<Props> = ({
   const closeSheet = () => {
     setAddOpen(false)
     setEditingEvent(null)
+    setImportPrefill(null)
+  }
+
+  const handleGpxFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    try {
+      const parsed = await parseWorkoutFile(file)
+      setImportPrefill(parsed)
+      setEditingEvent(null)
+      setAddOpen(true)
+    } catch {
+      showToast('Не вдалось розпарсити файл', 'error')
+    }
   }
 
   const handleDelete = (eventId: string) => {
@@ -468,6 +753,51 @@ const SportSpaceView: React.FC<Props> = ({
       showToast('Помилка збереження', 'error')
     }
   }
+
+  const handleProgramSave = async (name: string, exercises: WorkoutExercise[]) => {
+    try {
+      if (editingProgram) {
+        await updateProgram(spaceId, editingProgram._id, { name, exercises })
+      } else {
+        await createProgram(spaceId, { name, exercises })
+      }
+      showToast('Збережено', 'success')
+    } catch {
+      showToast('Помилка збереження', 'error')
+      throw new Error('Failed')
+    }
+  }
+
+  const handleProgramDelete = async () => {
+    if (!editingProgram) return
+    await deleteProgram(spaceId, editingProgram._id)
+    setProgramSheetOpen(false)
+    setEditingProgram(null)
+    showToast('Програму видалено', 'success')
+  }
+
+  const handleFinishWorkout = async (completedIds: string[]) => {
+    if (!activeWorkout) return
+    const today = new Date().toISOString().slice(0, 10)
+    try {
+      await createSession(spaceId, {
+        programId:          activeWorkout._id,
+        programName:        activeWorkout.name,
+        date:               today,
+        completedExercises: completedIds,
+        totalExercises:     activeWorkout.exercises.length,
+        notes:              '',
+      })
+      await fetchEvents(spaceId)
+      showToast('Тренування завершено', 'success')
+    } catch {
+      showToast('Помилка збереження', 'error')
+      throw new Error('Failed')
+    }
+  }
+
+  const programs  = programsBySpace[spaceId] ?? []
+  const sessions  = sessionsBySpace[spaceId] ?? []
 
   // ── Derived stats ──
 
@@ -575,15 +905,91 @@ const SportSpaceView: React.FC<Props> = ({
       {/* ── PR Tracker ── */}
       <PRTracker prs={profile?.prs ?? []} color={color} onSave={handlePRSave} />
 
+      {/* ── Workout programs ── */}
+      <div className={styles.programsSection}>
+        <div className={styles.programsHeader}>
+          <span className={styles.sectionTitle}>ПРОГРАМИ</span>
+          {programs.length < 2 && (
+            <button type="button" className={styles.addProgramBtn} style={{ color }}
+              onClick={() => { setEditingProgram(null); setProgramSheetOpen(true) }}>
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+              Додати
+            </button>
+          )}
+        </div>
+
+        {programs.length === 0 ? (
+          <p className={styles.programsEmpty}>Створи програму тренування — вправи, підходи, повторення.</p>
+        ) : (
+          <div className={styles.programsList}>
+            {programs.map(prog => {
+              const progSessions = sessions.filter(s => s.programId === prog._id)
+              const last3        = progSessions.slice(0, 3)
+              return (
+                <div key={prog._id} className={styles.programCard}>
+                  <div className={styles.programCardTop}>
+                    <div className={styles.programCardInfo}>
+                      <span className={styles.programCardName}>{prog.name}</span>
+                      <span className={styles.programCardCount}>{prog.exercises.length} вправ</span>
+                    </div>
+                    <div className={styles.programCardBtns}>
+                      <button type="button" className={styles.programEditBtn}
+                        onClick={() => { setEditingProgram(prog); setProgramSheetOpen(true) }} aria-label="Редагувати">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                      <button type="button" className={styles.programStartBtn} style={{ background: color }}
+                        onClick={() => setActiveWorkout(prog)}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                        Почати
+                      </button>
+                    </div>
+                  </div>
+                  {last3.length > 0 && (
+                    <div className={styles.programSessions}>
+                      {last3.map(s => (
+                        <div key={s._id} className={styles.programSessionRow}>
+                          <span className={styles.programSessionDate}>{s.date.slice(8,10)}.{s.date.slice(5,7)}</span>
+                          <span className={styles.programSessionScore}>
+                            {s.completedExercises.length}/{s.totalExercises}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
       {/* ── Quick actions ── */}
       <div className={styles.actionsSection}>
-        <button type="button" className={styles.addWorkoutBtn} style={colorVar} onClick={() => { setEditingEvent(null); setAddOpen(true) }}>
+        <button type="button" className={styles.addWorkoutBtn} style={colorVar} onClick={() => { setEditingEvent(null); setImportPrefill(null); setAddOpen(true) }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
           Додати тренування
           <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.plusIcon} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
+        <button type="button" className={styles.importBtn} onClick={() => gpxInputRef.current?.click()}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          GPX / TCX
+        </button>
+        <input
+          ref={gpxInputRef}
+          type="file"
+          accept=".gpx,.tcx"
+          className={styles.hiddenInput}
+          onChange={handleGpxFile}
+        />
       </div>
 
       {/* ── Workout log ── */}
@@ -665,6 +1071,7 @@ const SportSpaceView: React.FC<Props> = ({
         onClose={closeSheet}
         onSave={editingEvent ? handleUpdate : handleCreate}
         editEvent={editingEvent ?? undefined}
+        prefill={importPrefill}
       />
 
       <ProfileEditSheet
@@ -673,6 +1080,23 @@ const SportSpaceView: React.FC<Props> = ({
         color={color}
         onClose={() => setProfileOpen(false)}
         onSave={handleProfileSave}
+      />
+
+      <ProgramSheet
+        isOpen={programSheetOpen}
+        color={color}
+        program={editingProgram}
+        onClose={() => { setProgramSheetOpen(false); setEditingProgram(null) }}
+        onSave={handleProgramSave}
+        onDelete={editingProgram ? handleProgramDelete : null}
+      />
+
+      <ActiveWorkoutSheet
+        isOpen={activeWorkout !== null}
+        color={color}
+        program={activeWorkout}
+        onClose={() => setActiveWorkout(null)}
+        onFinish={handleFinishWorkout}
       />
     </div>
   )

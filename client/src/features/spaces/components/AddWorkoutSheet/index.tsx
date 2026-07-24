@@ -9,12 +9,33 @@ import styles from './AddWorkoutSheet.module.css'
 
 /** Props for AddWorkoutSheet */
 interface Props {
-  isOpen:      boolean
-  color:       string
-  onClose:     () => void
-  onSave:      (data: SportEventInput) => Promise<void>
-  editEvent?:  SportEvent
+  isOpen:     boolean
+  color:      string
+  onClose:    () => void
+  onSave:     (data: SportEventInput) => Promise<void>
+  editEvent?: SportEvent
+  /** Pre-filled data from GPX/TCX import */
+  prefill?:   SportEventInput | null
 }
+
+interface WgerSuggestion {
+  value:      string
+  categoryId: number
+}
+
+// Wger category IDs → default metrics to suggest
+const STRENGTH_IDS = new Set([10, 11, 12, 13, 14, 15, 16])
+const CARDIO_ID    = 17
+
+const STRENGTH_METRICS: WorkoutMetric[] = [
+  { name: 'Вага', value: '', unit: 'кг' },
+  { name: 'Підходи', value: '', unit: 'x' },
+  { name: 'Повтори', value: '', unit: 'x' },
+]
+const CARDIO_METRICS: WorkoutMetric[] = [
+  { name: 'Дистанція', value: '', unit: 'км' },
+  { name: 'Час', value: '', unit: 'хв' },
+]
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
@@ -31,15 +52,16 @@ function fmtDate(iso: string): string {
  * AddWorkoutSheet
  * ---------------
  * Bottom sheet для додавання/редагування тренування.
- * Підтримує гнучкі метрики через динамічний список.
+ * Підтримує гнучкі метрики та Wger exercise autocomplete.
  *
  * @prop isOpen     — видимість шторки
  * @prop color      — акцентний колір простору
  * @prop onClose    — закрити
  * @prop onSave     — зберегти дані
  * @prop editEvent  — подія для редагування (якщо є)
+ * @prop prefill    — дані з GPX/TCX імпорту
  */
-const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, editEvent }) => {
+const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, editEvent, prefill }) => {
   const [mounted, setMounted]   = useState(false)
   const [visible, setVisible]   = useState(false)
   const [busy, setBusy]         = useState(false)
@@ -50,6 +72,11 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
   const [duration, setDuration] = useState('')
   const [notes, setNotes]       = useState('')
   const [metrics, setMetrics]   = useState<WorkoutMetric[]>([])
+
+  // Wger autocomplete
+  const [suggestions, setSuggestions]       = useState<WgerSuggestion[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const wgerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const sheetRef   = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -66,6 +93,12 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
         setDuration(editEvent.duration != null ? String(editEvent.duration) : '')
         setNotes(editEvent.notes)
         setMetrics(editEvent.metrics.map(m => ({ ...m })))
+      } else if (prefill) {
+        setDate(prefill.date ?? todayISO())
+        setTitle(prefill.title ?? '')
+        setDuration(prefill.duration != null ? String(prefill.duration) : '')
+        setNotes(prefill.notes ?? '')
+        setMetrics((prefill.metrics ?? []).map(m => ({ ...m })))
       } else {
         setDate(todayISO())
         setTitle('')
@@ -76,10 +109,55 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
       setVisible(false)
+      setSuggestions([])
+      setShowSuggestions(false)
       const t = setTimeout(() => setMounted(false), 320)
       return () => clearTimeout(t)
     }
-  }, [isOpen, editEvent])
+  }, [isOpen, editEvent, prefill])
+
+  // Wger exercise search
+  const handleTitleChange = (val: string) => {
+    setTitle(val)
+    setShowSuggestions(false)
+    if (wgerTimer.current) clearTimeout(wgerTimer.current)
+    if (val.trim().length < 2) { setSuggestions([]); return }
+
+    wgerTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(val.trim())}&language=2&format=json`,
+          { signal: AbortSignal.timeout(4000) }
+        )
+        if (!res.ok) return
+        const data = await res.json()
+        const items: WgerSuggestion[] = (data.suggestions ?? []).slice(0, 6).map(
+          (s: { value: string; data?: { category?: { id?: number } } }) => ({
+            value:      s.value,
+            categoryId: s.data?.category?.id ?? 0,
+          })
+        )
+        setSuggestions(items)
+        setShowSuggestions(items.length > 0)
+      } catch {
+        // network error or timeout — silently ignore
+      }
+    }, 500)
+  }
+
+  const selectSuggestion = (s: WgerSuggestion) => {
+    setTitle(s.value)
+    setShowSuggestions(false)
+    setSuggestions([])
+    // Only prefill metrics if user hasn't added any yet
+    if (metrics.length === 0) {
+      if (STRENGTH_IDS.has(s.categoryId)) {
+        setMetrics(STRENGTH_METRICS.map(m => ({ ...m })))
+      } else if (s.categoryId === CARDIO_ID) {
+        setMetrics(CARDIO_METRICS.map(m => ({ ...m })))
+      }
+    }
+  }
 
   const addMetric = () => setMetrics(prev => [...prev, { name: '', value: '', unit: '' }])
 
@@ -119,7 +197,7 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
       <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
         <div className={styles.handle} />
         <div className={styles.header}>
-          <span className={styles.title}>{editEvent ? 'РЕДАГУВАТИ ТРЕНУВАННЯ' : 'НОВЕ ТРЕНУВАННЯ'}</span>
+          <span className={styles.title}>{editEvent ? 'РЕДАГУВАТИ ТРЕНУВАННЯ' : prefill ? 'ІМПОРТ ТРЕНУВАННЯ' : 'НОВЕ ТРЕНУВАННЯ'}</span>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
               <path d="M18 6L6 18M6 6l12 12"/>
@@ -129,15 +207,33 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
 
         <div ref={bodyRef} className={styles.body}>
 
-          {/* Назва */}
+          {/* Назва + Wger autocomplete */}
           <div className={styles.field}>
             <label className={styles.fieldLabel}>НАЗВА</label>
-            <input
-              className={styles.fieldInput}
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Ранкова пробіжка, Зал, Футбол…"
-            />
+            <div className={styles.autocompleteWrap}>
+              <input
+                className={styles.fieldInput}
+                value={title}
+                onChange={e => handleTitleChange(e.target.value)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                placeholder="Ранкова пробіжка, Зал, Футбол…"
+                autoComplete="off"
+              />
+              {showSuggestions && (
+                <ul className={styles.suggestions}>
+                  {suggestions.map((s, i) => (
+                    <li
+                      key={i}
+                      className={styles.suggestionItem}
+                      onMouseDown={() => selectSuggestion(s)}
+                    >
+                      {s.value}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           {/* Дата */}
