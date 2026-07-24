@@ -78,6 +78,15 @@ interface SpaceTx {
 }
 
 const SPACE_CONTEXT: Record<string, SpaceCtx> = {
+  plant: {
+    typeLabel: 'Рослина', description: 'Фото, моменти та нотатки про твою рослину.',
+    memBtnLabel: '+ Момент', planBtnLabel: '+ Нотатка', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+    txEmptyTitle: 'Витрат ще немає',      txEmptyDesc: 'Добрива, горщики, ґрунт — фіксуй витрати.',
+    memEmptyTitle: 'Моментів ще немає',   memEmptyDesc: 'Збережи перший момент — цвіт, нові листки, пересадка.',
+    planEmptyTitle: 'Нотаток ще немає',   planEmptyDesc: 'Запиши що потрібно купити або зробити.',
+    noteEmptyTitle: 'Нотаток ще немає',   noteEmptyDesc: 'Короткі записи про догляд.',
+    taskEmptyTitle: 'Задач ще немає',     taskEmptyDesc: 'Нагадування про пересадку, добриво, обробку.',
+  },
   shared: {
     typeLabel: 'Спільне', description: 'Спільний простір для людей, речей і планів що вас об\'єднують.',
     memBtnLabel: '+ Спільний спогад', planBtnLabel: '+ Спільний план', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
@@ -1111,7 +1120,7 @@ const SpaceDetailScreen: React.FC = () => {
 
         {/* ── Memories ── */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>СПОГАДИ</h2>
+          <h2 className={styles.sectionTitle}>{space?.type === 'plant' ? 'МОМЕНТИ' : 'СПОГАДИ'}</h2>
           {memories === null ? (
             <div className={styles.memoriesGrid}>{[1,2,3,4].map(i => <div key={i} className={styles.skeleton} />)}</div>
           ) : memories.length === 0 ? (

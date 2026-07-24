@@ -83,7 +83,14 @@ export async function createPlantEvent(req: Request, res: Response): Promise<voi
     })
 
     // Update lastWateredAt / lastFertilizedAt in profile on the fly
-    if (space.plantProfile) {
+    if (type === 'watering' || type === 'fertilizing') {
+      if (!space.plantProfile) {
+        space.plantProfile = {
+          commonName: '', species: '', location: '', acquiredDate: null,
+          wateringIntervalDays: null, lastWateredAt: null, lastFertilizedAt: null,
+          sunlight: null, photoUrl: '', toxicToPets: null, careNotes: '',
+        }
+      }
       if (type === 'watering')    space.plantProfile.lastWateredAt    = date
       if (type === 'fertilizing') space.plantProfile.lastFertilizedAt = date
       await space.save()

@@ -246,8 +246,8 @@ export async function addMember(req: Request, res: Response, next: NextFunction)
     const owner = users.find(u => (u._id as { toString(): string }).toString() === space.ownerId)
     const ownerName = owner?.name ?? 'Хтось'
     sendPushToUser(uid, {
-      title: `${ownerName} додав тебе до простору`,
-      body:  space.name,
+      title: `${ownerName} запросив тебе`,
+      body:  `Тебе додано до простору «${space.name}»`,
       url:   `/spaces/${space._id}`,
     }).catch(() => { /* push optional */ })
 

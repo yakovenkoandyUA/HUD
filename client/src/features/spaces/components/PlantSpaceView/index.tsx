@@ -625,23 +625,29 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
           {profile?.species && (
             <div className={styles.profileSpecies}>{profile.species}</div>
           )}
-          <div className={styles.profileMeta}>
-            {profile?.location && (
-              <span className={styles.metaItem}>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                {profile.location}
-              </span>
-            )}
-            {profile?.sunlight && (
-              <span className={styles.metaItem}>{SUNLIGHT_LABELS[profile.sunlight]}</span>
-            )}
-            {profile?.acquiredDate && (
-              <span className={styles.metaItem}>з {fmtDate(profile.acquiredDate)}</span>
-            )}
-            {profile?.toxicToPets === true && (
-              <span className={styles.toxicBadge}>Токсична</span>
-            )}
-          </div>
+          {!profile?.commonName && !profile?.species ? (
+            <button type="button" className={styles.profileHint} onClick={() => setProfileOpen(true)}>
+              Додай назву, фото та інтервал поливу →
+            </button>
+          ) : (
+            <div className={styles.profileMeta}>
+              {profile?.location && (
+                <span className={styles.metaItem}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {profile.location}
+                </span>
+              )}
+              {profile?.sunlight && (
+                <span className={styles.metaItem}>{SUNLIGHT_LABELS[profile.sunlight]}</span>
+              )}
+              {profile?.acquiredDate && (
+                <span className={styles.metaItem}>з {fmtDate(profile.acquiredDate)}</span>
+              )}
+              {profile?.toxicToPets === true && (
+                <span className={styles.toxicBadge}>Токсична</span>
+              )}
+            </div>
+          )}
         </div>
         <button type="button" className={styles.profileEditBtn} onClick={() => setProfileOpen(true)} aria-label="Редагувати">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

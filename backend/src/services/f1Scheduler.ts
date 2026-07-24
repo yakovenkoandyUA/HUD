@@ -62,8 +62,8 @@ export async function sendRaceWeekendAlert(): Promise<void> {
       keys: s.keys,
     })),
     {
-      title: '🏎️ Гоночний вікенд!',
-      body: `${race.name} — цього тижня`,
+      title: '🏎️ Гоночний вікенд цього тижня',
+      body: `${race.name} — не пропусти`,
       url:  '/f1',
       tag:  'f1-race-weekend',
     },
@@ -117,7 +117,7 @@ async function processReminders(
       try {
         await sendNotification(
           { endpoint: sub.endpoint, keys: sub.keys },
-          { title: '⏰ Нагадування', body: item.title, url: '/sprint', tag: `reminder-${String(item._id)}` }
+          { title: 'Час виконати', body: item.title, url: '/sprint', tag: `reminder-${String(item._id)}` }
         )
       } catch (err: unknown) {
         if ((err as { expired?: boolean }).expired) {
@@ -158,7 +158,7 @@ async function sendRecurringPaymentNotifications(): Promise<void> {
       try {
         await sendNotification(
           { endpoint: sub.endpoint, keys: sub.keys },
-          { title: '💳 Регулярний платіж', body: `${payment.name} — ${payment.amount} ₴`, url: '/finance', tag: `recurring-${String(payment._id)}` }
+          { title: `💳 «${payment.name}» — сьогодні`, body: `${payment.amount} ₴ спишеться сьогодні`, url: '/finance', tag: `recurring-${String(payment._id)}` }
         )
       } catch (err: unknown) {
         if ((err as { expired?: boolean }).expired) {

@@ -21,8 +21,8 @@ cron.schedule('0 18 * * *', async () => {
     for (const user of users) {
       if (loggedSet.has(user._id.toString())) continue
       await sendPushToUser(user._id.toString(), {
-        title: 'Як пройшов день?',
-        body:  'Відзнач настрій і підсумуй день у MIMIR',
+        title: 'День добігає кінця',
+        body:  'Як себе почуваєш? Відзнач настрій і зафіксуй підсумки',
         url:   '/',
         tag:   'day-recap',
       })

@@ -41,7 +41,7 @@ cron.schedule('0 9 * * *', async () => {
       await Promise.allSettled(
         space.members.map(m =>
           sendPushToUser(m.userId, {
-            title: `🚗 ${spaceName}`,
+            title: spaceName,
             body:  `${docLabel} — закінчується ${label}`,
             url:   `/spaces/${doc.spaceId}`,
           })

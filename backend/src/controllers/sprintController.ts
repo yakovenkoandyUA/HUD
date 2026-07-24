@@ -90,8 +90,8 @@ export async function createTask(req: Request, res: Response): Promise<void> {
     await Promise.allSettled(
       newlyAssigned.map(uid =>
         sendPushToUser(uid, {
-          title: '📋 Нова задача для тебе',
-          body: `${assignerName} призначив тебе на «${item.title}»`,
+          title: 'Тебе призначено на задачу',
+          body: `${assignerName} додав тебе до «${item.title}»`,
           url: `/sprint?quest=${item._id}`,
         })
       )
@@ -139,8 +139,8 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
       await Promise.allSettled(
         newlyAssigned.map(uid =>
           sendPushToUser(uid, {
-            title: '📋 Нова задача для тебе',
-            body: `${assignerName} призначив тебе на «${task.title}»`,
+            title: 'Тебе призначено на задачу',
+            body: `${assignerName} додав тебе до «${task.title}»`,
             url: `/sprint?quest=${task._id}`,
           })
         )

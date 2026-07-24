@@ -46,13 +46,13 @@ cron.schedule('0 9 * * *', async () => {
     for (const [userId, titles] of Object.entries(byUser)) {
       const count = titles.length
       const body = count === 1
-        ? `«${titles[0]}» — не виконано сьогодні`
-        : `${count} звичок не виконано сьогодні`
+        ? `«${titles[0]}» ще чекає на тебе`
+        : `${count} звичок чекають — не зупиняй серію`
       await sendPushToUser(userId, {
-        title: '⏰ Нагадування про звички',
+        title: 'Звички ще не виконані',
         body,
         url:  '/sprint',
-        tag:  'routine-reminder',  // replaces previous reminder if not dismissed
+        tag:  'routine-reminder',
       })
     }
 

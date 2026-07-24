@@ -103,7 +103,6 @@ const SpacesTab: React.FC = () => {
   const [petBreed,   setPetBreed]   = useState('')
 
   // ── Detail / members ──
-  const [memberInput, setMemberInput]   = useState('')
   const [addingMember, setAddingMember] = useState(false)
 
   // ── Inline name edit ──
@@ -254,23 +253,6 @@ const SpacesTab: React.FC = () => {
     return () => { cancelled = true }
   }
 
-  const handleAddMember = async () => {
-    if (!detailSpace || !memberInput.trim()) return
-    let cancelled = false
-    const submit = async () => {
-      setAddingMember(true)
-      try {
-        await addMember(detailSpace.id, memberInput.trim())
-        if (!cancelled) { setMemberInput(''); showToast('Учасника додано', 'success') }
-      } catch (err) {
-        if (!cancelled) showToast(err instanceof Error ? err.message : 'Не знайдено', 'error')
-      } finally {
-        if (!cancelled) setAddingMember(false)
-      }
-    }
-    submit()
-    return () => { cancelled = true }
-  }
 
   const handleRemoveMember = async (spaceId: string, userId: string) => {
     let cancelled = false
@@ -336,7 +318,6 @@ const SpacesTab: React.FC = () => {
   const myId = activeProfile?.id ?? ''
 
   const openDetail = (space: Space) => {
-    setMemberInput('')
     setNotesInput(space.notes ?? '')
     if (space.vehicleProfile) {
       setVMake(space.vehicleProfile.make ?? '')

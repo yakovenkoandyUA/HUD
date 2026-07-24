@@ -18,7 +18,7 @@ cron.schedule('* * * * *', async () => {
         const f1Users = await User.find({ f1Enabled: true })
         for (const user of f1Users) {
           await sendPushToUser(user._id.toString(), {
-            title: '🏎️ Гонка через 1 годину!',
+            title: '🏎️ Гонка починається за годину',
             body:  `${race.name} — ${race.circuit}`,
             url:   '/f1',
             tag:   'f1-race-start',
@@ -46,7 +46,7 @@ cron.schedule('0 10 * * *', async () => {
     })
     for (const item of items) {
       await sendPushToUser(item.userId, {
-        title: '🎬 Нова серія вийшла!',
+        title: '🎬 Новий епізод',
         body:  `«${item.title}» — вже доступна`,
         url:   '/watchlist',
         tag:   `episode-${String(item._id)}`,
@@ -72,7 +72,7 @@ cron.schedule('0 9 * * *', async () => {
     })
     for (const item of items) {
       await sendPushToUser(item.userId, {
-        title: '🎬 Новий сезон вийшов!',
+        title: '🎬 Новий сезон',
         body:  `«${item.title}» — вже доступний`,
         url:   '/watchlist',
         tag:   `season-${String(item._id)}`,

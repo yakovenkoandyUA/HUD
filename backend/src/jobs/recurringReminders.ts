@@ -26,8 +26,8 @@ cron.schedule('0 9 * * *', async () => {
 
         const label = days === 1 ? 'завтра' : `через ${days} ${days < 5 ? 'дні' : 'днів'}`
         await sendPushToUser(p.userId, {
-          title: '💳 Регулярний платіж',
-          body:  `«${p.name}» — ${p.amount.toLocaleString('uk-UA')} ₴ (${label})`,
+          title: `💳 «${p.name}» — ${label}`,
+          body:  `${p.amount.toLocaleString('uk-UA')} ₴ спишеться ${label}`,
           url:   '/finance',
           tag:   `recurring-${String(p._id)}`,
         })

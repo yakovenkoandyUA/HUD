@@ -160,6 +160,14 @@
   padding: 2px 7px;
 }
 
+.profileHint {
+  font-family: var(--font-ui); font-size: 0.75rem;
+  color: var(--space-color); background: none; border: none;
+  padding: 0; cursor: pointer; text-align: left; margin-top: 2px;
+  transition: opacity 0.15s;
+}
+.profileHint:active { opacity: 0.6; }
+
 .profileEditBtn {
   width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
