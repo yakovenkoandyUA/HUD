@@ -378,7 +378,7 @@ interface ProfileSheetProps {
   color:    string
   onClose:  () => void
   onSave:   (data: Partial<PlantProfile>) => Promise<void>
-  onIdentify: () => void
+  onIdentify: (photoUrl: string) => void
   identifying: boolean
 }
 
@@ -474,13 +474,13 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
               type="button"
               className={styles.identifyBtn}
               style={{ borderColor: color + '55', color }}
-              onClick={onIdentify}
+              onClick={() => onIdentify(photoUrl)}
               disabled={identifying || !photoUrl}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
               </svg>
-              {identifying ? 'Визначення…' : 'Визначити вид (Plant.id)'}
+              {identifying ? 'Визначення…' : 'Визначити вид'}
             </button>
           </div>
 
@@ -622,18 +622,18 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
   }
 
   // Plant.id → species name → Perenual care data
-  const handleIdentify = async () => {
+  const handleIdentify = async (currentPhotoUrl: string) => {
     const plantKey    = import.meta.env.VITE_PLANTID_API_KEY as string | undefined
     const perenualKey = import.meta.env.VITE_PERENUAL_API_KEY as string | undefined
     if (!plantKey) { showToast('Plant.id ключ не налаштовано', 'error'); return }
-    if (!profile?.photoUrl) { showToast('Спочатку завантаж фото', 'error'); return }
+    if (!currentPhotoUrl) { showToast('Спочатку завантаж фото', 'error'); return }
     setIdentifying(true)
     try {
       // 1. Identify with Plant.id
       const idRes = await fetch('https://api.plant.id/v2/identify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Api-Key': plantKey },
-        body: JSON.stringify({ images: [profile.photoUrl], plant_details: ['common_names', 'taxonomy'] }),
+        body: JSON.stringify({ images: [currentPhotoUrl], plant_details: ['common_names', 'taxonomy'] }),
       })
       if (!idRes.ok) throw new Error('plantid')
       const idData = await idRes.json() as {
@@ -643,7 +643,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
       if (!top) { showToast('Не вдалось визначити рослину', 'error'); return }
 
       const species    = top.plant_name
-      const commonName = top.plant_details.common_names?.[0] || profile.commonName || species
+      const commonName = top.plant_details.common_names?.[0] || profile?.commonName || species
 
       // 2. Fetch care data from Perenual
       let careNotes = profile?.careNotes || ''
