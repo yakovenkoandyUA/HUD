@@ -777,19 +777,26 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     <div className={styles.root} style={colorVar}>
 
       {/* ── Profile card ── */}
-      <div className={styles.profileCard}>
-        {profile?.photoUrl && (
+      <div className={styles.profileCard} onClick={() => setProfileOpen(true)}>
+        {profile?.photoUrl ? (
           <img src={profile.photoUrl} alt="" className={styles.profilePhoto} />
+        ) : (
+          <div className={styles.profilePhotoPlaceholder}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" aria-hidden="true">
+              <path d="M12 2C6 2 2 8 2 13a10 10 0 0 0 20 0c0-5-4-11-10-11z"/>
+            </svg>
+          </div>
         )}
+        <div className={styles.profileOverlay} />
         <div className={styles.profileInfo}>
           <div className={styles.profileName}>
-            {profile?.commonName || 'Рослина'}
+            {profile?.commonName || 'Моя рослина'}
           </div>
           {profile?.species && (
             <div className={styles.profileSpecies}>{profile.species}</div>
           )}
           {!profile?.commonName && !profile?.species ? (
-            <button type="button" className={styles.profileHint} onClick={() => setProfileOpen(true)}>
+            <button type="button" className={styles.profileHint} onClick={e => { e.stopPropagation(); setProfileOpen(true) }}>
               Додай назву, фото та інтервал поливу →
             </button>
           ) : (
@@ -812,8 +819,8 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
             </div>
           )}
         </div>
-        <button type="button" className={styles.profileEditBtn} onClick={() => setProfileOpen(true)} aria-label="Редагувати">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <button type="button" className={styles.profileEditBtn} onClick={e => { e.stopPropagation(); setProfileOpen(true) }} aria-label="Редагувати">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
