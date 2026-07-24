@@ -627,7 +627,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     setIdentifying(true)
     try {
       const details = 'common_names,watering,best_watering,best_soil_type,best_light_condition,toxicity'
-      const idRes = await fetch(`https://plant.id/api/v3/identification?details=${details}&language=en`, {
+      const idRes = await fetch(`https://plant.id/api/v3/identification?details=${details}&language=uk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Api-Key': plantKey },
         body: JSON.stringify({ images: [currentPhotoUrl], classification_level: 'species' }),
@@ -679,10 +679,9 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
         ? !(toxicStr.includes('non-toxic') || toxicStr.includes('not toxic'))
         : null
 
-      // Care notes — human-readable Ukrainian summary
+      // Care notes — ґрунт + світло (полив вже показується окремою секцією з іконкою краплі)
       const parts: string[] = []
-      if (d.best_watering)    parts.push(`Полив: ${d.best_watering}`)
-      if (d.best_soil_type)   parts.push(`Ґрунт: ${d.best_soil_type}`)
+      if (d.best_soil_type)       parts.push(`Ґрунт: ${d.best_soil_type}`)
       if (d.best_light_condition) parts.push(`Світло: ${d.best_light_condition}`)
       const careNotes = parts.join('\n')
 
