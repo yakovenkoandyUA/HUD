@@ -825,3 +825,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 .unarchiveBtn:active { background: var(--border); }
+
+.emptyHint {
+  font-family: var(--font-ui); font-size: 0.78rem;
+  color: var(--text3); line-height: 1.5; margin: 0;
+}

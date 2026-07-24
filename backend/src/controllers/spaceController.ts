@@ -6,6 +6,7 @@ import Memory from '../models/Memory'
 import SprintTask from '../models/SprintTask'
 import Note from '../models/Note'
 import { assertLimit, assertFeature } from '../utils/entitlements'
+import { sendPushToUser } from '../services/webpush'
 
 function memberPublic(u: InstanceType<typeof User>, role: string) {
   return {
@@ -241,6 +242,15 @@ export async function addMember(req: Request, res: Response, next: NextFunction)
 
     const userIds = space.members.map(m => m.userId)
     const users = await User.find({ _id: { $in: userIds } })
+
+    const owner = users.find(u => (u._id as { toString(): string }).toString() === space.ownerId)
+    const ownerName = owner?.name ?? 'Хтось'
+    sendPushToUser(uid, {
+      title: `${ownerName} додав тебе до простору`,
+      body:  space.name,
+      url:   `/spaces/${space._id}`,
+    }).catch(() => { /* push optional */ })
+
     res.json(serializeSpace(space, users))
   } catch (err) {
     next(err)

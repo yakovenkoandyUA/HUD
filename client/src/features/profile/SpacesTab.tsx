@@ -980,9 +980,8 @@ const SpacesTab: React.FC = () => {
 									ДОДАТИ УЧАСНИКА
 								</label>
 
-								{/* Family quick-add chips */}
-								{family.filter(f => !detailSpace.members.some(m => m.userId === f.id)).length > 0 && (
-									<div className={styles.familyPickRow} style={{ marginBottom: 10 }}>
+								{family.filter(f => !detailSpace.members.some(m => m.userId === f.id)).length > 0 ? (
+									<div className={styles.familyPickRow}>
 										{family
 											.filter(f => !detailSpace.members.some(m => m.userId === f.id))
 											.map(f => (
@@ -1014,23 +1013,9 @@ const SpacesTab: React.FC = () => {
 												</button>
 											))}
 									</div>
+								) : (
+									<p className={styles.emptyHint}>Додавати можна лише людей з вашого сімейного кола. Зв'яжіть профілі через розділ Сім'я в профілі.</p>
 								)}
-
-								{/* Manual username input fallback */}
-								<div className={styles.addMemberRow}>
-									<input
-										className={styles.input}
-										value={memberInput}
-										onChange={e => setMemberInput(e.target.value)}
-										placeholder="Додати за username…"
-										onKeyDown={e => {
-											if (e.key === 'Enter') handleAddMember()
-										}}
-									/>
-									<button type="button" className={styles.addMemberBtn} onClick={handleAddMember} disabled={addingMember || !memberInput.trim()}>
-										{addingMember ? '…' : 'Додати'}
-									</button>
-								</div>
 							</>
 						)}
 
