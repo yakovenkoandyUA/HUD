@@ -619,96 +619,72 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     }
   }
 
-  // Plant.id → species name → Perenual care data
+  // Plant.id v3 — identification + care data in one request
   const handleIdentify = async (currentPhotoUrl: string) => {
-    const plantKey    = import.meta.env.VITE_PLANTID_API_KEY as string | undefined
-    const perenualKey = import.meta.env.VITE_PERENUAL_API_KEY as string | undefined
+    const plantKey = import.meta.env.VITE_PLANTID_API_KEY as string | undefined
     if (!plantKey) { showToast('Plant.id ключ не налаштовано', 'error'); return }
     if (!currentPhotoUrl) { showToast('Спочатку завантаж фото', 'error'); return }
     setIdentifying(true)
     try {
-      // 1. Identify with Plant.id
-      const idRes = await fetch('https://api.plant.id/v2/identify', {
+      const details = 'common_names,watering,best_watering,best_soil_type,best_light_condition,toxicity'
+      const idRes = await fetch(`https://plant.id/api/v3/identification?details=${details}&language=en`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Api-Key': plantKey },
-        body: JSON.stringify({ images: [currentPhotoUrl], plant_details: ['common_names', 'taxonomy'] }),
+        body: JSON.stringify({ images: [currentPhotoUrl], classification_level: 'species' }),
       })
       if (!idRes.ok) throw new Error('plantid')
+
       const idData = await idRes.json() as {
-        suggestions: Array<{ plant_name: string; plant_details: { common_names?: string[] }; probability: number }>
+        result: {
+          classification: {
+            suggestions: Array<{
+              name: string
+              probability: number
+              details: {
+                common_names?: string[]
+                watering?: { min: number; max: number }
+                best_watering?: string
+                best_soil_type?: string
+                best_light_condition?: string
+                toxicity?: string
+              }
+            }>
+          }
+        }
       }
-      const top = idData.suggestions?.[0]
+
+      const top = idData.result?.classification?.suggestions?.[0]
       if (!top) { showToast('Не вдалось визначити рослину', 'error'); return }
 
-      const species    = top.plant_name
-      const commonName = top.plant_details.common_names?.[0] || profile?.commonName || species
+      const species    = top.name
+      const d          = top.details
+      const commonName = d.common_names?.[0] || profile?.commonName || species
 
-      // 2. Fetch care data from Perenual
-      let careNotes = profile?.careNotes || ''
-      let sunlight: PlantProfile['sunlight'] = profile?.sunlight ?? null
-      let wateringIntervalDays = profile?.wateringIntervalDays ?? null
-      let toxicToPets = profile?.toxicToPets ?? null
-
-      if (perenualKey) {
-        try {
-          const searchRes = await fetch(
-            `https://perenual.com/api/species-list?key=${perenualKey}&q=${encodeURIComponent(species)}&per_page=1`
-          )
-          if (searchRes.ok) {
-            const searchData = await searchRes.json() as {
-              data: Array<{
-                id: number
-                watering: string
-                sunlight: string[]
-                poisonous_to_pets: number
-                care_level: string
-              }>
-            }
-            const plant = searchData.data?.[0]
-            if (plant) {
-              const isUsable = (val: string | undefined) =>
-                !!val &&
-                val.length > 2 &&
-                !val.toLowerCase().includes('upgrade') &&
-                !val.includes('perenual.com') &&
-                !val.toLowerCase().includes('unknown')
-
-              // Map watering frequency → days + Ukrainian label
-              const wateringMap: Record<string, number> = {
-                'Frequent': 3, 'Average': 7, 'Minimum': 14, 'None': 30,
-              }
-              const wateringLabel: Record<string, string> = {
-                'Frequent': 'Часто', 'Average': 'Помірно', 'Minimum': 'Рідко', 'None': 'Дуже рідко',
-              }
-              if (isUsable(plant.watering) && wateringMap[plant.watering] !== undefined) {
-                wateringIntervalDays = wateringMap[plant.watering]
-              }
-
-              // Map sunlight → enum + Ukrainian label
-              const sunStr = (plant.sunlight?.[0] ?? '').toLowerCase()
-              let sunlightLabel = ''
-              if (isUsable(plant.sunlight?.[0])) {
-                if (sunStr.includes('full sun'))                              { sunlight = 'high';   sunlightLabel = 'Пряме сонце' }
-                else if (sunStr.includes('part') || sunStr.includes('filtered')) { sunlight = 'medium'; sunlightLabel = 'Розсіяне світло' }
-                else if (sunStr.includes('shade') || sunStr.includes('low')) { sunlight = 'low';    sunlightLabel = 'Тінь / мало світла' }
-              }
-
-              // Toxicity
-              toxicToPets = plant.poisonous_to_pets === 1
-
-              // Care notes — only write values that actually mapped
-              const parts: string[] = []
-              if (wateringIntervalDays !== null && wateringLabel[plant.watering])
-                parts.push(`Полив: ${wateringLabel[plant.watering]}`)
-              if (sunlightLabel)
-                parts.push(`Світло: ${sunlightLabel}`)
-              if (isUsable(plant.care_level) && plant.care_level !== 'Unknown')
-                parts.push(`Догляд: ${plant.care_level}`)
-              if (parts.length) careNotes = parts.join(' · ')
-            }
-          }
-        } catch { /* Perenual failing shouldn't block the identification result */ }
+      // Watering interval — average of min/max
+      let wateringIntervalDays: number | null = null
+      if (d.watering?.min != null && d.watering?.max != null) {
+        wateringIntervalDays = Math.round((d.watering.min + d.watering.max) / 2)
       }
+
+      // Sunlight
+      let sunlight: PlantProfile['sunlight'] = profile?.sunlight ?? null
+      const lightStr = (d.best_light_condition ?? '').toLowerCase()
+      if (lightStr.includes('full sun') || lightStr.includes('direct'))         sunlight = 'high'
+      else if (lightStr.includes('indirect') || lightStr.includes('partial'))   sunlight = 'medium'
+      else if (lightStr.includes('shade') || lightStr.includes('low'))          sunlight = 'low'
+
+      // Toxicity
+      const toxicStr = (d.toxicity ?? '').toLowerCase()
+      const toxicToPets = toxicStr.length > 0
+        ? !(toxicStr.includes('non-toxic') || toxicStr.includes('not toxic'))
+        : null
+
+      // Care notes — human-readable Ukrainian summary
+      const parts: string[] = []
+      if (d.best_watering)    parts.push(`Полив: ${d.best_watering}`)
+      if (d.best_soil_type)   parts.push(`Ґрунт: ${d.best_soil_type}`)
+      if (d.best_light_condition) parts.push(`Світло: ${d.best_light_condition}`)
+      const careNotes = parts.join('\n')
 
       const updated = await updateProfile(spaceId, {
         species, commonName, careNotes, sunlight, wateringIntervalDays, toxicToPets,
