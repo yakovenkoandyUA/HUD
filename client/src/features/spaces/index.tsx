@@ -1120,7 +1120,7 @@ const SpaceDetailScreen: React.FC = () => {
 
         {/* ── Memories ── */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{space?.type === 'plant' ? 'МОМЕНТИ' : 'СПОГАДИ'}</h2>
+          <h2 className={styles.sectionTitle}>СПОГАДИ</h2>
           {memories === null ? (
             <div className={styles.memoriesGrid}>{[1,2,3,4].map(i => <div key={i} className={styles.skeleton} />)}</div>
           ) : memories.length === 0 ? (
