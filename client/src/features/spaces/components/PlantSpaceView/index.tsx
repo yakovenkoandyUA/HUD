@@ -132,11 +132,10 @@ function WaterDrop({ pct, status }: WaterDropProps) {
 
 interface WateringBlockProps {
   profile:       PlantProfile | null
-  color:         string
   onOpenProfile: () => void
 }
 
-function WateringBlock({ profile, color, onOpenProfile }: WateringBlockProps) {
+function WateringBlock({ profile, onOpenProfile }: WateringBlockProps) {
   const status   = wateringStatus(profile)
   const days     = daysSince(profile?.lastWateredAt ?? null)
   const interval = profile?.wateringIntervalDays ?? null
@@ -653,7 +652,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
       </div>
 
       {/* ── Watering block ── */}
-      <WateringBlock profile={profile} color={color} onOpenProfile={() => setProfileOpen(true)} />
+      <WateringBlock profile={profile} onOpenProfile={() => setProfileOpen(true)} />
 
       {/* ── Care notes from Perenual ── */}
       {profile?.careNotes && (
