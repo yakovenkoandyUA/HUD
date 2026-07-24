@@ -569,7 +569,7 @@ const ActiveWorkoutSheet: React.FC<ActiveWorkoutProps> = ({ isOpen, color, progr
   )
 }
 
-// ── Workout heatmap ────────────────────────────────────────────────────────
+// ── Workout calendar (current month) ──────────────────────────────────────
 
 interface HeatmapProps {
   events: SportEvent[]
@@ -577,95 +577,83 @@ interface HeatmapProps {
 }
 
 const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
-const WEEKS = 16
+const MONTH_NAMES = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень']
 
 const WorkoutHeatmap: React.FC<HeatmapProps> = ({ events, color }) => {
-  // Build date → count map
   const countByDate: Record<string, number> = {}
   for (const e of events) {
     const d = e.date.slice(0, 10)
     countByDate[d] = (countByDate[d] ?? 0) + 1
   }
 
-  // Build grid: WEEKS columns × 7 rows, starting from Monday WEEKS weeks ago
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const todayIso = today.toISOString().slice(0, 10)
 
-  // Find last Monday
-  const endMonday = new Date(today)
-  const dow = (today.getDay() + 6) % 7  // 0=Mon
-  endMonday.setDate(today.getDate() - dow + 6)  // end of this week = Sunday
+  const year  = today.getFullYear()
+  const month = today.getMonth()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  // 0=Mon offset for first day
+  const firstDow = (new Date(year, month, 1).getDay() + 6) % 7
 
-  const startDay = new Date(endMonday)
-  startDay.setDate(endMonday.getDate() - WEEKS * 7 + 1)
+  // Build flat cells: nulls for empty slots + day numbers
+  const cells: Array<number | null> = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ]
+  // Pad to full weeks
+  while (cells.length % 7 !== 0) cells.push(null)
 
-  // Build weeks array (each week = 7 days Mon→Sun)
-  const weeks: Array<Array<{ iso: string; count: number; isToday: boolean; isFuture: boolean }>> = []
-  for (let w = 0; w < WEEKS; w++) {
-    const week = []
-    for (let d = 0; d < 7; d++) {
-      const day = new Date(startDay)
-      day.setDate(startDay.getDate() + w * 7 + d)
-      const iso = day.toISOString().slice(0, 10)
-      week.push({
-        iso,
-        count: countByDate[iso] ?? 0,
-        isToday: iso === today.toISOString().slice(0, 10),
-        isFuture: day > today,
-      })
-    }
-    weeks.push(week)
-  }
-
-  // Month labels: detect when month changes between weeks
-  const monthLabels: Array<{ weekIdx: number; label: string }> = []
-  let lastMonth = -1
-  for (let w = 0; w < weeks.length; w++) {
-    const m = parseInt(weeks[w][0].iso.slice(5, 7))
-    if (m !== lastMonth) {
-      monthLabels.push({ weekIdx: w, label: MONTHS_SHORT[m - 1] })
-      lastMonth = m
-    }
-  }
+  const isoOf = (day: number) =>
+    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
   return (
     <div className={styles.heatmap}>
-      {/* Month labels */}
-      <div className={styles.heatmapMonths}>
-        {monthLabels.map(({ weekIdx, label }) => (
-          <span
-            key={label}
-            className={styles.heatmapMonthLabel}
-            style={{ gridColumn: weekIdx + 2 }}
-          >
-            {label}
-          </span>
+      <div className={styles.heatmapHeader}>
+        <span className={styles.heatmapMonthName}>{MONTH_NAMES[month]} {year}</span>
+      </div>
+
+      {/* Weekday headers */}
+      <div className={styles.heatmapWeekRow}>
+        {WEEK_DAYS.map(d => (
+          <span key={d} className={styles.heatmapWeekDay}>{d}</span>
         ))}
       </div>
-      <div className={styles.heatmapGrid}>
-        {/* Day labels */}
-        <div className={styles.heatmapDayLabels}>
-          {WEEK_DAYS.map((d, i) => (
-            <span key={i} className={styles.heatmapDayLabel}>{i % 2 === 0 ? d : ''}</span>
-          ))}
+
+      {/* Day grid */}
+      <div className={styles.heatmapCalGrid}>
+        {cells.map((day, i) => {
+          if (day === null) return <div key={i} className={styles.heatmapCalEmpty} />
+          const iso   = isoOf(day)
+          const count = countByDate[iso] ?? 0
+          const isToday = iso === todayIso
+          return (
+            <div
+              key={iso}
+              className={`${styles.heatmapCalCell} ${isToday ? styles.heatmapCalToday : ''} ${count > 0 ? styles.heatmapCalActive : ''}`}
+              style={count > 0 ? { background: color, opacity: count >= 2 ? 1 : 0.7 } : undefined}
+            >
+              <span className={styles.heatmapCalDay}>{day}</span>
+              {count > 1 && <span className={styles.heatmapCalDot} />}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className={styles.heatmapLegend}>
+        <div className={styles.heatmapLegendItem}>
+          <div className={styles.heatmapLegendCell} />
+          <span>без тренування</span>
         </div>
-        {/* Week columns */}
-        {weeks.map((week, wi) => (
-          <div key={wi} className={styles.heatmapWeek}>
-            {week.map((day) => (
-              <div
-                key={day.iso}
-                className={`${styles.heatmapCell} ${day.isToday ? styles.heatmapCellToday : ''}`}
-                style={
-                  day.count > 0 && !day.isFuture
-                    ? { background: color, opacity: day.count >= 2 ? 1 : 0.5 }
-                    : undefined
-                }
-                title={day.count > 0 ? `${day.iso}: ${day.count} трен.` : day.iso}
-              />
-            ))}
-          </div>
-        ))}
+        <div className={styles.heatmapLegendItem}>
+          <div className={styles.heatmapLegendCell} style={{ background: color, opacity: 0.7 }} />
+          <span>1 тренування</span>
+        </div>
+        <div className={styles.heatmapLegendItem}>
+          <div className={styles.heatmapLegendCell} style={{ background: color }} />
+          <span>2+</span>
+        </div>
       </div>
     </div>
   )

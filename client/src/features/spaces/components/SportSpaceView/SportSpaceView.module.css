@@ -467,68 +467,108 @@
 
 .hiddenInput { display: none; }
 
-/* ── Heatmap ── */
+/* ── Calendar heatmap ── */
 .heatmap {
   margin-bottom: 16px;
-  overflow-x: auto;
 }
 
-.heatmapMonths {
+.heatmapHeader {
+  margin-bottom: 10px;
+}
+
+.heatmapMonthName {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.heatmapWeekRow {
   display: grid;
-  grid-template-columns: 20px repeat(16, 12px);
-  gap: 2px;
-  margin-bottom: 3px;
-  padding-left: 0;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 4px;
 }
 
-.heatmapMonthLabel {
-  font-size: 9px;
+.heatmapWeekDay {
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-secondary);
-  font-family: var(--font-mono);
-  white-space: nowrap;
+  text-align: center;
+  letter-spacing: 0.04em;
 }
 
-.heatmapGrid {
-  display: flex;
-  gap: 2px;
-  align-items: flex-start;
+.heatmapCalGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
 }
 
-.heatmapDayLabels {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex-shrink: 0;
+.heatmapCalEmpty {
+  aspect-ratio: 1;
 }
 
-.heatmapDayLabel {
-  font-size: 8px;
-  color: var(--text-secondary);
-  height: 10px;
-  width: 18px;
+.heatmapCalCell {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: opacity 0.15s;
+}
+
+.heatmapCalToday {
+  border-color: var(--space-color, var(--accent));
+  border-width: 2px;
+}
+
+.heatmapCalActive .heatmapCalDay {
+  color: #fff;
+  font-weight: 700;
+}
+
+.heatmapCalDay {
+  font-size: 12px;
   font-family: var(--font-mono);
+  color: var(--text-secondary);
+  line-height: 1;
 }
 
-.heatmapWeek {
+.heatmapCalDot {
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+}
+
+/* Legend */
+.heatmapLegend {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.heatmapLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.heatmapLegendCell {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
   flex-shrink: 0;
-}
-
-.heatmapCell {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  background: var(--border);
-  transition: opacity 0.1s;
-}
-
-.heatmapCellToday {
-  outline: 1px solid var(--space-color, var(--accent));
-  outline-offset: 1px;
 }
 
 /* ── Workout list (compact) ── */
