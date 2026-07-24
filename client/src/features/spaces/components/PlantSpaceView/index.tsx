@@ -156,9 +156,12 @@ function WateringBlock({ profile, onOpenProfile, inline }: WateringBlockProps) {
         <WaterDrop pct={0} status="unknown" />
         <div className={styles.waterInfo}>
           <span className={styles.waterLabel}>Полив</span>
-          <button type="button" className={styles.waterSetupBtn} onClick={e => { e.stopPropagation(); onOpenProfile() }}>
-            Налаштувати інтервал →
-          </button>
+          {!inline && (
+            <button type="button" className={styles.waterSetupBtn} onClick={e => { e.stopPropagation(); onOpenProfile() }}>
+              Налаштувати інтервал →
+            </button>
+          )}
+          {inline && <span className={styles.waterSub}>Інтервал не вказано</span>}
         </div>
       </div>
     )
