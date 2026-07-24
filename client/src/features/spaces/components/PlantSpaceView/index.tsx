@@ -83,11 +83,10 @@ const DROP_PATH = 'M 24 3 C 12 15 2 32 2 46 Q 2 62 24 62 Q 46 62 46 46 C 46 32 3
 
 interface WaterDropProps {
   pct:    number   // 0..1 — how full (1 = just watered, 0 = overdue)
-  color:  string
   status: 'ok' | 'soon' | 'overdue' | 'unknown'
 }
 
-function WaterDrop({ pct, color, status }: WaterDropProps) {
+function WaterDrop({ pct, status }: WaterDropProps) {
   const dropColor = status === 'overdue' ? '#ef4444' : status === 'soon' ? '#d97706' : '#3b82f6'
   const maxFillH  = 56          // max fill height in viewBox units
   const fillH     = pct * maxFillH
@@ -152,7 +151,7 @@ function WateringBlock({ profile, color, onOpenProfile }: WateringBlockProps) {
   if (status === 'unknown') {
     return (
       <div className={styles.waterBlock}>
-        <WaterDrop pct={0} color={color} status="unknown" />
+        <WaterDrop pct={0} status="unknown" />
         <div className={styles.waterInfo}>
           <span className={styles.waterLabel}>Полив</span>
           <button type="button" className={styles.waterSetupBtn} onClick={onOpenProfile}>
@@ -175,7 +174,7 @@ function WateringBlock({ profile, color, onOpenProfile }: WateringBlockProps) {
 
   return (
     <div className={styles.waterBlock}>
-      <WaterDrop pct={pct} color={color} status={status} />
+      <WaterDrop pct={pct} status={status} />
       <div className={styles.waterInfo}>
         <span className={`${styles.waterLabel} ${status === 'overdue' ? styles.waterLabelOverdue : status === 'soon' ? styles.waterLabelSoon : ''}`}>
           {statusLabel}
