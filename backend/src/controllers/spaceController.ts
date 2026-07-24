@@ -55,6 +55,8 @@ function serializeSpace(
     homeProfile:    space.homeProfile    ?? null,
     petProfile:     space.petProfile     ?? null,
     tripProfile:    space.tripProfile    ?? null,
+    sportProfile:   space.sportProfile   ?? null,
+    plantProfile:   space.plantProfile   ?? null,
     createdAt: space.createdAt,
     memoriesCount:  stats?.memoriesCount  ?? 0,
     openTasksCount: stats?.openTasksCount ?? 0,

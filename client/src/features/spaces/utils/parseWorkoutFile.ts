@@ -109,7 +109,7 @@ function parseTcx(doc: Document): SportEventInput {
   const SPORT_LABELS: Record<string, string> = {
     Running: 'Пробіжка', Cycling: 'Велосипед', Swimming: 'Плавання', Other: 'Тренування',
   }
-  const title = SPORT_LABELS[sport] ?? sport || 'Тренування'
+  const title = (SPORT_LABELS[sport] ?? sport) || 'Тренування'
 
   const metrics: WorkoutMetric[] = []
   if (totalM > 10) metrics.push({ name: 'Дистанція', value: (totalM / 1000).toFixed(2), unit: 'км' })

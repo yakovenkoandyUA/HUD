@@ -26,6 +26,8 @@ import {
 import {
   getSportProfile, updateSportProfile,
   getSportEvents, createSportEvent, updateSportEvent, deleteSportEvent,
+  getWorkoutPrograms, createWorkoutProgram, updateWorkoutProgram, deleteWorkoutProgram,
+  getWorkoutSessions, createWorkoutSession,
 } from '../controllers/sportController'
 import { getTickets, createTicket, updateTicket, deleteTicket } from '../controllers/ticketController'
 import { getAccommodations, createAccommodation, updateAccommodation, deleteAccommodation } from '../controllers/accommodationController'
@@ -91,11 +93,17 @@ router.post('/:id/plant/events',                       createPlantEvent)
 router.delete('/:id/plant/events/:eventId',            deletePlantEvent)
 
 // sport
-router.get('/:id/sport/profile',                       getSportProfile)
-router.patch('/:id/sport/profile',                     updateSportProfile)
-router.get('/:id/sport/events',                        getSportEvents)
-router.post('/:id/sport/events',                       createSportEvent)
-router.patch('/:id/sport/events/:eventId',             updateSportEvent)
-router.delete('/:id/sport/events/:eventId',            deleteSportEvent)
+router.get('/:id/sport/profile',                           getSportProfile)
+router.patch('/:id/sport/profile',                         updateSportProfile)
+router.get('/:id/sport/events',                            getSportEvents)
+router.post('/:id/sport/events',                           createSportEvent)
+router.patch('/:id/sport/events/:eventId',                 updateSportEvent)
+router.delete('/:id/sport/events/:eventId',                deleteSportEvent)
+router.get('/:id/sport/programs',                          getWorkoutPrograms)
+router.post('/:id/sport/programs',                         createWorkoutProgram)
+router.patch('/:id/sport/programs/:programId',             updateWorkoutProgram)
+router.delete('/:id/sport/programs/:programId',            deleteWorkoutProgram)
+router.get('/:id/sport/sessions',                          getWorkoutSessions)
+router.post('/:id/sport/sessions',                         createWorkoutSession)
 
 export default router

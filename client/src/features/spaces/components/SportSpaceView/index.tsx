@@ -318,8 +318,6 @@ const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
 
 // ── Program sheet (create / edit) ─────────────────────────────────────────
 
-function genId() { return Math.random().toString(36).slice(2, 10) }
-
 interface ProgramSheetProps {
   isOpen:   boolean
   color:    string
