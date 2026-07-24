@@ -17,6 +17,7 @@ import type { Memory } from '@/features/memories/types/memory'
 import type { AddMemoryData } from '@/features/memories/components/memories/AddMemoryModal'
 import type { PlanInput } from '@/features/memories/store/plansStore'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
+import { useImageUpload } from '@/shared/hooks/useImageUpload'
 import ProgressBar from '@/shared/components/ui/ProgressBar'
 import VehicleSpaceView from './components/VehicleSpaceView'
 import PetSpaceView from './components/PetSpaceView'
@@ -221,6 +222,11 @@ const SpaceDetailScreen: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const [coverPickerOpen, setCoverPickerOpen] = useState(false)
+
+  const { trigger: triggerCoverUpload, uploading: coverUploading, inputElement: coverInputElement } = useImageUpload('spaces', (url) => {
+    updateSpace(spaceId!, { coverUrl: url })
+    showToast('Обкладинку оновлено', 'success')
+  })
 
   // ── Unsplash auto-hero for trip spaces ──
   const [unsplashPhotos, setUnsplashPhotos]   = useState<Array<{ url: string; attribution: string }>>([])
@@ -635,6 +641,7 @@ const SpaceDetailScreen: React.FC = () => {
           </div>
         )}
 
+        {coverInputElement}
         <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 4l-5 5 5 5"/>
@@ -645,6 +652,27 @@ const SpaceDetailScreen: React.FC = () => {
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
             </svg>
+          </button>
+        )}
+        {isOwner && (space?.coverUrl || space?.type === 'trip') && (
+          <button
+            type="button"
+            className={styles.coverChangeBtn}
+            aria-label="Змінити обкладинку"
+            disabled={coverUploading}
+            onClick={() => {
+              if (space?.type === 'trip') setCoverPickerOpen(true)
+              else triggerCoverUpload()
+            }}
+          >
+            {coverUploading ? (
+              <span className={styles.coverChangeBtnSpinner} />
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            )}
           </button>
         )}
         {space && (
