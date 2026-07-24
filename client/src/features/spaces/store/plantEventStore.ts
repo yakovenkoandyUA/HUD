@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { authFetch } from '@/shared/services/api'
 import type { PlantProfile } from '@/features/memories/store/spacesStore'
 
@@ -20,19 +21,37 @@ export interface PlantEventInput {
   notes?: string
 }
 
-interface PlantEventStore {
-  eventsBySpace: Record<string, PlantEvent[]>
-  loading:       boolean
-
-  fetchEvents:   (spaceId: string) => Promise<void>
-  createEvent:   (spaceId: string, data: PlantEventInput) => Promise<PlantEvent>
-  deleteEvent:   (spaceId: string, eventId: string) => Promise<void>
-  updateProfile: (spaceId: string, data: Partial<PlantProfile>) => Promise<PlantProfile>
+export interface HealthIssue {
+  name:        string
+  probability: number
+  treatment?:  string
 }
 
-export const usePlantEventStore = create<PlantEventStore>((set) => ({
-  eventsBySpace: {},
-  loading:       false,
+export interface HealthResult {
+  checkedAt:         string
+  isHealthy:         boolean
+  healthProbability: number
+  issues:            HealthIssue[]
+}
+
+interface PlantEventStore {
+  eventsBySpace:      Record<string, PlantEvent[]>
+  healthChecksBySpace: Record<string, HealthResult>
+  loading:            boolean
+
+  fetchEvents:     (spaceId: string) => Promise<void>
+  createEvent:     (spaceId: string, data: PlantEventInput) => Promise<PlantEvent>
+  deleteEvent:     (spaceId: string, eventId: string) => Promise<void>
+  updateProfile:   (spaceId: string, data: Partial<PlantProfile>) => Promise<PlantProfile>
+  saveHealthCheck: (spaceId: string, result: HealthResult) => void
+}
+
+export const usePlantEventStore = create<PlantEventStore>()(
+  persist(
+    (set) => ({
+  eventsBySpace:       {},
+  healthChecksBySpace: {},
+  loading:             false,
 
   fetchEvents: async (spaceId) => {
     set({ loading: true })
@@ -82,4 +101,14 @@ export const usePlantEventStore = create<PlantEventStore>((set) => ({
     if (!res.ok) throw new Error('Update failed')
     return res.json() as Promise<PlantProfile>
   },
-}))
+
+  saveHealthCheck: (spaceId, result) => {
+    set(s => ({ healthChecksBySpace: { ...s.healthChecksBySpace, [spaceId]: result } }))
+  },
+}),
+    {
+      name: 'plant-health-storage',
+      partialize: (s) => ({ healthChecksBySpace: s.healthChecksBySpace }),
+    }
+  )
+)

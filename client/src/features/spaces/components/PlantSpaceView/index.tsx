@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { usePlantEventStore } from '../../store/plantEventStore'
-import type { PlantEventType, PlantEventInput } from '../../store/plantEventStore'
+import type { PlantEventType, PlantEventInput, HealthResult } from '../../store/plantEventStore'
 import type { PlantProfile } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
@@ -181,6 +181,103 @@ function WateringBlock({ profile, onOpenProfile }: WateringBlockProps) {
         <span className={styles.waterSub}>{subLabel}</span>
         <span className={styles.waterFraction}>{days}/{interval}д</span>
       </div>
+    </div>
+  )
+}
+
+// ── Health section ─────────────────────────────────────────────────────────
+
+interface HealthSectionProps {
+  result:    HealthResult | undefined
+  hasPhoto:  boolean
+  checking:  boolean
+  color:     string
+  onCheck:   () => void
+}
+
+function HealthSection({ result, hasPhoto, checking, color, onCheck }: HealthSectionProps) {
+  const scoreColor = !result
+    ? color
+    : result.healthProbability >= 0.7
+      ? '#22c55e'
+      : result.healthProbability >= 0.4
+        ? '#d97706'
+        : '#ef4444'
+
+  const scoreLabel = !result
+    ? ''
+    : result.isHealthy
+      ? 'Здорова'
+      : result.healthProbability >= 0.5
+        ? 'Є проблеми'
+        : 'Потребує уваги'
+
+  const topIssues = result?.issues.filter(i => i.probability > 0.08).slice(0, 3) ?? []
+
+  function fmtCheckedAt(iso: string) {
+    const [y, m, d] = iso.slice(0, 10).split('-')
+    return `${d}.${m}.${y}`
+  }
+
+  return (
+    <div className={styles.healthSection}>
+      <div className={styles.healthHeader}>
+        <span className={styles.sectionTitle}>ЗДОРОВ'Я</span>
+        <button
+          type="button"
+          className={styles.healthCheckBtn}
+          style={{ color }}
+          onClick={onCheck}
+          disabled={!hasPhoto || checking}
+        >
+          {checking ? (
+            <span className={styles.healthSpinner} style={{ borderTopColor: color }} />
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          )}
+          {checking ? 'Аналіз…' : result ? 'Оновити' : 'Перевірити'}
+        </button>
+      </div>
+
+      {!result && !checking && (
+        <p className={styles.healthEmpty}>
+          {hasPhoto ? 'Натисни «Перевірити» щоб оцінити стан рослини' : 'Додай фото рослини у профіль щоб перевірити здоров\'я'}
+        </p>
+      )}
+
+      {result && (
+        <>
+          <div className={styles.healthScore}>
+            <div className={styles.healthScoreBar}>
+              <div
+                className={styles.healthScoreFill}
+                style={{ width: `${Math.round(result.healthProbability * 100)}%`, background: scoreColor }}
+              />
+            </div>
+            <span className={styles.healthScoreLabel} style={{ color: scoreColor }}>
+              {Math.round(result.healthProbability * 100)}% — {scoreLabel}
+            </span>
+          </div>
+
+          {topIssues.length > 0 && (
+            <div className={styles.healthIssues}>
+              {topIssues.map((issue, i) => (
+                <div key={i} className={styles.healthIssueRow}>
+                  <div className={styles.healthIssueName}>{issue.name}</div>
+                  <div className={styles.healthIssuePct}>{Math.round(issue.probability * 100)}%</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className={styles.healthMeta}>
+            Перевірено {fmtCheckedAt(result.checkedAt)}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -474,11 +571,12 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
  */
 const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate }) => {
   const showToast = useUiStore(s => s.showToast)
-  const { eventsBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile } = usePlantEventStore()
+  const { eventsBySpace, healthChecksBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile, saveHealthCheck } = usePlantEventStore()
 
   const [addSheet, setAddSheet]       = useState<PlantEventType | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [identifying, setIdentifying] = useState(false)
+  const [healthChecking, setHealthChecking] = useState(false)
 
   const events = eventsBySpace[spaceId] ?? []
 
@@ -608,6 +706,59 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     }
   }
 
+  const handleHealthCheck = async () => {
+    const plantKey = import.meta.env.VITE_PLANTID_API_KEY as string | undefined
+    if (!plantKey) { showToast('Plant.id ключ не налаштовано', 'error'); return }
+    if (!profile?.photoUrl) { showToast('Спочатку завантаж фото', 'error'); return }
+    setHealthChecking(true)
+    try {
+      const res = await fetch('https://plant.id/api/v3/health_assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Api-Key': plantKey },
+        body: JSON.stringify({
+          images:  [profile.photoUrl],
+          health:  'all',
+          details: ['treatment', 'description'],
+        }),
+      })
+      if (!res.ok) throw new Error('health_api')
+      const data = await res.json() as {
+        result: {
+          is_healthy: { probability: number; binary: boolean }
+          disease: {
+            suggestions: Array<{
+              name: string
+              probability: number
+              details?: { treatment?: { prevention?: string[]; biological?: string[] } }
+            }>
+          }
+        }
+      }
+
+      const r = data.result
+      const issues = (r.disease?.suggestions ?? [])
+        .map(s => ({
+          name:        s.name,
+          probability: s.probability,
+          treatment:   s.details?.treatment?.prevention?.[0]
+            ?? s.details?.treatment?.biological?.[0],
+        }))
+        .sort((a, b) => b.probability - a.probability)
+
+      saveHealthCheck(spaceId, {
+        checkedAt:         new Date().toISOString(),
+        isHealthy:         r.is_healthy.binary,
+        healthProbability: r.is_healthy.probability,
+        issues,
+      })
+      showToast(r.is_healthy.binary ? 'Рослина здорова' : 'Знайдено проблеми', r.is_healthy.binary ? 'success' : 'error')
+    } catch {
+      showToast('Помилка діагностики', 'error')
+    } finally {
+      setHealthChecking(false)
+    }
+  }
+
   const colorVar = { '--space-color': color } as React.CSSProperties
 
   return (
@@ -659,6 +810,15 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
 
       {/* ── Watering block ── */}
       <WateringBlock profile={profile} onOpenProfile={() => setProfileOpen(true)} />
+
+      {/* ── Health check ── */}
+      <HealthSection
+        result={healthChecksBySpace[spaceId]}
+        hasPhoto={!!profile?.photoUrl}
+        checking={healthChecking}
+        color={color}
+        onCheck={handleHealthCheck}
+      />
 
       {/* ── Care notes from Perenual ── */}
       {profile?.careNotes && (

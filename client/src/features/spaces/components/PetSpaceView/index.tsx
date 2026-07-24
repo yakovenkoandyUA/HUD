@@ -1125,7 +1125,7 @@ const PetSpaceView: React.FC<Props> = ({
 
         <div className={styles.heroContent}>
           <h1 className={`${styles.heroName} ${coverUrl ? styles.heroNameCovered : ''}`}>{spaceName}</h1>
-          <span className={styles.heroTypeLabel}>Улюбленець</span>
+          <span className={styles.heroTypeLabel}>Вихованець</span>
           {(age || profile?.weight != null || nextUpcoming) && (
             <div className={styles.heroStatus}>
               {age && <span className={styles.heroStatusItem}>{age}</span>}

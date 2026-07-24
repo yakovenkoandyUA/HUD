@@ -29,10 +29,10 @@ const DEFAULT_MODULES: Partial<Record<SpaceType, string[]>> = {
 }
 
 const TYPE_OPTIONS: { value: SpaceType; label: string }[] = [
-  { value: 'trip',    label: 'Поїздка'    },
+  { value: 'trip',    label: 'Подорож'    },
   { value: 'vehicle', label: 'Авто'       },
   { value: 'plant',   label: 'Рослина'    },
-  { value: 'pet',     label: 'Улюбленець' },
+  { value: 'pet',     label: 'Вихованець' },
   { value: 'sports',  label: 'Спорт'      },
 ]
 
@@ -683,7 +683,7 @@ const SpacesTab: React.FC = () => {
 									</>
 								)}
 
-								{/* ── Улюбленець: додаткові поля ── */}
+								{/* ── Вихованець: додаткові поля ── */}
 								{newType === 'pet' && (
 									<>
 										<hr className={styles.profileDivider} />

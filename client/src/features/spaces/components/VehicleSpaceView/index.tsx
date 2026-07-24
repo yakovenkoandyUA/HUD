@@ -221,8 +221,12 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
   const { showToast }           = useUiStore()
   const { updateProfile }       = useVehicleStore()
   const { setVehicleProfile }   = useSpacesStore()
+  const f1Enabled               = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const { trigger: triggerPhoto, uploading: uploadingPhoto, inputElement: photoInput } =
     useImageUpload('mimir/vehicles', url => setForm(p => ({ ...p, photoUrl: url })))
+  const vehicleBanner = coverUrl || (f1Enabled
+    ? '/space-identifiers-transparent/space_car_f1.png'
+    : SPACE_TYPE_CONFIG.vehicle.iconSrc)
 
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(() => setEditOpen(false), { enabled: editOpen, overlayRef })
@@ -284,7 +288,7 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
       {/* ── Hero banner ── */}
       <div className={`${styles.vehicleHero} ${styles.vehicleHeroCovered}`}>
         <img
-          src={coverUrl || SPACE_TYPE_CONFIG.vehicle.iconSrc}
+          src={vehicleBanner}
           alt=""
           className={styles.vehicleHeroCoverImg}
           style={{ objectPosition: coverUrl ? `center ${coverPosition ?? 'center'}` : 'center center' }}

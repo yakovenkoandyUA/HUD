@@ -45,9 +45,9 @@ const DIRECTIONS: { id: Direction; label: string; desc: string; icon: React.Reac
 
 const SPACE_PRESETS: { type: SpaceType; label: string; desc: string }[] = [
   { type: 'plant',   label: 'Рослина',    desc: 'Полив, добрива, ідентифікація' },
-  { type: 'pet',     label: 'Улюбленець', desc: 'Ветеринар, щеплення, догляд' },
+  { type: 'pet',     label: 'Вихованець', desc: 'Ветеринар, щеплення, догляд' },
   { type: 'vehicle', label: 'Авто',       desc: 'ТО, заправки, документи' },
-  { type: 'trip',    label: 'Поїздка',    desc: 'Маршрут, місця, витрати' },
+  { type: 'trip',    label: 'Подорож',    desc: 'Маршрут, місця, витрати' },
   { type: 'sports',  label: 'Спорт',      desc: 'Результати й прогрес' },
 ]
 

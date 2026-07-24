@@ -11,8 +11,8 @@ export interface SpaceTemplate {
 
 export const SPACE_TEMPLATES: SpaceTemplate[] = [
   {
-    id: 'trip', label: 'Поїздка', type: 'trip', color: '#3498db',
-    defaultName: 'Нова поїздка',
+    id: 'trip', label: 'Подорож', type: 'trip', color: '#3498db',
+    defaultName: 'Нова подорож',
     description: 'Маршрут, місця, витрати',
   },
   {
@@ -26,8 +26,8 @@ export const SPACE_TEMPLATES: SpaceTemplate[] = [
     description: 'Полив, добрива, ідентифікація',
   },
   {
-    id: 'pet', label: 'Улюбленець', type: 'pet', color: '#ff7043',
-    defaultName: 'Мій улюбленець',
+    id: 'pet', label: 'Вихованець', type: 'pet', color: '#ff7043',
+    defaultName: 'Мій вихованець',
     description: 'Ветеринар, щеплення, догляд',
   },
   {
