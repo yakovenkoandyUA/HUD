@@ -16,17 +16,6 @@ interface Props {
   editEvent?:  SportEvent
 }
 
-// ── Preset metric templates per sport ─────────────────────────────────────
-
-const METRIC_PRESETS: Record<string, WorkoutMetric[]> = {
-  running:  [{ name: 'Відстань', value: '', unit: 'км' }, { name: 'Темп', value: '', unit: 'хв/км' }],
-  cycling:  [{ name: 'Відстань', value: '', unit: 'км' }, { name: 'Швидкість', value: '', unit: 'км/год' }],
-  swimming: [{ name: 'Довжина', value: '', unit: 'м' }, { name: 'Кількість басейнів', value: '', unit: 'x' }],
-  gym:      [{ name: 'Вправи', value: '', unit: '' }],
-  football: [{ name: 'Таймів зіграно', value: '', unit: 'x' }],
-  yoga:     [],
-}
-
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
 }

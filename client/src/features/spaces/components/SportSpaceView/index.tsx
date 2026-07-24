@@ -104,13 +104,12 @@ function genId(): string {
 interface ProfileSheetProps {
   isOpen:    boolean
   profile:   SportProfile | null
-  spaceName: string
   color:     string
   onClose:   () => void
   onSave:    (data: Partial<SportProfile>) => Promise<void>
 }
 
-const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceName, color, onClose, onSave }) => {
+const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color, onClose, onSave }) => {
   const [sport, setSport]   = useState(profile?.sport ?? '')
   const [level, setLevel]   = useState<SportProfile['level']>(profile?.level ?? null)
   const [goal, setGoal]     = useState(profile?.goal ?? '')
@@ -239,7 +238,6 @@ const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
   const [dateOpen, setDateOpen] = useState(false)
   const [date, setDate]       = useState('')
   const [saving, setSaving]   = useState(false)
-  const [editId, setEditId]   = useState<string | null>(null)
 
   const handleAdd = async () => {
     if (!name.trim() || !value.trim()) return
@@ -321,12 +319,11 @@ const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
 
 interface WorkoutRowProps {
   event:    SportEvent
-  color:    string
   onEdit:   () => void
   onDelete: () => void
 }
 
-const WorkoutRow: React.FC<WorkoutRowProps> = ({ event, color, onEdit, onDelete }) => {
+const WorkoutRow: React.FC<WorkoutRowProps> = ({ event, onEdit, onDelete }) => {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handleDelete = () => {
@@ -612,7 +609,6 @@ const SportSpaceView: React.FC<Props> = ({
               <WorkoutRow
                 key={event._id}
                 event={event}
-                color={color}
                 onEdit={() => openEdit(event)}
                 onDelete={() => handleDelete(event._id)}
               />
@@ -674,7 +670,6 @@ const SportSpaceView: React.FC<Props> = ({
       <ProfileEditSheet
         isOpen={profileOpen}
         profile={profile}
-        spaceName={spaceName}
         color={color}
         onClose={() => setProfileOpen(false)}
         onSave={handleProfileSave}
