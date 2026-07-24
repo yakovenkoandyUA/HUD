@@ -619,6 +619,20 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     }
   }
 
+  const translateToUk = async (text: string): Promise<string> => {
+    try {
+      const res = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|uk`
+      )
+      if (!res.ok) return text
+      const data = await res.json() as { responseData?: { translatedText?: string }; responseStatus?: number }
+      const translated = data.responseData?.translatedText
+      return (translated && data.responseStatus === 200) ? translated : text
+    } catch {
+      return text
+    }
+  }
+
   // Plant.id v3 — identification + care data in one request
   const handleIdentify = async (currentPhotoUrl: string) => {
     const plantKey = import.meta.env.VITE_PLANTID_API_KEY as string | undefined
@@ -679,10 +693,14 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
         ? !(toxicStr.includes('non-toxic') || toxicStr.includes('not toxic'))
         : null
 
-      // Care notes — ґрунт + світло (полив вже показується окремою секцією з іконкою краплі)
+      // Care notes — ґрунт + світло, translated to Ukrainian
+      const [soilUk, lightUk] = await Promise.all([
+        d.best_soil_type       ? translateToUk(d.best_soil_type)       : Promise.resolve(''),
+        d.best_light_condition ? translateToUk(d.best_light_condition) : Promise.resolve(''),
+      ])
       const parts: string[] = []
-      if (d.best_soil_type)       parts.push(`Ґрунт: ${d.best_soil_type}`)
-      if (d.best_light_condition) parts.push(`Світло: ${d.best_light_condition}`)
+      if (soilUk)  parts.push(`Ґрунт: ${soilUk}`)
+      if (lightUk) parts.push(`Світло: ${lightUk}`)
       const careNotes = parts.join('\n')
 
       const updated = await updateProfile(spaceId, {
