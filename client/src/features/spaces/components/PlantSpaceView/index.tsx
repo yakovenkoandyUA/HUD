@@ -49,10 +49,11 @@ function daysSince(iso: string | null): number | null {
   return Math.floor(ms / 86400000)
 }
 
-function wateringStatus(profile: PlantProfile | null): 'ok' | 'soon' | 'overdue' | 'unknown' {
+function wateringStatus(profile: PlantProfile | null): 'ok' | 'soon' | 'overdue' | 'unknown' | 'noHistory' {
   const days = daysSince(profile?.lastWateredAt ?? null)
   const interval = profile?.wateringIntervalDays ?? null
-  if (days === null || interval === null) return 'unknown'
+  if (interval === null) return 'unknown'
+  if (days === null) return 'noHistory'
   if (days >= interval) return 'overdue'
   if (days >= interval * 0.75) return 'soon'
   return 'ok'
@@ -162,6 +163,18 @@ function WateringBlock({ profile, onOpenProfile, inline }: WateringBlockProps) {
             </button>
           )}
           {inline && <span className={styles.waterSub}>Інтервал не вказано</span>}
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'noHistory') {
+    return (
+      <div className={blockClass}>
+        <WaterDrop pct={0} status="unknown" />
+        <div className={styles.waterInfo}>
+          <span className={styles.waterLabel}>Полив кожні {interval}д</span>
+          <span className={styles.waterSub}>Ще не поливали</span>
         </div>
       </div>
     )
