@@ -74,6 +74,7 @@ interface SportStore {
   deleteProgram:        (spaceId: string, programId: string) => Promise<void>
   fetchSessions:        (spaceId: string) => Promise<void>
   createSession:        (spaceId: string, data: Omit<WorkoutSession, '_id' | 'spaceId' | 'userId' | 'createdAt'>) => Promise<WorkoutSession>
+  deleteSession:        (spaceId: string, sessionId: string) => Promise<void>
 }
 
 export const useSportStore = create<SportStore>((set) => ({
@@ -201,5 +202,15 @@ export const useSportStore = create<SportStore>((set) => ({
       sessionsBySpace: { ...s.sessionsBySpace, [spaceId]: [session, ...(s.sessionsBySpace[spaceId] ?? [])] },
     }))
     return session
+  },
+
+  deleteSession: async (spaceId, sessionId) => {
+    set(s => ({
+      sessionsBySpace: {
+        ...s.sessionsBySpace,
+        [spaceId]: (s.sessionsBySpace[spaceId] ?? []).filter(s => s._id !== sessionId),
+      },
+    }))
+    await authFetch(`/api/spaces/${spaceId}/sport/sessions/${sessionId}`, { method: 'DELETE' })
   },
 }))

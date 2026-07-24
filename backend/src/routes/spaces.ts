@@ -27,7 +27,7 @@ import {
   getSportProfile, updateSportProfile,
   getSportEvents, createSportEvent, updateSportEvent, deleteSportEvent,
   getWorkoutPrograms, createWorkoutProgram, updateWorkoutProgram, deleteWorkoutProgram,
-  getWorkoutSessions, createWorkoutSession,
+  getWorkoutSessions, createWorkoutSession, deleteWorkoutSession,
 } from '../controllers/sportController'
 import { getTickets, createTicket, updateTicket, deleteTicket } from '../controllers/ticketController'
 import { getAccommodations, createAccommodation, updateAccommodation, deleteAccommodation } from '../controllers/accommodationController'
@@ -105,5 +105,6 @@ router.patch('/:id/sport/programs/:programId',             updateWorkoutProgram)
 router.delete('/:id/sport/programs/:programId',            deleteWorkoutProgram)
 router.get('/:id/sport/sessions',                          getWorkoutSessions)
 router.post('/:id/sport/sessions',                         createWorkoutSession)
+router.delete('/:id/sport/sessions/:sessionId',            deleteWorkoutSession)
 
 export default router

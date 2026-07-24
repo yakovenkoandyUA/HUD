@@ -122,7 +122,7 @@ export async function createWorkoutProgram(req: Request, res: Response): Promise
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
 
     const count = await WorkoutProgram.countDocuments({ spaceId: req.params.id })
-    if (count >= 2) { res.status(400).json({ error: 'Max 2 programs per space' }); return }
+    if (count >= 7) { res.status(400).json({ error: 'Max 7 programs per space' }); return }
 
     const { name, exercises } = req.body as { name?: string; exercises?: unknown[] }
     if (!name?.trim()) { res.status(400).json({ error: 'Name required' }); return }
@@ -213,6 +213,18 @@ export async function createWorkoutSession(req: Request, res: Response): Promise
     })
 
     res.status(201).json(session)
+  } catch {
+    res.status(500).json({ error: 'Server error' })
+  }
+}
+
+/** DELETE /api/spaces/:id/sport/sessions/:sessionId */
+export async function deleteWorkoutSession(req: Request, res: Response): Promise<void> {
+  try {
+    const space = await Space.findOne({ _id: req.params.id, 'members.userId': req.userId })
+    if (!space) { res.status(404).json({ error: 'Not found' }); return }
+    await WorkoutSession.deleteOne({ _id: req.params.sessionId, spaceId: req.params.id })
+    res.json({ ok: true })
   } catch {
     res.status(500).json({ error: 'Server error' })
   }

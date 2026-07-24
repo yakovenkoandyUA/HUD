@@ -80,6 +80,12 @@ function fmtDuration(min: number | null): string {
   return m ? `${h} г ${m} хв` : `${h} г`
 }
 
+function pluralStreak(n: number): string {
+  if (n === 1) return 'день поспіль'
+  if (n >= 2 && n <= 4) return 'дні поспіль'
+  return 'днів поспіль'
+}
+
 function calcStreak(events: SportEvent[]): number {
   if (!events.length) return 0
   const dates = [...new Set(events.map(e => e.date.slice(0, 10)))].sort().reverse()
@@ -580,28 +586,28 @@ const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
 const MONTH_NAMES = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень']
 
 const WorkoutHeatmap: React.FC<HeatmapProps> = ({ events, color }) => {
+  const [offset, setOffset] = useState(0) // 0 = current month, -1 = prev, etc.
+
   const countByDate: Record<string, number> = {}
   for (const e of events) {
     const d = e.date.slice(0, 10)
     countByDate[d] = (countByDate[d] ?? 0) + 1
   }
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayIso = today.toISOString().slice(0, 10)
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const todayIso = now.toISOString().slice(0, 10)
 
-  const year  = today.getFullYear()
-  const month = today.getMonth()
+  const displayDate = new Date(now.getFullYear(), now.getMonth() + offset, 1)
+  const year  = displayDate.getFullYear()
+  const month = displayDate.getMonth()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
-  // 0=Mon offset for first day
   const firstDow = (new Date(year, month, 1).getDay() + 6) % 7
 
-  // Build flat cells: nulls for empty slots + day numbers
   const cells: Array<number | null> = [
     ...Array(firstDow).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ]
-  // Pad to full weeks
   while (cells.length % 7 !== 0) cells.push(null)
 
   const isoOf = (day: number) =>
@@ -609,18 +615,37 @@ const WorkoutHeatmap: React.FC<HeatmapProps> = ({ events, color }) => {
 
   return (
     <div className={styles.heatmap}>
-      <div className={styles.heatmapHeader}>
+      <div className={styles.heatmapNav}>
+        <button
+          type="button"
+          className={styles.heatmapNavBtn}
+          onClick={() => setOffset(o => o - 1)}
+          aria-label="Попередній місяць"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 3L5 7l4 4"/>
+          </svg>
+        </button>
         <span className={styles.heatmapMonthName}>{MONTH_NAMES[month]} {year}</span>
+        <button
+          type="button"
+          className={styles.heatmapNavBtn}
+          onClick={() => setOffset(o => o + 1)}
+          disabled={offset >= 0}
+          aria-label="Наступний місяць"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 3l4 4-4 4"/>
+          </svg>
+        </button>
       </div>
 
-      {/* Weekday headers */}
       <div className={styles.heatmapWeekRow}>
         {WEEK_DAYS.map(d => (
           <span key={d} className={styles.heatmapWeekDay}>{d}</span>
         ))}
       </div>
 
-      {/* Day grid */}
       <div className={styles.heatmapCalGrid}>
         {cells.map((day, i) => {
           if (day === null) return <div key={i} className={styles.heatmapCalEmpty} />
@@ -640,7 +665,6 @@ const WorkoutHeatmap: React.FC<HeatmapProps> = ({ events, color }) => {
         })}
       </div>
 
-      {/* Legend */}
       <div className={styles.heatmapLegend}>
         <div className={styles.heatmapLegendItem}>
           <div className={styles.heatmapLegendCell} />
@@ -741,7 +765,7 @@ const SportSpaceView: React.FC<Props> = ({
     eventsBySpace, programsBySpace, sessionsBySpace,
     loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile,
     fetchPrograms, createProgram, updateProgram, deleteProgram,
-    fetchSessions, createSession,
+    fetchSessions, createSession, deleteSession,
   } = useSportStore()
 
   const [addOpen, setAddOpen]             = useState(false)
@@ -944,7 +968,7 @@ const SportSpaceView: React.FC<Props> = ({
         </div>
         <div className={styles.statCard}>
           <span className={styles.statVal}>{streak > 0 ? streak : '—'}</span>
-          <span className={styles.statLabel}>{streak === 1 ? 'день поспіль' : 'дні поспіль'}</span>
+          <span className={styles.statLabel}>{pluralStreak(streak)}</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statVal}>{totalMinutes > 0 ? fmtDuration(totalMinutes) : '—'}</span>
@@ -992,7 +1016,7 @@ const SportSpaceView: React.FC<Props> = ({
       <div className={styles.programsSection}>
         <div className={styles.programsHeader}>
           <span className={styles.sectionTitle}>ПРОГРАМИ</span>
-          {programs.length < 2 && (
+          {programs.length < 7 && (
             <button type="button" className={styles.addProgramBtn} style={{ color }}
               onClick={() => { setEditingProgram(null); setProgramSheetOpen(true) }}>
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
@@ -1040,6 +1064,16 @@ const SportSpaceView: React.FC<Props> = ({
                           <span className={styles.programSessionScore}>
                             {s.completedExercises.length}/{s.totalExercises}
                           </span>
+                          <button
+                            type="button"
+                            className={styles.programSessionDeleteBtn}
+                            onClick={() => deleteSession(spaceId, s._id)}
+                            aria-label="Видалити сесію"
+                          >
+                            <svg width="9" height="9" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                              <path d="M2 2l10 10M12 2L2 12"/>
+                            </svg>
+                          </button>
                         </div>
                       ))}
                     </div>

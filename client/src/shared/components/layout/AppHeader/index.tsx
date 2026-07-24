@@ -80,6 +80,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
         <div className={styles.center}>
           <MimirLogo className={styles.logoSvg} />
           {offline && <span className={styles.offlineBadge}>офлайн</span>}
+          <span className={styles.offlineBadge}>.beta</span>
         </div>
 
         <div className={styles.right}>
