@@ -78,6 +78,22 @@ export interface TripProfile {
   status:      'planning' | 'booked' | 'ongoing' | 'completed'
 }
 
+export interface SportPR {
+  id:    string
+  name:  string
+  value: string
+  unit:  string
+  date:  string | null
+}
+
+export interface SportProfile {
+  sport:    string
+  level:    'beginner' | 'intermediate' | 'advanced' | null
+  goal:     string
+  photoUrl: string
+  prs:      SportPR[]
+}
+
 export interface Space {
   id:             string
   name:           string
@@ -96,6 +112,7 @@ export interface Space {
   petProfile:     PetProfile | null
   tripProfile:    TripProfile | null
   plantProfile:   PlantProfile | null
+  sportProfile:   SportProfile | null
   notes:          string
   archived:       boolean
   createdAt:      string
@@ -132,6 +149,7 @@ interface SpacesStore {
   setPetProfile:        (id: string, profile: PetProfile) => void
   setTripProfile:       (id: string, profile: TripProfile) => void
   setPlantProfile:      (id: string, profile: PlantProfile) => void
+  setSportProfile:      (id: string, profile: SportProfile) => void
   archiveSpace:         (id: string) => Promise<void>
   unarchiveSpace:(id: string) => Promise<void>
   deleteSpace:   (id: string) => Promise<void>
@@ -214,6 +232,12 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
   setPlantProfile: (id, profile) => {
     set(s => ({
       spaces: s.spaces.map(sp => sp.id === id ? { ...sp, plantProfile: profile } : sp),
+    }))
+  },
+
+  setSportProfile: (id, profile) => {
+    set(s => ({
+      spaces: s.spaces.map(sp => sp.id === id ? { ...sp, sportProfile: profile } : sp),
     }))
   },
 

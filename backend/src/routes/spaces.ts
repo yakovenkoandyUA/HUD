@@ -23,6 +23,10 @@ import {
   getPlantProfile, updatePlantProfile,
   getPlantEvents, createPlantEvent, deletePlantEvent,
 } from '../controllers/plantController'
+import {
+  getSportProfile, updateSportProfile,
+  getSportEvents, createSportEvent, updateSportEvent, deleteSportEvent,
+} from '../controllers/sportController'
 import { getTickets, createTicket, updateTicket, deleteTicket } from '../controllers/ticketController'
 import { getAccommodations, createAccommodation, updateAccommodation, deleteAccommodation } from '../controllers/accommodationController'
 import { getTripPlaces, createTripPlace, updateTripPlace, deleteTripPlace } from '../controllers/tripPlaceController'
@@ -85,5 +89,13 @@ router.patch('/:id/plant/profile',                     updatePlantProfile)
 router.get('/:id/plant/events',                        getPlantEvents)
 router.post('/:id/plant/events',                       createPlantEvent)
 router.delete('/:id/plant/events/:eventId',            deletePlantEvent)
+
+// sport
+router.get('/:id/sport/profile',                       getSportProfile)
+router.patch('/:id/sport/profile',                     updateSportProfile)
+router.get('/:id/sport/events',                        getSportEvents)
+router.post('/:id/sport/events',                       createSportEvent)
+router.patch('/:id/sport/events/:eventId',             updateSportEvent)
+router.delete('/:id/sport/events/:eventId',            deleteSportEvent)
 
 export default router

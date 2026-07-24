@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose'
+import { Schema, model, Document, Types } from 'mongoose'
 
 export type SpaceType = 'personal' | 'shared' | 'trip' | 'family' | 'friends' | 'hobby' | 'sports' | 'project' | 'vehicle' | 'home' | 'pet' | 'plant' | 'blank'
 
@@ -74,6 +74,22 @@ export interface ITripProfile {
   status:      'planning' | 'booked' | 'ongoing' | 'completed'
 }
 
+export interface ISportPR {
+  id:    string
+  name:  string
+  value: string
+  unit:  string
+  date:  string | null
+}
+
+export interface ISportProfile {
+  sport:    string
+  level:    'beginner' | 'intermediate' | 'advanced' | null
+  goal:     string
+  photoUrl: string
+  prs:      ISportPR[]
+}
+
 export interface ISpace extends Document {
   name:           string
   type:           SpaceType
@@ -91,6 +107,7 @@ export interface ISpace extends Document {
   petProfile:     IPetProfile | null
   tripProfile:    ITripProfile | null
   plantProfile:   IPlantProfile | null
+  sportProfile:   ISportProfile | null
   notes:          string
   archived:       boolean
   createdAt:      Date
@@ -159,6 +176,22 @@ const plantProfileSchema = new Schema<IPlantProfile>({
   careNotes:            { type: String, default: '' },
 }, { _id: false })
 
+const sportPRSchema = new Schema<ISportPR>({
+  id:    { type: String, default: () => new Types.ObjectId().toHexString() },
+  name:  { type: String, default: '' },
+  value: { type: String, default: '' },
+  unit:  { type: String, default: '' },
+  date:  { type: String, default: null },
+}, { _id: false })
+
+const sportProfileSchema = new Schema<ISportProfile>({
+  sport:    { type: String, default: '' },
+  level:    { type: String, enum: ['beginner', 'intermediate', 'advanced', null], default: null },
+  goal:     { type: String, default: '' },
+  photoUrl: { type: String, default: '' },
+  prs:      { type: [sportPRSchema], default: [] },
+}, { _id: false })
+
 const tripProfileSchema = new Schema<ITripProfile>({
   destination: { type: String, default: '' },
   origin:      { type: String, default: '' },
@@ -185,6 +218,7 @@ const schema = new Schema<ISpace>({
   petProfile:     { type: petProfileSchema,     default: null },
   tripProfile:    { type: tripProfileSchema,    default: null },
   plantProfile:   { type: plantProfileSchema,   default: null },
+  sportProfile:   { type: sportProfileSchema,   default: null },
   archived:       { type: Boolean, default: false },
 }, { timestamps: true })
 

@@ -23,6 +23,7 @@ import VehicleSpaceView from './components/VehicleSpaceView'
 import PetSpaceView from './components/PetSpaceView'
 import PlantSpaceView from './components/PlantSpaceView'
 import TripSpaceView from './components/TripSpaceView'
+import SportSpaceView from './components/SportSpaceView'
 import TripCoverSheet from './components/TripCoverSheet'
 import AddTicketSheet from './components/AddTicketSheet'
 import AddAccommodationSheet from './components/AddAccommodationSheet'
@@ -97,7 +98,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
     taskEmptyTitle: 'Задач ще немає',     taskEmptyDesc: 'Додай спільне завдання або чекліст.',
   },
   trip: {
-    typeLabel: 'Поїздка', description: 'Збирай тут плани, спогади, місця й враження цієї поїздки — до, під час і після.',
+    typeLabel: 'Подорож', description: 'Збирай тут плани, спогади, місця й враження цієї подорожі — до, під час і після.',
     memBtnLabel: '+ Момент поїздки', planBtnLabel: '+ Ідея маршруту', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Що зробити',
     txEmptyTitle: 'Витрат ще немає',      txEmptyDesc: 'Додай витрати поїздки — готель, транспорт, розваги.',
     memEmptyTitle: 'Спогадів ще немає',   memEmptyDesc: 'Додай перший момент з цієї поїздки: фото, коротку історію або місце.',
@@ -186,7 +187,7 @@ function formatNoteDate(iso: string): string {
 const SpaceDetailScreen: React.FC = () => {
   const navigate = useNavigate()
   const { spaceId } = useParams<{ spaceId: string }>()
-  const { spaces, fetchSpaces, updateSpace, deleteSpace, archiveSpace, addMember, removeMember, setPetProfile, setTripProfile, setPlantProfile } = useSpacesStore()
+  const { spaces, fetchSpaces, updateSpace, deleteSpace, archiveSpace, addMember, removeMember, setPetProfile, setTripProfile, setPlantProfile, setSportProfile } = useSpacesStore()
   const myId = useProfileStore(s => s.activeProfile?.id ?? '')
   const { showToast } = useUiStore()
   const family = useFamilyStore(s => s.accepted)
@@ -624,8 +625,8 @@ const SpaceDetailScreen: React.FC = () => {
     <div className={styles.root}>
       <AppHeader />
 
-      {/* ── Hero (hidden for vehicle + pet — they render their own) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'pet' && <div
+      {/* ── Hero (hidden for vehicle + pet + sports — they render their own) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && <div
         className={`${styles.hero} ${styles.heroCovered}`}
       >
         <img
@@ -699,8 +700,8 @@ const SpaceDetailScreen: React.FC = () => {
         )}
       </div>}
 
-      {/* ── Overview (hidden for vehicle + pet) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'pet' && (() => {
+      {/* ── Overview (hidden for vehicle + pet + sports) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && (() => {
         const isTyped = ['plant', 'pet', 'trip'].includes(space?.type ?? '')
         const showPlans = !isTyped || (space?.modules ?? []).includes('plans')
         const isPlant = space?.type === 'plant'
@@ -726,8 +727,8 @@ const SpaceDetailScreen: React.FC = () => {
         )
       })()}
 
-      {/* ── Budget / spending block (hidden for vehicle + pet) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'pet' && (() => {
+      {/* ── Budget / spending block (hidden for vehicle + pet + sports) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && (() => {
         const spent = (spaceTxs ?? []).filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
         const sym   = space?.budgetCurrency === 'USD' ? '$' : space?.budgetCurrency === 'EUR' ? '€' : '₴'
         if (space?.budget != null) {
@@ -906,6 +907,22 @@ const SpaceDetailScreen: React.FC = () => {
         </div>
       )}
 
+      {space?.type === 'sports' && (
+        <SportSpaceView
+          spaceId={spaceId!}
+          color={space.color || 'var(--accent)'}
+          spaceName={space.name}
+          profile={space.sportProfile ?? null}
+          onProfileUpdate={p => setSportProfile(space.id, p)}
+          coverUrl={space.coverUrl}
+          coverPosition={space.coverPosition}
+          isOwner={isOwner}
+          onEditSpace={openEdit}
+          onBack={() => navigate(-1)}
+          spaceTxs={spaceTxs ?? []}
+        />
+      )}
+
       {space?.type === 'trip' && (
         <TripSpaceView
           spaceId={spaceId!}
@@ -1020,7 +1037,7 @@ const SpaceDetailScreen: React.FC = () => {
         </>
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && (
+      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
           <span className={styles.actionBtnIcon}>
@@ -1057,7 +1074,7 @@ const SpaceDetailScreen: React.FC = () => {
       </div>
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && (
+      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && (
       <div className={styles.content}>
 
         {/* ── Members ── */}
