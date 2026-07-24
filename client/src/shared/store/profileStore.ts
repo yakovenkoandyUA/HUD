@@ -264,6 +264,30 @@ export const useProfileStore = create<ProfileState>()(
     {
       name: 'profile-storage',
       partialize: (s) => ({ token: s.token, activeProfile: s.activeProfile }),
+      storage: {
+        getItem: (name) => {
+          try {
+            const str = localStorage.getItem(name)
+            return str ? JSON.parse(str) : null
+          } catch {
+            return null
+          }
+        },
+        setItem: (name, value) => {
+          const write = () => localStorage.setItem(name, JSON.stringify(value))
+          try {
+            write()
+          } catch (e) {
+            if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+              // Clear disposable episode caches and retry once
+              const toRemove = Object.keys(localStorage).filter(k => k.startsWith('episodes_cache_'))
+              toRemove.forEach(k => localStorage.removeItem(k))
+              try { write() } catch { /* storage unavailable — degrade silently */ }
+            }
+          }
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      },
     }
   )
 )

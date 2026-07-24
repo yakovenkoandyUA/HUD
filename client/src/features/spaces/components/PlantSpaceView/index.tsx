@@ -88,7 +88,7 @@ interface WaterDropProps {
 }
 
 function WaterDrop({ pct, color, status }: WaterDropProps) {
-  const dropColor = status === 'overdue' ? '#ef4444' : status === 'soon' ? '#d97706' : color
+  const dropColor = status === 'overdue' ? '#ef4444' : status === 'soon' ? '#d97706' : '#3b82f6'
   const maxFillH  = 56          // max fill height in viewBox units
   const fillH     = pct * maxFillH
   const fillY     = 64 - fillH  // y from which fill starts (drops fill from bottom)

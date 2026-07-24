@@ -979,12 +979,50 @@ const SpacesTab: React.FC = () => {
 								<label className={styles.fieldLabel} style={{ marginTop: 16 }}>
 									ДОДАТИ УЧАСНИКА
 								</label>
+
+								{/* Family quick-add chips */}
+								{family.filter(f => !detailSpace.members.some(m => m.userId === f.id)).length > 0 && (
+									<div className={styles.familyPickRow} style={{ marginBottom: 10 }}>
+										{family
+											.filter(f => !detailSpace.members.some(m => m.userId === f.id))
+											.map(f => (
+												<button
+													key={f.id}
+													type="button"
+													className={styles.familyPickChip}
+													onClick={async () => {
+														setAddingMember(true)
+														try {
+															await addMember(detailSpace.id, f.username)
+															showToast(`${f.name} додано`, 'success')
+														} catch {
+															showToast('Помилка', 'error')
+														} finally {
+															setAddingMember(false)
+														}
+													}}
+													disabled={addingMember}
+												>
+													<div className={styles.memberAvatar} style={{ width: 26, height: 26 }}>
+														{f.avatarUrl
+															? <img src={f.avatarUrl} alt={f.name} className={styles.memberAvatarImg} />
+															: <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text2)' }}>{f.name[0]?.toUpperCase()}</span>
+														}
+													</div>
+													<span className={styles.familyPickName}>{f.name}</span>
+													<svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+												</button>
+											))}
+									</div>
+								)}
+
+								{/* Manual username input fallback */}
 								<div className={styles.addMemberRow}>
 									<input
 										className={styles.input}
 										value={memberInput}
 										onChange={e => setMemberInput(e.target.value)}
-										placeholder="username"
+										placeholder="Додати за username…"
 										onKeyDown={e => {
 											if (e.key === 'Enter') handleAddMember()
 										}}
