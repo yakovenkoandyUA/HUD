@@ -4,6 +4,7 @@ import { getToken, authFetch, isBackendConfigured } from '@/shared/services/api'
 import { isRecurring, calcStreak } from '../utils/sprint'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { useSprintStreakStore } from './sprintStreakStore'
+import { usePlantEventStore } from '@/features/spaces/store/plantEventStore'
 
 const DEFAULT_LABELS: SprintLabel[] = [
   { id: 'default-1', title: '',        color: '#216E4E' },
@@ -694,6 +695,13 @@ export const useSprintStore = create<TodoState>((set, get) => ({
       useSprintStreakStore.getState().recordToday()
       if (calcStreak({ ...item, completionLog: newLog }) >= 7) {
         useAchievementsStore.getState().unlock('streak-7')
+      }
+      // Habit → Space: if linked to a plant space, log watering event
+      if (item.spaceId) {
+        const { createEvent, updateProfile } = usePlantEventStore.getState()
+        createEvent(item.spaceId, { type: 'watering', date: completionDateStr })
+          .then(event => updateProfile(item.spaceId!, { lastWateredAt: event.date }))
+          .catch(() => {})
       }
       const parts = completionDateStr.split('-').map(Number)
       const completionBase = new Date(parts[0], parts[1] - 1, parts[2])

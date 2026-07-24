@@ -6,6 +6,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
+import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import styles from './PlantSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -589,6 +590,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
 const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate }) => {
   const showToast = useUiStore(s => s.showToast)
   const { eventsBySpace, healthChecksBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile, saveHealthCheck } = usePlantEventStore()
+  const { items: sprintItems, addItem, toggleItem } = useSprintStore()
 
   const [addSheet, setAddSheet]       = useState<PlantEventType | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -597,6 +599,9 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
 
   const events = eventsBySpace[spaceId] ?? []
 
+  // Find habit linked to this space (recurring task with spaceId)
+  const linkedHabit = sprintItems.find(i => i.spaceId === spaceId && i.repeat && i.repeat !== 'none')
+
   useEffect(() => {
     let cancelled = false
     const load = async () => { if (!cancelled) await fetchEvents(spaceId) }
@@ -604,16 +609,35 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     return () => { cancelled = true }
   }, [spaceId, fetchEvents])
 
+  const handleCreateHabit = () => {
+    if (!profile?.wateringIntervalDays) return
+    addItem({
+      title:           `Полити ${profile.commonName || 'рослину'}`,
+      type:            'todo',
+      repeat:          'custom',
+      repeatConfig:    { interval: profile.wateringIntervalDays, unit: 'day', endsType: 'never' },
+      repeatStartDate: todayISO(),
+      spaceId,
+    })
+    showToast('Звичку створено', 'success')
+  }
+
   const handleCreate = async (data: PlantEventInput) => {
     try {
       const event = await createEvent(spaceId, data)
-      // optimistic update lastWateredAt / lastFertilizedAt in profile
       if (data.type === 'watering' || data.type === 'fertilizing') {
         const patch = data.type === 'watering'
           ? { lastWateredAt: event.date }
           : { lastFertilizedAt: event.date }
         const updated = await updateProfile(spaceId, patch)
         onProfileUpdate(updated)
+      }
+      // Space → Habit: mark linked habit done today
+      if (data.type === 'watering' && linkedHabit) {
+        const today = todayISO()
+        if (!linkedHabit.completionLog?.includes(today)) {
+          toggleItem(linkedHabit.id, today)
+        }
       }
       showToast('Додано', 'success')
     } catch {
@@ -843,6 +867,18 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
           {/* Watering inline */}
           <div className={styles.profileWatering}>
             <WateringBlock profile={profile} onOpenProfile={() => setProfileOpen(true)} inline />
+            {profile?.wateringIntervalDays && (
+              linkedHabit ? (
+                <span className={styles.habitLinked}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  {linkedHabit.title}
+                </span>
+              ) : (
+                <button type="button" className={styles.habitCreateBtn} onClick={e => { e.stopPropagation(); handleCreateHabit() }}>
+                  + Створити звичку
+                </button>
+              )
+            )}
           </div>
         </div>
         <button type="button" className={styles.profileEditBtn} onClick={e => { e.stopPropagation(); setProfileOpen(true) }} aria-label="Редагувати">
