@@ -467,45 +467,109 @@
 
 .hiddenInput { display: none; }
 
-/* ── Workout list ── */
+/* ── Heatmap ── */
+.heatmap {
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.heatmapMonths {
+  display: grid;
+  grid-template-columns: 20px repeat(16, 12px);
+  gap: 2px;
+  margin-bottom: 3px;
+  padding-left: 0;
+}
+
+.heatmapMonthLabel {
+  font-size: 9px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.heatmapGrid {
+  display: flex;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.heatmapDayLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.heatmapDayLabel {
+  font-size: 8px;
+  color: var(--text-secondary);
+  height: 10px;
+  width: 18px;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+}
+
+.heatmapWeek {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.heatmapCell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: opacity 0.1s;
+}
+
+.heatmapCellToday {
+  outline: 1px solid var(--space-color, var(--accent));
+  outline-offset: 1px;
+}
+
+/* ── Workout list (compact) ── */
 .workoutList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .workoutRow {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 8px 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
   background: var(--surface-raised);
-  border: 1px solid var(--border);
   border-left: 3px solid var(--space-color, var(--accent));
-  border-radius: 10px;
+  border-bottom: 1px solid var(--border);
 }
+.workoutRow:last-child { border-bottom: none; }
 
 .workoutDateCol {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 30px;
+  min-width: 26px;
   flex-shrink: 0;
-  padding-top: 1px;
 }
 
 .workoutDateDay {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
 }
 
 .workoutDateMon {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-secondary);
-  margin-top: 2px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -514,64 +578,54 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: 8px;
+  overflow: hidden;
 }
 
 .workoutTitle {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.workoutMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .workoutDuration {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
   font-size: 11px;
   font-weight: 600;
   color: var(--space-color, var(--accent));
   font-family: var(--font-mono);
-  opacity: 0.85;
 }
 
-.workoutMetrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 4px;
-}
-
-.workoutMetric {
+.workoutMetricInline {
   font-size: 11px;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-family: var(--font-mono);
-}
-
-.workoutNotes {
-  font-size: 12px;
   color: var(--text-secondary);
-  line-height: 1.4;
-  margin-top: 2px;
+  font-family: var(--font-mono);
 }
 
 .workoutActions {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
-  align-items: flex-start;
-  padding-top: 2px;
+  align-items: center;
 }
 
 .workoutEditBtn,
 .workoutDeleteBtn {
   background: none;
   border: none;
-  padding: 5px;
+  padding: 4px;
   cursor: pointer;
   line-height: 0;
   color: var(--text-secondary);

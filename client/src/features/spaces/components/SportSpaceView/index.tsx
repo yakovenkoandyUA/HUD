@@ -569,7 +569,109 @@ const ActiveWorkoutSheet: React.FC<ActiveWorkoutProps> = ({ isOpen, color, progr
   )
 }
 
-// ── Workout row ────────────────────────────────────────────────────────────
+// ── Workout heatmap ────────────────────────────────────────────────────────
+
+interface HeatmapProps {
+  events: SportEvent[]
+  color:  string
+}
+
+const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+const WEEKS = 16
+
+const WorkoutHeatmap: React.FC<HeatmapProps> = ({ events, color }) => {
+  // Build date → count map
+  const countByDate: Record<string, number> = {}
+  for (const e of events) {
+    const d = e.date.slice(0, 10)
+    countByDate[d] = (countByDate[d] ?? 0) + 1
+  }
+
+  // Build grid: WEEKS columns × 7 rows, starting from Monday WEEKS weeks ago
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  // Find last Monday
+  const endMonday = new Date(today)
+  const dow = (today.getDay() + 6) % 7  // 0=Mon
+  endMonday.setDate(today.getDate() - dow + 6)  // end of this week = Sunday
+
+  const startDay = new Date(endMonday)
+  startDay.setDate(endMonday.getDate() - WEEKS * 7 + 1)
+
+  // Build weeks array (each week = 7 days Mon→Sun)
+  const weeks: Array<Array<{ iso: string; count: number; isToday: boolean; isFuture: boolean }>> = []
+  for (let w = 0; w < WEEKS; w++) {
+    const week = []
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(startDay)
+      day.setDate(startDay.getDate() + w * 7 + d)
+      const iso = day.toISOString().slice(0, 10)
+      week.push({
+        iso,
+        count: countByDate[iso] ?? 0,
+        isToday: iso === today.toISOString().slice(0, 10),
+        isFuture: day > today,
+      })
+    }
+    weeks.push(week)
+  }
+
+  // Month labels: detect when month changes between weeks
+  const monthLabels: Array<{ weekIdx: number; label: string }> = []
+  let lastMonth = -1
+  for (let w = 0; w < weeks.length; w++) {
+    const m = parseInt(weeks[w][0].iso.slice(5, 7))
+    if (m !== lastMonth) {
+      monthLabels.push({ weekIdx: w, label: MONTHS_SHORT[m - 1] })
+      lastMonth = m
+    }
+  }
+
+  return (
+    <div className={styles.heatmap}>
+      {/* Month labels */}
+      <div className={styles.heatmapMonths}>
+        {monthLabels.map(({ weekIdx, label }) => (
+          <span
+            key={label}
+            className={styles.heatmapMonthLabel}
+            style={{ gridColumn: weekIdx + 2 }}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+      <div className={styles.heatmapGrid}>
+        {/* Day labels */}
+        <div className={styles.heatmapDayLabels}>
+          {WEEK_DAYS.map((d, i) => (
+            <span key={i} className={styles.heatmapDayLabel}>{i % 2 === 0 ? d : ''}</span>
+          ))}
+        </div>
+        {/* Week columns */}
+        {weeks.map((week, wi) => (
+          <div key={wi} className={styles.heatmapWeek}>
+            {week.map((day) => (
+              <div
+                key={day.iso}
+                className={`${styles.heatmapCell} ${day.isToday ? styles.heatmapCellToday : ''}`}
+                style={
+                  day.count > 0 && !day.isFuture
+                    ? { background: color, opacity: day.count >= 2 ? 1 : 0.5 }
+                    : undefined
+                }
+                title={day.count > 0 ? `${day.iso}: ${day.count} трен.` : day.iso}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Workout row (compact) ──────────────────────────────────────────────────
 
 interface WorkoutRowProps {
   event:    SportEvent
@@ -585,25 +687,20 @@ const WorkoutRow: React.FC<WorkoutRowProps> = ({ event, onEdit, onDelete }) => {
     else { setConfirmDelete(true); setTimeout(() => setConfirmDelete(false), 2500) }
   }
 
+  const primaryMetric = event.metrics.find(m => m.name && m.value)
+
   return (
     <div className={styles.workoutRow}>
       <div className={styles.workoutDateCol}>
-        <span className={styles.workoutDateDay}>{event.date.slice(8, 10)}</span>
+        <span className={styles.workoutDateDay}>{parseInt(event.date.slice(8, 10))}</span>
         <span className={styles.workoutDateMon}>{MONTHS_SHORT[parseInt(event.date.slice(5, 7)) - 1]}</span>
       </div>
       <div className={styles.workoutMain}>
-        <div className={styles.workoutTitle}>{event.title || 'Тренування'}</div>
-        {event.duration && <div className={styles.workoutDuration}>{fmtDuration(event.duration)}</div>}
-        {event.metrics.length > 0 && (
-          <div className={styles.workoutMetrics}>
-            {event.metrics.filter(m => m.name && m.value).map((m, i) => (
-              <span key={i} className={styles.workoutMetric}>
-                {m.name}: <strong>{m.value}</strong>{m.unit && ` ${m.unit}`}
-              </span>
-            ))}
-          </div>
-        )}
-        {event.notes && <div className={styles.workoutNotes}>{event.notes}</div>}
+        <span className={styles.workoutTitle}>{event.title || 'Тренування'}</span>
+        <span className={styles.workoutMeta}>
+          {event.duration ? <span className={styles.workoutDuration}>{fmtDuration(event.duration)}</span> : null}
+          {primaryMetric && <span className={styles.workoutMetricInline}>{primaryMetric.value}{primaryMetric.unit ? ` ${primaryMetric.unit}` : ''}</span>}
+        </span>
       </div>
       <div className={styles.workoutActions}>
         <button type="button" className={styles.workoutEditBtn} onClick={onEdit} aria-label="Редагувати">
@@ -993,6 +1090,8 @@ const SportSpaceView: React.FC<Props> = ({
       {/* ── Workout log ── */}
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>ТРЕНУВАННЯ</h3>
+
+        {events.length > 0 && <WorkoutHeatmap events={events} color={color} />}
 
         {loading && events.length === 0 ? (
           <div className={styles.loadingRow}>
