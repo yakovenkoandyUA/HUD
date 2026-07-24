@@ -1436,6 +1436,76 @@ const SpaceDetailScreen: React.FC = () => {
               )
             })()}
 
+            {/* ── Members ── */}
+            {isOwner && space && (
+              <>
+                <label className={styles.fieldLabel}>УЧАСНИКИ</label>
+                <div className={styles.editMemberList}>
+                  {space.members.map(m => (
+                    <div key={m.userId} className={styles.editMemberRow}>
+                      {m.avatarUrl
+                        ? <img src={m.avatarUrl} className={styles.editMemberAvatar} alt={m.name} />
+                        : <span className={styles.editMemberInitial} style={colorVar}>{m.name[0]?.toUpperCase()}</span>
+                      }
+                      <div className={styles.editMemberInfo}>
+                        <span className={styles.editMemberName}>{m.name}</span>
+                        <span className={styles.editMemberUsername}>@{m.username}</span>
+                      </div>
+                      {m.role === 'owner'
+                        ? <span className={styles.ownerBadge}>власник</span>
+                        : <button type="button" className={styles.editMemberRemove} onClick={() => removeMember(space.id, m.userId)} aria-label="Видалити">
+                            <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
+                          </button>
+                      }
+                    </div>
+                  ))}
+                </div>
+
+                {/* Family quick-add chips */}
+                {family.filter(f => !space.members.some(m => m.userId === f.id)).length > 0 && (
+                  <div className={styles.editFamilyRow}>
+                    {family
+                      .filter(f => !space.members.some(m => m.userId === f.id))
+                      .map(f => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          className={styles.editFamilyChip}
+                          onClick={() => addMember(space.id, f.username).then(() => showToast(`${f.name} додано`, 'success')).catch(() => showToast('Помилка', 'error'))}
+                        >
+                          {f.avatarUrl
+                            ? <img src={f.avatarUrl} className={styles.editFamilyChipAvatar} alt={f.name} />
+                            : <span className={styles.editFamilyChipInitial}>{f.name[0]?.toUpperCase()}</span>
+                          }
+                          {f.name}
+                          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+                        </button>
+                      ))}
+                  </div>
+                )}
+
+                {/* Manual username input */}
+                <div className={styles.addMemberRow}>
+                  <input
+                    className={styles.fieldInput}
+                    value={memberInput}
+                    onChange={e => setMemberInput(e.target.value)}
+                    placeholder="Додати за username…"
+                    onKeyDown={e => { if (e.key === 'Enter') handleAddMember() }}
+                  />
+                  <button
+                    type="button"
+                    className={styles.addMemberBtn}
+                    style={colorVar}
+                    onClick={handleAddMember}
+                    disabled={addingMember || !memberInput.trim()}
+                  >
+                    {addingMember ? '…' : 'Додати'}
+                  </button>
+                </div>
+              </>
+            )}
+
             <button
               type="button"
               className={styles.saveBtn}

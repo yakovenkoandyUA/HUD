@@ -77,11 +77,63 @@ function EventIcon({ type }: { type: PlantEventType }) {
   }
 }
 
+// ── Water drop SVG ────────────────────────────────────────────────────────
+
+const DROP_PATH = 'M 24 3 C 12 15 2 32 2 46 Q 2 62 24 62 Q 46 62 46 46 C 46 32 36 15 24 3 Z'
+
+interface WaterDropProps {
+  pct:    number   // 0..1 — how full (1 = just watered, 0 = overdue)
+  color:  string
+  status: 'ok' | 'soon' | 'overdue' | 'unknown'
+}
+
+function WaterDrop({ pct, color, status }: WaterDropProps) {
+  const dropColor = status === 'overdue' ? '#ef4444' : status === 'soon' ? '#d97706' : color
+  const maxFillH  = 56          // max fill height in viewBox units
+  const fillH     = pct * maxFillH
+  const fillY     = 64 - fillH  // y from which fill starts (drops fill from bottom)
+  const waveAmp   = 2.5
+
+  return (
+    <svg width="48" height="64" viewBox="0 0 48 64" aria-hidden="true">
+      <defs>
+        <clipPath id="wdrop-clip">
+          <path d={DROP_PATH} />
+        </clipPath>
+      </defs>
+
+      {/* drop background */}
+      <path d={DROP_PATH} fill={dropColor} fillOpacity={status === 'unknown' ? 0 : 0.1} />
+
+      {/* water fill */}
+      {pct > 0.01 && (
+        <g clipPath="url(#wdrop-clip)">
+          <path
+            d={`M 0 ${fillY} Q 12 ${fillY - waveAmp} 24 ${fillY} Q 36 ${fillY + waveAmp} 48 ${fillY} L 48 64 L 0 64 Z`}
+            fill={dropColor}
+            fillOpacity={0.8}
+          />
+        </g>
+      )}
+
+      {/* drop outline */}
+      <path
+        d={DROP_PATH}
+        fill="none"
+        stroke={dropColor}
+        strokeWidth="1.5"
+        strokeOpacity={status === 'unknown' ? 0.35 : 0.55}
+        strokeDasharray={status === 'unknown' ? '4 3' : undefined}
+      />
+    </svg>
+  )
+}
+
 // ── Watering block ─────────────────────────────────────────────────────────
 
 interface WateringBlockProps {
-  profile:      PlantProfile | null
-  color:        string
+  profile:       PlantProfile | null
+  color:         string
   onOpenProfile: () => void
 }
 
@@ -90,50 +142,46 @@ function WateringBlock({ profile, color, onOpenProfile }: WateringBlockProps) {
   const days     = daysSince(profile?.lastWateredAt ?? null)
   const interval = profile?.wateringIntervalDays ?? null
 
+  // pct: 1.0 = just watered (full), 0 = overdue (empty)
+  const pct = (days != null && interval != null && interval > 0)
+    ? Math.max(0, 1 - days / interval)
+    : 0
+
+  const daysLeft = (interval != null && days != null) ? Math.max(0, interval - days) : null
+
   if (status === 'unknown') {
     return (
       <div className={styles.waterBlock}>
-        <div className={styles.waterBlockUnknown}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" className={styles.waterDropIcon}>
-            <path d="M12 2C6 2 2 8 2 13a10 10 0 0 0 20 0c0-5-4-11-10-11z"/>
-          </svg>
-          <span className={styles.waterBlockLabel}>Налаштуй інтервал поливу</span>
-          <button type="button" className={styles.waterBlockCta} onClick={onOpenProfile} aria-label="Налаштувати полив">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        <WaterDrop pct={0} color={color} status="unknown" />
+        <div className={styles.waterInfo}>
+          <span className={styles.waterLabel}>Полив</span>
+          <button type="button" className={styles.waterSetupBtn} onClick={onOpenProfile}>
+            Налаштувати інтервал →
           </button>
         </div>
       </div>
     )
   }
 
-  const pct = Math.min(100, ((days ?? 0) / (interval ?? 1)) * 100)
-  const daysLeft = interval != null && days != null ? interval - days : null
-
-  const blockClass = status === 'overdue'
-    ? styles.waterBlockOverdue
+  const statusLabel = status === 'overdue'
+    ? 'Потребує поливу'
     : status === 'soon'
-      ? styles.waterBlockSoon
-      : styles.waterBlockOk
+      ? 'Скоро полив'
+      : 'Наступний полив'
 
-  const label = status === 'overdue'
-    ? `Потребує поливу — ${days}д без поливу`
-    : status === 'soon'
-      ? `Скоро полив — через ${daysLeft}д`
-      : `Наступний полив — через ${daysLeft}д`
-
-  const barColor = status === 'overdue' ? '#ef4444' : status === 'soon' ? '#d97706' : color
+  const subLabel = status === 'overdue'
+    ? `${days}д без поливу`
+    : `через ${daysLeft}д`
 
   return (
-    <div className={`${styles.waterBlock} ${blockClass}`}>
-      <div className={styles.waterBlockRow}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" className={styles.waterDropIcon}>
-          <path d="M12 2C6 2 2 8 2 13a10 10 0 0 0 20 0c0-5-4-11-10-11z"/>
-        </svg>
-        <span className={styles.waterBlockLabel}>{label}</span>
-        <span className={styles.waterBlockFraction}>{days}/{interval}д</span>
-      </div>
-      <div className={styles.waterBar}>
-        <div className={styles.waterBarFill} style={{ width: `${pct}%`, background: barColor }} />
+    <div className={styles.waterBlock}>
+      <WaterDrop pct={pct} color={color} status={status} />
+      <div className={styles.waterInfo}>
+        <span className={`${styles.waterLabel} ${status === 'overdue' ? styles.waterLabelOverdue : status === 'soon' ? styles.waterLabelSoon : ''}`}>
+          {statusLabel}
+        </span>
+        <span className={styles.waterSub}>{subLabel}</span>
+        <span className={styles.waterFraction}>{days}/{interval}д</span>
       </div>
     </div>
   )
