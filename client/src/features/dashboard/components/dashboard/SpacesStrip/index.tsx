@@ -143,9 +143,9 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
         {spaces.map(space => {
           const cfg = SPACE_TYPE_CONFIG[space.type] ?? SPACE_TYPE_CONFIG['blank']
           const profilePhoto =
-            space.type === 'pet'     ? (space.petProfile?.photoUrl     || null) :
-            space.type === 'vehicle' ? (space.vehicleProfile?.photoUrl || null) :
-            null
+            space.type === 'pet'     ? (space.petProfile?.photoUrl     || space.coverUrl || null) :
+            space.type === 'vehicle' ? (space.vehicleProfile?.photoUrl || space.coverUrl || null) :
+            space.coverUrl || null
 
           return (
             <button
