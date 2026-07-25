@@ -794,12 +794,12 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     if (!profile?.photoUrl) { showToast('Спочатку завантаж фото', 'error'); return }
     setHealthChecking(true)
     try {
-      const res = await fetch('https://plant.id/api/v3/health_assessment', {
+      const res = await fetch('https://plant.id/api/v3/health_assessment?details=treatment,description&language=uk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Api-Key': plantKey },
         body: JSON.stringify({
-          images:  [profile.photoUrl],
-          details: 'treatment,description',
+          images:         [profile.photoUrl],
+          similar_images: true,
         }),
       })
       if (!res.ok) throw new Error('health_api')
