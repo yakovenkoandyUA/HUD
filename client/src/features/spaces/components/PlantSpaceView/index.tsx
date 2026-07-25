@@ -817,7 +817,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
       }
 
       const r = data.result
-      const issues = (r.disease?.suggestions ?? [])
+      const rawIssues = (r.disease?.suggestions ?? [])
         .map(s => ({
           name:        s.name,
           probability: s.probability,
@@ -825,6 +825,14 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
             ?? s.details?.treatment?.biological?.[0],
         }))
         .sort((a, b) => b.probability - a.probability)
+
+      const issues = await Promise.all(
+        rawIssues.map(async i => ({
+          ...i,
+          name: await translateToUk(i.name),
+          treatment: i.treatment ? await translateToUk(i.treatment) : undefined,
+        }))
+      )
 
       saveHealthCheck(spaceId, {
         checkedAt:         new Date().toISOString(),
