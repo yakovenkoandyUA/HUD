@@ -51,6 +51,7 @@ function buildPrompt(
   dayOfWeekTotals: number[],
   reportStyle = 'standard',
   transactions: { desc: string; category: string; amount: number }[] = [],
+  userContext: { category?: string; note: string }[] = [],
 ): string {
   const monthLabel = new Date(`${month}-15`).toLocaleString('uk-UA', { month: 'long', year: 'numeric' })
 
@@ -110,11 +111,15 @@ ${receiptsText}
 ВИТРАТИ ПО ДНЯХ ТИЖНЯ:
 ${dowText}`
 
+  const userContextBlock = userContext.length > 0
+    ? `\nКОНТЕКСТ ВІД КОРИСТУВАЧА:\n${userContext.map(c => `  - ${c.category ? `[${c.category}] ` : ''}${c.note}`).join('\n')}\n`
+    : ''
+
   if (reportStyle === 'flash') {
     return `${intro}
 
 Проаналізуй витрати за ${monthLabel} українською мовою.
-
+${userContextBlock}
 ${dataBlock}
 
 Дай ДУЖЕ короткий аналіз: рівно 4-5 речень без жодних заголовків і списків. Одне речення — що одразу кинулося в очі. Одне-два речення — головний патерн або аномалія. Одне речення — єдина конкретна дія з очікуваною економією ₴. Більше нічого. Жодного markdown.`
@@ -124,7 +129,7 @@ ${dataBlock}
     return `${intro}
 
 Проаналізуй витрати за ${monthLabel} українською мовою. Це детальний аудит — розбери все ретельно, не скорочуй.
-
+${userContextBlock}
 ${dataBlock}
 
 Формат відповіді — markdown без таблиць (мобільний екран). Заголовки ## з одним коротким емодзі. Списки через "- ".
@@ -144,7 +149,7 @@ ${dataBlock}
   return `${intro}
 
 Проаналізуй витрати за ${monthLabel} українською мовою.
-
+${userContextBlock}
 ${dataBlock}
 
 Формат відповіді — markdown без таблиць (мобільний екран). Заголовки ## з одним коротким емодзі. Списки через "- ".
@@ -216,12 +221,13 @@ router.post('/report/:month', requireVerified, loadUser, requireFeature('advance
     dowTotals[dow] += t.amount
   }
 
-  const userDoc = await User.findById(req.userId, { reportStyle: 1 })
+  const userDoc = await User.findById(req.userId, { reportStyle: 1, financeContext: 1 })
   const reportStyle = userDoc?.reportStyle ?? 'standard'
+  const userContext = (userDoc?.financeContext ?? []).map(c => ({ category: c.category, note: c.note }))
   const txForPrompt = curTxs
     .filter(t => t.desc)
     .map(t => ({ desc: t.desc as string, category: t.category || 'Інше', amount: t.amount }))
-  const prompt = buildPrompt(month, categoryTotals, receiptData, dowTotals, reportStyle, txForPrompt)
+  const prompt = buildPrompt(month, categoryTotals, receiptData, dowTotals, reportStyle, txForPrompt, userContext)
 
   try {
     const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
