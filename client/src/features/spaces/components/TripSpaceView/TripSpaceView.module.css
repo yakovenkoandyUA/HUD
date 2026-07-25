@@ -88,6 +88,58 @@
   color: var(--space-color);
 }
 
+/* ── Countdown ── */
+.countdownRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+.countdown_future {
+  background: color-mix(in srgb, var(--space-color) 10%, transparent);
+  color: var(--text2);
+}
+.countdown_soon {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+.countdown_ongoing {
+  background: color-mix(in srgb, var(--positive, #16a34a) 12%, transparent);
+  color: var(--positive, #16a34a);
+}
+
+/* ── Budget row ── */
+.budgetRow {
+  display: flex;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.budgetItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.budgetLabel {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+.budgetVal {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
 /* ── Meta row (status + travelers + edit) ── */
 .metaRow {
   display: flex;
@@ -460,6 +512,18 @@
 }
 
 .placeLeft { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.placeMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placeVisitDate {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text3);
+}
 
 .placeCategory {
   font-family: var(--font-ui);

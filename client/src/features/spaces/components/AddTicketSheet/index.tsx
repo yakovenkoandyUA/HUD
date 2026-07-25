@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { useTicketStore } from '../../store/ticketStore'
-import type { Ticket, TicketTransport } from '../../store/ticketStore'
+import type { Ticket, TicketTransport, TicketStatus } from '../../store/ticketStore'
 import styles from './AddTicketSheet.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -16,6 +16,13 @@ interface Props {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+
+const STATUS_LABELS: Record<TicketStatus, string> = {
+  planned:   'Заплановано',
+  confirmed: 'Підтверджено',
+  cancelled: 'Скасовано',
+  used:      'Використано',
+}
 
 const TRANSPORT_LABELS: Record<TicketTransport, string> = {
   plane: 'Літак',
@@ -85,6 +92,7 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, edit
   const [flightNum, setFlightNum] = useState('')
   const [seat, setSeat]           = useState('')
   const [bookCode, setBookCode]   = useState('')
+  const [status, setStatus]       = useState<TicketStatus>('planned')
   const [busy, setBusy]           = useState(false)
   const [mounted, setMounted]     = useState(false)
   const [visible, setVisible]     = useState(false)
@@ -107,6 +115,7 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, edit
       setFlightNum(editTicket?.flightNumber ?? '')
       setSeat(editTicket?.seat ?? '')
       setBookCode(editTicket?.bookingCode ?? '')
+      setStatus(editTicket?.status ?? 'planned')
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
@@ -131,6 +140,7 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, edit
         flightNumber:  flightNum  || undefined,
         seat:          seat       || undefined,
         bookingCode:   bookCode   || undefined,
+        status,
       }
       if (editTicket) {
         await update(spaceId, editTicket._id, data)
@@ -233,6 +243,22 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, edit
             <div className={styles.field}>
               <label className={styles.fieldLabel}>КОД БРОНЮВАННЯ</label>
               <input className={styles.fieldInput} value={bookCode} onChange={e => setBookCode(e.target.value)} placeholder="ABC123…" />
+            </div>
+          </div>
+
+          {/* Status */}
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>СТАТУС</label>
+            <div className={styles.pills}>
+              {(Object.keys(STATUS_LABELS) as TicketStatus[]).map(s => (
+                <button
+                  key={s} type="button"
+                  className={`${styles.pill} ${status === s ? styles.pillOn : ''}`}
+                  onClick={() => setStatus(s)}
+                >
+                  {STATUS_LABELS[s]}
+                </button>
+              ))}
             </div>
           </div>
         </div>

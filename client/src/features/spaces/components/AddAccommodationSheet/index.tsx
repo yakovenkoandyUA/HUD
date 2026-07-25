@@ -42,6 +42,7 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
   const [checkOut, setCheckOut]     = useState('')
   const [checkOutOpen, setCheckOutOpen] = useState(false)
   const [bookCode, setBookCode]     = useState('')
+  const [contactInfo, setContactInfo] = useState('')
   const [link, setLink]             = useState('')
   const [price, setPrice]           = useState('')
   const [currency, setCurrency]     = useState<'UAH' | 'USD' | 'EUR'>('UAH')
@@ -59,7 +60,7 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
   React.useEffect(() => {
     if (isOpen) {
       setName(''); setAddress(''); setCheckIn(''); setCheckOut('')
-      setBookCode(''); setLink(''); setPrice(''); setCurrency('UAH'); setNotes('')
+      setBookCode(''); setContactInfo(''); setLink(''); setPrice(''); setCurrency('UAH'); setNotes('')
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
@@ -79,6 +80,7 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
         checkIn:     checkIn     || undefined,
         checkOut:    checkOut    || undefined,
         bookingCode: bookCode    || undefined,
+        contactInfo: contactInfo || undefined,
         link:        link        || undefined,
         price:       price ? parseFloat(price) : null,
         currency,
@@ -153,6 +155,11 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>КОНТАКТИ</label>
+            <input className={styles.fieldInput} value={contactInfo} onChange={e => setContactInfo(e.target.value)} placeholder="+33 1 23 45 67 89, reception@hotel.fr…" />
           </div>
 
           <div className={styles.field}>

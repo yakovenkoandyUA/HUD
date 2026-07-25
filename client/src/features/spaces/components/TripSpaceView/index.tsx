@@ -82,6 +82,31 @@ function calcDuration(start: string | null, end: string | null): string {
   return `${days} днів`
 }
 
+function pluralDays(n: number): string {
+  if (n === 1) return 'день'
+  if (n >= 2 && n <= 4) return 'дні'
+  return 'днів'
+}
+
+function calcCountdown(start?: string | null, end?: string | null): { text: string; type: 'future' | 'soon' | 'ongoing' } | null {
+  if (!start) return null
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const s = new Date(start + 'T00:00:00')
+  const e = end ? new Date(end + 'T00:00:00') : null
+
+  if (today < s) {
+    const days = Math.round((s.getTime() - today.getTime()) / 86400000)
+    if (days === 1) return { text: 'Завтра', type: 'soon' }
+    if (days <= 7) return { text: `за ${days} ${pluralDays(days)}`, type: 'soon' }
+    return { text: `за ${days} ${pluralDays(days)}`, type: 'future' }
+  }
+  if (!e || today <= e) {
+    const day = Math.round((today.getTime() - s.getTime()) / 86400000) + 1
+    return { text: `В дорозі · день ${day}`, type: 'ongoing' }
+  }
+  return null
+}
+
 function fmtAmount(n: number): string {
   return n.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
@@ -306,7 +331,10 @@ const AccomCard: React.FC<{ item: Accommodation; color: string; onDelete: (id: s
 const PlaceChip: React.FC<{ place: TripPlace; color: string; onDelete: (id: string) => void }> = ({ place, color, onDelete }) => (
   <div className={styles.placeChip} style={{ '--space-color': color } as React.CSSProperties}>
     <div className={styles.placeLeft}>
-      <span className={styles.placeCategory}>{PLACE_LABELS[place.category] ?? place.category}</span>
+      <div className={styles.placeMeta}>
+        <span className={styles.placeCategory}>{PLACE_LABELS[place.category] ?? place.category}</span>
+        {place.visitDate && <span className={styles.placeVisitDate}>{fmtDate(place.visitDate)}</span>}
+      </div>
       <span className={styles.placeName}>{place.name}</span>
       {place.address && <span className={styles.placeAddress}>{place.address}</span>}
     </div>
@@ -353,6 +381,17 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
   const expenses  = spaceTxs.filter(t => t.type === 'expense')
   const totalExp  = expenses.reduce((s, t) => s + t.amount, 0)
 
+  // Accommodation costs grouped by currency
+  const accomByCurrency = myAccoms.reduce<Record<string, number>>((acc, a) => {
+    if (a.price != null && a.price > 0) {
+      const cur = a.currency || 'UAH'
+      acc[cur] = (acc[cur] ?? 0) + a.price
+    }
+    return acc
+  }, {})
+  const hasAccomCost = Object.keys(accomByCurrency).length > 0
+  const hasBudget = hasAccomCost || totalExp > 0
+
   const handleSaveProfile = async (data: Partial<TripProfile>) => {
     try {
       const updated = await updateProfile(spaceId, data)
@@ -375,8 +414,30 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
   }
 
   const duration    = calcDuration(profile?.startDate ?? null, profile?.endDate ?? null)
+  const countdown   = calcCountdown(profile?.startDate, profile?.endDate)
   const statusColor = profile?.status ? (STATUS_COLORS[profile.status] ?? color) : color
   const colorVar    = { '--space-color': color } as React.CSSProperties
+
+  // Auto-update status based on today vs trip dates (silent, once per profile change)
+  const autoStatusRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!profile?.startDate) return
+    const key = `${profile.startDate}_${profile.endDate ?? ''}_${profile.status ?? ''}`
+    if (autoStatusRef.current === key) return
+    autoStatusRef.current = key
+
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const start = new Date(profile.startDate + 'T00:00:00')
+    const end   = profile.endDate ? new Date(profile.endDate + 'T00:00:00') : null
+
+    let newStatus: TripProfile['status'] | null = null
+    if (today >= start && (!end || today <= end) && profile.status !== 'ongoing' && profile.status !== 'completed') {
+      newStatus = 'ongoing'
+    } else if (end && today > end && profile.status !== 'completed') {
+      newStatus = 'completed'
+    }
+    if (newStatus) handleSaveProfile({ status: newStatus }).catch(() => {})
+  }, [profile?.startDate, profile?.endDate, profile?.status])
 
   return (
     <div className={styles.root} style={colorVar}>
@@ -418,6 +479,15 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
           </div>
         )}
 
+        {countdown && (
+          <div className={`${styles.countdownRow} ${styles['countdown_' + countdown.type]}`}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            {countdown.text}
+          </div>
+        )}
+
         <div className={styles.metaRow}>
           {profile?.status && (
             <span className={styles.statusBadge} style={{ background: statusColor + '22', color: statusColor, borderColor: statusColor + '44' }}>
@@ -440,6 +510,26 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
             Редагувати
           </button>
         </div>
+      {hasBudget && (
+        <div className={styles.budgetRow}>
+          {hasAccomCost && (
+            <div className={styles.budgetItem}>
+              <span className={styles.budgetLabel}>Проживання</span>
+              <span className={styles.budgetVal}>
+                {Object.entries(accomByCurrency).map(([cur, amt]) =>
+                  `${cur === 'UAH' ? '₴' : cur === 'USD' ? '$' : '€'}${fmtAmount(amt)}`
+                ).join(' + ')}
+              </span>
+            </div>
+          )}
+          {totalExp > 0 && (
+            <div className={styles.budgetItem}>
+              <span className={styles.budgetLabel}>Витрати</span>
+              <span className={styles.budgetVal}>₴{fmtAmount(totalExp)}</span>
+            </div>
+          )}
+        </div>
+      )}
       </div>
 
       {/* ── Tickets ── */}

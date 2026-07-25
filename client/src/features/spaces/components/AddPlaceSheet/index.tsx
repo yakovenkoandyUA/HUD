@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
+import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { useTripPlaceStore } from '../../store/tripPlaceStore'
 import type { TripPlaceCategory } from '../../store/tripPlaceStore'
 import styles from './AddPlaceSheet.module.css'
@@ -82,6 +83,8 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
   const [category, setCategory]   = useState<TripPlaceCategory>('other')
   const [address, setAddress]     = useState('')
   const [notes, setNotes]         = useState('')
+  const [visitDate, setVisitDate] = useState('')
+  const [visitDateOpen, setVisitDateOpen] = useState(false)
   const [busy, setBusy]           = useState(false)
   const [mounted, setMounted]     = useState(false)
   const [visible, setVisible]     = useState(false)
@@ -100,7 +103,7 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
 
   React.useEffect(() => {
     if (isOpen) {
-      setName(''); setCategory('other'); setAddress(''); setNotes('')
+      setName(''); setCategory('other'); setAddress(''); setNotes(''); setVisitDate('')
       setSearchQuery(''); setSuggestions([]); setShowSuggestions(false)
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
@@ -151,10 +154,11 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
     setBusy(true)
     try {
       await create(spaceId, {
-        name:    name.trim(),
+        name:      name.trim(),
         category,
-        address: address || undefined,
-        notes:   notes   || undefined,
+        address:   address   || undefined,
+        notes:     notes     || undefined,
+        visitDate: visitDate || undefined,
       })
       onClose()
     } finally {
@@ -248,6 +252,14 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
               onChange={e => setAddress(e.target.value)}
               placeholder="Rue de Rivoli 1, Paris…"
             />
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>КОЛИ ВІДВІДАТИ</label>
+            <button type="button" className={styles.dateField} onClick={() => setVisitDateOpen(true)}>
+              {visitDate ? (() => { const [y,m,d] = visitDate.slice(0,10).split('-'); return `${d}.${m}.${y}` })() : 'Вибрати дату'}
+            </button>
+            {visitDateOpen && <CustomDatePicker value={visitDate} onChange={v => { setVisitDate(v); setVisitDateOpen(false) }} onClose={() => setVisitDateOpen(false)} />}
           </div>
 
           <div className={styles.field}>
