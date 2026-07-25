@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useSportStore, type SportEvent, type SportEventInput, type WorkoutProgram, type WorkoutExercise } from '../../store/sportStore'
 import type { SportProfile, SportPR } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
+import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
@@ -761,6 +762,7 @@ const SportSpaceView: React.FC<Props> = ({
   coverUrl, coverPosition, isOwner, onEditSpace, onBack, spaceTxs = [],
 }) => {
   const { showToast } = useUiStore()
+  const { items: sprintItems, addItem, toggleItem } = useSprintStore()
   const {
     eventsBySpace, programsBySpace, sessionsBySpace,
     loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile,
@@ -779,6 +781,29 @@ const SportSpaceView: React.FC<Props> = ({
 
   const events = eventsBySpace[spaceId] ?? []
 
+  const linkedHabit = sprintItems.find(i => i.spaceId === spaceId && i.repeat && i.repeat !== 'none')
+  const todayISO = () => new Date().toISOString().slice(0, 10)
+
+  const handleCreateHabit = () => {
+    addItem({
+      title: `Тренування — ${spaceName}`,
+      type: 'todo',
+      repeat: 'custom',
+      repeatConfig: { interval: 2, unit: 'day', endsType: 'never' },
+      repeatStartDate: todayISO(),
+      spaceId,
+    })
+    showToast('Звичку створено', 'success')
+  }
+
+  const markHabitDoneToday = () => {
+    if (!linkedHabit) return
+    const today = todayISO()
+    if (!linkedHabit.completionLog?.includes(today)) {
+      toggleItem(linkedHabit.id, today)
+    }
+  }
+
   useEffect(() => {
     let cancelled = false
     const load = async () => {
@@ -794,6 +819,7 @@ const SportSpaceView: React.FC<Props> = ({
     try {
       await createEvent(spaceId, data)
       showToast('Тренування збережено', 'success')
+      markHabitDoneToday()
     } catch {
       showToast('Помилка збереження', 'error')
       throw new Error('Failed')
@@ -897,6 +923,7 @@ const SportSpaceView: React.FC<Props> = ({
       })
       await fetchEvents(spaceId)
       showToast('Тренування завершено', 'success')
+      markHabitDoneToday()
     } catch {
       showToast('Помилка збереження', 'error')
       throw new Error('Failed')
@@ -1001,6 +1028,19 @@ const SportSpaceView: React.FC<Props> = ({
               {profile?.sport && <span className={styles.sportBadge}>{SPORT_LABELS[profile.sport] ?? profile.sport}</span>}
               {profile?.level && <span className={styles.levelText}>{LEVEL_LABELS[profile.level]}</span>}
               {profile?.goal  && <span className={styles.goalText}>{profile.goal}</span>}
+              {linkedHabit ? (
+                <span className={styles.habitLinked}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                  {linkedHabit.title}
+                </span>
+              ) : (
+                <button type="button" className={styles.habitCreateBtn} onClick={e => { e.stopPropagation(); handleCreateHabit() }}>
+                  + Створити звичку
+                </button>
+              )}
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.profileChevron} aria-hidden="true">
               <path d="M9 18l6-6-6-6"/>

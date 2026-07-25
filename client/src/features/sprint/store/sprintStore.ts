@@ -5,6 +5,8 @@ import { isRecurring, calcStreak } from '../utils/sprint'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { useSprintStreakStore } from './sprintStreakStore'
 import { usePlantEventStore } from '@/features/spaces/store/plantEventStore'
+import { useSportStore } from '@/features/spaces/store/sportStore'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 
 const DEFAULT_LABELS: SprintLabel[] = [
   { id: 'default-1', title: '',        color: '#216E4E' },
@@ -696,12 +698,19 @@ export const useSprintStore = create<TodoState>((set, get) => ({
       if (calcStreak({ ...item, completionLog: newLog }) >= 7) {
         useAchievementsStore.getState().unlock('streak-7')
       }
-      // Habit → Space: if linked to a plant space, log watering event
+      // Habit → Space: log event in linked space based on space type
       if (item.spaceId) {
-        const { createEvent, updateProfile } = usePlantEventStore.getState()
-        createEvent(item.spaceId, { type: 'watering', date: completionDateStr })
-          .then(event => updateProfile(item.spaceId!, { lastWateredAt: event.date }))
-          .catch(() => {})
+        const space = useSpacesStore.getState().spaces.find(s => s.id === item.spaceId)
+        if (space?.type === 'plant') {
+          const { createEvent, updateProfile } = usePlantEventStore.getState()
+          createEvent(item.spaceId, { type: 'watering', date: completionDateStr })
+            .then(event => updateProfile(item.spaceId!, { lastWateredAt: event.date }))
+            .catch(() => {})
+        } else if (space?.type === 'sports') {
+          const { createEvent } = useSportStore.getState()
+          createEvent(item.spaceId, { title: item.title, date: completionDateStr })
+            .catch(() => {})
+        }
       }
       const parts = completionDateStr.split('-').map(Number)
       const completionBase = new Date(parts[0], parts[1] - 1, parts[2])

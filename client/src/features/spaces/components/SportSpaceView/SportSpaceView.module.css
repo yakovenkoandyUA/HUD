@@ -234,6 +234,21 @@
   flex-shrink: 0;
 }
 
+.habitLinked {
+  display: flex; align-items: center; gap: 5px;
+  flex-basis: 100%;
+  font-family: var(--font-ui); font-size: 0.7rem; color: var(--text3);
+}
+
+.habitCreateBtn {
+  background: none; border: none; padding: 0;
+  font-family: var(--font-ui); font-size: 0.7rem;
+  color: var(--space-color, var(--accent)); cursor: pointer;
+  flex-basis: 100%; text-align: left; opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.habitCreateBtn:active { opacity: 0.5; }
+
 /* ── Section ── */
 .section {
   padding: 16px 18px 0;
