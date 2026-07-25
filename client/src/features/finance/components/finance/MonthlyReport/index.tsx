@@ -295,7 +295,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const expensesOf = (ym: string) =>
     transactions.filter(t => t.type === 'expense' && t.date.startsWith(ym))
 
-  const { top3, totalCur, totalPrev, weekData, recommendation } = useMemo(() => {
+  const { top3, totalCur, totalPrev, weekData, recommendation, txCount } = useMemo(() => {
     const ymCur  = toYearMonth(year, month)
     const ymPrev = toYearMonth(prevYear, prevMonth)
 
