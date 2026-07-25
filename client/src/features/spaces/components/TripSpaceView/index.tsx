@@ -32,6 +32,8 @@ interface Props {
   spaceTxs:          SpaceTx[]
   onOpenCoverPicker?: () => void
   onEditTicket?:     (ticket: Ticket) => void
+  onEditAccom?:      (item: Accommodation) => void
+  onEditPlace?:      (place: TripPlace) => void
   onDeleteTx?:       (id: string) => void
 }
 
@@ -305,7 +307,7 @@ const TicketCard: React.FC<{ ticket: Ticket; color: string; onDelete: (id: strin
 
 // ── Accommodation card ─────────────────────────────────────────────────────
 
-const AccomCard: React.FC<{ item: Accommodation; color: string; onDelete: (id: string) => void }> = ({ item, color, onDelete }) => (
+const AccomCard: React.FC<{ item: Accommodation; color: string; onDelete: (id: string) => void; onEdit?: (item: Accommodation) => void }> = ({ item, color, onDelete, onEdit }) => (
   <div className={styles.accomCard} style={{ '--space-color': color } as React.CSSProperties}>
     <div className={styles.accomLeft}>
       <span className={styles.accomName}>{item.name}</span>
@@ -320,15 +322,22 @@ const AccomCard: React.FC<{ item: Accommodation; color: string; onDelete: (id: s
         {item.bookingCode && <span className={styles.accomCode}>{item.bookingCode}</span>}
       </div>
     </div>
-    <button type="button" className={styles.deleteBtn} onClick={() => onDelete(item._id)} aria-label="Видалити проживання">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-    </button>
+    <div className={styles.ticketActions}>
+      {onEdit && (
+        <button type="button" className={styles.editBtn} onClick={() => onEdit(item)} aria-label="Редагувати проживання">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      )}
+      <button type="button" className={styles.deleteBtn} onClick={() => onDelete(item._id)} aria-label="Видалити проживання">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
   </div>
 )
 
 // ── Place chip ─────────────────────────────────────────────────────────────
 
-const PlaceChip: React.FC<{ place: TripPlace; color: string; onDelete: (id: string) => void }> = ({ place, color, onDelete }) => (
+const PlaceChip: React.FC<{ place: TripPlace; color: string; onDelete: (id: string) => void; onEdit?: (place: TripPlace) => void }> = ({ place, color, onDelete, onEdit }) => (
   <div className={styles.placeChip} style={{ '--space-color': color } as React.CSSProperties}>
     <div className={styles.placeLeft}>
       <div className={styles.placeMeta}>
@@ -338,9 +347,16 @@ const PlaceChip: React.FC<{ place: TripPlace; color: string; onDelete: (id: stri
       <span className={styles.placeName}>{place.name}</span>
       {place.address && <span className={styles.placeAddress}>{place.address}</span>}
     </div>
-    <button type="button" className={styles.deleteBtn} onClick={() => onDelete(place._id)} aria-label="Видалити місце">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-    </button>
+    <div className={styles.ticketActions}>
+      {onEdit && (
+        <button type="button" className={styles.editBtn} onClick={() => onEdit(place)} aria-label="Редагувати місце">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      )}
+      <button type="button" className={styles.deleteBtn} onClick={() => onDelete(place._id)} aria-label="Видалити місце">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
   </div>
 )
 
@@ -358,7 +374,7 @@ const PlaceChip: React.FC<{ place: TripPlace; color: string; onDelete: (id: stri
  * @prop onProfileUpdate — callback після збереження профілю
  * @prop spaceTxs        — транзакції простору (з SpaceDetail)
  */
-const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate, spaceTxs, onOpenCoverPicker, onEditTicket, onDeleteTx }) => {
+const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate, spaceTxs, onOpenCoverPicker, onEditTicket, onEditAccom, onEditPlace, onDeleteTx }) => {
   const showToast = useUiStore(s => s.showToast)
   const { updateProfile } = useTripStore()
   const { tickets, load: loadTickets, remove: removeTicket }           = useTicketStore()
@@ -550,7 +566,7 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
           <h2 className={styles.sectionTitle}>ПРОЖИВАННЯ</h2>
           <div className={styles.accomList}>
             {myAccoms.map(a => (
-              <AccomCard key={a._id} item={a} color={color} onDelete={handleDeleteAccom} />
+              <AccomCard key={a._id} item={a} color={color} onDelete={handleDeleteAccom} onEdit={onEditAccom} />
             ))}
           </div>
         </div>
@@ -562,7 +578,7 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
           <h2 className={styles.sectionTitle}>МІСЦЯ</h2>
           <div className={styles.placeList}>
             {myPlaces.map(p => (
-              <PlaceChip key={p._id} place={p} color={color} onDelete={handleDeletePlace} />
+              <PlaceChip key={p._id} place={p} color={color} onDelete={handleDeletePlace} onEdit={onEditPlace} />
             ))}
           </div>
         </div>

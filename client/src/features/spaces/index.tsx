@@ -212,7 +212,9 @@ const SpaceDetailScreen: React.FC = () => {
   const [addTicketOpen, setAddTicketOpen]       = useState(false)
   const [editingTicket, setEditingTicket]       = useState<import('./store/ticketStore').Ticket | null>(null)
   const [addAccomOpen, setAddAccomOpen]         = useState(false)
+  const [editingAccom, setEditingAccom]         = useState<import('./store/accommodationStore').Accommodation | null>(null)
   const [addTripPlaceOpen, setAddTripPlaceOpen] = useState(false)
+  const [editingPlace, setEditingPlace]         = useState<import('./store/tripPlaceStore').TripPlace | null>(null)
   const [addExpenseOpen, setAddExpenseOpen]     = useState(false)
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [noteText, setNoteText]           = useState('')
@@ -938,6 +940,8 @@ const SpaceDetailScreen: React.FC = () => {
           spaceTxs={spaceTxs ?? []}
           onOpenCoverPicker={() => setCoverPickerOpen(true)}
           onEditTicket={t => { setEditingTicket(t); setAddTicketOpen(true) }}
+          onEditAccom={a => { setEditingAccom(a); setAddAccomOpen(true) }}
+          onEditPlace={p => { setEditingPlace(p); setAddTripPlaceOpen(true) }}
           onDeleteTx={handleDeleteTx}
         />
       )}
@@ -1028,14 +1032,16 @@ const SpaceDetailScreen: React.FC = () => {
             isOpen={addAccomOpen}
             spaceId={spaceId}
             color={space.color || 'var(--accent)'}
-            onClose={() => setAddAccomOpen(false)}
+            editAccom={editingAccom ?? undefined}
+            onClose={() => { setAddAccomOpen(false); setEditingAccom(null) }}
           />
           <AddPlaceSheet
             isOpen={addTripPlaceOpen}
             spaceId={spaceId}
             color={space.color || 'var(--accent)'}
             destination={space.tripProfile?.destination || undefined}
-            onClose={() => setAddTripPlaceOpen(false)}
+            editPlace={editingPlace ?? undefined}
+            onClose={() => { setAddTripPlaceOpen(false); setEditingPlace(null) }}
           />
           <AddSpaceExpenseSheet
             isOpen={addExpenseOpen}

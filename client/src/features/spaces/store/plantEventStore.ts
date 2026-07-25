@@ -41,6 +41,7 @@ interface PlantEventStore {
 
   fetchEvents:     (spaceId: string) => Promise<void>
   createEvent:     (spaceId: string, data: PlantEventInput) => Promise<PlantEvent>
+  updateEvent:     (spaceId: string, eventId: string, data: Partial<PlantEventInput>) => Promise<void>
   deleteEvent:     (spaceId: string, eventId: string) => Promise<void>
   updateProfile:   (spaceId: string, data: Partial<PlantProfile>) => Promise<PlantProfile>
   saveHealthCheck: (spaceId: string, result: HealthResult) => void
@@ -80,6 +81,22 @@ export const usePlantEventStore = create<PlantEventStore>()(
       },
     }))
     return event
+  },
+
+  updateEvent: async (spaceId, eventId, data) => {
+    const res = await authFetch(`/api/spaces/${spaceId}/plant/events/${eventId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) return
+    const updated: PlantEvent = await res.json()
+    set(s => ({
+      eventsBySpace: {
+        ...s.eventsBySpace,
+        [spaceId]: (s.eventsBySpace[spaceId] ?? []).map(e => e._id === eventId ? updated : e),
+      },
+    }))
   },
 
   deleteEvent: async (spaceId, eventId) => {

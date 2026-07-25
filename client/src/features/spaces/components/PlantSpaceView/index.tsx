@@ -305,20 +305,21 @@ function HealthSection({ result, hasPhoto, checking, color, onCheck }: HealthSec
 // ── Add event sheet ────────────────────────────────────────────────────────
 
 interface AddSheetProps {
-  isOpen:  boolean
-  type:    PlantEventType | null
-  color:   string
-  onClose: () => void
-  onSave:  (data: PlantEventInput) => Promise<void>
+  isOpen:      boolean
+  type:        PlantEventType | null
+  color:       string
+  onClose:     () => void
+  onSave:      (data: PlantEventInput) => Promise<void>
+  editEvent?:  import('../../store/plantEventStore').PlantEvent
 }
 
-const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, color, onClose, onSave }) => {
-  const [date, setDate]       = useState(todayISO)
+const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, color, onClose, onSave, editEvent }) => {
+  const [date, setDate]         = useState(todayISO)
   const [dateOpen, setDateOpen] = useState(false)
-  const [notes, setNotes]     = useState('')
-  const [busy, setBusy]       = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const [visible, setVisible] = useState(false)
+  const [notes, setNotes]       = useState('')
+  const [busy, setBusy]         = useState(false)
+  const [mounted, setMounted]   = useState(false)
+  const [visible, setVisible]   = useState(false)
 
   const sheetRef   = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -328,7 +329,8 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, color, onClose, 
 
   useEffect(() => {
     if (isOpen) {
-      setDate(todayISO()); setNotes('')
+      setDate(editEvent?.date ?? todayISO())
+      setNotes(editEvent?.notes ?? '')
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
@@ -336,7 +338,7 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, color, onClose, 
       const t = setTimeout(() => setMounted(false), 320)
       return () => clearTimeout(t)
     }
-  }, [isOpen])
+  }, [isOpen, editEvent])
 
   const handleSave = async () => {
     if (!type) return
@@ -362,7 +364,7 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, color, onClose, 
       <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
         <div className={styles.handle} />
         <div className={styles.sheetHeader}>
-          <span className={styles.sheetTitle}>{EVENT_LABELS[type].toUpperCase()}</span>
+          <span className={styles.sheetTitle}>{editEvent ? `РЕДАГУВАТИ: ${EVENT_LABELS[type].toUpperCase()}` : EVENT_LABELS[type].toUpperCase()}</span>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
@@ -382,7 +384,7 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, color, onClose, 
         </div>
         <div className={styles.sheetFooter}>
           <button type="button" className={styles.saveBtn} style={{ background: color }} onClick={handleSave} disabled={busy}>
-            {busy ? 'Збереження…' : 'Зберегти'}
+            {busy ? 'Збереження…' : editEvent ? 'Зберегти зміни' : 'Зберегти'}
           </button>
         </div>
       </div>
@@ -589,11 +591,12 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
  */
 const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate }) => {
   const showToast = useUiStore(s => s.showToast)
-  const { eventsBySpace, healthChecksBySpace, loading, fetchEvents, createEvent, deleteEvent, updateProfile, saveHealthCheck } = usePlantEventStore()
+  const { eventsBySpace, healthChecksBySpace, loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile, saveHealthCheck } = usePlantEventStore()
   const { items: sprintItems, addItem, toggleItem } = useSprintStore()
 
-  const [addSheet, setAddSheet]       = useState<PlantEventType | null>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
+  const [addSheet, setAddSheet]           = useState<PlantEventType | null>(null)
+  const [editingEvent, setEditingEvent]   = useState<import('../../store/plantEventStore').PlantEvent | null>(null)
+  const [profileOpen, setProfileOpen]     = useState(false)
   const [identifying, setIdentifying] = useState(false)
   const [healthChecking, setHealthChecking] = useState(false)
 
@@ -620,6 +623,17 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
       spaceId,
     })
     showToast('Звичку створено', 'success')
+  }
+
+  const handleUpdate = async (data: PlantEventInput) => {
+    if (!editingEvent) return
+    try {
+      await updateEvent(spaceId, editingEvent._id, { date: data.date, notes: data.notes })
+      showToast('Оновлено', 'success')
+    } catch {
+      showToast('Помилка збереження', 'error')
+      throw new Error('Failed')
+    }
   }
 
   const handleCreate = async (data: PlantEventInput) => {
@@ -953,13 +967,26 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
         ) : (
           <div className={styles.eventList}>
             {events.map(event => (
-              <EventRow key={event._id} event={event} color={color} onDelete={() => handleDelete(event)} />
+              <EventRow
+                key={event._id}
+                event={event}
+                color={color}
+                onDelete={() => handleDelete(event)}
+                onEdit={() => { setEditingEvent(event); setAddSheet(event.type) }}
+              />
             ))}
           </div>
         )}
       </div>
 
-      <AddEventSheet isOpen={addSheet !== null} type={addSheet} color={color} onClose={() => setAddSheet(null)} onSave={handleCreate} />
+      <AddEventSheet
+        isOpen={addSheet !== null}
+        type={addSheet}
+        color={color}
+        editEvent={editingEvent ?? undefined}
+        onClose={() => { setAddSheet(null); setEditingEvent(null) }}
+        onSave={editingEvent ? handleUpdate : handleCreate}
+      />
 
       <ProfileEditSheet
         isOpen={profileOpen}
@@ -980,9 +1007,10 @@ interface EventRowProps {
   event:    import('../../store/plantEventStore').PlantEvent
   color:    string
   onDelete: () => void
+  onEdit:   () => void
 }
 
-const EventRow: React.FC<EventRowProps> = ({ event, color, onDelete }) => {
+const EventRow: React.FC<EventRowProps> = ({ event, color, onDelete, onEdit }) => {
   const [confirm, setConfirm] = useState(false)
 
   const handleDelete = () => {
@@ -1000,6 +1028,12 @@ const EventRow: React.FC<EventRowProps> = ({ event, color, onDelete }) => {
         {event.notes && <div className={styles.eventNotes}>{event.notes}</div>}
       </div>
       <div className={styles.eventDate}>{fmtDate(event.date)}</div>
+      <button type="button" className={styles.editBtn} onClick={onEdit} aria-label="Редагувати">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
       <button
         type="button"
         className={`${styles.deleteBtn} ${confirm ? styles.deleteBtnConfirm : ''}`}

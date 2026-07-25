@@ -21,7 +21,7 @@ import {
 import { getTripProfile, updateTripProfile } from '../controllers/tripController'
 import {
   getPlantProfile, updatePlantProfile,
-  getPlantEvents, createPlantEvent, deletePlantEvent,
+  getPlantEvents, createPlantEvent, updatePlantEvent, deletePlantEvent,
 } from '../controllers/plantController'
 import {
   getSportProfile, updateSportProfile,
@@ -90,6 +90,7 @@ router.get('/:id/plant/profile',                       getPlantProfile)
 router.patch('/:id/plant/profile',                     updatePlantProfile)
 router.get('/:id/plant/events',                        getPlantEvents)
 router.post('/:id/plant/events',                       createPlantEvent)
+router.patch('/:id/plant/events/:eventId',             updatePlantEvent)
 router.delete('/:id/plant/events/:eventId',            deletePlantEvent)
 
 // sport

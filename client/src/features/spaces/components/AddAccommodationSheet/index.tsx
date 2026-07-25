@@ -2,15 +2,17 @@ import React, { useRef, useState } from 'react'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { useAccommodationStore } from '../../store/accommodationStore'
+import type { Accommodation } from '../../store/accommodationStore'
 import styles from './AddAccommodationSheet.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface Props {
-  isOpen:  boolean
-  spaceId: string
-  color:   string
-  onClose: () => void
+  isOpen:       boolean
+  spaceId:      string
+  color:        string
+  onClose:      () => void
+  editAccom?:   Accommodation
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -25,15 +27,16 @@ function fmtDateFull(iso: string): string {
 /**
  * AddAccommodationSheet
  * ---------------------
- * Bottom sheet для додавання бронювання житла до trip space.
+ * Bottom sheet для додавання або редагування бронювання житла в trip space.
  *
- * @prop isOpen  — стан відкриття
- * @prop spaceId — ID простору
- * @prop color   — колір простору для акцентів
- * @prop onClose — callback закриття
+ * @prop isOpen     — стан відкриття
+ * @prop spaceId    — ID простору
+ * @prop color      — колір простору для акцентів
+ * @prop onClose    — callback закриття
+ * @prop editAccom  — якщо передано — режим редагування
  */
-const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose }) => {
-  const { create } = useAccommodationStore()
+const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, editAccom }) => {
+  const { create, update } = useAccommodationStore()
 
   const [name, setName]             = useState('')
   const [address, setAddress]       = useState('')
@@ -59,8 +62,16 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
 
   React.useEffect(() => {
     if (isOpen) {
-      setName(''); setAddress(''); setCheckIn(''); setCheckOut('')
-      setBookCode(''); setContactInfo(''); setLink(''); setPrice(''); setCurrency('UAH'); setNotes('')
+      setName(editAccom?.name ?? '')
+      setAddress(editAccom?.address ?? '')
+      setCheckIn(editAccom?.checkIn ?? '')
+      setCheckOut(editAccom?.checkOut ?? '')
+      setBookCode(editAccom?.bookingCode ?? '')
+      setContactInfo(editAccom?.contactInfo ?? '')
+      setLink(editAccom?.link ?? '')
+      setPrice(editAccom?.price != null ? String(editAccom.price) : '')
+      setCurrency((editAccom?.currency as 'UAH' | 'USD' | 'EUR') ?? 'UAH')
+      setNotes(editAccom?.notes ?? '')
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
@@ -68,13 +79,13 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
       const t = setTimeout(() => setMounted(false), 320)
       return () => clearTimeout(t)
     }
-  }, [isOpen])
+  }, [isOpen, editAccom])
 
   const handleSave = async () => {
     if (!name.trim()) return
     setBusy(true)
     try {
-      await create(spaceId, {
+      const data = {
         name:        name.trim(),
         address:     address     || undefined,
         checkIn:     checkIn     || undefined,
@@ -85,7 +96,12 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
         price:       price ? parseFloat(price) : null,
         currency,
         notes:       notes       || undefined,
-      })
+      }
+      if (editAccom) {
+        await update(spaceId, editAccom._id, data)
+      } else {
+        await create(spaceId, data)
+      }
       onClose()
     } finally {
       setBusy(false)
@@ -105,7 +121,7 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
       <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
         <div className={styles.handle} />
         <div className={styles.sheetHeader}>
-          <span className={styles.sheetTitle}>ПРОЖИВАННЯ</span>
+          <span className={styles.sheetTitle}>{editAccom ? 'РЕДАГУВАТИ ПРОЖИВАННЯ' : 'ПРОЖИВАННЯ'}</span>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
@@ -181,7 +197,7 @@ const AddAccommodationSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClos
             onClick={handleSave}
             disabled={busy || !name.trim()}
           >
-            {busy ? 'Збереження…' : 'Зберегти'}
+            {busy ? 'Збереження…' : editAccom ? 'Зберегти зміни' : 'Зберегти'}
           </button>
         </div>
       </div>

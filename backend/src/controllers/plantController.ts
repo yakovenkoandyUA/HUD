@@ -102,6 +102,22 @@ export async function createPlantEvent(req: Request, res: Response): Promise<voi
   }
 }
 
+/** PATCH /api/spaces/:id/plant/events/:eventId */
+export async function updatePlantEvent(req: Request, res: Response): Promise<void> {
+  try {
+    const space = await Space.findOne({ _id: req.params.id, 'members.userId': req.userId })
+    if (!space) { res.status(404).json({ error: 'Not found' }); return }
+    const event = await PlantEvent.findOne({ _id: req.params.eventId, spaceId: req.params.id })
+    if (!event) { res.status(404).json({ error: 'Event not found' }); return }
+    if (req.body.date  !== undefined) event.date  = req.body.date
+    if (req.body.notes !== undefined) event.notes = req.body.notes
+    await event.save()
+    res.json(event)
+  } catch {
+    res.status(500).json({ error: 'Server error' })
+  }
+}
+
 /** DELETE /api/spaces/:id/plant/events/:eventId */
 export async function deletePlantEvent(req: Request, res: Response): Promise<void> {
   try {

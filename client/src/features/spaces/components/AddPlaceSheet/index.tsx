@@ -2,17 +2,18 @@ import React, { useCallback, useRef, useState } from 'react'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { useTripPlaceStore } from '../../store/tripPlaceStore'
-import type { TripPlaceCategory } from '../../store/tripPlaceStore'
+import type { TripPlace, TripPlaceCategory } from '../../store/tripPlaceStore'
 import styles from './AddPlaceSheet.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface Props {
-  isOpen:      boolean
-  spaceId:     string
-  color:       string
+  isOpen:       boolean
+  spaceId:      string
+  color:        string
   destination?: string
-  onClose:     () => void
+  onClose:      () => void
+  editPlace?:   TripPlace
 }
 
 interface PhotonFeature {
@@ -67,17 +68,18 @@ function buildAddress(props: PhotonFeature['properties']): string {
 /**
  * AddPlaceSheet
  * -------------
- * Bottom sheet для додавання збереженого місця до trip space.
- * Містить Photon (Komoot OSM) autocomplete для пошуку місць.
+ * Bottom sheet для додавання або редагування збереженого місця в trip space.
+ * Містить Photon (Komoot OSM) autocomplete для пошуку місць (тільки при створенні).
  *
  * @prop isOpen      — стан відкриття
  * @prop spaceId     — ID простору
  * @prop color       — колір простору для акцентів
  * @prop destination — поточне місто/напрямок для bias пошуку
  * @prop onClose     — callback закриття
+ * @prop editPlace   — якщо передано — режим редагування
  */
-const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, onClose }) => {
-  const { create } = useTripPlaceStore()
+const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, onClose, editPlace }) => {
+  const { create, update } = useTripPlaceStore()
 
   const [name, setName]           = useState('')
   const [category, setCategory]   = useState<TripPlaceCategory>('other')
@@ -103,7 +105,11 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
 
   React.useEffect(() => {
     if (isOpen) {
-      setName(''); setCategory('other'); setAddress(''); setNotes(''); setVisitDate('')
+      setName(editPlace?.name ?? '')
+      setCategory((editPlace?.category as TripPlaceCategory) ?? 'other')
+      setAddress(editPlace?.address ?? '')
+      setNotes(editPlace?.notes ?? '')
+      setVisitDate(editPlace?.visitDate ?? '')
       setSearchQuery(''); setSuggestions([]); setShowSuggestions(false)
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
@@ -112,7 +118,7 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
       const t = setTimeout(() => setMounted(false), 320)
       return () => clearTimeout(t)
     }
-  }, [isOpen])
+  }, [isOpen, editPlace])
 
   const fetchSuggestions = useCallback(async (q: string) => {
     if (!q.trim()) { setSuggestions([]); setShowSuggestions(false); return }
@@ -153,13 +159,18 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
     if (!name.trim()) return
     setBusy(true)
     try {
-      await create(spaceId, {
+      const data = {
         name:      name.trim(),
         category,
         address:   address   || undefined,
         notes:     notes     || undefined,
         visitDate: visitDate || undefined,
-      })
+      }
+      if (editPlace) {
+        await update(spaceId, editPlace._id, data)
+      } else {
+        await create(spaceId, data)
+      }
       onClose()
     } finally {
       setBusy(false)
@@ -179,7 +190,7 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
       <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
         <div className={styles.handle} />
         <div className={styles.sheetHeader}>
-          <span className={styles.sheetTitle}>МІСЦЕ</span>
+          <span className={styles.sheetTitle}>{editPlace ? 'РЕДАГУВАТИ МІСЦЕ' : 'МІСЦЕ'}</span>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
@@ -187,8 +198,8 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
 
         <div ref={bodyRef} className={styles.sheetBody}>
 
-          {/* ── Photon search ── */}
-          <div className={styles.field}>
+          {/* ── Photon search (create only) ── */}
+          {!editPlace && <div className={styles.field}>
             <label className={styles.fieldLabel}>ПОШУК МІСЦЯ</label>
             <div className={styles.searchWrap}>
               <div className={styles.searchInputWrap}>
@@ -215,9 +226,9 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
                 </ul>
               )}
             </div>
-          </div>
+          </div>}
 
-          <div className={styles.divider} />
+          {!editPlace && <div className={styles.divider} />}
 
           <div className={styles.field}>
             <label className={styles.fieldLabel}>НАЗВА</label>
@@ -282,7 +293,7 @@ const AddPlaceSheet: React.FC<Props> = ({ isOpen, spaceId, color, destination, o
             onClick={handleSave}
             disabled={busy || !name.trim()}
           >
-            {busy ? 'Збереження…' : 'Зберегти місце'}
+            {busy ? 'Збереження…' : editPlace ? 'Зберегти зміни' : 'Зберегти місце'}
           </button>
         </div>
       </div>
