@@ -799,8 +799,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
         headers: { 'Content-Type': 'application/json', 'Api-Key': plantKey },
         body: JSON.stringify({
           images:  [profile.photoUrl],
-          health:  'all',
-          details: ['treatment', 'description'],
+          details: 'treatment,description',
         }),
       })
       if (!res.ok) throw new Error('health_api')
