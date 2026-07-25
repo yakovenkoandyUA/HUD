@@ -71,34 +71,69 @@
   gap: 12px;
 }
 
-/* Upload own photo button */
-.uploadBtn {
-  width: 100%;
+/* Top row: Default + Upload */
+.topRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.topBtn {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 16px 10px;
   border: 1.5px dashed var(--border);
   border-radius: 12px;
   background: none;
   color: var(--text2);
   font-family: var(--font-ui);
-  font-size: 0.82rem;
-  font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  min-height: 90px;
 }
-.uploadBtn:hover { border-color: var(--accent); color: var(--accent); }
-.uploadBtn:disabled { opacity: 0.5; cursor: default; }
-.uploadBtnActive {
+.topBtn:hover { border-color: var(--accent); color: var(--accent); }
+.topBtn:disabled { opacity: 0.5; cursor: default; }
+.topBtnActive {
   border-style: solid;
   border-color: var(--accent);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
-.checkIcon { margin-left: 4px; color: var(--accent); }
+
+.topBtnIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.topBtnLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.topBtnCheck {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .sectionLabel {
   font-family: var(--font-ui);
@@ -136,24 +171,6 @@
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-/* Auto overlay (first cell) */
-.autoOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.autoLabel {
-  font-family: var(--font-ui);
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #fff;
-  text-transform: uppercase;
 }
 
 /* Checkmark overlay */

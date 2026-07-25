@@ -31,6 +31,8 @@ interface Props {
   onProfileUpdate:   (p: TripProfile) => void
   spaceTxs:          SpaceTx[]
   onOpenCoverPicker?: () => void
+  onEditTicket?:     (ticket: Ticket) => void
+  onDeleteTx?:       (id: string) => void
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -236,7 +238,7 @@ const TripEditSheet: React.FC<EditSheetProps> = ({ isOpen, profile, onClose, onS
 
 // ── Ticket card ────────────────────────────────────────────────────────────
 
-const TicketCard: React.FC<{ ticket: Ticket; color: string; onDelete: (id: string) => void }> = ({ ticket, color, onDelete }) => {
+const TicketCard: React.FC<{ ticket: Ticket; color: string; onDelete: (id: string) => void; onEdit?: (t: Ticket) => void }> = ({ ticket, color, onDelete, onEdit }) => {
   const isNext = ticket.status !== 'used' && ticket.status !== 'cancelled'
   return (
     <div className={`${styles.ticketCard} ${isNext ? styles.ticketCardActive : ''}`} style={{ '--space-color': color } as React.CSSProperties}>
@@ -259,9 +261,19 @@ const TicketCard: React.FC<{ ticket: Ticket; color: string; onDelete: (id: strin
           {ticket.bookingCode && <span className={styles.ticketCode}>{ticket.bookingCode}</span>}
         </div>
       </div>
-      <button type="button" className={styles.deleteBtn} onClick={() => onDelete(ticket._id)} aria-label="Видалити квиток">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-      </button>
+      <div className={styles.ticketActions}>
+        {onEdit && (
+          <button type="button" className={styles.editBtn} onClick={() => onEdit(ticket)} aria-label="Редагувати квиток">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+        )}
+        <button type="button" className={styles.deleteBtn} onClick={() => onDelete(ticket._id)} aria-label="Видалити квиток">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
     </div>
   )
 }
@@ -318,7 +330,7 @@ const PlaceChip: React.FC<{ place: TripPlace; color: string; onDelete: (id: stri
  * @prop onProfileUpdate — callback після збереження профілю
  * @prop spaceTxs        — транзакції простору (з SpaceDetail)
  */
-const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate, spaceTxs, onOpenCoverPicker }) => {
+const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate, spaceTxs, onOpenCoverPicker, onEditTicket, onDeleteTx }) => {
   const showToast = useUiStore(s => s.showToast)
   const { updateProfile } = useTripStore()
   const { tickets, load: loadTickets, remove: removeTicket }           = useTicketStore()
@@ -436,7 +448,7 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
           <h2 className={styles.sectionTitle}>КВИТКИ</h2>
           <div className={styles.ticketList}>
             {myTickets.map(t => (
-              <TicketCard key={t._id} ticket={t} color={color} onDelete={handleDeleteTicket} />
+              <TicketCard key={t._id} ticket={t} color={color} onDelete={handleDeleteTicket} onEdit={onEditTicket} />
             ))}
           </div>
         </div>
@@ -480,7 +492,16 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
                   <span className={styles.expenseTitle}>{t.title || t.desc || '—'}</span>
                   {t.category && <span className={styles.expenseCat}>{t.category}</span>}
                 </div>
-                <span className={styles.expenseAmount}>−₴{fmtAmount(t.amount)}</span>
+                <div className={styles.expenseRight}>
+                  <span className={styles.expenseAmount}>−₴{fmtAmount(t.amount)}</span>
+                  {onDeleteTx && (
+                    <button type="button" className={styles.expenseDeleteBtn} onClick={() => onDeleteTx(t._id)} aria-label="Видалити витрату">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

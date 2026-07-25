@@ -548,3 +548,36 @@
   -webkit-tap-highlight-color: transparent;
 }
 .deleteBtn:active { color: var(--negative); }
+
+/* ── Ticket card actions (edit + delete) ── */
+.ticketActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Expense row right side (amount + delete) ── */
+.expenseRight {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.expenseDeleteBtn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.expenseDeleteBtn:active { color: var(--negative); }

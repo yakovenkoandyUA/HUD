@@ -210,6 +210,7 @@ const SpaceDetailScreen: React.FC = () => {
   const [addMemOpen, setAddMemOpen]             = useState(false)
   const [addPlanOpen, setAddPlanOpen]           = useState(false)
   const [addTicketOpen, setAddTicketOpen]       = useState(false)
+  const [editingTicket, setEditingTicket]       = useState<import('./store/ticketStore').Ticket | null>(null)
   const [addAccomOpen, setAddAccomOpen]         = useState(false)
   const [addTripPlaceOpen, setAddTripPlaceOpen] = useState(false)
   const [addExpenseOpen, setAddExpenseOpen]     = useState(false)
@@ -602,6 +603,11 @@ const SpaceDetailScreen: React.FC = () => {
     showToast('Видалено', 'success')
   }
 
+  const handleDeleteTx = async (id: string) => {
+    setSpaceTxs(prev => prev ? prev.filter(t => t._id !== id) : prev)
+    await authFetch(`/api/transactions/${id}`, { method: 'DELETE' })
+  }
+
   // ── Render ──
 
   if (!loading && !space) {
@@ -931,6 +937,8 @@ const SpaceDetailScreen: React.FC = () => {
           onProfileUpdate={p => setTripProfile(space.id, p)}
           spaceTxs={spaceTxs ?? []}
           onOpenCoverPicker={() => setCoverPickerOpen(true)}
+          onEditTicket={t => { setEditingTicket(t); setAddTicketOpen(true) }}
+          onDeleteTx={handleDeleteTx}
         />
       )}
 
@@ -940,6 +948,7 @@ const SpaceDetailScreen: React.FC = () => {
           onClose={() => setCoverPickerOpen(false)}
           photos={unsplashPhotos}
           selectedUrl={space?.coverUrl ?? ''}
+          defaultIconSrc={SPACE_TYPE_CONFIG[space.type]?.iconSrc}
           onSelect={url => {
             const idx = unsplashPhotos.findIndex(p => p.url === url)
             setUnsplashIndex(idx >= 0 ? idx : 0)
@@ -1012,7 +1021,8 @@ const SpaceDetailScreen: React.FC = () => {
             isOpen={addTicketOpen}
             spaceId={spaceId}
             color={space.color || 'var(--accent)'}
-            onClose={() => setAddTicketOpen(false)}
+            editTicket={editingTicket ?? undefined}
+            onClose={() => { setAddTicketOpen(false); setEditingTicket(null) }}
           />
           <AddAccommodationSheet
             isOpen={addAccomOpen}

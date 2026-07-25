@@ -2,16 +2,17 @@ import React, { useRef, useState } from 'react'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { useTicketStore } from '../../store/ticketStore'
-import type { TicketTransport } from '../../store/ticketStore'
+import type { Ticket, TicketTransport } from '../../store/ticketStore'
 import styles from './AddTicketSheet.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface Props {
-  isOpen:  boolean
-  spaceId: string
-  color:   string
-  onClose: () => void
+  isOpen:      boolean
+  spaceId:     string
+  color:       string
+  onClose:     () => void
+  editTicket?: Ticket
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -62,15 +63,16 @@ function fmtDateFull(iso: string): string {
 /**
  * AddTicketSheet
  * --------------
- * Bottom sheet для додавання квитка до trip space.
+ * Bottom sheet для додавання або редагування квитка у trip space.
  *
- * @prop isOpen  — стан відкриття
- * @prop spaceId — ID простору
- * @prop color   — колір простору для акцентів
- * @prop onClose — callback закриття
+ * @prop isOpen      — стан відкриття
+ * @prop spaceId     — ID простору
+ * @prop color       — колір простору для акцентів
+ * @prop onClose     — callback закриття
+ * @prop editTicket  — якщо передано — режим редагування
  */
-const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose }) => {
-  const { create } = useTicketStore()
+const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, editTicket }) => {
+  const { create, update } = useTicketStore()
 
   const [transport, setTransport] = useState<TicketTransport>('plane')
   const [from, setFrom]           = useState('')
@@ -95,8 +97,16 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose }) =>
 
   React.useEffect(() => {
     if (isOpen) {
-      setTransport('plane'); setFrom(''); setTo(''); setDate(''); setDepTime('')
-      setArrTime(''); setCarrier(''); setFlightNum(''); setSeat(''); setBookCode('')
+      setTransport((editTicket?.transport as TicketTransport) ?? 'plane')
+      setFrom(editTicket?.from ?? '')
+      setTo(editTicket?.to ?? '')
+      setDate(editTicket?.date ?? '')
+      setDepTime(editTicket?.departureTime ?? '')
+      setArrTime(editTicket?.arrivalTime ?? '')
+      setCarrier(editTicket?.carrier ?? '')
+      setFlightNum(editTicket?.flightNumber ?? '')
+      setSeat(editTicket?.seat ?? '')
+      setBookCode(editTicket?.bookingCode ?? '')
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
@@ -104,13 +114,13 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose }) =>
       const t = setTimeout(() => setMounted(false), 320)
       return () => clearTimeout(t)
     }
-  }, [isOpen])
+  }, [isOpen, editTicket])
 
   const handleSave = async () => {
     if (!date) return
     setBusy(true)
     try {
-      await create(spaceId, {
+      const data = {
         transport,
         from:          from       || undefined,
         to:            to         || undefined,
@@ -121,7 +131,12 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose }) =>
         flightNumber:  flightNum  || undefined,
         seat:          seat       || undefined,
         bookingCode:   bookCode   || undefined,
-      })
+      }
+      if (editTicket) {
+        await update(spaceId, editTicket._id, data)
+      } else {
+        await create(spaceId, data)
+      }
       onClose()
     } finally {
       setBusy(false)
@@ -141,7 +156,7 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose }) =>
       <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
         <div className={styles.handle} />
         <div className={styles.sheetHeader}>
-          <span className={styles.sheetTitle}>КВИТОК</span>
+          <span className={styles.sheetTitle}>{editTicket ? 'РЕДАГУВАТИ КВИТОК' : 'КВИТОК'}</span>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
@@ -230,7 +245,7 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose }) =>
             onClick={handleSave}
             disabled={busy || !date}
           >
-            {busy ? 'Збереження…' : 'Зберегти квиток'}
+            {busy ? 'Збереження…' : editTicket ? 'Зберегти зміни' : 'Зберегти квиток'}
           </button>
         </div>
       </div>
