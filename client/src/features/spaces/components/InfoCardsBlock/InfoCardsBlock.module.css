@@ -1,0 +1,74 @@
+.root { display: flex; flex-direction: column; gap: 10px; }
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.title {
+  font-family: var(--font-ui); font-size: 0.65rem; font-weight: 800;
+  letter-spacing: 0.12em; color: var(--text3); margin: 0;
+}
+
+.addBtn {
+  width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+  border: none; background: none; color: var(--space-color); cursor: pointer;
+  border-radius: 6px; transition: opacity 0.15s;
+}
+.addBtn:active { opacity: 0.6; }
+
+/* ── Empty ── */
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 20px 16px; text-align: center;
+}
+.emptyText {
+  font-family: var(--font-ui); font-size: 0.75rem; color: var(--text3);
+  line-height: 1.5; margin: 0; max-width: 240px;
+}
+.emptyAction {
+  padding: 7px 16px; border: 1px solid var(--space-color); border-radius: 20px;
+  background: none; color: var(--space-color); font-family: var(--font-ui); font-size: 0.75rem;
+  font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+}
+.emptyAction:active { opacity: 0.6; }
+
+/* ── Cards grid ── */
+.grid { display: flex; flex-direction: column; gap: 6px; }
+
+.card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; background: var(--surface2);
+  border: 1px solid var(--border); cursor: pointer;
+  transition: border-color 0.15s; position: relative;
+}
+.card:active { border-color: var(--space-color); }
+
+.cardIcon {
+  width: 30px; height: 30px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--space-color) 12%, transparent);
+  border-radius: 7px; color: var(--space-color);
+}
+
+.cardBody {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.cardLabel {
+  font-family: var(--font-ui); font-size: 0.62rem; font-weight: 800;
+  letter-spacing: 0.08em; color: var(--text3); text-transform: uppercase;
+}
+
+.cardValue {
+  font-family: var(--font-ui); font-size: 0.85rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.deleteBtn {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none; color: var(--text3);
+  cursor: pointer; border-radius: 5px; transition: color 0.15s;
+}
+.deleteBtn:active { color: var(--danger, #e11d48); }

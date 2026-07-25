@@ -32,6 +32,7 @@ import {
 import { getTickets, createTicket, updateTicket, deleteTicket } from '../controllers/ticketController'
 import { getAccommodations, createAccommodation, updateAccommodation, deleteAccommodation } from '../controllers/accommodationController'
 import { getTripPlaces, createTripPlace, updateTripPlace, deleteTripPlace } from '../controllers/tripPlaceController'
+import { getInfoCards, createInfoCard, updateInfoCard, deleteInfoCard } from '../controllers/spaceInfoCardController'
 
 const router = Router()
 router.use(requireAuth)
@@ -107,5 +108,11 @@ router.delete('/:id/sport/programs/:programId',            deleteWorkoutProgram)
 router.get('/:id/sport/sessions',                          getWorkoutSessions)
 router.post('/:id/sport/sessions',                         createWorkoutSession)
 router.delete('/:id/sport/sessions/:sessionId',            deleteWorkoutSession)
+
+// info cards (blank/shared spaces)
+router.get('/:id/info-cards',                          getInfoCards)
+router.post('/:id/info-cards',                         createInfoCard)
+router.patch('/:id/info-cards/:cardId',                updateInfoCard)
+router.delete('/:id/info-cards/:cardId',               deleteInfoCard)
 
 export default router

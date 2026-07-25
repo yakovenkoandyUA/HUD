@@ -31,7 +31,11 @@ import AddPlaceSheet from './components/AddPlaceSheet'
 import AddSpaceExpenseSheet from './components/AddSpaceExpenseSheet'
 import SpaceChatSheet from './components/SpaceChatSheet'
 import SpaceTaskItem from './components/SpaceTaskItem'
+import InfoCardsBlock from './components/InfoCardsBlock'
+import AddInfoCardSheet from './components/AddInfoCardSheet'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
+import { useSpaceInfoCardStore } from './store/spaceInfoCardStore'
+import type { SpaceInfoCard } from './store/spaceInfoCardStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import { SPACE_TYPE_CONFIG } from './data/spaceTypes'
 import styles from './SpaceDetail.module.css'
@@ -222,6 +226,12 @@ const SpaceDetailScreen: React.FC = () => {
   const [taskInputText, setTaskInputText] = useState('')
   const [savingTask, setSavingTask]       = useState(false)
 
+  // ── Info Cards ──
+  const { cards: allInfoCards, load: loadInfoCards, remove: removeInfoCard } = useSpaceInfoCardStore()
+  const infoCards = spaceId ? (allInfoCards[spaceId] ?? null) : null
+  const [addInfoCardOpen, setAddInfoCardOpen]   = useState(false)
+  const [editingInfoCard, setEditingInfoCard]   = useState<SpaceInfoCard | null>(null)
+
   // ── Edit sheet ──
   const [chatOpen, setChatOpen]     = useState(false)
   const [editOpen, setEditOpen]     = useState(false)
@@ -282,6 +292,7 @@ const SpaceDetailScreen: React.FC = () => {
       const spaceType  = found?.type
       const needsFull  = spaceType !== 'vehicle' && spaceType !== 'pet' && spaceType !== 'plant'
       const needsTasks = spaceType !== 'vehicle'
+      const isGeneric  = spaceType === 'blank' || spaceType === 'shared' || !spaceType
 
       // Typed spaces skip sections they never show — resolve immediately with empty
       if (!needsFull)  { setMemories([]); setPlans([]); setSpaceNotes([]) }
@@ -310,6 +321,9 @@ const SpaceDetailScreen: React.FC = () => {
         authFetch(`/api/transactions?spaceId=${spaceId}`)
           .then(async r => { if (!cancelled && r.ok) setSpaceTxs(await r.json() as SpaceTx[]) }),
       )
+      if (isGeneric && spaceId) {
+        loadInfoCards(spaceId)
+      }
 
       await Promise.all(fetches)
       if (!cancelled) setLoading(false)
@@ -1053,6 +1067,16 @@ const SpaceDetailScreen: React.FC = () => {
         </>
       )}
 
+      {spaceId && space && (
+        <AddInfoCardSheet
+          isOpen={addInfoCardOpen}
+          spaceId={spaceId}
+          color={spaceColor}
+          onClose={() => { setAddInfoCardOpen(false); setEditingInfoCard(null) }}
+          editCard={editingInfoCard ?? undefined}
+        />
+      )}
+
       {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
@@ -1083,6 +1107,13 @@ const SpaceDetailScreen: React.FC = () => {
           {ctx.taskBtnLabel.replace('+ ', '')}
           <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => { setEditingInfoCard(null); setAddInfoCardOpen(true) }}>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </span>
+          Інфо
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+        </button>
         <button type="button" className={`${styles.actionBtn} ${styles.actionBtnMimir}`} style={colorVar} onClick={() => setChatOpen(true)}>
           <MimirIcon size={14} />
           Мімір
@@ -1092,6 +1123,15 @@ const SpaceDetailScreen: React.FC = () => {
 
       {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && (
       <div className={styles.content}>
+
+        {/* ── Info Cards ── */}
+        <InfoCardsBlock
+          cards={infoCards ?? []}
+          color={spaceColor}
+          onAdd={() => { setEditingInfoCard(null); setAddInfoCardOpen(true) }}
+          onEdit={card => { setEditingInfoCard(card); setAddInfoCardOpen(true) }}
+          onDelete={cardId => spaceId && removeInfoCard(spaceId, cardId)}
+        />
 
         {/* ── Members ── */}
         {space && (
@@ -1152,7 +1192,7 @@ const SpaceDetailScreen: React.FC = () => {
         )}
 
         {/* ── Memories ── */}
-        <section className={styles.section}>
+        {!space?.modules?.includes('hide:memories') && <section className={styles.section}>
           <h2 className={styles.sectionTitle}>СПОГАДИ</h2>
           {memories === null ? (
             <div className={styles.memoriesGrid}>{[1,2,3,4].map(i => <div key={i} className={styles.skeleton} />)}</div>
@@ -1170,10 +1210,10 @@ const SpaceDetailScreen: React.FC = () => {
               {memories.map(m => <MemoryCard key={m.id} memory={m} onClick={() => navigate(`/memories/${m.id}`)} />)}
             </div>
           )}
-        </section>
+        </section>}
 
         {/* ── Plans ── */}
-        <section className={styles.section}>
+        {!space?.modules?.includes('hide:plans') && <section className={styles.section}>
           <h2 className={styles.sectionTitle}>ПЛАНИ</h2>
           {plans === null ? (
             <div className={styles.plansCol}>{[1,2].map(i => <div key={i} className={`${styles.skeleton} ${styles.skeletonPlan}`} />)}</div>
@@ -1192,10 +1232,10 @@ const SpaceDetailScreen: React.FC = () => {
               {plans.map(p => <PlanCard key={p._id} plan={p} onClick={() => navigate(`/memories?plan=${p._id}`)} />)}
             </div>
           )}
-        </section>
+        </section>}
 
         {/* ── Notes ── */}
-        <section className={styles.section} ref={notesSectionRef}>
+        {!space?.modules?.includes('hide:notes') && <section className={styles.section} ref={notesSectionRef}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>НОТАТКИ</h2>
             {!showNoteInput && (
@@ -1252,9 +1292,10 @@ const SpaceDetailScreen: React.FC = () => {
               ))}
             </div>
           )}
-        </section>
+        </section>}
+
         {/* ── Tasks ── */}
-        <section className={styles.section} ref={tasksSectionRef}>
+        {!space?.modules?.includes('hide:tasks') && <section className={styles.section} ref={tasksSectionRef}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>ЗАДАЧІ</h2>
             {!showTaskInput && (
@@ -1301,7 +1342,7 @@ const SpaceDetailScreen: React.FC = () => {
               ))}
             </div>
           )}
-        </section>
+        </section>}
 
         {/* ── Transactions ── */}
         <section className={styles.section}>
@@ -1445,7 +1486,7 @@ const SpaceDetailScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* ── Modules (typed spaces only) ── */}
+            {/* ── Modules (typed spaces: opt-in; blank/shared: opt-out hide:X) ── */}
             {(['vehicle', 'plant', 'pet', 'trip'] as SpaceType[]).includes(editType) && (() => {
               const ALL_MODULES: { key: string; label: string }[] = [
                 { key: 'finance',   label: 'Фінанси' },
@@ -1473,6 +1514,40 @@ const SpaceDetailScreen: React.FC = () => {
                         {m.label}
                       </button>
                     ))}
+                  </div>
+                </>
+              )
+            })()}
+
+            {(['blank', 'shared'] as SpaceType[]).includes(editType) && (() => {
+              const HIDE_SECTIONS: { key: string; label: string }[] = [
+                { key: 'hide:memories', label: 'Спогади' },
+                { key: 'hide:plans',    label: 'Плани' },
+                { key: 'hide:notes',    label: 'Нотатки' },
+                { key: 'hide:tasks',    label: 'Задачі' },
+              ]
+              const toggleHide = (key: string) =>
+                setEditModules(prev =>
+                  prev.includes(key) ? prev.filter(m => m !== key) : [...prev, key]
+                )
+              return (
+                <>
+                  <label className={styles.fieldLabel}>РОЗДІЛИ</label>
+                  <div className={styles.moduleToggles}>
+                    {HIDE_SECTIONS.map(s => {
+                      const isVisible = !editModules.includes(s.key)
+                      return (
+                        <button
+                          key={s.key}
+                          type="button"
+                          className={`${styles.moduleToggle} ${isVisible ? styles.moduleToggleOn : ''}`}
+                          style={isVisible ? colorVar : undefined}
+                          onClick={() => toggleHide(s.key)}
+                        >
+                          {s.label}
+                        </button>
+                      )
+                    })}
                   </div>
                 </>
               )
