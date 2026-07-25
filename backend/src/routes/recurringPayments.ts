@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import RecurringPayment from '../models/RecurringPayment'
 import Transaction from '../models/Transaction'
+import Category from '../models/Category'
 import { requireAuth } from '../middleware/auth'
 
 const router = Router()
@@ -65,11 +66,24 @@ router.post('/:id/confirm', async (req: Request, res: Response): Promise<void> =
   }
 
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+  // Find or create "Підписки" category for this user
+  let subsCat = await Category.findOne({ userId: req.userId, name: { $regex: /^підписки$/i } })
+  if (!subsCat) {
+    subsCat = await Category.create({
+      userId: req.userId,
+      name:   'Підписки',
+      icon:   'ti-refresh',
+      color:  '#6366f1',
+    })
+  }
+
   const transaction = await Transaction.create({
     userId:      req.userId,
     type:        'expense',
     amount:      item.amount,
-    category:    (item.category && item.category !== 'Інше') ? item.category : 'Підписки',
+    category:    subsCat.name,
+    categoryId:  (subsCat._id as { toString(): string }).toString(),
     title:       item.name,
     desc:        'Регулярний платіж',
     date:        dateStr,
