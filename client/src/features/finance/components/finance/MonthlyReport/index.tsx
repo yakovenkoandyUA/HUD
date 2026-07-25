@@ -6,8 +6,16 @@ import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
+import Modal from '@/shared/components/ui/Modal'
 import type { Transaction } from '@/shared/types'
 import styles from './MonthlyReport.module.css'
+
+interface FinanceContextItem {
+  _id: string
+  category?: string
+  note: string
+  createdAt: string
+}
 
 function applyInline(text: string): string {
   return text
@@ -129,6 +137,13 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const aiMonthRef = useRef('')
   const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const [financeContext, setFinanceContext] = useState<FinanceContextItem[]>([])
+  const [showAddNote, setShowAddNote] = useState(false)
+  const [noteText, setNoteText] = useState('')
+  const [noteCategory, setNoteCategory] = useState('')
+  const [noteSaving, setNoteSaving] = useState(false)
+  const [contextLoaded, setContextLoaded] = useState(false)
+
   const LOADING_PHASES = [
     'Збираю транзакції за місяць…',
     'Аналізую категорії витрат…',
@@ -159,6 +174,56 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
     return () => { if (loadingIntervalRef.current) clearInterval(loadingIntervalRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiLoading])
+
+  useEffect(() => {
+    if (contextLoaded) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await authFetch('/api/finance/context')
+        if (!cancelled && res.ok) {
+          const data = await res.json() as { context: FinanceContextItem[] }
+          setFinanceContext(data.context)
+          setContextLoaded(true)
+        }
+      } catch { /* silent */ }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [contextLoaded])
+
+  const saveNote = async () => {
+    if (!noteText.trim()) return
+    setNoteSaving(true)
+    try {
+      const res = await authFetch('/api/finance/context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: noteText.trim(), category: noteCategory || undefined }),
+      })
+      if (res.ok) {
+        const data = await res.json() as { context: FinanceContextItem[] }
+        setFinanceContext(data.context)
+        setNoteText('')
+        setNoteCategory('')
+        setShowAddNote(false)
+        showToast('Зауваження збережено', 'success')
+      }
+    } catch { /* silent */ } finally {
+      setNoteSaving(false)
+    }
+  }
+
+  const deleteNote = async (id: string) => {
+    try {
+      const res = await authFetch(`/api/finance/context/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        const data = await res.json() as { context: FinanceContextItem[] }
+        setFinanceContext(data.context)
+        showToast('Зауваження видалено', 'success')
+      }
+    } catch { /* silent */ }
+  }
 
   const ym = toYearMonth(year, month)
 
@@ -288,7 +353,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
       }
     }
 
-    return { top3, totalCur, totalPrev, weekData: weekData.map(w => ({ ...w, maxWeek })), recommendation }
+    return { top3, totalCur, totalPrev, weekData: weekData.map(w => ({ ...w, maxWeek })), recommendation, txCount: curTxs.length }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, year, month])
 
@@ -305,6 +370,10 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
 
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
   const hasData = totalCur > 0
+  const MIN_TX = 10
+  const WARN_TX = 20
+  const canAnalyse = txCount >= MIN_TX
+  const lowDataWarning = txCount >= MIN_TX && txCount < WARN_TX
 
   const maxBar = top3.length > 0 ? top3[0].amount : 1
 
@@ -369,18 +438,26 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                     {totalCur <= totalPrev ? '↓' : '↑'} {fmt(Math.abs(totalCur - totalPrev))} ₴
                   </span>
                 )}
-                <button
-                  type="button"
-                  className={styles.aiBtn}
-                  onClick={generateReport}
-                  disabled={aiLoading}
-                  title={aiContent ? 'Оновити аналіз' : 'Згенерувати AI аналіз'}
-                >
-                  <MimirIcon size={12} />
-                  {aiContent ? 'Оновити' : 'Аналіз'}
-                  {!activeProfile?.isVerified && <span className={styles.verifyBadge}>ВЕРИФІКАЦІЯ</span>}
-                </button>
+                {canAnalyse && (
+                  <button
+                    type="button"
+                    className={styles.aiBtn}
+                    onClick={generateReport}
+                    disabled={aiLoading}
+                    title={aiContent ? 'Оновити аналіз' : 'Згенерувати AI аналіз'}
+                  >
+                    <MimirIcon size={12} />
+                    {aiContent ? 'Оновити' : 'Аналіз'}
+                    {!activeProfile?.isVerified && <span className={styles.verifyBadge}>ВЕРИФІКАЦІЯ</span>}
+                  </button>
+                )}
               </div>
+              {!canAnalyse && (
+                <p className={styles.txThreshold}>Замало транзакцій для аналізу (мінімум {MIN_TX}, зараз {txCount})</p>
+              )}
+              {lowDataWarning && (
+                <p className={styles.txWarning}>Мало даних — аналіз може бути неточним ({txCount} транзакцій)</p>
+              )}
 
               {/* AI loading block */}
               {aiLoading && (
@@ -433,6 +510,41 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                   )}
                 </div>
               )}
+
+              {/* Mimir context notes */}
+              <div className={styles.contextBlock}>
+                <div className={styles.contextHeader}>
+                  <span className={styles.sectionLabel} style={{ margin: 0 }}>ЗАУВАЖЕННЯ МІМІР</span>
+                  <button type="button" className={styles.contextAddBtn} onClick={() => setShowAddNote(true)}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    Додати
+                  </button>
+                </div>
+                {financeContext.length === 0 ? (
+                  <p className={styles.contextEmpty}>Немає зауважень — Мімір аналізує без обмежень</p>
+                ) : (
+                  <ul className={styles.contextList}>
+                    {financeContext.map(item => (
+                      <li key={item._id} className={styles.contextItem}>
+                        {item.category && <span className={styles.contextCat}>{item.category}</span>}
+                        <span className={styles.contextNote}>{item.note}</span>
+                        <button
+                          type="button"
+                          className={styles.contextDelBtn}
+                          onClick={() => deleteNote(item._id)}
+                          title="Видалити"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
               {/* Top-3 categories */}
               <p className={styles.sectionLabel}>ТОП КАТЕГОРІЇ</p>
@@ -502,6 +614,42 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
           )}
         </div>
       </div>
+
+      {/* Add note sheet */}
+      <Modal isOpen={showAddNote} onClose={() => { setShowAddNote(false); setNoteText(''); setNoteCategory('') }} title="Зауваження Мімір" draggable>
+        <div className={styles.noteForm}>
+          <p className={styles.noteHint}>Мімір врахує це в наступних аналізах. Наприклад: "барбершоп — витрата раз на 2 місяці, не аномалія".</p>
+          <label className={styles.noteLabel}>Категорія (необов'язково)</label>
+          <select
+            className={styles.noteSelect}
+            value={noteCategory}
+            onChange={e => setNoteCategory(e.target.value)}
+          >
+            <option value="">Загальне</option>
+            {categories.map(c => (
+              <option key={c._id} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+          <label className={styles.noteLabel}>Зауваження</label>
+          <textarea
+            className={styles.noteTextarea}
+            value={noteText}
+            onChange={e => setNoteText(e.target.value)}
+            placeholder="Напиши уточнення для Міміра…"
+            rows={4}
+            maxLength={300}
+          />
+          <span className={styles.noteCount}>{noteText.length}/300</span>
+          <button
+            type="button"
+            className={styles.noteSaveBtn}
+            onClick={saveNote}
+            disabled={noteSaving || !noteText.trim()}
+          >
+            {noteSaving ? 'Зберігаю…' : 'Зберегти'}
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }

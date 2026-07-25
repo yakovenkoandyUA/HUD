@@ -32,6 +32,7 @@ export interface IUser extends Document {
   unlockedAchievements: { id: string; unlockedAt: Date }[]
   onboardingCompleted: boolean
   mimirSeenHints: string[]
+  financeContext: { _id?: { toString(): string }; category?: string; note: string; createdAt: Date }[]
   createdAt: Date
   // Subscription fields
   plan: PlanId
@@ -90,6 +91,10 @@ const schema = new Schema<IUser>({
   },
   onboardingCompleted:    { type: Boolean, default: false },
   mimirSeenHints:         { type: [String], default: [] },
+  financeContext: {
+    type: [{ category: { type: String, default: null }, note: { type: String, required: true }, createdAt: { type: Date, default: Date.now } }],
+    default: [],
+  },
   createdAt:              { type: Date, default: Date.now },
   // Subscription fields — safe defaults, no migration needed
   plan:                   { type: String, enum: ['free', 'personal', 'couple', 'family'], default: 'free' },
