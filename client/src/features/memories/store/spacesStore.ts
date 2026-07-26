@@ -158,7 +158,7 @@ interface SpacesStore {
   ensureCellarSpace:  () => Promise<Space>
 }
 
-export const useSpacesStore = create<SpacesStore>((set) => ({
+export const useSpacesStore = create<SpacesStore>((set, get) => ({
   spaces:         [],
   archivedSpaces: [],
   loading:        true,
@@ -304,8 +304,8 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
     }))
   },
 
-  ensureCellarSpace: async () => {
-    const existing = useSpacesStore.getState().spaces.find(s => s.type === 'cellar')
+  ensureCellarSpace: async (): Promise<Space> => {
+    const existing = get().spaces.find((s: Space) => s.type === 'cellar')
     if (existing) return existing
     const res = await authFetch('/api/spaces', {
       method: 'POST',
