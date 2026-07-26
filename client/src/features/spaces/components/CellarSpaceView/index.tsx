@@ -82,8 +82,8 @@ const CellarSpaceView: React.FC<Props> = ({ color, coverUrl, coverPosition, onBa
         )}
 
         <div className={styles.heroInfo}>
-          <span className={styles.heroType} style={colorVar}>Cellar</span>
-          <h1 className={styles.heroName}>CELLAR</h1>
+          <span className={styles.heroType} style={colorVar}>Drink Deep</span>
+          <h1 className={styles.heroName}>DRINK DEEP</h1>
         </div>
       </div>
 

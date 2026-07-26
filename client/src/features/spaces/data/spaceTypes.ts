@@ -20,5 +20,5 @@ export const SPACE_TYPE_CONFIG: Record<SpaceType | 'home', SpaceTypeConfig> & { 
 	shared: { label: 'Спільний', description: 'Спільний простір', color: '#64748b', iconSrc: `${BASE}/space_personal.png`, isCover: true },
 	blank: { label: 'Свій простір', description: 'Свій простір з нуля', color: '#71717a', iconSrc: `${BASE}/space_personal.png`, isCover: true },
 	home:   { label: 'Дім', description: 'Ремонти, оплати, документи', color: '#92400e', iconSrc: `${BASE}/space_house.png`, isCover: true },
-	cellar: { label: 'Cellar', description: 'Колекція алкоголю', color: '#78350f', iconSrc: `${BASE}/space_drinks.png`, isCover: true },
+	cellar: { label: 'Drink Deep', description: 'Колекція алкоголю', color: '#78350f', iconSrc: `${BASE}/space_drinks.png`, isCover: true },
 }

@@ -310,7 +310,7 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
     const res = await authFetch('/api/spaces', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Cellar', type: 'cellar', color: '' }),
+      body: JSON.stringify({ name: 'Drink Deep', type: 'cellar', color: '' }),
     })
     if (!res.ok) throw new Error('Create cellar failed')
     const space: Space = await res.json()
