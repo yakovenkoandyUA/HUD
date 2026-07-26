@@ -1,109 +1,106 @@
 .card {
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px;
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-sizing: border-box;
-}
-
-.card:active { transform: scale(0.98); }
-
-.stats {
   display: flex;
   align-items: center;
-  gap: 0;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  padding: 12px 16px;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+}
+
+.card:active { background: var(--surface2); }
+
+/* Left: icon + name */
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.iconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.last {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.sub {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* Right: stats */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .stat {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .statNum {
-  font-family: var(--font-heading);
-  font-size: 28px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text);
   line-height: 1;
 }
 
 .statLabel {
   font-family: var(--font-ui);
-  font-size: 10px;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary);
-}
-
-.divider {
-  width: 1px;
-  height: 32px;
-  background: var(--border);
-}
-
-.recent {
-  display: flex;
-  gap: 10px;
-  overflow: hidden;
-}
-
-.bottle {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-}
-
-.bottlePhoto {
-  width: 100%;
-  aspect-ratio: 2/3;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.bottlePlaceholder {
-  width: 100%;
-  aspect-ratio: 2/3;
-  background: var(--surface-raised);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-}
-
-.bottleName {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-  text-align: center;
-}
-
-.bottleType {
-  font-family: var(--font-ui);
   font-size: 9px;
-  color: var(--text-secondary);
-  text-align: center;
+  letter-spacing: 0.04em;
+  color: var(--text3);
+  white-space: nowrap;
 }
 
-.empty {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0;
-  text-align: center;
-  padding: 8px 0;
+.statDivider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
 }
