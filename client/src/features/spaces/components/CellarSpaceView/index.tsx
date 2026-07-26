@@ -52,7 +52,7 @@ const CellarSpaceView: React.FC<Props> = ({ spaceId, color, isOwner }) => {
   return (
     <div className={styles.root}>
       {/* Quick actions */}
-      <div className={styles.actions} style={colorVar}>
+      {isOwner && <div className={styles.actions} style={colorVar}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddOpen(true)}>
           <span className={styles.actionBtnIcon}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -74,7 +74,7 @@ const CellarSpaceView: React.FC<Props> = ({ spaceId, color, isOwner }) => {
           Витрата
           <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
         </button>
-      </div>
+      </div>}
 
       {/* Search + add */}
       <div className={styles.searchRow}>
