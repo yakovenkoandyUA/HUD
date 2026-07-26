@@ -196,8 +196,8 @@
 }
 .moodBtn:hover { background: var(--surface); transform: translateY(-2px); }
 .moodBtnActive {
-  background: var(--tint-accent);
-  border-color: var(--accent);
+  background: color-mix(in srgb, var(--mood-color, var(--accent)) 14%, transparent);
+  border-color: var(--mood-color, var(--accent));
   transform: translateY(-2px);
 }
 
@@ -209,7 +209,7 @@
   text-align: center;
   letter-spacing: 0.04em;
 }
-.moodBtnActive .moodLabel { color: var(--accent); }
+.moodBtnActive .moodLabel { color: var(--mood-color, var(--accent)); }
 
 /* ── Routines ── */
 .routineList {
@@ -346,9 +346,8 @@
   font-family: var(--font-ui);
   font-size: 11px;
   color: var(--text3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .familyMoodLabel {

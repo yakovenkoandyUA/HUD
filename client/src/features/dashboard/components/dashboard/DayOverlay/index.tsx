@@ -175,6 +175,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
                   key={score}
                   type="button"
                   className={`${styles.moodBtn} ${currentMood === score ? styles.moodBtnActive : ''}`}
+                  style={currentMood === score ? { '--mood-color': MOOD_COLORS[score] } as React.CSSProperties : undefined}
                   onClick={() => handleMoodClick(score)}
                   title={MOOD_LABELS[score]}
                 >
