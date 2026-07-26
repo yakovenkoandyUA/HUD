@@ -648,8 +648,8 @@ const SpaceDetailScreen: React.FC = () => {
     <div className={styles.root}>
       <AppHeader />
 
-      {/* ── Hero (hidden for vehicle + pet + sports + cellar — they render their own) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && space?.type !== 'cellar' && <div
+      {/* ── Hero (hidden for vehicle + pet + sports — they render their own) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && <div
         className={`${styles.hero} ${styles.heroCovered}`}
       >
         <img
@@ -854,12 +854,7 @@ const SpaceDetailScreen: React.FC = () => {
         <CellarSpaceView
           spaceId={spaceId!}
           color={space.color || 'var(--accent)'}
-          spaceName={space.name}
           isOwner={isOwner}
-          coverUrl={space.coverUrl}
-          coverPosition={space.coverPosition}
-          onBack={() => navigate(-1)}
-          onEditSpace={openEdit}
         />
       )}
 

@@ -4,7 +4,6 @@ import { useDrinksStore } from '@/features/drinks/store/drinksStore'
 import DrinkCard from '@/features/drinks/components/DrinkCard'
 import AddDrinkSheet from '@/features/drinks/components/AddDrinkSheet'
 import { DRINK_TYPE_LABELS, type DrinkStatus, type DrinkType } from '@/features/drinks/types'
-import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
 import styles from './CellarSpaceView.module.css'
 
 type FilterStatus = 'all' | DrinkStatus
@@ -18,21 +17,16 @@ const STATUS_FILTERS: { key: FilterStatus; label: string }[] = [
 ]
 
 interface Props {
-  spaceId:        string
-  color:          string
-  spaceName:      string
-  isOwner:        boolean
-  coverUrl?:      string
-  coverPosition?: string
-  onBack:         () => void
-  onEditSpace:    () => void
+  spaceId:  string
+  color:    string
+  isOwner:  boolean
 }
 
 /**
- * CellarSpaceView — вигляд простору типу 'cellar'.
- * Рендерить колекцію алкогольних напоїв усередині SpaceDetail.
+ * CellarSpaceView — контент простору типу 'cellar'.
+ * Hero рендерить стандартний SpaceDetail (з назвою з БД, upload обкладинки тощо).
  */
-const CellarSpaceView: React.FC<Props> = ({ color, coverUrl, coverPosition, onBack, isOwner, onEditSpace }) => {
+const CellarSpaceView: React.FC<Props> = ({ color, isOwner }) => {
   const navigate = useNavigate()
   const { drinks, isLoading, fetchDrinks } = useDrinksStore()
 
@@ -51,42 +45,10 @@ const CellarSpaceView: React.FC<Props> = ({ color, coverUrl, coverPosition, onBa
 
   const usedTypes = useMemo(() => new Set(drinks.map(d => d.type)), [drinks])
 
-  const coverSrc = coverUrl || SPACE_TYPE_CONFIG.cellar.iconSrc
   const colorVar = { '--space-color': color || 'var(--accent)' } as React.CSSProperties
 
   return (
     <div className={styles.root}>
-      {/* Hero */}
-      <div className={styles.hero}>
-        <img
-          src={coverSrc}
-          alt=""
-          className={styles.heroCoverImg}
-          style={{ objectPosition: coverUrl ? `center ${coverPosition ?? 'center'}` : 'center center' }}
-          aria-hidden="true"
-        />
-        <div className={styles.heroOverlay} style={colorVar} />
-
-        <button type="button" className={styles.backBtn} onClick={onBack} aria-label="Назад">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 4l-5 5 5 5"/>
-          </svg>
-        </button>
-
-        {isOwner && (
-          <button type="button" className={styles.editBtn} onClick={onEditSpace} aria-label="Редагувати простір">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
-            </svg>
-          </button>
-        )}
-
-        <div className={styles.heroInfo}>
-          <span className={styles.heroType} style={colorVar}>Drink Deep</span>
-          <h1 className={styles.heroName}>DRINK DEEP</h1>
-        </div>
-      </div>
-
       {/* Search + add */}
       <div className={styles.searchRow}>
         <input

@@ -306,7 +306,19 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
 
   ensureCellarSpace: async (): Promise<Space> => {
     const existing = get().spaces.find((s: Space) => s.type === 'cellar')
-    if (existing) return existing
+    if (existing) {
+      if (existing.name === 'Cellar') {
+        await authFetch(`/api/spaces/${existing.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'Drink Deep' }),
+        })
+        const renamed = { ...existing, name: 'Drink Deep' }
+        set(s => ({ spaces: s.spaces.map(sp => sp.id === existing.id ? renamed : sp) }))
+        return renamed
+      }
+      return existing
+    }
     const res = await authFetch('/api/spaces', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
