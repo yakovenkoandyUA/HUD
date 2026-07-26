@@ -203,7 +203,7 @@ const tripProfileSchema = new Schema<ITripProfile>({
 
 const schema = new Schema<ISpace>({
   name:           { type: String, required: true, trim: true, maxlength: 60 },
-  type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle','home','pet','plant','blank'], default: 'shared' },
+  type:           { type: String, enum: ['personal','shared','trip','family','friends','hobby','sports','project','vehicle','home','pet','plant','blank','cellar'], default: 'shared' },
   color:          { type: String, default: '#9b59b6' },
   emoji:          { type: String, default: '' },
   coverUrl:       { type: String, default: '' },
