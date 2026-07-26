@@ -136,7 +136,9 @@ function buildSegments(stats: CatStat[], grandTotal: number, colorFn: (cat: stri
 
 // ── Component ─────────────────────────────────────────────────────────────────
 const ShoppingTracker: React.FC<ShoppingTrackerProps> = ({ transactions }) => {
-  const [period, setPeriod] = useState<Period>('month')
+  const [period, setPeriod] = useState<Period>(
+    () => (localStorage.getItem('shopping-tracker-period') as Period | null) ?? 'month'
+  )
   const [animated, setAnimated] = useState(false)
   const [exiting, setExiting] = useState(false)
 
@@ -209,6 +211,7 @@ const ShoppingTracker: React.FC<ShoppingTrackerProps> = ({ transactions }) => {
     setAnimated(false)
     const t1 = setTimeout(() => {
       setPeriod(p)
+      localStorage.setItem('shopping-tracker-period', p)
       setExiting(false)
     }, 220)
     const t2 = setTimeout(() => setAnimated(true), 290)

@@ -5,6 +5,141 @@
   padding: 4px 0 24px;
 }
 
+/* Search */
+.searchWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  padding: 0 10px;
+}
+
+.searchIcon {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+
+.searchInput::placeholder { color: var(--text-secondary); }
+
+.searchSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.searchClear {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dropdown {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.dropdownItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.dropdownItem:last-child { border-bottom: none; }
+.dropdownItem:active { background: var(--surface-raised); }
+
+.dropdownImg {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: var(--surface-raised);
+  flex-shrink: 0;
+}
+
+.dropdownInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dropdownName {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdownBrand {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.dropdownAbv {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.notFound {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 4px 0 2px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
 .field {
   display: flex;
   flex-direction: column;

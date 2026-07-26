@@ -16,6 +16,15 @@ import styles from './DrinkDetail.module.css'
  * DrinkDetail — full detail page for a single drink.
  * Routes: /drinks/:id
  */
+
+function getRatingLabel(rating: number): string {
+  if (rating >= 9) return 'Винятково'
+  if (rating >= 7) return 'Дуже добре'
+  if (rating >= 5) return 'Добре'
+  if (rating >= 3) return 'Посередньо'
+  return 'Слабко'
+}
+
 const DrinkDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -90,7 +99,14 @@ const DrinkDetail: React.FC = () => {
             </div>
           )}
           <div className={styles.heroInfo}>
-            <div className={styles.statusBadge}>{DRINK_STATUS_LABELS[drink.status]}</div>
+            <div className={`${styles.statusBadge} ${drink.status === 'finished' ? styles.statusFinished : ''}`}>
+              {drink.status === 'finished' && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+              {DRINK_STATUS_LABELS[drink.status]}
+            </div>
             <h1 className={styles.heroName}>{drink.name}</h1>
             {drink.brand && <p className={styles.heroBrand}>{drink.brand}</p>}
             <div className={styles.heroMeta}>
@@ -108,13 +124,22 @@ const DrinkDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Overall rating */}
+        {/* Rating card */}
         {drink.rating !== null && (
-          <div className={styles.section}>
-            <div className={styles.ratingHero}>
+          <div className={styles.ratingCard}>
+            <p className={styles.ratingCardTitle}>МОЯ ОЦІНКА</p>
+            <div className={styles.ratingRow}>
               <span className={styles.ratingNum}>{drink.rating}</span>
               <span className={styles.ratingMax}>/10</span>
-              <span className={styles.ratingLabel}>загальний рейтинг</span>
+              <span className={styles.ratingWord}>{getRatingLabel(drink.rating)}</span>
+            </div>
+            <div className={styles.ratingDots}>
+              {Array.from({ length: 10 }, (_, i) => (
+                <span
+                  key={i}
+                  className={`${styles.dot} ${i < drink.rating! ? styles.dotFilled : ''}`}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -140,16 +165,27 @@ const DrinkDetail: React.FC = () => {
         {/* Tastings */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>ДЕГУСТАЦІЇ ({drink.tastings.length})</h2>
+            <h2 className={styles.sectionTitle}>ДЕГУСТАЦІЇ · {drink.tastings.length}</h2>
             <button className={styles.addTastingBtn} onClick={() => setTastingOpen(true)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Додати
             </button>
           </div>
           {drink.tastings.length === 0 ? (
-            <p className={styles.emptyTastings}>Ще не дегустували</p>
+            <div className={styles.emptyTastings}>
+              <p className={styles.emptyTitle}>Записів ще немає</p>
+              {drink.status === 'finished' ? (
+                <p className={styles.emptyHint}>
+                  Напій позначено як скуштований, але запис дегустації ще не додано.
+                </p>
+              ) : (
+                <p className={styles.emptyHint}>
+                  Додайте аромат, смак і враження після першої дегустації.
+                </p>
+              )}
+            </div>
           ) : (
             <div className={styles.tastings}>
               {[...drink.tastings].reverse().map(t => (
@@ -184,18 +220,15 @@ const DrinkDetail: React.FC = () => {
               <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>
-            Списати у фінанси
-          </button>
-          <button className={styles.deleteBtn} onClick={handleDelete}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14H6L5 6" />
-              <path d="M10 11v6" /><path d="M14 11v6" />
-              <path d="M9 6V4h6v2" />
-            </svg>
-            Видалити
+            {drink.price !== null
+              ? `Списати ${drink.price.toLocaleString('uk-UA')} ₴ у фінанси`
+              : 'Списати у фінанси'}
           </button>
         </div>
+
+        <button className={styles.deleteLink} onClick={handleDelete}>
+          Видалити напій з колекції
+        </button>
       </div>
 
       {editOpen && (
