@@ -20,6 +20,7 @@ import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import { useImageUpload } from '@/shared/hooks/useImageUpload'
 import ProgressBar from '@/shared/components/ui/ProgressBar'
 import VehicleSpaceView from './components/VehicleSpaceView'
+import CellarSpaceView from './components/CellarSpaceView'
 import PetSpaceView from './components/PetSpaceView'
 import PlantSpaceView from './components/PlantSpaceView'
 import TripSpaceView from './components/TripSpaceView'
@@ -647,8 +648,8 @@ const SpaceDetailScreen: React.FC = () => {
     <div className={styles.root}>
       <AppHeader />
 
-      {/* ── Hero (hidden for vehicle + pet + sports — they render their own) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && <div
+      {/* ── Hero (hidden for vehicle + pet + sports + cellar — they render their own) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && space?.type !== 'cellar' && <div
         className={`${styles.hero} ${styles.heroCovered}`}
       >
         <img
@@ -722,8 +723,8 @@ const SpaceDetailScreen: React.FC = () => {
         )}
       </div>}
 
-      {/* ── Overview (hidden for vehicle + pet + sports) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && (() => {
+      {/* ── Overview (hidden for vehicle + pet + sports + cellar) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && space?.type !== 'cellar' && (() => {
         const isTyped = ['plant', 'pet', 'trip'].includes(space?.type ?? '')
         const showPlans = !isTyped || (space?.modules ?? []).includes('plans')
         const isPlant = space?.type === 'plant'
@@ -749,8 +750,8 @@ const SpaceDetailScreen: React.FC = () => {
         )
       })()}
 
-      {/* ── Budget / spending block (hidden for vehicle + pet + sports) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && (() => {
+      {/* ── Budget / spending block (hidden for vehicle + pet + sports + cellar) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && space?.type !== 'cellar' && (() => {
         const spent = (spaceTxs ?? []).filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
         const sym   = space?.budgetCurrency === 'USD' ? '$' : space?.budgetCurrency === 'EUR' ? '€' : '₴'
         if (space?.budget != null) {
@@ -849,6 +850,19 @@ const SpaceDetailScreen: React.FC = () => {
           onBack={() => navigate(-1)}
         />
       )}
+      {space?.type === 'cellar' && (
+        <CellarSpaceView
+          spaceId={spaceId!}
+          color={space.color || 'var(--accent)'}
+          spaceName={space.name}
+          isOwner={isOwner}
+          coverUrl={space.coverUrl}
+          coverPosition={space.coverPosition}
+          onBack={() => navigate(-1)}
+          onEditSpace={openEdit}
+        />
+      )}
+
       {space?.type === 'plant' && (
         <PlantSpaceView
           spaceId={spaceId!}
@@ -1077,7 +1091,7 @@ const SpaceDetailScreen: React.FC = () => {
         />
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && (
+      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && space?.type !== 'cellar' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
           <span className={styles.actionBtnIcon}>
@@ -1121,7 +1135,7 @@ const SpaceDetailScreen: React.FC = () => {
       </div>
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && (
+      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && space?.type !== 'cellar' && (
       <div className={styles.content}>
 
         {/* ── Info Cards ── */}

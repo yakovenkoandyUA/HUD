@@ -43,7 +43,6 @@ import OnboardingScreen from '@/features/auth/Onboarding'
 import TermsPage from '@/features/auth/TermsPage'
 import PrivacyPage from '@/features/auth/PrivacyPage'
 import PaymentResult from '@/features/auth/PaymentResult'
-import DrinksScreen from '@/features/drinks'
 import DrinkDetail from '@/features/drinks/detail'
 import PwaInstallBanner from '@/shared/components/ui/PwaInstallBanner'
 import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
@@ -119,7 +118,6 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/timeline" element={<TimelineScreen />} />
           <Route path="/yearbook/:year" element={<YearbookScreen />} />
           <Route path="/games" element={<Navigate to="/watchlist" replace />} />
-          <Route path="/drinks" element={<DrinksScreen />} />
           <Route path="/drinks/:id" element={<DrinkDetail />} />
 
           {/* F1 module — f1Enabled only */}

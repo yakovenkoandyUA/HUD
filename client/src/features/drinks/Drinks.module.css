@@ -1,6 +1,6 @@
 .page {
   min-height: 100dvh;
-  padding-bottom: 90px;
+  padding-bottom: 32px;
   background: var(--bg);
 }
 

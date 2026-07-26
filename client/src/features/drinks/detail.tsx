@@ -64,6 +64,12 @@ const DrinkDetail: React.FC = () => {
 
   const hasFlavorData = Object.values(drink.flavor).some(v => v > 0)
 
+  const metaParts = [
+    DRINK_TYPE_LABELS[drink.type],
+    drink.abv !== null ? `${drink.abv}%` : null,
+    drink.country || null,
+  ].filter(Boolean).join(' · ')
+
   return (
     <div className={styles.page}>
       <AppHeader />
@@ -109,11 +115,7 @@ const DrinkDetail: React.FC = () => {
             </div>
             <h1 className={styles.heroName}>{drink.name}</h1>
             {drink.brand && <p className={styles.heroBrand}>{drink.brand}</p>}
-            <div className={styles.heroMeta}>
-              <span className={styles.metaPill}>{DRINK_TYPE_LABELS[drink.type]}</span>
-              {drink.country && <span className={styles.metaPill}>{drink.country}</span>}
-              {drink.abv !== null && <span className={styles.metaPill}>{drink.abv}%</span>}
-            </div>
+            {metaParts && <p className={styles.heroMeta}>{metaParts}</p>}
             {drink.distillery && <p className={styles.distillery}>{drink.distillery}</p>}
             {drink.price !== null && (
               <p className={styles.price}>
@@ -216,7 +218,7 @@ const DrinkDetail: React.FC = () => {
         {/* Actions */}
         <div className={styles.actions}>
           <button className={styles.buyBtn} onClick={() => setBuyOpen(true)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={styles.buyIcon}>
               <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>

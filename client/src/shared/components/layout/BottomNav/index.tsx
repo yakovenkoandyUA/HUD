@@ -107,6 +107,7 @@ const BottomNav: React.FC = () => {
   }, [navStyle])
 
   if (modalDepth > 0) return null
+  if (pathname.startsWith('/drinks')) return null
 
   const isProfile = pathname === '/profile'
 

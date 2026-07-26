@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { authFetch } from '@/shared/services/api'
 
-export type SpaceType = 'shared' | 'trip' | 'sports' | 'vehicle' | 'pet' | 'plant' | 'blank'
+export type SpaceType = 'shared' | 'trip' | 'sports' | 'vehicle' | 'pet' | 'plant' | 'blank' | 'cellar'
 
 export interface SpaceMember {
   userId:    string
@@ -153,8 +153,9 @@ interface SpacesStore {
   archiveSpace:         (id: string) => Promise<void>
   unarchiveSpace:(id: string) => Promise<void>
   deleteSpace:   (id: string) => Promise<void>
-  addMember:     (spaceId: string, username: string) => Promise<void>
-  removeMember:  (spaceId: string, userId: string) => Promise<void>
+  addMember:          (spaceId: string, username: string) => Promise<void>
+  removeMember:       (spaceId: string, userId: string) => Promise<void>
+  ensureCellarSpace:  () => Promise<Space>
 }
 
 export const useSpacesStore = create<SpacesStore>((set) => ({
@@ -301,5 +302,19 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
           : sp
       ),
     }))
+  },
+
+  ensureCellarSpace: async () => {
+    const existing = useSpacesStore.getState().spaces.find(s => s.type === 'cellar')
+    if (existing) return existing
+    const res = await authFetch('/api/spaces', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Cellar', type: 'cellar', color: '' }),
+    })
+    if (!res.ok) throw new Error('Create cellar failed')
+    const space: Space = await res.json()
+    set(s => ({ spaces: [space, ...s.spaces] }))
+    return space
   },
 }))

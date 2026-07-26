@@ -128,6 +128,8 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues }) =
     setForm(prev => ({ ...prev, flavor: { ...prev.flavor, [key]: val } }))
   }
 
+  const ratingNum = parseInt(form.rating) || 0
+
   async function handleSave() {
     if (!form.name.trim()) return
     setSaving(true)
@@ -192,30 +194,30 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues }) =
           </div>
         )}
 
-        {/* Photo */}
-        <div className={styles.photoRow}>
-          {form.photo ? (
-            <div className={styles.photoPreview}>
-              <img src={form.photo} alt="preview" className={styles.photoImg} />
-              <button className={styles.photoRemove} onClick={() => setField('photo', '')}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
+        {/* ── ОСНОВНЕ ──────────────────────────────── */}
+        <div className={styles.sectionHeader}>ОСНОВНЕ</div>
+
+        {/* Photo + Name + Brand — compact hero row */}
+        <div className={styles.heroRow}>
+          <div className={styles.heroPhotoWrap}>
+            <ImageUploadButton
+              folder="drinks"
+              currentUrl={form.photo}
+              onUpload={url => setField('photo', url)}
+              variant="fill"
+              placeholder="Фото"
+            />
+          </div>
+          <div className={styles.heroFields}>
+            <div className={styles.field}>
+              <label className={styles.label}>Назва *</label>
+              <input className={styles.input} value={form.name} onChange={e => setField('name', e.target.value)} placeholder="Lagavulin 16..." />
             </div>
-          ) : (
-            <ImageUploadButton folder="drinks" currentUrl="" onUpload={url => setField('photo', url)} />
-          )}
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Назва *</label>
-          <input className={styles.input} value={form.name} onChange={e => setField('name', e.target.value)} placeholder="Lagavulin 16..." />
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Бренд / Виробник</label>
-          <input className={styles.input} value={form.brand} onChange={e => setField('brand', e.target.value)} placeholder="Diageo..." />
+            <div className={styles.field}>
+              <label className={styles.label}>Бренд / Виробник</label>
+              <input className={styles.input} value={form.brand} onChange={e => setField('brand', e.target.value)} placeholder="Diageo..." />
+            </div>
+          </div>
         </div>
 
         <div className={styles.field}>
@@ -228,6 +230,9 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues }) =
           <PillSelector options={STATUS_OPTIONS} value={form.status} onChange={v => setField('status', v)} columns={3} />
         </div>
 
+        {/* ── ПОХОДЖЕННЯ ───────────────────────────── */}
+        <div className={styles.sectionHeader}>ПОХОДЖЕННЯ</div>
+
         <div className={styles.row}>
           <div className={styles.field}>
             <label className={styles.label}>Країна</label>
@@ -239,7 +244,10 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues }) =
           </div>
         </div>
 
-        <div className={styles.row3}>
+        {/* ── ХАРАКТЕРИСТИКИ ───────────────────────── */}
+        <div className={styles.sectionHeader}>ХАРАКТЕРИСТИКИ</div>
+
+        <div className={styles.row2}>
           <div className={styles.field}>
             <label className={styles.label}>ABV %</label>
             <input className={styles.input} type="number" inputMode="decimal" value={form.abv} onChange={e => setField('abv', e.target.value)} placeholder="43" />
@@ -248,41 +256,60 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues }) =
             <label className={styles.label}>Ціна ₴</label>
             <input className={styles.input} type="number" inputMode="decimal" value={form.price} onChange={e => setField('price', e.target.value)} placeholder="1200" />
           </div>
-          <div className={styles.field}>
-            <label className={styles.label}>Рейтинг</label>
-            <input className={styles.input} type="number" inputMode="decimal" min="1" max="10" value={form.rating} onChange={e => setField('rating', e.target.value)} placeholder="1–10" />
-          </div>
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label}>Флейвор-профіль</label>
-          <div className={styles.sliders}>
-            {(Object.entries(FLAVOR_LABELS) as [keyof FlavorProfile, string][]).map(([key, name]) => (
-              <div key={key} className={styles.sliderRow}>
-                <span className={styles.sliderName}>{name}</span>
-                <div className={styles.sliderTrack}>
-                  {[1, 2, 3, 4, 5].map(v => (
-                    <button
-                      key={v}
-                      className={`${styles.sliderDot} ${(form.flavor[key] ?? 0) >= v ? styles.sliderDotActive : ''}`}
-                      onClick={() => setFlavor(key, v === form.flavor[key] ? 0 : v)}
-                    />
-                  ))}
-                </div>
-                <span className={styles.sliderVal}>{form.flavor[key]}</span>
-              </div>
+          <label className={styles.label}>Рейтинг{ratingNum > 0 ? ` · ${ratingNum}/10` : ''}</label>
+          <div className={styles.ratingSegments}>
+            {Array.from({ length: 10 }, (_, i) => (
+              <button
+                key={i}
+                className={`${styles.ratingSegment} ${ratingNum > i ? styles.ratingSegmentActive : ''}`}
+                onClick={() => setField('rating', ratingNum === i + 1 ? '' : String(i + 1))}
+              />
             ))}
           </div>
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label}>Нотатки</label>
-          <textarea className={styles.textarea} value={form.notes} onChange={e => setField('notes', e.target.value)} placeholder="Торф'яний, димний, з нотами ванілі..." rows={3} />
+        {/* ── СМАКОВИЙ ПРОФІЛЬ ─────────────────────── */}
+        <div className={styles.sectionHeader}>СМАКОВИЙ ПРОФІЛЬ</div>
+
+        <div className={styles.sliders}>
+          {(Object.entries(FLAVOR_LABELS) as [keyof FlavorProfile, string][]).map(([key, name]) => (
+            <div key={key} className={styles.sliderRow}>
+              <span className={styles.sliderName}>{name}</span>
+              <div className={styles.sliderTrack}>
+                {[1, 2, 3, 4, 5].map(v => (
+                  <button
+                    key={v}
+                    className={`${styles.sliderDot} ${(form.flavor[key] ?? 0) >= v ? styles.sliderDotActive : ''}`}
+                    onClick={() => setFlavor(key, v === form.flavor[key] ? 0 : v)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <button className={styles.saveBtn} onClick={handleSave} disabled={saving || !form.name.trim()}>
-          {saving ? 'Зберігаю...' : isEdit ? 'ЗБЕРЕГТИ' : 'ДОДАТИ'}
-        </button>
+        {/* ── НОТАТКИ ──────────────────────────────── */}
+        <div className={styles.sectionHeader}>НОТАТКИ</div>
+
+        <div className={styles.field}>
+          <label className={styles.labelHint}>Аромат · смак · післясмак · асоціації</label>
+          <textarea
+            className={styles.textarea}
+            value={form.notes}
+            onChange={e => setField('notes', e.target.value)}
+            placeholder="Торф'яний, димний, солодкуватий із нотами ванілі та сухофруктів..."
+            rows={4}
+          />
+        </div>
+
+        <div className={styles.saveWrap}>
+          <button className={styles.saveBtn} onClick={handleSave} disabled={saving || !form.name.trim()}>
+            {saving ? 'Зберігаю...' : isEdit ? 'ЗБЕРЕГТИ' : 'ДОДАТИ'}
+          </button>
+        </div>
       </div>
     </Modal>
   )
