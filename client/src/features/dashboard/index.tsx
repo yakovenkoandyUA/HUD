@@ -27,6 +27,7 @@ import { authFetch } from '@/shared/services/api'
 
 import type { ExpenseCategory } from '@/shared/types'
 import SpacesStrip from './components/dashboard/SpacesStrip'
+import DrinksPreviewCard from '@/features/drinks/components/DrinksPreviewCard'
 import DayOverlay from './components/dashboard/DayOverlay'
 import MimirHint, { type MimirPose } from '@/shared/components/ui/MimirHint'
 import { useMimirHint } from '@/shared/hooks/useMimirHint'
@@ -41,6 +42,7 @@ const Dashboard: React.FC = () => {
   const { items: sprintItems, fetchItems } = useSprintStore()
   const { showToast, mimirMode } = useUiStore()
   const f1Enabled         = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
+  const drinksEnabled     = useProfileStore(s => s.activeProfile?.drinksEnabled ?? false)
   const salaryDay         = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const monthlyBudget     = useProfileStore(s => s.activeProfile?.monthlySpendLimit ?? null)
   const userId            = useProfileStore(s => s.activeProfile?.id ?? '')
@@ -265,6 +267,22 @@ const Dashboard: React.FC = () => {
         {/* 6 — F1 countdown strip */}
         {f1Enabled && nextRace && (
           <RaceCountdownStrip race={nextRace} />
+        )}
+
+        {/* 7 — Drinks cellar */}
+        {drinksEnabled && (
+          <div className={styles.sectionWrap}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionLabel}>CELLAR</span>
+              <button type="button" className={styles.sectionLink} onClick={() => navigate('/drinks')}>
+                до колекції
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </button>
+            </div>
+            <DrinksPreviewCard onClick={() => navigate('/drinks')} />
+          </div>
         )}
 
       </div>

@@ -95,6 +95,7 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   avatarUrl: user.avatarUrl,
   role: user.role,
   f1Enabled:      user.f1Enabled ?? false,
+  drinksEnabled:  user.drinksEnabled ?? false,
   salaryDay:         user.salaryDay ?? 1,
   monthlySpendLimit: user.monthlySpendLimit ?? null,
   city:           user.city ?? '',
@@ -475,7 +476,7 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
   try {
     const users = await User.find(
       {},
-      { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1, plan: 1, subscriptionStatus: 1, planExpiresAt: 1 },
+      { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1, plan: 1, subscriptionStatus: 1, planExpiresAt: 1, f1Enabled: 1, drinksEnabled: 1 },
     ).sort({ createdAt: -1 })
 
     const links = await FamilyLink.find({ status: 'accepted' }, { requester: 1, recipient: 1 })
@@ -502,6 +503,8 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
         plan: u.plan ?? 'free',
         subscriptionStatus: u.subscriptionStatus ?? 'none',
         planExpiresAt: u.planExpiresAt ?? null,
+        f1Enabled: u.f1Enabled ?? false,
+        drinksEnabled: u.drinksEnabled ?? false,
         familyIds: familyMap.get(id) ?? [],
       }
     }))
@@ -562,6 +565,23 @@ export async function adminDeleteUser(req: Request, res: Response): Promise<void
   }
 }
 
+
+/** PATCH /auth/admin/users/:id/flags — toggle f1Enabled / drinksEnabled */
+export async function adminToggleFlag(req: Request, res: Response): Promise<void> {
+  const allowed = ['f1Enabled', 'drinksEnabled']
+  const updates: Record<string, boolean> = {}
+  for (const key of allowed) {
+    if (typeof req.body[key] === 'boolean') updates[key] = req.body[key]
+  }
+  if (Object.keys(updates).length === 0) { res.status(400).json({ error: 'No valid flags' }); return }
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true })
+    if (!user) { res.status(404).json({ error: 'Not found' }); return }
+    res.json({ id: req.params.id, f1Enabled: user.f1Enabled, drinksEnabled: user.drinksEnabled })
+  } catch {
+    res.status(500).json({ error: 'Failed to update flags' })
+  }
+}
 
 /** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {

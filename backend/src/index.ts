@@ -62,6 +62,7 @@ import billingRouter from './routes/billing'
 import mimirRouter from './routes/mimir'
 import feedbackRouter from './routes/feedback'
 import booksRouter from './routes/books'
+import drinksRouter from './routes/drinks'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 8080
@@ -121,6 +122,7 @@ app.use('/api/spaces', spacesRouter)
 app.use('/api/user', userRouter)
 app.use('/api/billing', billingRouter)
 app.use('/api/mimir', mimirRouter)
+app.use('/api/drinks', drinksRouter)
 app.use('/api/feedback', feedbackRouter)
 app.use('/api/books', booksRouter)
 

@@ -13,6 +13,8 @@ interface AdminUser {
   plan: 'free' | 'personal' | 'couple' | 'family'
   subscriptionStatus: string
   planExpiresAt: string | null
+  f1Enabled: boolean
+  drinksEnabled: boolean
   familyIds: string[]
 }
 
@@ -68,6 +70,7 @@ const AdminTab: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [savingPlan, setSavingPlan]   = useState<string | null>(null)
   const [savingMonths, setSavingMonths] = useState<string | null>(null)
+  const [savingFlag, setSavingFlag]   = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -137,6 +140,27 @@ const AdminTab: React.FC = () => {
     return () => { cancelled = true }
   }
 
+  const handleToggleFlag = async (userId: string, flag: 'f1Enabled' | 'drinksEnabled', value: boolean) => {
+    setSavingFlag(userId)
+    try {
+      const res = await authFetch(`/api/auth/admin/users/${userId}/flags`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [flag]: value }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json() as { f1Enabled: boolean; drinksEnabled: boolean }
+      setUsers(prev => prev.map(u => u.id === userId
+        ? { ...u, f1Enabled: data.f1Enabled, drinksEnabled: data.drinksEnabled }
+        : u,
+      ))
+    } catch {
+      // silent
+    } finally {
+      setSavingFlag(null)
+    }
+  }
+
   const handleDelete = async (userId: string) => {
     let cancelled = false
     try {
@@ -189,6 +213,7 @@ const AdminTab: React.FC = () => {
     const isConfirming = confirmDelete === u.id
     const isSaving = savingPlan === u.id
     const isExtending = savingMonths === u.id
+    const isTogglingFlag = savingFlag === u.id
     const expiryDays = u.planExpiresAt ? daysUntilExpiry(u.planExpiresAt) : null
     const expiryWarn = expiryDays !== null && expiryDays <= 3
 
@@ -222,6 +247,25 @@ const AdminTab: React.FC = () => {
           {/* Expanded: plan picker + months extension + delete */}
           {isExpanded && (
             <div className={styles.adminExpanded}>
+              {/* Feature flags */}
+              <div className={styles.adminFlagRow}>
+                <button
+                  type="button"
+                  disabled={isTogglingFlag}
+                  className={`${styles.adminFlagBtn} ${u.f1Enabled ? styles.adminFlagBtnOn : ''}`}
+                  onClick={() => handleToggleFlag(u.id, 'f1Enabled', !u.f1Enabled)}
+                >
+                  F1 {u.f1Enabled ? 'ON' : 'OFF'}
+                </button>
+                <button
+                  type="button"
+                  disabled={isTogglingFlag}
+                  className={`${styles.adminFlagBtn} ${u.drinksEnabled ? styles.adminFlagBtnOn : ''}`}
+                  onClick={() => handleToggleFlag(u.id, 'drinksEnabled', !u.drinksEnabled)}
+                >
+                  CELLAR {u.drinksEnabled ? 'ON' : 'OFF'}
+                </button>
+              </div>
               <div className={styles.adminPlanRow}>
                 {PLAN_OPTIONS.map(p => (
                   <button

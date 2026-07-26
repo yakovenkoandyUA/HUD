@@ -4,7 +4,7 @@ import {
   verify, me, updateMe, changePassword,
   setPin, removePin, verifyPin,
   verifyEmail, resendVerification,
-  getAllUsers, adminSetPlan, adminDeleteUser, refresh, logout,
+  getAllUsers, adminSetPlan, adminDeleteUser, adminToggleFlag, refresh, logout,
 } from '../controllers/authController'
 import { requireAuth } from '../middleware/auth'
 import { requireAdmin } from '../middleware/requireAdmin'
@@ -40,6 +40,7 @@ router.post('/change-password', requireAuth, validate(changePasswordSchema), cha
 // Admin
 router.get('/admin/users',              requireAuth, requireAdmin, getAllUsers)
 router.patch('/admin/users/:id/plan',  requireAuth, requireAdmin, adminSetPlan)
+router.patch('/admin/users/:id/flags', requireAuth, requireAdmin, adminToggleFlag)
 router.delete('/admin/users/:id',      requireAuth, requireAdmin, adminDeleteUser)
 
 export default router

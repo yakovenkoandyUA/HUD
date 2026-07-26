@@ -1,0 +1,55 @@
+.wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.ring {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.dataFill {
+  fill: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.dataStroke {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.dot {
+  fill: var(--accent);
+}
+
+.label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  pointer-events: none;
+}
+
+.labelName {
+  font-family: var(--font-ui);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.labelVal {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 600;
+}

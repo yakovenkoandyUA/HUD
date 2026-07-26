@@ -2589,6 +2589,33 @@
   gap: 8px;
 }
 
+.adminFlagRow {
+  display: flex;
+  gap: 6px;
+}
+
+.adminFlagBtn {
+  flex: 1;
+  padding: 5px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.adminFlagBtnOn {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.adminFlagBtn:disabled { opacity: 0.5; cursor: default; }
+
 .adminPlanRow {
   display: flex;
   gap: 6px;

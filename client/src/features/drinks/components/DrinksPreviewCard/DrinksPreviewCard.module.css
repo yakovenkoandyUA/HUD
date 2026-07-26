@@ -1,0 +1,109 @@
+.card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.card:active { transform: scale(0.98); }
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.statNum {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.statLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+}
+
+.recent {
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.bottle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.bottlePhoto {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.bottlePlaceholder {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: var(--surface-raised);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.bottleName {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+}
+
+.bottleType {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.empty {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  text-align: center;
+  padding: 8px 0;
+}

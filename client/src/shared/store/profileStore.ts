@@ -27,6 +27,7 @@ export interface Profile {
   avatarUrl: string | null
   role: 'admin' | 'user'
   f1Enabled: boolean
+  drinksEnabled: boolean
   salaryDay: number
   monthlySpendLimit: number | null
   city: string
