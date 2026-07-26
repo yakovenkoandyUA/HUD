@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import AppHeader from '@/shared/components/layout/AppHeader'
 import { useDrinksStore } from './store/drinksStore'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { DRINK_TYPE_LABELS, DRINK_STATUS_LABELS } from './types'
 import type { DrinkFormState } from './types'
@@ -30,6 +31,9 @@ const DrinkDetail: React.FC = () => {
   const navigate = useNavigate()
   const showToast = useUiStore(s => s.showToast)
   const { drinks, deleteDrink, deleteTasting } = useDrinksStore()
+  const spaces = useSpacesStore(s => s.spaces)
+  const cellarSpace = spaces.find(s => s.type === 'cellar')
+  const backPath = cellarSpace ? `/spaces/${cellarSpace.id}` : '/'
 
   const drink = drinks.find(d => d._id === id)
 
@@ -50,7 +54,7 @@ const DrinkDetail: React.FC = () => {
     if (!window.confirm('Видалити з колекції?')) return
     await deleteDrink(drink!._id)
     showToast('Видалено', 'success')
-    navigate('/drinks')
+    navigate(backPath)
   }
 
   const initialValues: Partial<DrinkFormState> = {
@@ -76,7 +80,7 @@ const DrinkDetail: React.FC = () => {
 
       {/* Sub-header */}
       <div className={styles.subHeader}>
-        <button className={styles.backBtn} onClick={() => navigate('/drinks')}>
+        <button className={styles.backBtn} onClick={() => navigate(backPath)}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
