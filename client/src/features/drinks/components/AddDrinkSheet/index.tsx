@@ -73,6 +73,7 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues, onD
   const { addDrink, updateDrink } = useDrinksStore()
   const [form, setForm] = useState<DrinkFormState>({ ...EMPTY, ...initialValues })
   const [saving, setSaving] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const [query, setQuery]       = useState('')
   const [results, setResults]   = useState<OFFProduct[]>([])
@@ -311,9 +312,17 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues, onD
             {saving ? 'Зберігаю...' : isEdit ? 'ЗБЕРЕГТИ' : 'ДОДАТИ'}
           </button>
           {isEdit && onDelete && (
-            <button className={styles.deleteBtn} onClick={onDelete}>
-              Видалити з колекції
-            </button>
+            confirmDelete ? (
+              <div className={styles.deleteConfirm}>
+                <span className={styles.deleteConfirmLabel}>Видалити напій?</span>
+                <button className={styles.deleteConfirmYes} onClick={onDelete}>Так</button>
+                <button className={styles.deleteConfirmNo} onClick={() => setConfirmDelete(false)}>Ні</button>
+              </div>
+            ) : (
+              <button className={styles.deleteBtn} onClick={() => setConfirmDelete(true)}>
+                Видалити з колекції
+              </button>
+            )
           )}
         </div>
       </div>

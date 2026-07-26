@@ -51,10 +51,9 @@ const DrinkDetail: React.FC = () => {
   }
 
   async function handleDelete() {
-    if (!window.confirm('Видалити з колекції?')) return
     await deleteDrink(drink!._id)
     showToast('Видалено', 'success')
-    navigate(backPath)
+    navigate('/drinks')
   }
 
   const initialValues: Partial<DrinkFormState> = {
@@ -232,9 +231,6 @@ const DrinkDetail: React.FC = () => {
           </button>
         </div>
 
-        <button className={styles.deleteLink} onClick={handleDelete}>
-          Видалити напій з колекції
-        </button>
       </div>
 
       {editOpen && (
