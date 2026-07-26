@@ -41,6 +41,7 @@ function getWeekBounds(): { start: string; end: string } {
 }
 
 const VISIBLE_COUNT = 5
+const MIN_FRAC = 0.02  // < 2% від суми — мержити в "інше"
 
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
   const { categories, fetchCategories } = useCategoryStore()
@@ -74,11 +75,30 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
     })
 
     const tot = Object.values(map).reduce((s, v) => s + v, 0)
-    const sorted = Object.entries(map)
+    const all = Object.entries(map)
       .map(([cat, amount]) => ({ cat, amount }))
       .sort((a, b) => b.amount - a.amount)
 
-    return { entries: sorted, total: tot }
+    // Merge tiny slices (< MIN_FRAC) into "інше"
+    const main: { cat: string; amount: number }[] = []
+    let otherAmount = 0
+    for (const e of all) {
+      if (e.amount / tot >= MIN_FRAC) {
+        main.push(e)
+      } else {
+        otherAmount += e.amount
+      }
+    }
+    if (otherAmount > 0) {
+      const existingOther = main.find(e => e.cat.toLowerCase() === 'інше')
+      if (existingOther) {
+        existingOther.amount += otherAmount
+      } else {
+        main.push({ cat: 'інше', amount: otherAmount })
+      }
+    }
+
+    return { entries: main, total: tot }
   }, [transactions, period])
 
   if (total === 0) return null
@@ -131,7 +151,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions }) => {
               stroke="var(--surface2)"
               strokeWidth={SW}
             />
-            {segments.map(({ cat, dashLen, start }) => (
+            {segments.filter(s => s.dashLen > 0).map(({ cat, dashLen, start }) => (
               <circle
                 key={cat}
                 cx={CX} cy={CY} r={R}
