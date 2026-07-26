@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDrinksStore } from '@/features/drinks/store/drinksStore'
 import DrinkCard from '@/features/drinks/components/DrinkCard'
 import AddDrinkSheet from '@/features/drinks/components/AddDrinkSheet'
+import AddSpaceExpenseSheet from '../AddSpaceExpenseSheet'
 import { DRINK_TYPE_LABELS, type DrinkStatus, type DrinkType } from '@/features/drinks/types'
 import styles from './CellarSpaceView.module.css'
 
@@ -17,16 +18,16 @@ const STATUS_FILTERS: { key: FilterStatus; label: string }[] = [
 ]
 
 interface Props {
-  spaceId:  string
-  color:    string
-  isOwner:  boolean
+  spaceId: string
+  color:   string
+  isOwner: boolean
 }
 
 /**
  * CellarSpaceView — контент простору типу 'cellar'.
- * Hero рендерить стандартний SpaceDetail (з назвою з БД, upload обкладинки тощо).
+ * Hero — стандартний від SpaceDetail (з назвою з БД, upload обкладинки).
  */
-const CellarSpaceView: React.FC<Props> = ({ color, isOwner }) => {
+const CellarSpaceView: React.FC<Props> = ({ spaceId, color, isOwner }) => {
   const navigate = useNavigate()
   const { drinks, isLoading, fetchDrinks } = useDrinksStore()
 
@@ -34,6 +35,7 @@ const CellarSpaceView: React.FC<Props> = ({ color, isOwner }) => {
   const [typeFilter,   setTypeFilter]   = useState<FilterType>('all')
   const [search,       setSearch]       = useState('')
   const [addOpen,      setAddOpen]      = useState(false)
+  const [expenseOpen,  setExpenseOpen]  = useState(false)
 
   React.useEffect(() => { fetchDrinks() }, [fetchDrinks])
 
@@ -49,6 +51,31 @@ const CellarSpaceView: React.FC<Props> = ({ color, isOwner }) => {
 
   return (
     <div className={styles.root}>
+      {/* Quick actions */}
+      <div className={styles.actions} style={colorVar}>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddOpen(true)}>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M8 2h8l1 6H7L8 2z" />
+              <path d="M7 8c0 8 2 12 5 12s5-4 5-12" />
+              <path d="M9 14s1 1 3 1 3-1 3-1" />
+            </svg>
+          </span>
+          Напій
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+        </button>
+        <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setExpenseOpen(true)}>
+          <span className={styles.actionBtnIcon}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <path d="M2 10h20"/>
+            </svg>
+          </span>
+          Витрата
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={styles.actionBtnPlus} aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+        </button>
+      </div>
+
       {/* Search + add */}
       <div className={styles.searchRow}>
         <input
@@ -57,14 +84,6 @@ const CellarSpaceView: React.FC<Props> = ({ color, isOwner }) => {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-        {isOwner && (
-          <button className={styles.addBtn} style={colorVar} onClick={() => setAddOpen(true)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          </button>
-        )}
       </div>
 
       {/* Status filter */}
@@ -122,6 +141,13 @@ const CellarSpaceView: React.FC<Props> = ({ color, isOwner }) => {
       )}
 
       {addOpen && <AddDrinkSheet onClose={() => setAddOpen(false)} />}
+      <AddSpaceExpenseSheet
+        isOpen={expenseOpen}
+        spaceId={spaceId}
+        color={color}
+        onClose={() => setExpenseOpen(false)}
+        onExpenseAdded={() => {}}
+      />
     </div>
   )
 }

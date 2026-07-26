@@ -750,8 +750,8 @@ const SpaceDetailScreen: React.FC = () => {
         )
       })()}
 
-      {/* ── Budget / spending block (hidden for vehicle + pet + sports + cellar) ── */}
-      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && space?.type !== 'cellar' && (() => {
+      {/* ── Budget / spending block (hidden for vehicle + pet + sports) ── */}
+      {space?.type !== 'vehicle' && space?.type !== 'pet' && space?.type !== 'sports' && (() => {
         const spent = (spaceTxs ?? []).filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
         const sym   = space?.budgetCurrency === 'USD' ? '$' : space?.budgetCurrency === 'EUR' ? '€' : '₴'
         if (space?.budget != null) {
