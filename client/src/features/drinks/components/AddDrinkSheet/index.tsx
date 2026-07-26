@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import Modal from '@/shared/components/ui/Modal'
 import PillSelector from '@/shared/components/ui/PillSelector'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'

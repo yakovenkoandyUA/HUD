@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Drink } from '../../types'
-import { DRINK_TYPE_LABELS, DRINK_STATUS_LABELS } from '../../types'
+import { DRINK_TYPE_LABELS } from '../../types'
 import styles from './DrinkCard.module.css'
 
 interface Props {

@@ -39,7 +39,7 @@ const TastingSheet: React.FC<Props> = ({ drinkId, drinkName, onClose }) => {
 
         <div className={styles.field}>
           <label className={styles.label}>Дата</label>
-          <CustomDatePicker value={date} onChange={setDate} />
+          <CustomDatePicker value={date} onChange={setDate} onClose={() => {}} />
         </div>
 
         <div className={styles.field}>
