@@ -238,6 +238,7 @@ const DrinkDetail: React.FC = () => {
           onClose={() => setEditOpen(false)}
           initialId={drink._id}
           initialValues={initialValues}
+          onDelete={handleDelete}
         />
       )}
       {tastingOpen && (

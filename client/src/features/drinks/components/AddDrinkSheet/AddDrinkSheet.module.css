@@ -333,3 +333,18 @@
 }
 
 .saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.deleteBtn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--danger, #e05c5c);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: 10px 0 2px;
+  cursor: pointer;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.deleteBtn:active { opacity: 1; }

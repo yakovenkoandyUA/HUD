@@ -11,6 +11,7 @@ interface Props {
   onClose: () => void
   initialId?: string
   initialValues?: Partial<DrinkFormState>
+  onDelete?: () => void
 }
 
 const TYPE_OPTIONS = (Object.entries(DRINK_TYPE_LABELS) as [DrinkType, string][]).map(([value, label]) => ({ value, label }))
@@ -68,7 +69,7 @@ function normalizeCountry(tags: string[]): string {
  * AddDrinkSheet — bottom sheet for adding or editing a drink.
  * Includes Open Food Facts search for auto-fill.
  */
-const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues }) => {
+const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues, onDelete }) => {
   const { addDrink, updateDrink } = useDrinksStore()
   const [form, setForm] = useState<DrinkFormState>({ ...EMPTY, ...initialValues })
   const [saving, setSaving] = useState(false)
@@ -309,6 +310,11 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues }) =
           <button className={styles.saveBtn} onClick={handleSave} disabled={saving || !form.name.trim()}>
             {saving ? 'Зберігаю...' : isEdit ? 'ЗБЕРЕГТИ' : 'ДОДАТИ'}
           </button>
+          {isEdit && onDelete && (
+            <button className={styles.deleteBtn} onClick={onDelete}>
+              Видалити з колекції
+            </button>
+          )}
         </div>
       </div>
     </Modal>
