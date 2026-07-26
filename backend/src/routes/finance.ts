@@ -261,4 +261,36 @@ router.post('/report/:month', requireVerified, loadUser, requireFeature('advance
   }
 })
 
+// ── Finance context notes ─────────────────────────────────────────────────────
+
+/** GET /api/finance/context — повертає нотатки-контекст юзера для AI-звіту */
+router.get('/context', async (req: Request, res: Response) => {
+  const user = await User.findById(req.userId, { financeContext: 1 })
+  if (!user) { res.status(404).json({ error: 'Not found' }); return }
+  res.json({ context: user.financeContext ?? [] })
+})
+
+/** POST /api/finance/context — додати нотатку */
+router.post('/context', async (req: Request, res: Response) => {
+  const { note, category } = req.body as { note: string; category?: string }
+  if (!note?.trim()) { res.status(400).json({ error: 'note required' }); return }
+  const user = await User.findById(req.userId)
+  if (!user) { res.status(404).json({ error: 'Not found' }); return }
+  user.financeContext.push({ note: note.trim(), category: category || undefined, createdAt: new Date() })
+  if (user.financeContext.length > 20) user.financeContext.splice(0, user.financeContext.length - 20)
+  await user.save()
+  res.json({ context: user.financeContext })
+})
+
+/** DELETE /api/finance/context/:id — видалити нотатку */
+router.delete('/context/:id', async (req: Request, res: Response) => {
+  const user = await User.findById(req.userId)
+  if (!user) { res.status(404).json({ error: 'Not found' }); return }
+  user.financeContext = user.financeContext.filter(
+    c => c._id?.toString() !== req.params.id
+  ) as typeof user.financeContext
+  await user.save()
+  res.json({ context: user.financeContext })
+})
+
 export default router
