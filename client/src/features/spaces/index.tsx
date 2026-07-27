@@ -680,7 +680,7 @@ const SpaceDetailScreen: React.FC = () => {
         )}
 
         {coverInputElement}
-        <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Назад">
+        <button type="button" className={styles.backBtn} onClick={() => navigate('/spaces')} aria-label="Назад">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 4l-5 5 5 5"/>
           </svg>
