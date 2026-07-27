@@ -35,7 +35,7 @@ const DrinkDetail: React.FC = () => {
   const spaces = useSpacesStore(s => s.spaces)
   const cellarSpace = spaces.find(s => s.type === 'cellar')
   const backPath = cellarSpace ? `/spaces/${cellarSpace.id}` : '/'
-  const myUserId = useProfileStore(s => s.profile?._id ?? '')
+  const myUserId = useProfileStore(s => s.activeProfile?.id ?? '')
 
   const drink = drinks.find(d => d._id === id)
 

@@ -40,8 +40,10 @@ const DrinkCard: React.FC<Props> = ({ drink, onClick }) => {
         </div>
         <div className={styles.meta}>
           <span className={styles.type}>{DRINK_TYPE_LABELS[drink.type]}</span>
-          {drink.rating !== null && (
-            <span className={styles.rating}>{drink.rating}/10</span>
+          {drink.ratings.length > 0 && (
+            <span className={styles.rating}>
+              {Math.round(drink.ratings.reduce((s, r) => s + r.score, 0) / drink.ratings.length * 10) / 10}/10
+            </span>
           )}
         </div>
       </div>
