@@ -163,8 +163,9 @@ const ShoppingTracker: React.FC<ShoppingTrackerProps> = ({ transactions }) => {
   const { start, end } = getPeriodRange(period)
   const expenses = transactions.filter(t => {
     if (t.type !== 'expense') return false
-    if (end) return t.date >= start && t.date <= end
-    return t.date.startsWith(start)
+    const dateStr = t.date.slice(0, 10)
+    if (end) return dateStr >= start && dateStr <= end
+    return dateStr.startsWith(start)
   })
   const grouped: Record<string, CatStat> = {}
   for (const t of expenses) {
