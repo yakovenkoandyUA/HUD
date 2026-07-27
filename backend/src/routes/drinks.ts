@@ -38,7 +38,8 @@ router.post('/', async (req: Request, res: Response) => {
 /** PATCH /api/drinks/:id — update */
 router.patch('/:id', async (req: Request, res: Response) => {
   const uid = req.userId!
-  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { sharedWith: uid }] })
+  const familyIds = await getDrinksEnabledFamilyIds(uid)
+  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { userId: { $in: familyIds } }, { sharedWith: uid }] })
   if (!drink) return res.status(404).json({ error: 'Not found' }) as unknown as void
 
   const allowed = ['name', 'brand', 'type', 'country', 'distillery', 'abv', 'photo', 'status', 'price', 'notes', 'flavor', 'sharedWith']
@@ -61,7 +62,8 @@ router.delete('/:id', async (req: Request, res: Response) => {
 /** PATCH /api/drinks/:id/rating — set or clear current user's rating */
 router.patch('/:id/rating', async (req: Request, res: Response) => {
   const uid = req.userId!
-  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { sharedWith: uid }] })
+  const familyIds = await getDrinksEnabledFamilyIds(uid)
+  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { userId: { $in: familyIds } }, { sharedWith: uid }] })
   if (!drink) return res.status(404).json({ error: 'Not found' }) as unknown as void
 
   const score = req.body.score as number | null
@@ -82,7 +84,8 @@ router.patch('/:id/rating', async (req: Request, res: Response) => {
 /** POST /api/drinks/:id/tasting — add tasting entry */
 router.post('/:id/tasting', async (req: Request, res: Response) => {
   const uid = req.userId!
-  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { sharedWith: uid }] })
+  const familyIds = await getDrinksEnabledFamilyIds(uid)
+  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { userId: { $in: familyIds } }, { sharedWith: uid }] })
   if (!drink) return res.status(404).json({ error: 'Not found' }) as unknown as void
 
   drink.tastings.push({ date: req.body.date, userId: uid, rating: req.body.rating, notes: req.body.notes ?? '', occasion: req.body.occasion ?? '' })
@@ -93,7 +96,8 @@ router.post('/:id/tasting', async (req: Request, res: Response) => {
 /** DELETE /api/drinks/:id/tasting/:tastingId */
 router.delete('/:id/tasting/:tastingId', async (req: Request, res: Response) => {
   const uid = req.userId!
-  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { sharedWith: uid }] })
+  const familyIds = await getDrinksEnabledFamilyIds(uid)
+  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { userId: { $in: familyIds } }, { sharedWith: uid }] })
   if (!drink) return res.status(404).json({ error: 'Not found' }) as unknown as void
 
   drink.tastings = drink.tastings.filter(t => t._id?.toString() !== req.params.tastingId) as typeof drink.tastings
@@ -107,7 +111,8 @@ router.post('/:id/buy', async (req: Request, res: Response) => {
   const { amount, date, note } = req.body as { amount: number; date: string; note?: string }
   if (!amount || !date) return res.status(400).json({ error: 'amount and date required' }) as unknown as void
 
-  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { sharedWith: uid }] })
+  const familyIds = await getDrinksEnabledFamilyIds(uid)
+  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { userId: { $in: familyIds } }, { sharedWith: uid }] })
   if (!drink) return res.status(404).json({ error: 'Not found' }) as unknown as void
 
   // find or create Алкоголь category

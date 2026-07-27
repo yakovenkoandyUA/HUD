@@ -89,7 +89,9 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
       method: 'PATCH',
       body: JSON.stringify({ score }),
     })
+    if (!res.ok) return
     const raw = await res.json() as Record<string, unknown>
+    if (!raw._id) return
     const updated = toDrink(raw)
     set(s => ({ drinks: s.drinks.map(d => d._id === id ? updated : d) }))
   },
