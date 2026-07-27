@@ -12,7 +12,6 @@ import type { AddMemoryData } from './components/memories/AddMemoryModal'
 import type { Memory } from './types/memory'
 import { useMemoriesStore } from '@/features/memories/store/memoriesStore'
 import { usePlansStore, type Plan } from '@/features/memories/store/plansStore'
-import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
@@ -124,7 +123,6 @@ const MemoriesScreen: React.FC = () => {
   const [pendingNav,  setPendingNav]  = useState<string | null>(null)
   const [showFlashback, setShowFlashback] = useState(false)
   const [statSheet, setStatSheet]         = useState<'count' | 'photos' | 'locations' | 'distance' | null>(null)
-  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null)
   const [selectedTag, setSelectedTag]     = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'flipbook'>(
     () => (localStorage.getItem('memories-view-mode') as 'grid' | 'flipbook') ?? 'grid'
@@ -135,8 +133,6 @@ const MemoriesScreen: React.FC = () => {
     localStorage.setItem('memories-view-mode', mode)
   }
 
-  const { spaces, fetchSpaces } = useSpacesStore()
-  useEffect(() => { fetchSpaces() }, [fetchSpaces])
 
   const swipeRef = useSwipeTabs({
     count: TAB_ORDER.length,
@@ -154,14 +150,8 @@ const MemoriesScreen: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
-  const filteredMemories = useMemo(
-    () => selectedSpaceId ? memories.filter(m => m.spaceId === selectedSpaceId) : memories,
-    [memories, selectedSpaceId]
-  )
-  const filteredPlans = useMemo(
-    () => selectedSpaceId ? plans.filter(p => p.spaceId === selectedSpaceId) : plans,
-    [plans, selectedSpaceId]
-  )
+  const filteredMemories = useMemo(() => memories, [memories])
+  const filteredPlans    = useMemo(() => plans,    [plans])
 
   const allTags = useMemo(() => {
     const set = new Set<string>()
@@ -363,30 +353,6 @@ const MemoriesScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* ── Space filter strip ── */}
-      {spaces.length > 0 && activeTab !== 'map' && (
-        <div className={styles.spaceFilterRow}>
-          <button
-            type="button"
-            className={`${styles.spaceFilterChip} ${!selectedSpaceId ? styles.spaceFilterChipAll : ''}`}
-            onClick={() => { setSelectedSpaceId(null); setSelectedTag(null) }}
-          >
-            Всі
-          </button>
-          {spaces.map(s => (
-            <button
-              key={s.id}
-              type="button"
-              className={styles.spaceFilterChip}
-              style={selectedSpaceId === s.id ? { borderColor: s.color, color: s.color } : undefined}
-              onClick={() => { setSelectedSpaceId(prev => prev === s.id ? null : s.id); setSelectedTag(null) }}
-            >
-              <span className={styles.spaceFilterDot} style={{ background: s.color }} />
-              {s.name}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* ── Tag filter strip (memories tab only) ── */}
       {activeTab === 'memories' && allTags.length > 0 && (
@@ -420,7 +386,7 @@ const MemoriesScreen: React.FC = () => {
             </div>
           ) : filteredMemories.length === 0 ? (
             <>
-              {showMemoriesEmpty && !selectedSpaceId && (
+              {showMemoriesEmpty && (
                 <div className={styles.mimirFloat}>
                   <MimirHint
                     pose={MIMIR_DIALOGUE.memories_empty.pose}
@@ -435,8 +401,8 @@ const MemoriesScreen: React.FC = () => {
                   <circle cx="22" cy="28" r="5" stroke="currentColor" strokeWidth="2.5"/>
                   <path d="M6 44l16-14 12 11 8-8 24 23" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі ще немає спогадів' : 'Ще немає спогадів'}</p>
-                <p className={styles.emptyHint}>{selectedSpaceId ? 'Додай перший!' : 'Додай перший!'}</p>
+                <p className={styles.emptyTitle}>Ще немає спогадів</p>
+                <p className={styles.emptyHint}>Додай перший!</p>
               </div>
             </>
           ) : (
@@ -634,7 +600,7 @@ const MemoriesScreen: React.FC = () => {
                 <path d="M36 10c-10.5 0-18 8.5-18 19 0 14 18 33 18 33s18-19 18-33c0-10.5-7.5-19-18-19z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
                 <circle cx="36" cy="29" r="6.5" stroke="currentColor" strokeWidth="2.5"/>
               </svg>
-              <p className={styles.emptyTitle}>{selectedSpaceId ? 'У цьому просторі планів немає' : 'Планів ще немає'}</p>
+              <p className={styles.emptyTitle}>Планів ще немає</p>
               <p className={styles.emptyHint}>Додай місце яке хочеш відвідати</p>
             </div>
           ) : (
