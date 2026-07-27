@@ -39,6 +39,8 @@ export async function createTicket(req: Request, res: Response): Promise<void> {
       seat:          req.body.seat          ?? '',
       bookingCode:   req.body.bookingCode   ?? '',
       attachmentUrl: req.body.attachmentUrl ?? '',
+      price:         req.body.price != null ? Number(req.body.price) : null,
+      currency:      req.body.currency      ?? 'UAH',
       status:        req.body.status        ?? 'planned',
     })
 
@@ -57,7 +59,7 @@ export async function updateTicket(req: Request, res: Response): Promise<void> {
     const ticket = await Ticket.findOne({ _id: req.params.ticketId, spaceId: req.params.id })
     if (!ticket) { res.status(404).json({ error: 'Ticket not found' }); return }
 
-    const allowed = ['transport','date','from','to','departureTime','arrivalTime','carrier','flightNumber','seat','bookingCode','attachmentUrl','status'] as const
+    const allowed = ['transport','date','from','to','departureTime','arrivalTime','carrier','flightNumber','seat','bookingCode','attachmentUrl','price','currency','status'] as const
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (ticket as unknown as Record<string, unknown>)[key] = req.body[key]
     })

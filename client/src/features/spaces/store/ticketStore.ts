@@ -17,6 +17,8 @@ export interface Ticket {
   flightNumber:  string
   seat:          string
   bookingCode:   string
+  price:         number | null
+  currency:      'UAH' | 'USD' | 'EUR'
   status:        TicketStatus
   createdAt:     string
 }

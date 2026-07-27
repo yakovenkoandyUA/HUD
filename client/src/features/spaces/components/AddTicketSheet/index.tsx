@@ -92,6 +92,8 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, edit
   const [flightNum, setFlightNum] = useState('')
   const [seat, setSeat]           = useState('')
   const [bookCode, setBookCode]   = useState('')
+  const [price, setPrice]         = useState('')
+  const [currency, setCurrency]   = useState<'UAH' | 'USD' | 'EUR'>('UAH')
   const [status, setStatus]       = useState<TicketStatus>('planned')
   const [busy, setBusy]           = useState(false)
   const [mounted, setMounted]     = useState(false)
@@ -115,6 +117,8 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, edit
       setFlightNum(editTicket?.flightNumber ?? '')
       setSeat(editTicket?.seat ?? '')
       setBookCode(editTicket?.bookingCode ?? '')
+      setPrice(editTicket?.price != null ? String(editTicket.price) : '')
+      setCurrency(editTicket?.currency ?? 'UAH')
       setStatus(editTicket?.status ?? 'planned')
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
@@ -140,6 +144,8 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, edit
         flightNumber:  flightNum  || undefined,
         seat:          seat       || undefined,
         bookingCode:   bookCode   || undefined,
+        price:         price ? Number(price) : null,
+        currency,
         status,
       }
       if (editTicket) {
@@ -243,6 +249,32 @@ const AddTicketSheet: React.FC<Props> = ({ isOpen, spaceId, color, onClose, edit
             <div className={styles.field}>
               <label className={styles.fieldLabel}>КОД БРОНЮВАННЯ</label>
               <input className={styles.fieldInput} value={bookCode} onChange={e => setBookCode(e.target.value)} placeholder="ABC123…" />
+            </div>
+          </div>
+
+          {/* Price */}
+          <div className={styles.fieldRow}>
+            <div className={styles.field} style={{ flex: 2 }}>
+              <label className={styles.fieldLabel}>ВАРТІСТЬ</label>
+              <input
+                className={styles.fieldInput}
+                value={price}
+                onChange={e => setPrice(e.target.value)}
+                placeholder="1200"
+                type="number"
+                inputMode="decimal"
+                min="0"
+              />
+            </div>
+            <div className={styles.field} style={{ flex: 1 }}>
+              <label className={styles.fieldLabel}>ВАЛЮТА</label>
+              <div className={styles.pills}>
+                {(['UAH','USD','EUR'] as const).map(c => (
+                  <button key={c} type="button" className={`${styles.pill} ${currency === c ? styles.pillOn : ''}`} onClick={() => setCurrency(c)}>
+                    {c === 'UAH' ? '₴' : c === 'USD' ? '$' : '€'}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

@@ -406,7 +406,18 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
     return acc
   }, {})
   const hasAccomCost = Object.keys(accomByCurrency).length > 0
-  const hasBudget = hasAccomCost || totalExp > 0
+
+  // Ticket costs grouped by currency
+  const ticketByCurrency = myTickets.reduce<Record<string, number>>((acc, t) => {
+    if (t.price != null && t.price > 0) {
+      const cur = t.currency || 'UAH'
+      acc[cur] = (acc[cur] ?? 0) + t.price
+    }
+    return acc
+  }, {})
+  const hasTicketCost = Object.keys(ticketByCurrency).length > 0
+
+  const hasBudget = hasAccomCost || hasTicketCost || totalExp > 0
 
   const handleSaveProfile = async (data: Partial<TripProfile>) => {
     try {
@@ -528,6 +539,16 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
         </div>
       {hasBudget && (
         <div className={styles.budgetRow}>
+          {hasTicketCost && (
+            <div className={styles.budgetItem}>
+              <span className={styles.budgetLabel}>Квитки</span>
+              <span className={styles.budgetVal}>
+                {Object.entries(ticketByCurrency).map(([cur, amt]) =>
+                  `${cur === 'UAH' ? '₴' : cur === 'USD' ? '$' : '€'}${fmtAmount(amt)}`
+                ).join(' + ')}
+              </span>
+            </div>
+          )}
           {hasAccomCost && (
             <div className={styles.budgetItem}>
               <span className={styles.budgetLabel}>Проживання</span>

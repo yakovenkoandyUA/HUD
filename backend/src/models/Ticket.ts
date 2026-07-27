@@ -17,6 +17,8 @@ export interface ITicket extends Document {
   seat:          string
   bookingCode:   string
   attachmentUrl: string
+  price:         number | null
+  currency:      'UAH' | 'USD' | 'EUR'
   status:        TicketStatus
   createdAt:     Date
 }
@@ -35,6 +37,8 @@ const schema = new Schema<ITicket>({
   seat:          { type: String, default: '' },
   bookingCode:   { type: String, default: '' },
   attachmentUrl: { type: String, default: '' },
+  price:         { type: Number, default: null },
+  currency:      { type: String, enum: ['UAH','USD','EUR'], default: 'UAH' },
   status:        { type: String, enum: ['planned','confirmed','cancelled','used'], default: 'planned' },
 }, { timestamps: true })
 
