@@ -215,10 +215,6 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues, onD
               <label className={styles.label}>Назва *</label>
               <input className={styles.input} value={form.name} onChange={e => setField('name', e.target.value)} placeholder="Lagavulin 16..." />
             </div>
-            <div className={styles.field}>
-              <label className={styles.label}>Бренд / Виробник</label>
-              <input className={styles.input} value={form.brand} onChange={e => setField('brand', e.target.value)} placeholder="Diageo..." />
-            </div>
           </div>
         </div>
 
@@ -235,15 +231,9 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues, onD
         {/* ── ПОХОДЖЕННЯ ───────────────────────────── */}
         <div className={styles.sectionHeader}>ПОХОДЖЕННЯ</div>
 
-        <div className={styles.row}>
-          <div className={styles.field}>
-            <label className={styles.label}>Країна</label>
-            <input className={styles.input} value={form.country} onChange={e => setField('country', e.target.value)} placeholder="Шотландія..." />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label}>Дистилерія</label>
-            <input className={styles.input} value={form.distillery} onChange={e => setField('distillery', e.target.value)} placeholder="Lagavulin..." />
-          </div>
+        <div className={styles.field}>
+          <label className={styles.label}>Країна</label>
+          <input className={styles.input} value={form.country} onChange={e => setField('country', e.target.value)} placeholder="Шотландія..." />
         </div>
 
         {/* ── ХАРАКТЕРИСТИКИ ───────────────────────── */}

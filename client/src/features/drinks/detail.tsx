@@ -129,26 +129,6 @@ const DrinkDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Rating card */}
-        {drink.rating !== null && (
-          <div className={styles.ratingCard}>
-            <p className={styles.ratingCardTitle}>МОЯ ОЦІНКА</p>
-            <div className={styles.ratingRow}>
-              <span className={styles.ratingNum}>{drink.rating}</span>
-              <span className={styles.ratingMax}>/10</span>
-              <span className={styles.ratingWord}>{getRatingLabel(drink.rating)}</span>
-            </div>
-            <div className={styles.ratingDots}>
-              {Array.from({ length: 10 }, (_, i) => (
-                <span
-                  key={i}
-                  className={`${styles.dot} ${i < drink.rating! ? styles.dotFilled : ''}`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Flavor radar */}
         {hasFlavorData && (
           <div className={styles.section}>
@@ -156,6 +136,15 @@ const DrinkDetail: React.FC = () => {
             <div className={styles.radarWrap}>
               <FlavorRadar flavor={drink.flavor} size={240} />
             </div>
+          </div>
+        )}
+
+        {/* Rating */}
+        {drink.rating !== null && (
+          <div className={styles.ratingRow}>
+            <span className={styles.ratingNum}>{drink.rating}</span>
+            <span className={styles.ratingMax}>/10</span>
+            <span className={styles.ratingWord}>{getRatingLabel(drink.rating)}</span>
           </div>
         )}
 

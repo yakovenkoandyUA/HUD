@@ -154,34 +154,17 @@
   color: var(--text-secondary);
 }
 
-/* Rating card */
-.ratingCard {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.ratingCardTitle {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
+/* Rating — minimal inline */
 .ratingRow {
   display: flex;
   align-items: baseline;
   gap: 4px;
+  padding: 0 16px 4px;
 }
 
 .ratingNum {
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: 28px;
   color: var(--accent);
   line-height: 1;
 }
@@ -194,27 +177,9 @@
 
 .ratingWord {
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary);
-  margin-left: 6px;
-}
-
-.ratingDots {
-  display: flex;
-  gap: 4px;
-}
-
-.dot {
-  flex: 1;
-  height: 5px;
-  border-radius: 3px;
-  background: var(--border);
-  opacity: 0.4;
-}
-
-.dotFilled {
-  background: var(--accent);
-  opacity: 1;
+  margin-left: 8px;
 }
 
 /* Sections */
