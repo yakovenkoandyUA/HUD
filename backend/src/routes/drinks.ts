@@ -3,22 +3,35 @@ import { requireAuth } from '../middleware/auth'
 import Drink from '../models/Drink'
 import Transaction from '../models/Transaction'
 import Category from '../models/Category'
+import { FamilyLink } from '../models/FamilyLink'
+import { User } from '../models/User'
+
+async function getDrinksEnabledFamilyIds(uid: string): Promise<string[]> {
+  const links = await FamilyLink.find({ status: 'accepted', $or: [{ requester: uid }, { recipient: uid }] })
+  const familyIds = links.map(l => l.requester === uid ? l.recipient : l.requester)
+  if (!familyIds.length) return []
+  const enabled = await User.find({ _id: { $in: familyIds }, drinksEnabled: true }).select('_id')
+  return enabled.map(u => (u._id as { toString(): string }).toString())
+}
 
 const router = Router()
 router.use(requireAuth)
 
-/** GET /api/drinks — list accessible drinks (own + sharedWith) */
+/** GET /api/drinks — list accessible drinks (own + family with drinksEnabled) */
 router.get('/', async (req: Request, res: Response) => {
   const uid = req.userId!
+  const familyIds = await getDrinksEnabledFamilyIds(uid)
   const drinks = await Drink.find({
-    $or: [{ userId: uid }, { sharedWith: uid }],
+    $or: [{ userId: uid }, { userId: { $in: familyIds } }, { sharedWith: uid }],
   }).sort({ createdAt: -1 })
   res.json(drinks)
 })
 
 /** POST /api/drinks — create */
 router.post('/', async (req: Request, res: Response) => {
-  const drink = await Drink.create({ ...req.body, userId: req.userId })
+  const uid = req.userId!
+  const familyIds = await getDrinksEnabledFamilyIds(uid)
+  const drink = await Drink.create({ ...req.body, userId: uid, sharedWith: familyIds })
   res.status(201).json(drink)
 })
 
