@@ -24,7 +24,7 @@ const FLAVOR_LABELS: Record<keyof FlavorProfile, string> = {
 
 const EMPTY: DrinkFormState = {
   name: '', brand: '', type: 'whisky', country: '', distillery: '',
-  abv: '', photo: '', status: 'wishlist', price: '', rating: '', notes: '',
+  abv: '', photo: '', status: 'wishlist', price: '', notes: '',
   flavor: { ...DEFAULT_FLAVOR },
 }
 
@@ -130,7 +130,6 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues, onD
     setForm(prev => ({ ...prev, flavor: { ...prev.flavor, [key]: val } }))
   }
 
-  const ratingNum = parseInt(form.rating) || 0
 
   async function handleSave() {
     if (!form.name.trim()) return
@@ -247,19 +246,6 @@ const AddDrinkSheet: React.FC<Props> = ({ onClose, initialId, initialValues, onD
           <div className={styles.field}>
             <label className={styles.label}>Ціна ₴</label>
             <input className={styles.input} type="number" inputMode="decimal" value={form.price} onChange={e => setField('price', e.target.value)} placeholder="1200" />
-          </div>
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label}>Рейтинг{ratingNum > 0 ? ` · ${ratingNum}/10` : ''}</label>
-          <div className={styles.ratingSegments}>
-            {Array.from({ length: 10 }, (_, i) => (
-              <button
-                key={i}
-                className={`${styles.ratingSegment} ${ratingNum > i ? styles.ratingSegmentActive : ''}`}
-                onClick={() => setField('rating', ratingNum === i + 1 ? '' : String(i + 1))}
-              />
-            ))}
           </div>
         </div>
 

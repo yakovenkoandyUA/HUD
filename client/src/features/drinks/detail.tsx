@@ -4,6 +4,7 @@ import AppHeader from '@/shared/components/layout/AppHeader'
 import { useDrinksStore } from './store/drinksStore'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
+import { useProfileStore } from '@/shared/store/profileStore'
 import { DRINK_TYPE_LABELS, DRINK_STATUS_LABELS } from './types'
 import type { DrinkFormState } from './types'
 import FlavorRadar from './components/FlavorRadar'
@@ -30,10 +31,11 @@ const DrinkDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const showToast = useUiStore(s => s.showToast)
-  const { drinks, deleteDrink, deleteTasting } = useDrinksStore()
+  const { drinks, deleteDrink, deleteTasting, rateDrink } = useDrinksStore()
   const spaces = useSpacesStore(s => s.spaces)
   const cellarSpace = spaces.find(s => s.type === 'cellar')
   const backPath = cellarSpace ? `/spaces/${cellarSpace.id}` : '/'
+  const myUserId = useProfileStore(s => s.profile?._id ?? '')
 
   const drink = drinks.find(d => d._id === id)
 
@@ -61,11 +63,21 @@ const DrinkDetail: React.FC = () => {
     country: drink.country, distillery: drink.distillery,
     abv: drink.abv?.toString() ?? '', photo: drink.photo,
     status: drink.status, price: drink.price?.toString() ?? '',
-    rating: drink.rating?.toString() ?? '', notes: drink.notes,
+    notes: drink.notes,
     flavor: { ...drink.flavor },
   }
 
   const hasFlavorData = Object.values(drink.flavor).some(v => v > 0)
+
+  const avgRating = drink.ratings.length
+    ? Math.round(drink.ratings.reduce((s, r) => s + r.score, 0) / drink.ratings.length * 10) / 10
+    : null
+  const myRating = drink.ratings.find(r => r.userId === myUserId)?.score ?? null
+
+  async function handleRate(score: number) {
+    const next = myRating === score ? null : score
+    await rateDrink(drink!._id, next)
+  }
 
   const metaParts = [
     DRINK_TYPE_LABELS[drink.type],
@@ -140,13 +152,34 @@ const DrinkDetail: React.FC = () => {
         )}
 
         {/* Rating */}
-        {drink.rating !== null && (
-          <div className={styles.ratingRow}>
-            <span className={styles.ratingNum}>{drink.rating}</span>
-            <span className={styles.ratingMax}>/10</span>
-            <span className={styles.ratingWord}>{getRatingLabel(drink.rating)}</span>
+        <div className={styles.ratingSection}>
+          <div className={styles.ratingSummary}>
+            {avgRating !== null ? (
+              <>
+                <span className={styles.ratingNum}>{avgRating}</span>
+                <span className={styles.ratingMax}>/10</span>
+                <span className={styles.ratingWord}>{getRatingLabel(avgRating)}</span>
+                {drink.ratings.length > 1 && (
+                  <span className={styles.ratingCount}>· {drink.ratings.length} оцінки</span>
+                )}
+              </>
+            ) : (
+              <span className={styles.ratingEmpty}>Ще без оцінки</span>
+            )}
           </div>
-        )}
+          <div className={styles.ratingPicker}>
+            {Array.from({ length: 10 }, (_, i) => (
+              <button
+                key={i}
+                className={`${styles.ratingDot} ${myRating !== null && i < myRating ? styles.ratingDotFilled : ''}`}
+                onClick={() => handleRate(i + 1)}
+              />
+            ))}
+          </div>
+          {myRating !== null && (
+            <p className={styles.ratingMine}>Моя оцінка: {myRating}/10</p>
+          )}
+        </div>
 
         {/* Notes */}
         {drink.notes && (

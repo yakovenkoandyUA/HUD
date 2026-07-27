@@ -12,6 +12,11 @@ export interface ITasting {
   occasion: string
 }
 
+export interface IDrinkRating {
+  userId: string
+  score: number
+}
+
 export interface IDrink extends Document {
   name: string
   brand: string
@@ -22,7 +27,7 @@ export interface IDrink extends Document {
   photo: string
   status: DrinkStatus
   price: number | null
-  rating: number | null
+  ratings: IDrinkRating[]
   notes: string
   flavor: {
     sweet: number
@@ -47,6 +52,11 @@ const tastingSchema = new Schema<ITasting>({
   occasion: { type: String, default: '' },
 }, { _id: true })
 
+const ratingSchema = new Schema<IDrinkRating>({
+  userId: { type: String, required: true },
+  score:  { type: Number, required: true, min: 1, max: 10 },
+}, { _id: false })
+
 const schema = new Schema<IDrink>({
   name:       { type: String, required: true },
   brand:      { type: String, default: '' },
@@ -57,7 +67,7 @@ const schema = new Schema<IDrink>({
   photo:      { type: String, default: '' },
   status:     { type: String, enum: ['wishlist', 'have', 'finished'], default: 'wishlist' },
   price:      { type: Number, default: null },
-  rating:     { type: Number, default: null, min: 1, max: 10 },
+  ratings:    { type: [ratingSchema], default: [] },
   notes:      { type: String, default: '' },
   flavor: {
     sweet:  { type: Number, default: 0, min: 0, max: 5 },

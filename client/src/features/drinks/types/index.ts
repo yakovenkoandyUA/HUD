@@ -19,6 +19,11 @@ export interface Tasting {
   occasion: string
 }
 
+export interface DrinkRating {
+  userId: string
+  score: number
+}
+
 export interface Drink {
   _id: string
   name: string
@@ -30,7 +35,7 @@ export interface Drink {
   photo: string
   status: DrinkStatus
   price: number | null
-  rating: number | null
+  ratings: DrinkRating[]
   notes: string
   flavor: FlavorProfile
   tastings: Tasting[]
@@ -50,7 +55,6 @@ export interface DrinkFormState {
   photo: string
   status: DrinkStatus
   price: string
-  rating: string
   notes: string
   flavor: FlavorProfile
 }

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { authFetch } from '@/shared/services/api'
-import type { Drink, DrinkFormState, Tasting } from '../types'
+import type { Drink, DrinkFormState, DrinkRating, Tasting } from '../types'
 import { DEFAULT_FLAVOR } from '../types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,7 +16,7 @@ function toDrink(d: Record<string, unknown>): Drink {
     photo:      (d.photo as string) ?? '',
     status:     (d.status as Drink['status']) ?? 'wishlist',
     price:      (d.price as number | null) ?? null,
-    rating:     (d.rating as number | null) ?? null,
+    ratings:    ((d.ratings as DrinkRating[]) ?? []),
     notes:      (d.notes as string) ?? '',
     flavor:     (d.flavor as Drink['flavor']) ?? { ...DEFAULT_FLAVOR },
     tastings:   ((d.tastings as Tasting[]) ?? []),
@@ -34,6 +34,7 @@ interface DrinksState {
   addDrink: (form: DrinkFormState) => Promise<Drink>
   updateDrink: (id: string, patch: Partial<DrinkFormState>) => Promise<void>
   deleteDrink: (id: string) => Promise<void>
+  rateDrink: (id: string, score: number | null) => Promise<void>
   addTasting: (drinkId: string, tasting: Omit<Tasting, '_id' | 'userId'>) => Promise<void>
   deleteTasting: (drinkId: string, tastingId: string) => Promise<void>
   buyDrink: (drinkId: string, amount: number, date: string, note?: string) => Promise<void>
@@ -59,7 +60,6 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
       ...form,
       abv:   form.abv   ? parseFloat(form.abv)   : null,
       price: form.price ? parseFloat(form.price) : null,
-      rating: form.rating ? parseFloat(form.rating) : null,
     }
     const res = await authFetch('/api/drinks', { method: 'POST', body: JSON.stringify(payload) })
     const raw = await res.json() as Record<string, unknown>
@@ -70,15 +70,13 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
 
   updateDrink: async (id, patch) => {
     const payload: Record<string, unknown> = { ...patch }
-    if (patch.abv !== undefined)    payload.abv    = patch.abv ? parseFloat(patch.abv) : null
-    if (patch.price !== undefined)  payload.price  = patch.price ? parseFloat(patch.price) : null
-    if (patch.rating !== undefined) payload.rating = patch.rating ? parseFloat(patch.rating) : null
+    if (patch.abv !== undefined)   payload.abv   = patch.abv   ? parseFloat(patch.abv)   : null
+    if (patch.price !== undefined) payload.price = patch.price ? parseFloat(patch.price) : null
 
     set(s => ({ drinks: s.drinks.map(d => d._id === id ? { ...d, ...payload } as Drink : d) }))
     const res = await authFetch(`/api/drinks/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })
     const raw = await res.json() as Record<string, unknown>
-    const updated = toDrink(raw)
-    set(s => ({ drinks: s.drinks.map(d => d._id === id ? updated : d) }))
+    set(s => ({ drinks: s.drinks.map(d => d._id === id ? toDrink(raw) : d) }))
   },
 
   deleteDrink: async (id) => {
@@ -86,11 +84,20 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
     await authFetch(`/api/drinks/${id}`, { method: 'DELETE' })
   },
 
+  rateDrink: async (id, score) => {
+    const res = await authFetch(`/api/drinks/${id}/rating`, {
+      method: 'PATCH',
+      body: JSON.stringify({ score }),
+    })
+    const raw = await res.json() as Record<string, unknown>
+    const updated = toDrink(raw)
+    set(s => ({ drinks: s.drinks.map(d => d._id === id ? updated : d) }))
+  },
+
   addTasting: async (drinkId, tasting) => {
     const res = await authFetch(`/api/drinks/${drinkId}/tasting`, { method: 'POST', body: JSON.stringify(tasting) })
     const raw = await res.json() as Record<string, unknown>
-    const updated = toDrink(raw)
-    set(s => ({ drinks: s.drinks.map(d => d._id === drinkId ? updated : d) }))
+    set(s => ({ drinks: s.drinks.map(d => d._id === drinkId ? toDrink(raw) : d) }))
   },
 
   deleteTasting: async (drinkId, tastingId) => {
@@ -102,8 +109,7 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
     }))
     const res = await authFetch(`/api/drinks/${drinkId}/tasting/${tastingId}`, { method: 'DELETE' })
     const raw = await res.json() as Record<string, unknown>
-    const updated = toDrink(raw)
-    set(s => ({ drinks: s.drinks.map(d => d._id === drinkId ? updated : d) }))
+    set(s => ({ drinks: s.drinks.map(d => d._id === drinkId ? toDrink(raw) : d) }))
   },
 
   buyDrink: async (drinkId, amount, date, note) => {
@@ -111,7 +117,6 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
       method: 'POST',
       body: JSON.stringify({ amount, date, note }),
     })
-    // refresh to get updated price
     await get().fetchDrinks()
   },
 }))

@@ -28,7 +28,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
   const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { sharedWith: uid }] })
   if (!drink) return res.status(404).json({ error: 'Not found' }) as unknown as void
 
-  const allowed = ['name', 'brand', 'type', 'country', 'distillery', 'abv', 'photo', 'status', 'price', 'rating', 'notes', 'flavor', 'sharedWith']
+  const allowed = ['name', 'brand', 'type', 'country', 'distillery', 'abv', 'photo', 'status', 'price', 'notes', 'flavor', 'sharedWith']
   allowed.forEach(key => {
     if (req.body[key] !== undefined) (drink as unknown as Record<string, unknown>)[key] = req.body[key]
   })
@@ -43,6 +43,27 @@ router.delete('/:id', async (req: Request, res: Response) => {
   if (!drink) return res.status(404).json({ error: 'Not found' }) as unknown as void
   await drink.deleteOne()
   res.json({ ok: true })
+})
+
+/** PATCH /api/drinks/:id/rating — set or clear current user's rating */
+router.patch('/:id/rating', async (req: Request, res: Response) => {
+  const uid = req.userId!
+  const drink = await Drink.findOne({ _id: req.params.id, $or: [{ userId: uid }, { sharedWith: uid }] })
+  if (!drink) return res.status(404).json({ error: 'Not found' }) as unknown as void
+
+  const score = req.body.score as number | null
+  const idx = drink.ratings.findIndex(r => r.userId === uid)
+
+  if (score === null || score === undefined) {
+    // clear rating
+    if (idx !== -1) drink.ratings.splice(idx, 1)
+  } else {
+    if (idx !== -1) drink.ratings[idx].score = score
+    else drink.ratings.push({ userId: uid, score })
+  }
+
+  await drink.save()
+  res.json(drink)
 })
 
 /** POST /api/drinks/:id/tasting — add tasting entry */
