@@ -38,7 +38,6 @@ const DrinkCard: React.FC<Props> = ({ drink, onClick }) => {
           <span className={`${styles.dot} ${STATUS_DOT[drink.status]}`} />
           <span className={styles.name}>{drink.name}</span>
         </div>
-        {drink.brand && <span className={styles.brand}>{drink.brand}</span>}
         <div className={styles.meta}>
           <span className={styles.type}>{DRINK_TYPE_LABELS[drink.type]}</span>
           {drink.rating !== null && (
