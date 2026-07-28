@@ -224,10 +224,9 @@ const YearbookTab: React.FC = () => {
               <span className={styles.coverYear}>{periodLabel}</span>
             </div>
 
-            {/* Center: well placeholder — буде SVG від Джоні */}
+            {/* Center: well illustration by Jonny */}
             <div className={styles.coverWell}>
-              <div className={styles.coverWellRing} />
-              <div className={styles.coverWellCore} />
+              <img src="/yearbook-well.png" className={styles.coverWellImg} alt="" draggable={false} />
             </div>
 
             {/* Bottom: main stat + summary chips */}
