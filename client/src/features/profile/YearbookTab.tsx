@@ -44,6 +44,23 @@ function formatUAH(n: number): string {
   return Math.round(n).toLocaleString('uk-UA')
 }
 
+function plural(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 19) return many
+  if (mod10 === 1) return one
+  if (mod10 >= 2 && mod10 <= 4) return few
+  return many
+}
+
+function cleanPlace(raw: string): string {
+  const skip = new Set(['Україна', 'Ukraine', 'Украина'])
+  const parts = raw.split(',')
+    .map(p => p.trim())
+    .filter(p => p.length > 1 && !/^\d{4,6}$/.test(p) && !skip.has(p))
+  return parts.slice(0, 2).join(', ')
+}
+
 const VEHICLE_TYPE_LABELS: Record<string, string> = {
   fuel:        'заправки',
   maintenance: 'ТО',
@@ -263,7 +280,7 @@ const YearbookTab: React.FC = () => {
             <div className={styles.coverFooter}>
               <div className={styles.statBlock}>
                 <span className={styles.statNum}>{s.memoriesCount}</span>
-                <span className={styles.statUnit}>СПОГАДІВ</span>
+                <span className={styles.statUnit}>{plural(s.memoriesCount, 'СПОГАД', 'СПОГАДИ', 'СПОГАДІВ')}</span>
               </div>
               <div className={styles.coverChips}>
                 {s.moodTrend && (() => {
@@ -278,7 +295,7 @@ const YearbookTab: React.FC = () => {
                   ) : null
                 })()}
                 {s.placesVisitedCount > 0 && (
-                  <span className={styles.coverChip}>{s.placesVisitedCount} МІСЦЬ</span>
+                  <span className={styles.coverChip}>{s.placesVisitedCount} {plural(s.placesVisitedCount, 'МІСЦЕ', 'МІСЦЯ', 'МІСЦЬ')}</span>
                 )}
                 {(s.moviesWatched + s.seriesWatched + s.animeWatched) > 0 && (
                   <span className={styles.coverChip}>{s.moviesWatched + s.seriesWatched + s.animeWatched} МЕДІА</span>
@@ -304,22 +321,22 @@ const YearbookTab: React.FC = () => {
                   <>
                     <div className={styles.statBlock}>
                       <span className={styles.statNum}>{s.placesVisitedCount}</span>
-                      <span className={styles.statUnit}>МІСЦЬ ВІДВІДАНО</span>
+                      <span className={styles.statUnit}>{plural(s.placesVisitedCount, 'МІСЦЕ ВІДВІДАНО', 'МІСЦЯ ВІДВІДАНО', 'МІСЦЬ ВІДВІДАНО')}</span>
                     </div>
                     {s.memoriesCount > 0 && (
-                      <p className={styles.subText}>{s.memoriesCount} спогадів збережено</p>
+                      <p className={styles.subText}>{s.memoriesCount} {plural(s.memoriesCount, 'спогад збережено', 'спогади збережено', 'спогадів збережено')}</p>
                     )}
                   </>
                 ) : (
                   <div className={styles.statBlock}>
                     <span className={styles.statNum}>{s.memoriesCount}</span>
-                    <span className={styles.statUnit}>СПОГАДІВ</span>
+                    <span className={styles.statUnit}>{plural(s.memoriesCount, 'СПОГАД', 'СПОГАДИ', 'СПОГАДІВ')}</span>
                   </div>
                 )}
                 {s.topPlaces.length > 0 && (
                   <div className={styles.pills}>
                     {s.topPlaces.map((p, i) => (
-                      <span key={i} className={styles.pill}>{p}</span>
+                      <span key={i} className={styles.pill}>{cleanPlace(p)}</span>
                     ))}
                   </div>
                 )}
@@ -347,9 +364,9 @@ const YearbookTab: React.FC = () => {
                   <span className={styles.statUnit}>ПЕРЕГЛЯНУТО</span>
                 </div>
                 <div className={styles.subStats}>
-                  {s.moviesWatched   > 0 && <span>{s.moviesWatched} фільмів</span>}
-                  {s.seriesWatched   > 0 && <span>{s.seriesWatched} серіалів</span>}
-                  {s.animeWatched    > 0 && <span>{s.animeWatched} аніме</span>}
+                  {s.moviesWatched  > 0 && <span>{s.moviesWatched} {plural(s.moviesWatched, 'фільм', 'фільми', 'фільмів')}</span>}
+                  {s.seriesWatched  > 0 && <span>{s.seriesWatched} {plural(s.seriesWatched, 'серіал', 'серіали', 'серіалів')}</span>}
+                  {s.animeWatched   > 0 && <span>{s.animeWatched} аніме</span>}
                 </div>
               </div>
             </div>
@@ -368,10 +385,10 @@ const YearbookTab: React.FC = () => {
                 <span className={styles.eyebrow}>КУХНЯ</span>
                 <div className={styles.statBlock}>
                   <span className={styles.statNum}>{s.recipesCookedCount}</span>
-                  <span className={styles.statUnit}>СТРАВ</span>
+                  <span className={styles.statUnit}>{plural(s.recipesCookedCount, 'СТРАВА', 'СТРАВИ', 'СТРАВ')}</span>
                 </div>
                 {s.uniqueRecipesCount > 0 && (
-                  <p className={styles.subText}>{s.uniqueRecipesCount} унікальних рецептів</p>
+                  <p className={styles.subText}>{s.uniqueRecipesCount} {plural(s.uniqueRecipesCount, 'унікальний рецепт', 'унікальні рецепти', 'унікальних рецептів')}</p>
                 )}
               </div>
             </div>
@@ -392,10 +409,10 @@ const YearbookTab: React.FC = () => {
                 <span className={styles.eyebrow}>ФОРМУЛА 1</span>
                 <div className={styles.statBlock}>
                   <span className={styles.statNum}>{s.f1.predictionsCount}</span>
-                  <span className={styles.statUnit}>ПРОГНОЗІВ</span>
+                  <span className={styles.statUnit}>{plural(s.f1.predictionsCount, 'ПРОГНОЗ', 'ПРОГНОЗИ', 'ПРОГНОЗІВ')}</span>
                 </div>
                 {s.f1.points > 0 && (
-                  <p className={styles.subText}>{s.f1.points} очок набрано</p>
+                  <p className={styles.subText}>{s.f1.points} {plural(s.f1.points, 'очко набрано', 'очки набрано', 'очок набрано')}</p>
                 )}
               </div>
             </div>
@@ -421,7 +438,7 @@ const YearbookTab: React.FC = () => {
                   <span className={styles.statUnit}>₴ ВИТРАТ</span>
                 </div>
                 <div className={styles.subStats}>
-                  <span>{s.vehicleStats.eventsCount} подій</span>
+                  <span>{s.vehicleStats.eventsCount} {plural(s.vehicleStats.eventsCount, 'подія', 'події', 'подій')}</span>
                   {s.vehicleStats.topEventType && (
                     <span>переважно {VEHICLE_TYPE_LABELS[s.vehicleStats.topEventType] ?? s.vehicleStats.topEventType}</span>
                   )}
