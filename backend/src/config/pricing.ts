@@ -5,9 +5,9 @@ export type BillingInterval = 'month' | 'year'
 
 // All amounts in kopecks (UAH × 100) — no floats for money
 export const PRICES: Record<PaidPlanId, Record<BillingInterval, number>> = {
-  personal: { month: 14900, year: 119900 },
-  couple:   { month: 24900, year: 199900 },
-  family:   { month: 39900, year: 319900 },
+  personal: { month: 19900, year: 159600 },
+  couple:   { month: 29900, year: 238800 },
+  family:   { month: 44900, year: 358800 },
 }
 
 export const CURRENCY = 'UAH' as const

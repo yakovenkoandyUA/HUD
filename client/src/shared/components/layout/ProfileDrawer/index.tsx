@@ -5,6 +5,8 @@ import { useFamilyStore } from '@/shared/store/familyStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useRuneScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getLevel } from '@/features/achievements/levels'
+import { getPlanDisplayName } from '@/shared/config/plans'
+import type { PlanId } from '@/shared/config/plans'
 import ChangelogSheet from '@/features/profile/components/ChangelogSheet'
 import styles from './ProfileDrawer.module.css'
 
@@ -66,7 +68,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
   if (!mounted || !activeProfile) return null
 
   const isPro = activeProfile.plan && activeProfile.plan !== 'free'
-  const planLabel = isPro ? 'PRO' : 'FREE'
+  const planLabel = getPlanDisplayName((activeProfile.plan ?? 'free') as PlanId).toUpperCase()
   const isAdmin = activeProfile.role === 'admin'
   const familyPending = pendingReceived.length
 

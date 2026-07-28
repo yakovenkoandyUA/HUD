@@ -11,7 +11,7 @@ const FEATURE_LABELS: Partial<Record<Feature, string>> = {
   monobank:        'Monobank синхронізація',
   gdprExport:      'Експорт даних',
   advancedFinance: 'AI аналіз фінансів',
-  familyLink:      'Сімейний доступ',
+  familyLink:      'Спільні профілі',
   sharedSpaces:    'Спільні простори',
 }
 

@@ -214,7 +214,7 @@ const FamilyTab: React.FC = () => {
             )}
           </div>
         ) : (
-          <UpgradePrompt feature="familyLink" message="Сімейні зв'язки доступні з плану Shared Life" />
+          <UpgradePrompt feature="familyLink" message="Спільні профілі доступні з плану DUO" />
         )}
       </section>
     </div>

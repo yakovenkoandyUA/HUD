@@ -1,12 +1,16 @@
 import { Router, Request, Response } from 'express'
 import crypto from 'crypto'
 import { requireAuth } from '../middleware/auth'
+import { loadUser } from '../middleware/loadUser'
+import { requireFeature } from '../utils/entitlements'
 import BankConnection from '../models/BankConnection'
 import Transaction from '../models/Transaction'
 import Category from '../models/Category'
 import { categorize } from '../utils/categorizeTransaction'
 
 const router = Router()
+
+const requireMonobank = [requireAuth, loadUser, requireFeature('monobank')]
 
 // tokenRequestId → userId (in-memory, TTL 5 min)
 const pendingAuths = new Map<string, string>()
@@ -86,7 +90,7 @@ function isoDate(unixSec: number): string {
 
 // ── POST /api/bank/connect ───────────────────────────────────────────────────
 
-router.post('/connect', requireAuth, async (req: Request, res: Response) => {
+router.post('/connect', ...requireMonobank, async (req: Request, res: Response) => {
   const { token } = req.body as { token?: string }
   if (!token?.trim()) {
     res.status(400).json({ error: 'Token required' }); return
@@ -131,7 +135,7 @@ router.post('/connect', requireAuth, async (req: Request, res: Response) => {
 
 // ── GET /api/bank/status ─────────────────────────────────────────────────────
 
-router.get('/status', requireAuth, async (req: Request, res: Response) => {
+router.get('/status', ...requireMonobank, async (req: Request, res: Response) => {
   const conn = await BankConnection.findOne({ userId: req.userId, bank: 'monobank' })
   if (!conn) { res.json(null); return }
   res.json({
@@ -145,14 +149,14 @@ router.get('/status', requireAuth, async (req: Request, res: Response) => {
 
 // ── DELETE /api/bank/disconnect ──────────────────────────────────────────────
 
-router.delete('/disconnect', requireAuth, async (req: Request, res: Response) => {
+router.delete('/disconnect', ...requireMonobank, async (req: Request, res: Response) => {
   await BankConnection.deleteOne({ userId: req.userId, bank: 'monobank' })
   res.json({ ok: true })
 })
 
 // ── POST /api/bank/sync ──────────────────────────────────────────────────────
 
-router.post('/sync', requireAuth, async (req: Request, res: Response) => {
+router.post('/sync', ...requireMonobank, async (req: Request, res: Response) => {
   const conn = await BankConnection.findOne({ userId: req.userId, bank: 'monobank', enabled: true })
   if (!conn) { res.status(404).json({ error: 'No connection' }); return }
 
@@ -219,7 +223,7 @@ router.post('/sync', requireAuth, async (req: Request, res: Response) => {
 // ── POST /api/bank/mono-auth-init ───────────────────────────────────────────
 // Step 1: initiate Monobank personal auth flow (no manual token needed)
 
-router.post('/mono-auth-init', requireAuth, async (req: Request, res: Response) => {
+router.post('/mono-auth-init', ...requireMonobank, async (req: Request, res: Response) => {
   const webhookUrl = `${process.env.API_BASE_URL ?? 'https://hud-production.up.railway.app'}/api/bank/mono-auth-webhook`
 
   let tokenRequestId: string
@@ -280,7 +284,7 @@ router.post('/mono-auth-webhook', async (req: Request, res: Response) => {
 // ── GET /api/bank/mono-auth-status/:tokenRequestId ──────────────────────────
 // Frontend polls this to know when auth completed
 
-router.get('/mono-auth-status/:tokenRequestId', requireAuth, async (req: Request, res: Response) => {
+router.get('/mono-auth-status/:tokenRequestId', ...requireMonobank, async (req: Request, res: Response) => {
   const pending = pendingAuths.has(req.params.tokenRequestId)
   res.json({ pending })
 })
@@ -290,7 +294,7 @@ router.get('/mono-auth-status/:tokenRequestId', requireAuth, async (req: Request
 //   Format A — app export:   Дата і час операції;Деталі операції;MCC;...;Сума у валюті картки;...
 //   Format B — web statement: [metadata rows]; Дата і час;Статус;Тип;Деталі;Адреса;MCC;Сума списання;Сума зарахування
 
-router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
+router.post('/import-csv', ...requireMonobank, async (req: Request, res: Response) => {
   const { csv } = req.body as { csv?: string }
   if (!csv?.trim()) { res.status(400).json({ error: 'CSV required' }); return }
 
@@ -431,7 +435,7 @@ router.post('/import-csv', requireAuth, async (req: Request, res: Response) => {
 // ── POST /api/bank/recategorize ─────────────────────────────────────────────
 // Retroactively categorizes all bank/csv transactions with empty category.
 
-router.post('/recategorize', requireAuth, async (req: Request, res: Response) => {
+router.post('/recategorize', ...requireMonobank, async (req: Request, res: Response) => {
   const uncategorized = await Transaction.find({
     userId: req.userId,
     source: { $in: ['monobank', 'csv'] },

@@ -31,15 +31,15 @@ const FEATURES: PlanFeature[] = [
   { label: 'Yearbook / щорічна хроніка', free: false,    personal: true,        couple: true,           family: true        },
   { label: 'Monobank інтеграція',        free: false,     personal: true,        couple: true,           family: true        },
   { label: 'Архів і експорт даних',     free: false,     personal: true,        couple: true,           family: true        },
-  { label: 'Сімейні зв\'язки',          free: false,     personal: false,       couple: true,           family: true        },
+  { label: 'Спільні профілі',            free: false,     personal: false,       couple: true,           family: true        },
   { label: 'Спільні простори',           free: false,     personal: false,       couple: 'до 3 спільних', family: 'Безліміт' },
 ]
 
 const HIGHLIGHTS: Record<PlanId, string[]> = {
   free:     ['2 простори', '1 рік пам\'яті', 'Квести, звички, покупки'],
   personal: ['5 просторів', 'AI-рефлексія та чат', 'Сканер чеків', 'Yearbook та архів'],
-  couple:   ['Усе з MEMORY', 'Спільна хроніка', 'До 5 учасників', 'Сімейні зв\'язки'],
-  family:   ['Усе з COUPLE', 'Безлімітні простори', 'Безлімітні учасники', 'Сімейний архів'],
+  couple:   ['Усе з PERSONAL', 'Спільна хроніка', 'До 5 учасників', 'Спільні профілі'],
+  family:   ['Усе з DUO', 'Безлімітні простори', 'Безлімітні учасники', 'Спільний архів'],
 }
 
 interface PlanDef {
@@ -52,9 +52,9 @@ interface PlanDef {
 }
 
 const PAID_PLANS: PlanDef[] = [
-  { id: 'personal', name: 'MEMORY', concept: 'Personal Memory', priceMonthly: 149, priceAnnual:  99, priceAnnualTotal: 1190 },
-  { id: 'couple',   name: 'COUPLE', concept: 'Shared Life',     priceMonthly: 249, priceAnnual: 179, priceAnnualTotal: 2148 },
-  { id: 'family',   name: 'FAMILY', concept: 'Family Chronicle', priceMonthly: 399, priceAnnual: 279, priceAnnualTotal: 3348 },
+  { id: 'personal', name: 'PERSONAL', concept: 'Solo + AI',      priceMonthly: 199, priceAnnual: 133, priceAnnualTotal: 1596 },
+  { id: 'couple',   name: 'DUO',      concept: 'Share with one', priceMonthly: 299, priceAnnual: 199, priceAnnualTotal: 2388 },
+  { id: 'family',   name: 'GROUP',    concept: 'Share with all', priceMonthly: 449, priceAnnual: 299, priceAnnualTotal: 3588 },
 ]
 
 const ALL_PLAN_IDS: PlanId[] = ['free', 'personal', 'couple', 'family']
@@ -65,6 +65,33 @@ function SmallCheck() {
       <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   )
+}
+
+const PLAN_ICONS: Record<string, React.FC<{ className?: string }>> = {
+  personal: ({ className }) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <circle cx="10" cy="7" r="3.2" stroke="currentColor" strokeWidth="1.6"/>
+      <path d="M3.5 17.5c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    </svg>
+  ),
+  couple: ({ className }) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <circle cx="7.5" cy="7" r="2.8" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M1.5 17c0-3.3 2.7-6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="13.5" cy="6.5" r="2.8" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M13.5 11c3.3 0 6 2.7 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  family: ({ className }) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+      <circle cx="10" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M5 16.5c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="3.5" cy="8" r="2" stroke="currentColor" strokeWidth="1.4"/>
+      <path d="M1 16.5c0-2 1.3-3.7 3-4.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <circle cx="16.5" cy="8" r="2" stroke="currentColor" strokeWidth="1.4"/>
+      <path d="M19 16.5c0-2-1.3-3.7-3-4.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
+  ),
 }
 
 function FeatureValue({ value }: { value: string | boolean }) {
@@ -153,7 +180,7 @@ const PlanTab: React.FC = () => {
         <div className={styles.freeHeader}>
           <div>
             <span className={styles.planName}>FREE</span>
-            <span className={styles.planConcept}>Personal Starter</span>
+            <span className={styles.planConcept}>Starter</span>
           </div>
           <span className={styles.freePrice}>Безкоштовно</span>
         </div>
@@ -198,8 +225,11 @@ const PlanTab: React.FC = () => {
 
             {/* Header */}
             <div className={styles.cardHeader}>
-              <div>
-                <span className={styles.planName}>{plan.name}</span>
+              <div className={styles.cardMeta}>
+                <div className={styles.planNameRow}>
+                  {PLAN_ICONS[plan.id] && React.createElement(PLAN_ICONS[plan.id], { className: styles.planIcon })}
+                  <span className={styles.planName}>{plan.name}</span>
+                </div>
                 <span className={styles.planConcept}>{plan.concept}</span>
               </div>
               <div className={styles.priceBlock}>
@@ -243,12 +273,13 @@ const PlanTab: React.FC = () => {
       })}
 
       {/* ── Feature comparison ── */}
+      <div className={styles.tableScroll}>
       <div className={styles.table}>
         <div className={styles.tableHeader}>
           <span />
           {ALL_PLAN_IDS.map(id => (
             <span key={id} className={`${styles.tableColLabel} ${id === currentPlan ? styles.tableColLabelActive : ''}`}>
-              {id === 'free' ? 'FREE' : id === 'personal' ? 'MEM' : id === 'couple' ? 'CPL' : 'FAM'}
+              {id === 'free' ? 'FREE' : id === 'personal' ? 'PERS' : id === 'couple' ? 'DUO' : 'GROUP'}
             </span>
           ))}
         </div>
@@ -269,6 +300,7 @@ const PlanTab: React.FC = () => {
             <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
+      </div>
       </div>
 
       <p className={styles.footerNote}>

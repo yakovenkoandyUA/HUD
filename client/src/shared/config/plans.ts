@@ -30,7 +30,7 @@ export interface PlanConfig {
 export const PLANS: Record<PlanId, PlanConfig> = {
   free: {
     id: 'free',
-    label: 'Personal Starter',
+    label: 'Free',
     limits: {
       maxSpaces: 2,
       maxSharedSpaces: 0,
@@ -54,7 +54,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
 
   personal: {
     id: 'personal',
-    label: 'Personal Memory',
+    label: 'Personal',
     limits: {
       maxSpaces: 5,
       maxSharedSpaces: 0,
@@ -78,7 +78,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
 
   couple: {
     id: 'couple',
-    label: 'Shared Life',
+    label: 'Duo',
     limits: {
       maxSpaces: 10,
       maxSharedSpaces: 3,
@@ -102,7 +102,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
 
   family: {
     id: 'family',
-    label: 'Family Chronicle',
+    label: 'Group',
     limits: {
       maxSpaces: -1,
       maxSharedSpaces: -1,
@@ -126,10 +126,10 @@ export const PLANS: Record<PlanId, PlanConfig> = {
 }
 
 export const PLAN_DISPLAY_NAMES: Record<PlanId, string> = {
-  free:     'Personal Starter',
-  personal: 'Personal Memory',
-  couple:   'Shared Life',
-  family:   'Family Chronicle',
+  free:     'Free',
+  personal: 'Personal',
+  couple:   'Duo',
+  family:   'Group',
 }
 
 export function getPlanDisplayName(plan: PlanId): string {

@@ -456,7 +456,7 @@ const SpacesTab: React.FC = () => {
 					</button>
 				)}
 			</div>
-			{!can('sharedSpaces') && <p className={styles.sharedHint}>Спільні простори доступні з плану Shared Life</p>}
+			{!can('sharedSpaces') && <p className={styles.sharedHint}>Спільні простори доступні з плану DUO</p>}
 
 			{/* ── Empty state ── */}
 			{!loading && spaces.length === 0 && (

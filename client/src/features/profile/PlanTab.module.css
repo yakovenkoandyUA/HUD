@@ -98,10 +98,10 @@
   flex-shrink: 0;
 }
 
-/* Per-plan accent borders */
-.cardPersonal { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
-.cardCouple   { border-color: color-mix(in srgb, var(--second) 50%, var(--border)); }
-.cardFamily   { border-color: color-mix(in srgb, var(--gold)   50%, var(--border)); }
+/* Per-plan accent borders — left stripe (A) */
+.cardPersonal { border-color: var(--border); border-left: 3px solid var(--accent); }
+.cardCouple   { border-color: var(--border); border-left: 3px solid var(--second); }
+.cardFamily   { border-color: var(--border); border-left: 3px solid var(--gold);   }
 
 /* Popular — subtle glow on MEMORY */
 .cardPopular {
@@ -141,10 +141,31 @@
   justify-content: space-between;
   gap: 12px;
 }
+
+/* Icon + name row (C) */
+.cardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.planNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.planIcon {
+  flex-shrink: 0;
+  color: var(--text3);
+  transition: color 0.15s;
+}
+.cardPersonal .planIcon { color: var(--accent); }
+.cardCouple   .planIcon { color: var(--second); }
+.cardFamily   .planIcon { color: var(--gold);   }
+
 .planName {
   display: block;
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: 0.06em;
@@ -155,7 +176,7 @@
   font-family: var(--font-ui);
   font-size: 10px;
   color: var(--text3);
-  margin-top: 2px;
+  margin-left: 28px;
 }
 
 /* Price */
@@ -171,7 +192,7 @@
 }
 .priceAmount {
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: 34px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
@@ -180,7 +201,9 @@
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 500;
-  color: var(--text2);
+  color: var(--text3);
+  align-self: flex-end;
+  padding-bottom: 4px;
 }
 .priceAnnualNote {
   font-family: var(--font-ui);
@@ -273,24 +296,31 @@
 }
 
 /* ── Feature comparison ── */
-.table {
-  border: 1px solid var(--border);
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 12px;
-  overflow: hidden;
+  border: 1px solid var(--border);
   margin-top: 4px;
+}
+.tableScroll::-webkit-scrollbar { display: none; }
+
+.table {
+  min-width: 380px;
+  width: 100%;
 }
 .tableHeader {
   display: grid;
-  grid-template-columns: 1fr 44px 44px 44px 44px;
+  grid-template-columns: 1fr 58px 58px 58px 58px;
   background: var(--surface2);
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
 }
 .tableColLabel {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   color: var(--text3);
   text-align: center;
   text-transform: uppercase;
@@ -298,8 +328,8 @@
 .tableColLabelActive { color: var(--accent); }
 .tableRow {
   display: grid;
-  grid-template-columns: 1fr 44px 44px 44px 44px;
-  padding: 8px 12px;
+  grid-template-columns: 1fr 58px 58px 58px 58px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   align-items: center;
 }
@@ -307,9 +337,9 @@
 .tableRow:nth-child(even) { background: color-mix(in srgb, var(--surface2) 40%, transparent); }
 .tableFeature {
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text2);
-  padding-right: 6px;
+  padding-right: 8px;
   line-height: 1.35;
 }
 .tableCell {
@@ -319,14 +349,15 @@
 }
 .featureVal {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--text2);
   text-align: center;
-  line-height: 1.25;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 .checkIcon { color: var(--positive); }
-.dashIcon  { font-size: 11px; color: var(--text3); font-weight: 400; }
+.dashIcon  { font-size: 13px; color: var(--border2); font-weight: 400; }
 
 .expandBtn {
   display: flex;
@@ -334,7 +365,7 @@
   justify-content: center;
   gap: 5px;
   width: 100%;
-  padding: 10px;
+  padding: 11px;
   background: none;
   border: none;
   border-top: 1px solid var(--border);

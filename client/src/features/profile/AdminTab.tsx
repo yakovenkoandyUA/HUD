@@ -20,9 +20,9 @@ interface AdminUser {
 
 const PLAN_LABELS: Record<AdminUser['plan'], string> = {
   free:     'FREE',
-  personal: 'PRO',
+  personal: 'PERSONAL',
   couple:   'DUO',
-  family:   'FAM',
+  family:   'GROUP',
 }
 
 const PLAN_OPTIONS: AdminUser['plan'][] = ['free', 'personal', 'couple', 'family']

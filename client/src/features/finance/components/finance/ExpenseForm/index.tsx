@@ -168,7 +168,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
           <div className={styles.scanWrap}>
           <button type="button" className={styles.scanBtn} onClick={() => {
               if (!activeProfile?.isVerified) { showToast('Підтвердіть email для сканування чеків', 'error'); return }
-              if (!canScan) { showToast('Сканер чеків — Personal Memory план', 'error'); window.location.href = '/profile?tab=plan'; return }
+              if (!canScan) { showToast('Сканер чеків — план PERSONAL', 'error'); window.location.href = '/profile?tab=plan'; return }
               setShowSourcePicker(v => !v)
             }}>
             <CameraIcon />

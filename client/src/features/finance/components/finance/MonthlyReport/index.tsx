@@ -262,7 +262,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
 
   const generateReport = async () => {
     if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-аналізу', 'error'); return }
-    if (!canReport) { showToast('AI звіт — Personal Memory план', 'error'); window.location.href = '/profile?tab=plan'; return }
+    if (!canReport) { showToast('AI звіт — план PERSONAL', 'error'); window.location.href = '/profile?tab=plan'; return }
     let cancelled = false
     setAiLoading(true)
     setAiError(false)
