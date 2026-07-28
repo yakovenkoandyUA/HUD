@@ -1073,65 +1073,70 @@
 }
 
 .actorHero {
-  position: relative;
-  padding: 56px 20px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
 
-.actorHeroInner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
 .actorHeroPhoto {
-  width: 72px;
-  height: 72px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .actorHeroPhotoFallback {
-  width: 72px;
-  height: 72px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--surface2);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 18px;
   color: var(--text3);
+}
+
+.actorHeroText {
+  flex: 1;
+  min-width: 0;
 }
 
 .actorName {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .actorCharacter {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text3);
-  margin: 4px 0 0;
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .actorBack {
-  position: absolute;
-  top: 12px;
-  left: 12px;
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 50%;
@@ -1145,98 +1150,67 @@
 .actorBack:hover { border-color: var(--accent); }
 
 .actorContent {
-  padding: 20px 16px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 .actorCredits {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
 .actorCredit {
   display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  flex-direction: column;
+  gap: 4px;
 }
 
 .actorCreditPoster {
-  width: 44px;
-  height: 64px;
+  width: 100%;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
-  border-radius: 6px;
-  flex-shrink: 0;
+  border-radius: 8px;
+  display: block;
 }
 
 .actorCreditPosterFallback {
-  width: 44px;
-  height: 64px;
+  width: 100%;
+  aspect-ratio: 2 / 3;
   background: var(--surface2);
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-
-.actorCreditInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
-  min-width: 0;
+  border-radius: 8px;
 }
 
 .actorCreditTitle {
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin: 0;
+  line-height: 1.3;
 }
 
-.actorCreditMeta {
-  display: flex;
-  gap: 8px;
+.actorCreditYear {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text3);
-}
-
-.actorCreditType {
-  background: var(--surface2);
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.actorCreditChar {
-  font-family: var(--font-body);
-  font-size: 11px;
-  color: var(--text3);
-  font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0;
 }
 
 .actorSkeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 4px 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
-.actorSkeletonRow {
-  height: 64px;
+.actorSkeletonCard {
+  aspect-ratio: 2 / 3;
   background: var(--surface2);
   border-radius: 8px;
   animation: shimmer 1.4s infinite linear;

@@ -1033,25 +1033,6 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     {selectedActor && (
       <div className={styles.actorSheet}>
         <div className={styles.actorHero}>
-          <div className={styles.actorHeroInner}>
-            {selectedActor.profilePath ? (
-              <img
-                src={`${TMDB_FACE}${selectedActor.profilePath}`}
-                alt={selectedActor.name}
-                className={styles.actorHeroPhoto}
-              />
-            ) : (
-              <div className={styles.actorHeroPhotoFallback}>
-                <span>{selectedActor.name.charAt(0)}</span>
-              </div>
-            )}
-            <div>
-              <h2 className={styles.actorName}>{selectedActor.name}</h2>
-              {selectedActor.character && (
-                <p className={styles.actorCharacter}>{selectedActor.character}</p>
-              )}
-            </div>
-          </div>
           <button
             type="button"
             className={styles.actorBack}
@@ -1062,13 +1043,22 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
               <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
+          {selectedActor.profilePath ? (
+            <img src={`${TMDB_FACE}${selectedActor.profilePath}`} alt={selectedActor.name} className={styles.actorHeroPhoto} />
+          ) : (
+            <div className={styles.actorHeroPhotoFallback}>{selectedActor.name.charAt(0)}</div>
+          )}
+          <div className={styles.actorHeroText}>
+            <h2 className={styles.actorName}>{selectedActor.name}</h2>
+            {selectedActor.character && <p className={styles.actorCharacter}>{selectedActor.character}</p>}
+          </div>
         </div>
 
         <div className={styles.actorContent}>
           <p className={styles.sectionLabel}>ФІЛЬМОГРАФІЯ</p>
           {loadingActorCredits ? (
             <div className={styles.actorSkeleton}>
-              {[1,2,3,4,5].map(i => <div key={i} className={styles.actorSkeletonRow} />)}
+              {[1,2,3,4,5,6].map(i => <div key={i} className={styles.actorSkeletonCard} />)}
             </div>
           ) : actorCredits.length === 0 ? (
             <p className={styles.actorEmpty}>Немає даних</p>
@@ -1077,23 +1067,12 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
               {actorCredits.map(c => (
                 <div key={`${c.mediaType}-${c.id}`} className={styles.actorCredit}>
                   {c.posterPath ? (
-                    <img
-                      src={`https://image.tmdb.org/t/p/w92${c.posterPath}`}
-                      alt={c.title}
-                      className={styles.actorCreditPoster}
-                    />
+                    <img src={`https://image.tmdb.org/t/p/w185${c.posterPath}`} alt={c.title} className={styles.actorCreditPoster} />
                   ) : (
                     <div className={styles.actorCreditPosterFallback} />
                   )}
-                  <div className={styles.actorCreditInfo}>
-                    <span className={styles.actorCreditTitle}>{c.title}</span>
-                    <span className={styles.actorCreditMeta}>
-                      {c.year && <span>{c.year}</span>}
-                      <span className={styles.actorCreditType}>{c.mediaType === 'movie' ? 'Фільм' : 'Серіал'}</span>
-                      {c.voteAverage > 0 && <span>★ {c.voteAverage.toFixed(1)}</span>}
-                    </span>
-                    {c.character && <span className={styles.actorCreditChar}>{c.character}</span>}
-                  </div>
+                  <p className={styles.actorCreditTitle}>{c.title}</p>
+                  <p className={styles.actorCreditYear}>{c.year}</p>
                 </div>
               ))}
             </div>
