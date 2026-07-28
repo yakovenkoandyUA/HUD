@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react'
 import type { UnifiedTodo } from '@/shared/types'
 import { isRoutineDueOnDay } from '../../../utils/sprint'
+import { useUkraineHolidays } from '../../../hooks/useUkraineHolidays'
 import styles from './WeekHeader.module.css'
 
 function toIsoLocal(d: Date): string {
@@ -25,6 +26,8 @@ function toIso(d: Date): string {
  * Заголовок тижня: назва, діапазон дат, 7 комірок днів.
  * Під числом дня — одна крапка: зелена (всі звички виконано), золота (pending),
  * червона (прострочено — минулий день без виконання).
+ * Державні свята УА (nager.date API, кеш у localStorage) — day-номер підсвічується
+ * окремим кольором, назва свята показується підписом під календарем для today/selectedDay.
  * Свайп ліво/право — навігація між тижнями через onPrevWeek/onNextWeek.
  * Тап по дню — викликає onDaySelect; довгий тап — onLongPress.
  *
@@ -202,7 +205,10 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
   const fmt = (d: Date) => d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
   const weekMonth = mon.getMonth()
 
+  const holidays = useUkraineHolidays([mon.getFullYear(), sun.getFullYear(), vmYear])
+
   const todayIso = toIso(today)
+  const activeHoliday = holidays[selectedDay ?? todayIso]
   const todayRoutines = routineItems.filter(t => isRoutineDueOnDay(t, today))
   const todayDone = todayRoutines.filter(t => t.completionLog?.includes(todayIso)).length
   const todayTotal = todayRoutines.length
@@ -304,15 +310,18 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
 											const isToday = toIso(dt) === toIso(today)
 											const isSel = iso === selectedDay && !isToday
 											const dotStatus = getRoutineDotStatus(dt, routineItems, today)
+											const holidayName = holidays[iso]
 											const numClass =
 												!isToday && !isSel
-													? dotStatus === 'done'
-														? styles.monthCompactNumDone
-														: dotStatus === 'pending'
-															? styles.monthCompactNumPending
-															: dotStatus === 'overdue'
-																? styles.monthCompactNumOverdue
-																: ''
+													? holidayName
+														? styles.monthCompactNumHoliday
+														: dotStatus === 'done'
+															? styles.monthCompactNumDone
+															: dotStatus === 'pending'
+																? styles.monthCompactNumPending
+																: dotStatus === 'overdue'
+																	? styles.monthCompactNumOverdue
+																	: ''
 													: ''
 											return (
 												<button
@@ -320,6 +329,7 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
 													type="button"
 													className={`${styles.monthCompactCell} ${!isCurMonth ? styles.monthCompactOther : ''} ${isToday ? styles.monthCompactToday : ''} ${isSel ? styles.monthCompactSel : ''}`}
 													onClick={() => onDaySelect?.(iso)}
+													title={holidayName}
 												>
 													<span className={`${styles.monthCompactNum} ${numClass}`}>{day.getDate()}</span>
 													{dotStatus !== 'none' && (
@@ -348,6 +358,8 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
 
 									const isSelected = dayIso === selectedDay && !isToday
 									const dotStatus = getRoutineDotStatus(dayTime, routineItems, today)
+									const holidayName = holidays[dayIso]
+									const isHoliday = !!holidayName && !isToday && !isSelected
 
 									const captured = dayTime
 									const lpStart = (e?: React.TouchEvent) => {
@@ -368,9 +380,10 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
 											onMouseLeave={lpStop}
 											onTouchStart={lpStart}
 											onTouchEnd={lpStop}
+											title={holidayName}
 										>
-											<span className={`${styles.dayName} ${isToday ? styles.dayNameToday : isSelected ? styles.dayNameSelected : isDim ? styles.dayNameDim : ''}`}>{DAY_LABELS[i]}</span>
-											<span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isDim ? styles.dayNumberDim : ''} ${showLongPressHint && isToday ? styles.dayNumberHint : ''}`}>{day.getDate()}</span>
+											<span className={`${styles.dayName} ${isToday ? styles.dayNameToday : isSelected ? styles.dayNameSelected : isHoliday ? styles.dayNameHoliday : isDim ? styles.dayNameDim : ''}`}>{DAY_LABELS[i]}</span>
+											<span className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : isSelected ? styles.dayNumberSelected : isHoliday ? styles.dayNumberHoliday : isDim ? styles.dayNumberDim : ''} ${showLongPressHint && isToday ? styles.dayNumberHint : ''}`}>{day.getDate()}</span>
 											{routineItems.length > 0 && (
 												<div className={styles.dotWrap}>
 													{dotStatus !== 'none' && <span className={`${styles.dot} ${dotStatus === 'done' ? styles.dotDone : dotStatus === 'overdue' ? styles.dotOverdue : styles.dotPending}`} />}
@@ -385,6 +398,9 @@ const WeekHeader: React.FC<WeekHeaderProps> = ({ weekStart, isCurrentWeek, onExp
 
 					{showLongPressHint && onLongPress && calendarMode === 'week' && (
 						<p className={styles.longPressHint}>Затримай палець на дні щоб додати задачу саме на нього</p>
+					)}
+					{activeHoliday && (
+						<p className={styles.holidayCaption}>{activeHoliday}</p>
 					)}
         <div className={styles.routinesBadgeWrap}>
 

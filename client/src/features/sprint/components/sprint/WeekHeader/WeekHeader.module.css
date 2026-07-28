@@ -180,6 +180,21 @@
   opacity: 0.45;
 }
 
+/* ── Holiday ───────────────────────────────────────────────────── */
+
+.dayNameHoliday   { color: var(--orange); }
+.dayNumberHoliday { color: var(--orange); }
+
+.holidayCaption {
+  width: 100%;
+  margin: 2px 0 0;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--orange);
+  text-align: center;
+}
+
 /* ── Dot ───────────────────────────────────────────────────────── */
 
 .dotWrap {
@@ -350,6 +365,7 @@
 .monthCompactNumDone    { color: var(--positive); }
 .monthCompactNumPending { color: var(--gold); }
 .monthCompactNumOverdue { color: var(--accent); }
+.monthCompactNumHoliday { color: var(--orange); }
 
 .monthCompactDot {
   display: block;
