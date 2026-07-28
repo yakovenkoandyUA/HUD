@@ -18,16 +18,18 @@ export interface FamilyMoodEntry {
 }
 
 interface MoodStore {
-  logs:             MoodLog[]
-  loading:          boolean
-  familyMoods:      FamilyMoodEntry[]
-  fetchLogs:        (from?: string, to?: string) => Promise<void>
-  fetchFamilyMoods: () => Promise<void>
-  setMood:          (date: string, score: 1 | 2 | 3 | 4 | 5) => Promise<void>
-  setNote:          (date: string, note: string) => Promise<void>
-  deleteMood:       (date: string) => Promise<void>
-  todayScore:       () => (1 | 2 | 3 | 4 | 5) | null
-  todayNote:        () => string | null
+  logs:                    MoodLog[]
+  loading:                 boolean
+  familyMoods:             FamilyMoodEntry[]
+  familyMoodsByDate:       Record<string, FamilyMoodEntry[]>
+  fetchLogs:               (from?: string, to?: string) => Promise<void>
+  fetchFamilyMoods:        () => Promise<void>
+  fetchFamilyMoodsForDate: (date: string) => Promise<void>
+  setMood:                 (date: string, score: 1 | 2 | 3 | 4 | 5) => Promise<void>
+  setNote:                 (date: string, note: string) => Promise<void>
+  deleteMood:              (date: string) => Promise<void>
+  todayScore:              () => (1 | 2 | 3 | 4 | 5) | null
+  todayNote:               () => string | null
 }
 
 function toLocalIso(d: Date): string {
@@ -35,9 +37,10 @@ function toLocalIso(d: Date): string {
 }
 
 export const useMoodStore = create<MoodStore>((set, get) => ({
-  logs:        [],
-  loading:     false,
-  familyMoods: [],
+  logs:              [],
+  loading:           false,
+  familyMoods:       [],
+  familyMoodsByDate: {},
 
   fetchLogs: async (from, to) => {
     set({ loading: true })
@@ -59,6 +62,13 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
     if (!res.ok) return
     const data: FamilyMoodEntry[] = await res.json()
     set({ familyMoods: data })
+  },
+
+  fetchFamilyMoodsForDate: async (date) => {
+    const res = await authFetch(`/api/mood/family/${date}`)
+    if (!res.ok) return
+    const data: FamilyMoodEntry[] = await res.json()
+    set(s => ({ familyMoodsByDate: { ...s.familyMoodsByDate, [date]: data } }))
   },
 
   setMood: async (date, score) => {

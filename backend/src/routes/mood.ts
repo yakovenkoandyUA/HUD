@@ -24,18 +24,16 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   res.json(logs)
 })
 
-// GET /api/mood/family/today — today's mood of accepted family members
-router.get('/family/today', async (req: Request, res: Response): Promise<void> => {
-  const familyIds = await getAcceptedFamilyIds(req.userId!)
-  if (familyIds.length === 0) { res.json([]); return }
+async function getFamilyMoodsForDate(userId: string, date: string) {
+  const familyIds = await getAcceptedFamilyIds(userId)
+  if (familyIds.length === 0) return []
 
-  const today = new Date().toISOString().slice(0, 10)
   const [logs, users] = await Promise.all([
-    MoodLog.find({ userId: { $in: familyIds }, date: today }),
+    MoodLog.find({ userId: { $in: familyIds }, date }),
     User.find({ _id: { $in: familyIds } }).select('name username avatarUrl'),
   ])
 
-  const result = logs.map(log => {
+  return logs.map(log => {
     const user = users.find(u => u._id.toString() === log.userId)
     return {
       userId:    log.userId,
@@ -45,8 +43,17 @@ router.get('/family/today', async (req: Request, res: Response): Promise<void> =
       note:      log.note ?? null,
     }
   })
+}
 
-  res.json(result)
+// GET /api/mood/family/today — today's mood of accepted family members
+router.get('/family/today', async (req: Request, res: Response): Promise<void> => {
+  const today = new Date().toISOString().slice(0, 10)
+  res.json(await getFamilyMoodsForDate(req.userId!, today))
+})
+
+// GET /api/mood/family/:date — accepted family members' mood for an arbitrary date
+router.get('/family/:date', async (req: Request, res: Response): Promise<void> => {
+  res.json(await getFamilyMoodsForDate(req.userId!, req.params.date))
 })
 
 const MOOD_LABELS: Record<number, string> = { 1: 'Важко', 2: 'Так собі', 3: 'Нормально', 4: 'Добре', 5: 'Чудово' }
@@ -67,28 +74,27 @@ router.put('/:date', validate(moodSchema), async (req: Request, res: Response): 
   )
   res.json(log)
 
-  // Push to family members — only for today
-  const today = new Date().toISOString().slice(0, 10)
-  if (date === today) {
-    try {
-      const [user, familyIds] = await Promise.all([
-        User.findById(req.userId).select('name username'),
-        getAcceptedFamilyIds(req.userId!),
-      ])
-      if (user && familyIds.length > 0) {
-        const name  = (user as { name?: string; username?: string }).name || (user as { username?: string }).username || 'Хтось'
-        const label = MOOD_LABELS[score] ?? ''
-        const emoji = MOOD_EMOJI[score] ?? ''
-        await Promise.allSettled(
-          familyIds.map(id => sendPushToUser(id, {
-            title: name,
-            body:  `${label} ${emoji}`,
-            tag:   `mood-${req.userId}-${today}`,
-          }))
-        )
-      }
-    } catch { /* silent — не блокуємо відповідь */ }
-  }
+  // Push to family members — setMood on the client is only ever called for "today"
+  // (its local today, which can differ from server UTC date near midnight Kyiv time,
+  // so we don't gate on a UTC date match here — see mood push bugfix 2026-07-28)
+  try {
+    const [user, familyIds] = await Promise.all([
+      User.findById(req.userId).select('name username'),
+      getAcceptedFamilyIds(req.userId!),
+    ])
+    if (user && familyIds.length > 0) {
+      const name  = (user as { name?: string; username?: string }).name || (user as { username?: string }).username || 'Хтось'
+      const label = MOOD_LABELS[score] ?? ''
+      const emoji = MOOD_EMOJI[score] ?? ''
+      await Promise.allSettled(
+        familyIds.map(id => sendPushToUser(id, {
+          title: name,
+          body:  `${label} ${emoji}`,
+          tag:   `mood-${req.userId}-${date}`,
+        }))
+      )
+    }
+  } catch { /* silent — не блокуємо відповідь */ }
 })
 
 // PATCH /api/mood/:date/note  { note: string }  — update note only

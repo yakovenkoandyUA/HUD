@@ -33,13 +33,15 @@ function getMondayOfWeek(d: Date): Date {
  *
  * Props:
  * @prop {MoodLog[]} logs — масив записів настрою
+ * @prop {(date: string) => void} [onSelectDate] — тап на день (не майбутній) відкриває деталі дня
  */
 interface MoodCalendarProps {
-  logs:     MoodLog[]
-  popKey?:  number
+  logs:         MoodLog[]
+  popKey?:      number
+  onSelectDate?: (date: string) => void
 }
 
-const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs, popKey = 0 }) => {
+const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs, popKey = 0, onSelectDate }) => {
   const logMap = useMemo(() => {
     const m: Record<string, 1 | 2 | 3 | 4 | 5> = {}
     logs.forEach(l => { m[l.date] = l.score })
@@ -99,8 +101,11 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs, popKey = 0 }) => {
           const scoreClass = cell.score ? styles[`score${cell.score}` as keyof typeof styles] : undefined
           const isPopIn    = cell.isToday && !!cell.score && popKey > 0
           return (
-            <div
+            <button
               key={cell.isToday ? `today-${popKey}` : cell.date}
+              type="button"
+              disabled={cell.isFuture}
+              onClick={() => onSelectDate?.(cell.date)}
               className={[
                 styles.cell,
                 cell.isFuture ? styles.cellFuture : (!cell.score ? styles.cellEmpty : styles.cellFilled),
@@ -113,7 +118,7 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs, popKey = 0 }) => {
               {cell.score ? (
                 <MoodIcon score={cell.score} size={22} color="rgba(255,255,255,0.88)" />
               ) : null}
-            </div>
+            </button>
           )
         })}
       </div>

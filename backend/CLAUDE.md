@@ -87,8 +87,9 @@
 | `/api/plans/:id/convert` | POST — план → спогад (visited) |
 | `/api/notes` | GET, POST |
 | `/api/notes/:id` | PATCH, DELETE |
-| `/api/mood` | GET (today + family), POST — { score, notes } |
-| `/api/mood/history` | GET — місячний heatmap |
+| `/api/mood` | GET ?from=&to= — власні логи, PUT /:date (upsert score/note), PATCH /:date/note, DELETE /:date |
+| `/api/mood/family/today` | GET — сьогоднішній настрій+нотатка прийнятих сімейних профілів |
+| `/api/mood/family/:date` | GET — те саме за довільну дату (тап на день в MoodCalendar) |
 | `/api/categories` | GET, POST |
 | `/api/categories/:id` | PATCH, DELETE |
 | `/api/receipt/scan` | POST — Anthropic Vision, auto-categorize |

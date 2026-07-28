@@ -48,8 +48,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.15s;
   min-width: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cell:disabled {
+  cursor: default;
+}
+.cell:not(:disabled):active {
+  transform: scale(0.88);
 }
 
 @keyframes cellPopIn {

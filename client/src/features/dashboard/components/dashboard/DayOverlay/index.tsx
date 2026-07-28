@@ -3,6 +3,7 @@ import { useWeather } from '@/shared/hooks/useWeather'
 import { useNavigate } from 'react-router-dom'
 import MoodIcon from './MoodIcon'
 import MoodCalendar from '../MoodCalendar'
+import MoodDayDetail from '../MoodDayDetail'
 import { useMoodStore } from '@/features/profile/store/moodStore'
 import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { useProfileStore } from '@/shared/store/profileStore'
@@ -72,6 +73,8 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const [popKey, setPopKey]         = useState(0)
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
   const today        = toLocalIso(new Date())
   const currentSlot  = getCurrentSlot()
   const currentMood  = todayScore()
@@ -137,6 +140,7 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   }
 
   return (
+    <>
     <div ref={overlayRef} className={styles.overlay} onClick={onClose}>
       <div ref={sheetRef} className={styles.sheet} onClick={e => e.stopPropagation()}>
         {flashScore !== null && (
@@ -285,11 +289,14 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
 
           {/* ── Mood calendar ── */}
           <section className={`${styles.section} ${styles.sectionCalendar}`}>
-            <MoodCalendar logs={logs} popKey={popKey} />
+            <MoodCalendar logs={logs} popKey={popKey} onSelectDate={setSelectedDate} />
           </section>
         </div>
       </div>
     </div>
+
+      <MoodDayDetail date={selectedDate} onClose={() => setSelectedDate(null)} />
+    </>
   )
 }
 
