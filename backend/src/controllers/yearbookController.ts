@@ -150,7 +150,7 @@ export async function getYearbook(req: Request, res: Response): Promise<void> {
     const year   = parseInt(req.params.year, 10)
     const period = (req.query.period as string) || 'annual'
     const report = await YearbookReport.findOne({ userId: req.userId, year, period })
-    if (!report) { res.status(404).json({ error: 'Not generated yet' }); return }
+    if (!report) { res.json({ notGenerated: true }); return }
 
     const { start, end } = periodRange(year, period)
     const freshSections  = await buildSections(req.userId!, year, start, end)

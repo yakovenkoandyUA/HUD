@@ -35,16 +35,15 @@ export const useYearbookStore = create<YearbookState>()((set, get) => ({
     set({ loading: true })
     try {
       const res = await authFetch(`/api/yearbook/${year}?period=${period}`)
-      if (res.status === 404) {
-        const k = cacheKey(year, period)
+      if (!res.ok) { set({ loading: false }); return }
+      const data = await res.json()
+      const k = cacheKey(year, period)
+      if (data.notGenerated) {
         set(s => ({ loading: false, notGenerated: { ...s.notGenerated, [k]: true } }))
         return
       }
-      if (!res.ok) { set({ loading: false }); return }
-      const data: YearbookReport = await res.json()
-      const k = cacheKey(year, period)
       set(s => ({
-        reports: { ...s.reports, [k]: data },
+        reports: { ...s.reports, [k]: data as YearbookReport },
         notGenerated: { ...s.notGenerated, [k]: false },
         loading: false,
       }))
