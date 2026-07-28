@@ -1,4 +1,5 @@
 import React, { useState, useRef, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { WheelColumn } from '@/shared/components/ui/TimeWheelPicker'
 import styles from './CustomDatePicker.module.css'
 
@@ -237,7 +238,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, on
     )
   }
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={onClose} data-no-swipe-tabs>
       <div className={styles.sheet} onClick={e => e.stopPropagation()}>
 
@@ -321,7 +322,8 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ value, onChange, on
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
