@@ -371,7 +371,16 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 - [ ] **Space тижневий дайджест** — backend cron (щонеділі) → push нотифікація: "Japan Trip: 3 задачі, 2 спогади, 12 000₴ витрат цього тижня"
 - [x] **ШІ-асистент per Space** — кнопка в хедері `SpaceDetail` → bottom sheet → SSE чат; `POST /api/ai/space-chat` приймає `spaceId` + `messages[]`; system prompt залежить від `space.type` (vehicle → механік, trip → travel planner, project → PM); Claude Haiku; контекст: назва/тип + останні 5 подій/задач/нотаток
 
-### ✅ Dashboard + UI polish (2026-07-13, 2026-07-21)
+### ✅ MoodCalendar — деталі дня по тапу (2026-07-28)
+
+- **Тап на день в MoodCalendar** (в `DayOverlay` → "НАСТРІЙ / МІСЯЦЬ") відкриває `MoodDayDetail` — draggable `Modal` з власною відміткою+нотаткою за той день і настроєм+нотаткою кожного сімейного профілю за той самий день. Майбутні дні неклікабельні.
+- Backend: `GET /api/mood/family/:date` (новий, поряд з існуючим `/family/today`) — той самий join з `getAcceptedFamilyIds`, винесений у спільну `getFamilyMoodsForDate(userId, date)`.
+- Frontend: `moodStore` — `familyMoodsByDate: Record<string, FamilyMoodEntry[]>` кеш + `fetchFamilyMoodsForDate(date)`.
+
+### ✅ Sprint: fix habit due-date bug + replace weekly-rate stat with streak (2026-07-28)
+
+- **Баг:** `isRoutineDueOnDay` (`client/src/features/sprint/utils/sprint.ts`) не перевіряв дату створення звички для `daily`/`weekly`/`monthly` repeat (тільки `custom`-interval мав anchor-перевірку) — щойно створена звичка рахувалась "запланованою" і для тижнів **до** свого створення, показуючи фантомні пропуски (0%) у статистиці. Виправлено: anchor-перевірка (`repeatStartDate ?? createdAt`) тепер застосовується до всіх типів repeat одразу на вході функції.
+- **Замінено віджет "Виконання звичок"** (тижневий % виконання, який був вразливий до цього бага за конструкцією — фіксовані тижневі вікна замість "рахувати до першого пропуску") на **серію звичок** (`calcOverallStreak` в `WeekExpandedView`): поточна серія + рекорд (дні поспіль коли всі заплановані на день звички виконані; дні без запланованих звичок не рвуть і не подовжують серію) + смужка крапок за останні 14 днів.
 
 - **HeroCard — фінанс блок:** видалено bar chart; замінено на stat strip (Сьогодні / 7 днів / Пік з назвою дня). Фон `var(--accent-soft)`. Контраст тексту налагоджено по всіх 6 темах: noir — `var(--surface)` фон як у решти блоків; pixel — білий текст; arctic/japan — dark text overrides; cyber — `var(--text)` для лейблів; velvet — золота ₴ і peak accent.
 - **F1 RaceCountdownStrip — баннер:** виправлено `LIGHT_THEMES`: arctic видалено (баннер dark), japan залишено (баннер light). `new Set(['pixel', 'japan'])`.

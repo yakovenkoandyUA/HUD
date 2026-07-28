@@ -161,6 +161,15 @@ export function buildMonthGrid(task: UnifiedTodo, year: number, month: number): 
 
 export function isRoutineDueOnDay(task: UnifiedTodo, day: Date): boolean {
   if (isRegular(task)) return false
+
+  const anchorIso = task.repeatStartDate ?? task.createdAt?.slice(0, 10)
+  if (anchorIso) {
+    const anchor = parseIso(anchorIso)
+    const d = new Date(day)
+    d.setHours(0, 0, 0, 0)
+    if (d < anchor) return false
+  }
+
   if (task.repeat === 'daily') return true
   if (task.repeat === 'weekly') {
     if (!task.nextDue) return false
@@ -171,9 +180,27 @@ export function isRoutineDueOnDay(task: UnifiedTodo, day: Date): boolean {
     return dom !== null && day.getDate() === dom
   }
   if (task.repeat === 'custom' && task.repeatConfig) {
-    const { unit, weekDays } = task.repeatConfig
+    const { unit, weekDays, interval } = task.repeatConfig
     if (unit === 'week' && weekDays && weekDays.length > 0) {
       return weekDays.includes((day.getDay() + 6) % 7)
+    }
+    if (anchorIso && interval && interval > 0) {
+      const anchor = parseIso(anchorIso)
+      const d = new Date(day)
+      d.setHours(0, 0, 0, 0)
+      if (unit === 'day') {
+        const diffDays = Math.round((d.getTime() - anchor.getTime()) / 86400000)
+        return diffDays % interval === 0
+      }
+      if (unit === 'month') {
+        const monthDiff = (d.getFullYear() - anchor.getFullYear()) * 12 + (d.getMonth() - anchor.getMonth())
+        return monthDiff >= 0 && monthDiff % interval === 0 && d.getDate() === anchor.getDate()
+      }
+      if (unit === 'year') {
+        const yearDiff = d.getFullYear() - anchor.getFullYear()
+        return yearDiff >= 0 && yearDiff % interval === 0 &&
+          d.getMonth() === anchor.getMonth() && d.getDate() === anchor.getDate()
+      }
     }
   }
   return false
