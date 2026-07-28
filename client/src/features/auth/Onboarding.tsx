@@ -53,18 +53,26 @@ const SPACE_PRESETS: { type: SpaceType; label: string; desc: string }[] = [
 
 const HABIT_PRESETS = ['Спорт', 'Читання', 'Медитація', 'Вода', 'Йога', 'Прогулянка', 'Сон']
 
-const MIMIR_MODES: { id: MimirMode; title: string; sub: string; desc: string }[] = [
-  { id: 'wise',  title: 'МУДРИЙ',  sub: 'WISE',  desc: 'Спокійний і точний' },
-  { id: 'witty', title: 'БАЛАГУР', sub: 'WITTY', desc: 'Іронічний, але на твоєму боці' },
-  { id: 'dark',  title: 'ТЕМНИЙ',  sub: 'DARK',  desc: 'Без прикрас і зайвих сентиментів' },
+const MIMIR_MODES: { id: MimirMode; title: string; sub: string; desc: string; quote: string; icon: React.ReactNode }[] = [
+  {
+    id: 'wise', title: 'МУДРИЙ', sub: 'WISE', desc: 'Спокійний і точний',
+    quote: '«Найкращий шлях — через знання.»',
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v2M12 16v2M6 12H4M20 12h-2"/></svg>,
+  },
+  {
+    id: 'witty', title: 'БАЛАГУР', sub: 'WITTY', desc: 'Іронічний, але на твоєму боці',
+    quote: '«Ти це ще не зробив? Цікаво.»',
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  },
+  {
+    id: 'dark', title: 'ТЕМНИЙ', sub: 'DARK', desc: 'Без прикрас і зайвих сентиментів',
+    quote: '«Правда не завжди зручна.»',
+    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>,
+  },
 ]
 
-const STEP_PROGRESS: Record<number, { label: string; pct: number }> = {
-  2: { label: 'Крок 1 / 4', pct: 25 },
-  3: { label: 'Крок 2 / 4', pct: 50 },
-  4: { label: 'Крок 3 / 4', pct: 75 },
-  5: { label: 'Крок 4 / 4', pct: 100 },
-}
+/** Directions that skip the space-creation step */
+const DIRECTIONS_WITHOUT_SPACE: Direction[] = ['finance', 'memories']
 
 interface SalaryDayPickerProps {
   value: number
@@ -207,10 +215,12 @@ const OnboardingScreen: React.FC = () => {
     setHabitCustom('')
   }
 
+  const skipSpaceStep = DIRECTIONS_WITHOUT_SPACE.includes(direction)
+
   const goBack = () => {
     if (step === 2) setStep(1)
     else if (step === 3) setStep(2)
-    else if (step === 4) setStep(3)
+    else if (step === 4) setStep(skipSpaceStep ? 2 : 3)
     else if (step === 5) {
       if (spaceCreated && direction === 'spaces') setStep(3)
       else setStep(4)
@@ -281,7 +291,22 @@ const OnboardingScreen: React.FC = () => {
     </svg>
   )
 
-  const progress = STEP_PROGRESS[step] ?? null
+  const progress = useMemo((): { label: string; pct: number } | null => {
+    if (step < 2 || step > 5) return null
+    if (skipSpaceStep) {
+      // 3 effective steps: 2 → 4 → 5
+      if (step === 2) return { label: 'Крок 1 / 3', pct: 33 }
+      if (step === 4) return { label: 'Крок 2 / 3', pct: 66 }
+      if (step === 5) return { label: 'Крок 3 / 3', pct: 100 }
+      return null
+    }
+    // 4 effective steps: 2 → 3 → 4 → 5
+    if (step === 2) return { label: 'Крок 1 / 4', pct: 25 }
+    if (step === 3) return { label: 'Крок 2 / 4', pct: 50 }
+    if (step === 4) return { label: 'Крок 3 / 4', pct: 75 }
+    if (step === 5) return { label: 'Крок 4 / 4', pct: 100 }
+    return null
+  }, [step, skipSpaceStep])
 
   // Summary items for done step
   const summaryItems = useMemo(() => {
@@ -379,7 +404,7 @@ const OnboardingScreen: React.FC = () => {
             <div className={styles.stepFooter}>
               <button
                 className={`${styles.primaryBtn} ${styles.primaryBtnWide}`}
-                onClick={() => setStep(3)}
+                onClick={() => setStep(skipSpaceStep ? 4 : 3)}
               >
                 ДАЛІ <ChevronRight />
               </button>
@@ -600,20 +625,18 @@ const OnboardingScreen: React.FC = () => {
                   onClick={() => setMimirMode(m.id)}
                   aria-pressed={mimirMode === m.id}
                 >
-                  <span className={styles.mimirModeCardInner}>
-                    <span className={styles.mimirModeCardTitles}>
-                      <span className={styles.mimirModeCardTitle}>{m.title}</span>
-                      <span className={styles.mimirModeCardSub}>{m.sub}</span>
-                    </span>
-                    <span className={styles.mimirModeCardDesc}>{m.desc}</span>
-                  </span>
-                  <span className={styles.directionCheck} aria-hidden="true">
-                    {mimirMode === m.id && (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 8l3.5 3.5L13 4"/>
+                  {mimirMode === m.id && (
+                    <span className={styles.mimirModeCheck} aria-hidden="true">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 6l2.5 2.5L10 3"/>
                       </svg>
-                    )}
-                  </span>
+                    </span>
+                  )}
+                  <span className={styles.mimirModeIcon} aria-hidden="true">{m.icon}</span>
+                  <span className={styles.mimirModeCardTitle}>{m.title}</span>
+                  <span className={styles.mimirModeCardSub}>{m.sub}</span>
+                  <span className={styles.mimirModeCardDesc}>{m.desc}</span>
+                  <span className={styles.mimirModeQuote}>{m.quote}</span>
                 </button>
               ))}
             </div>
@@ -631,41 +654,44 @@ const OnboardingScreen: React.FC = () => {
 
         {/* ── Step 6: Done ────────────────────────────────────── */}
         {step === 6 && (
-          <div className={styles.slideHero}>
-            <img
-              src="/mimir/mimir-celebrating.png"
-              alt="Mimir"
-              className={styles.slideHeroImg}
-              draggable={false}
-            />
-            <div className={styles.slideCopy}>
-              <h2 className={styles.doneTitle}>Криниця відкрита.</h2>
-              <p className={styles.doneDesc}>
-                Мімір пам'ятає все — тепер і твоє.<br />Твоя хроніка починається.
-              </p>
+          <div className={`${styles.step} ${styles.stepLeft} ${styles.stepDone}`}>
+            <div className={styles.doneBanner}>
+              <img
+                src="/mimir/mimir-celebrating.png"
+                alt="Mimir"
+                className={styles.doneBannerImg}
+                draggable={false}
+              />
+              <div className={styles.doneBannerText}>
+                <h2 className={styles.doneTitle}>Криниця відкрита.</h2>
+                <p className={styles.doneDesc}>Мімір пам'ятає все — тепер і твоє. Твоя хроніка починається.</p>
+              </div>
             </div>
 
-            {/* Avatar upload */}
-            <div className={styles.doneAvatarWrap}>
-              <ImageUploadButton
-                currentUrl={avatarUrl || undefined}
-                folder="mimir/avatars"
-                onUpload={url => {
-                  setAvatarUrl(url)
-                  updateProfile({ avatarUrl: url }).catch(() => {})
-                }}
-                placeholder="Додати фото профілю"
-                variant="compact"
-              />
-              <span className={styles.doneAvatarHint}>необов'язково</span>
+            {/* Avatar upload — compact inline row */}
+            <div className={styles.doneAvatarRow}>
+              <span className={styles.doneAvatarLabel}>ФОТО ПРОФІЛЮ</span>
+              <div className={styles.doneAvatarInner}>
+                <ImageUploadButton
+                  currentUrl={avatarUrl || undefined}
+                  folder="mimir/avatars"
+                  onUpload={url => {
+                    setAvatarUrl(url)
+                    updateProfile({ avatarUrl: url }).catch(() => {})
+                  }}
+                  placeholder="Додати фото"
+                  variant="compact"
+                />
+                <span className={styles.doneAvatarHint}>необов'язково</span>
+              </div>
             </div>
 
             {summaryItems.length > 0 && (
               <div className={styles.summaryCard}>
                 {summaryItems.map((item, i) => (
                   <div key={i} className={styles.summaryItem}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M2 7l3.5 3.5L12 3"/>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--accent)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M1.5 6l3 3L10.5 2"/>
                     </svg>
                     <span className={styles.summaryText}>{item}</span>
                   </div>
@@ -673,7 +699,6 @@ const OnboardingScreen: React.FC = () => {
               </div>
             )}
 
-            {/* Email verification reminder */}
             {activeProfile?.isVerified === false && (
               <div className={styles.verifyBanner}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
@@ -681,25 +706,22 @@ const OnboardingScreen: React.FC = () => {
               </div>
             )}
 
-            {/* PWA install */}
             {pwaInstall.isInstallable && (
-              <button
-                type="button"
-                className={styles.installBtn}
-                onClick={pwaInstall.promptInstall}
-              >
+              <button type="button" className={styles.installBtn} onClick={pwaInstall.promptInstall}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v13M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>
                 Встановити на екран
               </button>
             )}
 
-            <button
-              className={`${styles.primaryBtn} ${styles.primaryBtnFull}`}
-              onClick={handleFinish}
-              disabled={saving}
-            >
-              {saving ? 'Зберігаємо…' : <>ПЕРЕЙТИ ДО MIMIR <ChevronRight /></>}
-            </button>
+            <div className={styles.stepFooter}>
+              <button
+                className={`${styles.primaryBtn} ${styles.primaryBtnWide}`}
+                onClick={handleFinish}
+                disabled={saving}
+              >
+                {saving ? 'Зберігаємо…' : <>ПЕРЕЙТИ ДО MIMIR <ChevronRight /></>}
+              </button>
+            </div>
           </div>
         )}
 
