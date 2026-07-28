@@ -74,11 +74,184 @@
 
 .pickerLabel {
   flex: 1;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 0;
+  border: none;
+  background: transparent;
   font-family: var(--font-display);
   font-size: 16px;
   color: var(--text);
   letter-spacing: 0.08em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.pickerLabel:active { opacity: 0.6; }
+.pickerLabelChevron { color: var(--text3); flex-shrink: 0; }
+
+/* ── Period selector bottom sheet ── */
+.sheetOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheetPanel {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sheetHandle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border2);
+  align-self: center;
+  margin-bottom: 4px;
+}
+
+.sheetTitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--text3);
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0;
+}
+
+/* Year mode */
+.sheetYearList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.sheetYearItem {
+  padding: 14px 16px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sheetYearItem:hover { color: var(--text); background: var(--bg); }
+.sheetYearItemActive {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Shared year nav (month / season modes) */
+.sheetYearNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sheetYearNavBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.sheetYearNavBtn:disabled { opacity: 0.3; cursor: default; }
+.sheetYearNavBtn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+
+.sheetYearNavLabel {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  color: var(--text);
+}
+
+/* Month mode */
+.sheetMonthGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.sheetMonthItem {
+  padding: 12px 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sheetMonthItem:disabled { opacity: 0.3; cursor: default; }
+.sheetMonthItem:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+.sheetMonthItemActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Season mode */
+.sheetSeasonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.sheetSeasonItem {
+  padding: 18px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sheetSeasonItem:disabled { opacity: 0.3; cursor: default; }
+.sheetSeasonItem:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+.sheetSeasonItemActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 /* ── Loading / Empty ── */

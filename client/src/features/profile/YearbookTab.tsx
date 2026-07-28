@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useYearbookStore } from '@/features/profile/store/yearbookStore'
+import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import type { YearbookPeriod } from './types/yearbook'
 import styles from './YearbookTab.module.css'
 
@@ -138,6 +140,29 @@ const YearbookTab: React.FC = () => {
 
   const s = report?.sections
 
+  // Period sheet
+  const [showPeriodSheet, setShowPeriodSheet] = useState(false)
+  const [sheetYear, setSheetYear] = useState(year)
+  const sheetOverlayRef = useRef<HTMLDivElement>(null)
+  const sheetRef = useSwipeToDismiss(() => setShowPeriodSheet(false), {
+    enabled: showPeriodSheet,
+    overlayRef: sheetOverlayRef,
+  })
+
+  const openPeriodSheet = () => {
+    setSheetYear(year)
+    setShowPeriodSheet(true)
+  }
+
+  const applyPeriodSheet = (selected: { year?: number; month?: number; season?: SeasonKey }) => {
+    if (selected.year !== undefined)  setYear(selected.year)
+    if (selected.month !== undefined) setMonth(selected.month)
+    if (selected.season !== undefined) setSeason(selected.season)
+    setShowPeriodSheet(false)
+  }
+
+  const MIN_YEAR = 2020
+
   // Data presence checks — skip sections that have nothing to show
   const hasTravelData = s ? (s.memoriesCount > 0 || s.placesVisitedCount > 0) : false
   const hasMediaData  = s ? (s.moviesWatched + s.seriesWatched + s.animeWatched > 0) : false
@@ -168,7 +193,12 @@ const YearbookTab: React.FC = () => {
               <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <span className={styles.pickerLabel}>{periodLabel}</span>
+          <button type="button" className={styles.pickerLabel} onClick={openPeriodSheet} aria-label="Обрати період">
+            {periodLabel}
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true" className={styles.pickerLabelChevron}>
+              <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
           <button type="button" className={styles.pickerArrow} onClick={goNext} disabled={atMax()} aria-label="Вперед">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -377,6 +407,111 @@ const YearbookTab: React.FC = () => {
           </div>
 
         </div>
+      )}
+      {/* ── Period bottom sheet ── */}
+      {showPeriodSheet && createPortal(
+        <div ref={sheetOverlayRef} className={styles.sheetOverlay} onClick={() => setShowPeriodSheet(false)}>
+          <div ref={sheetRef as React.RefObject<HTMLDivElement>} className={styles.sheetPanel} onClick={e => e.stopPropagation()}>
+            <div className={styles.sheetHandle} />
+            <p className={styles.sheetTitle}>
+              {periodType === 'year' ? 'Рік' : periodType === 'month' ? 'Місяць' : 'Сезон'}
+            </p>
+
+            {/* Year mode — vertical list */}
+            {periodType === 'year' && (
+              <div className={styles.sheetYearList}>
+                {Array.from({ length: todayYear - MIN_YEAR + 1 }, (_, i) => todayYear - i).map(y => (
+                  <button
+                    key={y}
+                    type="button"
+                    className={`${styles.sheetYearItem} ${y === year ? styles.sheetYearItemActive : ''}`}
+                    onClick={() => applyPeriodSheet({ year: y })}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Month mode — year nav + 3×4 month grid */}
+            {periodType === 'month' && (
+              <>
+                <div className={styles.sheetYearNav}>
+                  <button type="button" className={styles.sheetYearNavBtn}
+                    onClick={() => setSheetYear(y => Math.max(MIN_YEAR, y - 1))}
+                    disabled={sheetYear <= MIN_YEAR}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                  <span className={styles.sheetYearNavLabel}>{sheetYear}</span>
+                  <button type="button" className={styles.sheetYearNavBtn}
+                    onClick={() => setSheetYear(y => Math.min(todayYear, y + 1))}
+                    disabled={sheetYear >= todayYear}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                </div>
+                <div className={styles.sheetMonthGrid}>
+                  {MONTHS_UA.map((name, i) => {
+                    const m = i + 1
+                    const disabled = sheetYear >= todayYear && m > todayMonth
+                    const active = sheetYear === year && m === month
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        disabled={disabled}
+                        className={`${styles.sheetMonthItem} ${active ? styles.sheetMonthItemActive : ''}`}
+                        onClick={() => applyPeriodSheet({ year: sheetYear, month: m })}
+                      >
+                        {name.slice(0, 3)}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Season mode — year nav + 2×2 season grid */}
+            {periodType === 'season' && (
+              <>
+                <div className={styles.sheetYearNav}>
+                  <button type="button" className={styles.sheetYearNavBtn}
+                    onClick={() => setSheetYear(y => Math.max(MIN_YEAR, y - 1))}
+                    disabled={sheetYear <= MIN_YEAR}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                  <span className={styles.sheetYearNavLabel}>{sheetYear}</span>
+                  <button type="button" className={styles.sheetYearNavBtn}
+                    onClick={() => setSheetYear(y => Math.min(todayYear, y + 1))}
+                    disabled={sheetYear >= todayYear}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                </div>
+                <div className={styles.sheetSeasonGrid}>
+                  {(SEASON_ORDER as SeasonKey[]).map(sk => {
+                    const isAtMax = sheetYear >= todayYear && SEASON_ORDER.indexOf(sk) > SEASON_ORDER.indexOf(todaySeason)
+                    const active = sheetYear === year && sk === season
+                    return (
+                      <button
+                        key={sk}
+                        type="button"
+                        disabled={isAtMax}
+                        className={`${styles.sheetSeasonItem} ${active ? styles.sheetSeasonItemActive : ''}`}
+                        onClick={() => applyPeriodSheet({ year: sheetYear, season: sk })}
+                      >
+                        {SEASONS_UA[sk]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   )
