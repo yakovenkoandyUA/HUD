@@ -390,11 +390,10 @@
 /* ── Base section ── */
 .section {
   position: relative;
-  min-height: 72dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 48px 28px 40px;
+  padding: 52px 28px 48px;
   overflow: hidden;
   --s-text:  rgba(255, 255, 255, 0.92);
   --s-text2: rgba(255, 255, 255, 0.55);
@@ -560,6 +559,7 @@
 
 /* ── Cover — deep navy + cold cyan + magenta glow ── */
 .sectionCover {
+  min-height: 70dvh;
   justify-content: space-between;
   background-color: hsla(224,60%,12%,1);
   background-image:
