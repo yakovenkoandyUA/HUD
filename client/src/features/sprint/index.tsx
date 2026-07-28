@@ -211,8 +211,7 @@ const Sprint: React.FC = () => {
 				return t.dueDate === selectedDay
 			}),
 		]
-	const dayHasAnyItems = isDayToday
-		|| items.some(t => !isRecurring(t) && t.dueDate === selectedDay)
+
 
 	const hasCustomOrder = rawDayQuests.some(t => (t.order ?? 0) > 0)
 
@@ -393,7 +392,7 @@ const Sprint: React.FC = () => {
 						/>
 					</div>
 				)}
-				{!pendingSprintEvent && filterType === 'task' && (showOverdue || showSprintEmpty) && (
+				{!pendingSprintEvent && filterType === 'all' && (showOverdue || showSprintEmpty) && (
 					<div className={styles.mimirFloat}>
 						{showOverdue ? (
 							<MimirHint
