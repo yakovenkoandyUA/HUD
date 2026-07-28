@@ -679,7 +679,10 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                 onToggleEpisode={handleToggleEpisode}
                 onMarkSeasonWatched={handleMarkSeasonWatched}
                 status={item.status}
-                initialSeason={item.currentSeason ?? 1}
+                initialSeason={(() => {
+                  const myWatched = watchedEpisodes.filter(w => w.userId === myId)
+                  return myWatched.length > 0 ? Math.max(...myWatched.map(w => w.season)) : 1
+                })()}
                 onMarkWatched={() => onStatusChange('watched')}
               />
             </div>
