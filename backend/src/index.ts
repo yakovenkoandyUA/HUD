@@ -44,6 +44,7 @@ import recurringRoutes from './routes/recurringPayments'
 import shoppingRoutes from './routes/shopping'
 import labelRoutes from './routes/labels'
 import watchlistCommentsRouter from './routes/watchlistComments'
+import recipeCommentsRouter from './routes/recipeComments'
 import plansRouter from './routes/plans'
 import aiRouter from './routes/ai'
 import familyRouter from './routes/family'
@@ -94,6 +95,7 @@ app.use('/api/transactions', transactionRoutes)
 app.use('/api/sprint', sprintRoutes)
 app.use('/api/lessons', lessonRoutes)
 app.use('/api/recipes', recipeRoutes)
+app.use('/api/recipes/:id/comments', recipeCommentsRouter)
 app.use('/api/watchlist', watchlistRoutes)
 app.use('/api/games', gamesRouter)
 app.use('/api/watchlist/:id/comments', watchlistCommentsRouter)

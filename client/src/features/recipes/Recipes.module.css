@@ -224,8 +224,9 @@
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
-  margin: 0 -16px;
-  padding: 0 16px 4px;
+  flex-shrink: 0;
+  padding: 6px 16px 8px;
+  border-bottom: 1px solid var(--border);
 }
 .tagsFilter::-webkit-scrollbar { display: none; }
 
@@ -262,11 +263,23 @@
 
 /* ── Recipe grid ──────────────────────────────────────────────── */
 
+@keyframes plateSlideLeft {
+  from { opacity: 0; transform: translateX(-22px) scale(0.975); }
+  to   { opacity: 1; transform: translateX(0)     scale(1); }
+}
+@keyframes plateSlideRight {
+  from { opacity: 0; transform: translateX(22px)  scale(0.975); }
+  to   { opacity: 1; transform: translateX(0)     scale(1); }
+}
+
 .recipeGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+
+.recipeGridLeft  { animation: plateSlideLeft  0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.recipeGridRight { animation: plateSlideRight 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 
 /* ── Ghost empty state ────────────────────────────────────────── */
 

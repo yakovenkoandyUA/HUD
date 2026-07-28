@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import type { Recipe } from '@/shared/types'
 import { useRecipesStore } from '@/features/recipes/store/recipesStore'
+import MimirIcon from '@/shared/components/ui/MimirIcon'
 import styles from './RecipeCard.module.css'
 
 /**
@@ -140,11 +141,6 @@ const HeartIcon: React.FC<{ filled: boolean }> = ({ filled }) => (
   </svg>
 )
 
-const SparkleIcon: React.FC = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M12 2c0 0 1.4 6 4.5 9S22 14 22 14s-5.4 1.4-8.5 4.5S12 22 12 22s-1.4-5.4-4.5-8.5S2 12 2 12s5.4-1.4 8.5-4.5S12 2 12 2z"/>
-  </svg>
-)
 
 const AI_OWNER_NAME = 'MIMIR AI'
 
@@ -196,6 +192,15 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
           </span>
         )}
 
+        {recipe.isOwn === false && recipe.avgRating !== undefined && (
+          <span className={styles.ratingBadge}>
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+              <path d="M6 1l1.4 2.8 3.1.45-2.25 2.2.53 3.08L6 8.1l-2.78 1.43.53-3.08L1.5 4.25l3.1-.45L6 1z"/>
+            </svg>
+            {recipe.avgRating.toFixed(1)}
+          </span>
+        )}
+
         <button
           type="button"
           className={`${styles.heartBtn} ${isWishlisted ? styles.heartActive : ''}`}
@@ -208,30 +213,30 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick, hideCategory =
 
       {/* ── Info block ── */}
       <div className={styles.info}>
-        <div className={styles.titleRow}>
-          <h3 className={styles.title}>{recipe.title}</h3>
-          {hasOwner && (
-            isAiOwner ? (
-              <div className={styles.ownerAiBadge} title={AI_OWNER_NAME}>
-                <SparkleIcon />
-              </div>
-            ) : (
-              <div className={styles.ownerBadge} title={recipe.ownerName}>
-                {recipe.ownerAvatarUrl
-                  ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
-                  : <span className={styles.ownerInitial}>{recipe.ownerName![0]}</span>
-                }
-              </div>
-            )
-          )}
-        </div>
+        <h3 className={styles.title}>{recipe.title}</h3>
         <div className={styles.meta}>
           {!hideCategory && recipe.category && (
             <span className={styles.categoryPill}>{recipe.category}</span>
           )}
-          {recipe.cookTime ? (
-            <span className={styles.cookTime}>{formatCookTime(recipe.cookTime)}</span>
-          ) : null}
+          <div className={styles.metaRight}>
+            {recipe.cookTime && !hasOwner ? (
+              <span className={styles.cookTime}>{formatCookTime(recipe.cookTime)}</span>
+            ) : null}
+            {hasOwner && (
+              isAiOwner ? (
+                <div className={styles.ownerAiBadge} title={AI_OWNER_NAME}>
+                  <MimirIcon size={13} />
+                </div>
+              ) : (
+                <div className={styles.ownerBadge} title={recipe.ownerName}>
+                  {recipe.ownerAvatarUrl
+                    ? <img src={recipe.ownerAvatarUrl} alt={recipe.ownerName} className={styles.ownerAvatar} />
+                    : <span className={styles.ownerInitial}>{recipe.ownerName![0]}</span>
+                  }
+                </div>
+              )
+            )}
+          </div>
         </div>
       </div>
     </div>

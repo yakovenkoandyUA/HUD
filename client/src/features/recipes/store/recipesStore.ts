@@ -22,6 +22,8 @@ function toRecipe(d: Record<string, any>): Recipe {
     ownerName:      d.ownerName ?? undefined,
     ownerAvatarUrl: d.ownerAvatarUrl ?? undefined,
     isOwn:          d.isOwn ?? true,
+    avgRating:      d.avgRating ?? undefined,
+    myRating:       d.myRating ?? undefined,
   }
 }
 
@@ -36,6 +38,7 @@ interface RecipesState {
   fetchRecipes: (scope?: RecipeScope) => Promise<void>
   fetchCookStats: () => Promise<void>
   logCook: (id: string) => Promise<void>
+  rateRecipe: (id: string, score: number) => Promise<void>
   setScope: (scope: RecipeScope) => void
   addRecipe: (data: Omit<Recipe, 'id'>) => Promise<void>
   updateRecipe: (id: string, data: Partial<Omit<Recipe, 'id'>>) => Promise<void>
@@ -114,6 +117,22 @@ export const useRecipesStore = create<RecipesState>()(
         if (!res.ok) return
         const stats = await res.json() as Record<string, CookStat>
         set({ cookStats: stats })
+      },
+
+      rateRecipe: async (id, score) => {
+        set(s => ({
+          recipes: s.recipes.map(r => r.id === id ? { ...r, myRating: score } : r),
+        }))
+        const res = await authFetch(`/api/recipes/${id}/rating`, {
+          method: 'PATCH',
+          body: JSON.stringify({ score }),
+        })
+        if (res.ok) {
+          const { avgRating } = await res.json() as { avgRating: number; myRating: number }
+          set(s => ({
+            recipes: s.recipes.map(r => r.id === id ? { ...r, avgRating } : r),
+          }))
+        }
       },
 
       logCook: async (id) => {

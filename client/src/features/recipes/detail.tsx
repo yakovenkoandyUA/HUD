@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useRecipesStore } from '@/features/recipes/store/recipesStore'
 import { useProfileStore } from '@/shared/store/profileStore'
@@ -12,7 +12,17 @@ import type { Recipe } from '@/shared/types'
 import { normalizeIngredient } from './utils/normalizeIngredient'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
+import { authFetch } from '@/shared/services/api'
 import styles from './RecipeDetail.module.css'
+
+interface RecipeComment {
+  _id: string
+  userId: string
+  username: string
+  avatarUrl: string | null
+  text: string
+  createdAt: string
+}
 
 /**
  * RecipeDetailScreen
@@ -99,13 +109,15 @@ function scaleAmount(amount: string, factor: number): string {
 const RecipeDetailScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { recipes, wishlistIds, cookStats, toggleWishlist, updateRecipe, deleteRecipe, logCook, fetchCookStats } = useRecipesStore()
+  const { recipes, wishlistIds, cookStats, toggleWishlist, updateRecipe, deleteRecipe, logCook, fetchCookStats, rateRecipe } = useRecipesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const canUseChef = useCanUseFeature('aiChefChat')
   const { addItem: addSprintItem, items: sprintItems } = useSprintStore()
 
   const recipe = recipes.find(r => r.id === id)
+  const isAdmin = activeProfile?.role === 'admin'
+  const canEdit = recipe?.isOwn !== false || isAdmin
   const defaultServings = recipe?.servings ?? 2
   const servings = defaultServings
   const [showEdit, setShowEdit] = useState(false)
@@ -115,24 +127,85 @@ const RecipeDetailScreen: React.FC = () => {
   const [showChef, setShowChef] = useState(false)
 
   const stat = id ? cookStats[id] : undefined
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions'>('ingredients')
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions' | 'comments'>('ingredients')
   const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set())
+  const [cookBannerDismissed, setCookBannerDismissed] = useState(false)
+  const [cookBannerNote, setCookBannerNote] = useState('')
+
+  const [comments, setComments] = useState<RecipeComment[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const [commentText, setCommentText] = useState('')
+  const [commentSubmitting, setCommentSubmitting] = useState(false)
+  const commentInputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => { fetchCookStats() }, [fetchCookStats])
+
+  useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    const load = async () => {
+      setCommentsLoading(true)
+      try {
+        const res = await authFetch(`/api/recipes/${id}/comments`)
+        if (!res.ok || cancelled) return
+        const data = await res.json() as RecipeComment[]
+        if (!cancelled) setComments(data)
+      } finally {
+        if (!cancelled) setCommentsLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [id])
+
+  const handleSubmitComment = async (text: string) => {
+    if (!id || !text.trim()) return
+    setCommentSubmitting(true)
+    try {
+      const res = await authFetch(`/api/recipes/${id}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ text: text.trim() }),
+      })
+      if (!res.ok) { showToast('Помилка збереження', 'error'); return }
+      const created = await res.json() as RecipeComment
+      setComments(prev => [...prev, created])
+    } finally {
+      setCommentSubmitting(false)
+    }
+  }
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!id) return
+    setComments(prev => prev.filter(c => c._id !== commentId))
+    await authFetch(`/api/recipes/${id}/comments/${commentId}`, { method: 'DELETE' })
+  }
 
   const toggleStep = (i: number) =>
     setCheckedSteps(prev => {
       const next = new Set(prev)
-      next.has(i) ? next.delete(i) : next.add(i)
+      if (next.has(i)) {
+        // allow unchecking only the last checked step
+        const maxChecked = Math.max(...Array.from(next))
+        if (i !== maxChecked) return prev
+        next.delete(i)
+      } else {
+        // allow checking only the next sequential step
+        if (i !== prev.size) return prev
+        next.add(i)
+      }
       return next
     })
 
-  const handleLogCook = async () => {
+  const handleLogCook = async (note?: string) => {
     if (!id) return
     await logCook(id)
     useAchievementsStore.getState().unlock('first-recipe-cooked')
     setCookLogged(true)
-    showToast('Записано! Смачного 🍽', 'success')
+    setCookBannerDismissed(true)
+    if (note?.trim()) {
+      await handleSubmitComment(note.trim())
+    }
+    showToast('Записано! Смачного', 'success')
   }
 
   const handleEdit = (data: Omit<Recipe, 'id'>) => {
@@ -202,7 +275,7 @@ const RecipeDetailScreen: React.FC = () => {
           <button type="button" className={styles.backBtn} onClick={() => navigate('/recipes')}>
             <BackIcon />
           </button>
-          {recipe.isOwn !== false && (
+          {canEdit && (
             <div className={styles.heroActions}>
               <button type="button" className={styles.editBtn} onClick={() => setShowEdit(true)} aria-label="Редагувати">
                 <EditIcon />
@@ -246,7 +319,7 @@ const RecipeDetailScreen: React.FC = () => {
           <button type="button" className={styles.backBtnDark} onClick={() => navigate('/recipes')}>
             <BackIcon />
           </button>
-          {recipe.isOwn !== false && (
+          {canEdit && (
             <div className={styles.noHeroActions}>
               <button type="button" className={styles.editBtnDark} onClick={() => setShowEdit(true)} aria-label="Редагувати">
                 <EditIcon />
@@ -350,7 +423,7 @@ const RecipeDetailScreen: React.FC = () => {
           <button
             type="button"
             className={`${styles.actionBtnPrimary} ${styles.actionBtn} ${styles.actionBtnSplit} ${cookLogged ? styles.actionBtnPrimaryDone : ''}`}
-            onClick={handleLogCook}
+            onClick={() => cookLogged ? undefined : handleLogCook()}
             disabled={cookLogged}
           >
             <UtensilsIcon />
@@ -365,6 +438,33 @@ const RecipeDetailScreen: React.FC = () => {
             {new Date(stat.lastCooked).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })}
           </p>
         )}
+
+        {/* Rating */}
+        <div className={styles.ratingRow}>
+          <div className={styles.stars}>
+            {[1, 2, 3, 4, 5].map(n => (
+              <button
+                key={n}
+                type="button"
+                className={`${styles.starBtn} ${n <= (recipe.myRating ?? 0) ? styles.starFilled : ''}`}
+                onClick={() => id && rateRecipe(id, n)}
+                aria-label={`Оцінити ${n}`}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 2l2.7 5.5 6.1.9-4.4 4.3 1.04 6.04L12 15.77l-5.44 2.97 1.04-6.04L3.2 8.4l6.1-.9L12 2z"
+                    stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
+                    fill={n <= (recipe.myRating ?? 0) ? 'currentColor' : 'none'}
+                  />
+                </svg>
+              </button>
+            ))}
+          </div>
+          {recipe.avgRating !== undefined && (
+            <span className={styles.avgRating}>
+              {recipe.avgRating.toFixed(1)}
+            </span>
+          )}
+        </div>
 
         {/* Cooking method */}
         {recipe.cookingMethod && recipe.cookingMethod.length > 0 && (
@@ -398,6 +498,13 @@ const RecipeDetailScreen: React.FC = () => {
                 onClick={() => setActiveTab('instructions')}
               >
                 Приготування
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${activeTab === 'comments' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('comments')}
+              >
+                Нотатки{comments.length > 0 ? ` (${comments.length})` : ''}
               </button>
             </div>
 
@@ -458,14 +565,16 @@ const RecipeDetailScreen: React.FC = () => {
                     {steps.map((step, i) => {
                       const isDone = checkedSteps.has(i)
                       const isNext = i === firstUnchecked
+                      const isLocked = !isDone && !isNext
                       return (
                         <div
                           key={i}
-                          className={`${styles.stepItem} ${isDone ? styles.stepItemDone : ''}`}
+                          className={`${styles.stepItem} ${isDone ? styles.stepItemDone : ''} ${isLocked ? styles.stepItemLocked : ''}`}
                           onClick={() => toggleStep(i)}
                           role="checkbox"
                           aria-checked={isDone}
-                          tabIndex={0}
+                          aria-disabled={isLocked}
+                          tabIndex={isLocked ? -1 : 0}
                           onKeyDown={e => e.key === ' ' && toggleStep(i)}
                         >
                           {i < steps.length - 1 && (
@@ -487,9 +596,109 @@ const RecipeDetailScreen: React.FC = () => {
                       )
                     })}
                   </div>
+
+                  {/* "Приготував?" banner — з'являється коли всі кроки виконані */}
+                  {allDone && !cookBannerDismissed && (
+                    <div className={styles.cookBanner}>
+                      <p className={styles.cookBannerTitle}>Готово!</p>
+                      <p className={styles.cookBannerSub}>Записати приготування та залишити нотатку?</p>
+                      <textarea
+                        className={styles.cookBannerInput}
+                        placeholder="Що змінив, як вийшло... (необов'язково)"
+                        value={cookBannerNote}
+                        onChange={e => setCookBannerNote(e.target.value)}
+                        rows={2}
+                      />
+                      <div className={styles.cookBannerActions}>
+                        <button
+                          type="button"
+                          className={styles.cookBannerSkip}
+                          onClick={() => setCookBannerDismissed(true)}
+                        >
+                          Пропустити
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.cookBannerConfirm}
+                          onClick={() => handleLogCook(cookBannerNote)}
+                        >
+                          <UtensilsIcon /> Записати
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })()}
+
+            {/* Comments tab */}
+            {activeTab === 'comments' && (
+              <div className={styles.section}>
+                {commentsLoading ? (
+                  <p className={styles.commentsEmpty}>Завантаження...</p>
+                ) : comments.length === 0 ? (
+                  <p className={styles.commentsEmpty}>Нотаток ще немає. Поділись враженнями або твістом рецепту!</p>
+                ) : (
+                  <ul className={styles.commentList}>
+                    {comments.map(c => (
+                      <li key={c._id} className={styles.commentItem}>
+                        <div className={styles.commentAvatar}>
+                          {c.avatarUrl
+                            ? <img src={c.avatarUrl} alt={c.username} className={styles.commentAvatarImg} />
+                            : <span className={styles.commentAvatarInitial}>{(c.username ?? '?')[0].toUpperCase()}</span>
+                          }
+                        </div>
+                        <div className={styles.commentBody}>
+                          <div className={styles.commentMeta}>
+                            <span className={styles.commentAuthor}>{c.username}</span>
+                            <span className={styles.commentDate}>
+                              {new Date(c.createdAt).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
+                            </span>
+                            {activeProfile && c.userId === (activeProfile as { id?: string; _id?: string }).id && (
+                              <button
+                                type="button"
+                                className={styles.commentDelete}
+                                onClick={() => handleDeleteComment(c._id)}
+                                aria-label="Видалити"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path d="M1.5 3h9M5 3V2h2v1M2.5 3l.7 7h5.6l.7-7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                          <p className={styles.commentText}>{c.text}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className={styles.commentForm}>
+                  <textarea
+                    ref={commentInputRef}
+                    className={styles.commentInput}
+                    placeholder="Твій твіст, враження, порада..."
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                    rows={2}
+                  />
+                  <button
+                    type="button"
+                    className={styles.commentSubmit}
+                    disabled={!commentText.trim() || commentSubmitting}
+                    onClick={async () => {
+                      await handleSubmitComment(commentText)
+                      setCommentText('')
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M14 8H2M14 8L9 3M14 8L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 

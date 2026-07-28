@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSwipeTabs } from '@/shared/hooks/useSwipeTabs'
 import RecipeCard from './components/recipes/RecipeCard'
@@ -49,6 +49,8 @@ const Recipes: React.FC = () => {
   const [savedOnly, setSavedOnly]         = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showIngredientSearch, setShowIngredientSearch] = useState(false)
+  const [slideDir, setSlideDir] = useState<'left' | 'right'>('right')
+  const [slideKey, setSlideKey] = useState(0)
 
   const scopeIndex = scopeOrder.indexOf(scope) === -1 ? 0 : scopeOrder.indexOf(scope)
   const swipeRef = useSwipeTabs({
@@ -66,6 +68,10 @@ const Recipes: React.FC = () => {
   }, [hasFamily, scope, setScope])
 
   const handleScopeChange = (next: RecipeScope) => {
+    const prevIdx = scopeOrder.indexOf(scope)
+    const nextIdx = scopeOrder.indexOf(next)
+    setSlideDir(nextIdx > prevIdx ? 'right' : 'left')
+    setSlideKey(k => k + 1)
     setSavedOnly(false)
     setSelectedCategory(null)
     setScope(next)
@@ -175,34 +181,37 @@ const Recipes: React.FC = () => {
         </div>
       </div>
 
-      <div className={styles.content}>
-
-        {/* ── Category chips ── */}
-        {categoryChips.length > 1 && (
-          <div className={styles.tagsFilter}>
+      {/* ── Category chips — outside scrollable content to avoid overflow clipping ── */}
+      {categoryChips.length > 1 && (
+        <div className={styles.tagsFilter}>
+          <button
+            type="button"
+            className={`${styles.tagChip} ${selectedCategory === null ? styles.tagChipActive : ''}`}
+            onClick={() => setSelectedCategory(null)}
+          >
+            Всі
+          </button>
+          {categoryChips.map(cat => (
             <button
+              key={cat}
               type="button"
-              className={`${styles.tagChip} ${selectedCategory === null ? styles.tagChipActive : ''}`}
-              onClick={() => setSelectedCategory(null)}
+              className={`${styles.tagChip} ${selectedCategory === cat ? styles.tagChipActive : ''}`}
+              onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
             >
-              Всі
+              {cat}
             </button>
-            {categoryChips.map(cat => (
-              <button
-                key={cat}
-                type="button"
-                className={`${styles.tagChip} ${selectedCategory === cat ? styles.tagChipActive : ''}`}
-                onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
+      )}
+
+      <div className={styles.content}>
 
         {/* ── Grid ── */}
         {visibleRecipes.length === 0 ? (
-          <div className={styles.ghostGrid}>
+          <div
+            key={slideKey}
+            className={`${styles.ghostGrid} ${slideDir === 'right' ? styles.recipeGridRight : styles.recipeGridLeft}`}
+          >
             {Array.from({ length: GHOST_COUNT }).map((_, i) => (
               <div key={i} className={styles.ghostCard}>
                 <div className={styles.ghostPhoto} />
@@ -218,7 +227,10 @@ const Recipes: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className={styles.recipeGrid}>
+          <div
+            key={slideKey}
+            className={`${styles.recipeGrid} ${slideDir === 'right' ? styles.recipeGridRight : styles.recipeGridLeft}`}
+          >
             {visibleRecipes.map((r) => (
               <RecipeCard
                 key={r.id}

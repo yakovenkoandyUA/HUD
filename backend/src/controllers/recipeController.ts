@@ -21,7 +21,15 @@ export async function getAll(req: Request, res: Response): Promise<void> {
   const items = await Recipe.find(filter).sort({ createdAt: -1 })
 
   if (scope === 'mine') {
-    res.json(items)
+    const mineResult = items.map(r => {
+      const ratings = r.ratings ?? []
+      const avgRating = ratings.length
+        ? Math.round((ratings.reduce((s, rt) => s + rt.score, 0) / ratings.length) * 10) / 10
+        : undefined
+      const myRating = ratings.find(rt => rt.userId === myId)?.score
+      return { ...r.toObject(), avgRating, myRating }
+    })
+    res.json(mineResult)
     return
   }
 
@@ -34,11 +42,18 @@ export async function getAll(req: Request, res: Response): Promise<void> {
 
   const result = items.map(r => {
     const owner = ownerMap.get(r.userId)
+    const ratings = r.ratings ?? []
+    const avgRating = ratings.length
+      ? Math.round((ratings.reduce((s, rt) => s + rt.score, 0) / ratings.length) * 10) / 10
+      : undefined
+    const myRating = ratings.find(rt => rt.userId === myId)?.score
     return {
       ...r.toObject(),
-      ownerName:     owner?.name ?? owner?.username ?? null,
+      ownerName:      owner?.name ?? owner?.username ?? null,
       ownerAvatarUrl: owner?.avatarUrl ?? null,
-      isOwn:         r.userId === myId,
+      isOwn:          r.userId === myId,
+      avgRating,
+      myRating,
     }
   })
 
@@ -56,17 +71,19 @@ export async function create(req: Request, res: Response): Promise<void> {
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
-  const item = await Recipe.findOneAndUpdate(
-    { _id: req.params.id, userId: req.userId },
-    req.body,
-    { new: true }
-  )
+  const filter = req.userRole === 'admin'
+    ? { _id: req.params.id }
+    : { _id: req.params.id, userId: req.userId }
+  const item = await Recipe.findOneAndUpdate(filter, req.body, { new: true })
   if (!item) { res.status(404).json({ error: 'Not found' }); return }
   res.json(item)
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
-  await Recipe.findOneAndDelete({ _id: req.params.id, userId: req.userId })
+  const filter = req.userRole === 'admin'
+    ? { _id: req.params.id }
+    : { _id: req.params.id, userId: req.userId }
+  await Recipe.findOneAndDelete(filter)
   res.status(204).end()
 }
 
@@ -140,6 +157,28 @@ instructions — масив рядків, кожен елемент один к�
   } catch {
     res.status(500).json({ error: 'Помилка генерації рецепту' })
   }
+}
+
+export async function rateRecipe(req: Request, res: Response): Promise<void> {
+  const { score } = req.body as { score: number }
+  if (!score || score < 1 || score > 5) {
+    res.status(400).json({ error: 'score must be 1–5' })
+    return
+  }
+  const recipe = await Recipe.findById(req.params.id)
+  if (!recipe) { res.status(404).json({ error: 'Not found' }); return }
+
+  const idx = recipe.ratings.findIndex(r => r.userId === req.userId)
+  if (idx >= 0) {
+    recipe.ratings[idx].score = score
+  } else {
+    recipe.ratings.push({ userId: req.userId as string, score })
+  }
+  await recipe.save()
+
+  const ratings = recipe.ratings
+  const avgRating = Math.round((ratings.reduce((s, r) => s + r.score, 0) / ratings.length) * 10) / 10
+  res.json({ avgRating, myRating: score })
 }
 
 export async function logCook(req: Request, res: Response): Promise<void> {

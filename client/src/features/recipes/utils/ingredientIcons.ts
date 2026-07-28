@@ -138,7 +138,7 @@ const ICON_MAP: Array<[string, string, string]> = [
   ['пирог',     'Pie',            'pie'],
   ['печиво',    'Cookie',         'cookie'],
   ['морозив',   'Ice cream',      'ice_cream'],
-  ['цукор',     'Honey pot',      'honey_pot'],
+  ['цукор',     'Jar',            'jar'],
   ['цукерк',    'Candy',          'candy'],
   ['мармелад',  'Candy',          'candy'],
   ['варення',   'Honey pot',      'honey_pot'],

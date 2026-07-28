@@ -183,6 +183,8 @@ export interface Recipe {
   ownerName?: string
   ownerAvatarUrl?: string | null
   isOwn?: boolean
+  avgRating?: number
+  myRating?: number
 }
 
 export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'

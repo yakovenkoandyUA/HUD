@@ -1,5 +1,10 @@
 import { Schema, model, Document } from 'mongoose'
 
+export interface IRecipeRating {
+  userId: string
+  score: number
+}
+
 export interface IRecipe extends Document {
   title: string
   ingredients: (string | { name: string; amount: string; unit: string })[]
@@ -16,6 +21,7 @@ export interface IRecipe extends Document {
   equipment?: string[]
   cookingMethod?: string[]
   tags?: string[]
+  ratings: IRecipeRating[]
 }
 
 const schema = new Schema<IRecipe>({
@@ -34,6 +40,7 @@ const schema = new Schema<IRecipe>({
   equipment:      { type: [String], default: [] },
   cookingMethod:  { type: [String], default: [] },
   tags:           { type: [String], default: [] },
+  ratings:        { type: [{ userId: String, score: Number }], default: [] },
 }, { timestamps: true })
 
 export default model<IRecipe>('Recipe', schema)
