@@ -13,28 +13,63 @@
   gap: 16px;
 }
 
+/* ── Ring button (кружечок, кліковий для upload) ── */
+.ringBtn {
+  position: relative;
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ringBtn:disabled { cursor: default; }
+
+.ringPhoto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .ring {
+  position: relative;
+  z-index: 1;
   flex-shrink: 0;
 }
 
+/* Upload hint icon — знизу праворуч */
+.ringUploadHint {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Info beside ring ── */
 .heroInfo {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.heroTitle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.emoji {
-  font-size: 20px;
-  flex-shrink: 0;
 }
 
 .name {

@@ -122,8 +122,31 @@
 }
 .goalCard:hover { border-color: var(--accent); }
 
-.ring {
+.ringWrap {
+  position: relative;
   flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.thumbImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ring {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ringOnThumb {
+  position: absolute;
+  inset: 0;
 }
 
 /* ── Centre info ── */

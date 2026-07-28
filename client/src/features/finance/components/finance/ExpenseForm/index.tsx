@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import Input from '@/shared/components/ui/Input'
 import Button from '@/shared/components/ui/Button'
 import ReceiptScanner from '../ReceiptScanner'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
+import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { INCOME_ONLY_NAMES } from '@/features/finance/constants'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
@@ -38,7 +39,8 @@ const CameraIcon: React.FC = () => (
 const VISIBLE_CATS = 10
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
-  const { categories, fetchCategories, categoryUsage, trackCategoryUsage } = useCategoryStore()
+  const { categories, fetchCategories, trackCategoryUsage } = useCategoryStore()
+  const transactions = useFinanceStore(s => s.transactions)
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const canScan = useCanUseFeature('receiptScanner')
@@ -63,12 +65,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
+  const catFrequency = useMemo(() => {
+    const freq: Record<string, number> = {}
+    for (const tx of transactions) {
+      if (tx.type === 'expense' && tx.category) {
+        const name = tx.category.toLowerCase()
+        freq[name] = (freq[name] ?? 0) + 1
+      }
+    }
+    return freq
+  }, [transactions])
+
   const activeCategories = categories.filter(c => c.isActive)
   const parentCats = activeCategories
     .filter(c => !c.parentId)
     .filter(c => !INCOME_ONLY_NAMES.has(c.name.toLowerCase()))
     .slice()
-    .sort((a, b) => (categoryUsage[b._id] ?? 0) - (categoryUsage[a._id] ?? 0))
+    .sort((a, b) => (catFrequency[b.name.toLowerCase()] ?? 0) - (catFrequency[a.name.toLowerCase()] ?? 0))
   const selectedCat      = parentCats.find(c => c._id === selectedCatId) ?? null
   const subCats          = selectedCatId
     ? activeCategories.filter(c => c.parentId === selectedCatId)

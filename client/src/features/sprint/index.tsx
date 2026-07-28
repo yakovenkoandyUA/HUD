@@ -24,7 +24,7 @@ import { MIMIR_DIALOGUE, getMimirText, type MimirDialogueId } from '@/shared/dat
 import { getMimirHistory, isDailyEligible, isWeeklyEligible, markDailyShown, markWeeklyShown, getTodayIso } from '@/shared/utils/mimirHistory'
 import styles from './Sprint.module.css'
 
-type FilterType   = 'task' | 'shopping'
+type FilterType   = 'all' | 'shopping'
 type StatusFilter = 'active' | 'done'
 
 const GHOST_HINT_LIMIT     = 1
@@ -70,7 +70,7 @@ const Sprint: React.FC = () => {
 	const [searchParams] = useSearchParams()
 	const locationState = location.state as { selectedDay?: string; filterType?: FilterType } | null
 
-	const [filterType, setFilterType]   = useState<FilterType>(locationState?.filterType ?? 'task')
+	const [filterType, setFilterType]   = useState<FilterType>(locationState?.filterType === 'shopping' ? 'shopping' : 'all')
 	const [filterStatus, setFilterStatus] = useState<StatusFilter>('active')
 
 	// "Заморожуємо" рішення показувати підказку на момент монтування — інакше інкремент
@@ -191,7 +191,6 @@ const Sprint: React.FC = () => {
 
 	const filteredItems = items.filter(t => {
 		if (isRecurring(t)) return false
-		if (filterType === 'task'     && t.type === 'shopping') return false
 		if (filterType === 'shopping' && t.type !== 'shopping') return false
 		if (filterStatus === 'active') return !t.done
 		if (filterStatus === 'done')   return t.done
@@ -208,7 +207,6 @@ const Sprint: React.FC = () => {
 			...routineItems.filter(t => isRoutineDueOnDay(t, selectedDate)),
 			...items.filter(t => {
 				if (isRecurring(t)) return false
-				if (filterType === 'task'     && t.type === 'shopping') return false
 				if (filterType === 'shopping' && t.type !== 'shopping') return false
 				return t.dueDate === selectedDay
 			}),
@@ -258,7 +256,7 @@ const Sprint: React.FC = () => {
 		? dayQuests.slice(0, doneVisibleCount)
 		: dayQuests.slice(0, activeVisibleCount)
 
-	const showSwipeGhost = ghostHintEligible && !sprintTutorialSeen && isDayToday && filterType === 'task' && filterStatus === 'active'
+	const showSwipeGhost = ghostHintEligible && !sprintTutorialSeen && isDayToday && filterType !== 'shopping' && filterStatus === 'active'
 
 	// ── Drag-to-reorder ───────────────────────────────────────────────────────
 	const {
@@ -355,38 +353,34 @@ const Sprint: React.FC = () => {
 					)
 				})()}
 
-				{/* ── Tab bar ── */}
-				{dayHasAnyItems && (
-					<div className={styles.tabBar}>
-						{(['task', 'shopping'] as const).map(type => (
-							<button
-								key={type}
-								className={`${styles.tab} ${filterType === type ? styles.tabActive : ''}`}
-								onClick={() => setFilterType(type)}
-							>
-								{type === 'task' ? 'КВЕСТИ' : 'ПОКУПКИ'}
-							</button>
-						))}
-					</div>
-				)}
-
 				{/* ── Status row ── */}
 				<div className={styles.statusRow}>
-					{isDayToday && (
-						<div className={styles.statusLeft}>
-							{(['active', 'done'] as const).map((status, i) => (
-								<React.Fragment key={status}>
-									{i > 0 && <span className={styles.statusSep}>·</span>}
-									<button
-										className={`${styles.statusBtn} ${filterStatus === status ? styles.statusBtnActive : ''}`}
-										onClick={() => setFilterStatus(status)}
-									>
-										{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
-									</button>
-								</React.Fragment>
-							))}
-						</div>
-					)}
+					<div className={styles.statusLeft}>
+						{isDayToday && (['active', 'done'] as const).map((status, i) => (
+							<React.Fragment key={status}>
+								{i > 0 && <span className={styles.statusSep}>·</span>}
+								<button
+									className={`${styles.statusBtn} ${filterStatus === status ? styles.statusBtnActive : ''}`}
+									onClick={() => setFilterStatus(status)}
+								>
+									{status === 'active' ? 'АКТИВНІ' : 'ЗАВЕРШЕНІ'}
+								</button>
+							</React.Fragment>
+						))}
+					</div>
+					<div className={styles.statusLeft}>
+						{(['all', 'shopping'] as const).map((type, i) => (
+							<React.Fragment key={type}>
+								{i > 0 && <span className={styles.statusSep}>·</span>}
+								<button
+									className={`${styles.statusBtn} ${filterType === type ? styles.statusBtnActive : ''}`}
+									onClick={() => setFilterType(type)}
+								>
+									{type === 'all' ? 'КВЕСТИ' : 'ПОКУПКИ'}
+								</button>
+							</React.Fragment>
+						))}
+					</div>
 				</div>
 
 				{/* ── Sprint Mimir dialogues ────────────────────────────────────────────── */}
@@ -463,7 +457,7 @@ const Sprint: React.FC = () => {
 										onToggle={() => toggleItem(t.id)}
 										onDelete={() => deleteItem(t.id)}
 										onOpenDetail={() => setDetailTaskId(t.id)}
-										onDragHandlePointerDown={filterType === 'task' && filterStatus === 'active' ? (e) => handleDragHandlePointerDown(i, e) : undefined}
+										onDragHandlePointerDown={filterType !== 'shopping' && filterStatus === 'active' ? (e) => handleDragHandlePointerDown(i, e) : undefined}
 										isDragging={dragFromIndex === i}
 										isDragOver={dragOverIndex === i && dragFromIndex !== null && dragFromIndex !== i}
 									/>

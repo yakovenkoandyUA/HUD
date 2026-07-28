@@ -1,20 +1,21 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import type { Goal } from '@/shared/types'
 import { useGoalsStore } from '@/features/finance/store/goalsStore'
+import { useUiStore } from '@/shared/store/uiStore'
+import { useImageUpload } from '@/shared/hooks/useImageUpload'
 import { fmt } from '../../../utils/finance'
 import Modal from '@/shared/components/ui/Modal'
-import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import styles from './GoalDetail.module.css'
 
 /**
  * GoalDetail
  * ----------
- * Модалка деталей цілі накопичення: зображення, кільце прогресу 96px,
- * форма поповнення, список депозитів, прогноз та видалення.
+ * Модалка деталей цілі: кружечок прогресу з фото, форма поповнення,
+ * список депозитів, прогноз, видалення.
  *
  * Props:
- * @prop {Goal}        goal    — ціль з goalsStore (реактивна — оновлюється після contribute)
- * @prop {boolean}     isOpen  — контролює анімацію відкриття/закриття Modal
+ * @prop {Goal}        goal    — ціль з goalsStore
+ * @prop {boolean}     isOpen  — контролює анімацію
  * @prop {() => void}  onClose — закрити модалку
  */
 interface GoalDetailProps {
@@ -24,10 +25,11 @@ interface GoalDetailProps {
 }
 
 const R    = 40
-const SW   = 8
+const SW   = 7
 const CX   = 48
 const CY   = 48
 const CIRC = 2 * Math.PI * R
+const INNER_R = R - SW / 2 - 1
 
 function calcForecast(goal: Goal): string {
   if (!goal.deposits || goal.deposits.length === 0) return ''
@@ -47,9 +49,19 @@ function calcForecast(goal: Goal): string {
 
 const GoalDetail: React.FC<GoalDetailProps> = ({ goal, isOpen, onClose }) => {
   const { contribute, updateImage, deleteGoal } = useGoalsStore()
+  const { showToast } = useUiStore()
   const [contribAmount, setContribAmount] = useState('')
   const [contribError, setContribError]   = useState<string | undefined>()
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const { trigger, uploading, error: uploadError, inputElement } = useImageUpload(
+    'mimir/goals',
+    (url) => { updateImage(goal.id, url); showToast('Фото оновлено', 'success') }
+  )
+
+  useEffect(() => {
+    if (uploadError) showToast('Помилка завантаження', 'error')
+  }, [uploadError, showToast])
 
   const pct    = goal.targetAmount > 0
     ? Math.min(Math.round((goal.currentAmount / goal.targetAmount) * 100), 100)
@@ -83,43 +95,63 @@ const GoalDetail: React.FC<GoalDetailProps> = ({ goal, isOpen, onClose }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} draggable>
       <div className={styles.wrap}>
-
-        <ImageUploadButton
-          currentUrl={goal.imageUrl || ''}
-          folder="mimir/goals"
-          onUpload={url => updateImage(goal.id, url)}
-          placeholder="Додати фото цілі"
-          variant="wide"
-        />
+        {inputElement}
 
         <div className={styles.hero}>
-          <svg width="96" height="96" viewBox="0 0 96 96" className={styles.ring}>
-            <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--border2)" strokeWidth={SW} />
-            <circle
-              cx={CX} cy={CY} r={R}
-              fill="none" stroke={color} strokeWidth={SW}
-              strokeDasharray={CIRC}
-              strokeDashoffset={offset}
-              strokeLinecap="round"
-              transform={`rotate(-90 ${CX} ${CY})`}
-            />
-            <text
-              x={CX} y={CY + 5}
-              textAnchor="middle"
-              fill={color}
-              fontSize="14"
-              fontFamily="var(--font-mono)"
-              fontWeight="700"
-            >
-              {pct}%
-            </text>
-          </svg>
+          {/* ── Ring з фото всередині ── */}
+          <button
+            type="button"
+            className={styles.ringBtn}
+            onClick={trigger}
+            disabled={uploading}
+            aria-label="Змінити фото"
+            title={goal.imageUrl ? 'Змінити фото' : 'Додати фото'}
+          >
+            {goal.imageUrl && (
+              <img src={goal.imageUrl} alt="" className={styles.ringPhoto} />
+            )}
+            <svg width="96" height="96" viewBox="0 0 96 96" className={styles.ring}>
+              <defs>
+                <clipPath id={`goal-clip-${goal.id}`}>
+                  <circle cx={CX} cy={CY} r={INNER_R} />
+                </clipPath>
+              </defs>
+              <circle cx={CX} cy={CY} r={R} fill="none"
+                stroke={goal.imageUrl ? 'rgba(0,0,0,0.25)' : 'var(--border2)'}
+                strokeWidth={SW}
+              />
+              <circle
+                cx={CX} cy={CY} r={R}
+                fill="none" stroke={color} strokeWidth={SW}
+                strokeDasharray={CIRC}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                transform={`rotate(-90 ${CX} ${CY})`}
+              />
+              <text
+                x={CX} y={CY + 5}
+                textAnchor="middle"
+                fill={goal.imageUrl ? '#fff' : color}
+                fontSize="14"
+                fontFamily="var(--font-mono)"
+                fontWeight="700"
+                style={{ textShadow: goal.imageUrl ? '0 1px 3px rgba(0,0,0,0.7)' : undefined }}
+              >
+                {uploading ? '...' : `${pct}%`}
+              </text>
+            </svg>
+            {!goal.imageUrl && (
+              <div className={styles.ringUploadHint}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 2v8M4 6l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 13h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+            )}
+          </button>
 
           <div className={styles.heroInfo}>
-            <div className={styles.heroTitle}>
-              {goal.emoji && <span className={styles.emoji}>{goal.emoji}</span>}
-              <span className={styles.name}>{goal.title}</span>
-            </div>
+            <span className={styles.name}>{goal.title}</span>
             <div className={styles.amounts}>
               <span className={styles.current}>{fmt(goal.currentAmount)} ₴</span>
               <span className={styles.sep}>/</span>

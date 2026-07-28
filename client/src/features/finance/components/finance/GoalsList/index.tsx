@@ -50,27 +50,32 @@ const GoalRow: React.FC<GoalRowProps> = ({
         tabIndex={0}
         onKeyDown={e => e.key === 'Enter' && onOpen()}
       >
-        <svg width="48" height="48" viewBox="0 0 48 48" className={styles.ring}>
-          <circle cx={CX} cy={CY} r={R} fill="none" stroke="var(--border2)" strokeWidth={SW} />
-          <circle
-            cx={CX} cy={CY} r={R}
-            fill="none" stroke={ringColor} strokeWidth={SW}
-            strokeDasharray={CIRC}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-            transform={`rotate(-90 ${CX} ${CY})`}
-          />
-          <text
-            x={CX} y={CY + 4}
-            textAnchor="middle"
-            fill={ringColor}
-            fontSize="10"
-            fontFamily="var(--font-mono)"
-            fontWeight="700"
-          >
-            {pct}%
-          </text>
-        </svg>
+        <div className={styles.ringWrap}>
+          {goal.imageUrl && (
+            <img src={goal.imageUrl} alt="" className={styles.thumbImg} />
+          )}
+          <svg width="48" height="48" viewBox="0 0 48 48" className={`${styles.ring} ${goal.imageUrl ? styles.ringOnThumb : ''}`}>
+            <circle cx={CX} cy={CY} r={R} fill="none" stroke={goal.imageUrl ? 'rgba(0,0,0,0.35)' : 'var(--border2)'} strokeWidth={SW} />
+            <circle
+              cx={CX} cy={CY} r={R}
+              fill="none" stroke={ringColor} strokeWidth={SW}
+              strokeDasharray={CIRC}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              transform={`rotate(-90 ${CX} ${CY})`}
+            />
+            <text
+              x={CX} y={CY + 4}
+              textAnchor="middle"
+              fill={goal.imageUrl ? '#fff' : ringColor}
+              fontSize="10"
+              fontFamily="var(--font-mono)"
+              fontWeight="700"
+            >
+              {pct}%
+            </text>
+          </svg>
+        </div>
 
         <div className={styles.goalInfo}>
           <div className={styles.goalHeader}>

@@ -494,6 +494,21 @@ const RecurringPayments: React.FC = () => {
         {/* Fix 1: key forces form DOM reset when switching between payments */}
         <form key={editPayment?._id ?? ''} onSubmit={handleEdit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {formFields(false)}
+          {editPayment && editPayment.dayOfMonth <= today && editPayment.lastConfirmedMonth !== currentMonth && (
+            <button
+              type="button"
+              className={styles.writeOffBtn}
+              onClick={async () => {
+                await handleConfirm(editPayment)
+                setEditPayment(null)
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Списати заднім числом
+            </button>
+          )}
           <div className={styles.formActions}>
             <button type="submit" className={styles.submitBtn} disabled={saving}>Зберегти</button>
             <button type="button" className={styles.deleteBtn} onClick={handleDelete}>Видалити</button>

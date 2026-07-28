@@ -245,7 +245,7 @@ const Dashboard: React.FC = () => {
             meals={todayMeals.map(r => r.title)}
             notesCount={notes.length}
             latestNoteDate={latestNoteDate}
-            onQuestsClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'task' } })}
+            onQuestsClick={() => navigate('/sprint', { state: { selectedDay: today } })}
             onShoppingClick={() => navigate('/sprint', { state: { selectedDay: today, filterType: 'shopping' } })}
             onMealsClick={() => todayMeals.length === 1
               ? navigate(`/recipes/${todayMeals[0].id}`)

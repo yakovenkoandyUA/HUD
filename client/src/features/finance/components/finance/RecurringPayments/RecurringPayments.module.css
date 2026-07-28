@@ -354,6 +354,27 @@
 }
 .deleteBtn:hover { color: var(--accent); border-color: var(--accent); }
 
+.writeOffBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.writeOffBtn:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+}
+
 /* ── Skeleton ── */
 @keyframes shimmer {
   0%   { background-position: -200px 0; }
