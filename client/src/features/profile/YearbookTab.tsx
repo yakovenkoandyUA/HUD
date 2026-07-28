@@ -290,6 +290,14 @@ const YearbookTab: React.FC = () => {
           {/* ── 2. Подорожі ── */}
           {hasTravelData && (
             <div className={`${styles.section} ${styles.sectionTravel}`}>
+              {/* horizon arc motif */}
+              <svg className={styles.sectionMotif} viewBox="0 0 240 240" fill="none" aria-hidden="true">
+                <path d="M20 180 Q120 60 220 180" stroke="currentColor" strokeWidth="1" opacity="0.6"/>
+                <path d="M40 200 Q120 90 200 200" stroke="currentColor" strokeWidth="0.8" opacity="0.4"/>
+                <path d="M0 220 Q120 120 240 220" stroke="currentColor" strokeWidth="0.6" opacity="0.25"/>
+                <circle cx="120" cy="100" r="4" fill="currentColor" opacity="0.5"/>
+                <line x1="120" y1="60" x2="120" y2="96" stroke="currentColor" strokeWidth="0.8" opacity="0.4"/>
+              </svg>
               <div className={styles.sectionInner}>
                 <span className={styles.eyebrow}>ПОДОРОЖІ</span>
                 {s.placesVisitedCount > 0 ? (
@@ -322,6 +330,16 @@ const YearbookTab: React.FC = () => {
           {/* ── 3. Медіа ── */}
           {hasMediaData && (
             <div className={`${styles.section} ${styles.sectionMedia}`}>
+              {/* film reel motif */}
+              <svg className={styles.sectionMotif} viewBox="0 0 240 240" fill="none" aria-hidden="true">
+                <circle cx="120" cy="120" r="90" stroke="currentColor" strokeWidth="1" opacity="0.5"/>
+                <circle cx="120" cy="120" r="55" stroke="currentColor" strokeWidth="0.8" opacity="0.4"/>
+                <circle cx="120" cy="120" r="18" stroke="currentColor" strokeWidth="1" opacity="0.6"/>
+                {[0,60,120,180,240,300].map(a => {
+                  const r1=58, r2=87, ra=a*Math.PI/180
+                  return <line key={a} x1={120+r1*Math.cos(ra)} y1={120+r1*Math.sin(ra)} x2={120+r2*Math.cos(ra)} y2={120+r2*Math.sin(ra)} stroke="currentColor" strokeWidth="0.8" opacity="0.4"/>
+                })}
+              </svg>
               <div className={styles.sectionInner}>
                 <span className={styles.eyebrow}>МЕДІА</span>
                 <div className={styles.statBlock}>
@@ -340,6 +358,12 @@ const YearbookTab: React.FC = () => {
           {/* ── 4. Кухня ── */}
           {hasFoodData && (
             <div className={`${styles.section} ${styles.sectionFood}`}>
+              {/* alchemical flame / ritual motif */}
+              <svg className={styles.sectionMotif} viewBox="0 0 240 240" fill="none" aria-hidden="true">
+                <ellipse cx="120" cy="185" rx="52" ry="12" stroke="currentColor" strokeWidth="0.8" opacity="0.35"/>
+                <path d="M120 170 C90 140 80 110 100 80 C105 95 110 100 120 90 C115 115 130 125 125 155 C135 130 145 105 135 70 C160 100 165 140 145 165 C160 155 165 140 160 120 C175 145 170 175 150 185 C145 192 135 195 120 195 C105 195 95 192 90 185 C70 175 65 145 80 120 C75 140 80 155 95 165 C75 140 80 100 105 80 C95 110 100 140 120 170Z" stroke="currentColor" strokeWidth="0.8" opacity="0.5"/>
+                <circle cx="120" cy="130" r="20" stroke="currentColor" strokeWidth="0.6" opacity="0.3"/>
+              </svg>
               <div className={styles.sectionInner}>
                 <span className={styles.eyebrow}>КУХНЯ</span>
                 <div className={styles.statBlock}>
@@ -356,6 +380,14 @@ const YearbookTab: React.FC = () => {
           {/* ── 5. F1 ── */}
           {hasF1Data && s.f1 && (
             <div className={`${styles.section} ${styles.sectionF1}`}>
+              {/* race track / starting grid motif */}
+              <svg className={styles.sectionMotif} viewBox="0 0 240 240" fill="none" aria-hidden="true">
+                <path d="M30 160 Q30 60 120 60 Q210 60 210 120 Q210 200 120 200 Q60 200 50 160" stroke="currentColor" strokeWidth="1.2" opacity="0.5" strokeLinecap="round"/>
+                <path d="M55 160 Q55 85 120 85 Q185 85 185 120 Q185 175 120 175 Q75 175 65 155" stroke="currentColor" strokeWidth="0.7" opacity="0.3" strokeLinecap="round"/>
+                {[0,1,2,3,4].map(i => (
+                  <line key={i} x1={28+i*8} y1={145} x2={28+i*8} y2={175} stroke="currentColor" strokeWidth="0.8" opacity={i%2===0?0.5:0.25}/>
+                ))}
+              </svg>
               <div className={styles.sectionInner}>
                 <span className={styles.eyebrow}>ФОРМУЛА 1</span>
                 <div className={styles.statBlock}>
@@ -372,6 +404,16 @@ const YearbookTab: React.FC = () => {
           {/* ── 6. Авто ── */}
           {s.vehicleStats && (
             <div className={`${styles.section} ${styles.sectionVehicle}`}>
+              {/* wheel sigil motif */}
+              <svg className={styles.sectionMotif} viewBox="0 0 240 240" fill="none" aria-hidden="true">
+                <circle cx="120" cy="120" r="95" stroke="currentColor" strokeWidth="1" opacity="0.45"/>
+                <circle cx="120" cy="120" r="65" stroke="currentColor" strokeWidth="0.7" opacity="0.3"/>
+                <circle cx="120" cy="120" r="22" stroke="currentColor" strokeWidth="1" opacity="0.5"/>
+                {[0,45,90,135,180,225,270,315].map(a => {
+                  const ra=a*Math.PI/180
+                  return <line key={a} x1={120+24*Math.cos(ra)} y1={120+24*Math.sin(ra)} x2={120+63*Math.cos(ra)} y2={120+63*Math.sin(ra)} stroke="currentColor" strokeWidth="0.8" opacity="0.35"/>
+                })}
+              </svg>
               <div className={styles.sectionInner}>
                 <span className={styles.eyebrow}>АВТО</span>
                 <div className={styles.statBlock}>
@@ -390,6 +432,18 @@ const YearbookTab: React.FC = () => {
 
           {/* ── 7. Фінанси ── */}
           <div className={`${styles.section} ${styles.sectionFinance} ${styles.sectionLast}`}>
+            {/* ledger / balance sigil motif */}
+            <svg className={styles.sectionMotif} viewBox="0 0 240 240" fill="none" aria-hidden="true">
+              {[60,90,120,150,180].map((y, i) => (
+                <line key={y} x1={30} y1={y} x2={i===2?210:i<2?180:160} y2={y} stroke="currentColor" strokeWidth={i===2?1:0.7} opacity={i===2?0.55:0.3}/>
+              ))}
+              <line x1="120" y1="45" x2="120" y2="195" stroke="currentColor" strokeWidth="0.8" opacity="0.35"/>
+              <circle cx="120" cy="45" r="8" stroke="currentColor" strokeWidth="0.8" opacity="0.4"/>
+              <line x1="80" y1="55" x2="120" y2="45" stroke="currentColor" strokeWidth="0.7" opacity="0.3"/>
+              <line x1="160" y1="55" x2="120" y2="45" stroke="currentColor" strokeWidth="0.7" opacity="0.3"/>
+              <ellipse cx="80" cy="62" rx="16" ry="6" stroke="currentColor" strokeWidth="0.7" opacity="0.35"/>
+              <ellipse cx="160" cy="62" rx="16" ry="6" stroke="currentColor" strokeWidth="0.7" opacity="0.35"/>
+            </svg>
             <div className={styles.sectionInner}>
               <span className={styles.eyebrow}>ФІНАНСИ</span>
               <div className={styles.statBlock}>
