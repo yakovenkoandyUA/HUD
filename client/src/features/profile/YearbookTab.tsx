@@ -187,11 +187,15 @@ const YearbookTab: React.FC = () => {
       {/* ── Not generated yet ── */}
       {!loading && notGenerated && !report && (
         <div className={styles.empty}>
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true" className={styles.emptyIcon}>
-            <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="1.4"/>
-            <path d="M16 10v6M16 21v1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-          </svg>
-          <p className={styles.emptyText}>Дані за {periodLabel.toLowerCase()} ще не зібрані</p>
+          {/* Місце під Міміра біля криниці — SVG від Джоні */}
+          <div className={styles.emptyWellPlaceholder}>
+            <div className={styles.emptyWellRing} />
+            <div className={styles.emptyWellCore} />
+          </div>
+          <div className={styles.emptyText}>
+            <strong>Щорічник ще не зібрано</strong>
+            <span>Збери підсумок — спогади, поїздки, медіа та інші події одним поглядом.</span>
+          </div>
           <button type="button" className={styles.generateBtn} onClick={handleGenerate} disabled={loading}>
             ЗГЕНЕРУВАТИ
           </button>
@@ -214,24 +218,43 @@ const YearbookTab: React.FC = () => {
 
           {/* ── 1. Cover ── */}
           <div className={`${styles.section} ${styles.sectionCover}`}>
-            <div className={styles.sectionInner}>
-              <span className={styles.eyebrow}>{periodLabel}</span>
-              <h2 className={styles.coverTitle}>MIMIR</h2>
+            {/* Top: label + period */}
+            <div className={styles.coverHeader}>
+              <span className={styles.coverEyebrow}>MIMIR YEARBOOK</span>
+              <span className={styles.coverYear}>{periodLabel}</span>
+            </div>
+
+            {/* Center: well placeholder — буде SVG від Джоні */}
+            <div className={styles.coverWell}>
+              <div className={styles.coverWellRing} />
+              <div className={styles.coverWellCore} />
+            </div>
+
+            {/* Bottom: main stat + summary chips */}
+            <div className={styles.coverFooter}>
               <div className={styles.statBlock}>
                 <span className={styles.statNum}>{s.memoriesCount}</span>
                 <span className={styles.statUnit}>СПОГАДІВ</span>
               </div>
-              {s.moodTrend && (() => {
-                const m = MOOD_META[s.moodTrend as keyof typeof MOOD_META]
-                return m ? (
-                  <div className={`${styles.moodPill} ${m.cls}`}>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                      <path d={m.path} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>{m.label}</span>
-                  </div>
-                ) : null
-              })()}
+              <div className={styles.coverChips}>
+                {s.moodTrend && (() => {
+                  const m = MOOD_META[s.moodTrend as keyof typeof MOOD_META]
+                  return m ? (
+                    <span className={`${styles.coverChip} ${m.cls}`}>
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d={m.path} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {m.label}
+                    </span>
+                  ) : null
+                })()}
+                {s.placesVisitedCount > 0 && (
+                  <span className={styles.coverChip}>{s.placesVisitedCount} МІСЦЬ</span>
+                )}
+                {(s.moviesWatched + s.seriesWatched + s.animeWatched) > 0 && (
+                  <span className={styles.coverChip}>{s.moviesWatched + s.seriesWatched + s.animeWatched} МЕДІА</span>
+                )}
+              </div>
             </div>
           </div>
 
