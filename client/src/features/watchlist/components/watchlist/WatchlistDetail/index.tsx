@@ -14,7 +14,8 @@ import { useUiStore } from '@/shared/store/uiStore'
 import styles from './WatchlistDetail.module.css'
 import type { WatchlistItem, WatchlistStatus } from '@/shared/types'
 
-const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY as string | undefined
+const TMDB_KEY  = import.meta.env.VITE_TMDB_API_KEY as string | undefined
+const TMDB_FACE = 'https://image.tmdb.org/t/p/w185'
 
 interface SimilarItem {
   id: number
@@ -25,6 +26,23 @@ interface SimilarItem {
   overview: string
   release_date?: string
   first_air_date?: string
+}
+
+interface CastMember {
+  id: number
+  name: string
+  character: string
+  profilePath: string | null
+}
+
+interface ActorCredit {
+  id: number
+  mediaType: 'movie' | 'tv'
+  title: string
+  posterPath: string | null
+  year: string
+  character: string
+  voteAverage: number
 }
 
 interface Comment {
@@ -133,6 +151,11 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [similarStatus, setSimilarStatus]         = useState<WatchlistStatus>('want')
   const [loadingSimilarDet, setLoadingSimilarDet] = useState(false)
   const [localRating, setLocalRating] = useState<number>(item.rating ?? 0)
+
+  const [cast, setCast]                             = useState<CastMember[]>([])
+  const [selectedActor, setSelectedActor]           = useState<CastMember | null>(null)
+  const [actorCredits, setActorCredits]             = useState<ActorCredit[]>([])
+  const [loadingActorCredits, setLoadingActorCredits] = useState(false)
 
   const myId = useProfileStore(s => s.activeProfile?.id ?? '')
   const [watchedEpisodes, setWatchedEpisodes] = useState<{ season: number; episode: number; userId: string }[]>(
@@ -275,6 +298,60 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     load()
     return () => { cancelled = true }
   }, [item.tmdbId, item.category])
+
+  // Load cast from TMDB credits
+  useEffect(() => {
+    if (!item.tmdbId || !TMDB_KEY || isBook) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const type = item.category === 'movie' ? 'movie' : 'tv'
+        const r = await fetch(`https://api.themoviedb.org/3/${type}/${item.tmdbId}/credits?api_key=${TMDB_KEY}&language=uk-UA`)
+        if (r.ok && !cancelled) {
+          const data = await r.json()
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const members: CastMember[] = (data.cast ?? []).slice(0, 10).map((m: any) => ({
+            id: m.id, name: m.name, character: m.character ?? '', profilePath: m.profile_path ?? null,
+          }))
+          setCast(members)
+        }
+      } catch { /* silent */ }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [item.tmdbId, item.category, isBook])
+
+  const handleActorClick = async (actor: CastMember) => {
+    setSelectedActor(actor)
+    setActorCredits([])
+    if (!TMDB_KEY) return
+    setLoadingActorCredits(true)
+    try {
+      const r = await fetch(`https://api.themoviedb.org/3/person/${actor.id}/combined_credits?api_key=${TMDB_KEY}&language=uk-UA`)
+      if (r.ok) {
+        const data = await r.json()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const credits: ActorCredit[] = [...(data.cast ?? [])]
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .filter((c: any) => c.poster_path && (c.vote_count ?? 0) > 20)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .sort((a: any, b: any) => (b.vote_average ?? 0) - (a.vote_average ?? 0))
+          .slice(0, 20)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((c: any) => ({
+            id: c.id,
+            mediaType: c.media_type as 'movie' | 'tv',
+            title: c.title ?? c.name ?? '',
+            posterPath: c.poster_path ?? null,
+            year: (c.release_date ?? c.first_air_date ?? '').slice(0, 4),
+            character: c.character ?? '',
+            voteAverage: c.vote_average ?? 0,
+          }))
+        setActorCredits(credits)
+      }
+    } catch { /* silent */ }
+    finally { setLoadingActorCredits(false) }
+  }
 
   const handleSimilarClick = async (s: SimilarItem) => {
     setSimilarPreview(s)
@@ -720,6 +797,33 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             </div>
           )}
 
+          {/* Cast */}
+          {cast.length > 0 && (
+            <div className={styles.castSection}>
+              <p className={styles.sectionLabel}>У РОЛЯХ</p>
+              <div className={styles.castRow}>
+                {cast.map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={styles.castMember}
+                    onClick={() => handleActorClick(m)}
+                  >
+                    <div className={styles.castPhoto}>
+                      {m.profilePath ? (
+                        <img src={`${TMDB_FACE}${m.profilePath}`} alt={m.name} className={styles.castImg} />
+                      ) : (
+                        <span className={styles.castInitial}>{m.name.charAt(0)}</span>
+                      )}
+                    </div>
+                    <span className={styles.castName}>{m.name}</span>
+                    {m.character && <span className={styles.castChar}>{m.character}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Similar */}
           {!isBook && similar.length > 0 && (
             <div className={styles.similarSection}>
@@ -918,6 +1022,78 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
             <button type="button" className={styles.simAddBtn} onClick={handleSimilarAdd}>
               ДОДАТИ ДО СПИСКУ
             </button>
+          )}
+        </div>
+      </div>
+    )}
+
+    {selectedActor && (
+      <div className={styles.actorSheet}>
+        <div className={styles.actorHero}>
+          <div className={styles.actorHeroInner}>
+            {selectedActor.profilePath ? (
+              <img
+                src={`${TMDB_FACE}${selectedActor.profilePath}`}
+                alt={selectedActor.name}
+                className={styles.actorHeroPhoto}
+              />
+            ) : (
+              <div className={styles.actorHeroPhotoFallback}>
+                <span>{selectedActor.name.charAt(0)}</span>
+              </div>
+            )}
+            <div>
+              <h2 className={styles.actorName}>{selectedActor.name}</h2>
+              {selectedActor.character && (
+                <p className={styles.actorCharacter}>{selectedActor.character}</p>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.actorBack}
+            onClick={() => setSelectedActor(null)}
+            aria-label="Назад"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.actorContent}>
+          <p className={styles.sectionLabel}>ФІЛЬМОГРАФІЯ</p>
+          {loadingActorCredits ? (
+            <div className={styles.actorSkeleton}>
+              {[1,2,3,4,5].map(i => <div key={i} className={styles.actorSkeletonRow} />)}
+            </div>
+          ) : actorCredits.length === 0 ? (
+            <p className={styles.actorEmpty}>Немає даних</p>
+          ) : (
+            <div className={styles.actorCredits}>
+              {actorCredits.map(c => (
+                <div key={`${c.mediaType}-${c.id}`} className={styles.actorCredit}>
+                  {c.posterPath ? (
+                    <img
+                      src={`https://image.tmdb.org/t/p/w92${c.posterPath}`}
+                      alt={c.title}
+                      className={styles.actorCreditPoster}
+                    />
+                  ) : (
+                    <div className={styles.actorCreditPosterFallback} />
+                  )}
+                  <div className={styles.actorCreditInfo}>
+                    <span className={styles.actorCreditTitle}>{c.title}</span>
+                    <span className={styles.actorCreditMeta}>
+                      {c.year && <span>{c.year}</span>}
+                      <span className={styles.actorCreditType}>{c.mediaType === 'movie' ? 'Фільм' : 'Серіал'}</span>
+                      {c.voteAverage > 0 && <span>★ {c.voteAverage.toFixed(1)}</span>}
+                    </span>
+                    {c.character && <span className={styles.actorCreditChar}>{c.character}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

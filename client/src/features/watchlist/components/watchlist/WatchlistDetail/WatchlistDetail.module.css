@@ -978,3 +978,280 @@
   transition: opacity 0.15s;
 }
 .commentSend:disabled { opacity: 0.3; cursor: default; }
+
+/* ── Cast section ── */
+.castSection {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.castRow {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  margin-top: 8px;
+}
+.castRow::-webkit-scrollbar { display: none; }
+
+.castMember {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  width: 64px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.castPhoto {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+.castMember:hover .castPhoto { border-color: var(--accent); }
+
+.castImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.castInitial {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--text3);
+}
+
+.castName {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.3;
+  width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.castChar {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--text3);
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ── Actor sheet ── */
+.actorSheet {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 202;
+  overflow-y: auto;
+  animation: simSlideIn 0.25s ease;
+}
+
+.actorHero {
+  position: relative;
+  padding: 56px 20px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.actorHeroInner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.actorHeroPhoto {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.actorHeroPhotoFallback {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--text3);
+}
+
+.actorName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.actorCharacter {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text3);
+  margin: 4px 0 0;
+}
+
+.actorBack {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 36px;
+  height: 36px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color 0.15s;
+}
+.actorBack:hover { border-color: var(--accent); }
+
+.actorContent {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.actorCredits {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.actorCredit {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.actorCreditPoster {
+  width: 44px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.actorCreditPosterFallback {
+  width: 44px;
+  height: 64px;
+  background: var(--surface2);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.actorCreditInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.actorCreditTitle {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.actorCreditMeta {
+  display: flex;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.actorCreditType {
+  background: var(--surface2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.actorCreditChar {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--text3);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.actorSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.actorSkeletonRow {
+  height: 64px;
+  background: var(--surface2);
+  border-radius: 8px;
+  animation: shimmer 1.4s infinite linear;
+}
+
+@keyframes shimmer {
+  0%   { opacity: 0.6; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.actorEmpty {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text3);
+  text-align: center;
+  padding: 20px 0;
+}
