@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { useUiStore } from '@/shared/store/uiStore'
-import { TREE_NODES, TREE_CONNECTIONS } from '../../data'
-import type { AchievementWithStatus } from '../../types'
+import { TREE_NODES, TREE_CONNECTIONS, CATEGORY_WELL_BG, CATEGORY_LABEL } from '../../data'
+import type { AchievementWithStatus, AchievementCategory } from '../../types'
 import styles from './index.module.css'
 
 // SVG arc progress ring dimensions
@@ -84,23 +83,29 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
 
 interface AchievementMapProps {
   achievements: AchievementWithStatus[]
-  category: string
+  category: AchievementCategory
   onNodeClick: (id: string) => void
   onClose: () => void
   selectedId: string | null
+  onBack: () => void
+  exiting: boolean
+  origin?: { x: number; y: number }
 }
 
 /**
  * AchievementMap
  * --------------
- * Tree visualization — background PNG + absolutely positioned achievement nodes.
- * Shows key nodes per category tab; connections drawn as SVG lines.
+ * "Дно" криниці для однієї категорії — фон category-well/[cat].png
+ * + вузли досягнень (руни/блоки/прогрес-кільце) + кнопка "Винирнути".
  *
  * Props:
  * @prop {AchievementWithStatus[]} achievements — full list with computed status
- * @prop {string} category — active category tab key
+ * @prop {AchievementCategory} category — активна категорія
  * @prop {(id: string) => void} onNodeClick — fires when node tapped
  * @prop {string | null} selectedId — currently selected node id
+ * @prop {() => void} onBack — "Винирнути" — повернутись до вибору категорій
+ * @prop {boolean} exiting — програє анімацію винирання
+ * @prop {{x:number,y:number}} [origin] — % координати точки занурення (transform-origin входу)
  */
 const AchievementMap: React.FC<AchievementMapProps> = ({
   achievements,
@@ -108,10 +113,11 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
   onNodeClick,
   onClose,
   selectedId,
+  onBack,
+  exiting,
+  origin,
 }) => {
   const [showInfo, setShowInfo] = useState(false)
-
-  const isDark  = ['noir', 'cyber', 'aurum', 'arctic'].includes(useUiStore(s => s.theme))
 
   const nodes       = TREE_NODES[category] ?? TREE_NODES.all
   const connections = TREE_CONNECTIONS[category] ?? TREE_CONNECTIONS.all
@@ -134,7 +140,8 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
-        <span className={styles.cardTitle}>КАРТА КРИНИЦІ</span>
+        <span />
+        <span className={styles.cardTitle}>{CATEGORY_LABEL[category]}</span>
         <button
           type="button"
           className={`${styles.infoBtn} ${showInfo ? styles.infoBtnActive : ''}`}
@@ -149,8 +156,23 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
         </button>
       </div>
 
-      <div className={styles.canvas} onClick={onClose}>
-        <img src="/achive_tree.png" alt="" className={`${styles.treeImg} ${isDark ? styles.treeImgDark : styles.treeImgLight}`} draggable={false} />
+      <div
+        className={`${styles.canvas} ${exiting ? styles.exiting : ''}`}
+        style={origin ? { '--dive-x': `${origin.x}%`, '--dive-y': `${origin.y}%` } as React.CSSProperties : undefined}
+        onClick={onClose}
+      >
+        <img src={CATEGORY_WELL_BG[category]} alt="" className={styles.treeImg} draggable={false} />
+
+        <button
+          type="button"
+          className={styles.diveOutBtn}
+          aria-label="Винирнути"
+          onClick={e => { e.stopPropagation(); onBack() }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+          </svg>
+        </button>
 
         {showInfo && (
           <div className={styles.infoTooltip}>

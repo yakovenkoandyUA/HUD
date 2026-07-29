@@ -7,6 +7,12 @@
   min-height: 0;
   overflow: hidden;
   background: #000;
+  animation: stageOpen 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes stageOpen {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .stageImg {
@@ -15,7 +21,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: -62px;
   user-select: none;
   pointer-events: none;
 }
@@ -42,14 +48,13 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
-  padding: 12px 16px 0;
 }
 
 .topProgressWrap {
   width: 100%;
-  height: 4px;
+  height: 12px;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
+
   overflow: hidden;
 }
 
@@ -79,56 +84,47 @@
 
 .nodeRune {
   position: relative;
-  width: 22px;
-  height: 22px;
-  margin-left: -11px;
+  width: 40px;
+  height: 40px;
+  margin-left: -16px;
   flex-shrink: 0;
   object-fit: contain;
   user-select: none;
-  filter: drop-shadow(0 0 0 transparent);
+  mix-blend-mode: screen;
+  opacity: 0.4;
+  filter: grayscale(1) brightness(0.7);
   transition: filter 0.3s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease, margin-left 0.3s ease;
 }
 
-.nodeLocked .nodeRune {
-  filter: grayscale(1) brightness(0.55);
-  opacity: 0.55;
-}
-
 .nodeUnlocked .nodeRune {
-  filter: drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--node-color) 60%, transparent));
+  opacity: 1;
+  filter: none;
 }
 
 .nodeCurrent .nodeRune {
-  width: 28px;
-  height: 28px;
-  margin-left: -14px;
-  animation: nodePulse 2.2s ease-in-out infinite;
-}
+  width: 40px;
+  height: 40px;
 
-@keyframes nodePulse {
-  0%, 100% { filter: drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--node-color) 70%, transparent)); }
-  50%      { filter: drop-shadow(0 0 8px var(--node-color)) drop-shadow(0 0 16px var(--node-color)); }
 }
 
 .nodeLine {
-  width: 14px;
+  width: 56px;
   height: 1px;
   background: rgba(255, 255, 255, 0.25);
   flex-shrink: 0;
 }
 
-.nodeUnlocked .nodeLine { background: color-mix(in srgb, var(--node-color) 55%, rgba(255, 255, 255, 0.25)); }
 
 .nodeLabel {
   display: flex;
   flex-direction: column;
+  white-space: nowrap;
   gap: 1px;
   padding: 3px 8px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.4);
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
-  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .nodeTitle {
@@ -142,11 +138,11 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-.nodeUnlocked .nodeTitle { color: var(--node-color); }
+.nodeUnlocked .nodeTitle { color: rgba(255, 255, 255, 0.88); }
 .nodeCurrent .nodeTitle { color: #fff; }
 
 .nodeHint {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 9px;
   letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.45);

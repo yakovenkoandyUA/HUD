@@ -19,6 +19,22 @@
 	z-index: 10;
 }
 
+/* ── Forced-dark header (pages with a permanently dark atmospheric bg) ── */
+.headerDark {
+	background: #0c0d10;
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+.headerDark .headerTitle {
+	color: rgba(255, 255, 255, 0.55);
+}
+.headerDark .backBtn {
+	color: rgba(255, 255, 255, 0.75);
+}
+.headerDark .backBtn:hover {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.08);
+}
+
 .backBtn {
 	display: flex;
 	align-items: center;
@@ -83,6 +99,15 @@
 	min-height: 0;
 }
 
+.contentClosing {
+	animation: contentClose 0.26s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes contentClose {
+	from { opacity: 1; transform: scale(1); }
+	to   { opacity: 0; transform: scale(0.94); }
+}
+
 /* ── Top-level tab switch (me/wallet/plan/admin) ── */
 .tabFade {
 	animation: meFadeIn 220ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -105,11 +130,13 @@
 	flex-direction: row;
 	align-items: stretch;
 	border: 1px solid var(--border);
-	border-radius:  var(--radius) var(--radius) 0 0;
+	border-left: none;
+	border-right: none;
+	border-radius: 0;
 	background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--level-color) 20%, transparent), var(--bg2) 75%);
-	margin-bottom: 16px;
+	margin: -16px -16px 0;
 	overflow: hidden;
-  min-height: 200px;
+
 }
 
 .heroLeft {
@@ -360,7 +387,7 @@
 
 .monolithBtn {
 	position: relative;
-	width: 128px;
+
 	flex-shrink: 0;
 	align-self: stretch;
 	display: flex;
@@ -372,8 +399,9 @@
 	border-radius: 0;
 
 	cursor: pointer;
-	overflow: hidden;
+	/* overflow: hidden; */
 	transition: border-color 0.15s;
+	margin-right: 1em;
 }
 
 .monolithBtn:active {
@@ -412,7 +440,7 @@
 .monolithBtnChevron {
 	position: absolute;
 	z-index: 1;
-	right: 8px;
+	right: -8px;
 	top: 8px;
 	color: var(--text3);
 }

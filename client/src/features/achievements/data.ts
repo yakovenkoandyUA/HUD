@@ -1,4 +1,30 @@
-import type { AchievementDef } from './types'
+import type { AchievementDef, AchievementCategory } from './types'
+
+export const CATEGORY_LABEL: Record<AchievementCategory, string> = {
+  memory:    "ПАМ'ЯТЬ",
+  spaces:    'ПРОСТОРИ',
+  finance:   'ФІНАНСИ',
+  sprint:    'СПРИНТ',
+  watchlist: 'МЕДІА',
+}
+
+/** Category select icon on the well home screen — public/achivement/category/*.png */
+export const CATEGORY_ICON: Record<AchievementCategory, string> = {
+  memory:    '/achivement/category/memory.png',
+  spaces:    '/achivement/category/space.png',
+  finance:   '/achivement/category/finance.png',
+  sprint:    '/achivement/category/sprint.png',
+  watchlist: '/achivement/category/media.png',
+}
+
+/** Background shown after diving into a category — public/achivement/category-well/*.png */
+export const CATEGORY_WELL_BG: Record<AchievementCategory, string> = {
+  memory:    '/achivement/category-well/memory.png',
+  spaces:    '/achivement/category-well/spaces.png',
+  finance:   '/achivement/category-well/finance.png',
+  sprint:    '/achivement/category-well/sprint.png',
+  watchlist: '/achivement/category-well/media.png',
+}
 
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // ── ПАМʼЯТЬ (10) ───────────────────────────────────────────────────────────
@@ -571,81 +597,67 @@ export const ACHIEVEMENT_MAX_SCORE = ACHIEVEMENT_DEFS.reduce((s, a) => s + a.rew
 export const ACHIEVEMENT_BY_ID: Record<string, AchievementDef> =
   Object.fromEntries(ACHIEVEMENT_DEFS.map(a => [a.id, a]))
 
-// ── Tree node positions (% of canvas) ──────────────────────────────────────
-// Each category shows 10 nodes. "all" tab shows 9 key nodes across categories.
-// Layout: 5-level tree with 2 nodes per level (+ 1 crown, 1 root)
-// Level 1 (crown):  (50, 7)
-// Level 2:          (25, 20) / (75, 20)
-// Level 3:          (15, 36) / (85, 36)
-// Level 4:          (30, 55) / (70, 55)
-// Level 5:          (20, 66) / (90, 66)
-// Root:             (50, 90)
+// ── Well node positions (% of canvas) ──────────────────────────────────────
+// Each category-well/[cat].png is a DIFFERENT render (different composition,
+// different rim height) — coordinates are tuned per image against its own
+// visible landmarks (archways / lit medallions), not shared across categories.
+// Node order is always [top, upperLeft, upperRight, lowerLeft, lowerRight]
+// so BRANCH_5 connections stay valid regardless of per-image coordinates.
 
 export const TREE_NODES: Record<string, { id: string; x: number; y: number }[]> = {
+  // memory.png — no top-rim landmark; uses the two upper lit medallions,
+  // two mid medallions flanking the well mouth, and the bottom-center one.
   memory: [
-    { id: 'first-memory',      x: 50,   y: 12 },
-    { id: 'memory-with-photo', x: 26.5, y: 24 },
-    { id: 'past-memory',       x: 73,   y: 24 },
-    { id: 'three-memories',    x: 29,   y: 46 },
-    { id: 'ten-memories',      x: 71,   y: 46 },
-    { id: 'month-memory',      x: 49.3,   y: 57 },
-    { id: 'seven-days-memory', x: 28,   y: 81 },
-    { id: 'archive-25',        x: 70,   y: 81 },
+    { id: 'first-memory',   x: 50, y: 40 },
+    { id: 'past-memory',    x: 22, y: 40 },
+    { id: 'ten-memories',   x: 78, y: 40 },
+    { id: 'month-memory',   x: 20, y: 57 },
+    { id: 'archive-25',     x: 83, y: 57 },
   ],
+  // spaces.png — 5 visible archways around the rim.
   spaces: [
-    { id: 'first-space',        x: 50,   y: 12 },
-    { id: 'space-with-cover',   x: 26.5, y: 24 },
-    { id: 'space-with-profile', x: 73,   y: 24 },
-    { id: 'three-spaces',       x: 29,   y: 46 },
-    { id: 'living-space',       x: 71,   y: 46 },
-    { id: 'five-spaces',        x: 49.3, y: 57 },
-    { id: 'first-auto',         x: 28,   y: 81 },
-    { id: 'life-map',           x: 70,   y: 81 },
+    { id: 'first-space',        x: 50, y: 32 },
+    { id: 'space-with-profile', x: 27, y: 36 },
+    { id: 'living-space',       x: 73, y: 36 },
+    { id: 'five-spaces',        x: 17, y: 63 },
+    { id: 'life-map',           x: 83, y: 63 },
   ],
+  // finance.png — scale emblem at top, coin stacks upper L/R, medallions lower L/R.
   finance: [
-    { id: 'first-transaction', x: 50,   y: 12 },
-    { id: 'no-fog-day',        x: 26.5, y: 24 },
-    { id: 'first-category',    x: 73,   y: 24 },
-    { id: 'seven-records',     x: 29,   y: 46 },
-    { id: 'first-goal',        x: 71,   y: 46 },
-    { id: 'month-watched',     x: 49.3, y: 57 },
-    { id: 'daily-finance',     x: 28,   y: 81 },
-    { id: 'first-pattern',     x: 70,   y: 81 },
+    { id: 'first-transaction', x: 50, y: 25 },
+    { id: 'first-category',    x: 23, y: 33 },
+    { id: 'first-goal',        x: 77, y: 33 },
+    { id: 'month-watched',     x: 24, y: 60 },
+    { id: 'first-pattern',     x: 76, y: 60 },
   ],
+  // sprint.png — flatter/wider render, 5 glowing orbs already asymmetric.
   sprint: [
-    { id: 'first-quest',       x: 50,   y: 12 },
-    { id: 'first-step',        x: 26.5, y: 24 },
-    { id: 'three-steps',       x: 73,   y: 24 },
-    { id: 'completed-path',    x: 29,   y: 46 },
-    { id: 'three-day-chain',   x: 71,   y: 46 },
-    { id: 'ten-steps',         x: 49.3, y: 57 },
-    { id: 'seven-days-fire',   x: 28,   y: 81 },
-    { id: 'return-after-fail', x: 70,   y: 81 },
+    { id: 'first-quest',       x: 53, y: 45 },
+    { id: 'three-steps',       x: 20, y: 53 },
+    { id: 'three-day-chain',   x: 84, y: 60 },
+    { id: 'ten-steps',         x: 27, y: 72 },
+    { id: 'return-after-fail', x: 60, y: 78 },
   ],
+  // media.png — top platform with 5 lit dots (top / L / R / lower-L / lower-R).
   watchlist: [
-    { id: 'first-watchlist',   x: 50,   y: 12 },
-    { id: 'first-movie',       x: 26.5, y: 24 },
-    { id: 'first-series',      x: 73,   y: 24 },
-    { id: 'first-anime',       x: 29,   y: 46 },
-    { id: 'watched-completed', x: 71,   y: 46 },
-    { id: 'not-just-list',     x: 49.3, y: 57 },
-    { id: 'ten-watchlist',     x: 28,   y: 81 },
-    { id: 'taste-archive',     x: 70,   y: 81 },
+    { id: 'first-watchlist',   x: 50, y: 38 },
+    { id: 'first-series',      x: 18, y: 52 },
+    { id: 'watched-completed', x: 82, y: 52 },
+    { id: 'not-just-list',     x: 37, y: 63 },
+    { id: 'taste-archive',     x: 63, y: 63 },
   ],
 }
 
-// 8-node hourglass: top → 2 upper → 2 mid → center → 2 roots
-const BRANCH_8: [number, number][] = [
+// 5-node fan: top → 2 upper → each upper connects down to its lower neighbor
+const BRANCH_5: [number, number][] = [
   [0,1],[0,2],
   [1,3],[2,4],
-  [3,5],[4,5],
-  [5,6],[5,7],
 ]
 
 export const TREE_CONNECTIONS: Record<string, [number, number][]> = {
-  memory:   BRANCH_8,
-  spaces:   BRANCH_8,
-  finance:  BRANCH_8,
-  sprint:   BRANCH_8,
-  watchlist:BRANCH_8,
+  memory:   BRANCH_5,
+  spaces:   BRANCH_5,
+  finance:  BRANCH_5,
+  sprint:   BRANCH_5,
+  watchlist:BRANCH_5,
 }
