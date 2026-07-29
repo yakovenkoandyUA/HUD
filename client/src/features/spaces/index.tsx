@@ -346,14 +346,14 @@ const SpaceDetailScreen: React.FC = () => {
   // If coverUrl is an unsplash URL (saved via cycling) → fetch + restore saved index.
   useEffect(() => {
     if (space?.type !== 'trip') return
-    const cover = space.coverUrl ?? ''
-    const isCloudinary = cover && !cover.includes('images.unsplash.com')
-    if (isCloudinary) { setUnsplashPhotos([]); setUnsplashIndex(0); return }
-    const destination = space.tripProfile?.destination
-    if (!destination) return
-    const savedUnsplashUrl = cover  // '' or previously saved unsplash URL
     let cancelled = false
     const load = async () => {
+      const cover = space.coverUrl ?? ''
+      const isCloudinary = cover && !cover.includes('images.unsplash.com')
+      if (isCloudinary) { if (!cancelled) { setUnsplashPhotos([]); setUnsplashIndex(0) }; return }
+      const destination = space.tripProfile?.destination
+      if (!destination) return
+      const savedUnsplashUrl = cover  // '' or previously saved unsplash URL
       try {
         const key = import.meta.env.VITE_UNSPLASH_ACCESS_KEY as string
         const CITY_EN: Record<string, string> = {

@@ -36,9 +36,9 @@ const F1Screen: React.FC = () => {
   const raceThisWeek = getRaceThisWeek(F1_SEASON_2026)
 
   useEffect(() => {
-    if (!raceThisWeek) { setLiveActive(false); return }
     let cancelled = false
     const check = async () => {
+      if (!raceThisWeek) { if (!cancelled) setLiveActive(false); return }
       try {
         const res = await authFetch('/api/f1/live/sessions?meeting_key=latest')
         if (!res.ok) return
@@ -53,8 +53,8 @@ const F1Screen: React.FC = () => {
       } catch { /* silent */ }
     }
     check()
-    const timer = setInterval(check, 60_000)
-    return () => { cancelled = true; clearInterval(timer) }
+    const timer = raceThisWeek ? setInterval(check, 60_000) : null
+    return () => { cancelled = true; if (timer) clearInterval(timer) }
   }, [raceThisWeek])
 
   const nextRace  = getNextRace(F1_SEASON_2026)

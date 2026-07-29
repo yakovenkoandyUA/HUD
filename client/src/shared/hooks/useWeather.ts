@@ -174,11 +174,10 @@ export function useWeather(city: string | undefined): WeatherData | null {
     const trimmed = city?.trim()
     if (!trimmed) return
 
-    const cached = getCached(trimmed)
-    if (cached) { setWeather(cached); return }
-
     let cancelled = false
     const load = async () => {
+      const cached = getCached(trimmed)
+      if (cached) { if (!cancelled) setWeather(cached); return }
       try {
         const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
         const url = `${apiUrl}/api/weather?city=${encodeURIComponent(trimmed)}`
