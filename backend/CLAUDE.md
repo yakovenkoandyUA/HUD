@@ -42,6 +42,8 @@
 | `/api/auth/pin/verify` | POST — { pin } |
 | `/api/auth/verify-email` | POST — { token } → isVerified = true |
 | `/api/auth/resend-verification` | POST (auth) → re-sends verification email |
+| `/api/auth/forgot-password` | POST — { email } → якщо акаунт з паролем існує, шле reset-лист (Resend); завжди `{ok:true}`, анти-enumeration |
+| `/api/auth/reset-password` | POST — { token, newPassword } → перевіряє `resetPasswordToken`+`resetPasswordExpires`, оновлює пароль, автологінить (JWT+refresh) |
 | `/api/auth/refresh` | POST — rotate refresh token (httpOnly cookie) |
 | `/api/auth/logout` | POST — очищає cookie і DB запис |
 | `/api/auth/me` | GET, PATCH |
@@ -152,7 +154,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 ## Моделі — ключові поля
 
-**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`
+**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `resetPasswordToken: string|null`, `resetPasswordExpires: Date|null` (1г TTL), `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`
 
 **BillingOrder** — `userId`, `provider: 'wayforpay'|'paddle'`, `orderReference` (unique, opaque: `mimir_{YYYYMMDD}_{16hex}`), `planId: 'personal'|'couple'|'family'`, `interval: 'month'|'year'`, `amount` (копійки), `currency: 'UAH'`, `status: 'pending'|'paid'|'failed'|'refunded'|'expired'`, `expiresAt`, `paidAt`, `rawProviderPayload`. Indexes: unique orderReference, `{userId, createdAt: -1}`, `{status, expiresAt}` для cleanup cron
 

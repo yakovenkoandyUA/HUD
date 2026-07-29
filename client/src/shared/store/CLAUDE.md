@@ -24,6 +24,8 @@ interface ProfileState {
 }
 ```
 
+**Password reset actions:** `requestPasswordReset(email)` — POST `/api/auth/forgot-password`. `resetPasswordWithToken(token, newPassword)` — POST `/api/auth/reset-password`, автологінить (set token+activeProfile) при успіху.
+
 **UserProfile ключові поля:**
 - `f1Enabled: boolean` — показ F1 фіч (BottomNav іконка, HeroCard F1 блок, `/f1`)
 - `isVerified: boolean` — верифікований email (gate для AI-фіч)

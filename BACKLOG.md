@@ -377,6 +377,12 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 - Backend: `GET /api/mood/family/:date` (новий, поряд з існуючим `/family/today`) — той самий join з `getAcceptedFamilyIds`, винесений у спільну `getFamilyMoodsForDate(userId, date)`.
 - Frontend: `moodStore` — `familyMoodsByDate: Record<string, FamilyMoodEntry[]>` кеш + `fetchFamilyMoodsForDate(date)`.
 
+### ✅ Відновлення пароля + Spaces фікси (2026-07-29)
+
+- **Forgot/Reset password** — `POST /api/auth/forgot-password` ({email} → якщо акаунт з паролем існує, генерує `resetPasswordToken`+`resetPasswordExpires` (1г), шле лист через Resend; завжди `{ok:true}` — анти-enumeration) + `POST /api/auth/reset-password` ({token, newPassword} → перевіряє токен+expiry, хешує новий пароль, автологінить JWT+refresh, як verify-email). Frontend: `/forgot-password` (ForgotPassword.tsx), `/reset-password?token=` (ResetPassword.tsx, автологін+редірект), лінк "Забули пароль?" на Login. Закриває блокер з RELEASE.md Етап 0 (реєстрація була, відновлення доступу — не було).
+- **TripSpaceView — quick actions баг** — `trip` був у exclusion-списку generic actions/content блоку в `spaces/index.tsx` (додано раніше щоб не дублювати ВИТРАТИ), через що trip-простір не мав жодного способу додати задачу/нотатку/спогад. Виправлено: `trip` прибрано з обох exclusion-умов (actions + content), секція "ВИТРАТИ" в generic-блоці явно виключена тільки для `trip` (вже рендериться в `TripSpaceView`) — уникнуто повторного дублювання транзакцій.
+- **HomeSpaceView видалено** — компонент був повністю не використаний (ніде не імпортувався, `home`-простори фактично йшли через generic-блок); `homeStore.ts` теж видалено після того як лишився без референсів. Backend (`HomeEvent` модель, `homeController`, роути) не займали — лишається про запас.
+
 ### ✅ Sprint: fix habit due-date bug + replace weekly-rate stat with streak (2026-07-28)
 
 - **Баг:** `isRoutineDueOnDay` (`client/src/features/sprint/utils/sprint.ts`) не перевіряв дату створення звички для `daily`/`weekly`/`monthly` repeat (тільки `custom`-interval мав anchor-перевірку) — щойно створена звичка рахувалась "запланованою" і для тижнів **до** свого створення, показуючи фантомні пропуски (0%) у статистиці. Виправлено: anchor-перевірка (`repeatStartDate ?? createdAt`) тепер застосовується до всіх типів repeat одразу на вході функції.
@@ -469,12 +475,12 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 ### Memories
 - **fetchRelated:** `GET /api/memories/:id/related` — незрозуміло що повертає (за тегами? локацією?). Не використовується в жодному компоненті крім виклику в store.
 - **MemoryMap — пустий стан:** якщо у юзера 0 спогадів і 0 планів — карта показує глобус без пінів, нема underlay hint.
-- **EditMemoryModal `withProfiles`:** при редагуванні зображення `withProfiles` не передається якщо поле не чіпали — перевірити що PATCH не скидає учасників.
+- ~~**EditMemoryModal `withProfiles`**~~ ✅ Закрито — перевірено (2026-07-29): бага немає, `onSave` завжди відправляє поточний `withProfiles`, зміна обкладинки йде окремим PATCH `{coverUrl}` що не чіпає інші поля.
 
 ### Spaces
 - ~~**SpaceDetailScreen — дублювання транзакцій DOM**~~ ✅ Закрито — `trip` додано до exclusion list generic content block (2026-07-23).
-- **SpacesStrip — `general` тип відсутній в TYPE_OPTIONS:** форма дозволяє вибрати `shared/trip/vehicle/home/pet/sports`, але `SPACE_TYPE_CONFIG` має `blank`. Якщо space.type = 'general' — `cfg` = undefined → `?? SPACE_TYPE_CONFIG['blank']` рятує, але тип 'general' недоступний при створенні.
-- **TripSpaceView — без quick actions:** на відміну від Vehicle/Home/Pet — TripSpaceView не має власних quick action кнопок (задачі, нотатки, спогади); для trip-space потрібно використовувати generic actions block — але він захований для `type !== 'vehicle' && type !== 'home' && type !== 'pet'`... Перевірити: `trip` попадає під generic блок (рядок 944 умова).
+- ~~**SpacesStrip — `general` тип відсутній в TYPE_OPTIONS**~~ ✅ Закрито — перевірено (2026-07-29): типу `'general'` не існує ніде в коді (ні backend enum, ні frontend), пункт був застарілий/помилковий (плутанина з `blank`).
+- ~~**TripSpaceView — без quick actions**~~ ✅ Закрито — `trip` прибрано з exclusion-списку generic actions/content блоку, ВИТРАТИ в generic-блоці виключена тільки для trip щоб не дублювати (2026-07-29).
 
 ### Recipes
 - **AI генератор — gate через PaywallGate:** кнопка AI в FAB recipes приховується за PaywallGate, але при натисканні без плану — поведінка залежить від `useCanUseFeature` — перевірити що показується UpgradePrompt, а не silent fail.
