@@ -3,11 +3,11 @@ import type { AchievementWithStatus } from '../../types'
 import styles from './index.module.css'
 
 const RUNE_SRC: Record<string, string> = {
-  memory:    '/achive/mimir-runes-transparent/rune-memory.png',
-  spaces:    '/achive/mimir-runes-transparent/rune-spaces.png',
-  finance:   '/achive/mimir-runes-transparent/rune-finance.png',
-  sprint:    '/achive/mimir-runes-transparent/rune-sprint.png',
-  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.png',
+  memory:    '/achive/mimir-runes-transparent/rune-memory.webp',
+  spaces:    '/achive/mimir-runes-transparent/rune-spaces.webp',
+  finance:   '/achive/mimir-runes-transparent/rune-finance.webp',
+  sprint:    '/achive/mimir-runes-transparent/rune-sprint.webp',
+  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.webp',
 }
 
 interface AchievementCardProps {
@@ -35,8 +35,8 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
   const fraction = target > 0 ? Math.min(progress / target, 1) : 0
 
   const runeSrc     = RUNE_SRC[achievement.category]
-  const blockSrc    = '/achive/achive-block-dark.png'
-  const questionSrc = '/achive/achive-question-dark.png'
+  const blockSrc    = '/achive/achive-block-dark.webp'
+  const questionSrc = '/achive/achive-question-dark.webp'
 
   return (
     <div className={`${styles.card} ${isUnlocked ? styles.cardUnlocked : ''}`}>

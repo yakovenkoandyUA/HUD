@@ -8,11 +8,11 @@ import styles from './AchievementUnlockedModal.module.css'
 const AUTO_DISMISS_MS = 6000
 
 const RUNE_SRC: Record<string, string> = {
-  memory:    '/achive/mimir-runes-transparent/rune-memory.png',
-  spaces:    '/achive/mimir-runes-transparent/rune-spaces.png',
-  finance:   '/achive/mimir-runes-transparent/rune-finance.png',
-  sprint:    '/achive/mimir-runes-transparent/rune-sprint.png',
-  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.png',
+  memory:    '/achive/mimir-runes-transparent/rune-memory.webp',
+  spaces:    '/achive/mimir-runes-transparent/rune-spaces.webp',
+  finance:   '/achive/mimir-runes-transparent/rune-finance.webp',
+  sprint:    '/achive/mimir-runes-transparent/rune-sprint.webp',
+  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.webp',
 }
 
 /**
@@ -72,7 +72,7 @@ const AchievementUnlockedModal: React.FC = () => {
         onClick={e => e.stopPropagation()}
       >
         {/* Decorative vertical rune — right-edge watermark */}
-        <img src="/achive/achive-hero.png" alt="" className={styles.decoRune} draggable={false} aria-hidden="true" />
+        <img src="/achive/achive-hero.webp" alt="" className={styles.decoRune} draggable={false} aria-hidden="true" />
 
         {/* Sparkles */}
         <div className={styles.sparkles} aria-hidden="true">

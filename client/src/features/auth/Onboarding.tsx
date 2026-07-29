@@ -346,7 +346,7 @@ const OnboardingScreen: React.FC = () => {
         {step === 1 && (
           <div className={styles.slideHero}>
             <img
-              src="/mimir/mimir-welcome.png"
+              src="/mimir/mimir-welcome.webp"
               alt="Mimir"
               className={styles.slideHeroImg}
               draggable={false}
@@ -369,7 +369,7 @@ const OnboardingScreen: React.FC = () => {
         {step === 2 && (
           <div className={`${styles.step} ${styles.stepLeft}`}>
             <div className={styles.stepHeaderRow}>
-              <img src="/mimir/mimir-pointing.png" alt="" className={styles.mimirSm} draggable={false} />
+              <img src="/mimir/mimir-pointing.webp" alt="" className={styles.mimirSm} draggable={false} />
               <div className={styles.stepHeaderText}>
                 <h2 className={styles.stepTitleSm}>З чого почнемо?</h2>
                 <p className={styles.stepSubSm}>Обери напрям — налаштуємо разом.</p>
@@ -416,7 +416,7 @@ const OnboardingScreen: React.FC = () => {
         {step === 3 && (
           <div className={`${styles.step} ${styles.stepLeft}`}>
             <div className={styles.stepHeaderRow}>
-              <img src="/mimir/mimir-pointing.png" alt="" className={styles.mimirSm} draggable={false} />
+              <img src="/mimir/mimir-pointing.webp" alt="" className={styles.mimirSm} draggable={false} />
               <div className={styles.stepHeaderText}>
                 <h2 className={styles.stepTitleSm}>
                   {direction === 'spaces' ? 'Перший простір' : 'Додати простір?'}
@@ -497,7 +497,7 @@ const OnboardingScreen: React.FC = () => {
             {actionIsHabit && (
               <>
                 <img
-                  src="/mimir/mimir-writing.png"
+                  src="/mimir/mimir-writing.webp"
                   alt=""
                   className={styles.mimirAvatar}
                   draggable={false}
@@ -536,7 +536,7 @@ const OnboardingScreen: React.FC = () => {
             {direction === 'finance' && (
               <>
                 <img
-                  src="/mimir/mimir-pointing.png"
+                  src="/mimir/mimir-pointing.webp"
                   alt=""
                   className={styles.mimirAvatar}
                   draggable={false}
@@ -571,7 +571,7 @@ const OnboardingScreen: React.FC = () => {
             {direction === 'memories' && (
               <>
                 <img
-                  src="/mimir/mimir-location.png"
+                  src="/mimir/mimir-location.webp"
                   alt=""
                   className={styles.mimirAvatar}
                   draggable={false}
@@ -609,7 +609,7 @@ const OnboardingScreen: React.FC = () => {
         {step === 5 && (
           <div className={`${styles.step} ${styles.stepLeft}`}>
             <div className={styles.stepHeaderRow}>
-              <img src="/mimir/mimir-welcome.png" alt="" className={styles.mimirSm} draggable={false} />
+              <img src="/mimir/mimir-welcome.webp" alt="" className={styles.mimirSm} draggable={false} />
               <div className={styles.stepHeaderText}>
                 <h2 className={styles.stepTitleSm}>Яким Мімір буде поруч?</h2>
                 <p className={styles.stepSubSm}>Завжди можна змінити у Профіль → Мімір.</p>
@@ -657,7 +657,7 @@ const OnboardingScreen: React.FC = () => {
           <div className={`${styles.step} ${styles.stepDone}`}>
             <div className={styles.doneHero}>
               <img
-                src="/mimir/mimir-celebrating.png"
+                src="/mimir/mimir-celebrating.webp"
                 alt="Mimir"
                 className={styles.doneHeroImg}
                 draggable={false}

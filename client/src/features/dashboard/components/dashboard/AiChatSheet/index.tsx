@@ -5,8 +5,8 @@ import { getToken } from '@/shared/services/api'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
 import styles from './AiChatSheet.module.css'
 
-const MIMIR_EMPTY_SRC   = '/mimir/mimir-idle.png'
-const MIMIR_THINKING_SRC = '/mimir/mimir-thinking.png'
+const MIMIR_EMPTY_SRC   = '/mimir/mimir-idle.webp'
+const MIMIR_THINKING_SRC = '/mimir/mimir-thinking.webp'
 
 /**
  * AiChatSheet

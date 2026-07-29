@@ -21,21 +21,21 @@ const MODES: ModeOption[] = [
     id: 'wise',
     label: 'МУДРИЙ',
     hint: 'Поради та цитати',
-    img: '/mimir/mimir-wise.png',
+    img: '/mimir/mimir-wise.webp',
     sample: 'Криниця пам\'яті не переповнюється. Лише збагачується.',
   },
   {
     id: 'witty',
     label: 'БАЛАГУР',
     hint: 'Жарти і сарказм',
-    img: '/mimir/mimir-balaghur.png',
+    img: '/mimir/mimir-balaghur.webp',
     sample: 'Ти знову відклав це. Аплодисменти, будь ласка.',
   },
   {
     id: 'dark',
     label: 'ЦИНИК',
     hint: 'Похмура мудрість',
-    img: '/mimir/mimir-cynical.png',
+    img: '/mimir/mimir-cynical.webp',
     sample: 'Час — єдиний ресурс, що не поновлюється. Ну і що ти з ним зробив?',
   },
 ]
@@ -174,7 +174,7 @@ const MeMimir: React.FC = () => {
   }
 
   const seenCount = activeProfile?.mimirSeenHints?.length ?? 0
-  const paralaxImg = (theme === 'mimir' || theme === 'pixel') ? '/mimir/mimir-paralax-light.png' : '/mimir/mimir-paralax-dark.png'
+  const paralaxImg = (theme === 'mimir' || theme === 'pixel') ? '/mimir/mimir-paralax-light.webp' : '/mimir/mimir-paralax-dark.webp'
 
   return (
     <>

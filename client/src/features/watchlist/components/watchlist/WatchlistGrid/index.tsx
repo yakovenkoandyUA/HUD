@@ -25,7 +25,7 @@ const WatchlistGrid: React.FC<WatchlistGridProps> = ({ items, onTap, hasHero = f
       <div className={styles.empty}>
         <div className={`${styles.tvScreen} ${hasHero ? '' : styles.tvScreenHigh}`} aria-hidden="true" />
         <div className={styles.emptyImgWrap}>
-          <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyImg} draggable={false} />
+          <img src="/mimir/mimir-empty-watchlist.webp" alt="" className={styles.emptyImg} draggable={false} />
         </div>
         <p className={styles.emptyText}>Список порожній</p>
         <p className={styles.emptyHint}>Знайди щось цікаве через пошук вище</p>

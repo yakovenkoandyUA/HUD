@@ -694,7 +694,7 @@ const Watchlist: React.FC = () => {
               <div key={`game-${gameStatusFilter}-${gameGenreFilter ?? ''}-${gameSortBy}-${gamePlatformFilter ?? ''}`} className={styles.contentAnimated}>
                 {filteredGames.length === 0 ? (
                   <div className={styles.emptyGames}>
-                    <img src="/mimir/mimir-empty-watchlist.png" alt="" className={styles.emptyMimirImg} draggable={false} />
+                    <img src="/mimir/mimir-empty-watchlist.webp" alt="" className={styles.emptyMimirImg} draggable={false} />
                     <p className={styles.emptyText}>
                       {gameGenreFilter
                         ? 'Немає ігор цього жанру'

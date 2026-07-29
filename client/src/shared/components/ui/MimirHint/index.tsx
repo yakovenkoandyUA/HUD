@@ -76,17 +76,17 @@ function getDailyHint(hints: string[]): string {
 export type MimirPose = 'idle' | 'writing' | 'thinking' | 'success' | 'skeptical' | 'pointing' | 'shrug' | 'excited' | 'alarmed' | 'sleeping' | 'celebrating'
 
 const POSE_SRC: Record<MimirPose, string> = {
-  idle:        '/mimir/mimir-idle.png',
-  writing:     '/mimir/mimir-writing.png',
-  thinking:    '/mimir/mimir-thinking.png',
-  success:     '/mimir/mimir-success.png',
-  skeptical:   '/mimir/mimir-skeptical.png',
-  pointing:    '/mimir/mimir-pointing.png',
-  shrug:       '/mimir/mimir-shrug.png',
-  excited:     '/mimir/mimir-excited.png',
-  alarmed:     '/mimir/mimir-alarmed.png',
-  sleeping:    '/mimir/mimir-sleeping.png',
-  celebrating: '/mimir/mimir-celebrating.png',
+  idle:        '/mimir/mimir-idle.webp',
+  writing:     '/mimir/mimir-writing.webp',
+  thinking:    '/mimir/mimir-thinking.webp',
+  success:     '/mimir/mimir-success.webp',
+  skeptical:   '/mimir/mimir-skeptical.webp',
+  pointing:    '/mimir/mimir-pointing.webp',
+  shrug:       '/mimir/mimir-shrug.webp',
+  excited:     '/mimir/mimir-excited.webp',
+  alarmed:     '/mimir/mimir-alarmed.webp',
+  sleeping:    '/mimir/mimir-sleeping.webp',
+  celebrating: '/mimir/mimir-celebrating.webp',
 }
 
 const POSE_CLASS: Record<MimirPose, string> = {

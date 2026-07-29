@@ -31,9 +31,9 @@ interface WellHomeProps {
  */
 const WellHome: React.FC<WellHomeProps> = ({ onSelect, exiting }) => (
   <div className={`${styles.canvas} ${exiting ? styles.exiting : ''}`}>
-    <img src="/achivement/well-bg-dark.png" alt="" className={`${styles.bgImg} ${styles.bgImgDark}`} draggable={false} />
-    <img src="/achivement/well-bg-light.png" alt="" className={`${styles.bgImg} ${styles.bgImgLight}`} draggable={false} />
-    <img src="/achivement/well.png" alt="" className={styles.wellImg} draggable={false} />
+    <img src="/achivement/well-bg-dark.webp" alt="" className={`${styles.bgImg} ${styles.bgImgDark}`} draggable={false} />
+    <img src="/achivement/well-bg-light.webp" alt="" className={`${styles.bgImg} ${styles.bgImgLight}`} draggable={false} />
+    <img src="/achivement/well.webp" alt="" className={styles.wellImg} draggable={false} />
 
     {CATEGORIES.map(cat => {
       const pos = CATEGORY_POS[cat]

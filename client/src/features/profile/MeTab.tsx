@@ -218,7 +218,7 @@ const MeTab: React.FC = () => {
           aria-label="Шлях рівнів"
         >
           <img
-            src="/achivement/monolite-noBg.png"
+            src="/achivement/monolite-noBg.webp"
             alt=""
             className={styles.monolithBtnImg}
             draggable={false}

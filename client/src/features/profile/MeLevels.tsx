@@ -49,7 +49,7 @@ const MeLevels: React.FC = () => {
 	return (
 		<div className={styles.stage}>
 			<img
-				src="/achivement/monolite.png"
+				src="/achivement/monolite.webp"
 				alt=""
 				className={styles.stageImg}
 				draggable={false}
@@ -77,7 +77,7 @@ const MeLevels: React.FC = () => {
 							className={`${styles.node} ${unlocked ? styles.nodeUnlocked : styles.nodeLocked} ${isCurrent ? styles.nodeCurrent : ''}`}
 							style={{ top: `${y}%`, '--node-color': lvl.color } as React.CSSProperties}
 						>
-							<img src={`/achivement/monolite-levels/level-${lvl.level}.png`} alt="" className={styles.nodeRune} draggable={false} />
+							<img src={`/achivement/monolite-levels/level-${lvl.level}.webp`} alt="" className={styles.nodeRune} draggable={false} />
 							<span className={styles.nodeLine} />
 							<div className={styles.nodeLabel}>
 								<span className={styles.nodeTitle}>
@@ -101,7 +101,7 @@ const MeLevels: React.FC = () => {
 				className={`${styles.node} ${styles.nodeUnlocked}`}
 				style={{ top: `${NODE_ZERO_Y}%` }}
 			>
-				<img src="/achivement/monolite-levels/level-0.png" alt="" className={styles.nodeRune} draggable={false} />
+				<img src="/achivement/monolite-levels/level-0.webp" alt="" className={styles.nodeRune} draggable={false} />
 				<span className={styles.nodeLine} />
 				<div className={styles.nodeLabel}>
 					<span className={styles.nodeTitle}>0. ПОЧАТОК ШЛЯХУ</span>

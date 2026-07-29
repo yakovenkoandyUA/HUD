@@ -8,22 +8,22 @@ export const CATEGORY_LABEL: Record<AchievementCategory, string> = {
   watchlist: 'МЕДІА',
 }
 
-/** Category select icon on the well home screen — public/achivement/category/*.png */
+/** Category select icon on the well home screen — public/achivement/category/*.webp */
 export const CATEGORY_ICON: Record<AchievementCategory, string> = {
-  memory:    '/achivement/category/memory.png',
-  spaces:    '/achivement/category/space.png',
-  finance:   '/achivement/category/finance.png',
-  sprint:    '/achivement/category/sprint.png',
-  watchlist: '/achivement/category/media.png',
+  memory:    '/achivement/category/memory.webp',
+  spaces:    '/achivement/category/space.webp',
+  finance:   '/achivement/category/finance.webp',
+  sprint:    '/achivement/category/sprint.webp',
+  watchlist: '/achivement/category/media.webp',
 }
 
-/** Background shown after diving into a category — public/achivement/category-well/*.png */
+/** Background shown after diving into a category — public/achivement/category-well/*.webp */
 export const CATEGORY_WELL_BG: Record<AchievementCategory, string> = {
-  memory:    '/achivement/category-well/memory.png',
-  spaces:    '/achivement/category-well/spaces.png',
-  finance:   '/achivement/category-well/finance.png',
-  sprint:    '/achivement/category-well/sprint.png',
-  watchlist: '/achivement/category-well/media.png',
+  memory:    '/achivement/category-well/memory.webp',
+  spaces:    '/achivement/category-well/spaces.webp',
+  finance:   '/achivement/category-well/finance.webp',
+  sprint:    '/achivement/category-well/sprint.webp',
+  watchlist: '/achivement/category-well/media.webp',
 }
 
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
