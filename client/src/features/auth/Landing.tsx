@@ -111,37 +111,40 @@ const Landing: React.FC = () => {
         <div className={styles.heroRing} aria-hidden="true" />
         <h1 className={styles.heroTitle}>MIMIR</h1>
         <p className={styles.heroKicker}>Memory OS for your life spaces</p>
+        <p className={styles.heroFormula}>Thought finds the path. Memory gives it meaning. <span className={styles.heroFormulaAccent}>Drink deep.</span></p>
         <p className={styles.heroDesc}>
           Збирай пам'ять, людей, події, плани й фінанси у простори власного життя.
         </p>
         <button type="button" className={styles.heroCta} onClick={scrollToForm}>
           Приєднатися до закритої бети
         </button>
-        <p className={styles.heroFormula}>Thought finds the path. Memory gives it meaning. <span className={styles.heroFormulaAccent}>Drink deep.</span></p>
       </section>
 
-      {/* ── Problem ── */}
+      {/* ── Problem + Life Spaces (two compact blocks side by side) ── */}
       <section className={`${styles.section} ${styles.reveal}`}>
-        <p className={styles.eyebrow}>◆ Проблема</p>
-        <h2 className={styles.sectionTitle}>Твоє життя зберігається всюди.<br />Крім одного місця.</h2>
-        <div className={styles.chaosCloud}>
-          {CHAOS_ITEMS.map((item, i) => (
-            <span key={item} className={styles.chaosChip} style={{ '--i': i } as React.CSSProperties}>{item}</span>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Life Spaces ── */}
-      <section className={`${styles.section} ${styles.reveal}`}>
-        <p className={styles.eyebrow}>◆ Life Spaces</p>
-        <h2 className={styles.sectionTitle}>Простори власного життя</h2>
-        <div className={styles.spacesGrid}>
-          {LIFE_SPACES.map(s => (
-            <div key={s.title} className={styles.spaceCard}>
-              <span className={styles.spaceCardTitle}>{s.title}</span>
-              <p className={styles.spaceCardDesc}>{s.desc}</p>
+        <div className={styles.twinBlocks}>
+          <div className={styles.block}>
+            <p className={styles.eyebrow}>◆ Проблема</p>
+            <h2 className={styles.blockTitle}>Твоє життя зберігається всюди. Крім одного місця.</h2>
+            <div className={styles.chaosCloud}>
+              {CHAOS_ITEMS.map((item, i) => (
+                <span key={item} className={styles.chaosChip} style={{ '--i': i } as React.CSSProperties}>{item}</span>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div className={styles.block}>
+            <p className={styles.eyebrow}>◆ Life Spaces</p>
+            <h2 className={styles.blockTitle}>Простори власного життя</h2>
+            <div className={styles.spacesList}>
+              {LIFE_SPACES.map(s => (
+                <div key={s.title} className={styles.spaceRow}>
+                  <span className={styles.spaceRowTitle}>{s.title}</span>
+                  <p className={styles.spaceRowDesc}>{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
