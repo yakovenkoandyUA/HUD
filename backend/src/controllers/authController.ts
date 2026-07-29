@@ -226,6 +226,7 @@ async function sendAuthResponse(res: Response, userId: string, role: string, use
     issueRefreshToken(userId),
   ])
   setRefreshCookie(res, refreshRaw)
+  User.findByIdAndUpdate(userId, { lastLoginAt: new Date() }).catch(() => {})
   // Include refreshToken in body so clients behind SW (cross-origin cookie issue) can store it
   res.status(status).json({ token: accessToken, user, refreshToken: refreshRaw })
 }
@@ -819,6 +820,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
       issueRefreshToken(userId),
     ])
     setRefreshCookie(res, refreshRaw)
+    User.findByIdAndUpdate(userId, { lastLoginAt: new Date() }).catch(() => {})
     res.json({ token: accessToken, user: USER_PUBLIC_FIELDS(user), refreshToken: refreshRaw })
   } catch {
     res.status(500).json({ error: 'Refresh failed' })

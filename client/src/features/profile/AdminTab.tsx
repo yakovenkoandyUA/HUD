@@ -27,6 +27,84 @@ const PLAN_LABELS: Record<AdminUser['plan'], string> = {
 
 const PLAN_OPTIONS: AdminUser['plan'][] = ['free', 'personal', 'couple', 'family']
 
+interface AnalyticsData {
+  totalUsers: number
+  funnel: {
+    onboarded:          { count: number; pct: number }
+    createdFirstSpace:  { count: number; pct: number }
+    createdFirstMemory: { count: number; pct: number }
+  }
+  active: { last7d: number; last30d: number }
+}
+
+/**
+ * AnalyticsPanel
+ * --------------
+ * Launch-readiness funnel: реєстрації → onboarding → перший Space → перший Memory,
+ * і активні за 7/30 днів. Дані виводяться з існуючих timestamp-полів
+ * (User/Space/Memory.createdAt, User.lastLoginAt) — без окремого event-трекінгу.
+ */
+const AnalyticsPanel: React.FC = () => {
+  const [data, setData]       = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await authFetch('/api/auth/admin/analytics')
+        if (!res.ok) throw new Error()
+        const json = await res.json() as AnalyticsData
+        if (!cancelled) setData(json)
+      } catch {
+        // silent — panel just stays empty
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  if (loading || !data) return null
+
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionTitle}>АНАЛІТИКА</span>
+        <span className={styles.sectionCount}>{data.totalUsers} юзерів</span>
+      </div>
+      <div className={styles.analyticsGrid}>
+        <div className={styles.analyticsTile}>
+          <span className={styles.analyticsNum}>{data.funnel.onboarded.pct}%</span>
+          <span className={styles.analyticsSub}>{data.funnel.onboarded.count}/{data.totalUsers}</span>
+          <span className={styles.analyticsLabel}>Onboarding</span>
+        </div>
+        <div className={styles.analyticsTile}>
+          <span className={styles.analyticsNum}>{data.funnel.createdFirstSpace.pct}%</span>
+          <span className={styles.analyticsSub}>{data.funnel.createdFirstSpace.count}/{data.totalUsers}</span>
+          <span className={styles.analyticsLabel}>Перший Space</span>
+        </div>
+        <div className={styles.analyticsTile}>
+          <span className={styles.analyticsNum}>{data.funnel.createdFirstMemory.pct}%</span>
+          <span className={styles.analyticsSub}>{data.funnel.createdFirstMemory.count}/{data.totalUsers}</span>
+          <span className={styles.analyticsLabel}>Перший Memory</span>
+        </div>
+        <div className={styles.analyticsTile}>
+          <span className={styles.analyticsNum}>{data.active.last7d}</span>
+          <span className={styles.analyticsSub}>активні</span>
+          <span className={styles.analyticsLabel}>За 7 днів</span>
+        </div>
+        <div className={styles.analyticsTile}>
+          <span className={styles.analyticsNum}>{data.active.last30d}</span>
+          <span className={styles.analyticsSub}>активні</span>
+          <span className={styles.analyticsLabel}>За 30 днів</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /** BFS connected components — returns userId → groupId (only for users with family links) */
 function buildFamilyGroups(users: AdminUser[]): Map<string, string> {
   const userIds = new Set(users.map(u => u.id))
@@ -324,26 +402,30 @@ const AdminTab: React.FC = () => {
   }
 
   return (
-    <section className={styles.section}>
-      <div className={styles.sectionHeader}>
-        <span className={styles.sectionTitle}>КОРИСТУВАЧІ</span>
-        <span className={styles.sectionCount}>{users.length}</span>
-      </div>
+    <>
+      <AnalyticsPanel />
 
-      {users.length === 0 && <p className={styles.adminEmpty}>Немає користувачів</p>}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>КОРИСТУВАЧІ</span>
+          <span className={styles.sectionCount}>{users.length}</span>
+        </div>
 
-      <div className={styles.adminList}>
-        {items.map((item) => {
-          if (item.type === 'user') return renderUserCard(item.user)
-          return (
-            <div key={item.groupId} className={styles.adminFamilyGroup}>
-              <span className={styles.adminFamilyLabel}>СІМ'Я</span>
-              {item.members.map(u => renderUserCard(u))}
-            </div>
-          )
-        })}
-      </div>
-    </section>
+        {users.length === 0 && <p className={styles.adminEmpty}>Немає користувачів</p>}
+
+        <div className={styles.adminList}>
+          {items.map((item) => {
+            if (item.type === 'user') return renderUserCard(item.user)
+            return (
+              <div key={item.groupId} className={styles.adminFamilyGroup}>
+                <span className={styles.adminFamilyLabel}>СІМ'Я</span>
+                {item.members.map(u => renderUserCard(u))}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    </>
   )
 }
 

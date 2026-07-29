@@ -24,6 +24,7 @@ export interface IUser extends Document {
   verificationToken: string | null
   resetPasswordToken: string | null
   resetPasswordExpires: Date | null
+  lastLoginAt: Date | null
   reportStyle: string
   mediaEnabledTabs: string[]
   sprintTutorialSeen: boolean
@@ -83,6 +84,7 @@ const schema = new Schema<IUser>({
   verificationToken: { type: String, default: null },
   resetPasswordToken:   { type: String, default: null },
   resetPasswordExpires: { type: Date, default: null },
+  lastLoginAt:          { type: Date, default: null },
   reportStyle:       { type: String, default: 'standard' },
   mediaEnabledTabs:  { type: [String], default: ['movie', 'series', 'anime', 'game'] },
   sprintTutorialSeen: { type: Boolean, default: false },

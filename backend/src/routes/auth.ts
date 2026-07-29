@@ -7,6 +7,7 @@ import {
   forgotPassword, resetPassword,
   getAllUsers, adminSetPlan, adminDeleteUser, adminToggleFlag, refresh, logout,
 } from '../controllers/authController'
+import { getAnalytics } from '../controllers/analyticsController'
 import { requireAuth } from '../middleware/auth'
 import { requireAdmin } from '../middleware/requireAdmin'
 import { validate } from '../middleware/validate'
@@ -43,6 +44,7 @@ router.patch('/me', requireAuth, validate(updateMeSchema), updateMe)
 router.post('/change-password', requireAuth, validate(changePasswordSchema), changePassword)
 
 // Admin
+router.get('/admin/analytics',          requireAuth, requireAdmin, getAnalytics)
 router.get('/admin/users',              requireAuth, requireAdmin, getAllUsers)
 router.patch('/admin/users/:id/plan',  requireAuth, requireAdmin, adminSetPlan)
 router.patch('/admin/users/:id/flags', requireAuth, requireAdmin, adminToggleFlag)
