@@ -31,7 +31,7 @@
 
 .slideHeroImg {
   width: 100%;
-  max-width: 320px;
+  max-width: 310px;
   flex: 1;
   min-height: 0;
   object-fit: contain;
@@ -163,11 +163,13 @@
   margin: 0 0 24px;
 }
 
-.greeting {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0 0 10px;
+.slogan {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text2);
+  line-height: 1.5;
+  margin: 0 0 18px;
+  max-width: 290px;
 }
 
 .desc {
@@ -990,33 +992,38 @@
   gap: 12px;
 }
 
-.doneBanner {
+.doneHero {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  justify-content: center;
   width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
-.doneBannerImg {
-  height: 140px;
+.doneHeroImg {
+  height: 400px;
   width: auto;
-  flex-shrink: 0;
   object-fit: contain;
-  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.45));
   animation: onboardEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .doneBannerText {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 4px;
 }
 
 .doneAvatarRow {
   width: 100%;
   display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.doneAvatarText {
+  display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .doneAvatarLabel {
@@ -1025,12 +1032,6 @@
   font-size: 10px;
   letter-spacing: 0.14em;
   color: var(--text3);
-}
-
-.doneAvatarInner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 
 /* ── Step 6: Summary card ── */
@@ -1059,14 +1060,6 @@
 }
 
 /* ── Step 6: Avatar, verification banner, PWA install ── */
-
-.doneAvatarWrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 16px;
-}
 
 .doneAvatarHint {
   font-size: 11px;

@@ -12,7 +12,7 @@ const TABS: { id: CategoryTab; label: string }[] = [
   { id: 'spaces',    label: 'ПРОСТОРИ' },
   { id: 'finance',   label: 'ФІНАНСИ' },
   { id: 'sprint',    label: 'СПРИНТ' },
-  { id: 'watchlist', label: 'WATCHLIST' },
+  { id: 'watchlist', label: 'МЕДІА' },
 ]
 
 

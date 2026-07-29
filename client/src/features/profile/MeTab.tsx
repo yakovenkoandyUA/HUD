@@ -1,9 +1,10 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import { useAchievementScore } from '@/features/achievements/hooks/useAchievementProgress'
-import { getLevel, getNextLevel, getLevelProgress } from '@/features/achievements/levels'
+import { getLevel, getLevelProgress } from '@/features/achievements/levels'
 import AchievementsTab from '@/features/achievements'
 import styles from './ProfilePage.module.css'
 
@@ -35,6 +36,7 @@ const EditIcon: React.FC = () => (
  * Рівень, прогрес, ранг — в нижній секції картки.
  */
 const MeTab: React.FC = () => {
+  const navigate = useNavigate()
   const { activeProfile, updateProfile } = useProfileStore()
   const { showToast, setUpdateAvailable } = useUiStore()
 
@@ -131,113 +133,106 @@ const MeTab: React.FC = () => {
 
   const score    = useAchievementScore()
   const level    = getLevel(score.earned)
-  const nextLvl  = getNextLevel(score.earned)
   const progress = getLevelProgress(score.earned)
 
   return (
     <div className={styles.tabContent}>
-      <div className={styles.heroCard}>
+      <div className={styles.heroCard} style={{ '--level-color': level.color } as React.CSSProperties}>
 
-        {/* ── Top: avatar + identity + edit button ── */}
-        <div className={styles.identityRow}>
-          <div className={styles.avatarWrap}>
-            <button
-              type="button"
-              className={styles.avatarBtn}
-              style={{ borderColor: level.color }}
-              onClick={() => fileRef.current?.click()}
-              disabled={uploadingAvatar}
-              aria-label="Змінити аватар"
-            >
-              {activeProfile.avatarUrl
-                ? <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
-                : <span className={styles.avatarInitial}>{activeProfile.name[0].toUpperCase()}</span>
-              }
-            </button>
-            <div className={styles.avatarBadge} aria-hidden="true">
-              {uploadingAvatar ? <div className={styles.spinner} /> : <CameraIcon />}
-            </div>
-            <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleAvatarChange} />
-          </div>
-
-          <div className={styles.profileCol}>
-            {heroEditing ? (
-              <>
-                <input
-                  ref={nameRef}
-                  type="text"
-                  value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') usernameRef.current?.focus() }}
-                  className={styles.heroNameInput}
-                  maxLength={32}
-                  disabled={savingName}
-                  placeholder="Ім'я"
-                />
-                <div className={styles.heroUsernameInputRow}>
-                  <span className={styles.heroUsernameAt}>@</span>
-                  <input
-                    ref={usernameRef}
-                    type="text"
-                    value={usernameInput}
-                    onChange={e => setUsernameInput(e.target.value.toLowerCase())}
-                    onKeyDown={e => { if (e.key === 'Enter') handleSaveAll(); if (e.key === 'Escape') setHeroEditing(false) }}
-                    className={styles.heroUsernameInput}
-                    maxLength={30}
-                    disabled={savingUsername}
-                    autoCapitalize="none"
-                  />
+        <div className={styles.heroLeft}>
+          {/* ── Top: avatar + name ── */}
+          <div className={styles.identityRow}>
+            <div className={styles.avatarCol}>
+              <div className={styles.avatarWrap}>
+                <button
+                  type="button"
+                  className={styles.avatarBtn}
+                  style={{ borderColor: level.color }}
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  aria-label="Змінити аватар"
+                >
+                  {activeProfile.avatarUrl
+                    ? <img src={activeProfile.avatarUrl} alt={activeProfile.name} className={styles.avatarImg} />
+                    : <span className={styles.avatarInitial}>{activeProfile.name[0].toUpperCase()}</span>
+                  }
+                </button>
+                <div className={styles.avatarBadge} aria-hidden="true">
+                  {uploadingAvatar ? <div className={styles.spinner} /> : <CameraIcon />}
                 </div>
-              </>
-            ) : (
-              <>
-                <span className={styles.profileName}>{activeProfile.name}</span>
-                <span className={styles.profileUsername}>@{activeProfile.username}</span>
-              </>
-            )}
-          </div>
+                <button
+                  type="button"
+                  className={`${styles.avatarEditBtn} ${heroEditing ? styles.avatarEditBtnActive : ''}`}
+                  onClick={heroEditing ? handleSaveAll : () => setHeroEditing(true)}
+                  aria-label={heroEditing ? 'Зберегти' : 'Редагувати'}
+                  disabled={savingName || savingUsername}
+                >
+                  {heroEditing ? <CheckIcon /> : <EditIcon />}
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" className={styles.fileInput} onChange={handleAvatarChange} />
+              </div>
 
-          <button
-            type="button"
-            className={`${styles.heroEditBtn} ${heroEditing ? styles.heroEditBtnActive : ''}`}
-            onClick={heroEditing ? handleSaveAll : () => setHeroEditing(true)}
-            aria-label={heroEditing ? 'Зберегти' : 'Редагувати'}
-            disabled={savingName || savingUsername}
-          >
-            {heroEditing ? <CheckIcon /> : <EditIcon />}
-          </button>
+              {heroEditing ? (
+                <div className={styles.profileColEditing}>
+                  <input
+                    ref={nameRef}
+                    type="text"
+                    value={nameInput}
+                    onChange={e => setNameInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') usernameRef.current?.focus() }}
+                    className={styles.heroNameInput}
+                    maxLength={32}
+                    disabled={savingName}
+                    placeholder="Ім'я"
+                  />
+                  <div className={styles.heroUsernameInputRow}>
+                    <span className={styles.heroUsernameAt}>@</span>
+                    <input
+                      ref={usernameRef}
+                      type="text"
+                      value={usernameInput}
+                      onChange={e => setUsernameInput(e.target.value.toLowerCase())}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSaveAll(); if (e.key === 'Escape') setHeroEditing(false) }}
+                      className={styles.heroUsernameInput}
+                      maxLength={30}
+                      disabled={savingUsername}
+                      autoCapitalize="none"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.profileColStatic}>
+                  <span className={styles.profileName}>{activeProfile.name}</span>
+                  <span className={styles.profileUsername}>@{activeProfile.username}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* ── Divider ── */}
-        <div className={styles.heroDivider} />
+        <button
+          type="button"
+          className={styles.monolithBtn}
+          style={{ '--level-color': level.color } as React.CSSProperties}
+          onClick={() => navigate('/profile/levels')}
+          aria-label="Шлях рівнів"
+        >
+          <img
+            src="/achivement/monolite-noBg.png"
+            alt=""
+            className={styles.monolithBtnImg}
+            draggable={false}
+          />
+          <span className={styles.monolithBtnLabel} style={{ color: level.color, borderColor: level.color }}>
+            {level.label}
+          </span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={styles.monolithBtnChevron} aria-hidden="true">
+            <path d="M4.5 2.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
 
-        {/* ── Level + progress + badge ── */}
-        <div className={styles.levelRow}>
-          <div className={styles.levelBody}>
-            <span className={styles.levelTitle}>РІВЕНЬ {level.level}</span>
-            <div className={styles.levelProgressWrap}>
-              <div className={styles.levelProgressFill} style={{ width: `${progress}%` }} />
-            </div>
-            <p className={styles.levelSub}>
-              {nextLvl
-                ? <><span className={styles.levelSubCurrent}>{score.earned}</span>{' / '}{nextLvl.minRunes}{' рун'}</>
-                : <><span className={styles.levelSubCurrent}>{score.earned}</span>{' рун · МАКСИМУМ'}</>
-              }
-            </p>
-          </div>
-
-          <div className={styles.levelBadge}>
-            <img
-              src={`/achive/profile/level-${level.level}.png`}
-              alt={level.label}
-              className={styles.levelBadgeImg}
-              draggable={false}
-              onError={(e) => { (e.target as HTMLImageElement).src = '/achive/achive-treaser.png' }}
-            />
-            <span className={styles.levelBadgeLabel} style={{ color: level.color, borderColor: level.color }}>
-              {level.label}
-            </span>
-          </div>
+        <div className={styles.heroProgressBar} aria-hidden="true">
+          <div className={styles.heroProgressFill} style={{ width: `${progress}%` }} />
         </div>
 
       </div>

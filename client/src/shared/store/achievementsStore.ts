@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { useProfileStore } from './profileStore'
-import { ACHIEVEMENTS_BY_ID, type Achievement } from '@/shared/data/achievements'
+import { ACHIEVEMENTS_BY_ID, getAchievementReward, type Achievement } from '@/shared/data/achievements'
 import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
 import type { AchievementCategory } from '@/features/achievements/types'
 import { getLevel, type Level } from '@/features/achievements/levels'
@@ -70,7 +70,7 @@ interface AchievementsState {
 }
 
 function calcRunes(ids: { id: string }[]): number {
-  return ids.reduce((sum, u) => sum + (ACHIEVEMENT_BY_ID[u.id]?.reward ?? 0), 0)
+  return ids.reduce((sum, u) => sum + getAchievementReward(u.id), 0)
 }
 
 export const useAchievementsStore = create<AchievementsState>()((set) => ({

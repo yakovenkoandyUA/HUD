@@ -56,6 +56,10 @@ const Dashboard: React.FC = () => {
 
   // Suppress daily greeting if first_visit fires in this session
   const firstVisitInSession = useRef(!welcomeSeen)
+  // Freeze the "show welcome hint" decision at mount — markWelcomeSeen() persists
+  // right away (so quick navigation away doesn't lose it), but must not yank the
+  // hint out of the tree mid-display once welcomeSeen flips to true.
+  const showWelcomeHint = useRef(!welcomeSeen)
   const [showDailyGreeting, setShowDailyGreeting] = useState(false)
   const dailyGreetingDecided = useRef(false)
 
@@ -201,7 +205,7 @@ const Dashboard: React.FC = () => {
         />
 
         {/* First-visit Mimir — floats over content via portal */}
-        {!welcomeSeen && (
+        {showWelcomeHint.current && (
           <div className={styles.mimirFloat}>
             <MimirHint
               pose="excited"

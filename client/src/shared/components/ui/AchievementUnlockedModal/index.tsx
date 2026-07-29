@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
+import { getAchievementReward, TOTAL_ACHIEVEMENT_COUNT } from '@/shared/data/achievements'
 import styles from './AchievementUnlockedModal.module.css'
 
 const AUTO_DISMISS_MS = 6000
@@ -58,8 +59,8 @@ const AchievementUnlockedModal: React.FC = () => {
   const meta     = ACHIEVEMENT_BY_ID[pending.id]
   const category = meta?.category ?? 'memory'
   const runeSrc  = RUNE_SRC[category]
-  const reward      = meta?.reward ?? 0
-  const totalAch    = Object.keys(ACHIEVEMENT_BY_ID).length
+  const reward      = getAchievementReward(pending.id)
+  const totalAch    = TOTAL_ACHIEVEMENT_COUNT
 
   return (
     <div

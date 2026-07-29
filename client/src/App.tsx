@@ -34,6 +34,7 @@ import MeModules from '@/features/profile/MeModules'
 import MeFamily from '@/features/profile/MeFamily'
 import AdminTab from '@/features/profile/AdminTab'
 import MeAccount from '@/features/profile/MeAccount'
+import MeLevels from '@/features/profile/MeLevels'
 import VerifyEmail from '@/features/auth/VerifyEmail'
 import ForgotPasswordScreen from '@/features/auth/ForgotPassword'
 import ResetPasswordScreen from '@/features/auth/ResetPassword'
@@ -128,6 +129,7 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/profile/modules"    element={<ProfileSubPage title="ПРОСТОРИ"><MeModules /></ProfileSubPage>} />
           <Route path="/profile/family"     element={<MeFamily />} />
           <Route path="/profile/account"    element={<ProfileSubPage title="НАЛАШТУВАННЯ"><MeAccount /></ProfileSubPage>} />
+          <Route path="/profile/levels"     element={<ProfileSubPage title="ШЛЯХ РІВНІВ" fullBleed><MeLevels /></ProfileSubPage>} />
           <Route path="/profile/admin"      element={<ProfileSubPage title="АДМІН"><AdminTab /></ProfileSubPage>} />
           <Route path="/notes" element={<NotesScreen />} />
           <Route path="/timeline" element={<TimelineScreen />} />

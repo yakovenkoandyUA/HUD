@@ -1,9 +1,14 @@
 import type { DoodleVariant } from '@/shared/components/ui/DoodleIllustration'
+import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
 
 /**
  * achievements.ts
  * ---------------
- * Статичний каталог досягнень MIMIR — суто косметичний шар мотивації.
+ * Статичний каталог "тізер"-досягнень MIMIR — 12 флагманських віх (по одній
+ * на фічу), використовується лише для Dashboard-тізера "СПРОБУЙ".
+ * Джерело істини для рун/рівнів — `@/features/achievements/data` (50 ачівок);
+ * `reward` тут задається лише для 7 ідентифікаторів що не мають відповідника
+ * в тому каталозі (решта 5 — ті самі id що і в rich-каталозі, reward береться звідти).
  * НЕ контролює доступ до жодної фічі (доступ керується boolean-флагами
  * профілю/підпискою) — лише фіксує "перші кроки" юзера і святкує їх.
  */
@@ -19,6 +24,8 @@ export interface Achievement {
   color: string
   /** Власна іконка вузла на стежці — окрема для кожної ачівки, не загальний трофей */
   illustration: DoodleVariant
+  /** Тільки для id відсутніх в rich-каталозі — див. getAchievementReward() */
+  reward?: number
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -48,6 +55,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     route: '/recipes',
     color: 'var(--second)',
     illustration: 'recipes',
+    reward: 10,
   },
   {
     id: 'first-watchlist',
@@ -75,6 +83,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     route: '/profile?tab=me&section=appearance',
     color: 'var(--text)',
     illustration: 'theme',
+    reward: 10,
   },
   {
     id: 'first-prediction',
@@ -84,6 +93,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     route: '/f1',
     color: 'var(--second)',
     illustration: 'racing',
+    reward: 10,
   },
   {
     id: 'family-linked',
@@ -93,6 +103,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     route: '/profile?tab=me&section=family',
     color: 'var(--accent)',
     illustration: 'family',
+    reward: 15,
   },
   {
     id: 'first-note',
@@ -102,6 +113,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     route: '/notes',
     color: 'var(--text2)',
     illustration: 'notes',
+    reward: 10,
   },
   {
     id: 'first-goal',
@@ -120,6 +132,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     route: '/',
     color: 'var(--negative)',
     illustration: 'mood',
+    reward: 10,
   },
   {
     id: 'streak-7',
@@ -129,8 +142,24 @@ export const ACHIEVEMENTS: Achievement[] = [
     route: '/sprint',
     color: 'var(--gold)',
     illustration: 'streak',
+    reward: 20,
   },
 ]
 
 export const ACHIEVEMENTS_BY_ID: Record<string, Achievement> =
   Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]))
+
+/**
+ * Єдина точка правди для нарахування рун — rich-каталог (`ACHIEVEMENT_BY_ID`)
+ * має пріоритет, легасі `reward` використовується лише для 7 id що не мають
+ * відповідника в rich-каталозі.
+ */
+export function getAchievementReward(id: string): number {
+  return ACHIEVEMENT_BY_ID[id]?.reward ?? ACHIEVEMENTS_BY_ID[id]?.reward ?? 0
+}
+
+/** Кількість унікальних ачівок в обох каталогах разом (для "X / Y ВІДКРИТО") */
+export const TOTAL_ACHIEVEMENT_COUNT = new Set([
+  ...Object.keys(ACHIEVEMENT_BY_ID),
+  ...ACHIEVEMENTS.map(a => a.id),
+]).size

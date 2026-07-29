@@ -1,22 +1,24 @@
 export interface Level {
   level: number
   label: string
+  /** Коротке слово-девіз рангу — підпис під назвою на моноліті рівнів */
+  hint: string
   minRunes: number
   color: string
   unlocksTheme?: string
 }
 
 export const LEVELS: Level[] = [
-  { level: 1,  minRunes: 0,    label: 'МАНДРІВНИК', color: 'var(--text3)' },
-  { level: 2,  minRunes: 30,   label: 'УЧЕНЬ',       color: 'var(--text2)' },
-  { level: 3,  minRunes: 80,   label: 'СЛІДОПИТ',    color: 'var(--accent)', unlocksTheme: 'arctic' },
-  { level: 4,  minRunes: 150,  label: 'ШУКАЧ',       color: 'var(--accent)' },
-  { level: 5,  minRunes: 250,  label: 'ХРАНИТЕЛЬ',   color: 'var(--second)', unlocksTheme: 'noir' },
-  { level: 6,  minRunes: 400,  label: 'ПРОВИДЕЦЬ',   color: 'var(--second)' },
-  { level: 7,  minRunes: 550,  label: 'МУДРЕЦЬ',      color: 'var(--gold)',   unlocksTheme: 'cyber' },
-  { level: 8,  minRunes: 700,  label: 'ПРОСВІТЛЕНИЙ', color: 'var(--gold)' },
-  { level: 9,  minRunes: 850,  label: 'ОРАКУЛ',       color: 'var(--gold)',   unlocksTheme: 'pixel' },
-  { level: 10, minRunes: 1010, label: 'МІМІР',       color: 'var(--gold)' },
+  { level: 1,  minRunes: 0,    label: 'МАНДРІВНИК',   hint: 'ПОЧАТОК',        color: 'var(--text3)' },
+  { level: 2,  minRunes: 30,   label: 'УЧЕНЬ',         hint: 'ДИСЦИПЛІНА',     color: 'var(--text2)' },
+  { level: 3,  minRunes: 80,   label: 'СЛІДОПИТ',      hint: 'ПОШУК',          color: 'var(--accent)', unlocksTheme: 'arctic' },
+  { level: 4,  minRunes: 150,  label: 'ШУКАЧ',         hint: 'НАПОЛЕГЛИВІСТЬ', color: 'var(--accent)' },
+  { level: 5,  minRunes: 250,  label: 'ХРАНИТЕЛЬ',     hint: "ПАМ'ЯТЬ",       color: 'var(--second)', unlocksTheme: 'noir' },
+  { level: 6,  minRunes: 400,  label: 'ПРОВИДЕЦЬ',     hint: 'ПРОЗРІННЯ',     color: 'var(--second)' },
+  { level: 7,  minRunes: 550,  label: 'МУДРЕЦЬ',       hint: 'ГЛИБИНА',       color: 'var(--gold)',   unlocksTheme: 'cyber' },
+  { level: 8,  minRunes: 700,  label: 'ПРОСВІТЛЕНИЙ',  hint: 'ЯСНІСТЬ',       color: 'var(--gold)' },
+  { level: 9,  minRunes: 850,  label: 'ОРАКУЛ',        hint: 'ПРАВДА',        color: 'var(--gold)',   unlocksTheme: 'pixel' },
+  { level: 10, minRunes: 1010, label: 'МІМІР',         hint: 'ЛЕГЕНДА',       color: 'var(--gold)' },
 ]
 
 /** Themes available without any requirement */

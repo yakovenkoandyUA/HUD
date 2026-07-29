@@ -1,0 +1,153 @@
+/* ── Single full-height atmospheric stage (fills remaining page height) ── */
+
+.stage {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.stageImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  user-select: none;
+  pointer-events: none;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.25) 20%,
+    transparent 34%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Top bar overlay — progress right under the header, runes bottom-right ── */
+
+.topBar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 12px 16px 0;
+}
+
+.topProgressWrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.topProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 60%, var(--bg)), var(--accent));
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.topRunes {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Level node (orb + leader line + label), positioned as % of .stage ── */
+
+.node {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  transform: translateY(-50%);
+}
+
+.nodeRune {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  flex-shrink: 0;
+  object-fit: contain;
+  user-select: none;
+  filter: drop-shadow(0 0 0 transparent);
+  transition: filter 0.3s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease, margin-left 0.3s ease;
+}
+
+.nodeLocked .nodeRune {
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.55;
+}
+
+.nodeUnlocked .nodeRune {
+  filter: drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--node-color) 60%, transparent));
+}
+
+.nodeCurrent .nodeRune {
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  animation: nodePulse 2.2s ease-in-out infinite;
+}
+
+@keyframes nodePulse {
+  0%, 100% { filter: drop-shadow(0 0 5px var(--node-color)) drop-shadow(0 0 10px color-mix(in srgb, var(--node-color) 70%, transparent)); }
+  50%      { filter: drop-shadow(0 0 8px var(--node-color)) drop-shadow(0 0 16px var(--node-color)); }
+}
+
+.nodeLine {
+  width: 14px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.nodeUnlocked .nodeLine { background: color-mix(in srgb, var(--node-color) 55%, rgba(255, 255, 255, 0.25)); }
+
+.nodeLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  white-space: nowrap;
+}
+
+.nodeTitle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nodeUnlocked .nodeTitle { color: var(--node-color); }
+.nodeCurrent .nodeTitle { color: #fff; }
+
+.nodeHint {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.45);
+}

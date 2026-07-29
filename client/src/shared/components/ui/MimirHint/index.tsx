@@ -136,11 +136,8 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
   // true якщо поточний показ — останній дозволений сьогодні
   const isLastShow = useState(() => !oneTime && getDailyRecord().count === MAX_DAILY_SHOWS - 1)[0]
 
-  const dismissedRef = useRef(dismissed)
-  dismissedRef.current = dismissed
   const onDismissRef = useRef(onDismiss)
   onDismissRef.current = onDismiss
-  const mountTimeRef = useRef(Date.now())
 
   // Щоденний лічильник: рахуємо цей показ при монтуванні (не oneTime)
   useEffect(() => {
@@ -148,13 +145,11 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // For oneTime hints: mark as seen on unmount only if visible for ≥ 3s (user had time to read it)
+  // For oneTime hints: mark as seen as soon as it's actually rendered on screen —
+  // navigating away right after mount must not un-persist the "seen" state
   useEffect(() => {
     if (!oneTime) return
-    return () => {
-      if (!dismissedRef.current && Date.now() - mountTimeRef.current > 3000)
-        onDismissRef.current?.()
-    }
+    onDismissRef.current?.()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

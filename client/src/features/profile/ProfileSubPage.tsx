@@ -10,15 +10,18 @@ import styles from './ProfilePage.module.css'
  * Reuses ProfilePage header styles: back button + title, no logout button.
  *
  * Props:
- * @prop {string}    title    — page title shown in header (uppercase)
- * @prop {ReactNode} children — page content
+ * @prop {string}    title      — page title shown in header (uppercase)
+ * @prop {ReactNode} children   — page content
+ * @prop {boolean}   [fullBleed] — skip `.content` padding/gap so children can fill edge-to-edge
+ *                                 (e.g. a full-height background photo like MeLevels)
  */
 interface ProfileSubPageProps {
   title: string
   children: ReactNode
+  fullBleed?: boolean
 }
 
-const ProfileSubPage: React.FC<ProfileSubPageProps> = ({ title, children }) => {
+const ProfileSubPage: React.FC<ProfileSubPageProps> = ({ title, children, fullBleed }) => {
   const navigate = useNavigate()
   return (
     <div className={styles.page}>
@@ -31,7 +34,7 @@ const ProfileSubPage: React.FC<ProfileSubPageProps> = ({ title, children }) => {
         <span className={styles.headerTitle}>{title}</span>
         <span className={styles.headerSpacer} />
       </div>
-      <div className={styles.content}>
+      <div className={fullBleed ? styles.contentFullBleed : styles.content}>
         {children}
       </div>
     </div>

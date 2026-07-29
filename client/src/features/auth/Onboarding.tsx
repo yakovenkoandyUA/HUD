@@ -354,7 +354,7 @@ const OnboardingScreen: React.FC = () => {
             <div className={styles.slideCopy}>
               <h1 className={styles.wordmark}>MIMIR</h1>
               <p className={styles.tagline}>DRINK DEEP</p>
-              <p className={styles.greeting}>Занурся глибше.</p>
+              <p className={styles.slogan}>Thought finds the path. Memory gives it meaning.</p>
               <p className={styles.desc}>
                 Особистий простір для пам'яті, фінансів, звичок і всього, що формує твоє життя.
               </p>
@@ -654,34 +654,34 @@ const OnboardingScreen: React.FC = () => {
 
         {/* ── Step 6: Done ────────────────────────────────────── */}
         {step === 6 && (
-          <div className={`${styles.step} ${styles.stepLeft} ${styles.stepDone}`}>
-            <div className={styles.doneBanner}>
+          <div className={`${styles.step} ${styles.stepDone}`}>
+            <div className={styles.doneHero}>
               <img
                 src="/mimir/mimir-celebrating.png"
                 alt="Mimir"
-                className={styles.doneBannerImg}
+                className={styles.doneHeroImg}
                 draggable={false}
               />
-              <div className={styles.doneBannerText}>
-                <h2 className={styles.doneTitle}>Криниця відкрита.</h2>
-                <p className={styles.doneDesc}>Мімір пам'ятає все — тепер і твоє. Твоя хроніка починається.</p>
-              </div>
+            </div>
+            <div className={styles.doneBannerText}>
+              <h2 className={styles.doneTitle}>Криниця відкрита.</h2>
+              <p className={styles.doneDesc}>Мімір пам'ятає все — тепер і твоє. Твоя хроніка починається.</p>
             </div>
 
-            {/* Avatar upload — compact inline row */}
+            {/* Avatar upload — circular */}
             <div className={styles.doneAvatarRow}>
-              <span className={styles.doneAvatarLabel}>ФОТО ПРОФІЛЮ</span>
-              <div className={styles.doneAvatarInner}>
-                <ImageUploadButton
-                  currentUrl={avatarUrl || undefined}
-                  folder="mimir/avatars"
-                  onUpload={url => {
-                    setAvatarUrl(url)
-                    updateProfile({ avatarUrl: url }).catch(() => {})
-                  }}
-                  placeholder="Додати фото"
-                  variant="compact"
-                />
+              <ImageUploadButton
+                currentUrl={avatarUrl || undefined}
+                folder="mimir/avatars"
+                onUpload={url => {
+                  setAvatarUrl(url)
+                  updateProfile({ avatarUrl: url }).catch(() => {})
+                }}
+                placeholder="Додати фото"
+                variant="circle"
+              />
+              <div className={styles.doneAvatarText}>
+                <span className={styles.doneAvatarLabel}>ФОТО ПРОФІЛЮ</span>
                 <span className={styles.doneAvatarHint}>необов'язково</span>
               </div>
             </div>

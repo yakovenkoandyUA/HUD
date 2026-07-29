@@ -8,6 +8,7 @@ import { useSprintStreakStore } from '@/features/sprint/store/sprintStreakStore'
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { ACHIEVEMENT_DEFS, ACHIEVEMENT_BY_ID } from '../data'
+import { getAchievementReward } from '@/shared/data/achievements'
 import type { AchievementWithStatus, AchievementStatus } from '../types'
 
 const EMPTY_UNLOCKED: { id: string }[] = []
@@ -105,7 +106,7 @@ export function useAchievementProgress(): AchievementWithStatus[] {
       'living-space':       maxMemoriesInOneSpace(memories),
       'full-space':         maxMemoriesInOneSpace(memories),
       'first-auto':         spaces.filter(s => s.type === 'vehicle').length,
-      'first-home':         spaces.filter(s => s.type === 'plant').length,
+      'first-pet':          spaces.filter(s => s.type === 'pet').length,
       'life-map':           distinctSpaceTypes(spaces),
 
       // ── Finance ───────────────────────────────────────────────────────────
@@ -138,7 +139,7 @@ export function useAchievementProgress(): AchievementWithStatus[] {
       'first-series':      watchItems.filter(i => i.category === 'series').length,
       'first-anime':       watchItems.filter(i => i.category === 'anime').length,
       'watched-completed': watchItems.filter(i => i.status === 'watched' || i.status === 'dropped').length,
-      'not-just-list':     watchItems.filter(i => i.rating !== null && i.rating !== undefined).length,
+      'not-just-list':     watchItems.filter(i => i.status === 'watched' || i.status === 'dropped').length,
       'first-rating':      watchItems.filter(i => i.rating !== null && i.rating !== undefined).length,
       'ten-watchlist':     watchItems.length,
       'taste-archive':     watchItems.filter(i => i.status === 'watched' || i.status === 'dropped').length,
@@ -173,19 +174,24 @@ export function useAchievementById(id: string): AchievementWithStatus | undefine
   return useMemo(() => all.find(a => a.id === id), [all, id])
 }
 
+/**
+ * Rune score — сумується з ПЕРСИСТНУТИХ `unlockedAchievements`, а не з live
+ * прогресу, щоб завжди збігатись з `useRuneScore()` (AppHeader/ProfileDrawer).
+ * `max` — сума всіх ачівок обох каталогів разом (rich + унікальні legacy).
+ */
 export function useAchievementScore(): { earned: number; max: number } {
-  const all = useAchievementProgress()
+  const unlocked = useProfileStore(s => s.activeProfile?.unlockedAchievements ?? EMPTY_UNLOCKED)
   return useMemo(() => ({
-    earned: all.filter(a => a.status === 'unlocked').reduce((s, a) => s + a.reward, 0),
+    earned: unlocked.reduce((s, u) => s + getAchievementReward(u.id), 0),
     max:    ACHIEVEMENT_DEFS.reduce((s, a) => s + a.reward, 0),
-  }), [all])
+  }), [unlocked])
 }
 
 /** Lightweight score hook — reads only profileStore, no heavy store subscriptions */
 export function useRuneScore(): number {
   const unlocked = useProfileStore(s => s.activeProfile?.unlockedAchievements ?? [])
   return useMemo(
-    () => unlocked.reduce((sum, u) => sum + (ACHIEVEMENT_BY_ID[u.id]?.reward ?? 0), 0),
+    () => unlocked.reduce((sum, u) => sum + getAchievementReward(u.id), 0),
     [unlocked],
   )
 }
@@ -196,7 +202,7 @@ export function useAutoUnlock() {
 
   return useMemo(() => {
     const unlocked = new Set((activeProfile?.unlockedAchievements ?? EMPTY_UNLOCKED).map(u => u.id))
-    const toUnlock = all.filter(a => a.status === 'unlocked' && !unlocked.has(a.id) && !ACHIEVEMENT_BY_ID[a.id]?.hidden)
+    const toUnlock = all.filter(a => a.status === 'unlocked' && !unlocked.has(a.id))
     return toUnlock
   }, [all, activeProfile])
 }
