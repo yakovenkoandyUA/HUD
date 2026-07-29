@@ -7,7 +7,7 @@ import RaceCalendarList from './components/f1/RaceCalendarList'
 import ChampionshipTable from './components/f1/ChampionshipTable'
 import LastRaceCard from './components/f1/LastRaceCard'
 import { F1_SEASON_2026 } from './data/f1Season2026'
-import { getNextRace, getNextRound } from './utils/f1'
+import { getNextRace, getNextRound, getRaceThisWeek } from './utils/f1'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useF1PredictionsStore, toRaceId, isRaceLocked } from '@/features/f1/store/f1PredictionsStore'
 import styles from './F1.module.css'
@@ -31,7 +31,12 @@ const F1Screen: React.FC = () => {
 
   const [liveActive, setLiveActive] = useState(false)
 
+  // Only poll for a live session during an actual race week — avoids hammering
+  // the OpenF1 proxy every 60s between seasons when nothing can possibly be live.
+  const raceThisWeek = getRaceThisWeek(F1_SEASON_2026)
+
   useEffect(() => {
+    if (!raceThisWeek) { setLiveActive(false); return }
     let cancelled = false
     const check = async () => {
       try {
@@ -50,7 +55,7 @@ const F1Screen: React.FC = () => {
     check()
     const timer = setInterval(check, 60_000)
     return () => { cancelled = true; clearInterval(timer) }
-  }, [])
+  }, [raceThisWeek])
 
   const nextRace  = getNextRace(F1_SEASON_2026)
   const nextRound = getNextRound(F1_SEASON_2026)
