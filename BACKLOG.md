@@ -377,6 +377,14 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 - Backend: `GET /api/mood/family/:date` (новий, поряд з існуючим `/family/today`) — той самий join з `getAcceptedFamilyIds`, винесений у спільну `getFamilyMoodsForDate(userId, date)`.
 - Frontend: `moodStore` — `familyMoodsByDate: Record<string, FamilyMoodEntry[]>` кеш + `fetchFamilyMoodsForDate(date)`.
 
+### ✅ Базова аналітика — launch-readiness funnel (2026-07-29)
+
+Замість стороннього сервісу (PostHog/GA) чи окремого event-трекінгу — funnel виводиться з уже наявних timestamp-полів: `User.createdAt`/`onboardingCompleted`, `Space.createdAt`, `Memory.createdAt`. Причина: MIMIR позиціонується на приватності (RELEASE.md "Приватність"), сторонній аналітичний сервіс — ще один процесор персональних даних, якого треба додавати в `/privacy`; на масштабі <100 юзерів повний event-pipeline — оверінжиніринг.
+
+- **Backend**: `User.lastLoginAt: Date|null` — оновлюється (fire-and-forget) в `sendAuthResponse` (login/register/google/verify/reset) і в `refresh` — proxy для "активний юзер" без окремого heartbeat-механізму. `backend/src/controllers/analyticsController.ts` → `GET /api/auth/admin/analytics` (requireAdmin): total users, onboarding/перший Space/перший Memory % (через `Space.distinct('ownerId')`/`Memory.distinct('userId')`), активні за 7д/30д (`lastLoginAt`), реєстрації по днях (aggregate).
+- **Frontend**: `AdminTab` → `AnalyticsPanel` — грід з 5 плиток (onboarding%, перший Space%, перший Memory%, активні 7д, активні 30д) над списком юзерів.
+- Закриває чекбокс "Базова аналітика" з RELEASE.md Етап 0. Якщо пізніше знадобиться по-екранний/поведінковий трекінг — окремий легкий event-лог (свій, не сторонній), не раніше.
+
 ### ✅ Відновлення пароля + Spaces фікси (2026-07-29)
 
 - **Forgot/Reset password** — `POST /api/auth/forgot-password` ({email} → якщо акаунт з паролем існує, генерує `resetPasswordToken`+`resetPasswordExpires` (1г), шле лист через Resend; завжди `{ok:true}` — анти-enumeration) + `POST /api/auth/reset-password` ({token, newPassword} → перевіряє токен+expiry, хешує новий пароль, автологінить JWT+refresh, як verify-email). Frontend: `/forgot-password` (ForgotPassword.tsx), `/reset-password?token=` (ResetPassword.tsx, автологін+редірект), лінк "Забули пароль?" на Login. Закриває блокер з RELEASE.md Етап 0 (реєстрація була, відновлення доступу — не було).
