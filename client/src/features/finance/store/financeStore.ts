@@ -147,7 +147,14 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
           return { syncStatus: 'synced', transactions }
         })
       })
-      .catch(() => set({ syncStatus: 'error' }))
+      .catch(() => {
+        set(s => {
+          const transactions = s.transactions.filter(t => t.id !== tx.id)
+          const balance = s.balance - amount
+          writeCache(transactions, balance)
+          return { balance, transactions, syncStatus: 'error' }
+        })
+      })
   },
 
   addExpense: (amount, description, category, tripMemoryId, spaceId, subcategory, date) => {
@@ -177,7 +184,14 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
           return { syncStatus: 'synced', transactions }
         })
       })
-      .catch(() => set({ syncStatus: 'error' }))
+      .catch(() => {
+        set(s => {
+          const transactions = s.transactions.filter(t => t.id !== tx.id)
+          const balance = s.balance + amount
+          writeCache(transactions, balance)
+          return { balance, transactions, syncStatus: 'error' }
+        })
+      })
   },
 
   renameTransaction: (id, title) =>
@@ -250,7 +264,15 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     writeCache(transactions, balance)
     set({ balance, transactions, syncStatus: 'syncing' })
     authFetch(`/api/transactions/${id}`, { method: 'DELETE' })
+      .then(r => { if (!r.ok) throw new Error() })
       .then(() => set({ syncStatus: 'synced' }))
-      .catch(() => set({ syncStatus: 'error' }))
+      .catch(() => {
+        set(s2 => {
+          const restored = [tx, ...s2.transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          const restoredBalance = s2.balance - delta
+          writeCache(restored, restoredBalance)
+          return { balance: restoredBalance, transactions: restored, syncStatus: 'error' }
+        })
+      })
   },
 }))
