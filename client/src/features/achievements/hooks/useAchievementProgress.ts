@@ -7,7 +7,7 @@ import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { useSprintStreakStore } from '@/features/sprint/store/sprintStreakStore'
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore'
 import { useProfileStore } from '@/shared/store/profileStore'
-import { ACHIEVEMENT_DEFS, ACHIEVEMENT_BY_ID } from '../data'
+import { ACHIEVEMENT_DEFS } from '../data'
 import { getAchievementReward } from '@/shared/data/achievements'
 import type { AchievementWithStatus, AchievementStatus } from '../types'
 
