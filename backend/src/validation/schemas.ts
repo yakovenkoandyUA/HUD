@@ -27,6 +27,15 @@ export const changePasswordSchema = z.object({
   newPassword:     z.string().min(6, 'Новий пароль мінімум 6 символів'),
 })
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Невалідний email'),
+})
+
+export const resetPasswordSchema = z.object({
+  token:       z.string().min(1, 'token required'),
+  newPassword: z.string().min(6, 'Пароль мінімум 6 символів'),
+})
+
 export const updateMeSchema = z.object({
   name:              z.string().min(1).max(64).optional(),
   avatarUrl:         z.string().url().optional(),

@@ -163,6 +163,8 @@ const LoginScreen: React.FC = () => {
             <PasswordToggleButton visible={showPassword} onToggle={() => setShowPassword(v => !v)} />
           </div>
 
+          <Link to="/forgot-password" className={styles.forgotLink}>Забули пароль?</Link>
+
           {error && <p className={styles.error}>{error}</p>}
 
           <button

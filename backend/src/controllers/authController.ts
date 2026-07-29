@@ -85,6 +85,79 @@ async function sendVerificationEmail(email: string, token: string, name: string)
   })
 }
 
+async function sendPasswordResetEmail(email: string, token: string, name: string): Promise<void> {
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const link = `${CLIENT_URL}/reset-password?token=${token}`
+  await resend.emails.send({
+    from: 'MIMIR <noreply@mimir-hud.tech>',
+    to: email,
+    subject: 'Відновлення пароля — MIMIR',
+    html: `<!DOCTYPE html>
+<html lang="uk">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0e0e0e;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e0e;padding:40px 0;">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#161616;border:1px solid #2a2a2a;border-radius:2px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.5);">
+
+        <!-- Accent bar -->
+        <tr>
+          <td style="height:4px;background:linear-gradient(90deg,#7a6022,#c9a84c,#f0d98c,#c9a84c,#7a6022);font-size:0;line-height:0;">&nbsp;</td>
+        </tr>
+
+        <!-- Header -->
+        <tr>
+          <td style="background:radial-gradient(ellipse at center,#1c1813 0%,#111 70%);padding:36px 40px 30px;text-align:center;">
+            <img src="${CLIENT_URL}/icons/icon-192.png" width="56" height="56" alt="MIMIR" style="display:block;margin:0 auto 16px;border-radius:12px;border:1px solid #c9a84c;">
+            <div style="font-size:28px;letter-spacing:8px;color:#c9a84c;font-weight:700;font-family:Georgia,serif;">MIMIR</div>
+            <div style="font-size:10px;letter-spacing:4px;color:#666;margin-top:6px;text-transform:uppercase;">Heads Up Display</div>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:40px 40px 32px;">
+            <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;color:#c9a84c;text-transform:uppercase;">◆ Відновлення пароля</p>
+            <p style="margin:0 0 24px;font-size:22px;color:#e8e0d0;line-height:1.4;">Привіт, ${name}!</p>
+            <p style="margin:0 0 32px;font-size:14px;color:#888;line-height:1.7;">
+              Хтось (сподіваємось, ви) запросив відновлення пароля для акаунту <strong style="color:#c9a84c;">MIMIR</strong>. Натисніть кнопку нижче, щоб встановити новий пароль — посилання дійсне <strong style="color:#e8e0d0;">1 годину</strong>. Якщо це були не ви — просто ігноруйте цей лист.
+            </p>
+
+            <!-- CTA Button -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+              <tr>
+                <td style="background:linear-gradient(135deg,#e0c172,#c9a84c);border-radius:2px;box-shadow:0 8px 24px rgba(201,168,76,0.25);">
+                  <a href="${link}" style="display:block;padding:14px 40px;font-size:12px;letter-spacing:3px;color:#0e0e0e;text-decoration:none;font-weight:700;text-transform:uppercase;font-family:Georgia,serif;">
+                    ВІДНОВИТИ ПАРОЛЬ
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;font-size:11px;color:#444;line-height:1.6;word-break:break-all;">
+              Або скопіюйте посилання вручну:<br>
+              <a href="${link}" style="color:#666;">${link}</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="border-top:1px solid #1e1e1e;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:11px;color:#444;letter-spacing:1px;">
+              DRINK DEEP &nbsp;◆&nbsp; mimir-hud.tech
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  })
+}
+
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
@@ -438,6 +511,64 @@ export async function resendVerification(req: Request, res: Response): Promise<v
     res.json({ ok: true })
   } catch {
     res.status(500).json({ error: 'Помилка відправки листа' })
+  }
+}
+
+// ── Password reset ─────────────────────────────────────────────────────────────
+
+/** POST /auth/forgot-password — { email } → sends reset link if account exists (always 200, no email enumeration) */
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  const { email } = req.body as { email?: string }
+  if (!email) {
+    res.status(400).json({ error: 'email required' })
+    return
+  }
+  try {
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
+    if (user?.passwordHash) {
+      const resetToken = crypto.randomBytes(32).toString('hex')
+      user.resetPasswordToken = resetToken
+      user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000)
+      await user.save()
+      if (process.env.RESEND_API_KEY) {
+        sendPasswordResetEmail(user.email!, resetToken, user.name).catch(() => {})
+      }
+    }
+    // Same response whether or not the account exists — prevents email enumeration
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Помилка відправки листа' })
+  }
+}
+
+/** POST /auth/reset-password — { token, newPassword } → sets new password and logs in */
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const { token, newPassword } = req.body as { token?: string; newPassword?: string }
+  if (!token || !newPassword) {
+    res.status(400).json({ error: 'token and newPassword required' })
+    return
+  }
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: 'Пароль мінімум 6 символів' })
+    return
+  }
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    })
+    if (!user) {
+      res.status(400).json({ error: 'Невалідне або прострочене посилання' })
+      return
+    }
+    user.passwordHash = await bcrypt.hash(newPassword, 10)
+    user.resetPasswordToken = null
+    user.resetPasswordExpires = null
+    await user.save()
+    const userId = (user._id as { toString(): string }).toString()
+    await sendAuthResponse(res, userId, user.role, USER_PUBLIC_FIELDS(user))
+  } catch {
+    res.status(500).json({ error: 'Помилка відновлення пароля' })
   }
 }
 

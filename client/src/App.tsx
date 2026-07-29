@@ -35,6 +35,8 @@ import MeFamily from '@/features/profile/MeFamily'
 import AdminTab from '@/features/profile/AdminTab'
 import MeAccount from '@/features/profile/MeAccount'
 import VerifyEmail from '@/features/auth/VerifyEmail'
+import ForgotPasswordScreen from '@/features/auth/ForgotPassword'
+import ResetPasswordScreen from '@/features/auth/ResetPassword'
 import NotFound from '@/features/auth/NotFound'
 import NotesScreen from '@/features/notes'
 import TimelineScreen from '@/features/timeline'
@@ -91,6 +93,8 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/register" element={<RegisterScreen />} />
         <Route path="/verify" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+        <Route path="/reset-password" element={<ResetPasswordScreen />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/payment/result" element={<PaymentResult />} />
@@ -149,6 +153,8 @@ const NavGuard: React.FC = () => {
   if (/^\/profile\/.+/.test(pathname)) return null
   if (pathname === '/login') return null
   if (pathname === '/register') return null
+  if (pathname === '/forgot-password') return null
+  if (pathname === '/reset-password') return null
   if (pathname === '/onboarding') return null
   return <BottomNav />
 }

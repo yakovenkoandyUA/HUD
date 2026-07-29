@@ -1086,7 +1086,7 @@ const SpaceDetailScreen: React.FC = () => {
         />
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && space?.type !== 'cellar' && (
+      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'sports' && space?.type !== 'cellar' && (
       <div className={styles.actions}>
         <button type="button" className={styles.actionBtn} style={colorVar} onClick={() => setAddMemOpen(true)}>
           <span className={styles.actionBtnIcon}>
@@ -1130,7 +1130,7 @@ const SpaceDetailScreen: React.FC = () => {
       </div>
       )}
 
-      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'trip' && space?.type !== 'sports' && space?.type !== 'cellar' && (
+      {space?.type !== 'vehicle' && space?.type !== 'plant' && space?.type !== 'pet' && space?.type !== 'sports' && space?.type !== 'cellar' && (
       <div className={styles.content}>
 
         {/* ── Info Cards ── */}
@@ -1353,8 +1353,8 @@ const SpaceDetailScreen: React.FC = () => {
           )}
         </section>}
 
-        {/* ── Transactions ── */}
-        <section className={styles.section}>
+        {/* ── Transactions (trip renders its own ВИТРАТИ section inside TripSpaceView) ── */}
+        {space?.type !== 'trip' && <section className={styles.section}>
           <h2 className={styles.sectionTitle}>ВИТРАТИ</h2>
 
           {spaceTxs === null ? (
@@ -1406,7 +1406,7 @@ const SpaceDetailScreen: React.FC = () => {
               </div>
             </>
           )}
-        </section>
+        </section>}
       </div>
 
       )}

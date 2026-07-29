@@ -70,6 +70,8 @@ interface ProfileState {
   unlockPIN: () => void
   verifyEmailToken: (token: string) => Promise<void>
   resendVerification: () => Promise<void>
+  requestPasswordReset: (email: string) => Promise<void>
+  resetPasswordWithToken: (token: string, newPassword: string) => Promise<void>
 }
 
 async function apiPost(path: string, body: unknown, token?: string | null) {
@@ -260,6 +262,25 @@ export const useProfileStore = create<ProfileState>()(
           const data = await res.json() as { error?: string }
           throw new Error(data.error ?? 'Помилка відправки')
         }
+      },
+
+      requestPasswordReset: async (email: string) => {
+        const res = await apiPost('/api/auth/forgot-password', { email })
+        if (!res.ok) {
+          const data = await res.json() as { error?: string }
+          throw new Error(data.error ?? 'Помилка відправки листа')
+        }
+      },
+
+      resetPasswordWithToken: async (token: string, newPassword: string) => {
+        const res = await apiPost('/api/auth/reset-password', { token, newPassword })
+        if (!res.ok) {
+          const data = await res.json() as { error?: string }
+          throw new Error(data.error ?? 'Помилка відновлення пароля')
+        }
+        const { token: accessToken, user, refreshToken } = await res.json() as { token: string; user: Profile; refreshToken?: string }
+        if (refreshToken) saveRefreshToken(refreshToken)
+        set({ token: accessToken, activeProfile: user, pinLocked: false })
       },
     }),
     {

@@ -4,12 +4,13 @@ import {
   verify, me, updateMe, changePassword,
   setPin, removePin, verifyPin,
   verifyEmail, resendVerification,
+  forgotPassword, resetPassword,
   getAllUsers, adminSetPlan, adminDeleteUser, adminToggleFlag, refresh, logout,
 } from '../controllers/authController'
 import { requireAuth } from '../middleware/auth'
 import { requireAdmin } from '../middleware/requireAdmin'
 import { validate } from '../middleware/validate'
-import { registerSchema, loginSchema, googleAuthSchema, pinSchema, changePasswordSchema, updateMeSchema } from '../validation/schemas'
+import { registerSchema, loginSchema, googleAuthSchema, pinSchema, changePasswordSchema, updateMeSchema, forgotPasswordSchema, resetPasswordSchema } from '../validation/schemas'
 
 const router = Router()
 
@@ -26,6 +27,10 @@ router.post('/pin/verify', requireAuth, validate(pinSchema), verifyPin)
 // Email verification
 router.post('/verify-email', verifyEmail)
 router.post('/resend-verification', requireAuth, resendVerification)
+
+// Password reset
+router.post('/forgot-password', validate(forgotPasswordSchema), forgotPassword)
+router.post('/reset-password',  validate(resetPasswordSchema),  resetPassword)
 
 // Token refresh + logout (no requireAuth — refresh token in cookie)
 router.post('/refresh', refresh)

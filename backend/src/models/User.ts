@@ -22,6 +22,8 @@ export interface IUser extends Document {
   eveningStart: number
   isVerified: boolean
   verificationToken: string | null
+  resetPasswordToken: string | null
+  resetPasswordExpires: Date | null
   reportStyle: string
   mediaEnabledTabs: string[]
   sprintTutorialSeen: boolean
@@ -79,6 +81,8 @@ const schema = new Schema<IUser>({
   eveningStart:      { type: Number, default: 18, min: 0, max: 23 },
   isVerified:        { type: Boolean, default: false },
   verificationToken: { type: String, default: null },
+  resetPasswordToken:   { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null },
   reportStyle:       { type: String, default: 'standard' },
   mediaEnabledTabs:  { type: [String], default: ['movie', 'series', 'anime', 'game'] },
   sprintTutorialSeen: { type: Boolean, default: false },
