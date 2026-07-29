@@ -471,9 +471,9 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 - **MimirHint — нема fallback:** якщо `useMimirAiHint` ще завантажується і `welcomeSeen=true`, між першим рендером і відповіддю AI — порожній mimirFloat (невидима висота 0 але DOM-елемент є).
 
 ### Finance
-- **patchTransaction не відправляє на бекенд:** `patchTransaction` оновлює локальний стор але `authFetch` не викликається — зміни description/amount через inline редагування не зберігаються при наступному fetchTransactions.
+- ~~**patchTransaction не відправляє на бекенд**~~ ✅ Закрито — перевірено (2026-07-29): вже викликає `authFetch` PATCH з rollback при помилці (backlog був застарілий).
 - **Кеш sessionStorage обмежений 200 транзакціями:** якщо юзер робить `fetchTransactions(month)` для різних місяців — кожен раз fetchuje знову без кешу, але і не показує stale-стан.
-- **addTopup/addExpense — немає error rollback:** якщо POST /api/transactions повертає помилку, транзакція лишається у стані з temp UUID і syncStatus 'error' — немає відкату.
+- ~~**addTopup/addExpense — немає error rollback**~~ ✅ Закрито (2026-07-29): при помилці POST тепер видаляється temp-транзакція і відкочується баланс; той самий фікс додано і в `deleteTransaction` (rollback при помилці DELETE).
 
 ### Sprint (Квести)
 - **AddSprintItemModal deadline chips:** після рефакторингу на inline chips (commit e262113), DeadlineSheet видалено і дата/час/нагадування — inline в форму. Перевірити що `draftTime` правильно ініціалізується при відкритті форми для існуючих задач.
@@ -504,10 +504,14 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 
 ### Achievements
 - ~~**Локальний стор**~~ ✅ Вже синкаються через `achievementsStore.unlock()` → `profileStore.updateProfile({ unlockedAchievements })` → `PATCH /api/auth/me` (backlog був застарілий).
-- **useAchievementProgress:** читає дані з кількох stores синхронно — при першому рендері stores ще порожні, прогрес = 0. Може викликати false unlock при першому mount (stores ще не завантажили дані, потім data load → прогрес стрибає).
+- **useAchievementProgress / AutoUnlockWatcher:** досліджено (2026-07-29) — прогрес не може хибно "стрибнути" (рахується від реальних масивів, тільки зростає), тож false unlock немає. Реальний нюанс: `AutoUnlockWatcher` встановлює "seenOnMount" baseline при ПЕРШІЙ непорожній `toUnlock`, а не при справжньому першому рендері — тому якщо у юзера це перший unlock за сесію і stores ще не встигли догрузитись, celebration-модалка може бути пропущена (тихо запишеться як catch-up). Виправити технічно можна, але потребує сигналу "stores hydrated", якого зараз немає в жодному з 6 stores — потрібне архітектурне рішення, не зробив.
 
 ### F1
-- **OpenF1 polling на `/f1/live`:** якщо гонки немає (between seasons) — polling idle з помилками 404. Перевірити graceful handling.
+- ~~**OpenF1 polling на `/f1/live`**~~ ✅ Досліджено і закрито (2026-07-29): реального 404-шторму не було (backend проксі вже повертає `[]`/помилку без падінь), але `/f1` (не `/f1/live`) молотив `sessions?meeting_key=latest` кожні 60с цілий рік незалежно від сезону. Тепер polling запускається тільки в тиждень реальної гонки (`getRaceThisWeek`).
+
+### Технічний борг — useEffect setState (2026-07-29)
+- ~~**RecurringPayments**~~ ✅ Вже виправлено в попередній сесії (backlog був застарілий) — обидва ефекти коректно обгорнуті.
+- ✅ Знайдено і виправлено той самий патерн (синхронний setState перед async-логікою в тілі ефекту) ще в 4 місцях: `f1/index.tsx` (у власному щойно написаному фіксі), `spaces/index.tsx` (Unsplash trip-cover ефект), `shared/hooks/useWeather.ts`, `shared/hooks/usePushSubscription.ts` (останній також не мав `cancelled`-гарду — можливий setState після unmount).
 
 ---
 
