@@ -63,6 +63,7 @@ import billingRouter from './routes/billing'
 import mimirRouter from './routes/mimir'
 import feedbackRouter from './routes/feedback'
 import booksRouter from './routes/books'
+import waitlistRouter from './routes/waitlist'
 import drinksRouter from './routes/drinks'
 
 const app = express()
@@ -127,6 +128,7 @@ app.use('/api/mimir', mimirRouter)
 app.use('/api/drinks', drinksRouter)
 app.use('/api/feedback', feedbackRouter)
 app.use('/api/books', booksRouter)
+app.use('/api/waitlist', waitlistRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 

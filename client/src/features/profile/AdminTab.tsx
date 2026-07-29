@@ -105,6 +105,92 @@ const AnalyticsPanel: React.FC = () => {
   )
 }
 
+interface WaitlistEntry {
+  id: string
+  name: string
+  email: string
+  currentTools: string
+  scenario: string
+  createdAt: string
+}
+
+/**
+ * WaitlistPanel
+ * -------------
+ * Заявки з форми "Приєднатися до бети" на лендінгу (`/`).
+ */
+const WaitlistPanel: React.FC = () => {
+  const [entries, setEntries] = useState<WaitlistEntry[] | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await authFetch('/api/waitlist')
+        if (!res.ok) throw new Error()
+        const data = await res.json() as WaitlistEntry[]
+        if (!cancelled) setEntries(data)
+      } catch {
+        if (!cancelled) setEntries([])
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  if (entries === null) return null
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' })
+
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionTitle}>WAITLIST</span>
+        <span className={styles.sectionCount}>{entries.length}</span>
+      </div>
+
+      {entries.length === 0 && <p className={styles.adminEmpty}>Ще немає заявок</p>}
+
+      <div className={styles.adminList}>
+        {entries.map(e => {
+          const isExpanded = expandedId === e.id
+          return (
+            <div key={e.id} className={styles.adminUserRow}>
+              <div className={styles.adminAvatarInitial}>{e.name[0]?.toUpperCase() ?? '?'}</div>
+              <div className={styles.adminUserInfo}>
+                <div className={styles.adminUserTop}>
+                  <span className={styles.adminUserName}>{e.name}</span>
+                </div>
+                <span className={styles.adminUserSub}>{e.email}</span>
+                <span className={styles.adminUserDate}>{formatDate(e.createdAt)}</span>
+
+                {isExpanded && (e.currentTools || e.scenario) && (
+                  <div className={styles.adminExpanded}>
+                    {e.currentTools && <p className={styles.adminEmpty}>Використовує: {e.currentTools}</p>}
+                    {e.scenario && <p className={styles.adminEmpty}>Сценарій: {e.scenario}</p>}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                className={`${styles.adminExpandBtn} ${isExpanded ? styles.adminExpandBtnOpen : ''}`}
+                onClick={() => setExpandedId(isExpanded ? null : e.id)}
+                aria-label={isExpanded ? 'Згорнути' : 'Розгорнути'}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 /** BFS connected components — returns userId → groupId (only for users with family links) */
 function buildFamilyGroups(users: AdminUser[]): Map<string, string> {
   const userIds = new Set(users.map(u => u.id))
@@ -404,6 +490,7 @@ const AdminTab: React.FC = () => {
   return (
     <>
       <AnalyticsPanel />
+      <WaitlistPanel />
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>

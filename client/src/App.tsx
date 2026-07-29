@@ -37,6 +37,7 @@ import MeAccount from '@/features/profile/MeAccount'
 import VerifyEmail from '@/features/auth/VerifyEmail'
 import ForgotPasswordScreen from '@/features/auth/ForgotPassword'
 import ResetPasswordScreen from '@/features/auth/ResetPassword'
+import Landing from '@/features/auth/Landing'
 import NotFound from '@/features/auth/NotFound'
 import NotesScreen from '@/features/notes'
 import TimelineScreen from '@/features/timeline'
@@ -63,6 +64,16 @@ const ProtectedRoute: React.FC = () => {
     return <Navigate to="/onboarding" replace />
   }
   return <Outlet />
+}
+
+/** "/" — Landing for guests (no token), Dashboard for authenticated users */
+const RootRoute: React.FC = () => {
+  const { token, activeProfile } = useProfileStore()
+  if (!token) return <Landing />
+  if (activeProfile && activeProfile.onboardingCompleted === false) {
+    return <Navigate to="/onboarding" replace />
+  }
+  return <Dashboard />
 }
 
 /** Redirects users without f1Enabled to / */
@@ -98,10 +109,10 @@ const AnimatedRoutes: React.FC = () => {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/payment/result" element={<PaymentResult />} />
+        <Route path="/" element={<RootRoute />} />
         {/* Protected — require token */}
         <Route element={<ProtectedRoute />}>
           <Route path="/onboarding" element={<OnboardingScreen />} />
-          <Route path="/" element={<Dashboard />} />
           <Route path="/finance" element={<Finance />} />
           <Route path="/sprint" element={<Sprint />} />
           <Route path="/recipes" element={<Recipes />} />
@@ -142,6 +153,8 @@ const AnimatedRoutes: React.FC = () => {
 
 const NavGuard: React.FC = () => {
   const { pathname } = useLocation()
+  const { token } = useProfileStore()
+  if (!token) return null
   if (/^\/f1\/\d+$/.test(pathname)) return null
   if (pathname === '/f1/my-season') return null
   if (/^\/memories\/.+/.test(pathname)) return null

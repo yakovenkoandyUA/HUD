@@ -243,7 +243,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 ### 🔵 Стратегічне (Фаза 2+)
 - ~~**Onboarding flow**~~ ✅ Зроблено
 - **Лендінг** — mimir.app або аналог
-- **Web/desktop layout** — зараз mobile-first
+- **Web/desktop layout** — зараз mobile-first. Рішення (2026-07-29): не адаптувати UI під десктоп — для залогінених юзерів з широким viewport показувати окремий "install on phone" екран замість стиснутого mobile UI. Не реалізовано, потребує: breakpoint, контент екрану (QR/інструкція), scope (усі protected routes чи тільки деякі)
 - **Білінг (Paddle)** — Free/Personal/Couple/Family підписки
 - **GDPR export** — JSON архів даних
 - **iOS/Android віджети** — домашній екран
