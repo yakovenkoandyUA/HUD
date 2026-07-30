@@ -65,7 +65,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - `weather` — проксі wttr.in (Cache-Control 30хв)
 - `books` — Google Books proxy (кеш 10хв)
 
-**Jobs/schedulers:** routineReminders, recurringReminders (окремий daily cron, відділений від reminder-циклу), dayReminder, episodeReminder, f1Scheduler (22 GP 2026 + live notifications) — task/todo reminders тепер на 5-хвилинному циклі, точні до `dueTime` (раніше — раз на день, без часу)
+**Jobs/schedulers:** routineReminders, recurringReminders (окремий daily cron, відділений від reminder-циклу), dayReminder, f1Scheduler (22 GP 2026 + live notifications) — task/todo reminders тепер на 5-хвилинному циклі, точні до `dueTime` (раніше — раз на день, без часу). `episodeReminder.ts` видалено (2026-07-30) — мертвий код, ніде не імпортувався.
 
 ### Frontend — 21 екран, 20 Zustand stores, 12 хуків
 
@@ -128,8 +128,8 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - Підтримувані сервіси: MyShows, Letterboxd, Trakt, IMDb, Кінопошук та будь-який CSV/XLSX-експорт.
 
 ### 🟡 Не починалось (продуктові фічі)
-- **Goodreads імпорт** — books-таб у Watchlist взагалі "В РОЗРОБЦІ" (нижче), тож імпорт книг чекає на сам books-функціонал, не тільки на парсер
-- **Книги (Books)** — backend `/api/books/search` (Google Books) є, але UI у Watchlist позначено "В РОЗРОБЦІ" (тоггл в профілі disabled, placeholder при відкритті табу)
+- ~~**Книги (Books)**~~ ✅ Тоггл в профілі і UI в Watchlist вже працюють (2026-07-30, підтверджено юзером — попередній запис був застарілий).
+- **Goodreads імпорт** — books тепер живий таб, але власного імпорту (Goodreads CSV) ще нема — окрема задача від універсального CSV/XLSX-парсера вище.
 
 ### ✅ AI Chef-асистент — зроблено
 Кнопка "Шеф" в `RecipeDetail` (поряд з Wishlist/Покупки/Приготував) відкриває `ChefChatSheet` — той самий UI-паттерн що `AiChatSheet` з Dashboard (SSE streaming, Claude Haiku). Контекст рецепту (title/ingredients/instructions/servings/difficulty/cookTime/calories) передається в тілі запиту з фронтенду напряму в `POST /api/ai/chef-chat` — без додаткового похід в БД і дублювання scope-логіки доступу до рецептів (mine/family/all).
@@ -467,8 +467,8 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 
 ### Dashboard
 - **HeroCard — баланс vs витрати:** `displayed` анімує `balance` (топап − витрати всіх часів), але лейбл "цей місяць" — семантичний розрив. Без бюджету юзер бачить загальний баланс але думає що це місячна витрата.
-- **FAB — немає "Спогад":** в expandable FAB є Витрата / Квест / Покупка / Нотатка, але немає швидкого додавання спогаду — часта дія в поїздках.
-- **MimirHint — нема fallback:** якщо `useMimirAiHint` ще завантажується і `welcomeSeen=true`, між першим рендером і відповіддю AI — порожній mimirFloat (невидима висота 0 але DOM-елемент є).
+- ~~**FAB — немає "Спогад"**~~ ❌ Свідоме рішення (2026-07-30, підтверджено юзером) — Dashboard FAB навмисно без швидкого додавання спогаду, не додавати.
+- ~~**MimirHint — нема fallback**~~ ✅ Досліджено (2026-07-30): не баг — поки `aiHint` вантажиться і немає daily greeting, компонент рендериться як `null` (не порожній DOM-елемент); `.mimirFloat` до того ж завжди `height:0`, тож навіть якщо контент є — layout shift неможливий за дизайном.
 
 ### Finance
 - ~~**patchTransaction не відправляє на бекенд**~~ ✅ Закрито — перевірено (2026-07-29): вже викликає `authFetch` PATCH з rollback при помилці (backlog був застарілий).
@@ -476,12 +476,12 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 - ~~**addTopup/addExpense — немає error rollback**~~ ✅ Закрито (2026-07-29): при помилці POST тепер видаляється temp-транзакція і відкочується баланс; той самий фікс додано і в `deleteTransaction` (rollback при помилці DELETE).
 
 ### Sprint (Квести)
-- **AddSprintItemModal deadline chips:** після рефакторингу на inline chips (commit e262113), DeadlineSheet видалено і дата/час/нагадування — inline в форму. Перевірити що `draftTime` правильно ініціалізується при відкритті форми для існуючих задач.
+- ~~**AddSprintItemModal deadline chips**~~ ✅ Перевірено (2026-07-30): `AddSprintItemModal` не має edit-режиму взагалі (тільки add) — `draftTime` завжди стартує з `'09:00'` і ніколи не читається з існуючої задачі, бо редагування йде окремо через `TaskDetailModal` (без local mirror state, PATCH напряму в стор). Компонент `DeadlineSheet` виявився мертвим кодом (ніде не імпортувався) — видалено разом зі стейл-згадкою в `ReminderFields`.
 - **Drag-to-reorder (useSprintDrag):** не реалізовано для задач в SpaceDetail — там порядок фіксований по `createdAt`.
 - **TrashBin soft-delete:** TTL 24г на бекенді — юзер може не встигнути відновити якщо не знає про кошик.
 
 ### Memories
-- **fetchRelated:** `GET /api/memories/:id/related` — незрозуміло що повертає (за тегами? локацією?). Не використовується в жодному компоненті крім виклику в store.
+- ~~**fetchRelated**~~ ✅ Досліджено (2026-07-30): не мертвий код — живить карусель "ПОВ'ЯЗАНІ СПОГАДИ" в `detail.tsx`. Relevance-скоринг (+3 спільний тег, +2 fuzzy локація, +1 той самий місяць+рік, +0.5 той самий місяць інший рік, +1 річниця ±7 днів; поріг 2, топ 6) задокументовано докстрінгом над `getRelated` у `memoryController.ts`.
 - **MemoryMap — пустий стан:** якщо у юзера 0 спогадів і 0 планів — карта показує глобус без пінів, нема underlay hint.
 - ~~**EditMemoryModal `withProfiles`**~~ ✅ Закрито — перевірено (2026-07-29): бага немає, `onSave` завжди відправляє поточний `withProfiles`, зміна обкладинки йде окремим PATCH `{coverUrl}` що не чіпає інші поля.
 
@@ -491,12 +491,12 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 - ~~**TripSpaceView — без quick actions**~~ ✅ Закрито — `trip` прибрано з exclusion-списку generic actions/content блоку, ВИТРАТИ в generic-блоці виключена тільки для trip щоб не дублювати (2026-07-29).
 
 ### Recipes
-- **AI генератор — gate через PaywallGate:** кнопка AI в FAB recipes приховується за PaywallGate, але при натисканні без плану — поведінка залежить від `useCanUseFeature` — перевірити що показується UpgradePrompt, а не silent fail.
-- **RecipeDetail "Шеф":** ChefChatSheet не закривається свайпом якщо юзер свайпає по тексту чату (стандартна проблема SSE+scroll).
+- ~~**AI генератор — gate через PaywallGate**~~ ✅ Закрито (2026-07-30) — реальний баг: кнопки взагалі не мала гейту (`useCanUseFeature`/`PaywallGate` не викликались), free-план міг відкрити генератор і отримати помилку тільки після сабміту (бекенд вже enforce'ив `requireFeature('aiChat')`). Додано `useCanUseFeature('aiChat')` + редірект на `/profile?tab=plan` + lock-бейдж, за зразком AppHeader.
+- ~~**RecipeDetail "Шеф"**~~ ✅ Закрито (2026-07-30) — причина: ефект автоскролу вниз спрацьовував на кожен SSE-чанк, тому `scrollTop` ніколи не міг дійти до 0, а `useSwipeToDismiss` дозволяє drag тільки коли scrollable body вгорі. Додано sticky-bottom автоскрол — стежить за низом лише поки юзер сам не проскролив вище.
 
 ### Watchlist
 - ~~**Книги (Books):**~~ ✅ Реалізовано (backlog був застарілий).
-- **WatchlistStatsSheet:** рахує "реальну тривалість" через TMDB, але для anime/books — логіка тривалості інша (серія anime ≠ серія серіалу).
+- ~~**WatchlistStatsSheet**~~ ✅ Закрито (2026-07-30) — аніме виявилось коректним (окремий TMDB `/tv/` запит + свій фолбек 24хв/еп, а не 45хв серіалів). Реальний баг: книги взагалі не потрапляли в розрахунок тривалості (0 внесок у години/розподіл). Додано оцінку часу читання за `pageCount` (~1.2хв/сторінку, фолбек 300 стор.) + сегмент "Книги" в розподілі.
 
 ### Profile
 - **ChangelogSheet workflow:** задокументовано що потрібно дописувати `CHANGELOG` перед кожним пушем — на практиці часто пропускається. Немає валідації в pre-push hook.

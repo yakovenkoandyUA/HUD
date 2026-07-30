@@ -73,6 +73,13 @@ function isAnnualProximity(dateA: string, dateB: string): boolean {
   return diff <= 7 || diff >= 358 // 358 = 365-7, handles year-boundary wrap
 }
 
+/**
+ * GET /api/memories/:id/related — top 6 memories relevance-scored against
+ * `:id`: +3 per shared tag, +2 fuzzy location match, +1 same month+year,
+ * +0.5 same month different year, +1 "annual proximity" (±7 days ignoring
+ * year — anniversaries). Minimum score 2 to qualify. Used by the
+ * "ПОВ'ЯЗАНІ СПОГАДИ" carousel in MemoryDetail (frontend `fetchRelated`).
+ */
 export async function getRelated(req: Request, res: Response): Promise<void> {
   const current = await Memory.findOne(visibleFilter(req.userId!, { _id: req.params.id }))
   if (!current) { res.status(404).json({ error: 'Not found' }); return }
