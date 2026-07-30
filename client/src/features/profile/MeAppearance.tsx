@@ -22,7 +22,7 @@ interface ThemePalette {
 
 const PALETTES: ThemePalette[] = [
   { id: 'aurum', name: 'AURUM', bg: '#090d18', surface: '#141a2b', border: '#2b3550', accent: '#e09a30', second: '#b94b6a', gold: '#d9b45d', text: '#f0eadc' },
-  { id: 'mimir',  name: 'MIMIR',  bg: '#f3f0eb', surface: '#faf8f4', border: '#d8d3cb', accent: '#d9365f', second: '#3a5a8c', gold: '#9b7740',  text: '#181a22' },
+  { id: 'vellum', name: 'VELLUM', bg: '#f3f0eb', surface: '#faf8f4', border: '#d8d3cb', accent: '#d97824', second: '#3a5a8c', gold: '#9b7740',  text: '#181a22' },
   { id: 'cyber',  name: 'CYBER',  bg: '#06080e', surface: '#131a2c', border: '#202c48', accent: '#ff2060', second: '#00d4ff', gold: '#f0a020',  text: '#d8eaf8' },
   { id: 'noir',   name: 'NOIR',   bg: '#080808', surface: '#1a1a1a', border: '#2a2a2a', accent: '#d0d0d0', second: '#606060', gold: '#c8c8c8',  text: '#ebebeb' },
   { id: 'pixel',  name: 'PIXEL',  bg: '#f4efe0', surface: '#faf6ea', border: '#c8bc94', accent: '#d42020', second: '#1848c8', gold: '#e8a020',  text: '#181028' },
@@ -141,7 +141,7 @@ const LockIcon: React.FC = () => (
  * MeAppearance
  * ------------
  * Підекран "Вигляд" вкладки "Я": теми + стиль навігації + закріплені розділи.
- * Теми відкриваються за рівнями досягнень: aurum і mimir доступні одразу,
+ * Теми відкриваються за рівнями досягнень: aurum і vellum доступні одразу,
  * решта — за рівнями 3, 5, 7, 9.
  */
 const MeAppearance: React.FC = () => {

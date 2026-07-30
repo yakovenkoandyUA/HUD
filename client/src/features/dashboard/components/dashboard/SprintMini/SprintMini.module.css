@@ -85,7 +85,7 @@
 	border-color: var(--second);
 }
 
-:global([data-theme="mimir"]) .checkbox {
+:global([data-theme="vellum"]) .checkbox {
 	border-color: rgba(0, 0, 0, 0.15);
 }
 

@@ -174,7 +174,7 @@ const MeMimir: React.FC = () => {
   }
 
   const seenCount = activeProfile?.mimirSeenHints?.length ?? 0
-  const paralaxImg = (theme === 'mimir' || theme === 'pixel') ? '/mimir/mimir-paralax-light.webp' : '/mimir/mimir-paralax-dark.webp'
+  const paralaxImg = (theme === 'vellum' || theme === 'pixel') ? '/mimir/mimir-paralax-light.webp' : '/mimir/mimir-paralax-dark.webp'
 
   return (
     <>

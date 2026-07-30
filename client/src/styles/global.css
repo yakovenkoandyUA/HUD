@@ -142,8 +142,8 @@
   --font-display: 'Cinzel', 'Bebas Neue', serif;
 }
 
-/* ── MIMIR ᚨ ─────────────────────────────────────────────────────────────── */
-[data-theme="mimir"] {
+/* ── VELLUM ᚨ ────────────────────────────────────────────────────────────── */
+[data-theme="vellum"] {
   --bg:         #f3f0eb;
   --bg2:        #ede9e3;
   --bg3:        #e6e1da;
@@ -152,10 +152,10 @@
   --border:     #d8d3cb;
   --border2:    #c5beb4;
 
-  --accent:      #d9365f;
-  --accent-dim:  #9e2948;
-  --accent-glow: rgba(217, 54, 95, 0.20);
-  --accent-soft: rgba(217, 54, 95, 0.08);
+  --accent:      #d97824;
+  --accent-dim:  #a95518;
+  --accent-glow: rgba(217, 120, 36, 0.20);
+  --accent-soft: rgba(217, 120, 36, 0.08);
 
   --second:      #3a5a8c;
   --second-soft: rgba(58, 90, 140, 0.10);
@@ -336,7 +336,7 @@
 }
 
 /* ── Light-theme overrides for --cat-* (WCAG AA on light surfaces) ── */
-[data-theme="mimir"],
+[data-theme="vellum"],
 [data-theme="pixel"] {
   --cat-quest: #c01028;
   --cat-shop:  #5830a8;

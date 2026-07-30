@@ -133,11 +133,11 @@
 }
 
 /* Light themes: cream icons need to be darkened (only emblem, not cover photos) */
-:global([data-theme="mimir"]) .spaceIconImg,
+:global([data-theme="vellum"]) .spaceIconImg,
 :global([data-theme="pixel"]) .spaceIconImg {
   filter: brightness(0) opacity(0.5);
 }
-:global([data-theme="mimir"]) .spaceIconImgCover,
+:global([data-theme="vellum"]) .spaceIconImgCover,
 :global([data-theme="pixel"]) .spaceIconImgCover {
   filter: none;
 }
@@ -660,7 +660,7 @@
 }
 
 /* Light themes: darken cream icons in icon zone */
-:global([data-theme="mimir"]) .templateIconZone img,
+:global([data-theme="vellum"]) .templateIconZone img,
 :global([data-theme="pixel"]) .templateIconZone img {
   filter: brightness(0) opacity(0.55);
 }

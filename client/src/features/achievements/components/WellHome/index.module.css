@@ -25,12 +25,12 @@
   display: none;
 }
 
-:global([data-theme="mimir"]) .bgImgDark,
+:global([data-theme="vellum"]) .bgImgDark,
 :global([data-theme="pixel"]) .bgImgDark {
   display: none;
 }
 
-:global([data-theme="mimir"]) .bgImgLight,
+:global([data-theme="vellum"]) .bgImgLight,
 :global([data-theme="pixel"]) .bgImgLight {
   display: block;
 }

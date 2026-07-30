@@ -15,7 +15,7 @@
 }
 
 /* Light themes: cream icon (#E9DCAB) invisible on light bg — darken via filter */
-:global([data-theme="mimir"]) .badge img,
+:global([data-theme="vellum"]) .badge img,
 :global([data-theme="pixel"]) .badge img {
   filter: brightness(0) opacity(0.55);
 }

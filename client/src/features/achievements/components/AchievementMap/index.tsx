@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { TREE_NODES, TREE_CONNECTIONS, CATEGORY_WELL_BG, CATEGORY_LABEL } from '../../data'
+import { TREE_NODES, TREE_CONNECTIONS, CATEGORY_WELL_BG, CATEGORY_LABEL, WELL_MOUTH } from '../../data'
 import type { AchievementWithStatus, AchievementCategory } from '../../types'
 import styles from './index.module.css'
 
@@ -166,6 +166,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
         <button
           type="button"
           className={styles.diveOutBtn}
+          style={{ left: `${WELL_MOUTH[category].x}%`, top: `${WELL_MOUTH[category].y}%` }}
           aria-label="Винирнути"
           onClick={e => { e.stopPropagation(); onBack() }}
         >

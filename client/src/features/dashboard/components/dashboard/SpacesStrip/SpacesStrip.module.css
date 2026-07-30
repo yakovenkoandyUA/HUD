@@ -312,9 +312,9 @@
 .primaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Light themes: emblem PNGs too light — darken via filter */
-:global([data-theme="mimir"]) .emblemImg,
+:global([data-theme="vellum"]) .emblemImg,
 :global([data-theme="pixel"]) .emblemImg,
-:global([data-theme="mimir"]) .typeImg,
+:global([data-theme="vellum"]) .typeImg,
 :global([data-theme="pixel"]) .typeImg {
   filter: brightness(0) opacity(0.55);
 }

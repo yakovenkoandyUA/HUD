@@ -26,6 +26,20 @@ export const CATEGORY_WELL_BG: Record<AchievementCategory, string> = {
   watchlist: '/achivement/category-well/media.webp',
 }
 
+/**
+ * "Винирнути" button position (% of canvas) — the actual well-mouth/dark-hole
+ * spot in each category-well/[cat].webp. Each render has a different well
+ * position/size, so this can't be a single shared coordinate like the old
+ * fixed `top: 61%` was.
+ */
+export const WELL_MOUTH: Record<AchievementCategory, { x: number; y: number }> = {
+  memory:    { x: 50, y: 40 },
+  spaces:    { x: 50, y: 58 },
+  finance:   { x: 50, y: 63 },
+  sprint:    { x: 48, y: 68 },
+  watchlist: { x: 50, y: 87 },
+}
+
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // ── ПАМʼЯТЬ (10) ───────────────────────────────────────────────────────────
   {

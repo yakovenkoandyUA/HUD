@@ -22,15 +22,15 @@ export const LEVELS: Level[] = [
 ]
 
 /** Themes available without any requirement */
-export const DEFAULT_THEMES = ['aurum', 'mimir'] as const
+export const DEFAULT_THEMES = ['aurum', 'vellum'] as const
 
 /**
  * Trigger-based unlock conditions per theme.
  * `hint` — shown in the lock badge.
  */
 export const THEME_UNLOCK_CONDITIONS: Record<string, { hint: string }> = {
-  aurum: { hint: 'Доступна одразу' },
-  mimir:  { hint: 'Доступна одразу' },
+  aurum:  { hint: 'Доступна одразу' },
+  vellum: { hint: 'Доступна одразу' },
   noir:   { hint: 'Після onboarding' },
   arctic: { hint: 'Після першого досягнення' },
   cyber:  { hint: 'Заверши перший квест' },

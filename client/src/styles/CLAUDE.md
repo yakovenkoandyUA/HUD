@@ -2,17 +2,17 @@
 
 ## Теми
 
-6 тем: **aurum** (default) / **mimir** / **cyber** / **noir** / **pixel** / **arctic**
+6 тем: **aurum** / **vellum** (default для нових інсталяцій) / **cyber** / **noir** / **pixel** / **arctic**
 Перемикання через `data-theme` атрибут на `<html>`.
 Зберігається в `uiStore` → `localStorage` (ключ `hud-ui`).
 
 ```tsx
 // uiStore.ts
-theme: 'aurum' | 'mimir' | 'cyber' | 'noir' | 'pixel' | 'arctic'
+theme: 'aurum' | 'vellum' | 'cyber' | 'noir' | 'pixel' | 'arctic'
 setTheme: (theme) => void
 ```
 
-### aurum (default)
+### aurum
 Midnight navy + warm gold accent + wine secondary + antique gold decorative. Класична темна тема MIMIR.
 - `--accent` (warm gold #e09a30): CTA, FAB, active nav, selected chips, progress, focus ring
 - `--second` (wine): secondary interactive — task-shopping, теплий контраст до gold
@@ -31,20 +31,20 @@ Midnight navy + warm gold accent + wine secondary + antique gold decorative. К�
 }
 ```
 
-### mimir
-Базова світла тема MIMIR. Пергаментний фон, малиновий accent, нордична типографіка.
-Замінила japan у v2 (`uiStore persist version 2` — migration japan→mimir).
+### vellum (default для нових інсталяцій)
+Базова світла тема MIMIR — перейменована з `mimir` (v3→v4 migration), бо назва теми дублювала назву самого застосунку. Пергаментний фон, теплий бурштиновий accent (перенесений з відхиленої теми sol), нордична типографіка.
+Історія: japan → mimir (v1→v2) → **vellum** (v3→v4).
 ```css
-[data-theme="mimir"] {
+[data-theme="vellum"] {
   --bg: #f3f0eb;  --surface: #faf8f4;  --surface2: #e9e5df;
-  --accent: #d9365f;  --accent-dim: #9e2948;
+  --accent: #d97824;  --accent-dim: #a95518;
   --gold: #9b7740;
   --text: #181a22;  --text2: #5f6470;  --text3: #9297a2;
   --border: #d8d3cb;  --border2: #c5beb4;
   --font-display: 'Furore', 'Oswald', sans-serif;
 }
 ```
-F1 banner: **light** (`LIGHT_THEMES = new Set(['pixel', 'mimir'])`)
+F1 banner: **light** (`LIGHT_THEMES = new Set(['pixel', 'vellum'])`)
 Без декоративних текстур (жодного body::after/before).
 
 ### cyber
