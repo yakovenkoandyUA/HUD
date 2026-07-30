@@ -53,7 +53,7 @@
   height: 38px;
   border-radius: 50%;
   background: var(--accent);
-  color: #fff;
+  color: var(--fab-icon-color, #fff);
   display: flex;
   align-items: center;
   justify-content: center;

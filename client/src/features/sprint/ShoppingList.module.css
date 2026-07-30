@@ -426,7 +426,7 @@
   height: 52px;
   border-radius: 16px;
   background: var(--accent);
-  color: #fff;
+  color: var(--fab-icon-color, #fff);
   display: flex;
   align-items: center;
   justify-content: center;

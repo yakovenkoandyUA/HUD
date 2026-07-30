@@ -45,6 +45,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const { showToast } = useUiStore()
   const canScan = useCanUseFeature('receiptScanner')
   const spaces = useSpacesStore(s => s.spaces)
+  const fetchSpaces = useSpacesStore(s => s.fetchSpaces)
   const financeSpaces = spaces.filter(sp => sp.modules.includes('finance'))
   const [amount, setAmount]                     = useState('')
   const [description, setDescription]          = useState('')
@@ -64,6 +65,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const dateLabel   = isToday ? 'Сьогодні' : new Date(date + 'T12:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
+  useEffect(() => { if (spaces.length === 0) fetchSpaces() }, [])
 
   const catFrequency = useMemo(() => {
     const freq: Record<string, number> = {}
