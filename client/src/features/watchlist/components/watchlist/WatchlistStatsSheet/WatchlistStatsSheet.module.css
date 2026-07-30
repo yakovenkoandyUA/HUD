@@ -170,6 +170,7 @@
 .stackSegMovie  { background: hsl(22, 60%, 44%); border-radius: 4px; }
 .stackSegSeries { background: hsl(258, 52%, 48%); border-radius: 4px; }
 .stackSegAnime  { background: hsl(163, 42%, 36%); border-radius: 4px; }
+.stackSegBook   { background: hsl(340, 55%, 46%); border-radius: 4px; }
 
 .stackLabels {
   display: flex;
@@ -188,7 +189,8 @@
 
 .stackDotMovie,
 .stackDotSeries,
-.stackDotAnime {
+.stackDotAnime,
+.stackDotBook {
   display: inline-block;
   width: 7px;
   height: 7px;
@@ -199,6 +201,7 @@
 .stackDotMovie  { background: hsl(22, 60%, 44%); }
 .stackDotSeries { background: hsl(258, 52%, 48%); }
 .stackDotAnime  { background: hsl(163, 42%, 36%); }
+.stackDotBook   { background: hsl(340, 55%, 46%); }
 
 /* ── Genre ranking bars ── */
 .rankingBars {

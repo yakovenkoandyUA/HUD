@@ -71,8 +71,26 @@ const ChefChatSheet: React.FC<ChefChatSheetProps> = ({ isOpen, onClose, recipe }
     if (visible) setTimeout(() => inputRef.current?.focus(), 350)
   }, [visible])
 
+  // Sticky-bottom auto-scroll: only follow new streamed content while the user
+  // hasn't scrolled away from the bottom. Otherwise SSE chunks keep re-snapping
+  // scrollTop to the bottom, which also traps swipe-to-dismiss (it only starts
+  // a drag when the scrollable body is at scrollTop 0).
+  const stickToBottomRef = useRef(true)
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = bodyRef.current
+    if (!el) return
+    const onScroll = () => {
+      stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    if (stickToBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   useEffect(() => {

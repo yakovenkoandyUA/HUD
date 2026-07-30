@@ -11,6 +11,10 @@ const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY
 const FALLBACK_MOVIE_MIN  = 120
 const FALLBACK_SERIES_MIN = 45
 const FALLBACK_ANIME_MIN  = 24
+// Books have no runtime/episodes — estimate reading time from page count
+// (~1.2 хв/сторінку, типова швидкість читання ~250 слів/хв, ~300 слів/сторінку).
+const MIN_PER_PAGE         = 1.2
+const FALLBACK_BOOK_PAGES  = 300
 
 function countEpisodes(item: WatchlistItem): number {
   if (item.watchedEpisodes?.length) return item.watchedEpisodes.length
@@ -223,6 +227,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
     const movies  = items.filter(i => i.category === 'movie')
     const series  = items.filter(i => i.category === 'series')
     const anime   = items.filter(i => i.category === 'anime')
+    const books   = items.filter(i => i.category === 'book')
 
     const watchedMovies  = movies.filter(i => i.status === 'watched')
     const movieWatched   = watchedMovies.length
@@ -233,15 +238,18 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
     const animeEp        = anime.reduce((s, i) => s + countEpisodes(i), 0)
     const seriesMinutes  = series.reduce((s, i) => s + countEpisodes(i) * (i.episodeRuntimeMin ?? FALLBACK_SERIES_MIN), 0)
     const animeMinutes   = anime.reduce((s, i) => s + countEpisodes(i) * (i.episodeRuntimeMin ?? FALLBACK_ANIME_MIN), 0)
-    const totalH         = Math.round((movieMinutes + seriesMinutes + animeMinutes) / 60)
+    const readBooks      = books.filter(i => i.status === 'watched')
+    const bookRead        = readBooks.length
+    const bookMinutes    = readBooks.reduce((s, i) => s + (i.pageCount ?? FALLBACK_BOOK_PAGES) * MIN_PER_PAGE, 0)
+    const totalH         = Math.round((movieMinutes + seriesMinutes + animeMinutes + bookMinutes) / 60)
 
     const { root, watchedCount } = computeCirclePack(items)
     const monthBins = computeMonthly(items)
 
-    return { movieWatched, seriesCount, animeCount, seriesEp, animeEp, totalH, movieMinutes, seriesMinutes, animeMinutes, root, watchedCount, monthBins }
+    return { movieWatched, seriesCount, animeCount, seriesEp, animeEp, bookRead, totalH, movieMinutes, seriesMinutes, animeMinutes, bookMinutes, root, watchedCount, monthBins }
   }, [items])
 
-  const { totalH, movieWatched, seriesCount, animeCount, seriesEp, animeEp, movieMinutes, seriesMinutes, animeMinutes, root, watchedCount, monthBins } = stats
+  const { totalH, movieWatched, seriesCount, animeCount, seriesEp, animeEp, bookRead, movieMinutes, seriesMinutes, animeMinutes, bookMinutes, root, watchedCount, monthBins } = stats
 
   if (!mounted) return null
 
@@ -253,12 +261,14 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
   if (movieWatched > 0) summaryParts.push(`${movieWatched} фільм${movieWatched === 1 ? '' : 'ів'}`)
   if (seriesCount > 0)  summaryParts.push(`${seriesEp} еп. серіалів`)
   if (animeCount > 0)   summaryParts.push(`${animeEp} еп. аніме`)
+  if (bookRead > 0)     summaryParts.push(`${bookRead} книг${bookRead === 1 ? 'а' : ''}`)
 
-  const totalMin = movieMinutes + seriesMinutes + animeMinutes
+  const totalMin = movieMinutes + seriesMinutes + animeMinutes + bookMinutes
   const moviePct  = totalMin > 0 ? Math.round(movieMinutes  / totalMin * 100) : 0
   const seriesPct = totalMin > 0 ? Math.round(seriesMinutes / totalMin * 100) : 0
-  const animePct  = totalMin > 0 ? 100 - moviePct - seriesPct : 0
-  const hasMediaBreakdown = (movieMinutes > 0 ? 1 : 0) + (seriesMinutes > 0 ? 1 : 0) + (animeMinutes > 0 ? 1 : 0) > 1
+  const animePct  = totalMin > 0 ? Math.round(animeMinutes  / totalMin * 100) : 0
+  const bookPct   = totalMin > 0 ? 100 - moviePct - seriesPct - animePct : 0
+  const hasMediaBreakdown = (movieMinutes > 0 ? 1 : 0) + (seriesMinutes > 0 ? 1 : 0) + (animeMinutes > 0 ? 1 : 0) + (bookMinutes > 0 ? 1 : 0) > 1
 
   const maxGenreCount = root.children[0]?.value ?? 1
   const centerGenre = selectedGenre ? root.children.find(g => g.name === selectedGenre) : null
@@ -308,11 +318,13 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
                     {movieMinutes > 0  && <div className={styles.stackSegMovie}  style={{ width: `${moviePct}%`  }} />}
                     {seriesMinutes > 0 && <div className={styles.stackSegSeries} style={{ width: `${seriesPct}%` }} />}
                     {animeMinutes > 0  && <div className={styles.stackSegAnime}  style={{ width: `${animePct}%`  }} />}
+                    {bookMinutes > 0   && <div className={styles.stackSegBook}   style={{ width: `${bookPct}%`   }} />}
                   </div>
                   <div className={styles.stackLabels}>
                     {movieMinutes > 0  && <span className={styles.stackLabel}><i className={styles.stackDotMovie}  />Фільми {moviePct}%</span>}
                     {seriesMinutes > 0 && <span className={styles.stackLabel}><i className={styles.stackDotSeries} />Серіали {seriesPct}%</span>}
                     {animeMinutes > 0  && <span className={styles.stackLabel}><i className={styles.stackDotAnime}  />Аніме {animePct}%</span>}
+                    {bookMinutes > 0   && <span className={styles.stackLabel}><i className={styles.stackDotBook}   />Книги {bookPct}%</span>}
                   </div>
                 </div>
               </>
@@ -414,7 +426,7 @@ const WatchlistStatsSheet: React.FC<WatchlistStatsSheetProps> = ({ isOpen, onClo
             )}
 
             <p className={styles.note}>
-              * рахуємо реальну тривалість з TMDB; без даних — фільм ≈ 2 год, серіал ≈ 45 хв/еп, аніме ≈ 24 хв/еп
+              * рахуємо реальну тривалість з TMDB; без даних — фільм ≈ 2 год, серіал ≈ 45 хв/еп, аніме ≈ 24 хв/еп, книга ≈ 1.2 хв/сторінку
             </p>
           </>
         )}
