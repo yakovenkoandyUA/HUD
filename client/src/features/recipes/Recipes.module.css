@@ -378,6 +378,7 @@
 }
 
 .fabAi {
+  position: relative;
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -393,6 +394,15 @@
 }
 .fabAi:hover { background: var(--surface); }
 .fabAi:active { transform: scale(0.93); }
+
+.fabAiLock {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  color: var(--text3);
+  background: var(--surface2);
+  border-radius: 50%;
+}
 
 .fab:active {
   transform: scale(0.93);

@@ -14,6 +14,7 @@ import { useRecipesStore } from '@/features/recipes/store/recipesStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import { useUiStore } from '@/shared/store/uiStore'
+import { useCanUseFeature } from '@/shared/hooks/usePlan'
 import type { Recipe, RecipeScope } from '@/shared/types'
 import styles from './Recipes.module.css'
 
@@ -37,6 +38,7 @@ const Recipes: React.FC = () => {
   const { activeProfile } = useProfileStore()
   const { accepted: familyAccepted, fetchFamily } = useFamilyStore()
   const { showToast } = useUiStore()
+  const canUseAi = useCanUseFeature('aiChat')
 
   const hasFamily = familyAccepted.length > 0
   const scopeTabs = hasFamily ? ALL_SCOPE_TABS : ALL_SCOPE_TABS.filter(t => t.value !== 'family')
@@ -277,12 +279,19 @@ const Recipes: React.FC = () => {
           className={styles.fabAi}
           onClick={() => {
             if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-генератора рецептів', 'error'); return }
+            if (!canUseAi) { navigate('/profile?tab=plan'); return }
             setShowGenerator(true)
           }}
           aria-label="Згенерувати рецепт"
           title="Згенерувати рецепт"
         >
           <MimirIcon size={18} />
+          {!canUseAi && (
+            <svg width="8" height="8" viewBox="0 0 10 10" fill="none" className={styles.fabAiLock} aria-hidden="true">
+              <rect x="1.5" y="4.5" width="7" height="5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+              <path d="M3 4.5V3a2 2 0 0 1 4 0v1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            </svg>
+          )}
         </button>
         <button
           type="button"
