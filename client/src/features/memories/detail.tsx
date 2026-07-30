@@ -677,7 +677,7 @@ const MemoryDetailScreen: React.FC = () => {
 			)}
 
 			{/* ── Places section ── */}
-			{((memory.places ?? []).length > 0 || true) && (
+			{((memory.places ?? []).length > 0 || isOwner) && (
 				<div className={styles.placesSection}>
 					<div className={styles.placesSectionHead}>
 						<span className={styles.placesSectionLabel}>ЗАКЛАДИ</span>
