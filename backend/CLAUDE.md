@@ -228,7 +228,6 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 - `recurringReminders` — cron 09:00 UTC, нагадування про платежі (1/2/7 днів до)
 - `dayReminder` — денний підсумок push 18:00 UTC (21:00 Kyiv)
 - `f1Scheduler` — Sun 08:00 Kyiv weekend-алерт + **5-хвилинний reminder-цикл** для квестів/тудушок (точний до `dueDate`+`dueTime`, дефолт 09:00 якщо час не вказано; `reminderSent` анти-дубль) + daily 05:00 UTC нагадування про регулярні платежі (винесено в окремий cron, незалежний від 5-хвилинного циклу)
-- `jobs/episodeReminder.ts` існує в репо, але **не імпортується** в `index.ts` (мертвий код, функціонал перенесено в `pushJobs`)
 
 ## Скрипти міграції
 
