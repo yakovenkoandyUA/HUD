@@ -44,7 +44,7 @@ interface NavLivePreviewProps {
   navStyle: import('@/shared/store/uiStore').NavStyle
   navLabelMode: import('@/shared/store/uiStore').NavLabelMode
   pinnedSections: string[]
-  f1Enabled: boolean
+  sportEnabled: boolean
 }
 
 /**
@@ -53,8 +53,8 @@ interface NavLivePreviewProps {
  * Статичний превʼю реального нав-бара відповідно до поточних налаштувань.
  * Перший розділ (/) завжди "активний" для демонстрації.
  */
-function NavLivePreview({ navStyle, navLabelMode, pinnedSections, f1Enabled }: NavLivePreviewProps) {
-  const sections = ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || f1Enabled)
+function NavLivePreview({ navStyle, navLabelMode, pinnedSections, sportEnabled }: NavLivePreviewProps) {
+  const sections = ALL_NAV_SECTIONS.filter(s => !s.requiresSport || sportEnabled)
   const demoActive = '/'
 
   const showLabel = (to: string) =>
@@ -305,7 +305,7 @@ const MeAppearance: React.FC = () => {
           navStyle={navStyle}
           navLabelMode={navLabelMode}
           pinnedSections={pinnedSections}
-          f1Enabled={activeProfile?.f1Enabled ?? false}
+          sportEnabled={(activeProfile?.f1Enabled ?? false) || (activeProfile?.footballEnabled ?? false)}
         />
 
         {navStyle === 'hub' && (() => {
@@ -322,7 +322,7 @@ const MeAppearance: React.FC = () => {
                     {pinnedSections.length}/{NAV_STYLE_MAX_PINNED[navStyle]}
                   </span>
                 </p>
-                {ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || (activeProfile?.f1Enabled ?? false)).map(s => {
+                {ALL_NAV_SECTIONS.filter(s => !s.requiresSport || (activeProfile?.f1Enabled ?? false) || (activeProfile?.footballEnabled ?? false)).map(s => {
                   const isPinned = pinnedSections.includes(s.to)
                   const maxPinned = NAV_STYLE_MAX_PINNED[navStyle]
                   const canAdd = pinnedSections.length < maxPinned

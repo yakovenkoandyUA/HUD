@@ -168,6 +168,7 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   avatarUrl: user.avatarUrl,
   role: user.role,
   f1Enabled:      user.f1Enabled ?? false,
+  footballEnabled: user.footballEnabled ?? false,
   drinksEnabled:  user.drinksEnabled ?? false,
   salaryDay:         user.salaryDay ?? 1,
   monthlySpendLimit: user.monthlySpendLimit ?? null,
@@ -608,7 +609,7 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
   try {
     const users = await User.find(
       {},
-      { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1, plan: 1, subscriptionStatus: 1, planExpiresAt: 1, f1Enabled: 1, drinksEnabled: 1 },
+      { name: 1, username: 1, email: 1, role: 1, avatarUrl: 1, createdAt: 1, plan: 1, subscriptionStatus: 1, planExpiresAt: 1, f1Enabled: 1, footballEnabled: 1, drinksEnabled: 1 },
     ).sort({ createdAt: -1 })
 
     const links = await FamilyLink.find({ status: 'accepted' }, { requester: 1, recipient: 1 })
@@ -636,6 +637,7 @@ export async function getAllUsers(req: Request, res: Response): Promise<void> {
         subscriptionStatus: u.subscriptionStatus ?? 'none',
         planExpiresAt: u.planExpiresAt ?? null,
         f1Enabled: u.f1Enabled ?? false,
+        footballEnabled: u.footballEnabled ?? false,
         drinksEnabled: u.drinksEnabled ?? false,
         familyIds: familyMap.get(id) ?? [],
       }
@@ -698,9 +700,9 @@ export async function adminDeleteUser(req: Request, res: Response): Promise<void
 }
 
 
-/** PATCH /auth/admin/users/:id/flags — toggle f1Enabled / drinksEnabled */
+/** PATCH /auth/admin/users/:id/flags — toggle f1Enabled / footballEnabled / drinksEnabled */
 export async function adminToggleFlag(req: Request, res: Response): Promise<void> {
-  const allowed = ['f1Enabled', 'drinksEnabled']
+  const allowed = ['f1Enabled', 'footballEnabled', 'drinksEnabled']
   const updates: Record<string, boolean> = {}
   for (const key of allowed) {
     if (typeof req.body[key] === 'boolean') updates[key] = req.body[key]
@@ -709,23 +711,23 @@ export async function adminToggleFlag(req: Request, res: Response): Promise<void
   try {
     const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true })
     if (!user) { res.status(404).json({ error: 'Not found' }); return }
-    res.json({ id: req.params.id, f1Enabled: user.f1Enabled, drinksEnabled: user.drinksEnabled })
+    res.json({ id: req.params.id, f1Enabled: user.f1Enabled, footballEnabled: user.footballEnabled, drinksEnabled: user.drinksEnabled })
   } catch {
     res.status(500).json({ error: 'Failed to update flags' })
   }
 }
 
-/** PATCH /auth/me — update name, avatar, f1Enabled, salaryDay, username for active user */
+/** PATCH /auth/me — update name, avatar, f1Enabled, footballEnabled, salaryDay, username for active user */
 export async function updateMe(req: Request, res: Response): Promise<void> {
-  const { avatarUrl, name, f1Enabled, salaryDay, monthlySpendLimit, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs, unlockedAchievements, sprintTutorialSeen, weekdayLongPressTutorialSeen, swipeDismissTutorialSeen, sprintTutorialShownCount, weekdayLongPressShownCount, swipeDismissShownCount, onboardingCompleted, mimirSeenHints } = req.body as {
-    avatarUrl?: string; name?: string; f1Enabled?: boolean; salaryDay?: number; monthlySpendLimit?: number | null; username?: string
+  const { avatarUrl, name, f1Enabled, footballEnabled, salaryDay, monthlySpendLimit, username, city, morningStart, afternoonStart, eveningStart, reportStyle, mediaEnabledTabs, unlockedAchievements, sprintTutorialSeen, weekdayLongPressTutorialSeen, swipeDismissTutorialSeen, sprintTutorialShownCount, weekdayLongPressShownCount, swipeDismissShownCount, onboardingCompleted, mimirSeenHints } = req.body as {
+    avatarUrl?: string; name?: string; f1Enabled?: boolean; footballEnabled?: boolean; salaryDay?: number; monthlySpendLimit?: number | null; username?: string
     city?: string; morningStart?: number; afternoonStart?: number; eveningStart?: number; reportStyle?: string
     mediaEnabledTabs?: string[]; unlockedAchievements?: ({ id: string } | string)[]; sprintTutorialSeen?: boolean
     weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean
     sprintTutorialShownCount?: number; weekdayLongPressShownCount?: number; swipeDismissShownCount?: number
     onboardingCompleted?: boolean; mimirSeenHints?: string[]
   }
-  if (!avatarUrl && !name && f1Enabled === undefined && salaryDay === undefined && monthlySpendLimit === undefined && !username &&
+  if (!avatarUrl && !name && f1Enabled === undefined && footballEnabled === undefined && salaryDay === undefined && monthlySpendLimit === undefined && !username &&
       city === undefined && morningStart === undefined && afternoonStart === undefined && eveningStart === undefined &&
       reportStyle === undefined && mediaEnabledTabs === undefined && unlockedAchievements === undefined &&
       sprintTutorialSeen === undefined && weekdayLongPressTutorialSeen === undefined && swipeDismissTutorialSeen === undefined &&
@@ -740,6 +742,7 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
     if (avatarUrl) update.avatarUrl = avatarUrl
     if (name?.trim()) update.name = name.trim()
     if (f1Enabled !== undefined) update.f1Enabled = f1Enabled
+    if (footballEnabled !== undefined) update.footballEnabled = footballEnabled
     if (salaryDay !== undefined) {
       const day = Math.round(salaryDay)
       if (day < 1 || day > 31) { res.status(400).json({ error: 'salaryDay must be 1–31' }); return }

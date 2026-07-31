@@ -14,6 +14,7 @@ interface AdminUser {
   subscriptionStatus: string
   planExpiresAt: string | null
   f1Enabled: boolean
+  footballEnabled: boolean
   drinksEnabled: boolean
   familyIds: string[]
 }
@@ -304,7 +305,7 @@ const AdminTab: React.FC = () => {
     return () => { cancelled = true }
   }
 
-  const handleToggleFlag = async (userId: string, flag: 'f1Enabled' | 'drinksEnabled', value: boolean) => {
+  const handleToggleFlag = async (userId: string, flag: 'f1Enabled' | 'footballEnabled' | 'drinksEnabled', value: boolean) => {
     setSavingFlag(userId)
     try {
       const res = await authFetch(`/api/auth/admin/users/${userId}/flags`, {
@@ -313,9 +314,9 @@ const AdminTab: React.FC = () => {
         body: JSON.stringify({ [flag]: value }),
       })
       if (!res.ok) throw new Error()
-      const data = await res.json() as { f1Enabled: boolean; drinksEnabled: boolean }
+      const data = await res.json() as { f1Enabled: boolean; footballEnabled: boolean; drinksEnabled: boolean }
       setUsers(prev => prev.map(u => u.id === userId
-        ? { ...u, f1Enabled: data.f1Enabled, drinksEnabled: data.drinksEnabled }
+        ? { ...u, f1Enabled: data.f1Enabled, footballEnabled: data.footballEnabled, drinksEnabled: data.drinksEnabled }
         : u,
       ))
     } catch {
@@ -420,6 +421,14 @@ const AdminTab: React.FC = () => {
                   onClick={() => handleToggleFlag(u.id, 'f1Enabled', !u.f1Enabled)}
                 >
                   F1 {u.f1Enabled ? 'ON' : 'OFF'}
+                </button>
+                <button
+                  type="button"
+                  disabled={isTogglingFlag}
+                  className={`${styles.adminFlagBtn} ${u.footballEnabled ? styles.adminFlagBtnOn : ''}`}
+                  onClick={() => handleToggleFlag(u.id, 'footballEnabled', !u.footballEnabled)}
+                >
+                  ФУТБОЛ {u.footballEnabled ? 'ON' : 'OFF'}
                 </button>
                 <button
                   type="button"

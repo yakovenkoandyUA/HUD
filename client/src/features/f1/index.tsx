@@ -9,10 +9,13 @@ import LastRaceCard from './components/f1/LastRaceCard'
 import { F1_SEASON_2026 } from './data/f1Season2026'
 import { getNextRace, getNextRound, getRaceThisWeek } from './utils/f1'
 import { useUiStore } from '@/shared/store/uiStore'
+import { useProfileStore } from '@/shared/store/profileStore'
 import { useF1PredictionsStore, toRaceId, isRaceLocked } from '@/features/f1/store/f1PredictionsStore'
+import FootballPanel from '@/features/football/components/FootballPanel'
 import styles from './F1.module.css'
 
 type F1Tab = 'calendar' | 'drivers' | 'constructors'
+type SportTab = 'f1' | 'football'
 
 const TABS: { id: F1Tab; label: string }[] = [
   { id: 'calendar',     label: 'Календар' },
@@ -22,6 +25,10 @@ const TABS: { id: F1Tab; label: string }[] = [
 
 const F1Screen: React.FC = () => {
   const navigate = useNavigate()
+  const { activeProfile } = useProfileStore()
+  const f1Enabled = activeProfile?.f1Enabled ?? false
+  const footballEnabled = activeProfile?.footballEnabled ?? false
+  const [sportTab, setSportTab] = useState<SportTab>(f1Enabled ? 'f1' : 'football')
   const [tab, setTab] = useState<F1Tab>('calendar')
   const { theme } = useUiStore()
   const { fetchPredictions, predictions } = useF1PredictionsStore()
@@ -95,7 +102,24 @@ const F1Screen: React.FC = () => {
     <div className={styles.screen}>
       {showBg && <div ref={bgRef} className={styles.bg} />}
       <AppHeader />
+      {f1Enabled && footballEnabled && (
+        <div className={styles.tabs}>
+          <button
+            className={`${styles.tab} ${sportTab === 'f1' ? styles.tabActive : ''}`}
+            onClick={() => setSportTab('f1')}
+          >
+            Формула 1
+          </button>
+          <button
+            className={`${styles.tab} ${sportTab === 'football' ? styles.tabActive : ''}`}
+            onClick={() => setSportTab('football')}
+          >
+            Футбол
+          </button>
+        </div>
+      )}
       <div ref={contentRef} className={styles.content}>
+        {sportTab === 'football' ? <FootballPanel /> : <>
         {nextRace ? (
           <NextRaceCard race={nextRace} />
         ) : (
@@ -169,6 +193,7 @@ const F1Screen: React.FC = () => {
         {(tab === 'drivers' || tab === 'constructors') && (
           <ChampionshipTable tab={tab} />
         )}
+        </>}
       </div>
     </div>
   )

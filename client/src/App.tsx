@@ -77,10 +77,10 @@ const RootRoute: React.FC = () => {
   return <Dashboard />
 }
 
-/** Redirects users without f1Enabled to / */
+/** Redirects users without f1Enabled or footballEnabled to / */
 const F1Route: React.FC = () => {
   const { activeProfile } = useProfileStore()
-  if (!activeProfile?.f1Enabled) return <Navigate to="/" replace />
+  if (!activeProfile?.f1Enabled && !activeProfile?.footballEnabled) return <Navigate to="/" replace />
   return <Outlet />
 }
 

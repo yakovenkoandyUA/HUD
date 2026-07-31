@@ -83,14 +83,14 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - `/notes` — inline edit, пошук
 - `/profile` — MeTab (avatar, name, username — тільки hero-картка), WalletTab, PlanTab, AdminTab; **ProfileDrawer:** Вигляд → Система → Модулі → Близькі → **Тариф** (→ `/profile?tab=plan`) → Адмін → **Акаунт** (→ `/profile/account`); при `updateAvailable` — рядок під Акаунтом → `ChangelogSheet`
 - `/profile/account` — **MeAccount**: Експорт даних (JSON), Юридична інформація (Terms/Privacy + checkbox підтвердження), Небезпечна зона (видалення акаунту з confirmation input)
-- `/f1` — NextRaceCard, LastRaceCard, RacePredictionCard, ChampionshipTable (Пілоти/Конструктори/МІЙ СЕЗОН), McLarenViewer (Three.js)
+- `/f1` — таб-хаб "Спорт" (Формула 1 / Футбол, показується тільки коли ввімкнено обидва). F1-таб: NextRaceCard, LastRaceCard, RacePredictionCard, ChampionshipTable (Пілоти/Конструктори/МІЙ СЕЗОН), McLarenViewer (Three.js). Футбол-таб: `FootballPanel` (топ-5 європейських ліг + ЛЧ через football-data.org, `PillSelector` вибір ліги, найближчий матч, турнірна таблиця) — керується новим `footballEnabled` boolean-флагом (дзеркально до `f1Enabled`), toggle в Профіль → Модулі → Спорт. Баскетбол лишається `wip` (немає пристойного безкоштовного live API)
 - `/f1/live` — F1 Live Dashboard (OpenF1 polling)
 - `/f1/:round` — RaceDetail (CircuitStats, SessionSchedule, Weather, Podium)
 - `/f1/my-season` — особисті прогнози + scoring
 - `/login`, `/register`, `/verify` — auth flow
 - `*` — NotFound
 
-**Stores:** profileStore, financeStore, goalsStore, streakStore, sprintStore, lessonStore, recipesStore, mealPlanStore, shoppingListStore, watchlistStore, memoriesStore, f1PredictionsStore, notesStore, categoryStore, uiStore, familyStore, moodStore, bankStore, gamesStore
+**Stores:** profileStore, financeStore, goalsStore, streakStore, sprintStore, lessonStore, recipesStore, mealPlanStore, shoppingListStore, watchlistStore, memoriesStore, f1PredictionsStore, footballStore, notesStore, categoryStore, uiStore, familyStore, moodStore, bankStore, gamesStore
 
 **Ключові компоненти:**
 - `AiChatSheet` — SSE streaming AI чат (Dashboard), markdown rendering

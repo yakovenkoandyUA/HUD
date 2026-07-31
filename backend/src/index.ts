@@ -38,6 +38,7 @@ import goalRoutes from './routes/goals'
 import pushRoutes from './routes/push'
 import memoryRoutes from './routes/memories'
 import f1Routes from './routes/f1'
+import footballRoutes from './routes/football'
 import categoryRoutes from './routes/categories'
 import receiptRoutes from './routes/receipt'
 import recurringRoutes from './routes/recurringPayments'
@@ -104,6 +105,7 @@ app.use('/api/goals', goalRoutes)
 app.use('/api/push', pushRoutes)
 app.use('/api/memories', memoryRoutes)
 app.use('/api/f1', f1Routes)
+app.use('/api/football', footballRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/receipt', receiptRoutes)
 app.use('/api/recurring', recurringRoutes)

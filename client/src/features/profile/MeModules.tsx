@@ -13,7 +13,7 @@ const MEDIA_TABS: { id: string; label: string; sub: string; wip?: boolean }[] = 
 
 const SPORT_MODULES: { id: string; label: string; sub: string; wip?: boolean }[] = [
   { id: 'f1',         label: 'Формула 1',  sub: 'Календар, стендінги, прогнози' },
-  { id: 'football',   label: 'Футбол',     sub: 'Ліги, матчі, статистика',       wip: true },
+  { id: 'football',   label: 'Футбол',     sub: 'Топ-5 ліг, ЛЧ, турнірні таблиці' },
   { id: 'basketball', label: 'Баскетбол',  sub: 'НБА, матчі, рейтинги',          wip: true },
 ]
 
@@ -48,7 +48,7 @@ const MeModules: React.FC = () => {
   const mediaTotal       = MEDIA_TABS.filter(t => !t.wip).length
   const mediaActiveCount = MEDIA_TABS.filter(t => !t.wip && enabledTabs.includes(t.id)).length
   const sportTotal       = SPORT_MODULES.filter(m => !m.wip).length
-  const sportActiveCount = activeProfile.f1Enabled ? 1 : 0
+  const sportActiveCount = (activeProfile.f1Enabled ? 1 : 0) + (activeProfile.footballEnabled ? 1 : 0)
 
   return (
     <>
@@ -116,7 +116,11 @@ const MeModules: React.FC = () => {
         </button>
         <div className={`${styles.subAccordionBody} ${sportOpen ? styles.subAccordionBodyOpen : ''}`}>
           {SPORT_MODULES.map((m, i) => {
-            const enabled = m.id === 'f1' ? (activeProfile.f1Enabled ?? false) : false
+            const sportFlags: Record<string, boolean> = {
+              f1: activeProfile.f1Enabled ?? false,
+              football: activeProfile.footballEnabled ?? false,
+            }
+            const enabled = sportFlags[m.id] ?? false
             return (
               <React.Fragment key={m.id}>
                 {i > 0 && <div className={styles.cardDivider} />}
@@ -134,6 +138,7 @@ const MeModules: React.FC = () => {
                     onClick={() => {
                       if (m.wip) return
                       if (m.id === 'f1') updateProfile({ f1Enabled: !enabled })
+                      else if (m.id === 'football') updateProfile({ footballEnabled: !enabled })
                     }}
                     aria-label={`${enabled ? 'Вимкнути' : 'Увімкнути'} модуль ${m.label}`}
                     aria-pressed={!m.wip && enabled}

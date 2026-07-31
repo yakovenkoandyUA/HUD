@@ -115,6 +115,8 @@
 | `/api/bank/import-csv` | POST — CSV import |
 | `/api/books/search` | GET (proxy Google Books, кеш 10хв) |
 | `/api/f1/predictions` | GET, POST, PATCH |
+| `/api/football/standings` | GET `?competition=PL\|PD\|BL1\|SA\|FL1\|CL` — турнірна таблиця, кеш 1г |
+| `/api/football/matches` | GET `?competition=...` — найближчий запланований матч, кеш 10хв |
 | `/api/weather` | GET ?city= — проксі до wttr.in (Cache-Control 30хв) |
 | `/api/user/export` | GET — requireAuth; JSON export всіх даних юзера (без passwordHash/pinHash/tokens/Paddle fields) |
 | `/api/user/me` | DELETE — soft delete; вимагає `{ confirmation: 'DELETE' }`; видаляє RefreshTokens, очищає cookie |
@@ -148,6 +150,7 @@ GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 RESEND_API_KEY=...
 MONOBANK_KEY=...        # (якщо є серверний ключ)
+FOOTBALL_DATA_API_KEY=... # football-data.org, безкоштовний токен реєстрації
 BILLING_ENABLED=false   # 'true' вмикає entitlement gates; поки false — всі no-op
 WAYFORPAY_MERCHANT_LOGIN=...  # (Phase 4B)
 WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
@@ -155,7 +158,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 ## Моделі — ключові поля
 
-**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `isVerified: boolean` (default false), `verificationToken: string|null`, `resetPasswordToken: string|null`, `resetPasswordExpires: Date|null` (1г TTL), `lastLoginAt: Date|null` (оновлюється при login/register/google/refresh — proxy для "активний юзер"), `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`
+**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `footballEnabled: boolean` (обидва — feature-флаги модулів на екрані `/f1`, який тепер таб-хаб "Спорт"), `isVerified: boolean` (default false), `verificationToken: string|null`, `resetPasswordToken: string|null`, `resetPasswordExpires: Date|null` (1г TTL), `lastLoginAt: Date|null` (оновлюється при login/register/google/refresh — proxy для "активний юзер"), `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`
 
 **BillingOrder** — `userId`, `provider: 'wayforpay'|'paddle'`, `orderReference` (unique, opaque: `mimir_{YYYYMMDD}_{16hex}`), `planId: 'personal'|'couple'|'family'`, `interval: 'month'|'year'`, `amount` (копійки), `currency: 'UAH'`, `status: 'pending'|'paid'|'failed'|'refunded'|'expired'`, `expiresAt`, `paidAt`, `rawProviderPayload`. Indexes: unique orderReference, `{userId, createdAt: -1}`, `{status, expiresAt}` для cleanup cron
 
@@ -213,6 +216,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 | **Monobank API** | OAuth connect, sync транзакцій, баланс |
 | **OpenF1 API** | F1 live data (`api.openf1.org/v1/`) |
 | **Jolpica API** | F1 залік команд/пілотів, результати гонок |
+| **football-data.org** | Футбол — топ-5 європейських ліг + ЛЧ (`PL/PD/BL1/SA/FL1/CL`), стендінги + найближчий матч |
 | **TMDB API** | Пошук фільмів/серіалів/аніме |
 | **Google Books** | Пошук книг (через backend proxy) |
 | **Resend** | Email верифікація (потребує домену mimir.app) |

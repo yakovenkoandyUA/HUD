@@ -1,0 +1,166 @@
+.wrap {
+  padding: 14px 16px 24px;
+}
+
+.competitionRow {
+  margin-bottom: 16px;
+}
+
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin: 0 0 8px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.matchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.crest {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.crestFallback {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.teamName {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.vsMid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.vsTime {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.vsLeague {
+  font-size: 9.5px;
+  color: var(--text3);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.table th {
+  text-align: left;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-weight: 700;
+  padding: 0 6px 8px;
+}
+
+.table th.num,
+.table td.num {
+  text-align: right;
+}
+
+.table td {
+  padding: 7px 6px;
+  border-top: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+.table tr:first-child td {
+  border-top: none;
+}
+
+.pos {
+  color: var(--text3);
+  width: 18px;
+}
+
+.posTop {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.teamCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.miniCrest {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.pts {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text3);
+  font-size: 13px;
+}

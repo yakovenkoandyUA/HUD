@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router
 import styles from './BottomNav.module.css'
 import DashboardIcon from '@/assets/icons/nav/dashboard.svg?react'
 import WalletIcon    from '@/assets/icons/nav/wallet.svg?react'
-import F1Icon        from '@/assets/icons/nav/F1.svg?react'
+import SportIcon     from '@/assets/icons/nav/sport.svg?react'
 import SprintIcon    from '@/assets/icons/nav/sprint.svg?react'
 import RecipeIcon    from '@/assets/icons/nav/recipe.svg?react'
 import WatchIcon     from '@/assets/icons/nav/watch.svg?react'
@@ -25,7 +25,7 @@ export interface NavSection {
   to: string
   label: string
   Icon: React.ComponentType<{ className?: string }>
-  requiresF1?: boolean
+  requiresSport?: boolean
 }
 
 export const ALL_NAV_SECTIONS: NavSection[] = [
@@ -35,7 +35,7 @@ export const ALL_NAV_SECTIONS: NavSection[] = [
   { to: '/watchlist', label: 'Медіа',   Icon: WatchIcon },
   { to: '/recipes',   label: 'Рецепти', Icon: RecipeIcon },
   { to: '/memories',  label: 'Спогади', Icon: MemoriesIcon },
-  { to: '/f1',        label: 'F1',      Icon: F1Icon, requiresF1: true },
+  { to: '/f1',        label: 'Спорт',   Icon: SportIcon, requiresSport: true },
 ]
 
 // Arc positions for secondary pills (relative to hub button center)
@@ -91,7 +91,7 @@ function AnsuzRune({ flipped }: { flipped: boolean }) {
 const BottomNav: React.FC = () => {
   const { activeProfile } = useProfileStore()
   const { navStyle, navLabelMode, pinnedSections, pinnedProfileTabs, modalDepth } = useUiStore()
-  const f1Enabled = activeProfile?.f1Enabled ?? false
+  const sportEnabled = (activeProfile?.f1Enabled ?? false) || (activeProfile?.footballEnabled ?? false)
   const { pathname } = useLocation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -112,7 +112,7 @@ const BottomNav: React.FC = () => {
   const isProfile = pathname === '/profile'
 
   // All sections available for this user
-  const availableSections = ALL_NAV_SECTIONS.filter(s => !s.requiresF1 || f1Enabled)
+  const availableSections = ALL_NAV_SECTIONS.filter(s => !s.requiresSport || sportEnabled)
 
   // Pinned sections (ordered by ALL_NAV_SECTIONS order, filtered to available)
   const pinnedAvailable = availableSections.filter(s => pinnedSections.includes(s.to))
