@@ -678,7 +678,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     const item = get().items.find(i => i.id === id)
     if (!item) return
 
-    if (isRecurring(item) && !item.done) {
+    if (isRecurring(item)) {
       const completionDateStr = date ?? localDateStr(new Date())
 
       if (item.completionLog?.includes(completionDateStr)) {
