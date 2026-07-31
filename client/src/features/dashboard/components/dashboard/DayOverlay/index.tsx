@@ -57,7 +57,7 @@ const MOOD_COLORS: Record<number, string> = {
 const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
   const navigate = useNavigate()
   const { fetchLogs, fetchFamilyMoods, setMood, setNote, todayScore, todayNote, logs, familyMoods } = useMoodStore()
-  const { items, fetchItems } = useSprintStore()
+  const { items, fetchItems, toggleItem } = useSprintStore()
   const { activeProfile } = useProfileStore()
 
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -134,7 +134,11 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
     noteTimer.current = setTimeout(() => setNote(today, val), 800)
   }
 
-  const handleRoutineClick = (_item: UnifiedTodo) => {
+  const handleRoutineToggle = (item: UnifiedTodo) => {
+    toggleItem(item.id, today)
+  }
+
+  const handleRoutineOpen = () => {
     navigate('/sprint')
     onClose()
   }
@@ -241,9 +245,14 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
                       key={item.id}
                       type="button"
                       className={`${styles.routineRow} ${isDoneToday(item) ? styles.routineDone : ''}`}
-                      onClick={() => handleRoutineClick(item)}
+                      onClick={handleRoutineOpen}
                     >
-                      <span className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}>
+                      <span
+                        role="button"
+                        aria-label={isDoneToday(item) ? 'Скасувати виконання' : 'Позначити виконаним'}
+                        className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}
+                        onClick={e => { e.stopPropagation(); handleRoutineToggle(item) }}
+                      >
                         {isDoneToday(item) && (
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -267,9 +276,14 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
                     key={item.id}
                     type="button"
                     className={`${styles.routineRow} ${isDoneToday(item) ? styles.routineDone : ''}`}
-                    onClick={() => handleRoutineClick(item)}
+                    onClick={handleRoutineOpen}
                   >
-                    <span className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}>
+                    <span
+                      role="button"
+                      aria-label={isDoneToday(item) ? 'Скасувати виконання' : 'Позначити виконаним'}
+                      className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}
+                      onClick={e => { e.stopPropagation(); handleRoutineToggle(item) }}
+                    >
                       {isDoneToday(item) && (
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                           <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
