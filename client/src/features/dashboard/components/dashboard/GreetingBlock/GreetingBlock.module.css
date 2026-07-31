@@ -304,7 +304,15 @@
   display: flex;
   align-items: center;
   gap: 7px;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  margin: -4px 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
+.todayItem:active { opacity: 0.6; }
 
 .todayDot {
   width: 6px;

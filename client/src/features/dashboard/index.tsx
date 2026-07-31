@@ -188,7 +188,7 @@ const Dashboard: React.FC = () => {
   }
 
   const pendingRoutines   = routineItems.filter(r => !isDoneToday(r))
-  const todayTeasers      = pendingRoutines.slice(0, 2).map(r => r.title)
+  const todayTeasers      = pendingRoutines.slice(0, 2).map(r => ({ id: r.id, title: r.title }))
   const todayTeasersTotal = pendingRoutines.length
 
   return (

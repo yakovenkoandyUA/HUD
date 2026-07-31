@@ -4,6 +4,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useWeather } from '@/shared/hooks/useWeather'
 import type { WeatherData } from '@/shared/hooks/useWeather'
 import { reverseGeocodeCity } from '@/features/memories/utils/geocode'
+import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import styles from './GreetingBlock.module.css'
 
 /**
@@ -11,18 +12,23 @@ import styles from './GreetingBlock.module.css'
  * ----------------------------
  * Компактний банер з темовим фоном, датою/погодою та діями дня.
  * Верхня частина: дата + погода (тап → WeatherModal).
- * Нижня частина: СЬОГОДНІ label + список рутин + "детальніше >".
+ * Нижня частина: СЬОГОДНІ label + список рутин (тап → позначити виконаним) + "детальніше >".
  *
  * Props:
  * @prop {(weather: WeatherData) => void} [onWeatherClick] — callback при тапі на погоду
  * @prop {() => void}                     onOpenDay        — відкрити DayOverlay
- * @prop {string[]}                       [todayTeasers]   — назви рутин на сьогодні (до 3)
+ * @prop {{id: string; title: string}[]}  [todayTeasers]   — рутини на сьогодні (до 2)
  */
 interface GreetingBlockProps {
   onWeatherClick?: (weather: WeatherData) => void
   onOpenDay: () => void
-  todayTeasers?: string[]
+  todayTeasers?: { id: string; title: string }[]
   todayTeasersTotal?: number
+}
+
+function todayLocalIso(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
@@ -41,10 +47,10 @@ function formatTimeParts(d: Date): { hh: string; mm: string } {
 }
 
 const THEME_PHOTOS: Partial<Record<string, string>> = {
-  aurum: '/theme/lunar.webp',
+  aurum:  '/theme/lunar.webp',
   cyber:  '/theme/cyber.webp',
   noir:   '/theme/noir.webp',
-  mimir:  '/theme/mimir.webp',
+  vellum: '/theme/mimir.webp',
   pixel:  '/theme/pixel.webp',
   arctic: '/theme/arctic.webp',
 }
@@ -53,6 +59,7 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
   const profile       = useProfileStore(s => s.activeProfile)
   const updateProfile = useProfileStore(s => s.updateProfile)
   const theme         = useUiStore(s => s.theme)
+  const toggleItem    = useSprintStore(s => s.toggleItem)
   const weather       = useWeather(profile?.city)
   const [now, setNow] = useState(() => new Date())
   const [geoState, setGeoState] = useState<'idle' | 'loading' | 'denied'>('idle')
@@ -154,14 +161,19 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
       <div className={styles.todayRow}>
         <span className={styles.todayLabel}>СЬОГОДНІ</span>
         {todayTeasers && todayTeasers.length > 0 ? (
-          todayTeasers.map((title, i) => {
+          todayTeasers.map((item, i) => {
             const isLast = i === todayTeasers.length - 1
             return (
-              <div key={i} className={styles.todayBottom}>
-                <div className={styles.todayItem}>
+              <div key={item.id} className={styles.todayBottom}>
+                <button
+                  type="button"
+                  className={styles.todayItem}
+                  onClick={() => toggleItem(item.id, todayLocalIso())}
+                  aria-label={`Позначити виконаним: ${item.title}`}
+                >
                   <span className={styles.todayDot} aria-hidden="true" />
-                  <span className={styles.todayText}>{title}</span>
-                </div>
+                  <span className={styles.todayText}>{item.title}</span>
+                </button>
                 {isLast && (
                   <div className={styles.todayActions}>
                     {hiddenCount > 0 && (

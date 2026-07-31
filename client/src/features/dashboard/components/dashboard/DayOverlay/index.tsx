@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useWeather } from '@/shared/hooks/useWeather'
-import { useNavigate } from 'react-router-dom'
 import MoodIcon from './MoodIcon'
 import MoodCalendar from '../MoodCalendar'
 import MoodDayDetail from '../MoodDayDetail'
@@ -55,7 +54,6 @@ const MOOD_COLORS: Record<number, string> = {
 }
 
 const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
-  const navigate = useNavigate()
   const { fetchLogs, fetchFamilyMoods, setMood, setNote, todayScore, todayNote, logs, familyMoods } = useMoodStore()
   const { items, fetchItems, toggleItem } = useSprintStore()
   const { activeProfile } = useProfileStore()
@@ -136,11 +134,6 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
 
   const handleRoutineToggle = (item: UnifiedTodo) => {
     toggleItem(item.id, today)
-  }
-
-  const handleRoutineOpen = () => {
-    navigate('/sprint')
-    onClose()
   }
 
   return (
@@ -245,13 +238,11 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
                       key={item.id}
                       type="button"
                       className={`${styles.routineRow} ${isDoneToday(item) ? styles.routineDone : ''}`}
-                      onClick={handleRoutineOpen}
+                      onClick={() => handleRoutineToggle(item)}
                     >
                       <span
-                        role="button"
-                        aria-label={isDoneToday(item) ? 'Скасувати виконання' : 'Позначити виконаним'}
+                        aria-hidden="true"
                         className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}
-                        onClick={e => { e.stopPropagation(); handleRoutineToggle(item) }}
                       >
                         {isDoneToday(item) && (
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -276,13 +267,11 @@ const DayOverlay: React.FC<DayOverlayProps> = ({ onClose }) => {
                     key={item.id}
                     type="button"
                     className={`${styles.routineRow} ${isDoneToday(item) ? styles.routineDone : ''}`}
-                    onClick={handleRoutineOpen}
+                    onClick={() => handleRoutineToggle(item)}
                   >
                     <span
-                      role="button"
-                      aria-label={isDoneToday(item) ? 'Скасувати виконання' : 'Позначити виконаним'}
+                      aria-hidden="true"
                       className={`${styles.routineCheck} ${isDoneToday(item) ? styles.routineCheckDone : ''}`}
-                      onClick={e => { e.stopPropagation(); handleRoutineToggle(item) }}
                     >
                       {isDoneToday(item) && (
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
