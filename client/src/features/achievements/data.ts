@@ -33,10 +33,10 @@ export const CATEGORY_WELL_BG: Record<AchievementCategory, string> = {
  * fixed `top: 61%` was.
  */
 export const WELL_MOUTH: Record<AchievementCategory, { x: number; y: number }> = {
-  memory:    { x: 50, y: 40 },
-  spaces:    { x: 50, y: 58 },
-  finance:   { x: 50, y: 63 },
-  sprint:    { x: 48, y: 68 },
+  memory:    { x: 50, y: 74 },
+  spaces:    { x: 50, y: 56 },
+  finance:   { x: 51, y: 49 },
+  sprint:    { x: 50, y: 48 },
   watchlist: { x: 50, y: 87 },
 }
 
@@ -622,43 +622,43 @@ export const TREE_NODES: Record<string, { id: string; x: number; y: number }[]> 
   // memory.png — no top-rim landmark; uses the two upper lit medallions,
   // two mid medallions flanking the well mouth, and the bottom-center one.
   memory: [
-    { id: 'first-memory',   x: 50, y: 40 },
-    { id: 'past-memory',    x: 22, y: 40 },
-    { id: 'ten-memories',   x: 78, y: 40 },
-    { id: 'month-memory',   x: 20, y: 57 },
-    { id: 'archive-25',     x: 83, y: 57 },
+    { id: 'first-memory',   x: 50, y: 15 },
+    { id: 'past-memory',    x: 9, y: 30 },
+    { id: 'ten-memories',   x: 90, y: 30 },
+    { id: 'month-memory',   x: 13, y: 61 },
+    { id: 'archive-25',     x: 87, y: 61 },
   ],
   // spaces.png — 5 visible archways around the rim.
   spaces: [
-    { id: 'first-space',        x: 50, y: 32 },
-    { id: 'space-with-profile', x: 27, y: 36 },
-    { id: 'living-space',       x: 73, y: 36 },
-    { id: 'five-spaces',        x: 17, y: 63 },
-    { id: 'life-map',           x: 83, y: 63 },
+    { id: 'first-space',        x: 51, y: 20 },
+    { id: 'space-with-profile', x: 27, y: 24 },
+    { id: 'living-space',       x: 73.5, y: 24 },
+    { id: 'five-spaces',        x: 19.5, y: 50 },
+    { id: 'life-map',           x: 80.5, y: 50 },
   ],
   // finance.png — scale emblem at top, coin stacks upper L/R, medallions lower L/R.
   finance: [
-    { id: 'first-transaction', x: 50, y: 25 },
-    { id: 'first-category',    x: 23, y: 33 },
-    { id: 'first-goal',        x: 77, y: 33 },
-    { id: 'month-watched',     x: 24, y: 60 },
-    { id: 'first-pattern',     x: 76, y: 60 },
+    { id: 'first-transaction', x: 51, y: 18 },
+    { id: 'first-category',    x: 23, y: 24 },
+    { id: 'first-goal',        x: 77, y: 23 },
+    { id: 'month-watched',     x: 24, y: 55 },
+    { id: 'first-pattern',     x: 76, y: 55 },
   ],
   // sprint.png — flatter/wider render, 5 glowing orbs already asymmetric.
   sprint: [
-    { id: 'first-quest',       x: 53, y: 45 },
-    { id: 'three-steps',       x: 20, y: 53 },
-    { id: 'three-day-chain',   x: 84, y: 60 },
-    { id: 'ten-steps',         x: 27, y: 72 },
-    { id: 'return-after-fail', x: 60, y: 78 },
+    { id: 'first-quest',       x: 70, y: 29 },
+    { id: 'three-steps',       x: 30, y: 30 },
+    { id: 'three-day-chain',   x: 86, y: 52 },
+    { id: 'ten-steps',         x: 17, y: 52 },
+    { id: 'return-after-fail', x: 50, y: 68 },
   ],
   // media.png — top platform with 5 lit dots (top / L / R / lower-L / lower-R).
   watchlist: [
-    { id: 'first-watchlist',   x: 50, y: 38 },
-    { id: 'first-series',      x: 18, y: 52 },
-    { id: 'watched-completed', x: 82, y: 52 },
-    { id: 'not-just-list',     x: 37, y: 63 },
-    { id: 'taste-archive',     x: 63, y: 63 },
+    { id: 'first-watchlist',   x: 50, y: 15 },
+    { id: 'first-series',      x: 11, y: 35 },
+    { id: 'watched-completed', x: 88, y: 35 },
+    { id: 'not-just-list',     x: 28, y: 73 },
+    { id: 'taste-archive',     x: 73, y: 73 },
   ],
 }
 

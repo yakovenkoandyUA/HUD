@@ -109,7 +109,7 @@ function scaleAmount(amount: string, factor: number): string {
 const RecipeDetailScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { recipes, wishlistIds, cookStats, toggleWishlist, updateRecipe, deleteRecipe, logCook, fetchCookStats, rateRecipe } = useRecipesStore()
+  const { recipes, wishlistIds, cookStats, toggleWishlist, updateRecipe, deleteRecipe, logCook, fetchCookStats, fetchRecipes, rateRecipe } = useRecipesStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
   const canUseChef = useCanUseFeature('aiChefChat')
@@ -139,6 +139,10 @@ const RecipeDetailScreen: React.FC = () => {
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => { fetchCookStats() }, [fetchCookStats])
+
+  useEffect(() => {
+    if (recipes.length === 0) fetchRecipes()
+  }, [])
 
   useEffect(() => {
     if (!id) return
@@ -235,11 +239,13 @@ const RecipeDetailScreen: React.FC = () => {
       title:         recipe.title,
       recipeId:      recipe.id,
       recipeImageUrl: recipe.imageUrl,
-      checklist:     recipe.ingredients.map(raw => {
-        const ing = normalizeIngredient(raw)
-        const label = [ing.amount, ing.unit, ing.name].filter(Boolean).join(' ')
-        return { id: crypto.randomUUID(), title: label || String(raw), done: false }
-      }),
+      checklist:     recipe.ingredients
+        .filter(raw => !(typeof raw === 'string' && raw.trim().endsWith(':')))
+        .map(raw => {
+          const ing = normalizeIngredient(raw)
+          const label = [ing.amount, ing.unit, ing.name].filter(Boolean).join(' ')
+          return { id: crypto.randomUUID(), title: label || String(raw), done: false }
+        }),
     })
     showToast(`«${recipe.title}» додано до покупок`, 'success')
     navigate('/sprint', { state: { filterType: 'shopping' } })

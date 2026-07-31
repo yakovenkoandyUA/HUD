@@ -64,8 +64,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 42px;
-	height: 42px;
+	width: 62px;
+	height: 62px;
 	border-radius: 50%;
 	background: color-mix(in srgb, var(--bg) 55%, transparent);
 	border: 1px solid var(--border-alpha-60);
