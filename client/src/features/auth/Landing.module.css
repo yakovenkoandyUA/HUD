@@ -187,13 +187,13 @@
 }
 
 .sectionTitle {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 4.5vw, 34px);
-  font-weight: 400;
-  line-height: 1.25;
+  font-family: var(--font-ui);
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 800;
+  line-height: 1.3;
   color: var(--text);
   margin: 0 0 28px;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
 }
 
 /* ── Problem + Life Spaces: two compact blocks ── */
@@ -209,13 +209,26 @@
   padding: 24px 22px;
 }
 
+.blockPlain {
+  padding: 24px 0;
+}
+
 .blockTitle {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: 19px;
-  font-weight: 400;
-  line-height: 1.3;
+  font-weight: 800;
+  line-height: 1.35;
   color: var(--text);
   margin: 0 0 18px;
+  letter-spacing: -0.005em;
+}
+
+.chaosConclusion {
+  margin: 16px 0 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text2);
 }
 
 .chaosCloud {
@@ -269,38 +282,57 @@
   margin: 0;
 }
 
-/* ── Cycle ── */
+/* ── Cycle — vertical trajectory ── */
 .cycle {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
 }
 
 .cycleStep {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 18px 20px;
-  border: 1px solid var(--border2);
-  min-width: 140px;
+  gap: 18px;
+  padding-bottom: 30px;
+}
+.cycleStep:last-child { padding-bottom: 0; }
+.cycleStep:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 34px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--border);
 }
 
 .cycleNum {
-  font-family: var(--font-mono);
-  font-size: 11px;
+  flex-shrink: 0;
+  width: 36px;
+  font-family: var(--font-display);
+  font-size: 18px;
   color: var(--accent);
+  text-align: center;
+}
+
+.cycleBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 1px;
+}
+
+.cycleTitle {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
 }
 
 .cycleText {
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   font-size: 13px;
+  line-height: 1.5;
   color: var(--text2);
-}
-
-.cycleArrow {
-  color: var(--text3);
-  font-size: 16px;
 }
 
 /* ── Real interface placeholders ── */
@@ -434,6 +466,13 @@
 }
 .ctaSecondary:hover { color: var(--accent); }
 
+.ctaNote {
+  margin: 18px 0 0;
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--text3);
+}
+
 /* ── Footer ── */
 .footer {
   border-top: 1px solid var(--border);
@@ -475,7 +514,6 @@
 @media (max-width: 640px) {
   .twinBlocks { grid-template-columns: 1fr; }
   .ctaButtons { flex-direction: column; align-items: flex-start; gap: 14px; }
-  .cycleStep { min-width: 0; flex: 1 1 auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

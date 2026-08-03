@@ -6,16 +6,16 @@ import styles from './Landing.module.css'
 const CHAOS_ITEMS = ['Нотатки', 'Фото', 'Календар', 'Банківські витрати', 'Список справ', 'Фільми й книги', 'Десь у голові…']
 
 const LIFE_SPACES = [
-  { title: 'Я', desc: 'Особистий простір — звички, цілі, нотатки, все що стосується лише тебе.' },
-  { title: "Сім'я / пара", desc: 'Спільні спогади, витрати, плани — з тими, хто поруч.' },
-  { title: 'Подорож або проєкт', desc: 'Квитки, місця, витрати, люди — все, що складає одну історію.' },
+  { title: 'Я', desc: "Думки, звички, цілі, здоров'я та особиста пам'ять." },
+  { title: "Сім'я / пара", desc: "Спільні події, витрати, плани й речі, які не варто втрачати." },
+  { title: 'Подорож або проєкт', desc: "Люди, місця, квитки, рішення й витрати в одному контексті. Усе, що складається в одну історію." },
 ]
 
 const CYCLE_STEPS = [
-  'Створи Space',
-  'Додавай події та памʼять',
-  'MIMIR збирає контекст',
-  'Повертайся осмислено',
+  { title: 'Створи простір',        desc: 'Для себе, сім\'ї, подорожі або проєкту.' },
+  { title: 'Додавай події',         desc: 'Нотатки, фото, витрати, місця, людей і плани.' },
+  { title: "MIMIR пов'язує контекст", desc: 'Показує, що, коли, де і з ким відбувалося.' },
+  { title: 'Повертайся до цілого',  desc: 'Не до окремої нотатки, а до історії навколо неї.' },
 ]
 
 const INTERFACE_ITEMS = [
@@ -27,9 +27,8 @@ const INTERFACE_ITEMS = [
 ]
 
 const PRIVACY_POINTS = [
-  'Ти бачиш свої дані — і тільки ті, хто в твоїх spaces, бачить спільне',
-  'Дані зберігаються в зашифрованому вигляді, паролі — тільки як bcrypt-хеш',
-  'Спільні простори видимі лише учасникам, яких ти сам додав',
+  'Особисті дані бачиш лише ти. Спільні дані бачать тільки учасники відповідного простору',
+  'Паролі не зберігаються у відкритому вигляді',
   'Експорт і видалення даних — в один клік, будь-коли',
   'AI бачить лише те, що потрібно для відповіді — діалоги не зберігаються',
 ]
@@ -70,13 +69,14 @@ const Landing: React.FC = () => {
         <div className={styles.heroGlow} aria-hidden="true" />
         <div className={styles.heroRing} aria-hidden="true" />
         <h1 className={styles.heroTitle}>MIMIR</h1>
-        <p className={styles.heroKicker}>Memory OS for your life spaces</p>
+        <p className={styles.heroKicker}>A memory system for your life</p>
         <p className={styles.heroFormula}>Thought finds the path. Memory gives it meaning. <span className={styles.heroFormulaAccent}>Drink deep.</span></p>
         <p className={styles.heroDesc}>
-          Збирай пам'ять, людей, події, плани й фінанси у простори власного життя.
+          MIMIR запам'ятовує зв'язки між подіями, людьми, місцями і рішеннями твого життя —
+          і повертає тобі не список нотаток, а цілісну картину.
         </p>
         <button type="button" className={styles.heroCta} onClick={scrollToCta}>
-          Почати
+          Створити свій простір
         </button>
       </section>
 
@@ -91,9 +91,13 @@ const Landing: React.FC = () => {
                 <span key={item} className={styles.chaosChip} style={{ '--i': i } as React.CSSProperties}>{item}</span>
               ))}
             </div>
+            <p className={styles.chaosConclusion}>
+              Нотатки пам'ятають текст. Календар пам'ятає дату. Банк пам'ятає витрату.
+              Але жоден із них не пам'ятає, як усе це було пов'язано.
+            </p>
           </div>
 
-          <div className={styles.block}>
+          <div className={styles.blockPlain}>
             <p className={styles.eyebrow}>◆ Life Spaces</p>
             <h2 className={styles.blockTitle}>Простори власного життя</h2>
             <div className={styles.spacesList}>
@@ -113,13 +117,13 @@ const Landing: React.FC = () => {
         <p className={styles.eyebrow}>◆ Як працює MIMIR</p>
         <div className={styles.cycle}>
           {CYCLE_STEPS.map((step, i) => (
-            <React.Fragment key={step}>
-              <div className={styles.cycleStep}>
-                <span className={styles.cycleNum}>{String(i + 1).padStart(2, '0')}</span>
-                <span className={styles.cycleText}>{step}</span>
+            <div key={step.title} className={styles.cycleStep}>
+              <span className={styles.cycleNum}>{String(i + 1).padStart(2, '0')}</span>
+              <div className={styles.cycleBody}>
+                <span className={styles.cycleTitle}>{step.title}</span>
+                <span className={styles.cycleText}>{step.desc}</span>
               </div>
-              {i < CYCLE_STEPS.length - 1 && <span className={styles.cycleArrow} aria-hidden="true">→</span>}
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </section>
@@ -149,10 +153,10 @@ const Landing: React.FC = () => {
       <section className={`${styles.section} ${styles.mimirSection} ${styles.reveal}`}>
         <MimirFillIcon progress={1} size={96} />
         <p className={styles.eyebrow}>◆ Хто такий Мімір</p>
-        <h2 className={styles.sectionTitle}>Не help-бот. Не Clippy у мантії.</h2>
+        <h2 className={styles.sectionTitle}>Не асистент над твоїм життям. Пам'ять поруч із ним.</h2>
         <p className={styles.mimirText}>
-          Мімір не керує твоїм життям. Він допомагає не втрачати його контекст —
-          провідник по твоїй пам'яті, просторах і рішеннях.
+          Мімір не вирішує за тебе. Він зберігає зв'язки між подіями, людьми, місцями,
+          витратами й думками — щоб ти міг повернутися до повної картини.
         </p>
       </section>
 
@@ -173,12 +177,14 @@ const Landing: React.FC = () => {
         <p className={styles.eyebrow}>◆ Почати</p>
         <h2 className={styles.sectionTitle}>Твій простір готовий</h2>
         <p className={styles.mimirText}>
-          Створи акаунт і почни збирати пам'ять власного життя вже зараз.
+          Створення акаунта займає хвилину. Після цього ти створюєш перший простір
+          і додаєш першу пам'ять.
         </p>
         <div className={styles.ctaButtons}>
           <Link to="/register" className={styles.ctaPrimary}>Створити акаунт</Link>
           <Link to="/login" className={styles.ctaSecondary}>Увійти</Link>
         </div>
+        <p className={styles.ctaNote}>Безкоштовний старт. Карта не потрібна.</p>
       </section>
 
       {/* ── Footer ── */}
