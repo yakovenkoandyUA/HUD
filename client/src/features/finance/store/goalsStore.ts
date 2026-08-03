@@ -53,11 +53,17 @@ interface GoalsState {
   contribute: (id: string, amount: number) => void
   updateImage: (id: string, imageUrl: string) => void
   deleteGoal: (id: string) => void
+  reset: () => void
 }
 
 export const useGoalsStore = create<GoalsState>()((set, get) => ({
   goals: readGoalsCache() ?? [],
   goalsLoading: !readGoalsCache(),
+
+  reset: () => {
+    sessionStorage.removeItem(GOALS_CACHE_KEY)
+    set({ goals: [], goalsLoading: true })
+  },
 
   fetchGoals: async () => {
     if (!getToken() || !isBackendConfigured()) return

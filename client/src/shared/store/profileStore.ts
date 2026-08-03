@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import { clearUserState } from '@/shared/utils/clearUserState'
-import { useSprintStore } from '@/features/sprint/store/sprintStore'
 import { saveRefreshToken, clearRefreshToken, authFetch } from '@/shared/services/api'
 
 const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
@@ -130,7 +129,7 @@ export const useProfileStore = create<ProfileState>()(
         }
         const { token, user, refreshToken } = await res.json() as { token: string; user: Profile; refreshToken?: string }
         if (refreshToken) saveRefreshToken(refreshToken)
-        useSprintStore.getState().clearItems()
+        clearUserState()
         set({ token, activeProfile: user, pinLocked: false })
       },
 
@@ -142,7 +141,7 @@ export const useProfileStore = create<ProfileState>()(
         }
         const { token, user, refreshToken } = await res.json() as { token: string; user: Profile; refreshToken?: string }
         if (refreshToken) saveRefreshToken(refreshToken)
-        useSprintStore.getState().clearItems()
+        clearUserState()
         set({ token, activeProfile: user, pinLocked: false })
       },
 

@@ -156,12 +156,15 @@ interface SpacesStore {
   addMember:          (spaceId: string, username: string) => Promise<void>
   removeMember:       (spaceId: string, userId: string) => Promise<void>
   ensureCellarSpace:  () => Promise<Space>
+  reset: () => void
 }
 
 export const useSpacesStore = create<SpacesStore>((set, get) => ({
   spaces:         [],
   archivedSpaces: [],
   loading:        true,
+
+  reset: () => set({ spaces: [], archivedSpaces: [], loading: true }),
 
   fetchSpaces: async () => {
     set({ loading: true })

@@ -85,12 +85,15 @@ interface WatchlistStore {
   setRating: (id: string, rating: number | null) => void
   toggleReminder: (id: string, date?: string) => void
   setSyncStatus: (s: SyncStatus) => void
+  reset: () => void
 }
 
 export const useWatchlistStore = create<WatchlistStore>()((set, get) => ({
   items: [],
   syncStatus: 'local' as SyncStatus,
   isLoading: true,
+
+  reset: () => set({ items: [], syncStatus: 'local' as SyncStatus, isLoading: true }),
 
   setSyncStatus: (syncStatus) => set({ syncStatus }),
 

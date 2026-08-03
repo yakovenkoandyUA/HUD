@@ -66,12 +66,15 @@ interface MemoriesState {
   setCover: (memoryId: string, photoUrl: string) => Promise<void>
   updatePhoto: (memoryId: string, photoId: string, updates: Partial<MemoryPhoto>) => Promise<void>
   fetchRelated: (memoryId: string) => Promise<Memory[]>
+  reset: () => void
 }
 
 export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
   memories: [],
   isLoading: true,
   _deletingIds: new Set<string>(),
+
+  reset: () => set({ memories: [], isLoading: true, _deletingIds: new Set<string>() }),
 
   fetchMemories: async () => {
     if (!getToken()) { set({ isLoading: false }); return }

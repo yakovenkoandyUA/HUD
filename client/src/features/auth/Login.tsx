@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
+import { clearUserState } from '@/shared/utils/clearUserState'
 import { saveRefreshToken } from '@/shared/services/api'
 import MimirFillIcon from '@/shared/components/ui/MimirFillIcon'
 import PasswordToggleButton from '@/shared/components/ui/PasswordToggleButton'
@@ -44,6 +45,7 @@ const LoginScreen: React.FC = () => {
       }
       const { token, user, refreshToken } = await res.json() as { token: string; user: { id: string; name: string; username: string; email?: string; avatarUrl: string | null; role: 'admin' | 'user'; f1Enabled: boolean; footballEnabled: boolean; drinksEnabled: boolean; salaryDay: number; hasPIN: boolean; isVerified: boolean; city: string; morningStart: number; afternoonStart: number; eveningStart: number; reportStyle?: string; mediaEnabledTabs?: string[]; unlockedAchievements?: { id: string; unlockedAt: string }[]; sprintTutorialSeen?: boolean; weekdayLongPressTutorialSeen?: boolean; swipeDismissTutorialSeen?: boolean; sprintTutorialShownCount?: number; weekdayLongPressShownCount?: number; swipeDismissShownCount?: number }; refreshToken?: string }
       if (refreshToken) saveRefreshToken(refreshToken)
+      clearUserState()
       useProfileStore.setState({
         token,
         activeProfile: {
