@@ -8,6 +8,7 @@ import type { SpaceType } from '@/features/memories/store/spacesStore'
 import { authFetch } from '@/shared/services/api'
 import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
+import Modal from '@/shared/components/ui/Modal'
 import styles from './Onboarding.module.css'
 
 const DIRECTION_ROUTES: Record<Direction, string> = {
@@ -183,6 +184,7 @@ const OnboardingScreen: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
   const { setMimirMode: saveMode } = useUiStore()
   const pwaInstall = usePwaInstall()
+  const [showIosInstall, setShowIosInstall] = useState(false)
 
   const [step, setStep]   = useState(1)
   const [saving, setSaving] = useState(false)
@@ -716,6 +718,16 @@ const OnboardingScreen: React.FC = () => {
               </>
             )}
 
+            {!pwaInstall.isInstallable && pwaInstall.isIOS && (
+              <>
+                <button type="button" className={styles.installBtn} onClick={() => setShowIosInstall(true)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v13M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>
+                  Встановити MIMIR
+                </button>
+                <p className={styles.installHint}>Додати застосунок на головний екран телефону</p>
+              </>
+            )}
+
             <div className={styles.stepFooter}>
               <button
                 className={`${styles.primaryBtn} ${styles.primaryBtnWide}`}
@@ -729,6 +741,17 @@ const OnboardingScreen: React.FC = () => {
         )}
 
       </div>
+
+      <Modal isOpen={showIosInstall} onClose={() => setShowIosInstall(false)} title="Встановлення MIMIR" draggable>
+        <ol className={styles.iosInstallSteps}>
+          <li>Натисни «Поділитися» в браузері</li>
+          <li>Обери «На початковий екран»</li>
+          <li>Натисни «Додати»</li>
+        </ol>
+        <p className={styles.iosInstallNote}>
+          Встановлений застосунок відкриватиметься окремо, без звичайної панелі браузера.
+        </p>
+      </Modal>
     </div>
   )
 }
