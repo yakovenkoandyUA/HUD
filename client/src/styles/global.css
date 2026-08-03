@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=PT+Sans:wght@400;700&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600&family=Cinzel:wght@400;600;700;900&family=Bebas+Neue&family=Press+Start+2P&family=Philosopher:wght@400;700&family=Orbitron:wght@400;700&family=Special+Elite&family=Exo+2:wght@300;400;600&display=swap');
+/* Theme fonts (Manrope/Oswald/PT Sans/Barlow/JetBrains Mono/Cormorant Garamond/
+   Cinzel/Bebas Neue/Press Start 2P/Philosopher/Orbitron/Special Elite/Exo 2)
+   loaded via <link> in index.html <head> — not @import (render-blocking, serial fetch). */
 
 @font-face {
   font-family: 'Furore';
