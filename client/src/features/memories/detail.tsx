@@ -12,7 +12,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import { useProfileStore } from '@/shared/store/profileStore'
-import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
+import { uploadToCloudinary, isHeic } from '@/shared/utils/uploadToCloudinary'
 import { generateMemoryPosterBlob } from './utils/generateMemoryPoster'
 import { useLongPress } from '@/shared/hooks/useLongPress'
 import { useModalHistory } from '@/shared/hooks/useModalHistory'
@@ -469,7 +469,7 @@ const MemoryDetailScreen: React.FC = () => {
     const files = Array.from(e.target.files ?? [])
     if (!files.length || !id) return
 
-    const imageFiles = files.filter(f => f.type.startsWith('image/'))
+    const imageFiles = files.filter(f => f.type.startsWith('image/') || isHeic(f))
     if (!imageFiles.length) return
 
     setUploading(true)

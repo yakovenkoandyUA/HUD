@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import React from 'react'
-import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
+import { uploadToCloudinary, isHeic } from '@/shared/utils/uploadToCloudinary'
 
 /**
  * useImageUpload
@@ -25,7 +25,7 @@ export function useImageUpload(
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith('image/') && !isHeic(file)) {
       setError('Тільки зображення')
       return
     }
