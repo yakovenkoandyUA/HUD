@@ -69,9 +69,7 @@
 :global([data-theme='arctic']) .cardPhoto {
   background-position: 10px 0;
 }
-:global([data-theme='aurum']) .cardPhoto {
-  background-position: 168px -20px;
-}
+
 :global([data-theme='aurum']) .cardPhoto::before {
   background: linear-gradient(
     to right,
