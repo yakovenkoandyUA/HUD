@@ -146,8 +146,8 @@
   align-items: center;
   gap: 3px;
   background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   border-radius: 20px;
   padding: 2px 6px 2px 5px;
   font-family: var(--font-mono);
@@ -178,8 +178,8 @@
   height: 20px;
   border-radius: 50%;
   background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   border: 1.5px solid rgba(255,255,255,0.2);
   display: flex;
   align-items: center;

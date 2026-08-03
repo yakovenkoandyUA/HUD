@@ -71,8 +71,8 @@
   height: 28px;
   border-radius: 50%;
   background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   border: none;
   color: rgba(255,255,255,0.85);
   display: flex;
@@ -232,8 +232,8 @@
   align-items: center;
   gap: 3px;
   background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   color: var(--gold);
   font-family: var(--font-mono);
   font-size: 10px;

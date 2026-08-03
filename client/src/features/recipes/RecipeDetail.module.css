@@ -43,8 +43,8 @@
   height: 36px;
   border-radius: 50%;
   background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   color: #fff;
   display: flex;
   align-items: center;
@@ -71,8 +71,8 @@
   height: 36px;
   border-radius: 50%;
   background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   color: #fff;
   display: flex;
   align-items: center;
@@ -115,8 +115,8 @@
   gap: 4px;
   padding: 5px 10px;
   background: rgba(0,0,0,0.50);
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border-radius: 999px;
   font-family: var(--font-mono);
   font-size: 13px;

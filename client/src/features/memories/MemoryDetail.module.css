@@ -1071,8 +1071,8 @@
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 	transition: background 0.15s;
-	backdrop-filter: blur(4px);
 	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(4px);
 }
 .editCoverActionChip:hover {
 	background: rgba(0, 0, 0, 0.65);

@@ -99,8 +99,8 @@
   padding: 2px 6px 2px 5px;
   background: rgba(0, 0, 0, 0.52);
   border-radius: 20px;
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   max-width: calc(100% - 16px);
 }
 
@@ -132,8 +132,8 @@
   gap: 3px;
   padding: 2px 5px 2px 4px;
   background: rgba(0, 0, 0, 0.48);
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 4px;
   font-family: var(--font-mono);
