@@ -14,7 +14,13 @@ export function isHeic(file: File): boolean {
   return type === 'image/heic' || type === 'image/heif' || /\.hei[cf]$/i.test(file.name)
 }
 
-async function compressImage(file: File): Promise<File> {
+/**
+ * compressImage
+ * -------------
+ * Resizes to MAX_PX max side + re-encodes as JPEG (quality JPEG_QUALITY).
+ * Always transcodes HEIC/HEIF regardless of resulting size — see isHeic().
+ */
+export async function compressImage(file: File): Promise<File> {
   const heic = isHeic(file)
   if (!heic && (!file.type.startsWith('image/') || file.type === 'image/gif')) return file
 

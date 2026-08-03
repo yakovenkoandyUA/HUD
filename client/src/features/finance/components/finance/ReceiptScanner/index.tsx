@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { authFetch } from '@/shared/services/api'
 import { useUiStore } from '@/shared/store/uiStore'
+import { compressImage } from '@/shared/utils/uploadToCloudinary'
 import styles from './ReceiptScanner.module.css'
 
 /**
@@ -52,10 +53,13 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
 
     const run = async () => {
       try {
-        const base64 = await fileToBase64(file)
+        // Transcodes HEIC → JPEG (Anthropic Vision doesn't accept HEIC) and downsizes
+        // large camera photos before they go into a base64 JSON body.
+        const compressed = await compressImage(file)
+        const base64 = await fileToBase64(compressed)
         const response = await authFetch('/api/receipt/scan', {
           method: 'POST',
-          body: JSON.stringify({ imageBase64: base64, mimeType: file.type }),
+          body: JSON.stringify({ imageBase64: base64, mimeType: compressed.type }),
         })
 
         if (!response.ok) throw new Error('API error')
