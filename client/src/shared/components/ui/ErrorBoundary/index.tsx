@@ -11,6 +11,18 @@ interface State {
   error: Error | null
 }
 
+// After a new deploy, a browser tab that's been open across the release still
+// references old content-hashed chunk filenames that no longer exist on the
+// server — lazy route imports then throw instead of showing the app. That's
+// a stale-cache problem, not a real crash, so it's worth one silent reload
+// before falling back to the error screen (guarded to avoid a reload loop if
+// the failure is persistent for some other reason).
+const CHUNK_RELOAD_KEY = 'mimir-chunk-reload-attempted'
+
+function isChunkLoadError(error: Error): boolean {
+  return /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed/i.test(error.message)
+}
+
 /**
  * Top-level error boundary.
  * Catches runtime crashes and renders a Ragnarök screen
@@ -22,12 +34,22 @@ class ErrorBoundary extends React.Component<Props, State> {
     this.state = { hasError: false, error: null }
   }
 
+  componentDidMount() {
+    // Reached a successful mount — clear the guard so a future stale-chunk
+    // error can still trigger one more auto-reload.
+    sessionStorage.removeItem(CHUNK_RELOAD_KEY)
+  }
+
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('[MIMIR] Uncaught error:', error, info)
+    if (isChunkLoadError(error) && !sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, '1')
+      window.location.reload()
+    }
   }
 
   private handleReload = () => {
@@ -41,6 +63,11 @@ class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (!this.state.hasError) return this.props.children
+
+    // Auto-reload in flight — render nothing rather than flashing the error screen.
+    if (this.state.error && isChunkLoadError(this.state.error) && sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+      return null
+    }
 
     return (
       <div className={styles.root}>
