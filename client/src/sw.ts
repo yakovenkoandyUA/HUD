@@ -3,7 +3,7 @@
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
 import { CacheFirst, NetworkOnly } from 'workbox-strategies'
-import { BackgroundSyncPlugin } from 'workbox-background-sync'
+import { Queue } from 'workbox-background-sync'
 import { ExpirationPlugin } from 'workbox-expiration'
 
 declare const self: ServiceWorkerGlobalScope
@@ -26,7 +26,11 @@ registerRoute(
 )
 
 // ── API write calls (POST/PATCH/PUT/DELETE): NetworkOnly + Background Sync ───
-const bgSyncPlugin = new BackgroundSyncPlugin('api-write-queue', {
+// Held directly (rather than via BackgroundSyncPlugin) so replayRequests() can be
+// triggered manually — iOS Safari has no Background Sync API at all, so the queue
+// would otherwise only ever replay on browsers that support it. The app's 'online'
+// listener posts REPLAY_QUEUE to the SW as a same-effect fallback for iOS.
+const writeQueue = new Queue('api-write-queue', {
   maxRetentionTime: 24 * 60, // 24h
 })
 
@@ -34,7 +38,11 @@ registerRoute(
   ({ url, request }) =>
     url.origin === API_URL &&
     ['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method),
-  new NetworkOnly({ plugins: [bgSyncPlugin] }),
+  new NetworkOnly({
+    plugins: [{
+      fetchDidFail: async ({ request }) => { await writeQueue.pushRequest({ request }) },
+    }],
+  }),
   'POST'
 )
 
@@ -61,8 +69,14 @@ self.addEventListener('activate', (event) => {
 
 // ── Clear stale API cache on logout ──────────────────────────────────────────
 self.addEventListener('message', (event: ExtendableMessageEvent) => {
-  if ((event.data as { type?: string } | undefined)?.type === 'CLEAR_API_CACHE') {
+  const type = (event.data as { type?: string } | undefined)?.type
+  if (type === 'CLEAR_API_CACHE') {
     event.waitUntil(caches.delete('api-cache-v1'))
+  }
+  // Manual replay trigger — needed on browsers without the Background Sync API
+  // (iOS Safari), where the queue would otherwise never automatically retry.
+  if (type === 'REPLAY_QUEUE') {
+    event.waitUntil(writeQueue.replayRequests().catch(() => {}))
   }
 })
 

@@ -263,6 +263,19 @@ const App: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Manually nudge the SW's offline write-queue to replay on reconnect — the
+  // Background Sync API (which the queue otherwise relies on) doesn't exist on
+  // iOS Safari at all, so without this, queued writes made offline on iOS would
+  // just sit there until the SW happens to restart, if ever.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const replayQueue = () => {
+      navigator.serviceWorker.controller?.postMessage({ type: 'REPLAY_QUEUE' })
+    }
+    window.addEventListener('online', replayQueue)
+    return () => window.removeEventListener('online', replayQueue)
+  }, [])
+
   useEffect(() => {
     if (!token || !activeProfile || !isSupported || isSubscribed) return
     async function trySubscribe() {
