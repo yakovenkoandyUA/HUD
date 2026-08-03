@@ -28,7 +28,7 @@ interface RawgGame {
 let upcomingCache: { data: unknown[]; expiresAt: number } | null = null
 
 export async function upcoming(req: Request, res: Response): Promise<void> {
-  if (!RAWG_KEY) { res.status(503).json({ error: 'RAWG_API_KEY not configured' }); return }
+  if (!RAWG_KEY) { res.status(503).json({ error: 'Сервіс пошуку ігор тимчасово недоступний' }); return }
 
   if (upcomingCache && Date.now() < upcomingCache.expiresAt) {
     res.json(upcomingCache.data)
@@ -45,7 +45,7 @@ export async function upcoming(req: Request, res: Response): Promise<void> {
 
     const url = `${RAWG_BASE}/games?key=${RAWG_KEY}&dates=${dateFrom},${dateTo}&ordering=-added&page_size=20&platforms=187,18,4,7,186`
     const raw = await fetch(url)
-    if (!raw.ok) { res.status(502).json({ error: 'RAWG error' }); return }
+    if (!raw.ok) { res.status(502).json({ error: 'Сервіс пошуку ігор тимчасово недоступний, спробуй пізніше' }); return }
 
     const data = await raw.json() as { results: RawgGame[] }
     const results = (data.results ?? [])
@@ -66,19 +66,19 @@ export async function upcoming(req: Request, res: Response): Promise<void> {
     upcomingCache = { data: results, expiresAt: Date.now() + 2 * 60 * 60 * 1000 }
     res.json(results)
   } catch {
-    res.status(500).json({ error: 'Failed to fetch upcoming games' })
+    res.status(500).json({ error: 'Сервіс пошуку ігор тимчасово недоступний, спробуй пізніше' })
   }
 }
 
 export async function search(req: Request, res: Response): Promise<void> {
   const q = (req.query.q as string | undefined)?.trim()
   if (!q) { res.status(400).json({ error: 'Query required' }); return }
-  if (!RAWG_KEY) { res.status(503).json({ error: 'RAWG_API_KEY not configured' }); return }
+  if (!RAWG_KEY) { res.status(503).json({ error: 'Сервіс пошуку ігор тимчасово недоступний' }); return }
 
   try {
     const url = `${RAWG_BASE}/games?key=${RAWG_KEY}&search=${encodeURIComponent(q)}&page_size=12&ordering=-relevance`
     const raw = await fetch(url)
-    if (!raw.ok) { res.status(502).json({ error: 'RAWG error' }); return }
+    if (!raw.ok) { res.status(502).json({ error: 'Сервіс пошуку ігор тимчасово недоступний, спробуй пізніше' }); return }
     const data = await raw.json() as {
       results: Array<{
         id: number
@@ -107,7 +107,7 @@ export async function search(req: Request, res: Response): Promise<void> {
 
     res.json(results)
   } catch {
-    res.status(500).json({ error: 'Search failed' })
+    res.status(500).json({ error: 'Сервіс пошуку ігор тимчасово недоступний, спробуй пізніше' })
   }
 }
 
