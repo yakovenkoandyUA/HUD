@@ -56,7 +56,15 @@ const MeSystem: React.FC = () => {
           ? true
           : await Notification.requestPermission().then(p => p === 'granted')
         if (!granted) { setPermissionDenied(true); return }
-        await subscribe()
+        const ok = await subscribe()
+        if (!ok) {
+          showToast(
+            isIOS && !isStandalone
+              ? 'На iOS сповіщення працюють тільки після встановлення застосунку на головний екран'
+              : 'Не вдалося увімкнути сповіщення',
+            'error',
+          )
+        }
       }
     } finally {
       setPushLoading(false)
@@ -136,7 +144,11 @@ const MeSystem: React.FC = () => {
           <div className={styles.cardRow}>
             <div className={styles.pushInfo}>
               <span className={styles.cardRowLabel}>Push-сповіщення</span>
-              <span className={styles.pushSub}>Гонки, задачі, оновлення</span>
+              <span className={styles.pushSub}>
+                {isIOS && !isStandalone
+                  ? 'Спершу встанови застосунок на головний екран'
+                  : 'Гонки, задачі, оновлення'}
+              </span>
             </div>
             <button
               type="button"
