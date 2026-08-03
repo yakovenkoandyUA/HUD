@@ -398,89 +398,41 @@
 }
 .privacyLink:hover { opacity: 0.8; }
 
-/* ── Waitlist form ── */
-.form {
+/* ── Почати (CTA) ── */
+.ctaButtons {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 460px;
+  align-items: center;
+  gap: 20px;
+  margin-top: 8px;
 }
 
-.formRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.formInput,
-.formTextarea {
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--bg2, var(--surface));
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 14px;
-  padding: 13px 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.formTextarea { font-family: var(--font-body); resize: vertical; }
-
-.formInput::placeholder,
-.formTextarea::placeholder { color: var(--text3); }
-.formInput:focus,
-.formTextarea:focus { border-color: var(--accent); }
-
-.formConsent {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-family: var(--font-body);
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--text3);
-  cursor: pointer;
-}
-.formConsent input { margin-top: 2px; accent-color: var(--accent); }
-
-.formError {
-  font-family: var(--font-ui);
-  font-size: 12px;
-  color: var(--negative);
-  margin: 0;
-}
-
-.formSubmit {
-  margin-top: 4px;
-  padding: 15px;
+.ctaPrimary {
+  padding: 15px 32px;
   background: var(--accent);
   color: var(--bg);
-  border: none;
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  cursor: pointer;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
   transition: opacity 0.2s;
 }
-.formSubmit:hover:not(:disabled) { opacity: 0.88; }
-.formSubmit:disabled { opacity: 0.4; cursor: not-allowed; }
+.ctaPrimary:hover { opacity: 0.88; }
 
-.formSuccess {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  color: var(--accent);
-  max-width: 420px;
-}
-.formSuccess p {
-  font-family: var(--font-body);
-  font-size: 14px;
+.ctaSecondary {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--text2);
-  margin: 0;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border2);
+  padding-bottom: 2px;
+  transition: color 0.2s;
 }
+.ctaSecondary:hover { color: var(--accent); }
 
 /* ── Footer ── */
 .footer {
@@ -522,7 +474,7 @@
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .twinBlocks { grid-template-columns: 1fr; }
-  .formRow { grid-template-columns: 1fr; }
+  .ctaButtons { flex-direction: column; align-items: flex-start; gap: 14px; }
   .cycleStep { min-width: 0; flex: 1 1 auto; }
 }
 

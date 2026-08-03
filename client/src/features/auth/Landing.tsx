@@ -1,10 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import MimirFillIcon from '@/shared/components/ui/MimirFillIcon'
 import styles from './Landing.module.css'
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/
-const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').trim()
 
 const CHAOS_ITEMS = ['Нотатки', 'Фото', 'Календар', 'Банківські витрати', 'Список справ', 'Фільми й книги', 'Десь у голові…']
 
@@ -37,28 +34,18 @@ const PRIVACY_POINTS = [
   'AI бачить лише те, що потрібно для відповіді — діалоги не зберігаються',
 ]
 
-type FormStatus = 'idle' | 'loading' | 'success' | 'error'
-
 /**
  * Landing
  * -------
  * Публічна маркетингова сторінка на "/" для неавторизованих гостей
  * (RootRoute рендерить її замість Dashboard коли немає токена).
  * Структура за брифом Джонні: Hero → Проблема → Life Spaces → Як працює →
- * Реальний інтерфейс (заглушки) → Хто такий Мімір → Приватність → Форма в бету.
+ * Реальний інтерфейс (заглушки) → Хто такий Мімір → Приватність → Почати (реєстрація).
  */
 const Landing: React.FC = () => {
-  const formRef = useRef<HTMLDivElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
 
-  const [name, setName]                 = useState('')
-  const [email, setEmail]               = useState('')
-  const [currentTools, setCurrentTools] = useState('')
-  const [scenario, setScenario]         = useState('')
-  const [consent, setConsent]           = useState(false)
-  const [status, setStatus]             = useState<FormStatus>('idle')
-  const [error, setError]               = useState('')
-
-  const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const scrollToCta = () => ctaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   // Reveal-on-scroll for section blocks
   useEffect(() => {
@@ -69,33 +56,6 @@ const Landing: React.FC = () => {
     els.forEach(el => io.observe(el))
     return () => io.disconnect()
   }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim() || !email.trim() || !consent) return
-    if (!EMAIL_RE.test(email.trim())) {
-      setError('Невірний формат email')
-      setStatus('error')
-      return
-    }
-    setStatus('loading')
-    setError('')
-    try {
-      const res = await fetch(`${BASE_URL}/api/waitlist`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), currentTools: currentTools.trim(), scenario: scenario.trim(), consent }),
-      })
-      if (!res.ok) {
-        const data = await res.json() as { error?: string }
-        throw new Error(data.error ?? 'Помилка відправки')
-      }
-      setStatus('success')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Помилка відправки')
-      setStatus('error')
-    }
-  }
 
   return (
     <div className={styles.root}>
@@ -115,8 +75,8 @@ const Landing: React.FC = () => {
         <p className={styles.heroDesc}>
           Збирай пам'ять, людей, події, плани й фінанси у простори власного життя.
         </p>
-        <button type="button" className={styles.heroCta} onClick={scrollToForm}>
-          Приєднатися до закритої бети
+        <button type="button" className={styles.heroCta} onClick={scrollToCta}>
+          Почати
         </button>
       </section>
 
@@ -208,77 +168,17 @@ const Landing: React.FC = () => {
         <Link to="/privacy" className={styles.privacyLink}>Повна політика конфіденційності →</Link>
       </section>
 
-      {/* ── Waitlist form ── */}
-      <section className={`${styles.section} ${styles.reveal}`} ref={formRef}>
-        <p className={styles.eyebrow}>◆ Закрита бета</p>
-        <h2 className={styles.sectionTitle}>Приєднатися</h2>
-
-        {status === 'success' ? (
-          <div className={styles.formSuccess}>
-            <svg width="40" height="40" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-              <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" />
-              <path d="M14 24l7 7 13-14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <p>Заявку прийнято. Ми напишемо, коли відкриємо доступ.</p>
-          </div>
-        ) : (
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <div className={styles.formRow}>
-              <input
-                className={styles.formInput}
-                placeholder="ІМ'Я"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                disabled={status === 'loading'}
-                required
-              />
-              <input
-                className={styles.formInput}
-                type="email"
-                placeholder="EMAIL"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                disabled={status === 'loading'}
-                required
-              />
-            </div>
-            <input
-              className={styles.formInput}
-              placeholder="Що зараз використовуєш? (Notes, Google Calendar…)"
-              value={currentTools}
-              onChange={e => setCurrentTools(e.target.value)}
-              disabled={status === 'loading'}
-            />
-            <textarea
-              className={styles.formTextarea}
-              placeholder="Який сценарій цікавить найбільше?"
-              value={scenario}
-              onChange={e => setScenario(e.target.value)}
-              rows={3}
-              disabled={status === 'loading'}
-            />
-            <label className={styles.formConsent}>
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={e => setConsent(e.target.checked)}
-                disabled={status === 'loading'}
-                required
-              />
-              Погоджуюсь на участь у тестуванні та обробку email для запрошення в бету
-            </label>
-
-            {status === 'error' && <p className={styles.formError}>{error}</p>}
-
-            <button
-              type="submit"
-              className={styles.formSubmit}
-              disabled={status === 'loading' || !name.trim() || !email.trim() || !consent}
-            >
-              {status === 'loading' ? '▪▪▪' : 'ПРИЄДНАТИСЯ'}
-            </button>
-          </form>
-        )}
+      {/* ── Почати ── */}
+      <section className={`${styles.section} ${styles.reveal}`} ref={ctaRef}>
+        <p className={styles.eyebrow}>◆ Почати</p>
+        <h2 className={styles.sectionTitle}>Твій простір готовий</h2>
+        <p className={styles.mimirText}>
+          Створи акаунт і почни збирати пам'ять власного життя вже зараз.
+        </p>
+        <div className={styles.ctaButtons}>
+          <Link to="/register" className={styles.ctaPrimary}>Створити акаунт</Link>
+          <Link to="/login" className={styles.ctaSecondary}>Увійти</Link>
+        </div>
       </section>
 
       {/* ── Footer ── */}
