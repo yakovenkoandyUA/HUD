@@ -87,7 +87,7 @@ Finance block: `background: var(--surface)` замість `var(--accent-soft)` 
 /* body::after — scanlines поверх */
 ```
 Іконки SVG у SpacesStrip: `filter: brightness(0) opacity(0.55)` (кремові іконки невидимі).
-F1 banner: **light** (`LIGHT_THEMES = new Set(['pixel', 'japan'])`)
+F1 banner: **light** (`LIGHT_THEMES = new Set(['pixel', 'vellum'])`)
 
 ### arctic
 Темно-синій + блакитний акцент. Холодна ніч.

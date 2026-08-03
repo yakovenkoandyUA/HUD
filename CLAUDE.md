@@ -41,7 +41,10 @@ client/src/
 │   ├── notes/
 │   ├── timeline/
 │   ├── spaces/
-│   └── auth/          ← Login, Register, Onboarding, VerifyEmail, ...
+│   ├── achievements/
+│   ├── drinks/
+│   ├── football/      ← Sport hub (колишній F1) + Football tab
+│   └── auth/          ← Login, Register, Onboarding, VerifyEmail, Landing, ...
 └── shared/            ← все що використовується 3+ фічами
     ├── components/
     │   ├── ui/        — Button, Modal, Input, PillSelector, ...
@@ -319,12 +322,12 @@ res.json(doc)
 
 1. **`BACKLOG.md`** — додати реалізоване в розділ "Що реалізовано" (відповідний підрозділ: Dashboard / Finance / Recipes / тощо). Якщо щось було скасовано або змінено в підході — відобразити це.
 
-2. **`client/src/screens/CLAUDE.md`** — оновити опис екранів що змінились: нові компоненти, нова поведінка, нові роути.
+2. **`client/src/shared/store/CLAUDE.md`** — додати нові stores або оновити опис існуючих (persist стратегія, нові actions, нові поля стану).
 
-3. **`client/src/store/CLAUDE.md`** — додати нові stores або оновити опис існуючих (persist стратегія, нові actions, нові поля стану).
+3. **`backend/CLAUDE.md`** — додати нові ендпоінти в таблицю API, нові моделі в розділ "Моделі".
 
-4. **`backend/CLAUDE.md`** — додати нові ендпоінти в таблицю API, нові моделі в розділ "Моделі".
+4. **`client/src/shared/components/CLAUDE.md`** — якщо додані нові компоненти або змінилась структура папок.
 
-5. **`client/src/components/CLAUDE.md`** — якщо додані нові компоненти або змінилась структура папок.
+> Немає окремого `client/src/screens/CLAUDE.md` — екрани це `features/[name]/index.tsx`, документуються описово в root CLAUDE.md/BACKLOG.md, не в окремому файлі.
 
 Commit з docs-змінами окремо після основного коду: `docs: sync CLAUDE.md and BACKLOG with <session topic>`.

@@ -91,9 +91,10 @@ SVG ілюстрації досягнень. `variant` відповідає на
 ```
 Пов'язаний з `useMimirHint` / `useMimirAiHint` хуками.
 
-### UnsplashPicker
+### UnsplashPicker (`features/memories/components/memories/UnsplashPicker`)
 Picker для обкладинок з Unsplash. Debounced пошук, 3×3 сітка, attribution overlay.
 Використовується в `AddMemoryModal`, `EditMemoryModal`, `EditSpaceSheet`.
+**Не в `shared/`** — живе в фічі `memories`, бо ще не досяг порогу 3+ фіч.
 
 ### AchievementUnlockedModal
 Slide-down toast при розблокуванні ачівки (non-blocking, не fullscreen).
@@ -103,6 +104,9 @@ Slide-down toast при розблокуванні ачівки (non-blocking, �
 
 ### LegalDocModal
 Рендерить Terms/Privacy документи в модальному вікні.
+
+### Інше (ui/, недокументовані детально)
+`Button`, `Card`, `Input`, `Badge`, `ErrorBoundary`, `PinLock`, `PasswordToggleButton`, `ProfileEditModal`, `PwaInstallBanner`, `WeatherSplash`, `FeedbackSheet`, `FabHint`, `AutoUnlockWatcher`, `MimirAchievementLayer` (глобальний overlay для achievement-діалогів Міміра, монтується в `App.tsx`), `IngredientIcon`, `UnitPicker` (рецепти).
 
 ---
 
@@ -172,8 +176,9 @@ const sheetRef = useSwipeToDismiss(onClose, {
 ## Shared Services (`shared/services/`)
 
 - **`api.ts`** — `authFetch()`: автоматичний JWT refresh (проактивний < 60с до expiry, singleton race prevention)
-- **`cloudinary.ts`** — `uploadToCloudinary(file)` → Cloudinary URL (unsigned preset `mimirorg`)
-- **`push.ts`** — Web Push підписка/відписка
+- **`billing.ts`** — `createBillingCheckout()` та інші billing API виклики (WayForPay checkout, план/ліміти)
+- Cloudinary upload — `shared/utils/uploadToCloudinary.ts` (не `services/`), unsigned preset `mimirorg`
+- Web Push — `shared/utils/pushManager.ts` + `shared/hooks/usePushSubscription.ts` (не `services/push.ts`)
 
 ---
 

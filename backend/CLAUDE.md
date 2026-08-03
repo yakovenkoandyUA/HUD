@@ -136,6 +136,17 @@
 | `/api/billing/checkout` | POST (auth) — генерація WayForPay payment URL, HMAC підпис; повертає `{ paymentUrl, orderReference }` |
 | `/api/billing/wayforpay/callback` | POST (public) — HMAC-MD5 верифікація, idempotency через ProcessedBillingEvent, оновлення BillingOrder + User.plan |
 | `/api/billing/order/:orderReference/status` | GET (auth) — статус BillingOrder для polling |
+| `/api/games` | GET, POST, PATCH, DELETE — Watchlist "ігри" підкатегорія |
+| `/api/recipes/:id/comments` | GET, POST, DELETE — коментарі до рецепту |
+| `/api/watchlist/:id/comments` | GET, POST, DELETE — коментарі до watchlist-запису |
+| `/api/timeline` | GET — агрегована стрічка подій по місяцях (`TimelineBody`) |
+| `/api/yearbook` | GET `/:year` — річний звіт (requireFeature('yearbookGenerate')) |
+| `/api/places` | GET, POST, PATCH, DELETE — заклади/локації (Places feature) |
+| `/api/drinks` | GET, POST, PATCH, DELETE — трекер напоїв (`features/drinks`) |
+| `/api/feedback` | POST — форма зворотного зв'язку |
+| `/api/waitlist` | POST — реєстрація в waitlist (WaitlistEntry) |
+
+> Ці роути існують в коді (`backend/src/routes/`), але детально не задокументовані рядок-в-рядок — дивись відповідний `*Controller.ts` для повного контракту.
 
 ## Env
 
@@ -207,6 +218,8 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 **FinancialReport** — `userId`, `month: string` (YYYY-MM), `content: string` (markdown), `generatedAt`
 
 **CookLog** — `userId`, `recipeId`, `cookedAt: Date`
+
+**Інші моделі (існують, коротко не задокументовані по полях):** `Accommodation`, `Ticket`, `TripPlace` (Trip Space Phase 2 — житло/квитки/місця подорожі), `Drink` (трекер напоїв), `Game` (Watchlist ігри), `Label`, `Lesson`, `Note`, `Recipe`/`RecipeComment`, `WatchlistComment`, `PlantEvent` (події догляду за рослиною — простір типу "рослина"), `WorkoutProgram`/`WorkoutSession`, `SportEvent` (Sport hub, колишній F1), `ShoppingItem`, `SpaceInfoCard`, `MimirCache` (кеш AI-відповідей Міміра), `PushSubscription`, `RefreshToken`, `WaitlistEntry`, `YearbookReport`. Дивись `backend/src/models/*.ts` для повних схем.
 
 ## Зовнішні API
 

@@ -48,24 +48,43 @@ interface ProfileState {
 ## uiStore
 
 ```ts
-// persist: 'hud-ui' (localStorage)
+// persist: 'hud-ui' (localStorage), version 4 + міграції
 interface UiState {
-  theme: 'velvet'|'mimir'|'cyber'|'noir'|'pixel'|'arctic'
+  theme: 'aurum'|'vellum'|'cyber'|'noir'|'pixel'|'arctic'
   navStyle: 'classic'|'pill'|'hub'
+  navLabelMode: 'always'|'active'|'never'
+  pinnedSections: string[]
+  pinnedProfileTabs: string[]
+  mimirMode: 'wise'|'witty'|'dark'
+  mimirFrequency: 'active'|'balanced'|'silent'
   updateAvailable: boolean
-  // toast
-  toast: { message: string; type: 'success'|'error'|'info' } | null
+  toasts: Toast[]              // масив, не одиночний об'єкт
+  activeModal: string | null
+  modalDepth: number
   // actions
   setTheme(theme): void
   setNavStyle(style): void
+  setNavLabelMode(mode): void
+  setPinnedSections(ids: string[]): void
+  setPinnedProfileTabs(ids: string[]): void
+  setMimirMode(mode): void
+  setMimirFrequency(freq): void
   showToast(message: string, type: 'success'|'error'|'info'): void
+  dismissToast(id: string): void
   setUpdateAvailable(v: boolean): void
+  pushModal(id: string): void
+  popModal(): void
+  openModal(id: string): void
+  closeModal(): void
 }
 ```
 
 - `updateAvailable` — встановлюється через `controllerchange` event Service Worker. Показує пульсуючу крапку на аватарі в AppHeader і банер в ProfilePage → МЯ таб
-- `theme` — пишеться як `data-theme` атрибут на `<html>` в App.tsx
-- Toast auto-dismiss після 3с
+- `theme` — пишеться як `data-theme` атрибут на `<html>` в App.tsx. **Історія перейменувань:** `japan→mimir` (v1→v2), `velvet→aurum` (v2→v3), `mimir→vellum` (v3→v4) — усі три міграції в persist `migrate()`
+- `toasts` — масив, кожен toast має свій `id` і auto-dismiss через 3с (`dismissToast(id)`), не одиночний об'єкт
+- `mimirMode`/`mimirFrequency` — характер і частота підказок Міміра (Профіль → Вигляд)
+- `pinnedSections`/`pinnedProfileTabs` — закріплені розділи дашборду / вкладки профілю (дефолти: `DEFAULT_PINNED_SECTIONS`/`DEFAULT_PINNED_PROFILE_TABS`)
+- `activeModal`/`modalDepth` + `pushModal`/`popModal`/`openModal`/`closeModal` — стек модалок для коректної поведінки back-button (`useModalHistory`)
 
 ---
 
@@ -93,7 +112,7 @@ interface FamilyState {
 - `WatchlistDetail` — checkboxes "ДИВИЛИСЬ РАЗОМ"
 - `MemoryCard` — micro-аватари
 - `MemoryDetail` — секція "З КИМ"
-- `SpacesStore` — member management
+- `features/spaces/index.tsx` — member management
 
 ---
 
