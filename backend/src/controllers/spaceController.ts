@@ -5,7 +5,7 @@ import { User } from '../models/User'
 import Memory from '../models/Memory'
 import SprintTask from '../models/SprintTask'
 import Note from '../models/Note'
-import { assertLimit, assertFeature } from '../utils/entitlements'
+import { assertLimit } from '../utils/entitlements'
 import { sendPushToUser } from '../services/webpush'
 
 function memberPublic(u: InstanceType<typeof User>, role: string) {
@@ -148,9 +148,9 @@ export async function createSpace(req: Request, res: Response, next: NextFunctio
     if (req.user) {
       const count = await Space.countDocuments({ ownerId: req.userId })
       assertLimit(req.user, 'maxSpaces', count)
-      if (resolvedType !== 'personal') {
-        assertFeature(req.user, 'sharedSpaces')
-      }
+      // No 'sharedSpaces' feature gate here — a space is always created solo
+      // (members starts as just the owner below); actual sharing is gated at
+      // addMember via maxMembersPerSharedSpace, which is where it belongs.
     }
     const space = await Space.create({
       name:    name.trim(),
