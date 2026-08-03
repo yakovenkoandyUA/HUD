@@ -47,7 +47,7 @@ function formatTimeParts(d: Date): { hh: string; mm: string } {
 }
 
 const THEME_PHOTOS: Partial<Record<string, string>> = {
-  aurum:  '/theme/lunar.webp',
+  aurum:  '/theme/lunar.png',
   cyber:  '/theme/cyber.webp',
   noir:   '/theme/noir.webp',
   vellum: '/theme/mimir.webp',
