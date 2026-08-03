@@ -541,7 +541,15 @@ const MemoryDetailScreen: React.FC = () => {
             text: `${memory.title} · ${formattedDate}\n${shareUrl}`,
             url: shareUrl,
           })
-        } catch { /* user cancelled or not supported */ }
+        } catch (err) {
+          // AbortError — user closed the share sheet, expected and silent.
+          // Anything else (e.g. iOS Safari's share-gesture window expiring while
+          // generateMemoryPosterBlob was still fetching the cover/map images on a
+          // slow connection) should surface, not fail invisibly.
+          if (err instanceof Error && err.name !== 'AbortError') {
+            showToast('Не вдалося поділитися, спробуй ще раз', 'error')
+          }
+        }
       } else {
         // download fallback + copy link
         const url = URL.createObjectURL(blob)
@@ -554,7 +562,9 @@ const MemoryDetailScreen: React.FC = () => {
         try {
           await navigator.clipboard.writeText(shareUrl)
           showToast('Посилання на спогад скопійовано', 'success')
-        } catch { /* clipboard unavailable — image download still happened */ }
+        } catch {
+          showToast('Зображення завантажено, але посилання скопіювати не вдалось', 'info')
+        }
       }
     } finally {
       setSharing(false)
