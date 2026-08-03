@@ -77,20 +77,6 @@
   opacity: 0.5;
 }
 
-/* Faint rune of Mímisbrunnr, resting at the well's centre */
-.heroRune {
-  position: absolute;
-  top: 164px;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 22px;
-  color: var(--gold);
-  opacity: 0.18;
-  line-height: 1;
-  pointer-events: none;
-  animation: heroFadeUp 0.9s ease 0.05s both;
-}
-
 /* ── Well ripples — concentric rings expanding out from the well ── */
 .heroRipples {
   position: absolute;
@@ -158,22 +144,27 @@
   height: 260px;
   transform: translateX(-50%);
   border: 1px solid var(--border2);
-  border-radius: 50% 48% 51% 49% / 49% 51% 48% 50%;
+  border-radius: 58% 42% 61% 39% / 40% 60% 40% 60%;
   opacity: 0.5;
   pointer-events: none;
-  animation: heroRingSpin 60s linear infinite;
+  animation: heroRingSpin 28s linear infinite;
 }
 .heroRing::before {
   content: '';
   position: absolute;
   inset: -22px;
   border: 1px solid var(--border);
-  border-radius: 49% 51% 48% 50% / 50% 49% 51% 48%;
+  border-radius: 39% 61% 40% 60% / 60% 40% 61% 39%;
   opacity: 0.6;
+  animation: heroRingSpinReverse 40s linear infinite;
 }
 
 @keyframes heroRingSpin {
   to { transform: translateX(-50%) rotate(360deg); }
+}
+
+@keyframes heroRingSpinReverse {
+  to { transform: rotate(-360deg); }
 }
 
 .heroTitle {
@@ -686,7 +677,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .heroRing { animation: none; }
+  .heroRing, .heroRing::before { animation: none; }
   .heroTitle, .heroKicker, .heroDesc, .heroCta, .heroFormula { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
 }

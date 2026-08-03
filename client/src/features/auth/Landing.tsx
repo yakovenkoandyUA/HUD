@@ -86,7 +86,6 @@ const Landing: React.FC = () => {
           ))}
         </div>
         <div className={styles.heroRing} aria-hidden="true" />
-        <span className={styles.heroRune} aria-hidden="true">ᛗ</span>
         <h1 className={styles.heroTitle}>MIMIR</h1>
         <p className={styles.heroKicker}>A memory system for your life</p>
         <p className={styles.heroFormula}>Thought finds the path. Memory gives it meaning.<span className={styles.heroFormulaAccent}>Drink deep.</span></p>
