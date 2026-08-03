@@ -659,10 +659,14 @@
   background: color-mix(in srgb, var(--type-color, var(--accent)) 22%, var(--surface));
 }
 
-/* Light themes: darken cream icons in icon zone */
+/* Light themes: darken cream icons in icon zone (only emblem, not cover photos) */
 :global([data-theme="vellum"]) .templateIconZone img,
 :global([data-theme="pixel"]) .templateIconZone img {
   filter: brightness(0) opacity(0.55);
+}
+:global([data-theme="vellum"]) .templateIconImgCover,
+:global([data-theme="pixel"]) .templateIconImgCover {
+  filter: none;
 }
 
 .templateCardBody {

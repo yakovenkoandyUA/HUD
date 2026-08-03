@@ -311,10 +311,8 @@
 }
 .primaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Light themes: emblem PNGs too light — darken via filter */
+/* Light themes: emblem PNGs too light — darken via filter (.typeImg is always a cover photo, never darken it) */
 :global([data-theme="vellum"]) .emblemImg,
-:global([data-theme="pixel"]) .emblemImg,
-:global([data-theme="vellum"]) .typeImg,
-:global([data-theme="pixel"]) .typeImg {
+:global([data-theme="pixel"]) .emblemImg {
   filter: brightness(0) opacity(0.55);
 }
