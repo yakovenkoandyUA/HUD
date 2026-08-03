@@ -1103,3 +1103,10 @@
   transition: background 0.15s, border-color 0.15s;
 }
 .installBtn:hover { background: var(--surface2); border-color: var(--accent); }
+
+.installHint {
+  margin: -4px 0 10px;
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+}

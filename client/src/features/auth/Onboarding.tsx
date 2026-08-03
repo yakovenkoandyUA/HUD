@@ -707,10 +707,13 @@ const OnboardingScreen: React.FC = () => {
             )}
 
             {pwaInstall.isInstallable && (
-              <button type="button" className={styles.installBtn} onClick={pwaInstall.promptInstall}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v13M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>
-                Встановити на екран
-              </button>
+              <>
+                <button type="button" className={styles.installBtn} onClick={pwaInstall.promptInstall}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 2v13M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>
+                  Встановити MIMIR
+                </button>
+                <p className={styles.installHint}>Додати застосунок на головний екран телефону</p>
+              </>
             )}
 
             <div className={styles.stepFooter}>
