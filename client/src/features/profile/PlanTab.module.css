@@ -82,7 +82,10 @@
   border-color: var(--border);
   gap: 10px;
 }
-.cardCurrentFree { border-color: var(--border); }
+.cardCurrentFree {
+  background: color-mix(in srgb, var(--positive) 7%, var(--surface2));
+  border-color: color-mix(in srgb, var(--positive) 45%, var(--border));
+}
 
 .freeHeader {
   display: flex;
@@ -133,6 +136,7 @@
 }
 .badgePopular { color: var(--bg); background: var(--accent); }
 .badgeCurrent { color: var(--bg); background: var(--text3); }
+.badgeCurrentFree { color: var(--bg); background: var(--positive); }
 
 /* Plan name + concept */
 .cardHeader {
@@ -284,8 +288,8 @@
   gap: 7px;
   font-family: var(--font-ui);
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text2);
+  font-weight: 700;
+  color: var(--positive);
 }
 .currentDot {
   width: 7px;

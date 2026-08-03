@@ -177,6 +177,11 @@ const PlanTab: React.FC = () => {
 
       {/* ── FREE — compact ── */}
       <div className={`${styles.card} ${styles.cardFree} ${currentPlan === 'free' ? styles.cardCurrentFree : ''}`}>
+        {currentPlan === 'free' && (
+          <div className={styles.badgeRow}>
+            <span className={`${styles.badge} ${styles.badgeCurrentFree}`}>ПОТОЧНИЙ</span>
+          </div>
+        )}
         <div className={styles.freeHeader}>
           <div>
             <span className={styles.planName}>FREE</span>
