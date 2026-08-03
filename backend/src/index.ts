@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/node'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import cookieParser from 'cookie-parser'
 import { connectDB } from './config/db'
@@ -71,6 +72,7 @@ const app = express()
 const PORT = Number(process.env.PORT) || 8080
 
 app.use(helmet())
+app.use(compression())
 
 const allowedOrigins = ['https://hud-murex.vercel.app', 'https://mimir-hud.tech', 'https://www.mimir-hud.tech', 'http://localhost:5173']
 app.use(cors({
