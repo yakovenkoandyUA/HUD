@@ -72,15 +72,38 @@ interface MonoStatement {
   counterName?: string
 }
 
+class MonoApiError extends Error {
+  status: number
+  constructor(status: number, body: string) {
+    super(`Monobank ${status}: ${body}`)
+    this.status = status
+  }
+}
+
 async function monoFetch(path: string, token: string) {
   const res = await fetch(`${MONO_BASE}${path}`, {
     headers: { 'X-Token': token },
   })
   if (!res.ok) {
     const body = await res.text()
-    throw new Error(`Monobank ${res.status}: ${body}`)
+    throw new MonoApiError(res.status, body)
   }
   return res.json()
+}
+
+/** Translates a raw Monobank fetch failure into a user-facing Ukrainian message. */
+function friendlyMonoError(e: unknown, context: 'connect' | 'sync'): string {
+  if (e instanceof MonoApiError) {
+    if (e.status === 401 || e.status === 403) {
+      return context === 'connect'
+        ? 'Невірний токен Monobank. Перевір і спробуй ще раз'
+        : 'Токен Monobank більше не дійсний — підключи банк заново'
+    }
+    if (e.status === 429) return 'Забагато запитів до Monobank, зачекай хвилину і спробуй ще раз'
+  }
+  return context === 'connect'
+    ? 'Не вдалося підключити Monobank, спробуй пізніше'
+    : 'Не вдалося синхронізувати з Monobank, спробуй пізніше'
 }
 
 function isoDate(unixSec: number): string {
@@ -100,8 +123,7 @@ router.post('/connect', ...requireMonobank, async (req: Request, res: Response) 
   try {
     clientInfo = await monoFetch('/personal/client-info', token.trim()) as MonoClientInfo
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    res.status(400).json({ error: `Monobank error: ${msg}` }); return
+    res.status(400).json({ error: friendlyMonoError(e, 'connect') }); return
   }
 
   // Pick first UAH account (currencyCode 980)
@@ -178,8 +200,7 @@ router.post('/sync', ...requireMonobank, async (req: Request, res: Response) => 
       token,
     ) as MonoStatement[]
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown'
-    res.status(502).json({ error: msg }); return
+    res.status(502).json({ error: friendlyMonoError(e, 'sync') }); return
   }
 
   // Deduplicate by monoId
@@ -233,15 +254,13 @@ router.post('/mono-auth-init', ...requireMonobank, async (req: Request, res: Res
       headers: { 'X-Callback': webhookUrl },
     })
     if (!monoRes.ok) {
-      const body = await monoRes.text()
-      res.status(502).json({ error: `Monobank: ${body}` }); return
+      res.status(502).json({ error: friendlyMonoError(new MonoApiError(monoRes.status, await monoRes.text()), 'connect') }); return
     }
     const data = await monoRes.json() as { tokenRequestId: string; acceptUrl: string }
     tokenRequestId = data.tokenRequestId
     acceptUrl = data.acceptUrl
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown'
-    res.status(502).json({ error: msg }); return
+    res.status(502).json({ error: friendlyMonoError(e, 'connect') }); return
   }
 
   pendingAuths.set(tokenRequestId, req.userId!)
