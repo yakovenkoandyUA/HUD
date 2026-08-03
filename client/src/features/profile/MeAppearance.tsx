@@ -147,13 +147,10 @@ const LockIcon: React.FC = () => (
 const MeAppearance: React.FC = () => {
   const { activeProfile } = useProfileStore()
   const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections, pinnedProfileTabs, setPinnedProfileTabs } = useUiStore()
-  const { showToast } = useUiStore()
-  const isAdmin = activeProfile?.role === 'admin'
   const unlockedAchievementIds = new Set((activeProfile?.unlockedAchievements ?? []).map(u => u.id))
   const onboardingCompleted = activeProfile?.onboardingCompleted ?? false
-  const unlockedThemes = isAdmin
-    ? PALETTES.map(p => p.id)
-    : getUnlockedThemes(unlockedAchievementIds, onboardingCompleted)
+  const unlockedThemes = getUnlockedThemes(unlockedAchievementIds, onboardingCompleted)
+  const [lockedInfo, setLockedInfo] = React.useState<{ name: string; hint: string } | null>(null)
 
   return (
     <>
@@ -176,9 +173,10 @@ const MeAppearance: React.FC = () => {
                 }}
                 onClick={() => {
                   if (!isUnlocked) {
-                    showToast(unlockHint, 'info')
+                    setLockedInfo({ name: p.name, hint: unlockHint })
                     return
                   }
+                  setLockedInfo(null)
                   setTheme(p.id)
                   useAchievementsStore.getState().unlock('theme-changed')
                 }}
@@ -207,13 +205,23 @@ const MeAppearance: React.FC = () => {
                 {!isUnlocked && (
                   <span className={styles.themeLockBadge} style={{ color: p.text, background: `${p.bg}cc` }}>
                     <LockIcon />
-                    {unlockHint}
                   </span>
                 )}
               </button>
             )
           })}
         </div>
+        {lockedInfo && (
+          <div className={styles.themeLockInfo}>
+            <LockIcon />
+            <span className={styles.themeLockInfoText}>
+              <b>{lockedInfo.name}</b> — {lockedInfo.hint}
+            </span>
+            <button type="button" className={styles.themeLockInfoClose} onClick={() => setLockedInfo(null)}>
+              Зрозуміло
+            </button>
+          </div>
+        )}
       </div>
       <div className={styles.cardDivider} />
       <div className={styles.cardPadded}>

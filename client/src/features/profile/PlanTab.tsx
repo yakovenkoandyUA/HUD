@@ -26,17 +26,17 @@ const FEATURES: PlanFeature[] = [
   { label: 'Глибина пам\'яті',           free: '1 рік',   personal: '5 років',   couple: 'Безліміт',     family: 'Безліміт'  },
   { label: 'AI-рефлексія',              free: false,     personal: true,        couple: true,           family: true        },
   { label: 'AI шеф-кухар',              free: false,     personal: true,        couple: true,           family: true        },
-  { label: 'Сканер чеків (AI)',          free: false,     personal: true,        couple: true,           family: true        },
-  { label: 'AI фінансовий звіт',        free: false,     personal: true,        couple: true,           family: true        },
+  { label: 'Сканер чеків (AI)',          free: '5 / міс', personal: true,        couple: true,           family: true        },
+  { label: 'AI фінансовий звіт',        free: '1 / міс', personal: true,        couple: true,           family: true        },
   { label: 'Yearbook / щорічна хроніка', free: false,    personal: true,        couple: true,           family: true        },
-  { label: 'Monobank інтеграція',        free: false,     personal: true,        couple: true,           family: true        },
+  { label: 'Monobank інтеграція',        free: true,      personal: true,        couple: true,           family: true        },
   { label: 'Архів і експорт даних',     free: false,     personal: true,        couple: true,           family: true        },
-  { label: 'Спільні профілі',            free: false,     personal: false,       couple: true,           family: true        },
-  { label: 'Спільні простори',           free: false,     personal: false,       couple: 'до 3 спільних', family: 'Безліміт' },
+  { label: 'Близькі (родина/друзі)',     free: 'до 2',    personal: 'до 2',      couple: 'Безліміт',     family: 'Безліміт'  },
+  { label: 'Спільні простори',           free: 'до 3 спільних', personal: false, couple: 'до 3 спільних', family: 'Безліміт' },
 ]
 
 const HIGHLIGHTS: Record<PlanId, string[]> = {
-  free:     ['2 простори', '1 рік пам\'яті', 'Квести, звички, покупки'],
+  free:     ['2 простори', '1 рік пам\'яті', 'Сканер чеків 5/міс', 'Monobank'],
   personal: ['5 просторів', 'AI-рефлексія та чат', 'Сканер чеків', 'Yearbook та архів'],
   couple:   ['Усе з PERSONAL', 'Спільна хроніка', 'До 5 учасників', 'Спільні профілі'],
   family:   ['Усе з DUO', 'Безлімітні простори', 'Безлімітні учасники', 'Спільний архів'],

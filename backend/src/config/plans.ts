@@ -8,7 +8,6 @@ export type Feature =
   | 'monobank'
   | 'gdprExport'
   | 'advancedFinance'
-  | 'familyLink'
   | 'sharedSpaces'
   | 'mimirAi'
 
@@ -17,6 +16,9 @@ export interface PlanLimits {
   maxSharedSpaces: number            // 0 = disabled, -1 = unlimited
   maxMembersPerSharedSpace: number   // 0 = disabled, -1 = unlimited
   timelineHistoryYears: number       // -1 = unlimited
+  maxReceiptScansPerMonth: number    // -1 = unlimited
+  maxFinancialReportsPerMonth: number // -1 = unlimited
+  maxFamilyLinks: number             // -1 = unlimited
 }
 
 export interface PlanConfig {
@@ -30,20 +32,22 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     id: 'free',
     limits: {
       maxSpaces: 2,
-      maxSharedSpaces: 0,
-      maxMembersPerSharedSpace: 0,
+      maxSharedSpaces: 3,
+      maxMembersPerSharedSpace: 5,
       timelineHistoryYears: 1,
+      maxReceiptScansPerMonth: 5,
+      maxFinancialReportsPerMonth: 1,
+      maxFamilyLinks: 2,
     },
     features: {
       aiChat: false,
       aiChefChat: false,
-      receiptScanner: false,
+      receiptScanner: true,
       yearbookGenerate: false,
-      monobank: false,
+      monobank: true,
       gdprExport: false,
-      advancedFinance: false,
-      familyLink: false,
-      sharedSpaces: false,
+      advancedFinance: true,
+      sharedSpaces: true,
       mimirAi: false,
     },
   },
@@ -55,6 +59,9 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxSharedSpaces: 0,
       maxMembersPerSharedSpace: 0,
       timelineHistoryYears: 5,
+      maxReceiptScansPerMonth: -1,
+      maxFinancialReportsPerMonth: -1,
+      maxFamilyLinks: 2,
     },
     features: {
       aiChat: true,
@@ -64,7 +71,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       monobank: true,
       gdprExport: true,
       advancedFinance: true,
-      familyLink: false,
       sharedSpaces: false,
       mimirAi: true,
     },
@@ -77,6 +83,9 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxSharedSpaces: 3,
       maxMembersPerSharedSpace: 5,
       timelineHistoryYears: -1,
+      maxReceiptScansPerMonth: -1,
+      maxFinancialReportsPerMonth: -1,
+      maxFamilyLinks: -1,
     },
     features: {
       aiChat: true,
@@ -86,7 +95,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       monobank: true,
       gdprExport: true,
       advancedFinance: true,
-      familyLink: true,
       sharedSpaces: true,
       mimirAi: true,
     },
@@ -99,6 +107,9 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxSharedSpaces: -1,
       maxMembersPerSharedSpace: -1,
       timelineHistoryYears: -1,
+      maxReceiptScansPerMonth: -1,
+      maxFinancialReportsPerMonth: -1,
+      maxFamilyLinks: -1,
     },
     features: {
       aiChat: true,
@@ -108,7 +119,6 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       monobank: true,
       gdprExport: true,
       advancedFinance: true,
-      familyLink: true,
       sharedSpaces: true,
       mimirAi: true,
     },

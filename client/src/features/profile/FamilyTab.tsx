@@ -3,7 +3,7 @@ import { useFamilyStore } from '@/shared/store/familyStore'
 import type { FamilyMember } from '@/shared/store/familyStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
-import { useCanUseFeature } from '@/shared/hooks/usePlan'
+import { usePlan } from '@/shared/hooks/usePlan'
 import UpgradePrompt from '@/shared/components/ui/UpgradePrompt'
 import KynGraph from './components/KynGraph'
 import styles from './ProfilePage.module.css'
@@ -23,15 +23,22 @@ const REL_TYPES = [
 const FamilyTab: React.FC = () => {
   const {
     accepted, pendingSent, pendingReceived,
-    searchResults, searchUsers, sendRequest, acceptRequest, removeLink, clearSearch,
+    searchResults, searchUsers, sendRequest, acceptRequest, removeLink, clearSearch, fetchFamily,
   } = useFamilyStore()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
-  const canFamily = useCanUseFeature('familyLink')
+  const { limits } = usePlan()
 
   const [familySearch, setFamilySearch]   = useState('')
   const [familyLoading, setFamilyLoading] = useState(false)
   const [pendingUser, setPendingUser]     = useState<FamilyMember | null>(null)
+  // Бекенд лишається джерелом правди для ліміту — якщо запит все ж відхилено
+  // (напр. паралельний запит з іншого пристрою), тримаємо це в стані окремо
+  // від локального підрахунку, поки не підтягнеться свіжий fetchFamily().
+  const [serverLimitHit, setServerLimitHit] = useState(false)
+
+  const totalLinks = accepted.length + pendingSent.length + pendingReceived.length
+  const atLimit = serverLimitHit || (limits.maxFamilyLinks !== -1 && totalLinks >= limits.maxFamilyLinks)
 
   const handleSearch = useCallback((q: string) => {
     setFamilySearch(q)
@@ -52,11 +59,18 @@ const FamilyTab: React.FC = () => {
       setPendingUser(null)
       showToast('Запит надіслано', 'success')
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Помилка', 'error')
+      const code = err instanceof Error ? (err as Error & { code?: string }).code : undefined
+      if (code === 'PLAN_LIMIT') {
+        setPendingUser(null)
+        setServerLimitHit(true)
+        fetchFamily()
+      } else {
+        showToast(err instanceof Error ? err.message : 'Помилка', 'error')
+      }
     } finally {
       setFamilyLoading(false)
     }
-  }, [pendingUser, sendRequest, showToast])
+  }, [pendingUser, sendRequest, showToast, fetchFamily])
 
   const handleAccept = useCallback(async (linkId: string) => {
     try {
@@ -135,7 +149,7 @@ const FamilyTab: React.FC = () => {
         )}
 
         {/* ── Search + relationship type picker ── */}
-        {canFamily ? (
+        {!atLimit ? (
           <div className={styles.familySearchWrap}>
             <input
               className={styles.familySearchInput}
@@ -214,7 +228,11 @@ const FamilyTab: React.FC = () => {
             )}
           </div>
         ) : (
-          <UpgradePrompt feature="familyLink" message="Спільні профілі доступні з плану DUO" />
+          <UpgradePrompt
+            limitKey="maxFamilyLinks"
+            currentCount={totalLinks}
+            message={`На твоєму плані доступно до ${limits.maxFamilyLinks} близьких. Онови план для необмеженої кількості.`}
+          />
         )}
       </section>
     </div>

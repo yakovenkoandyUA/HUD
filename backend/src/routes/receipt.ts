@@ -1,8 +1,8 @@
-import { Router, Request, Response } from 'express'
+import { Router, Request, Response, NextFunction } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { requireVerified } from '../middleware/requireVerified'
 import { loadUser } from '../middleware/loadUser'
-import { requireFeature } from '../utils/entitlements'
+import { requireFeature, assertAndTrackMonthlyUsage } from '../utils/entitlements'
 
 const router = Router()
 
@@ -25,7 +25,7 @@ interface AnthropicResponse {
   content: { type: string; text: string }[]
 }
 
-router.post('/scan', requireAuth, requireVerified, loadUser, requireFeature('receiptScanner'), async (req: Request, res: Response): Promise<void> => {
+router.post('/scan', requireAuth, requireVerified, loadUser, requireFeature('receiptScanner'), async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { imageBase64, mimeType } = req.body as { imageBase64?: string; mimeType?: string }
 
   if (!imageBase64 || !mimeType) {
@@ -36,6 +36,13 @@ router.post('/scan', requireAuth, requireVerified, loadUser, requireFeature('rec
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' })
+    return
+  }
+
+  try {
+    await assertAndTrackMonthlyUsage(req.user!, 'receiptScanner', 'maxReceiptScansPerMonth')
+  } catch (err) {
+    next(err)
     return
   }
 

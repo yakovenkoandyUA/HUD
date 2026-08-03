@@ -284,6 +284,8 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 
 **Наступне:** Phase 4B — WayForPay checkout route (backend), Phase 4C — frontend upgrade flow.
 
+**Оновлення (2026-08-03):** "Близькі" (FamilyLink) перероблено з булевого feature-гейту на кількісний ліміт — повний бан на free/personal відчувався зайвим. Тепер `maxFamilyLinks`: free/personal — 2, couple/family — безліміт. Бекенд: `assertLimit` інлайн у `familyController.sendRequest` (не middleware — потрібен async count query). Клієнт: `FamilyTab` рахує `accepted+pendingSent+pendingReceived` і показує `UpgradePrompt` тільки по досягненню ліміту, а не завжди для free/personal.
+
 ### ~~8. 💳 Білінг Phase 3A — Legal + Data Rights~~ ✅ Зроблено
 Деталі вище в розділі "Що реалізовано".
 

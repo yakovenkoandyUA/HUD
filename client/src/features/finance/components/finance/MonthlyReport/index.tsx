@@ -130,6 +130,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const [aiContent,     setAiContent]     = useState<string | null>(null)
   const [aiLoading,     setAiLoading]     = useState(false)
   const [aiError,       setAiError]       = useState(false)
+  const [aiErrorMessage, setAiErrorMessage] = useState<string | null>(null)
   const [aiGeneratedAt, setAiGeneratedAt] = useState<Date | null>(null)
   const [aiTextExpanded, setAiTextExpanded] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState(0)
@@ -266,6 +267,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
     let cancelled = false
     setAiLoading(true)
     setAiError(false)
+    setAiErrorMessage(null)
     try {
       const res = await authFetch(`/api/finance/report/${ym}`, { method: 'POST' })
       if (!cancelled) {
@@ -275,6 +277,12 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
           setAiGeneratedAt(new Date(data.generatedAt))
           setAiTextExpanded(true)
         } else {
+          const data = await res.json().catch(() => ({})) as { error?: string; code?: string; limit?: number }
+          if (data.code === 'PLAN_LIMIT') {
+            setAiErrorMessage(`Ліміт AI-звітів на цей місяць вичерпано (${data.limit}). Оновіть план для більшої кількості.`)
+          } else if (data.code === 'PLAN_GATE') {
+            setAiErrorMessage('AI-звіт недоступний на вашому плані')
+          }
           setAiError(true)
         }
       }
@@ -496,7 +504,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                       </button>
                     )}
                   </div>
-                  {aiError && <p className={styles.aiError}>Помилка генерації. Спробуйте ще раз.</p>}
+                  {aiError && <p className={styles.aiError}>{aiErrorMessage ?? 'Помилка генерації. Спробуйте ще раз.'}</p>}
                   {aiContent && (
                     <div className={`${styles.aiContent} ${!aiTextExpanded ? styles.aiContentCollapsed : ''}`}>
                       {renderMarkdown(aiContent)}

@@ -29,7 +29,8 @@
   - `assertLimit(user, limitKey, currentCount)` — кидає `{ status:403, code:'PLAN_LIMIT', limitKey, limit }` (no-op аналогічно)
   - `requireFeature(feature)` — Express middleware factory, передає помилку в `next(err)`
 - `errorHandler.ts` — обробляє `PLAN_GATE` → `{ error, code, feature }` і `PLAN_LIMIT` → `{ error, code, limitKey, limit }`
-- Guards навішані: `requireFeature('aiChat'/'aiChefChat')` у `routes/ai.ts`, `requireFeature('receiptScanner')` у `routes/receipt.ts`, `requireFeature('yearbookGenerate')` у `routes/yearbook.ts`, `requireFeature('familyLink')` у `routes/family.ts`, `requireFeature('advancedFinance')` у `routes/finance.ts`, `assertLimit(maxSpaces/sharedSpaces)` у `spaceController.ts`, timeline history у `timelineController.ts`
+- Guards навішані: `requireFeature('aiChat'/'aiChefChat')` у `routes/ai.ts`, `requireFeature('receiptScanner')` у `routes/receipt.ts`, `requireFeature('yearbookGenerate')` у `routes/yearbook.ts`, `requireFeature('advancedFinance')` у `routes/finance.ts`, `assertLimit(maxSpaces/sharedSpaces)` у `spaceController.ts`, timeline history у `timelineController.ts`
+- **Близькі (FamilyLink) — не feature-гейт, а ліміт:** `assertLimit(user, 'maxFamilyLinks', currentLinksCount)` інлайн у `familyController.sendRequest` (не middleware, бо потрібен async count query перед перевіркою). `maxFamilyLinks`: free/personal — 2, couple/family — безліміт (-1). Рахується як `FamilyLink.countDocuments({$or:[{requester},{recipient}]})` — будь-який статус (pending+accepted) враховується в ліміт
 
 ## API ендпоінти
 

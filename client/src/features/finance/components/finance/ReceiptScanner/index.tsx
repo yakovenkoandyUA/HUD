@@ -62,7 +62,13 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
           body: JSON.stringify({ imageBase64: base64, mimeType: compressed.type }),
         })
 
-        if (!response.ok) throw new Error('API error')
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({})) as { error?: string; code?: string; limit?: number }
+          const err = new Error(data.error ?? 'API error') as Error & { code?: string; limit?: number }
+          err.code = data.code
+          err.limit = data.limit
+          throw err
+        }
         const data: ReceiptResult = await response.json()
         if (!data.total || !Array.isArray(data.items)) throw new Error('Invalid JSON')
 
@@ -72,9 +78,17 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
           setItems(data.items)
           setStatus('preview')
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          showToast('Не вдалось розпізнати чек, спробуй ще раз', 'error')
+          const code = err instanceof Error ? (err as Error & { code?: string; limit?: number }).code : undefined
+          const limit = err instanceof Error ? (err as Error & { code?: string; limit?: number }).limit : undefined
+          if (code === 'PLAN_LIMIT') {
+            showToast(`Ліміт сканувань чеків на цей місяць вичерпано (${limit}). Оновіть план для більшої кількості.`, 'error')
+          } else if (code === 'PLAN_GATE') {
+            showToast('Сканер чеків недоступний на вашому плані', 'error')
+          } else {
+            showToast('Не вдалось розпізнати чек, спробуй ще раз', 'error')
+          }
           onCancel()
         }
       }

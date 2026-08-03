@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
 import { PLANS, type Feature, type PlanLimits } from '../config/plans'
 import type { IUser } from '../models/User'
+import UsageCounter from '../models/UsageCounter'
 
 export function isBillingEnforcementEnabled(): boolean {
   return process.env.BILLING_ENABLED === 'true'
@@ -52,6 +53,40 @@ export function requireFeature(feature: Feature) {
       next(err)
     }
   }
+}
+
+/**
+ * Throws 403 if billing is enabled and the user has hit their monthly quota for usageKey,
+ * otherwise increments the counter for the current calendar month.
+ * No-op when BILLING_ENABLED !== "true" or limit === -1 (unlimited).
+ */
+export async function assertAndTrackMonthlyUsage(
+  user: IUser,
+  usageKey: string,
+  limitKey: keyof PlanLimits,
+): Promise<void> {
+  if (!isBillingEnforcementEnabled()) return
+  if (user.role === 'admin') return
+  const limit = getPlanLimits(user)[limitKey]
+  if (limit === -1) return
+
+  const month = new Date().toISOString().slice(0, 7)
+  const userId = (user._id as { toString(): string }).toString()
+  const existing = await UsageCounter.findOne({ userId, key: usageKey, month })
+  if ((existing?.count ?? 0) >= limit) {
+    const err = new Error(`Monthly limit reached: ${usageKey}`) as Error & { status: number; code: string; limitKey: string; limit: number }
+    err.status = 403
+    err.code = 'PLAN_LIMIT'
+    err.limitKey = limitKey
+    err.limit = limit
+    throw err
+  }
+
+  await UsageCounter.findOneAndUpdate(
+    { userId, key: usageKey, month },
+    { $inc: { count: 1 } },
+    { upsert: true },
+  )
 }
 
 /**

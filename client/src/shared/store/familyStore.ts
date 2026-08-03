@@ -70,8 +70,10 @@ export const useFamilyStore = create<FamilyState>()((set, get) => ({
       body: JSON.stringify({ targetUserId, relationshipType }),
     })
     if (!res.ok) {
-      const data = await res.json() as { error?: string }
-      throw new Error(data.error ?? 'Помилка відправки запиту')
+      const data = await res.json() as { error?: string; code?: string }
+      const err = new Error(data.error ?? 'Помилка відправки запиту') as Error & { code?: string }
+      err.code = data.code
+      throw err
     }
     await get().fetchFamily()
   },

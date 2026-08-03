@@ -1,6 +1,7 @@
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
 import { FamilyLink } from '../models/FamilyLink'
 import { User } from '../models/User'
+import { assertLimit } from '../utils/entitlements'
 
 /** Returns all accepted family member userIds for a given userId */
 export async function getAcceptedFamilyIds(userId: string): Promise<string[]> {
@@ -82,7 +83,7 @@ export async function searchUsers(req: Request, res: Response): Promise<void> {
 }
 
 /** POST /api/family/request — { targetUserId } */
-export async function sendRequest(req: Request, res: Response): Promise<void> {
+export async function sendRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
   const { targetUserId, relationshipType } = req.body as { targetUserId?: string; relationshipType?: string }
   if (!targetUserId) {
     res.status(400).json({ error: 'targetUserId required' })
@@ -112,9 +113,15 @@ export async function sendRequest(req: Request, res: Response): Promise<void> {
       return
     }
 
+    const currentLinks = await FamilyLink.countDocuments({
+      $or: [{ requester: req.userId }, { recipient: req.userId }],
+    })
+    assertLimit(req.user!, 'maxFamilyLinks', currentLinks)
+
     const link = await FamilyLink.create({ requester: req.userId, recipient: targetUserId, relationshipType: relationshipType ?? null })
     res.status(201).json({ linkId: (link._id as { toString(): string }).toString(), status: link.status })
-  } catch {
+  } catch (err) {
+    if ((err as { status?: number }).status === 403) { next(err); return }
     res.status(500).json({ error: 'Failed to send request' })
   }
 }
