@@ -664,8 +664,8 @@
 :global([data-theme="pixel"]) .templateIconZone img {
   filter: brightness(0) opacity(0.55);
 }
-:global([data-theme="vellum"]) .templateIconImgCover,
-:global([data-theme="pixel"]) .templateIconImgCover {
+:global([data-theme="vellum"]) .templateIconZone img.templateIconImgCover,
+:global([data-theme="pixel"]) .templateIconZone img.templateIconImgCover {
   filter: none;
 }
 
