@@ -109,6 +109,29 @@ router.patch('/:date/note', async (req: Request, res: Response): Promise<void> =
   )
   if (!log) { res.status(404).json({ error: 'No mood for this date' }); return }
   res.json(log)
+
+  // Push to family members — mirrors PUT /:date, but only for a non-empty note
+  // (setNote is called separately from setMood, e.g. editing the note after the
+  // mood was already set earlier, so that push must not be skipped)
+  const trimmed = (note ?? '').trim()
+  if (!trimmed) return
+  try {
+    const [user, familyIds] = await Promise.all([
+      User.findById(req.userId).select('name username'),
+      getAcceptedFamilyIds(req.userId!),
+    ])
+    if (user && familyIds.length > 0) {
+      const name = (user as { name?: string; username?: string }).name || (user as { username?: string }).username || 'Хтось'
+      const body = trimmed.length > 80 ? `${trimmed.slice(0, 77)}…` : trimmed
+      await Promise.allSettled(
+        familyIds.map(id => sendPushToUser(id, {
+          title: name,
+          body,
+          tag:   `mood-${req.userId}-${date}`,
+        }))
+      )
+    }
+  } catch { /* silent — не блокуємо відповідь */ }
 })
 
 // DELETE /api/mood/:date
