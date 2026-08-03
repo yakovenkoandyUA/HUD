@@ -48,7 +48,7 @@
 /* ── Theme overrides ────────────────────────────────────────── */
 
 :global([data-theme='noir']) .cardPhoto {
-  background-position-y: 110px;
+  background-position-y: 150px;
   filter: grayscale(1);
 }
 :global([data-theme='noir']) .cardPhoto::before {

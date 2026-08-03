@@ -28,10 +28,10 @@ const CYCLE_STEPS = [
 ]
 
 const INTERFACE_ITEMS = [
-  { title: 'Дашборд (огляд дня)',        src: '/screenshot/dashboard.png' },
-  { title: 'Створення Space',            src: '/screenshot/space.png' },
-  { title: 'Додавання Memory',            src: '/screenshot/memory.png' },
-  { title: 'Мімір у релевантний момент',  src: '/screenshot/mimir.png' },
+  { title: 'Дашборд (огляд дня)',        src: '/screenshot/dashboard.webp' },
+  { title: 'Створення Space',            src: '/screenshot/space.webp' },
+  { title: 'Додавання Memory',            src: '/screenshot/memory.webp' },
+  { title: 'Мімір у релевантний момент',  src: '/screenshot/mimir.webp' },
 ]
 
 const PRIVACY_POINTS = [
