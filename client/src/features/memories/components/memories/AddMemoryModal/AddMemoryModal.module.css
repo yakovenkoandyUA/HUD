@@ -54,7 +54,7 @@
 
 .coverZone {
   width: 100%;
-  height: 130px;
+  height: 200px;
   background: var(--surface);
   border: none;
   border-bottom: 1.5px dashed var(--border2);

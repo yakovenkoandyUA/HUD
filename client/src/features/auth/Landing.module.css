@@ -44,7 +44,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 96px 24px 80px;
+  padding: 64px 24px 36px;
   overflow: hidden;
 }
 
@@ -59,6 +59,95 @@
   opacity: 0.16;
   filter: blur(20px);
   pointer-events: none;
+  animation: wellGlowPulse 4.5s ease-in-out infinite;
+}
+
+@keyframes wellGlowPulse {
+  0%, 100% { opacity: 0.14; transform: translateX(-50%) scale(1); }
+  50%       { opacity: 0.24; transform: translateX(-50%) scale(1.06); }
+}
+
+/* Depth — a darker core suggesting a shaft going down into the well */
+.heroRing::after {
+  content: '';
+  position: absolute;
+  inset: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--text) 10%, transparent) 0%, transparent 72%);
+  opacity: 0.5;
+}
+
+/* Faint rune of Mímisbrunnr, resting at the well's centre */
+.heroRune {
+  position: absolute;
+  top: 164px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  color: var(--gold);
+  opacity: 0.18;
+  line-height: 1;
+  pointer-events: none;
+  animation: heroFadeUp 0.9s ease 0.05s both;
+}
+
+/* ── Well ripples — concentric rings expanding out from the well ── */
+.heroRipples {
+  position: absolute;
+  top: 164px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.heroRipple {
+  position: absolute;
+  top: -130px;
+  left: -130px;
+  width: 260px;
+  height: 260px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: wellRipple 4.5s ease-out infinite;
+}
+
+@keyframes wellRipple {
+  0%   { transform: scale(0.55); opacity: 0.4; }
+  70%  { opacity: 0.08; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+
+/* ── Rising motes of light — thoughts surfacing from the well ── */
+.heroParticles {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+.heroParticle {
+  position: absolute;
+  bottom: 130px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold, var(--accent));
+  box-shadow: 0 0 7px 1px color-mix(in srgb, var(--gold, var(--accent)) 70%, transparent);
+  opacity: 0;
+  animation: motesRise var(--dur, 6.5s) ease-in infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes motesRise {
+  0%   { transform: translate(calc(-50% + var(--x)), 10px) scale(0.6); opacity: 0; }
+  12%  { opacity: 0.85; }
+  80%  { opacity: 0.1; }
+  100% { transform: translate(calc(-50% + var(--x)), -230px) scale(1); opacity: 0; }
 }
 
 .heroRing {
@@ -69,7 +158,7 @@
   height: 260px;
   transform: translateX(-50%);
   border: 1px solid var(--border2);
-  border-radius: 50%;
+  border-radius: 50% 48% 51% 49% / 49% 51% 48% 50%;
   opacity: 0.5;
   pointer-events: none;
   animation: heroRingSpin 60s linear infinite;
@@ -79,7 +168,7 @@
   position: absolute;
   inset: -22px;
   border: 1px solid var(--border);
-  border-radius: 50%;
+  border-radius: 49% 51% 48% 50% / 50% 49% 51% 48%;
   opacity: 0.6;
 }
 
@@ -124,7 +213,7 @@
 
 .heroCta {
   position: relative;
-  margin-top: 36px;
+  margin-top: 28px;
   padding: 16px 40px;
   background: var(--accent);
   color: var(--bg);
@@ -135,10 +224,92 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: transform 0.2s, opacity 0.2s, box-shadow 0.3s;
   animation: heroFadeUp 0.9s ease 0.3s both;
 }
-.heroCta:hover { transform: translateY(-2px); opacity: 0.9; }
+.heroCta:hover {
+  transform: translateY(-2px);
+  opacity: 0.92;
+  box-shadow: 0 6px 24px 0 color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.heroCta:active { transform: translateY(-1px) scale(0.97); }
+
+.heroCtaArrow {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 0.2s;
+}
+.heroCta:hover .heroCtaArrow { transform: translateX(3px); }
+
+/* ── Corner mascot (quiet, non-accent presence) ── */
+.cycleSection {
+  position: relative;
+}
+
+.cornerMascotWrap {
+  position: absolute;
+  top: -65px;
+    right: 70px;
+  width: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.cornerMascotBubble {
+  position: relative;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text3);
+  text-align: center;
+}
+.cornerMascotBubble::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) rotate(45deg);
+  background: var(--surface);
+  border-right: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+}
+
+.cornerMascot {
+  width: 76px;
+  height: auto;
+  filter: grayscale(0.15);
+  animation: mascotFloat 6s ease-in-out infinite;
+}
+
+@keyframes mascotFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ── Quiet mascot bubble (Life Spaces block) ── */
+.mascotBubble {
+  margin: 20px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text3);
+  text-align: right;
+}
 
 .heroFormula {
   position: relative;
@@ -148,10 +319,16 @@
   font-style: italic;
   font-size: 12px;
   line-height: 1.6;
-  color: var(--text3);
+  color: var(--text2);
   animation: heroFadeUp 0.9s ease 0.15s both;
 }
-.heroFormulaAccent { color: var(--gold); font-style: normal; letter-spacing: 0.04em; }
+.heroFormulaAccent {
+  color: color-mix(in srgb, var(--gold) 78%, var(--text2));
+  font-style: normal;
+  letter-spacing: 0.04em;
+  margin-left: 0.4em;
+  display: inline-block;
+}
 
 @keyframes heroFadeUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -210,6 +387,7 @@
 }
 
 .blockPlain {
+  position: relative;
   padding: 24px 0;
 }
 
@@ -348,23 +526,14 @@
   gap: 8px;
 }
 
-.interfaceFramePlaceholder {
-  aspect-ratio: 3 / 4;
-  border: 1px dashed var(--border2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: var(--text3);
+.interfaceFrameImg {
+  width: 100%;
+  aspect-ratio: 9 / 18;
+  object-fit: cover;
+  object-position: top center;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
   background: var(--surface);
-}
-
-.interfaceFramePlaceholder span {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .interfaceFrameLabel {

@@ -1,13 +1,22 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import MimirFillIcon from '@/shared/components/ui/MimirFillIcon'
 import styles from './Landing.module.css'
 
 const CHAOS_ITEMS = ['Нотатки', 'Фото', 'Календар', 'Банківські витрати', 'Список справ', 'Фільми й книги', 'Десь у голові…']
 
+const HERO_PARTICLES = [
+  { x: -70, delay: 0,    dur: 6.5 },
+  { x: -28, delay: 1.4,  dur: 7.2 },
+  { x: 0,   delay: 2.6,  dur: 6.8 },
+  { x: 34,  delay: 0.7,  dur: 7.6 },
+  { x: 74,  delay: 3.4,  dur: 6.2 },
+]
+
 const LIFE_SPACES = [
   { title: 'Я', desc: "Думки, звички, цілі, здоров'я та особиста пам'ять." },
   { title: "Сім'я / пара", desc: "Спільні події, витрати, плани й речі, які не варто втрачати." },
+  { title: 'Компанія / друзі', desc: "Спільні плани, витрати в складчину й моменти, які варто пам'ятати разом." },
   { title: 'Подорож або проєкт', desc: "Люди, місця, квитки, рішення й витрати в одному контексті. Усе, що складається в одну історію." },
 ]
 
@@ -19,11 +28,10 @@ const CYCLE_STEPS = [
 ]
 
 const INTERFACE_ITEMS = [
-  'Створення Space',
-  'Додавання Memory',
-  "Пов'язані люди, місця, витрати",
-  'Yearbook та Timeline',
-  'Мімір у релевантний момент',
+  { title: 'Дашборд (огляд дня)',        src: '/screenshot/dashboard.png' },
+  { title: 'Створення Space',            src: '/screenshot/space.png' },
+  { title: 'Додавання Memory',            src: '/screenshot/memory.png' },
+  { title: 'Мімір у релевантний момент',  src: '/screenshot/mimir.png' },
 ]
 
 const PRIVACY_POINTS = [
@@ -42,10 +50,6 @@ const PRIVACY_POINTS = [
  * Реальний інтерфейс (заглушки) → Хто такий Мімір → Приватність → Почати (реєстрація).
  */
 const Landing: React.FC = () => {
-  const ctaRef = useRef<HTMLDivElement>(null)
-
-  const scrollToCta = () => ctaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-
   // Reveal-on-scroll for section blocks
   useEffect(() => {
     const els = document.querySelectorAll(`.${styles.reveal}`)
@@ -67,17 +71,32 @@ const Landing: React.FC = () => {
       {/* ── Hero ── */}
       <section className={styles.hero}>
         <div className={styles.heroGlow} aria-hidden="true" />
+        <div className={styles.heroRipples} aria-hidden="true">
+          <span className={styles.heroRipple} style={{ animationDelay: '0s' } as React.CSSProperties} />
+          <span className={styles.heroRipple} style={{ animationDelay: '1.5s' } as React.CSSProperties} />
+          <span className={styles.heroRipple} style={{ animationDelay: '3s' } as React.CSSProperties} />
+        </div>
+        <div className={styles.heroParticles} aria-hidden="true">
+          {HERO_PARTICLES.map((p, i) => (
+            <span
+              key={i}
+              className={styles.heroParticle}
+              style={{ '--x': `${p.x}px`, '--delay': `${p.delay}s`, '--dur': `${p.dur}s` } as React.CSSProperties}
+            />
+          ))}
+        </div>
         <div className={styles.heroRing} aria-hidden="true" />
+        <span className={styles.heroRune} aria-hidden="true">ᛗ</span>
         <h1 className={styles.heroTitle}>MIMIR</h1>
         <p className={styles.heroKicker}>A memory system for your life</p>
-        <p className={styles.heroFormula}>Thought finds the path. Memory gives it meaning. <span className={styles.heroFormulaAccent}>Drink deep.</span></p>
+        <p className={styles.heroFormula}>Thought finds the path. Memory gives it meaning.<span className={styles.heroFormulaAccent}>Drink deep.</span></p>
         <p className={styles.heroDesc}>
-          MIMIR запам'ятовує зв'язки між подіями, людьми, місцями і рішеннями твого життя —
-          і повертає тобі не список нотаток, а цілісну картину.
+          MIMIR пов'язує події, людей, місця, витрати й думки, щоб ти повертався
+          не до окремих записів, а до цілісної картини свого життя.
         </p>
-        <button type="button" className={styles.heroCta} onClick={scrollToCta}>
-          Створити свій простір
-        </button>
+        <Link to="/register" className={styles.heroCta}>
+          Створити свій простір <span className={styles.heroCtaArrow} aria-hidden="true">→</span>
+        </Link>
       </section>
 
       {/* ── Problem + Life Spaces (two compact blocks side by side) ── */}
@@ -108,12 +127,26 @@ const Landing: React.FC = () => {
                 </div>
               ))}
             </div>
+            <p className={styles.mascotBubble}>
+              Три простори чи тридцять три — я запам'ятаю зв'язки в кожному.
+            </p>
           </div>
         </div>
       </section>
 
       {/* ── How it works ── */}
-      <section className={`${styles.section} ${styles.reveal}`}>
+      <section className={`${styles.section} ${styles.reveal} ${styles.cycleSection}`}>
+        <div className={styles.cornerMascotWrap}>
+          <p className={styles.cornerMascotBubble}>
+            Ти ще не з нами? Погнали у подорож під назвою життя.
+          </p>
+          <img
+            src="/mimir/mimir-excited.webp"
+            alt=""
+            aria-hidden="true"
+            className={styles.cornerMascot}
+          />
+        </div>
         <p className={styles.eyebrow}>◆ Як працює MIMIR</p>
         <div className={styles.cycle}>
           {CYCLE_STEPS.map((step, i) => (
@@ -134,16 +167,9 @@ const Landing: React.FC = () => {
         <h2 className={styles.sectionTitle}>Не мокапи. Справжній продукт.</h2>
         <div className={styles.interfaceGrid}>
           {INTERFACE_ITEMS.map(item => (
-            <div key={item} className={styles.interfaceFrame}>
-              <div className={styles.interfaceFramePlaceholder}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <path d="M21 15l-5-5L5 21" />
-                </svg>
-                <span>Скріншот скоро</span>
-              </div>
-              <span className={styles.interfaceFrameLabel}>{item}</span>
+            <div key={item.title} className={styles.interfaceFrame}>
+              <img src={item.src} alt={item.title} className={styles.interfaceFrameImg} loading="lazy" />
+              <span className={styles.interfaceFrameLabel}>{item.title}</span>
             </div>
           ))}
         </div>
@@ -173,7 +199,7 @@ const Landing: React.FC = () => {
       </section>
 
       {/* ── Почати ── */}
-      <section className={`${styles.section} ${styles.reveal}`} ref={ctaRef}>
+      <section className={`${styles.section} ${styles.reveal}`}>
         <p className={styles.eyebrow}>◆ Почати</p>
         <h2 className={styles.sectionTitle}>Твій простір готовий</h2>
         <p className={styles.mimirText}>

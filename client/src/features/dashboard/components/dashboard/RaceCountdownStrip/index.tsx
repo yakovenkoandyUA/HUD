@@ -66,7 +66,7 @@ const RaceCountdownStrip: React.FC<RaceCountdownStripProps> = ({ race }) => {
       {/* Banner image */}
       <div className={styles.banner} style={{ backgroundImage: `url('${bannerUrl}')` }} aria-hidden="true" />
       {/* Gradient overlay */}
-      {/* <div className={styles.overlay} aria-hidden="true" /> */}
+      <div className={styles.overlay} aria-hidden="true" />
 
       {/* Content */}
       <div className={styles.inner}>
