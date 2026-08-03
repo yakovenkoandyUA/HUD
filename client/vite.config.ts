@@ -16,8 +16,14 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          if (!id.includes('node_modules/')) return
           if (id.includes('node_modules/react-dom')) return 'react-dom'
-          if (id.includes('node_modules/')) return 'vendor'
+          // Heavy, feature-scoped libs — keep OUT of the shared vendor chunk so they
+          // only load with the route that actually needs them (map screens / watchlist stats),
+          // instead of blocking first paint on every page.
+          if (id.includes('node_modules/mapbox-gl') || id.includes('node_modules/@mapbox')) return 'map-vendor'
+          if (id.includes('node_modules/@nivo')) return 'charts-vendor'
+          return 'vendor'
         },
       },
     },
@@ -25,7 +31,13 @@ export default defineConfig({
   plugins: [
     react(),
     svgr(),
-    ...(process.env.SENTRY_AUTH_TOKEN ? [sentryVitePlugin({ org: 'mimir-hud', project: 'mimir-client' })] : []),
+    ...(process.env.SENTRY_AUTH_TOKEN ? [sentryVitePlugin({
+      org: 'mimir-hud',
+      project: 'mimir-client',
+      // Upload maps to Sentry for readable stack traces, then remove them from
+      // dist/ so they aren't publicly deployed/fetchable alongside the JS bundle.
+      sourcemaps: { filesToDeleteAfterUpload: ['dist/**/*.map'] },
+    })] : []),
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',

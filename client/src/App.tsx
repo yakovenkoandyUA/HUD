@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import BottomNav from '@/shared/components/layout/BottomNav'
 import ToastContainer from '@/shared/components/ui/Toast'
@@ -10,44 +10,46 @@ import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { usePushSubscription } from '@/shared/hooks/usePushSubscription'
 import { reverseGeocodeCity } from '@/features/memories/utils/geocode'
+// Critical first-paint screens — loaded eagerly (no Suspense flash on the most common entry points)
 import Dashboard from '@/features/dashboard'
-import Finance from '@/features/finance'
-import F1Screen from '@/features/f1'
-import F1Live from '@/features/f1/live'
-import RaceDetailPage from '@/features/f1/raceDetail'
-import MySeasonPage from '@/features/f1/mySeasonPage'
-import Sprint from '@/features/sprint'
-import Recipes from '@/features/recipes'
-import RecipeDetailScreen from '@/features/recipes/detail'
-import MealPlannerScreen from '@/features/recipes/planner'
-import ShoppingListScreen from '@/features/sprint/shoppingList'
-import Watchlist from '@/features/watchlist'
-import MemoriesScreen from '@/features/memories'
-import MemoryDetailScreen from '@/features/memories/detail'
-import SpaceDetailScreen from '@/features/spaces'
 import LoginScreen from '@/features/auth/Login'
 import RegisterScreen from '@/features/auth/Register'
-import ProfilePage from '@/features/profile'
-import ProfileSubPage from '@/features/profile/ProfileSubPage'
-import MeAppearance from '@/features/profile/MeAppearance'
-import MeModules from '@/features/profile/MeModules'
-import MeFamily from '@/features/profile/MeFamily'
-import AdminTab from '@/features/profile/AdminTab'
-import MeAccount from '@/features/profile/MeAccount'
-import MeLevels from '@/features/profile/MeLevels'
-import VerifyEmail from '@/features/auth/VerifyEmail'
-import ForgotPasswordScreen from '@/features/auth/ForgotPassword'
-import ResetPasswordScreen from '@/features/auth/ResetPassword'
 import Landing from '@/features/auth/Landing'
-import NotFound from '@/features/auth/NotFound'
-import NotesScreen from '@/features/notes'
-import TimelineScreen from '@/features/timeline'
-import YearbookScreen from '@/features/auth/Yearbook'
-import OnboardingScreen from '@/features/auth/Onboarding'
-import TermsPage from '@/features/auth/TermsPage'
-import PrivacyPage from '@/features/auth/PrivacyPage'
-import PaymentResult from '@/features/auth/PaymentResult'
-import DrinkDetail from '@/features/drinks/detail'
+// Everything else — route-level code splitting, loaded on demand
+const Finance = lazy(() => import('@/features/finance'))
+const F1Screen = lazy(() => import('@/features/f1'))
+const F1Live = lazy(() => import('@/features/f1/live'))
+const RaceDetailPage = lazy(() => import('@/features/f1/raceDetail'))
+const MySeasonPage = lazy(() => import('@/features/f1/mySeasonPage'))
+const Sprint = lazy(() => import('@/features/sprint'))
+const Recipes = lazy(() => import('@/features/recipes'))
+const RecipeDetailScreen = lazy(() => import('@/features/recipes/detail'))
+const MealPlannerScreen = lazy(() => import('@/features/recipes/planner'))
+const ShoppingListScreen = lazy(() => import('@/features/sprint/shoppingList'))
+const Watchlist = lazy(() => import('@/features/watchlist'))
+const MemoriesScreen = lazy(() => import('@/features/memories'))
+const MemoryDetailScreen = lazy(() => import('@/features/memories/detail'))
+const SpaceDetailScreen = lazy(() => import('@/features/spaces'))
+const ProfilePage = lazy(() => import('@/features/profile'))
+const ProfileSubPage = lazy(() => import('@/features/profile/ProfileSubPage'))
+const MeAppearance = lazy(() => import('@/features/profile/MeAppearance'))
+const MeModules = lazy(() => import('@/features/profile/MeModules'))
+const MeFamily = lazy(() => import('@/features/profile/MeFamily'))
+const AdminTab = lazy(() => import('@/features/profile/AdminTab'))
+const MeAccount = lazy(() => import('@/features/profile/MeAccount'))
+const MeLevels = lazy(() => import('@/features/profile/MeLevels'))
+const VerifyEmail = lazy(() => import('@/features/auth/VerifyEmail'))
+const ForgotPasswordScreen = lazy(() => import('@/features/auth/ForgotPassword'))
+const ResetPasswordScreen = lazy(() => import('@/features/auth/ResetPassword'))
+const NotFound = lazy(() => import('@/features/auth/NotFound'))
+const NotesScreen = lazy(() => import('@/features/notes'))
+const TimelineScreen = lazy(() => import('@/features/timeline'))
+const YearbookScreen = lazy(() => import('@/features/auth/Yearbook'))
+const OnboardingScreen = lazy(() => import('@/features/auth/Onboarding'))
+const TermsPage = lazy(() => import('@/features/auth/TermsPage'))
+const PrivacyPage = lazy(() => import('@/features/auth/PrivacyPage'))
+const PaymentResult = lazy(() => import('@/features/auth/PaymentResult'))
+const DrinkDetail = lazy(() => import('@/features/drinks/detail'))
 import PwaInstallBanner from '@/shared/components/ui/PwaInstallBanner'
 import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
 import ErrorBoundary from '@/shared/components/ui/ErrorBoundary'
@@ -100,6 +102,7 @@ const AnimatedRoutes: React.FC = () => {
 
   return (
     <div key={location.pathname} className="pageWrapper">
+      <Suspense fallback={<div className="routeFallback"><span /></div>}>
       <Routes location={location}>
         {/* Public */}
         <Route path="/login" element={<LoginScreen />} />
@@ -149,6 +152,7 @@ const AnimatedRoutes: React.FC = () => {
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </div>
   )
 }
