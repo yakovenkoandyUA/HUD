@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import PasswordToggleButton from '@/shared/components/ui/PasswordToggleButton'
+import InfoToggle from '@/shared/components/ui/InfoToggle'
 import styles from './ProfilePage.module.css'
 
 /**
@@ -138,7 +139,13 @@ const MeSecurity: React.FC = () => {
       {pinStep === 'idle' ? (
         <div className={styles.cardRow}>
           <div>
-            <div className={styles.cardRowLabel}>PIN-код</div>
+            <div className={styles.cardRowLabelRow}>
+              <div className={styles.cardRowLabel}>PIN-код</div>
+              <InfoToggle
+                ariaLabel="Коли запитує PIN"
+                text="Код запитується при кожному новому відкритті застосунку та після 5 хв бездіяльності — захищає дані, навіть якщо телефон лишиться розблокованим."
+              />
+            </div>
             <div className={styles.pushSub}>
               {activeProfile.hasPIN ? 'Блокування через 5 хв' : 'Захист додатку'}
             </div>

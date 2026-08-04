@@ -5,6 +5,7 @@ import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import KynGraph from './components/KynGraph'
+import InfoToggle from '@/shared/components/ui/InfoToggle'
 import styles from './ProfilePage.module.css'
 import mfStyles from './MeFamily.module.css'
 
@@ -100,7 +101,13 @@ const MeFamily: React.FC = () => {
             <path d="M12.5 16L7 10l5.5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <span className={styles.headerTitle}>БЛИЗЬКІ</span>
+        <span className={`${styles.headerTitle} ${mfStyles.headerTitleWrap}`}>
+          БЛИЗЬКІ
+          <InfoToggle
+            ariaLabel="Хто що бачить"
+            text="Спогади бачать усі близькі профілі автоматично. У серіалах/фільмах — тільки те, що позначено «Дивились разом». Фінанси й задачі лишаються приватними."
+          />
+        </span>
         <button
           type="button"
           className={`${mfStyles.searchToggleBtn} ${searchOpen ? mfStyles.searchToggleBtnActive : ''}`}

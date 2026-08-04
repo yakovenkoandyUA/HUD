@@ -5,6 +5,7 @@ import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { useBankStore } from '@/features/finance/store/bankStore'
 import { authFetch } from '@/shared/services/api'
 import Modal from '@/shared/components/ui/Modal'
+import InfoToggle from '@/shared/components/ui/InfoToggle'
 import { INCOME_CATEGORIES, INCOME_ONLY_NAMES } from '@/features/finance/constants'
 import type { Category } from '@/shared/types'
 import styles from './ProfilePage.module.css'
@@ -314,7 +315,13 @@ const WalletTab: React.FC = () => {
 
       {/* ── Bank accounts ── */}
       <div className={styles.settingsCard}>
-        <div className={styles.cardTitle}>РАХУНКИ</div>
+        <div className={styles.cardTitle}>
+          РАХУНКИ
+          <InfoToggle
+            ariaLabel="Що передається з банку"
+            text="Токен доступу зберігається зашифрованим. MIMIR бачить лише транзакції з підключеного рахунку — не бачить баланс картки чи інші дані Monobank поза виписками."
+          />
+        </div>
 
         {bankLoading ? (
           <div className={styles.cardRow}><span className={styles.pushSub}>Завантаження...</span></div>

@@ -3,6 +3,7 @@ import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { useModalHistory } from '@/shared/hooks/useModalHistory'
 import { getToken } from '@/shared/services/api'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
+import InfoToggle from '@/shared/components/ui/InfoToggle'
 import styles from './AiChatSheet.module.css'
 
 const MIMIR_EMPTY_SRC   = '/mimir/mimir-idle.webp'
@@ -209,6 +210,10 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
           <div className={styles.headerLeft}>
             <MimirIcon size={15} />
             <span className={styles.headerTitle}>MIMIR</span>
+            <InfoToggle
+              ariaLabel="Що бачить Мімір"
+              text="Мімір бачить контекст поточного розділу (наприклад, фінанси чи рецепт), щоб відповідати влучно. Історія діалогу не зберігається — кожен чат починається з чистого аркуша."
+            />
           </div>
           <button type="button" className={styles.closeBtn} onClick={onClose}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">

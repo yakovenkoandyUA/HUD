@@ -15,6 +15,7 @@ import styles from './Modal.module.css'
  * @prop {boolean}         isOpen
  * @prop {() => void}      onClose
  * @prop {string}          [title]
+ * @prop {React.ReactNode} [titleInfo] — опційний елемент поруч із заголовком (напр. InfoToggle)
  * @prop {React.ReactNode} children
  * @prop {boolean}         [draggable=false] — вмикає drag-to-dismiss свайп
  */
@@ -22,6 +23,7 @@ interface ModalProps {
   isOpen: boolean
   onClose: () => void
   title?: string
+  titleInfo?: React.ReactNode
   children: React.ReactNode
   draggable?: boolean
 }
@@ -29,7 +31,7 @@ interface ModalProps {
 const ANIM_MS = 360
 const SWIPE_DISMISS_HINT_LIMIT = 2
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggable = false }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, titleInfo, children, draggable = false }) => {
   const [mounted, setMounted] = useState(isOpen)
   const [visible, setVisible] = useState(isOpen)
   const modalRef   = useRef<HTMLDivElement>(null)
@@ -227,7 +229,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, draggab
         )}
         {title && (
           <div className={styles.header}>
-            <h3 className={styles.title}>{title}</h3>
+            <div className={styles.titleRow}>
+              <h3 className={styles.title}>{title}</h3>
+              {titleInfo}
+            </div>
             <button className={styles.close} onClick={handleClose}>✕</button>
           </div>
         )}

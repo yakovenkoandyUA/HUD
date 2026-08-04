@@ -1888,6 +1888,12 @@
 	flex: 1;
 }
 
+.cardRowLabelRow {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
 .cardRowValue {
 	font-family: var(--font-mono);
 	font-size: 11px;

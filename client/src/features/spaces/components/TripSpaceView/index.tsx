@@ -10,6 +10,7 @@ import type { TripPlace } from '../../store/tripPlaceStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
+import InfoToggle from '@/shared/components/ui/InfoToggle'
 import styles from './TripSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -609,7 +610,13 @@ const TripSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpda
       {expenses.length > 0 && (
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>
-            ВИТРАТИ
+            <span className={styles.sectionTitleLeft}>
+              ВИТРАТИ
+              <InfoToggle
+                ariaLabel="Про витрати поїздки"
+                text="Додавай витрати вручну тут, або збережи спогад-подорож з датами поїздки — MIMIR сам запропонує прив'язати вже наявні транзакції за той період."
+              />
+            </span>
             <span className={styles.expenseTotal}>₴{fmtAmount(totalExp)}</span>
           </h2>
           <div className={styles.expenseList}>

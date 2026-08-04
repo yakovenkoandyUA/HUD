@@ -1,5 +1,6 @@
 import React, { useRef, useCallback, useState } from 'react'
 import Modal from '@/shared/components/ui/Modal'
+import InfoToggle from '@/shared/components/ui/InfoToggle'
 import { authFetch } from '@/shared/services/api'
 import { useImportWatchlistStore } from '../../../store/importWatchlistStore'
 import { CONST_PREFIX } from '../ColumnMappingStep'
@@ -156,7 +157,18 @@ const ImportWatchlistModal: React.FC<ImportWatchlistModalProps> = ({ isOpen, onC
   }[store.step]
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={modalTitle} draggable>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={modalTitle}
+      titleInfo={store.step === 'upload' ? (
+        <InfoToggle
+          ariaLabel="Про імпорт"
+          text="Підтримує CSV, XLSX, PDF і фото списку. Спочатку завантажуєш файл, далі звіряєш колонки з полями MIMIR — система підказує відповідність, але можна поправити вручну перед самим імпортом."
+        />
+      ) : undefined}
+      draggable
+    >
       <div className={styles.body}>
 
         {/* ── Upload step ── */}
