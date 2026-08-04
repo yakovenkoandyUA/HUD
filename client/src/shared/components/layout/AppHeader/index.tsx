@@ -33,7 +33,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const [showDrawer, setShowDrawer] = useState(false)
   const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
-  const { showToast } = useUiStore()
+  const { showToast, updateAvailable } = useUiStore()
   const navigate = useNavigate()
   const canUseAI = useCanUseFeature('aiChat')
   const runeScore = useRuneScore()
@@ -73,7 +73,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
                 {activeProfile?.username?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}
-            {showInstallDot && <span className={styles.installDot} aria-hidden="true" />}
+            {updateAvailable
+              ? <span className={styles.updateBadge} aria-hidden="true">!</span>
+              : showInstallDot && <span className={styles.installDot} aria-hidden="true" />}
           </button>
         </div>
 
