@@ -124,51 +124,6 @@
   /* margin: 0 -16px; */
 }
 
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px 8px;
-}
-
-.sectionLabel {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text3);
-}
-
-.sectionLink {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: var(--font-ui);
-  font-size: 10px;
-  color: var(--text3);
-  cursor: pointer;
-  letter-spacing: 0.03em;
-  transition: color 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.sectionLink:hover, .sectionLink:active { color: var(--accent); }
-
-/* ── Dark themes: section labels/links readable ── */
-
-:global([data-theme='aurum']) .sectionLabel,
-:global([data-theme='cyber'])  .sectionLabel,
-:global([data-theme='noir'])   .sectionLabel,
-:global([data-theme='arctic']) .sectionLabel { color: var(--text2); }
-
-:global([data-theme='aurum']) .sectionLink,
-:global([data-theme='cyber'])  .sectionLink,
-:global([data-theme='noir'])   .sectionLink,
-:global([data-theme='arctic']) .sectionLink { color: var(--text2); }
-
 /* ── FAB ────────────────────────────────────────────────────── */
 
 .fabContainer {

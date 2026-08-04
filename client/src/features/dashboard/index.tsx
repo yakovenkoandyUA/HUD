@@ -261,15 +261,6 @@ const Dashboard: React.FC = () => {
 
         {/* 5 — Finance */}
         <div className={styles.sectionWrap}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionLabel}>ФІНАНСИ</span>
-            <button type="button" className={styles.sectionLink} onClick={() => navigate('/finance')}>
-              детальніше
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M9 18l6-6-6-6"/>
-              </svg>
-            </button>
-          </div>
           <HeroCard
             balance={balance}
             dailyBudget={dailyBudget}
@@ -279,6 +270,7 @@ const Dashboard: React.FC = () => {
             thisMonthExpenses={thisMonthExpenses}
             upcomingTotal={upcomingTotal}
             upcomingCount={upcomingCount}
+            onDetailsClick={() => navigate('/finance')}
           />
         </div>
 

@@ -19,6 +19,7 @@ import styles from './HeroCard.module.css'
  * @prop {number}      thisMonthExpenses  — витрати за поточний календарний місяць
  * @prop {number}      upcomingTotal      — сума активних майбутніх регулярних платежів
  * @prop {number}      upcomingCount      — кількість таких платежів
+ * @prop {() => void}  [onDetailsClick]   — клік на "детальніше" (у кутку картки)
  */
 interface HeroCardProps {
   balance:           number
@@ -29,7 +30,17 @@ interface HeroCardProps {
   thisMonthExpenses: number
   upcomingTotal:     number
   upcomingCount:     number
+  onDetailsClick?:   () => void
 }
+
+const DetailsLink: React.FC<{ onClick?: () => void }> = ({ onClick }) => (
+  <button type="button" className={styles.detailsLink} onClick={onClick}>
+    детальніше
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 18l6-6-6-6"/>
+    </svg>
+  </button>
+)
 
 const DAYS_SHORT = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 
@@ -69,6 +80,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
   sparklineData,
   monthlyBudget,
   thisMonthExpenses,
+  onDetailsClick,
 }) => {
   const [displayed, setDisplayed] = useState(0)
   const hasAnimated = useRef(false)
@@ -123,6 +135,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
 
     return (
       <div className={styles.balanceCard}>
+        <DetailsLink onClick={onDetailsClick} />
         <div className={styles.balanceTop}>
           <span className={styles.balanceAmount}>
             {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
@@ -178,6 +191,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
 
       {/* Right — area chart */}
       <div className={styles.splitRight}>
+        <DetailsLink onClick={onDetailsClick} />
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
