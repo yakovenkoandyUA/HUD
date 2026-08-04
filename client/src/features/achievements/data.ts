@@ -10,35 +10,28 @@ export const CATEGORY_LABEL: Record<AchievementCategory, string> = {
 
 /** Category select icon on the well home screen — public/achivement/category/*.webp */
 export const CATEGORY_ICON: Record<AchievementCategory, string> = {
-  memory:    '/achivement/category/memory.webp',
-  spaces:    '/achivement/category/space.webp',
-  finance:   '/achivement/category/finance.webp',
-  sprint:    '/achivement/category/sprint.webp',
-  watchlist: '/achivement/category/media.webp',
+  memory:    '/achivement/category/memory.png',
+  spaces:    '/achivement/category/space.png',
+  finance:   '/achivement/category/finance.png',
+  sprint:    '/achivement/category/sprint.png',
+  watchlist: '/achivement/category/media.png',
 }
 
-/** Background shown after diving into a category — public/achivement/category-well/*.webp */
+/** Branch shown after selecting a category — public/achivement/category-well/*.png */
 export const CATEGORY_WELL_BG: Record<AchievementCategory, string> = {
-  memory:    '/achivement/category-well/memory.webp',
-  spaces:    '/achivement/category-well/spaces.webp',
-  finance:   '/achivement/category-well/finance.webp',
-  sprint:    '/achivement/category-well/sprint.webp',
-  watchlist: '/achivement/category-well/media.webp',
+  memory:    '/achivement/category-well/memory.png',
+  spaces:    '/achivement/category-well/spaces.png',
+  finance:   '/achivement/category-well/finance.png',
+  sprint:    '/achivement/category-well/sprint.png',
+  watchlist: '/achivement/category-well/media.png',
 }
 
 /**
- * "Винирнути" button position (% of canvas) — the actual well-mouth/dark-hole
- * spot in each category-well/[cat].webp. Each render has a different well
- * position/size, so this can't be a single shared coordinate like the old
- * fixed `top: 61%` was.
+ * "Повернутись до дерева" button position (% of canvas) — the glowing floor
+ * sigil beneath the roots. Same spot in all 5 branch renders (shared template),
+ * so unlike the old well-mouth this is a single constant, not per-category.
  */
-export const WELL_MOUTH: Record<AchievementCategory, { x: number; y: number }> = {
-  memory:    { x: 50, y: 74 },
-  spaces:    { x: 50, y: 56 },
-  finance:   { x: 51, y: 49 },
-  sprint:    { x: 50, y: 48 },
-  watchlist: { x: 50, y: 87 },
-}
+export const TREE_RETURN_POS = { x: 50, y: 90 }
 
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // ── ПАМʼЯТЬ (10) ───────────────────────────────────────────────────────────
@@ -611,67 +604,46 @@ export const ACHIEVEMENT_MAX_SCORE = ACHIEVEMENT_DEFS.reduce((s, a) => s + a.rew
 export const ACHIEVEMENT_BY_ID: Record<string, AchievementDef> =
   Object.fromEntries(ACHIEVEMENT_DEFS.map(a => [a.id, a]))
 
-// ── Well node positions (% of canvas) ──────────────────────────────────────
-// Each category-well/[cat].png is a DIFFERENT render (different composition,
-// different rim height) — coordinates are tuned per image against its own
-// visible landmarks (archways / lit medallions), not shared across categories.
-// Node order is always [top, upperLeft, upperRight, lowerLeft, lowerRight]
-// so BRANCH_5 connections stay valid regardless of per-image coordinates.
+// ── Branch node positions (% of canvas) ────────────────────────────────────
+// All 5 category-well/[cat].png renders share the same branch template —
+// only the medallion icons differ — so the 6 medallion sockets sit at the
+// same coordinates in every image (measured against the artwork).
+// Order is root (bottom, easiest) → tip (top, hardest), matching how the
+// tree grows: foundational achievements near the ground, the pinnacle near
+// the crown.
 
-export const TREE_NODES: Record<string, { id: string; x: number; y: number }[]> = {
-  // memory.png — no top-rim landmark; uses the two upper lit medallions,
-  // two mid medallions flanking the well mouth, and the bottom-center one.
-  memory: [
-    { id: 'first-memory',   x: 50, y: 15 },
-    { id: 'past-memory',    x: 9, y: 30 },
-    { id: 'ten-memories',   x: 90, y: 30 },
-    { id: 'month-memory',   x: 13, y: 61 },
-    { id: 'archive-25',     x: 87, y: 61 },
-  ],
-  // spaces.png — 5 visible archways around the rim.
-  spaces: [
-    { id: 'first-space',        x: 51, y: 20 },
-    { id: 'space-with-profile', x: 27, y: 24 },
-    { id: 'living-space',       x: 73.5, y: 24 },
-    { id: 'five-spaces',        x: 19.5, y: 50 },
-    { id: 'life-map',           x: 80.5, y: 50 },
-  ],
-  // finance.png — scale emblem at top, coin stacks upper L/R, medallions lower L/R.
-  finance: [
-    { id: 'first-transaction', x: 51, y: 18 },
-    { id: 'first-category',    x: 23, y: 24 },
-    { id: 'first-goal',        x: 77, y: 23 },
-    { id: 'month-watched',     x: 24, y: 55 },
-    { id: 'first-pattern',     x: 76, y: 55 },
-  ],
-  // sprint.png — flatter/wider render, 5 glowing orbs already asymmetric.
-  sprint: [
-    { id: 'first-quest',       x: 70, y: 29 },
-    { id: 'three-steps',       x: 30, y: 30 },
-    { id: 'three-day-chain',   x: 86, y: 52 },
-    { id: 'ten-steps',         x: 17, y: 52 },
-    { id: 'return-after-fail', x: 50, y: 68 },
-  ],
-  // media.png — top platform with 5 lit dots (top / L / R / lower-L / lower-R).
-  watchlist: [
-    { id: 'first-watchlist',   x: 50, y: 15 },
-    { id: 'first-series',      x: 11, y: 35 },
-    { id: 'watched-completed', x: 88, y: 35 },
-    { id: 'not-just-list',     x: 28, y: 73 },
-    { id: 'taste-archive',     x: 73, y: 73 },
-  ],
-}
-
-// 5-node fan: top → 2 upper → each upper connects down to its lower neighbor
-const BRANCH_5: [number, number][] = [
-  [0,1],[0,2],
-  [1,3],[2,4],
+const BRANCH_NODE_POS: { x: number; y: number }[] = [
+  { x: 50, y: 79 }, // root — bottom
+  { x: 48, y: 66 },
+  { x: 52, y: 53 },
+  { x: 47, y: 42 },
+  { x: 53, y: 30 },
+  { x: 50, y: 16 }, // tip — top
 ]
 
+const BRANCH_IDS: Record<AchievementCategory, string[]> = {
+  memory:    ['first-memory', 'past-memory', 'seven-days-memory', 'ten-memories', 'month-memory', 'archive-25'],
+  spaces:    ['first-space', 'space-with-profile', 'living-space', 'five-spaces', 'full-space', 'life-map'],
+  finance:   ['first-transaction', 'first-category', 'first-goal', 'daily-finance', 'first-pattern', 'month-watched'],
+  sprint:    ['first-quest', 'three-steps', 'three-day-chain', 'ten-steps', 'completed-path', 'return-after-fail'],
+  watchlist: ['first-watchlist', 'first-series', 'watched-completed', 'not-just-list', 'ten-watchlist', 'taste-archive'],
+}
+
+export const TREE_NODES: Record<string, { id: string; x: number; y: number }[]> =
+  Object.fromEntries(
+    (Object.entries(BRANCH_IDS) as [AchievementCategory, string[]][]).map(([cat, ids]) => [
+      cat,
+      ids.map((id, i) => ({ id, ...BRANCH_NODE_POS[i] })),
+    ]),
+  )
+
+// Linear chain: root → ... → tip
+const BRANCH_CHAIN: [number, number][] = [[0,1],[1,2],[2,3],[3,4],[4,5]]
+
 export const TREE_CONNECTIONS: Record<string, [number, number][]> = {
-  memory:   BRANCH_5,
-  spaces:   BRANCH_5,
-  finance:  BRANCH_5,
-  sprint:   BRANCH_5,
-  watchlist:BRANCH_5,
+  memory:   BRANCH_CHAIN,
+  spaces:   BRANCH_CHAIN,
+  finance:  BRANCH_CHAIN,
+  sprint:   BRANCH_CHAIN,
+  watchlist:BRANCH_CHAIN,
 }

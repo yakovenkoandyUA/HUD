@@ -3,13 +3,13 @@ import { CATEGORY_ICON, CATEGORY_LABEL } from '../../data'
 import type { AchievementCategory } from '../../types'
 import styles from './index.module.css'
 
-/** Pentagon layout around the well image — % of canvas */
+/** Positions align with the medallion sockets on tree.png — % of canvas */
 const CATEGORY_POS: Record<AchievementCategory, { x: number; y: number }> = {
-  memory:    { x: 50, y: 19 },
-  spaces:    { x: 85, y: 33 },
-  finance:   { x: 73, y: 58 },
-  sprint:    { x: 27, y: 58 },
-  watchlist: { x: 15, y: 33 },
+  memory:    { x: 50, y: 25.1 },
+  spaces:    { x: 81.3, y: 36.8 },
+  finance:   { x: 82.6, y: 61.1 },
+  sprint:    { x: 17.3, y: 61.2 },
+  watchlist: { x: 18.6, y: 36.8 },
 }
 
 const CATEGORIES: AchievementCategory[] = ['memory', 'spaces', 'finance', 'sprint', 'watchlist']
@@ -22,7 +22,7 @@ interface WellHomeProps {
 /**
  * WellHome
  * --------
- * Стартовий екран криниці — 5 категорій-кружечків навколо well.png.
+ * Стартовий екран досягнень — 5 категорій-медальйонів на дереві (tree.png).
  * Тап на категорію запускає "занурення" (обробляється у батьківському компоненті).
  *
  * Props:
@@ -31,9 +31,7 @@ interface WellHomeProps {
  */
 const WellHome: React.FC<WellHomeProps> = ({ onSelect, exiting }) => (
   <div className={`${styles.canvas} ${exiting ? styles.exiting : ''}`}>
-    <img src="/achivement/well-bg-dark.webp" alt="" className={`${styles.bgImg} ${styles.bgImgDark}`} draggable={false} />
-    <img src="/achivement/well-bg-light.webp" alt="" className={`${styles.bgImg} ${styles.bgImgLight}`} draggable={false} />
-    <img src="/achivement/well.webp" alt="" className={styles.wellImg} draggable={false} />
+    <img src="/achivement/tree.png" alt="" className={styles.treeImg} draggable={false} />
 
     {CATEGORIES.map(cat => {
       const pos = CATEGORY_POS[cat]

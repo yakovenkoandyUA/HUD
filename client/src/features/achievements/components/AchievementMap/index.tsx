@@ -1,6 +1,6 @@
 import React from 'react'
 import InfoToggle from '@/shared/components/ui/InfoToggle'
-import { TREE_NODES, TREE_CONNECTIONS, CATEGORY_WELL_BG, CATEGORY_LABEL, WELL_MOUTH } from '../../data'
+import { TREE_NODES, TREE_CONNECTIONS, CATEGORY_WELL_BG, TREE_RETURN_POS } from '../../data'
 import type { AchievementWithStatus, AchievementCategory } from '../../types'
 import styles from './index.module.css'
 
@@ -96,15 +96,15 @@ interface AchievementMapProps {
 /**
  * AchievementMap
  * --------------
- * "Дно" криниці для однієї категорії — фон category-well/[cat].png
- * + вузли досягнень (руни/блоки/прогрес-кільце) + кнопка "Винирнути".
+ * Гілка дерева для однієї категорії — фон category-well/[cat].png
+ * + вузли досягнень (руни/блоки/прогрес-кільце) + кнопка "Повернутись до дерева".
  *
  * Props:
  * @prop {AchievementWithStatus[]} achievements — full list with computed status
  * @prop {AchievementCategory} category — активна категорія
  * @prop {(id: string) => void} onNodeClick — fires when node tapped
  * @prop {string | null} selectedId — currently selected node id
- * @prop {() => void} onBack — "Винирнути" — повернутись до вибору категорій
+ * @prop {() => void} onBack — "Повернутись до дерева" — повернутись до вибору категорій
  * @prop {boolean} exiting — програє анімацію винирання
  * @prop {{x:number,y:number}} [origin] — % координати точки занурення (transform-origin входу)
  */
@@ -138,16 +138,12 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
 
   return (
     <div className={styles.cardOuter}>
-      <div className={styles.cardHeader}>
-        <span />
-        <span className={styles.cardTitle}>{CATEGORY_LABEL[category]}</span>
-        <div className={styles.infoBtn}>
-          <InfoToggle
-            ariaLabel="Про карту криниці"
-            text="Кожен вузол — досягнення. Відкривай руни, щоб прокладати шлях до глибини криниці. Золоті вузли пробуджені, кам'яні — в процесі, чорні — ще заблоковані."
-            align="right"
-          />
-        </div>
+      <div className={styles.infoBtn}>
+        <InfoToggle
+          ariaLabel="Про гілку дерева"
+          text="Кожен вузол — досягнення. Відкривай руни, щоб прокладати шлях від коріння до крони. Золоті вузли пробуджені, кам'яні — в процесі, чорні — ще заблоковані."
+          align="right"
+        />
       </div>
 
       <div className={styles.card}>
@@ -161,8 +157,8 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
         <button
           type="button"
           className={styles.diveOutBtn}
-          style={{ left: `${WELL_MOUTH[category].x}%`, top: `${WELL_MOUTH[category].y}%` }}
-          aria-label="Винирнути"
+          style={{ left: `${TREE_RETURN_POS.x}%`, top: `${TREE_RETURN_POS.y}%` }}
+          aria-label="Повернутись до дерева"
           onClick={e => { e.stopPropagation(); onBack() }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -248,7 +244,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
 
         {/* Hidden label */}
         {nodes.some(n => byId[n.id]?.status === 'hidden') && (
-          <p className={styles.wellText}>Криниця мовчить</p>
+          <p className={styles.wellText}>Гілка мовчить</p>
         )}
       </div>
       </div>
