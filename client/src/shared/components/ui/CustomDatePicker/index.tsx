@@ -36,7 +36,7 @@ const MONTHS_UA = [
 
 const WEEKDAYS = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','НД']
 
-const MIN_YEAR = 2020
+const MIN_YEAR = 1950
 const MAX_YEAR = 2040
 const YEARS = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => String(MIN_YEAR + i))
 

@@ -2967,6 +2967,53 @@
 	gap: 8px;
 }
 
+/* ── Admin: feedback reply ── */
+.feedbackImg {
+	width: 100%;
+	max-width: 220px;
+	border-radius: 8px;
+	border: 1px solid var(--border);
+	display: block;
+}
+
+.feedbackReplyBox {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.feedbackReplyInput {
+	width: 100%;
+	background: var(--bg);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 8px 10px;
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--text);
+	resize: vertical;
+	outline: none;
+	box-sizing: border-box;
+	transition: border-color 0.15s;
+}
+.feedbackReplyInput:focus { border-color: var(--accent); }
+
+.feedbackReplyBtn {
+	align-self: flex-end;
+	padding: 6px 14px;
+	background: var(--accent);
+	color: var(--bg);
+	border: none;
+	border-radius: 6px;
+	font-family: var(--font-ui);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	transition: opacity 0.15s;
+}
+.feedbackReplyBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .adminFlagRow {
 	display: flex;
 	gap: 6px;

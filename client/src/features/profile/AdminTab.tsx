@@ -192,6 +192,151 @@ const WaitlistPanel: React.FC = () => {
   )
 }
 
+interface FeedbackEntry {
+  id: string
+  userName: string
+  userAvatar: string | null
+  message: string
+  imageUrl: string | null
+  status: 'open' | 'resolved'
+  adminReply: string | null
+  repliedAt: string | null
+  createdAt: string
+}
+
+/**
+ * FeedbackPanel
+ * -------------
+ * Список фідбеків з форми в застосунку. Дозволяє відповісти — відповідь
+ * шле push-сповіщення юзеру і позначає запис виконаним.
+ */
+const FeedbackPanel: React.FC = () => {
+  const [entries, setEntries]       = useState<FeedbackEntry[] | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
+  const [sendingId, setSendingId]   = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await authFetch('/api/feedback')
+        if (!res.ok) throw new Error()
+        const data = await res.json() as FeedbackEntry[]
+        if (!cancelled) setEntries(data)
+      } catch {
+        if (!cancelled) setEntries([])
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  if (entries === null) return null
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+
+  const handleReply = async (id: string) => {
+    const reply = replyDrafts[id]?.trim()
+    if (!reply || sendingId) return
+    setSendingId(id)
+    try {
+      const res = await authFetch(`/api/feedback/${id}/reply`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reply }),
+      })
+      if (!res.ok) throw new Error()
+      setEntries(prev => prev?.map(e => e.id === id
+        ? { ...e, status: 'resolved', adminReply: reply, repliedAt: new Date().toISOString() }
+        : e,
+      ) ?? null)
+      setReplyDrafts(prev => { const next = { ...prev }; delete next[id]; return next })
+    } catch {
+      // silent — textarea keeps the draft, admin can retry
+    } finally {
+      setSendingId(null)
+    }
+  }
+
+  const openCount = entries.filter(e => e.status === 'open').length
+
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionTitle}>ФІДБЕК</span>
+        <span className={styles.sectionCount}>{openCount}</span>
+      </div>
+
+      {entries.length === 0 && <p className={styles.adminEmpty}>Ще немає фідбеку</p>}
+
+      <div className={styles.adminList}>
+        {entries.map(e => {
+          const isExpanded = expandedId === e.id
+          return (
+            <div key={e.id} className={styles.adminUserRow}>
+              {e.userAvatar
+                ? <img src={e.userAvatar} alt={e.userName} className={styles.adminAvatar} />
+                : <div className={styles.adminAvatarInitial}>{e.userName[0]?.toUpperCase() ?? '?'}</div>}
+              <div className={styles.adminUserInfo}>
+                <div className={styles.adminUserTop}>
+                  <span className={styles.adminUserName}>{e.userName}</span>
+                  {e.status === 'open'
+                    ? <span className={styles.adminBadge}>НОВЕ</span>
+                    : <span className={styles.adminUserSub}>відповідано {formatDate(e.repliedAt!)}</span>}
+                </div>
+                <span className={styles.adminUserSub}>{e.message}</span>
+                <span className={styles.adminUserDate}>{formatDate(e.createdAt)}</span>
+
+                {isExpanded && (
+                  <div className={styles.adminExpanded}>
+                    {e.imageUrl && (
+                      <img src={e.imageUrl} alt="" className={styles.feedbackImg} />
+                    )}
+                    {e.adminReply && (
+                      <p className={styles.adminEmpty}>Твоя відповідь: {e.adminReply}</p>
+                    )}
+                    {e.status === 'open' && (
+                      <div className={styles.feedbackReplyBox}>
+                        <textarea
+                          className={styles.feedbackReplyInput}
+                          placeholder="Відповісти користувачу..."
+                          value={replyDrafts[e.id] ?? ''}
+                          onChange={ev => setReplyDrafts(prev => ({ ...prev, [e.id]: ev.target.value }))}
+                          rows={2}
+                        />
+                        <button
+                          type="button"
+                          className={styles.feedbackReplyBtn}
+                          disabled={!replyDrafts[e.id]?.trim() || sendingId === e.id}
+                          onClick={() => handleReply(e.id)}
+                        >
+                          {sendingId === e.id ? '...' : 'Надіслати'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                className={`${styles.adminExpandBtn} ${isExpanded ? styles.adminExpandBtnOpen : ''}`}
+                onClick={() => setExpandedId(isExpanded ? null : e.id)}
+                aria-label={isExpanded ? 'Згорнути' : 'Розгорнути'}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 /** BFS connected components — returns userId → groupId (only for users with family links) */
 function buildFamilyGroups(users: AdminUser[]): Map<string, string> {
   const userIds = new Set(users.map(u => u.id))
@@ -499,6 +644,7 @@ const AdminTab: React.FC = () => {
   return (
     <>
       <AnalyticsPanel />
+      <FeedbackPanel />
       <WaitlistPanel />
 
       <section className={styles.section}>

@@ -144,7 +144,7 @@
 | `/api/yearbook` | GET `/:year` — річний звіт (requireFeature('yearbookGenerate')) |
 | `/api/places` | GET, POST, PATCH, DELETE — заклади/локації (Places feature) |
 | `/api/drinks` | GET, POST, PATCH, DELETE — трекер напоїв (`features/drinks`) |
-| `/api/feedback` | POST — форма зворотного зв'язку |
+| `/api/feedback` | POST — форма зворотного зв'язку (зберігає в Feedback + шле в Telegram якщо налаштовано); GET — requireAdmin, список фідбеків; PATCH `/:id/reply` — requireAdmin, відповідь юзеру (push-сповіщення + status: resolved) |
 | `/api/waitlist` | POST — реєстрація в waitlist (WaitlistEntry) |
 
 > Ці роути існують в коді (`backend/src/routes/`), але детально не задокументовані рядок-в-рядок — дивись відповідний `*Controller.ts` для повного контракту.
@@ -219,6 +219,8 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 **FinancialReport** — `userId`, `month: string` (YYYY-MM), `content: string` (markdown), `generatedAt`
 
 **CookLog** — `userId`, `recipeId`, `cookedAt: Date`
+
+**Feedback** — `userId`, `message`, `imageUrl?`, `status: 'open'|'resolved'`, `adminReply?`, `repliedAt?`. Створюється з `POST /api/feedback`, адмін відповідає через AdminTab → `FeedbackPanel`, відповідь шле push і позначає resolved.
 
 **Інші моделі (існують, коротко не задокументовані по полях):** `Accommodation`, `Ticket`, `TripPlace` (Trip Space Phase 2 — житло/квитки/місця подорожі), `Drink` (трекер напоїв), `Game` (Watchlist ігри), `Label`, `Lesson`, `Note`, `Recipe`/`RecipeComment`, `WatchlistComment`, `PlantEvent` (події догляду за рослиною — простір типу "рослина"), `WorkoutProgram`/`WorkoutSession`, `SportEvent` (Sport hub, колишній F1), `ShoppingItem`, `SpaceInfoCard`, `MimirCache` (кеш AI-відповідей Міміра), `PushSubscription`, `RefreshToken`, `WaitlistEntry`, `YearbookReport`. Дивись `backend/src/models/*.ts` для повних схем.
 
