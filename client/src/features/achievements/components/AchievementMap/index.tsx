@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React from 'react'
+import InfoToggle from '@/shared/components/ui/InfoToggle'
 import { TREE_NODES, TREE_CONNECTIONS, CATEGORY_WELL_BG, CATEGORY_LABEL, WELL_MOUTH } from '../../data'
 import type { AchievementWithStatus, AchievementCategory } from '../../types'
 import styles from './index.module.css'
@@ -117,8 +118,6 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
   exiting,
   origin,
 }) => {
-  const [showInfo, setShowInfo] = useState(false)
-
   const nodes       = TREE_NODES[category] ?? TREE_NODES.all
   const connections = TREE_CONNECTIONS[category] ?? TREE_CONNECTIONS.all
 
@@ -138,24 +137,20 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
   if (nearIds.size === 0 && nodes[0]) nearIds.add(nodes[0].id)
 
   return (
-    <div className={styles.card}>
+    <div className={styles.cardOuter}>
       <div className={styles.cardHeader}>
         <span />
         <span className={styles.cardTitle}>{CATEGORY_LABEL[category]}</span>
-        <button
-          type="button"
-          className={`${styles.infoBtn} ${showInfo ? styles.infoBtnActive : ''}`}
-          aria-label="Про карту криниці"
-          onClick={() => setShowInfo(v => !v)}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
-            <circle cx="8" cy="8" r="6.5"/>
-            <path d="M8 7v4"/>
-            <circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/>
-          </svg>
-        </button>
+        <div className={styles.infoBtn}>
+          <InfoToggle
+            ariaLabel="Про карту криниці"
+            text="Кожен вузол — досягнення. Відкривай руни, щоб прокладати шлях до глибини криниці. Золоті вузли пробуджені, кам'яні — в процесі, чорні — ще заблоковані."
+            align="right"
+          />
+        </div>
       </div>
 
+      <div className={styles.card}>
       <div
         className={`${styles.canvas} ${exiting ? styles.exiting : ''}`}
         style={origin ? { '--dive-x': `${origin.x}%`, '--dive-y': `${origin.y}%` } as React.CSSProperties : undefined}
@@ -174,14 +169,6 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
             <path d="M12 19V5M5 12l7-7 7 7"/>
           </svg>
         </button>
-
-        {showInfo && (
-          <div className={styles.infoTooltip}>
-            <p className={styles.infoTooltipText}>
-              Кожен вузол — досягнення. Відкривай руни, щоб прокладати шлях до глибини криниці. Золоті вузли пробуджені, кам'яні — в процесі, чорні — ще заблоковані.
-            </p>
-          </div>
-        )}
 
         {/* Connection lines */}
         <svg className={styles.connectionsSvg} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -263,6 +250,7 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
         {nodes.some(n => byId[n.id]?.status === 'hidden') && (
           <p className={styles.wellText}>Криниця мовчить</p>
         )}
+      </div>
       </div>
     </div>
   )

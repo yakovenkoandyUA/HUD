@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: flex-start;
   background: var(--bg);
-  padding: 32px 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
+  padding: calc(32px + env(safe-area-inset-top, 0px)) 20px calc(env(safe-area-inset-bottom, 0px) + 16px);
   overflow-y: auto;
 }
 

@@ -27,12 +27,7 @@
 .overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.88) 0%,
-    rgba(0, 0, 0, 0.72) 40%,
-    rgba(0, 0, 0, 0.20) 100%
-  );
+  background: transparent;
 }
 
 /* ── Content ── */

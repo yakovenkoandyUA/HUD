@@ -1,5 +1,9 @@
 /* ── Card ── */
 
+.cardOuter {
+	/* wraps header + card so the InfoToggle popover isn't clipped by .card's overflow:hidden */
+}
+
 .card {
 	/* background: var(--surface); */
 	/* border: 1px solid var(--border); */
@@ -28,30 +32,6 @@
 	text-shadow: 0 0 16px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-.infoBtn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	background: none;
-	border: 1px solid var(--border);
-	border-radius: 50%;
-	color: var(--text3);
-	cursor: pointer;
-	-webkit-tap-highlight-color: transparent;
-	transition: color 0.15s;
-}
-
-.infoBtn:active {
-	color: var(--accent);
-}
-
-.infoBtnActive {
-	color: var(--accent);
-	border-color: var(--accent);
-	background: var(--tint-accent-10);
-}
 
 /* ── Dive-out button — sits in the well's mouth, tap to surface ── */
 
@@ -96,42 +76,6 @@
 	50% {
 		box-shadow: 0 0 14px 3px color-mix(in srgb, var(--text2) 35%, transparent);
 	}
-}
-
-/* ── Info tooltip ── */
-
-.infoTooltip {
-	position: absolute;
-	top: 8px;
-	left: 8px;
-	right: 8px;
-	z-index: 10;
-	padding: 10px 14px;
-	background: color-mix(in srgb, var(--surface) 90%, transparent);
-	-webkit-backdrop-filter: blur(8px);
-	backdrop-filter: blur(8px);
-	border: 1px solid var(--accent-border-strong);
-	border-radius: 10px;
-	animation: fadeIn 0.15s ease;
-}
-
-@keyframes fadeIn {
-	from {
-		opacity: 0;
-		transform: translateY(-4px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-.infoTooltipText {
-	font-family: var(--font-ui);
-	font-size: 12px;
-	color: var(--text2);
-	line-height: 1.5;
-	margin: 0;
 }
 
 /* ── Canvas ── */

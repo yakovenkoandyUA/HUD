@@ -18,9 +18,11 @@
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* portal mode: card rendered directly to body, fixed above backdrop */
+/* portal mode: card rendered directly to body, fixed above backdrop —
+   offset by the safe area so it doesn't render under the notch/status bar */
 .rootPortal {
   position: fixed;
+  top: calc(8px + env(safe-area-inset-top));
 }
 
 .rootHiding {

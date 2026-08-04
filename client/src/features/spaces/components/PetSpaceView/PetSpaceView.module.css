@@ -568,6 +568,8 @@
 }
 .foodHeader .sectionTitle { margin: 0; }
 
+.foodTitleRow { display: flex; align-items: center; gap: 6px; }
+
 .foodFilters { display: flex; gap: 5px; }
 .foodFilterBtn {
   padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);

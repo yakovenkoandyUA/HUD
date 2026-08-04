@@ -4,6 +4,7 @@ import type { PetProfile, PetFoodItem } from '@/features/memories/store/spacesSt
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
+import InfoToggle from '@/shared/components/ui/InfoToggle'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
 import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
 import styles from './PetSpaceView.module.css'
@@ -811,7 +812,13 @@ const FoodLog: React.FC<FoodLogProps> = ({ foodLog, color, onSave }) => {
   return (
     <div className={styles.section} style={colorVar}>
       <div className={styles.foodHeader}>
-        <h3 className={styles.sectionTitle}>РАЦІОН</h3>
+        <div className={styles.foodTitleRow}>
+          <h3 className={styles.sectionTitle}>РАЦІОН</h3>
+          <InfoToggle
+            ariaLabel="Про пошук корму"
+            text="Пошук шукає серед готової бази кормів і знаходить не все. Якщо потрібного корму немає в підказках — просто впиши назву вручну і додай, це теж збережеться."
+          />
+        </div>
         <div className={styles.foodFilters}>
           {(['all', ...REACTIONS] as const).map(f => (
             <button
@@ -1346,26 +1353,27 @@ const PetSpaceView: React.FC<Props> = ({
               const isIncome = t.type === 'income'
               const catColor = isIncome ? 'var(--positive)' : 'var(--negative)'
               return (
-                <React.Fragment key={t._id}>
-                  {curDate !== prevDate && <div className={styles.txDateHeader}>{curDate}</div>}
-                  <div className={styles.spaceTx}>
-                    <div className={styles.txLeft}>
-                      <div className={styles.txTypeIcon} style={{ '--cat-color': catColor } as React.CSSProperties}>
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          {isIncome ? <path d="M8 13V3M3 8l5-5 5 5"/> : <path d="M8 3v10M3 8l5 5 5-5"/>}
-                        </svg>
-                      </div>
-                      <div className={styles.txContent}>
-                        <span className={styles.txTitle}>{t.title || t.desc || t.category || '—'}</span>
-                        {t.category && <span className={styles.txSub}>{t.category}</span>}
-                      </div>
-                    </div>
-                    <span className={`${styles.txAmount} ${isIncome ? styles.txAmountPos : styles.txAmountNeg}`}>
-                      {isIncome ? '+' : '−'}₴{t.amount.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </React.Fragment>
-              )
+								<React.Fragment key={t._id}>
+									{curDate !== prevDate && <div className={styles.txDateHeader}>{curDate}</div>}
+									<div className={styles.spaceTx}>
+										<div className={styles.txLeft}>
+											<div className={styles.txTypeIcon} style={{ '--cat-color': catColor } as React.CSSProperties}>
+												<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+													{isIncome ? <path d="M8 13V3M3 8l5-5 5 5" /> : <path d="M8 3v10M3 8l5 5 5-5" />}
+												</svg>
+											</div>
+											<div className={styles.txContent}>
+												<span className={styles.txTitle}>{t.title || t.desc || t.category || '—'}</span>
+												{t.category && <span className={styles.txSub}>{t.category}</span>}
+											</div>
+										</div>
+										<span className={`${styles.txAmount} ${isIncome ? styles.txAmountPos : styles.txAmountNeg}`}>
+											{isIncome ? '+' : '−'}
+											{t.amount.toLocaleString('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}₴
+										</span>
+									</div>
+								</React.Fragment>
+							)
             })}
           </div>
         </div>

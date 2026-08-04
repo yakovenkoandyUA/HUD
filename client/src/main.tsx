@@ -14,12 +14,13 @@ Sentry.init({
 runCacheMigration()
 
 // Apply stored theme before React mounts to prevent flash
+// Fallback must match uiStore's default theme (currently 'vellum')
 try {
   const stored = JSON.parse(localStorage.getItem('hud-ui') || '{}')
-  const theme = stored?.state?.theme ?? 'aurum'
+  const theme = stored?.state?.theme ?? 'vellum'
   document.documentElement.setAttribute('data-theme', theme)
 } catch {
-  document.documentElement.setAttribute('data-theme', 'aurum')
+  document.documentElement.setAttribute('data-theme', 'vellum')
 }
 
 createRoot(document.getElementById('root')!).render(
