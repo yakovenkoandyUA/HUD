@@ -4,6 +4,9 @@ import { F1_SEASON_2026 } from './data/f1Season2026'
 import { getNextRound } from './utils/f1'
 import { CIRCUIT_DATA, ROUND_TO_CIRCUIT_ID, type CircuitInfo } from './data/circuitData'
 import { useRaceResults } from './hooks/useRaceResults'
+import { useCircuitWinners } from './hooks/useCircuitWinners'
+import { useSessionReminders } from './hooks/useSessionReminders'
+import { useChampionshipStandings } from './hooks/useChampionshipStandings'
 import TrackSVG from './components/f1/TrackSVG'
 import DriverAvatar from './components/f1/DriverAvatar'
 import styles from './RaceDetail.module.css'
@@ -52,7 +55,7 @@ function weatherDesc2Icon(desc: string): string {
 
 interface SessionEntry {
   label:     string
-  icon:      string
+  key:       string
   date:      string
   time:      string
   isRace?:   boolean
@@ -68,11 +71,79 @@ function getSessionType(s: SessionEntry): SessionType {
   return 'practice'
 }
 
-function getSessionIcon(type: SessionType): string {
-  if (type === 'race')                                  return '🏁'
-  if (type === 'sprint')                                return '🔄'
-  if (type === 'sprint_quali' || type === 'qualifying') return '⏱'
-  return '🔧'
+/** Лінійна SVG-іконка типу сесії (stroke=currentColor, узгоджена товщина 1.6) */
+function SessionIcon({ type, className }: { type: SessionType; className?: string }) {
+  const common = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+
+  if (type === 'race') {
+    return (
+      <svg className={className} {...common} aria-hidden="true">
+        <path d="M5 3v18" />
+        <path d="M5 4c2-1 4-1 6 0s4 1 6 0v8c-2 1-4 1-6 0s-4-1-6 0V4z" />
+        <path d="M8 4v8M14 4v8M5 8h12" />
+      </svg>
+    )
+  }
+  if (type === 'sprint') {
+    return (
+      <svg className={className} {...common} aria-hidden="true">
+        <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+      </svg>
+    )
+  }
+  if (type === 'sprint_quali' || type === 'qualifying') {
+    return (
+      <svg className={className} {...common} aria-hidden="true">
+        <circle cx="12" cy="13" r="8" />
+        <path d="M12 13V9M12 13h3" />
+        <path d="M9 2h6M12 2v3" />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} {...common} aria-hidden="true">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  )
+}
+
+/** Тогл-дзвіночок для нагадування про сесію (заповнений = активне) */
+function BellIcon({ active, className }: { active: boolean; className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6.5H4c.5-1 2-2.5 2-6.5z" />
+      <path d="M10 19a2 2 0 0 0 4 0" />
+    </svg>
+  )
+}
+
+type WeatherIconKind = 'temperature' | 'wind' | 'humidity'
+
+/** Лінійна SVG-іконка погодної метрики (stroke=currentColor) */
+function WeatherIcon({ kind, className }: { kind: WeatherIconKind; className?: string }) {
+  const common = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+
+  if (kind === 'temperature') {
+    return (
+      <svg className={className} {...common} aria-hidden="true">
+        <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
+      </svg>
+    )
+  }
+  if (kind === 'wind') {
+    return (
+      <svg className={className} {...common} aria-hidden="true">
+        <path d="M9.59 4.59A2 2 0 1 1 11 8H2" />
+        <path d="M12.59 11.59A2 2 0 1 1 14 15H2" />
+        <path d="M17.73 7.73A2.5 2.5 0 1 1 19.5 12H2" />
+      </svg>
+    )
+  }
+  return (
+    <svg className={className} {...common} aria-hidden="true">
+      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+    </svg>
+  )
 }
 
 function useRaceSchedule(round: number) {
@@ -103,20 +174,20 @@ function useRaceSchedule(round: number) {
         if (!race) { setLoading(false); return }
 
         const isSprintWeekend = !!race.Sprint
-        const addIf = (key: string, label: string, icon: string, extra?: Partial<SessionEntry>) => {
-          const s = race[key]
-          if (s?.date && s?.time) return { label, icon, date: s.date as string, time: s.time as string, ...extra }
+        const addIf = (raceKey: string, key: string, label: string, extra?: Partial<SessionEntry>) => {
+          const s = race[raceKey]
+          if (s?.date && s?.time) return { label, key, date: s.date as string, time: s.time as string, ...extra }
           return null
         }
 
         const entries: (SessionEntry | null)[] = [
-          addIf('FirstPractice',  'Practice 1',                     '🔧'),
-          addIf('SecondPractice', isSprintWeekend ? 'Sprint Qualifying' : 'Practice 2', '🔧', isSprintWeekend ? { isSprint: true } : {}),
-          addIf('ThirdPractice',  'Practice 3',                     '🔧'),
-          addIf('Sprint',         'Sprint Race',                    '🔄', { isSprint: true }),
-          addIf('Qualifying',     'Qualifying',                     '⏱'),
+          addIf('FirstPractice',  'practice1',        'Practice 1'),
+          addIf('SecondPractice', isSprintWeekend ? 'sprint_quali' : 'practice2', isSprintWeekend ? 'Sprint Qualifying' : 'Practice 2', isSprintWeekend ? { isSprint: true } : {}),
+          addIf('ThirdPractice',  'practice3',        'Practice 3'),
+          addIf('Sprint',         'sprint',           'Sprint Race', { isSprint: true }),
+          addIf('Qualifying',     'qualifying',       'Qualifying'),
           race.date && race.time
-            ? { label: 'Race', icon: '🏁', date: race.date as string, time: race.time as string, isRace: true }
+            ? { label: 'Race', key: 'race', date: race.date as string, time: race.time as string, isRace: true }
             : null,
         ]
 
@@ -137,9 +208,11 @@ function useRaceSchedule(round: number) {
 }
 
 interface WeatherData { tempC: string; windKmph: string; desc: string; humidity: string }
+interface WeatherDay { date: string; maxC: string; minC: string; desc: string; chanceOfRain: string }
 
 function useRaceWeather(city: string, enabled: boolean) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [days, setDays]       = useState<WeatherDay[]>([])
 
   useEffect(() => {
     if (!enabled || !city) return
@@ -156,13 +229,27 @@ function useRaceWeather(city: string, enabled: boolean) {
       .then((json: any) => {
         if (cancelled) return
         const c = json?.current_condition?.[0]
-        if (!c) return
-        setWeather({
-          tempC:    c.temp_C ?? '?',
-          windKmph: c.windspeedKmph ?? '?',
-          desc:     c.weatherDesc?.[0]?.value ?? '',
-          humidity: c.humidity ?? '?',
-        })
+        if (c) {
+          setWeather({
+            tempC:    c.temp_C ?? '?',
+            windKmph: c.windspeedKmph ?? '?',
+            desc:     c.weatherDesc?.[0]?.value ?? '',
+            humidity: c.humidity ?? '?',
+          })
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const forecast: any[] = json?.weather ?? []
+        setDays(forecast.map(d => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const midday = d.hourly?.find((h: any) => h.time === '1200') ?? d.hourly?.[Math.floor((d.hourly?.length ?? 1) / 2)]
+          return {
+            date:         d.date as string,
+            maxC:         d.maxtempC ?? '?',
+            minC:         d.mintempC ?? '?',
+            desc:         midday?.weatherDesc?.[0]?.value ?? '',
+            chanceOfRain: midday?.chanceofrain ?? '0',
+          }
+        }))
       })
       .catch(() => { /* silent fail */ })
       .finally(() => clearTimeout(t))
@@ -170,12 +257,14 @@ function useRaceWeather(city: string, enabled: boolean) {
     return () => { cancelled = true; ctrl.abort() }
   }, [city, enabled])
 
-  return weather
+  return { weather, days }
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function CircuitStatsSection({ info }: { info: CircuitInfo }) {
+function CircuitStatsSection({ info, circuitId }: { info: CircuitInfo; circuitId: string }) {
+  const { winners, loading: winnersLoading } = useCircuitWinners(circuitId)
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionTitle}>ХАРАКТЕРИСТИКИ ТРАСИ</div>
@@ -207,15 +296,19 @@ function CircuitStatsSection({ info }: { info: CircuitInfo }) {
               <span className={styles.recordValue}>{info.lapRecord.time}</span>
             </div>
             <div className={styles.recordRow}>
-              <span className={styles.recordMeta}>{info.lapRecord.driver}</span>
-              <span className={styles.recordMeta}>{info.lapRecord.year}</span>
+              <span className={styles.recordLabel}>Пілот</span>
+              <span className={styles.recordValue}>{info.lapRecord.driver}</span>
+            </div>
+            <div className={styles.recordRow}>
+              <span className={styles.recordLabel}>Рік</span>
+              <span className={styles.recordValue}>{info.lapRecord.year}</span>
             </div>
           </>
         )}
         {info.mostWins && (
           <div className={styles.recordRow}>
             <span className={styles.recordLabel}>Найбільше перемог</span>
-            <span className={styles.recordValue}>{info.mostWins.driver} ({info.mostWins.count})</span>
+            <span className={styles.recordValue}>{info.mostWins.driver} · {info.mostWins.count}</span>
           </div>
         )}
         <div className={styles.recordRow}>
@@ -223,12 +316,26 @@ function CircuitStatsSection({ info }: { info: CircuitInfo }) {
           <span className={styles.recordValue}>{info.firstRace}</span>
         </div>
       </div>
+
+      {!winnersLoading && winners && winners.length > 0 && (
+        <div className={styles.winnersRows}>
+          <div className={styles.winnersTitle}>Переможці останніх років</div>
+          {winners.map(w => (
+            <div key={w.season} className={styles.winnersRow}>
+              <span className={styles.winnersYear}>{w.season}</span>
+              <span className={styles.winnersDriver}>{w.driver}</span>
+              <span className={styles.winnersTeam}>{w.team}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 function SessionScheduleSection({ round }: { round: number }) {
   const { sessions, loading } = useRaceSchedule(round)
+  const { active: activeReminders, toggle: toggleReminder } = useSessionReminders(round)
 
   if (loading) {
     return (
@@ -254,40 +361,41 @@ function SessionScheduleSection({ round }: { round: number }) {
   return (
     <div className={styles.section}>
       <div className={styles.sectionTitle}>РОЗКЛАД СЕСІЙ</div>
+
       <div className={styles.timeline}>
-        {dayEntries.map(([day, daySessions], dayIdx) => (
+        {dayEntries.map(([day, daySessions]) => (
           <div key={day} className={styles.dayGroup}>
             <div className={styles.dayHeader}>{day}</div>
             {daySessions.map((s, i) => {
               const type = getSessionType(s)
-              const isLast = dayIdx === dayEntries.length - 1 && i === daySessions.length - 1
+              const isFuture = new Date(s.date + 'T' + s.time).getTime() > Date.now()
               return (
                 <div key={i} className={styles.tlRow}>
-                  <div className={styles.tlLineCol}>
-                    <div className={`
-                      ${styles.tlDot}
-                      ${type === 'race' ? styles.tlDotRace : ''}
-                      ${type === 'qualifying' || type === 'sprint_quali' ? styles.tlDotQuali : ''}
-                      ${type === 'sprint' ? styles.tlDotSprint : ''}
-                    `} />
-                    {!isLast && <div className={styles.tlConnector} />}
-                  </div>
-                  <div className={styles.tlContent}>
-                    <span className={`
-                      ${styles.tlName}
-                      ${type === 'race' ? styles.tlNameRace : ''}
-                      ${type === 'qualifying' ? styles.tlNameQuali : ''}
-                      ${type === 'sprint_quali' ? styles.tlNameQuali : ''}
-                    `}>
-                      {getSessionIcon(type)} {s.label}
-                    </span>
-                    <span className={`
-                      ${styles.tlTime}
-                      ${type === 'race' ? styles.tlTimeRace : ''}
-                    `}>
-                      {fmtTime(s.date, s.time)}
-                    </span>
-                  </div>
+                  <SessionIcon className={styles.tlIcon} type={type} />
+                  <span className={`
+                    ${styles.tlName}
+                    ${type === 'race' ? styles.tlNameRace : ''}
+                    ${type === 'qualifying' ? styles.tlNameQuali : ''}
+                    ${type === 'sprint_quali' ? styles.tlNameQuali : ''}
+                  `}>
+                    {s.label}
+                  </span>
+                  <span className={`
+                    ${styles.tlTime}
+                    ${type === 'race' ? styles.tlTimeRace : ''}
+                  `}>
+                    {fmtTime(s.date, s.time)}
+                  </span>
+                  {isFuture && (
+                    <button
+                      type="button"
+                      className={`${styles.tlBell} ${activeReminders.has(s.key) ? styles.tlBellActive : ''}`}
+                      aria-label="Нагадати за 30 хв до сесії"
+                      onClick={() => toggleReminder(s.key, s.label, `${s.date}T${s.time}`)}
+                    >
+                      <BellIcon active={activeReminders.has(s.key)} className={styles.tlBellIcon} />
+                    </button>
+                  )}
                 </div>
               )
             })}
@@ -298,30 +406,49 @@ function SessionScheduleSection({ round }: { round: number }) {
   )
 }
 
-function RaceWeatherSection({ city }: { city: string }) {
-  const weather = useRaceWeather(city, !!city)
+function RaceWeatherSection({ city, round }: { city: string; round: number }) {
+  const { weather, days } = useRaceWeather(city, !!city)
+  const { sessions } = useRaceSchedule(round)
   if (!weather) return null
+
+  const weekendDates = Array.from(new Set((sessions ?? []).map(s => s.date)))
+  const weekendForecast = days.filter(d => weekendDates.includes(d.date))
 
   return (
     <div className={styles.section}>
       <div className={styles.sectionTitle}>ПОГОДА</div>
-      <div className={styles.weatherGrid}>
+      <div className={styles.weatherPanel}>
         <div className={styles.weatherMetric}>
-          <span className={styles.wmIcon}>🌡</span>
+          <WeatherIcon className={styles.wmIcon} kind="temperature" />
           <span className={styles.wmValue}>{weather.tempC}°</span>
           <span className={styles.wmLabel}>Температура</span>
         </div>
+        <div className={styles.weatherDivider} />
         <div className={styles.weatherMetric}>
-          <span className={styles.wmIcon}>💨</span>
+          <WeatherIcon className={styles.wmIcon} kind="wind" />
           <span className={styles.wmValue}>{weather.windKmph}</span>
           <span className={styles.wmLabel}>км/г вітер</span>
         </div>
+        <div className={styles.weatherDivider} />
         <div className={styles.weatherMetric}>
-          <span className={styles.wmIcon}>💧</span>
+          <WeatherIcon className={styles.wmIcon} kind="humidity" />
           <span className={styles.wmValue}>{weather.humidity}%</span>
           <span className={styles.wmLabel}>Вологість</span>
         </div>
       </div>
+
+      {weekendForecast.length > 0 && (
+        <div className={styles.forecastRows}>
+          {weekendForecast.map(d => (
+            <div key={d.date} className={styles.forecastRow}>
+              <span className={styles.forecastDay}>{fmtDayHeader(d.date)}</span>
+              <span className={styles.forecastDesc}>{d.desc}</span>
+              <span className={styles.forecastRain}>Дощ {d.chanceOfRain}%</span>
+              <span className={styles.forecastTemp}>{d.minC}° / {d.maxC}°</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -385,6 +512,58 @@ function RacePodiumSection({ round }: { round: number }) {
           <span className={styles.laps}>{result.laps} кл</span>
         </div>
       )}
+
+      {result.top10.length > 0 && (
+        <div className={styles.resultsTable}>
+          {result.top10.map(r => (
+            <div key={r.position} className={styles.resultsRow}>
+              <span className={styles.resultsPos}>{r.position}</span>
+              <span className={styles.resultsCode}>{r.code}</span>
+              <span className={styles.resultsTeam}>{r.team}</span>
+              <span className={styles.resultsPoints}>{r.points}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const TOTAL_ROUNDS_2026     = 22
+const MAX_POINTS_PER_ROUND  = 25
+
+function ChampionshipStakesSection({ round }: { round: number }) {
+  const { drivers, loading } = useChampionshipStandings()
+  const roundsRemaining = TOTAL_ROUNDS_2026 - round
+  if (loading || roundsRemaining < 0 || roundsRemaining > 8 || drivers.length < 2) return null
+
+  const maxPoints = roundsRemaining * MAX_POINTS_PER_ROUND
+  const leader = drivers[0]
+  const chaser = drivers[1]
+  const gap = leader.points - chaser.points
+  const decided = gap > maxPoints && roundsRemaining > 0
+
+  return (
+    <div className={styles.section}>
+      <div className={styles.sectionTitle}>ЩО НА КОНУ</div>
+
+      <div className={styles.stakesRows}>
+        {drivers.slice(0, 3).map((d, i) => (
+          <div key={d.driverId ?? d.full_name} className={styles.stakesRow}>
+            <span className={styles.stakesPos}>{i + 1}</span>
+            <span className={styles.stakesName}>{d.full_name}</span>
+            <span className={styles.stakesPoints}>{d.points}</span>
+          </div>
+        ))}
+      </div>
+
+      <p className={styles.stakesNote}>
+        {roundsRemaining === 0
+          ? 'Останній етап сезону'
+          : decided
+            ? `${leader.full_name} гарантовано чемпіон — залишилось ${roundsRemaining} ${roundsRemaining === 1 ? 'етап' : 'етапів'}`
+            : `До кінця сезону ${roundsRemaining} ${roundsRemaining === 1 ? 'етап' : 'етапів'} · розіграно буде до ${maxPoints} очок · відрив лідера ${gap}`}
+      </p>
     </div>
   )
 }
@@ -428,47 +607,47 @@ const RaceDetailPage: React.FC = () => {
         <span className={styles.roundLabel}>Раунд {String(race.round).padStart(2, '0')}</span>
       </header>
 
-      {/* ── Track hero ── */}
+      {/* ── Hero: track + info merged ── */}
       <div className={styles.hero}>
-        {race.trackSvg ? (
-          <TrackSVG
-            src={race.trackSvg}
-            startOffset={race.trackStartOffset}
-            color={trackColor}
-            strokeWidth={1.5}
-            animated={!isPast}
-          />
-        ) : (
-          <div className={styles.heroEmpty}>
+        <div className={styles.heroTrackWrap}>
+          {race.trackSvg ? (
+            <TrackSVG
+              src={race.trackSvg}
+              startOffset={race.trackStartOffset}
+              color={trackColor}
+              strokeWidth={1.5}
+              animated
+            />
+          ) : (
             <span className={styles.heroEmptyFlag}>{race.flag}</span>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* ── Info bar ── */}
-      <div className={styles.infoBar}>
-        <div className={styles.metaRow}>
-          <span className={styles.metaRound}>РАУНД {String(race.round).padStart(2, '0')}</span>
-          {isPast
-            ? <span className={styles.badgeDone}>ПРОЙДЕНО</span>
-            : <span className={styles.badgeNext}>НАСТУПНА</span>
-          }
-          {race.sprint && <span className={styles.badgeSprint}>SPRINT</span>}
+        <div className={styles.heroContent}>
+          <div className={styles.metaRow}>
+            <span className={styles.metaRound}>РАУНД {String(race.round).padStart(2, '0')}</span>
+            {isPast
+              ? <span className={styles.badgeDone}>ПРОЙДЕНО</span>
+              : <span className={styles.badgeNext}>НАСТУПНА</span>
+            }
+            {race.sprint && <span className={styles.badgeSprint}>SPRINT</span>}
+          </div>
+          <div className={styles.nameRow}>
+            <span className={styles.infoFlag}>{race.flag}</span>
+            <h1 className={styles.infoName}>{race.name.toUpperCase()}</h1>
+          </div>
+          <p className={styles.infoSub}>{race.circuit} · {race.country}</p>
+          <p className={styles.infoDate}>{formatFullDate(race.date)}</p>
         </div>
-        <div className={styles.nameRow}>
-          <span className={styles.infoFlag}>{race.flag}</span>
-          <h1 className={styles.infoName}>{race.name.toUpperCase()}</h1>
-        </div>
-        <p className={styles.infoSub}>{race.circuit} · {race.country}</p>
-        <p className={styles.infoDate}>{formatFullDate(race.date)}</p>
       </div>
 
       {/* ── Sections ── */}
       <div className={styles.content}>
-        {circuitInfo && <CircuitStatsSection info={circuitInfo} />}
+        {circuitInfo && <CircuitStatsSection info={circuitInfo} circuitId={circuitId} />}
         <SessionScheduleSection round={race.round} />
-        {!isPast && circuitInfo && <RaceWeatherSection city={circuitInfo.city} />}
+        {!isPast && circuitInfo && <RaceWeatherSection city={circuitInfo.city} round={race.round} />}
         {isPast && <RacePodiumSection round={race.round} />}
+        {!isPast && <ChampionshipStakesSection round={race.round} />}
       </div>
 
     </div>

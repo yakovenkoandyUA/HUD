@@ -3,7 +3,8 @@ import PushSubscription from '../models/PushSubscription'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
 import RecurringPayment from '../models/RecurringPayment'
-import { sendNotification, sendToAll } from './webpush'
+import F1SessionReminder from '../models/F1SessionReminder'
+import { sendNotification, sendToAll, sendPushToUser } from './webpush'
 
 // 2026 F1 race dates (race Sunday, ISO format)
 const F1_2026_RACES: Array<{ name: string; date: string; flag: string }> = [
@@ -148,6 +149,27 @@ async function sendReminderNotifications(): Promise<void> {
   }
 }
 
+// Нагадування про конкретну сесію ГП (FP/Sprint/Quali/Race) — точні до сесії, окремо від задач
+async function sendF1SessionReminders(): Promise<void> {
+  const now = new Date()
+  const due = await F1SessionReminder.find({ sent: false, remindAt: { $lte: now } }).lean()
+  if (due.length === 0) return
+
+  for (const r of due) {
+    // Пропущене нагадування (сервер був недоступний/деплой) — не спамити через добу
+    if (now.getTime() - new Date(r.remindAt).getTime() <= 24 * 60 * 60 * 1000) {
+      await sendPushToUser(r.userId, {
+        title: `🏎 ${r.sessionLabel} за 30 хв`,
+        body: 'Скоро початок сесії',
+        url: `/f1/${r.round}`,
+        tag: `f1-session-${r.round}-${r.sessionKey}`,
+      })
+    }
+    await F1SessionReminder.updateOne({ _id: r._id }, { sent: true })
+  }
+  console.log(`🏎 F1 session reminders sent (${due.length})`)
+}
+
 // Регулярні платежі — раз на добу, окремо від 5-хвилинного reminder-циклу
 async function sendRecurringPaymentNotifications(): Promise<void> {
   const todayDay = new Date().getDate()
@@ -188,6 +210,12 @@ export function startF1Scheduler(): void {
     sendReminderNotifications().catch(console.error)
   })
   console.log('🔔 Reminder scheduler started (every 5 min)')
+
+  // F1 session reminders — every 5 minutes, precise to sessionAt - 30min
+  cron.schedule('*/5 * * * *', () => {
+    sendF1SessionReminders().catch(console.error)
+  })
+  console.log('🏎 F1 session reminder scheduler started (every 5 min)')
 
   // Recurring payments — daily at 08:00 Kyiv (05:00 UTC)
   cron.schedule('0 5 * * *', () => {

@@ -79,7 +79,7 @@
 
 /* ── Avatar (used by DriverAvatar sub-component) ── */
 .avatar {
-  border-radius: 50%;
+  /* border-radius: 50%; */
   overflow: hidden;
   /* border: 2px solid var(--border2); */
   display: flex;

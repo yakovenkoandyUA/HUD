@@ -14,7 +14,9 @@
   display: none;
 }
 
-/* Parallax background layer — extra tall so long scrolls (grid view) don't run it out */
+/* Parallax background layer — extra tall so long scrolls (grid view) don't run it out.
+   Blurred + dimmed so it reads as atmosphere behind the standings list rather than
+   a competing poster (the source photo has legible sponsor/livery text on it). */
 .bg {
   position: absolute;
   top: -40%;
@@ -25,6 +27,7 @@
   background-size: 120%;
   background-repeat: no-repeat;
   background-position: center;
+  filter: blur(14px) brightness(0.5) saturate(0.85);
   will-change: transform;
   pointer-events: none;
   z-index: -1;
@@ -34,7 +37,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 60%, var(--f1-back) 100%);
+  background: linear-gradient(to bottom, transparent 8%, var(--f1-back) 62%);
 }
 
 .content {
