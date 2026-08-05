@@ -244,11 +244,24 @@ const App: React.FC = () => {
   const { token, activeProfile, updateProfile, refreshProfile } = useProfileStore()
   const { setUpdateAvailable } = useUiStore()
   const { isSupported, isSubscribed, subscribe } = usePushSubscription()
-  const { isInstallable, isIOS, isDismissed, promptInstall, dismiss } = usePwaInstall()
+  const { isInstallable, isIOS, isStandalone, isDismissed, promptInstall, dismiss } = usePwaInstall()
   const cityAutoLocateRef = useRef(false)
 
   useEffect(() => {
     if (token) refreshProfile()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
+
+  // Re-sync profile when the app returns to the foreground — catches out-of-band
+  // server-side changes (e.g. email verified via a link opened outside this tab)
+  // that the already-running app has no other way to learn about.
+  useEffect(() => {
+    if (!token) return
+    const handleVisibility = () => {
+      if (!document.hidden) refreshProfile()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
@@ -327,7 +340,7 @@ const App: React.FC = () => {
       <AchievementUnlockedModal />
       <MimirAchievementLayer />
       <AutoUnlockWatcher />
-      {(isInstallable || isIOS) && !isDismissed && (
+      {(isInstallable || isIOS) && !isStandalone && !isDismissed && (
         <PwaInstallBanner isIOS={isIOS} onInstall={promptInstall} onDismiss={dismiss} />
       )}
     </BrowserRouter>

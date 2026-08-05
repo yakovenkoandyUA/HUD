@@ -86,6 +86,47 @@ const HeroCard: React.FC<HeroCardProps> = ({
   const hasAnimated = useRef(false)
   const rafRef      = useRef<number | undefined>(undefined)
 
+  const lineRef = useRef<SVGPathElement>(null)
+  const hasAnimatedChart = useRef(false)
+  const [chartRevealed, setChartRevealed] = useState(false)
+  const [dotVisible, setDotVisible] = useState(false)
+
+  const chartData    = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
+  const hasChartData = chartData.some(v => v > 0)
+  const { line: sparkLine } = buildSparkPath(chartData)
+
+  // ── Sparkline draw-on reveal (once per mount) ────────────────
+  useEffect(() => {
+    if (!hasChartData) return
+    const path = lineRef.current
+    if (!path) return
+
+    if (hasAnimatedChart.current) {
+      path.style.transition = 'none'
+      path.style.strokeDashoffset = '0'
+      setChartRevealed(true)
+      setDotVisible(true)
+      return
+    }
+    hasAnimatedChart.current = true
+
+    const length = path.getTotalLength()
+    const drawMs = 1000
+    path.style.strokeDasharray = `${length}`
+    path.style.strokeDashoffset = `${length}`
+    path.style.transition = 'none'
+    void path.getBoundingClientRect()
+
+    const startTimer = setTimeout(() => {
+      path.style.transition = `stroke-dashoffset ${drawMs}ms cubic-bezier(0.4, 0, 0.2, 1)`
+      path.style.strokeDashoffset = '0'
+      setChartRevealed(true)
+    }, 150)
+    const dotTimer = setTimeout(() => setDotVisible(true), 150 + drawMs)
+
+    return () => { clearTimeout(startTimer); clearTimeout(dotTimer) }
+  }, [hasChartData, sparkLine])
+
   useEffect(() => {
     let cancelled = false
     const animate = async () => {
@@ -165,10 +206,9 @@ const HeroCard: React.FC<HeroCardProps> = ({
   }
 
   // ── Без бюджету: 30/70 split з area chart ───────────────────
-  const data      = sparklineData && sparklineData.length === 7 ? sparklineData : Array(7).fill(0)
   const dayLabels = getSparkDaysShort()
-  const hasAnyData = data.some(v => v > 0)
-  const { line, area, pts } = buildSparkPath(data)
+  const hasAnyData = hasChartData
+  const { line, area, pts } = buildSparkPath(chartData)
   const lastPt = pts[6]
 
   return (
@@ -195,7 +235,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
-          className={styles.sparkSvg}
+          className={`${styles.sparkSvg} ${chartRevealed ? styles.sparkRevealed : ''}`}
           aria-hidden="true"
         >
           <defs>
@@ -211,6 +251,11 @@ const HeroCard: React.FC<HeroCardProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            <linearGradient id="sparkWaveGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="var(--accent)" stopOpacity="0" />
+              <stop offset="50%"  stopColor="var(--accent)" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            </linearGradient>
           </defs>
 
           {/* Baseline */}
@@ -227,14 +272,25 @@ const HeroCard: React.FC<HeroCardProps> = ({
 
           {hasAnyData && (
             <>
-              <path d={area} fill="url(#sparkGrad)" />
-              <path d={line} fill="none" stroke="var(--accent)" strokeWidth="1.4"
+              <clipPath id="sparkAreaClip">
+                <path d={area} />
+              </clipPath>
+              <path d={area} fill="url(#sparkGrad)" className={styles.sparkArea} />
+              {/* Subtle shimmer sweeping through the fill — clipped to the
+                  area's own shape, doesn't touch the data line/points */}
+              <g clipPath="url(#sparkAreaClip)" className={`${styles.sparkWave} ${chartRevealed ? styles.sparkWaveOn : ''}`}>
+                <rect className={styles.sparkWaveBand} y="0" width={W * 0.5} height={H} fill="url(#sparkWaveGrad)" />
+              </g>
+              <path ref={lineRef} d={line} fill="none" stroke="var(--accent)" strokeWidth="1.4"
                 strokeLinecap="round" strokeLinejoin="round"
                 filter="url(#sparkGlow)" />
-              {/* Pulsing today dot */}
-              <circle cx={lastPt.x} cy={lastPt.y} r="3.5" fill="var(--accent)" fillOpacity="0.18"
-                className={styles.sparkDotPulse} />
-              <circle cx={lastPt.x} cy={lastPt.y} r="2" fill="var(--accent)" />
+              {/* "Today" dot — pops in (native r/opacity, not transform, to
+                  avoid the iOS Safari overflow-clip escape noted above) only
+                  after the line finishes drawing */}
+              <circle cx={lastPt.x} cy={lastPt.y} r={dotVisible ? 3.5 : 0} fill="var(--accent)" fillOpacity="0.18"
+                className={`${styles.sparkDotRing} ${dotVisible ? styles.sparkDotPulse : ''}`} />
+              <circle cx={lastPt.x} cy={lastPt.y} r={dotVisible ? 2 : 0} fill="var(--accent)"
+                className={styles.sparkDotCore} />
             </>
           )}
         </svg>

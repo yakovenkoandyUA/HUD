@@ -28,6 +28,7 @@ function detectIOS(): boolean {
 interface UsePwaInstall {
   isInstallable: boolean
   isIOS: boolean
+  isStandalone: boolean
   isDismissed: boolean
   promptInstall: () => void
   dismiss: () => void
@@ -38,9 +39,10 @@ export function usePwaInstall(): UsePwaInstall {
   const [isInstallable, setIsInstallable] = useState(false)
   const [isDismissedState, setIsDismissedState] = useState(() => dismissed())
   const isIOS = detectIOS()
+  const standalone = isStandalone()
 
   useEffect(() => {
-    if (isStandalone()) return
+    if (standalone) return
 
     const handler = (e: Event) => {
       e.preventDefault()
@@ -67,5 +69,5 @@ export function usePwaInstall(): UsePwaInstall {
     dismiss()
   }, [dismiss])
 
-  return { isInstallable, isIOS, isDismissed: isDismissedState, promptInstall, dismiss }
+  return { isInstallable, isIOS, isStandalone: standalone, isDismissed: isDismissedState, promptInstall, dismiss }
 }
