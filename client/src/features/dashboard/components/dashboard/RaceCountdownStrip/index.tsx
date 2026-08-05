@@ -45,7 +45,7 @@ function getWeekendDates(raceDate: string): string {
 const RaceCountdownStrip: React.FC<RaceCountdownStripProps> = ({ race }) => {
   const navigate = useNavigate()
   const theme = useUiStore(s => s.theme)
-  const bannerUrl = LIGHT_THEMES.has(theme) ? '/banner-f1-light.png' : '/banner-f1-dark.png'
+  const bannerUrl = race.banner ?? (LIGHT_THEMES.has(theme) ? '/banner-f1-light.png' : '/banner-f1-dark.png')
   const [cd, setCd] = useState<Cd | null>(() => getCountdown(race.date))
 
   useEffect(() => {

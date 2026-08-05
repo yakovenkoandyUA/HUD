@@ -144,6 +144,7 @@ const NextRaceCard: React.FC<NextRaceCardProps> = ({ race }) => {
         <div className={styles.trackBg}>
           <TrackSVG
             src={race.trackSvg}
+            startOffset={race.trackStartOffset}
             color="white"
             strokeWidth={2}
             animated={false}

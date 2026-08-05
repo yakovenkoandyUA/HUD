@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { F1_SEASON_2026 } from './data/f1Season2026'
 import { getNextRound } from './utils/f1'
 import { CIRCUIT_DATA, ROUND_TO_CIRCUIT_ID, type CircuitInfo } from './data/circuitData'
-import { useLastRace } from './components/f1/LastRaceCard'
+import { useRaceResults } from './hooks/useRaceResults'
 import TrackSVG from './components/f1/TrackSVG'
+import DriverAvatar from './components/f1/DriverAvatar'
 import styles from './RaceDetail.module.css'
 
 /**
@@ -326,28 +327,62 @@ function RaceWeatherSection({ city }: { city: string }) {
 }
 
 function RacePodiumSection({ round }: { round: number }) {
-  const { data } = useLastRace()
+  const { result, loading } = useRaceResults(round)
 
-  if (!data || data.round !== round || data.podium.length < 3) return null
-
-  const [p1, p2, p3] = data.podium
+  if (loading) {
+    return (
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>РЕЗУЛЬТАТ</div>
+        {[80, 60].map((w, i) => (
+          <div key={i} className={styles.skLine} style={{ width: `${w}%` }} />
+        ))}
+      </div>
+    )
+  }
+  if (!result) return null
 
   return (
     <div className={styles.section}>
       <div className={styles.sectionTitle}>РЕЗУЛЬТАТ</div>
-      {[p1, p2, p3].map((entry, i) => (
-        <div key={entry.code} className={styles.podiumRow}>
-          <span className={styles.podiumPos}>{i + 1}</span>
-          <span className={styles.podiumName}>{entry.lastName}</span>
-          <span className={styles.podiumTeam}>{entry.team}</span>
-          <span className={styles.podiumGap}>{entry.gap}</span>
+
+      <div className={styles.podium}>
+        {/* P2 */}
+        <div className={`${styles.podiumEntry} ${styles.p2}`}>
+          <DriverAvatar driverId={result.p2.driverId} code={result.p2.code} />
+          <span className={styles.podCode}>{result.p2.code}</span>
+          <span className={styles.podTeam}>{result.p2.team}</span>
+          <span className={styles.podGap}>{result.p2.gap}</span>
+          <div className={`${styles.step} ${styles.step2}`}>
+            <span className={styles.podPos}>2</span>
+          </div>
         </div>
-      ))}
-      {data.fastestLap && (
-        <div className={styles.fastestRow}>
+        {/* P1 */}
+        <div className={`${styles.podiumEntry} ${styles.p1}`}>
+          <DriverAvatar driverId={result.p1.driverId} code={result.p1.code} gold />
+          <span className={`${styles.podCode} ${styles.podCodeGold}`}>{result.p1.code}</span>
+          <span className={styles.podTeam}>{result.p1.team}</span>
+          <div className={`${styles.step} ${styles.step1}`}>
+            <span className={styles.podPos}>1</span>
+          </div>
+        </div>
+        {/* P3 */}
+        <div className={`${styles.podiumEntry} ${styles.p3}`}>
+          <DriverAvatar driverId={result.p3.driverId} code={result.p3.code} />
+          <span className={styles.podCode}>{result.p3.code}</span>
+          <span className={styles.podTeam}>{result.p3.team}</span>
+          <span className={styles.podGap}>{result.p3.gap}</span>
+          <div className={`${styles.step} ${styles.step3}`}>
+            <span className={styles.podPos}>3</span>
+          </div>
+        </div>
+      </div>
+
+      {result.fastest.code && (
+        <div className={styles.fastest}>
           <span className={styles.fastestDot} />
-          <span className={styles.fastestDriver}>{data.fastestLap.code}</span>
-          <span className={styles.fastestTime}>{data.fastestLap.time}</span>
+          <span className={styles.fastestLabel}>FASTEST</span>
+          <span className={styles.fastestValue}>{result.fastest.code} {result.fastest.time}</span>
+          <span className={styles.laps}>{result.laps} кл</span>
         </div>
       )}
     </div>
@@ -398,6 +433,7 @@ const RaceDetailPage: React.FC = () => {
         {race.trackSvg ? (
           <TrackSVG
             src={race.trackSvg}
+            startOffset={race.trackStartOffset}
             color={trackColor}
             strokeWidth={1.5}
             animated={!isPast}
