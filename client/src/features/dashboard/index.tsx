@@ -12,6 +12,7 @@ import WeatherModal from './components/dashboard/WeatherModal'
 import type { WeatherData } from '@/shared/hooks/useWeather'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { useSprintStore } from '@/features/sprint/store/sprintStore'
+import { useSportStore } from '@/features/spaces/store/sportStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useMealPlanStore } from '@/features/recipes/store/mealPlanStore'
@@ -40,6 +41,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const { items: sprintItems, fetchItems } = useSprintStore()
+  const { todayEvents: todayWorkouts, fetchTodayEvents } = useSportStore()
   const { showToast, mimirMode } = useUiStore()
   const f1Enabled         = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const drinksEnabled     = useProfileStore(s => s.activeProfile?.drinksEnabled ?? false)
@@ -87,6 +89,7 @@ const Dashboard: React.FC = () => {
     fetchTransactions()
     fetchMealPlan()
     fetchItems()
+    fetchTodayEvents()
     fetchNotes()
     if (recipes.length === 0) fetchRecipes()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -187,9 +190,12 @@ const Dashboard: React.FC = () => {
     setFabOpen(false)
   }
 
-  const pendingRoutines   = routineItems.filter(r => !isDoneToday(r))
-  const todayTeasers      = pendingRoutines.slice(0, 2).map(r => ({ id: r.id, title: r.title }))
-  const todayTeasersTotal = pendingRoutines.length
+  const pendingRoutines = routineItems.filter(r => !isDoneToday(r))
+  const routineTeasers  = pendingRoutines.map(r => ({ id: r.id, title: r.title, kind: 'routine' as const }))
+  const workoutTeasers  = todayWorkouts.map(e => ({ id: e._id, title: e.title || 'Тренування', kind: 'workout' as const, spaceId: e.spaceId }))
+  const allTeasers        = [...routineTeasers, ...workoutTeasers]
+  const todayTeasers      = allTeasers.slice(0, 2)
+  const todayTeasersTotal = allTeasers.length
 
   return (
     <div className={styles.screen}>

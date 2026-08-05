@@ -6,6 +6,7 @@ export interface IWorkoutExercise {
   sets?:     number | null
   reps?:     number | null
   duration?: number | null
+  restSec?:  number | null
   notes?:    string
 }
 
@@ -24,6 +25,7 @@ const exerciseSchema = new Schema<IWorkoutExercise>({
   sets:     { type: Number, default: null },
   reps:     { type: Number, default: null },
   duration: { type: Number, default: null },
+  restSec:  { type: Number, default: null },
   notes:    { type: String, default: '' },
 }, { _id: false })
 

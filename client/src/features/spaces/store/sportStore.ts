@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import { authFetch } from '@/shared/services/api'
 import type { SportProfile } from '@/features/memories/store/spacesStore'
+import type { RepeatConfig } from '@/shared/types'
+import type { ReminderUnit } from '@/features/sprint/components/sprint/ReminderFields'
+
+export interface SportEventReminder {
+  amount: number
+  unit:   ReminderUnit
+}
 
 export interface WorkoutMetric {
   name:  string
@@ -8,24 +15,39 @@ export interface WorkoutMetric {
   unit:  string
 }
 
+export type SportRepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
+
 export interface SportEvent {
-  _id:      string
-  spaceId:  string
-  userId:   string
-  date:     string
-  title:    string
-  duration: number | null
-  metrics:  WorkoutMetric[]
-  notes:    string
-  createdAt: string
+  _id:          string
+  spaceId:      string
+  userId:       string
+  date:         string
+  time:         string | null
+  title:        string
+  duration:     number | null
+  metrics:      WorkoutMetric[]
+  notes:        string
+  repeat:       SportRepeatType
+  repeatConfig: RepeatConfig | null
+  programIds:   string[]
+  programNames: string[]
+  reminder:     SportEventReminder | null
+  reminderSent: boolean
+  createdAt:    string
 }
 
 export interface SportEventInput {
-  date:      string
-  title?:    string
-  duration?: number | null
-  metrics?:  WorkoutMetric[]
-  notes?:    string
+  date:           string
+  time?:          string | null
+  title?:         string
+  duration?:      number | null
+  metrics?:       WorkoutMetric[]
+  notes?:         string
+  repeat?:        SportRepeatType
+  repeatConfig?:  RepeatConfig | null
+  programIds?:    string[]
+  programNames?:  string[]
+  reminder?:      SportEventReminder | null
 }
 
 export interface WorkoutExercise {
@@ -34,6 +56,7 @@ export interface WorkoutExercise {
   sets?:     number | null
   reps?:     number | null
   duration?: number | null
+  restSec?:  number | null
   notes?:    string
 }
 
@@ -61,9 +84,11 @@ interface SportStore {
   eventsBySpace:    Record<string, SportEvent[]>
   programsBySpace:  Record<string, WorkoutProgram[]>
   sessionsBySpace:  Record<string, WorkoutSession[]>
+  todayEvents:      SportEvent[]
   loading:          boolean
 
   fetchEvents:          (spaceId: string) => Promise<void>
+  fetchTodayEvents:     () => Promise<void>
   createEvent:          (spaceId: string, data: SportEventInput) => Promise<SportEvent>
   updateEvent:          (spaceId: string, eventId: string, data: Partial<SportEventInput>) => Promise<void>
   deleteEvent:          (spaceId: string, eventId: string) => Promise<void>
@@ -81,7 +106,19 @@ export const useSportStore = create<SportStore>((set) => ({
   eventsBySpace:   {},
   programsBySpace: {},
   sessionsBySpace: {},
+  todayEvents:     [],
   loading:         false,
+
+  fetchTodayEvents: async () => {
+    try {
+      const res = await authFetch('/api/spaces/sport/today')
+      if (!res.ok) return
+      const data: SportEvent[] = await res.json()
+      set({ todayEvents: data })
+    } catch {
+      // silent — non-critical dashboard widget
+    }
+  },
 
   fetchEvents: async (spaceId) => {
     set({ loading: true })
@@ -161,7 +198,10 @@ export const useSportStore = create<SportStore>((set) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    if (!res.ok) throw new Error('Create failed')
+    if (!res.ok) {
+      const err = await res.json().catch(() => null) as { error?: string } | null
+      throw new Error(err?.error ?? 'Create failed')
+    }
     const program: WorkoutProgram = await res.json()
     set(s => ({ programsBySpace: { ...s.programsBySpace, [spaceId]: [...(s.programsBySpace[spaceId] ?? []), program] } }))
     return program
@@ -173,7 +213,10 @@ export const useSportStore = create<SportStore>((set) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    if (!res.ok) return
+    if (!res.ok) {
+      const err = await res.json().catch(() => null) as { error?: string } | null
+      throw new Error(err?.error ?? 'Update failed')
+    }
     const updated: WorkoutProgram = await res.json()
     set(s => ({ programsBySpace: { ...s.programsBySpace, [spaceId]: (s.programsBySpace[spaceId] ?? []).map(p => p._id === programId ? updated : p) } }))
   },

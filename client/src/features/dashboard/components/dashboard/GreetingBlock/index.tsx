@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useWeather } from '@/shared/hooks/useWeather'
@@ -17,12 +18,12 @@ import styles from './GreetingBlock.module.css'
  * Props:
  * @prop {(weather: WeatherData) => void} [onWeatherClick] — callback при тапі на погоду
  * @prop {() => void}                     onOpenDay        — відкрити DayOverlay
- * @prop {{id: string; title: string}[]}  [todayTeasers]   — рутини на сьогодні (до 2)
+ * @prop {{id, title, kind, spaceId}[]}  [todayTeasers]   — рутини + тренування на сьогодні (до 2)
  */
 interface GreetingBlockProps {
   onWeatherClick?: (weather: WeatherData) => void
   onOpenDay: () => void
-  todayTeasers?: { id: string; title: string }[]
+  todayTeasers?: { id: string; title: string; kind?: 'routine' | 'workout'; spaceId?: string }[]
   todayTeasersTotal?: number
 }
 
@@ -56,10 +57,11 @@ const THEME_PHOTOS: Partial<Record<string, string>> = {
 }
 
 const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay, todayTeasers, todayTeasersTotal }) => {
-  const profile       = useProfileStore(s => s.activeProfile)
-  const updateProfile = useProfileStore(s => s.updateProfile)
-  const theme         = useUiStore(s => s.theme)
-  const toggleItem    = useSprintStore(s => s.toggleItem)
+  const navigate       = useNavigate()
+  const profile        = useProfileStore(s => s.activeProfile)
+  const updateProfile  = useProfileStore(s => s.updateProfile)
+  const theme          = useUiStore(s => s.theme)
+  const toggleItem     = useSprintStore(s => s.toggleItem)
   const weather       = useWeather(profile?.city)
   const [now, setNow] = useState(() => new Date())
   const [geoState, setGeoState] = useState<'idle' | 'loading' | 'denied'>('idle')
@@ -163,15 +165,19 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
         {todayTeasers && todayTeasers.length > 0 ? (
           todayTeasers.map((item, i) => {
             const isLast = i === todayTeasers.length - 1
+            const isWorkout = item.kind === 'workout'
             return (
               <div key={item.id} className={styles.todayBottom}>
                 <button
                   type="button"
                   className={styles.todayItem}
-                  onClick={() => toggleItem(item.id, todayLocalIso())}
-                  aria-label={`Позначити виконаним: ${item.title}`}
+                  onClick={() => isWorkout
+                    ? (item.spaceId && navigate(`/spaces/${item.spaceId}`))
+                    : toggleItem(item.id, todayLocalIso())
+                  }
+                  aria-label={isWorkout ? `Тренування: ${item.title}` : `Позначити виконаним: ${item.title}`}
                 >
-                  <span className={styles.todayDot} aria-hidden="true" />
+                  <span className={`${styles.todayDot} ${isWorkout ? styles.todayDotWorkout : ''}`} aria-hidden="true" />
                   <span className={styles.todayText}>{item.title}</span>
                 </button>
                 {isLast && (

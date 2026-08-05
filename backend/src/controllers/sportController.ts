@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import mongoose from 'mongoose'
 import { Space } from '../models/Space'
 import { SportEvent } from '../models/SportEvent'
 import { WorkoutProgram } from '../models/WorkoutProgram'
@@ -35,6 +36,68 @@ export async function updateSportProfile(req: Request, res: Response): Promise<v
   }
 }
 
+// Чи припадає SportEvent на конкретний день, з урахуванням repeat/repeatConfig.
+// Дзеркалить client/src/features/sprint/utils/sprint.ts isRoutineDueOnDay, адаптовано під
+// SportEvent (де date — сама дата початку серії, без окремого nextDue).
+function isSportEventDueOnDay(
+  event: { date: string; repeat: string; repeatConfig: { unit?: string; weekDays?: number[]; interval?: number } | null },
+  day: Date,
+  dayIso: string
+): boolean {
+  if (!event.repeat || event.repeat === 'none') return event.date === dayIso
+
+  const [ay, am, ad] = event.date.split('-').map(Number)
+  const anchor = new Date(ay, am - 1, ad)
+  if (day < anchor) return false
+
+  if (event.repeat === 'daily')   return true
+  if (event.repeat === 'weekly')  return day.getDay() === anchor.getDay()
+  if (event.repeat === 'monthly') return day.getDate() === anchor.getDate()
+  if (event.repeat === 'yearly')  return day.getMonth() === anchor.getMonth() && day.getDate() === anchor.getDate()
+
+  if (event.repeat === 'custom' && event.repeatConfig) {
+    const { unit, weekDays, interval } = event.repeatConfig
+    if (unit === 'week' && weekDays && weekDays.length > 0) {
+      return weekDays.includes((day.getDay() + 6) % 7)
+    }
+    if (interval && interval > 0) {
+      if (unit === 'day') {
+        const diffDays = Math.round((day.getTime() - anchor.getTime()) / 86_400_000)
+        return diffDays % interval === 0
+      }
+      if (unit === 'month') {
+        const monthDiff = (day.getFullYear() - anchor.getFullYear()) * 12 + (day.getMonth() - anchor.getMonth())
+        return monthDiff >= 0 && monthDiff % interval === 0 && day.getDate() === anchor.getDate()
+      }
+      if (unit === 'year') {
+        const yearDiff = day.getFullYear() - anchor.getFullYear()
+        return yearDiff >= 0 && yearDiff % interval === 0 &&
+          day.getMonth() === anchor.getMonth() && day.getDate() === anchor.getDate()
+      }
+    }
+  }
+  return false
+}
+
+/** GET /api/spaces/sport/today — тренування на сьогодні по всіх Sport-просторах юзера */
+export async function getTodaySportEvents(req: Request, res: Response): Promise<void> {
+  try {
+    const spaces = await Space.find({ 'members.userId': req.userId, type: 'sports' }).select('_id').lean()
+    const spaceIds = spaces.map(s => String(s._id))
+    if (spaceIds.length === 0) { res.json([]); return }
+
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayIso = today.toISOString().slice(0, 10)
+
+    const events = await SportEvent.find({ spaceId: { $in: spaceIds }, date: { $lte: todayIso } }).lean()
+    const due = events.filter(e => isSportEventDueOnDay(e, today, todayIso))
+    res.json(due)
+  } catch {
+    res.status(500).json({ error: 'Server error' })
+  }
+}
+
 /** GET /api/spaces/:id/sport/events */
 export async function getSportEvents(req: Request, res: Response): Promise<void> {
   try {
@@ -58,15 +121,22 @@ export async function createSportEvent(req: Request, res: Response): Promise<voi
     const space = await Space.findOne({ _id: req.params.id, 'members.userId': req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
 
-    const { date, title, duration, metrics, notes } = req.body
+    const { date, time, title, duration, metrics, notes, repeat, repeatConfig, programIds, programNames, reminder } = req.body
     const event = await SportEvent.create({
-      spaceId:  req.params.id,
-      userId:   req.userId,
-      date:     date ?? new Date().toISOString().slice(0, 10),
-      title:    title  ?? '',
-      duration: duration ?? null,
-      metrics:  metrics  ?? [],
-      notes:    notes    ?? '',
+      spaceId:      req.params.id,
+      userId:       req.userId,
+      date:         date ?? new Date().toISOString().slice(0, 10),
+      time:         time ?? null,
+      title:        title  ?? '',
+      duration:     duration ?? null,
+      metrics:      metrics  ?? [],
+      notes:        notes    ?? '',
+      repeat:       repeat ?? 'none',
+      repeatConfig: repeatConfig ?? null,
+      programIds:   programIds   ?? [],
+      programNames: programNames ?? [],
+      reminder:     reminder ?? null,
+      reminderSent: false,
     })
     res.status(201).json(event)
   } catch {
@@ -80,10 +150,11 @@ export async function updateSportEvent(req: Request, res: Response): Promise<voi
     const event = await SportEvent.findOne({ _id: req.params.eventId, spaceId: req.params.id })
     if (!event) { res.status(404).json({ error: 'Not found' }); return }
 
-    const allowed = ['date', 'title', 'duration', 'metrics', 'notes'] as const
+    const allowed = ['date', 'time', 'title', 'duration', 'metrics', 'notes', 'repeat', 'repeatConfig', 'programIds', 'programNames', 'reminder'] as const
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (event as unknown as Record<string, unknown>)[key] = req.body[key]
     })
+    if (req.body.date !== undefined || req.body.time !== undefined || req.body.reminder !== undefined) event.reminderSent = false
     await event.save()
     res.json(event)
   } catch {
@@ -124,17 +195,20 @@ export async function createWorkoutProgram(req: Request, res: Response): Promise
     const count = await WorkoutProgram.countDocuments({ spaceId: req.params.id })
     if (count >= 7) { res.status(400).json({ error: 'Max 7 programs per space' }); return }
 
-    const { name, exercises } = req.body as { name?: string; exercises?: unknown[] }
+    const { name, exercises } = req.body as { name?: string; exercises?: { name?: string }[] }
     if (!name?.trim()) { res.status(400).json({ error: 'Name required' }); return }
+    if (!exercises || exercises.length === 0) { res.status(400).json({ error: 'At least one exercise required' }); return }
+    if (exercises.some(e => !e.name?.trim())) { res.status(400).json({ error: 'Every exercise needs a name' }); return }
 
     const program = await WorkoutProgram.create({
       spaceId:   req.params.id,
       userId:    req.userId,
       name:      name.trim(),
-      exercises: exercises ?? [],
+      exercises,
     })
     res.status(201).json(program)
-  } catch {
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError) { res.status(400).json({ error: err.message }); return }
     res.status(500).json({ error: 'Server error' })
   }
 }
@@ -145,11 +219,20 @@ export async function updateWorkoutProgram(req: Request, res: Response): Promise
     const program = await WorkoutProgram.findOne({ _id: req.params.programId, spaceId: req.params.id })
     if (!program) { res.status(404).json({ error: 'Not found' }); return }
 
-    if (req.body.name      !== undefined) program.name      = req.body.name
-    if (req.body.exercises !== undefined) program.exercises = req.body.exercises
+    if (req.body.name !== undefined) {
+      if (!String(req.body.name).trim()) { res.status(400).json({ error: 'Name required' }); return }
+      program.name = req.body.name
+    }
+    if (req.body.exercises !== undefined) {
+      const exercises = req.body.exercises as { name?: string }[]
+      if (exercises.length === 0) { res.status(400).json({ error: 'At least one exercise required' }); return }
+      if (exercises.some(e => !e.name?.trim())) { res.status(400).json({ error: 'Every exercise needs a name' }); return }
+      program.exercises = req.body.exercises
+    }
     await program.save()
     res.json(program)
-  } catch {
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError) { res.status(400).json({ error: err.message }); return }
     res.status(500).json({ error: 'Server error' })
   }
 }

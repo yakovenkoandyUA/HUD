@@ -28,6 +28,7 @@ import {
   getSportEvents, createSportEvent, updateSportEvent, deleteSportEvent,
   getWorkoutPrograms, createWorkoutProgram, updateWorkoutProgram, deleteWorkoutProgram,
   getWorkoutSessions, createWorkoutSession, deleteWorkoutSession,
+  getTodaySportEvents,
 } from '../controllers/sportController'
 import { getTickets, createTicket, updateTicket, deleteTicket } from '../controllers/ticketController'
 import { getAccommodations, createAccommodation, updateAccommodation, deleteAccommodation } from '../controllers/accommodationController'
@@ -39,6 +40,7 @@ router.use(requireAuth)
 
 router.get('/',                                        getSpaces)
 router.post('/',                                       loadUser, createSpace)
+router.get('/sport/today',                             getTodaySportEvents)
 router.get('/:id',                                     getSpace)
 router.patch('/:id',                                   updateSpace)
 router.delete('/:id',                                  deleteSpace)

@@ -25,6 +25,7 @@ import './jobs/renewalReminder'
 import './jobs/subscriptionExpiry'
 import './jobs/vehicleDocReminders'
 import './jobs/spaceWeeklyDigest'
+import './jobs/workoutReminders'
 import { startCleanupSprintImages } from './jobs/cleanupSprintImages'
 import { errorHandler } from './middleware/errorHandler'
 

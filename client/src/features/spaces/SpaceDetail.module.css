@@ -858,7 +858,7 @@
 
 .editSheet {
   width: 100%;
-  background: var(--surface);
+  background: var(--bg2);
   border-radius: 20px 20px 0 0;
   padding: 12px 20px 40px;
   max-height: 90dvh;

@@ -320,6 +320,10 @@
   flex-shrink: 0;
 }
 
+.todayDotWorkout {
+  background: var(--accent);
+}
+
 .todayText {
   font-family: var(--font-ui);
   font-size: 12px;
