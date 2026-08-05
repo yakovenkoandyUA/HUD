@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
@@ -26,8 +26,10 @@ const ProfilePage: React.FC = () => {
   const { fetchFamily } = useFamilyStore()
 
   const activeTab = (searchParams.get('tab') as ProfileTab | null) ?? 'me'
+  const [branchActive, setBranchActive] = useState(false)
 
   useEffect(() => { fetchFamily() }, [fetchFamily])
+  useEffect(() => { if (activeTab !== 'me') setBranchActive(false) }, [activeTab])
 
   if (!activeProfile) return null
 
@@ -40,7 +42,12 @@ const ProfilePage: React.FC = () => {
     <div className={`${styles.page} ${activeTab === 'mimir' ? styles.pageMimir : ''}`}>
       {/* ── Header ── */}
       <div className={`${styles.header} ${activeTab === 'mimir' ? styles.headerMimir : ''}`}>
-        <button type="button" className={styles.backBtn} onClick={() => navigate(-1)}>
+        <button
+          type="button"
+          className={`${styles.backBtn} ${branchActive ? styles.backBtnHidden : ''}`}
+          onClick={() => navigate(-1)}
+          tabIndex={branchActive ? -1 : 0}
+        >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M12.5 16L7 10l5.5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -57,7 +64,7 @@ const ProfilePage: React.FC = () => {
       {/* ── Tab content (with bottom nav padding) ── */}
       <div className={styles.content}>
         <div key={activeTab} className={styles.tabFade}>
-          {activeTab === 'me'     && <MeTab />}
+          {activeTab === 'me'     && <MeTab onBranchActiveChange={setBranchActive} />}
           {activeTab === 'wallet' && <WalletTab />}
           {activeTab === 'plan'   && <PlanTab />}
           {activeTab === 'timeline' && <YearbookTab />}

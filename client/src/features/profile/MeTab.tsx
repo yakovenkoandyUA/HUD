@@ -34,9 +34,23 @@ const EditIcon: React.FC = () => (
  * Вкладка "Профіль" — hero-картка (аватар / ім'я / нікнейм).
  * Єдина кнопка редагування у верхньому-правому куті хіро-картки.
  * Рівень, прогрес, ранг — в нижній секції картки.
+ *
+ * Props:
+ * @prop {(active: boolean) => void} [onBranchActiveChange] — прокидається у ProfilePage,
+ * коли юзер заходить/виходить з гілки досягнень (щоб сховати кнопку "назад" у хедері)
  */
-const MeTab: React.FC = () => {
+interface MeTabProps {
+  onBranchActiveChange?: (active: boolean) => void
+}
+
+const MeTab: React.FC<MeTabProps> = ({ onBranchActiveChange }) => {
   const navigate = useNavigate()
+  const [branchActive, setBranchActive] = useState(false)
+
+  const handleBranchActiveChange = useCallback((active: boolean) => {
+    setBranchActive(active)
+    onBranchActiveChange?.(active)
+  }, [onBranchActiveChange])
   const { activeProfile, updateProfile } = useProfileStore()
   const { showToast, setUpdateAvailable } = useUiStore()
 
@@ -137,6 +151,7 @@ const MeTab: React.FC = () => {
 
   return (
     <div className={styles.tabContent}>
+      <div className={`${styles.heroCardWrap} ${branchActive ? styles.heroCardWrapRetract : ''}`}>
       <div className={styles.heroCard} style={{ '--level-color': level.color } as React.CSSProperties}>
 
         <div className={styles.heroLeft}>
@@ -236,8 +251,9 @@ const MeTab: React.FC = () => {
         </div>
 
       </div>
+      </div>
 
-      <AchievementsTab />
+      <AchievementsTab onBranchActiveChange={handleBranchActiveChange} />
     </div>
   )
 }
