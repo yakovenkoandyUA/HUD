@@ -69,6 +69,13 @@ interface MemoriesState {
   reset: () => void
 }
 
+// Guards against a slow fetchMemories() (called on mount, and again
+// conditionally from the memory detail page) overwriting a memory added/
+// edited while it was still in flight with stale data — see spacesStore.ts
+// for the same pattern. Separate from (and in addition to) the _deletingIds
+// guard below, which only protects deleted memories from reappearing.
+let memoriesReqId = 0
+
 export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
   memories: [],
   isLoading: true,
@@ -78,14 +85,16 @@ export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
 
   fetchMemories: async () => {
     if (!getToken()) { set({ isLoading: false }); return }
+    const reqId = ++memoriesReqId
     try {
       const res = await authFetch('/api/memories')
       if (!res.ok) return
       const data = await res.json()
+      if (reqId !== memoriesReqId) return // a mutation happened while this was in flight — stale, drop it
       const deletingIds = get()._deletingIds
       set({ memories: data.map(toMemory).filter((m: Memory) => !deletingIds.has(m.id)) })
     } finally {
-      set({ isLoading: false })
+      if (reqId === memoriesReqId) set({ isLoading: false })
     }
   },
 
@@ -97,11 +106,13 @@ export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
     if (!res.ok) throw new Error('Failed to create memory')
     const item = await res.json()
     const m = toMemory(item)
+    memoriesReqId++
     set(s => ({ memories: [m, ...s.memories] }))
     return m.id
   },
 
   updateMemory: async (id, updates) => {
+    memoriesReqId++
     set(s => ({
       memories: s.memories.map(m => m.id === id ? { ...m, ...updates } : m),
     }))
@@ -133,6 +144,7 @@ export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     }
+    memoriesReqId++
     set(s => ({
       memories: s.memories.map(m =>
         m.id === memoryId ? { ...m, photos: [...m.photos, tempPhoto] } : m
@@ -151,6 +163,7 @@ export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
   },
 
   deletePhoto: async (memoryId, photoId) => {
+    memoriesReqId++
     set(s => ({
       memories: s.memories.map(m =>
         m.id === memoryId
@@ -162,6 +175,7 @@ export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
   },
 
   setCover: async (memoryId, photoUrl) => {
+    memoriesReqId++
     set(s => ({
       memories: s.memories.map(m =>
         m.id === memoryId ? { ...m, coverUrl: photoUrl } : m
@@ -174,6 +188,7 @@ export const useMemoriesStore = create<MemoriesState>()((set, get) => ({
   },
 
   updatePhoto: async (memoryId, photoId, updates) => {
+    memoriesReqId++
     set(s => ({
       memories: s.memories.map(m =>
         m.id === memoryId

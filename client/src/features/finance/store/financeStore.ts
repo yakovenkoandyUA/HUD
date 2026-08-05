@@ -92,6 +92,12 @@ interface FinanceState {
 
 const cached = readCache()
 
+// Guards against a slow fetchTransactions() (called on mount from both
+// Dashboard and the Finance page) overwriting a transaction added/edited
+// while it was still in flight with stale data — see spacesStore.ts for
+// the same pattern.
+let financeReqId = 0
+
 export const useFinanceStore = create<FinanceState>()((set, get) => ({
   balance: cached?.balance ?? 0,
   transactions: cached?.transactions ?? [],
@@ -106,19 +112,21 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
 
   fetchTransactions: async (month) => {
     if (!getToken() || !isBackendConfigured()) return
+    const reqId = ++financeReqId
     set({ syncStatus: 'syncing' })
     try {
       const url = month ? `/api/transactions?month=${month}` : '/api/transactions'
       const res = await authFetch(url)
       if (!res.ok) throw new Error()
       const data: ApiTransaction[] = await res.json()
+      if (reqId !== financeReqId) return // a mutation happened while this was in flight — stale, drop it
       const transactions = data.map(fromApi)
       const balance = calcBalance(transactions)
       set({ transactions, balance, syncStatus: 'synced' })
       // кешуємо тільки дефолтний запит (не фільтрований по місяцю)
       if (!month) writeCache(transactions, balance)
     } catch {
-      set({ syncStatus: 'error' })
+      if (reqId === financeReqId) set({ syncStatus: 'error' })
     }
   },
 
@@ -132,6 +140,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       spaceId: spaceId ?? null,
       date: new Date().toISOString(),
     }
+    financeReqId++
     set(s => {
       const transactions = [tx, ...s.transactions].slice(0, 200)
       const balance = s.balance + amount
@@ -141,6 +150,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     authFetch('/api/transactions', { method: 'POST', body: JSON.stringify({ ...toApiBody(tx), spaceId: spaceId ?? null }) })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then((created: ApiTransaction) => {
+        financeReqId++
         set(s => {
           const transactions = s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t)
           writeCache(transactions, s.balance)
@@ -148,6 +158,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
         })
       })
       .catch(() => {
+        financeReqId++
         set(s => {
           const transactions = s.transactions.filter(t => t.id !== tx.id)
           const balance = s.balance - amount
@@ -169,6 +180,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       spaceId: spaceId ?? null,
       subcategory: subcategory ?? null,
     }
+    financeReqId++
     set(s => {
       const transactions = [tx, ...s.transactions].slice(0, 200)
       const balance = s.balance - amount
@@ -178,6 +190,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     authFetch('/api/transactions', { method: 'POST', body: JSON.stringify({ ...toApiBody(tx), tripMemoryId: tx.tripMemoryId, spaceId: spaceId ?? null }) })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then((created: ApiTransaction) => {
+        financeReqId++
         set(s => {
           const transactions = s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t)
           writeCache(transactions, s.balance)
@@ -185,6 +198,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
         })
       })
       .catch(() => {
+        financeReqId++
         set(s => {
           const transactions = s.transactions.filter(t => t.id !== tx.id)
           const balance = s.balance + amount
@@ -194,12 +208,14 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       })
   },
 
-  renameTransaction: (id, title) =>
+  renameTransaction: (id, title) => {
+    financeReqId++
     set(s => {
       const transactions = s.transactions.map(t => t.id === id ? { ...t, title } : t)
       writeCache(transactions, s.balance)
       return { transactions }
-    }),
+    })
+  },
 
   patchTransaction: async (id, patch) => {
     const s = get()
@@ -211,6 +227,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       ? nextAmount - prevAmount
       : prevAmount - nextAmount
     const prev = { description: tx.description, amount: tx.amount, title: tx.title }
+    financeReqId++
     set(s2 => {
       const transactions = s2.transactions.map(t => t.id === id ? { ...t, ...patch } : t)
       const balance = s2.balance + delta
@@ -229,6 +246,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       if (!res.ok) throw new Error('patch failed')
     } catch {
       const rollbackDelta = -(delta)
+      financeReqId++
       set(s2 => {
         const transactions = s2.transactions.map(t => t.id === id ? { ...t, ...prev } : t)
         const balance = s2.balance + rollbackDelta
@@ -239,6 +257,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
   },
 
   tagTripExpenses: (ids, tripMemoryId) => {
+    financeReqId++
     set(s => {
       const transactions = s.transactions.map(t =>
         ids.includes(t.id) ? { ...t, tripMemoryId } : t
@@ -262,11 +281,13 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     const transactions = s.transactions.filter(t => t.id !== id)
     const balance = s.balance + delta
     writeCache(transactions, balance)
+    financeReqId++
     set({ balance, transactions, syncStatus: 'syncing' })
     authFetch(`/api/transactions/${id}`, { method: 'DELETE' })
       .then(r => { if (!r.ok) throw new Error() })
       .then(() => set({ syncStatus: 'synced' }))
       .catch(() => {
+        financeReqId++
         set(s2 => {
           const restored = [tx, ...s2.transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           const restoredBalance = s2.balance - delta

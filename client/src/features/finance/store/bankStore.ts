@@ -30,6 +30,11 @@ interface BankState {
   pollMonoAuth:   (tokenRequestId: string) => Promise<boolean>
 }
 
+// Guards against a slow fetchStatus() (called on mount from WalletTab and
+// the Finance page) overwriting a connection made/changed while it was
+// still in flight with stale data — see spacesStore.ts for the same pattern.
+let bankReqId = 0
+
 export const useBankStore = create<BankState>((set, get) => ({
   connection:         null,
   loading:            false,
@@ -40,15 +45,16 @@ export const useBankStore = create<BankState>((set, get) => ({
   authAcceptUrl:      null,
 
   fetchStatus: async () => {
+    const reqId = ++bankReqId
     set({ loading: true })
     try {
       const res = await authFetch('/api/bank/status')
       if (res.ok) {
         const data = await res.json() as BankConnection | null
-        set({ connection: data })
+        if (reqId === bankReqId) set({ connection: data })
       }
     } finally {
-      set({ loading: false })
+      if (reqId === bankReqId) set({ loading: false })
     }
   },
 
@@ -62,11 +68,13 @@ export const useBankStore = create<BankState>((set, get) => ({
       throw new Error(error)
     }
     const data = await res.json() as BankConnection
+    bankReqId++
     set({ connection: data })
   },
 
   disconnect: async () => {
     await authFetch('/api/bank/disconnect', { method: 'DELETE' })
+    bankReqId++
     set({ connection: null })
   },
 
@@ -79,6 +87,7 @@ export const useBankStore = create<BankState>((set, get) => ({
         throw new Error(error)
       }
       const data = await res.json() as { imported: number; lastSync: string }
+      bankReqId++
       set(s => s.connection ? { connection: { ...s.connection, lastSync: data.lastSync } } : {})
       return { imported: data.imported }
     } finally {

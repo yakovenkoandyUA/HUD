@@ -32,6 +32,12 @@ interface FamilyState {
   clearSearch: () => void
 }
 
+// Guards against a slow fetchFamily() (called on mount from 10+ components —
+// spaces, profile, SpacesTab, FamilyTab, MeFamily, recipes, sprint modals,
+// memories, watchlist) overwriting a link removed while it was still in
+// flight with stale data — see spacesStore.ts for the same pattern.
+let familyReqId = 0
+
 /**
  * familyStore
  * -----------
@@ -46,10 +52,12 @@ export const useFamilyStore = create<FamilyState>()((set, get) => ({
   loading: false,
 
   fetchFamily: async () => {
+    const reqId = ++familyReqId
     try {
       const res = await authFetch('/api/family')
       if (!res.ok) return
       const data = await res.json() as { accepted: FamilyLink[]; pendingSent: FamilyLink[]; pendingReceived: FamilyLink[] }
+      if (reqId !== familyReqId) return // a mutation happened while this was in flight — stale, drop it
       set({ accepted: data.accepted, pendingSent: data.pendingSent, pendingReceived: data.pendingReceived })
     } catch { /* offline */ }
   },
@@ -86,6 +94,7 @@ export const useFamilyStore = create<FamilyState>()((set, get) => ({
 
   removeLink: async (linkId: string) => {
     await authFetch(`/api/family/${linkId}`, { method: 'DELETE' })
+    familyReqId++
     set(s => ({
       accepted: s.accepted.filter(l => l.linkId !== linkId),
       pendingSent: s.pendingSent.filter(l => l.linkId !== linkId),

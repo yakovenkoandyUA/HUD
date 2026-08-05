@@ -88,6 +88,11 @@ interface WatchlistStore {
   reset: () => void
 }
 
+// Guards against a slow fetchWatchlist() (called on mount, and again after an
+// import) overwriting an item added/edited while it was still in flight with
+// stale data — see spacesStore.ts for the same pattern.
+let watchlistReqId = 0
+
 export const useWatchlistStore = create<WatchlistStore>()((set, get) => ({
   items: [],
   syncStatus: 'local' as SyncStatus,
@@ -99,6 +104,7 @@ export const useWatchlistStore = create<WatchlistStore>()((set, get) => ({
 
   fetchWatchlist: async (filters) => {
     if (!getToken() || !isBackendConfigured()) { set({ isLoading: false }); return }
+    const reqId = ++watchlistReqId
     set({ syncStatus: 'syncing' })
     try {
       const params = new URLSearchParams()
@@ -108,16 +114,18 @@ export const useWatchlistStore = create<WatchlistStore>()((set, get) => ({
       const res = await authFetch(`/api/watchlist${qs}`)
       if (!res.ok) throw new Error()
       const data: ApiWatchlistItem[] = await res.json()
+      if (reqId !== watchlistReqId) return // a mutation happened while this was in flight — stale, drop it
       set({ items: data.map(fromApi), syncStatus: 'synced' })
     } catch {
-      set({ syncStatus: 'error' })
+      if (reqId === watchlistReqId) set({ syncStatus: 'error' })
     } finally {
-      set({ isLoading: false })
+      if (reqId === watchlistReqId) set({ isLoading: false })
     }
   },
 
   addItem: (item) => {
     const local: WatchlistItem = { ...item, id: crypto.randomUUID(), addedAt: new Date().toISOString() }
+    watchlistReqId++
     set(s => ({ items: [...s.items, local], syncStatus: 'syncing' }))
     authFetch('/api/watchlist', { method: 'POST', body: JSON.stringify(item) })
       .then(r => {
@@ -139,6 +147,7 @@ export const useWatchlistStore = create<WatchlistStore>()((set, get) => ({
   },
 
   updateItem: (id, updates) => {
+    watchlistReqId++
     set(s => ({
       items: s.items.map(i => i.id === id ? { ...i, ...updates } : i),
       syncStatus: 'syncing',
@@ -150,6 +159,7 @@ export const useWatchlistStore = create<WatchlistStore>()((set, get) => ({
   },
 
   deleteItem: (id) => {
+    watchlistReqId++
     set(s => ({ items: s.items.filter(i => i.id !== id), syncStatus: 'syncing' }))
     authFetch(`/api/watchlist/${id}`, { method: 'DELETE' })
       .then(() => set({ syncStatus: 'synced' }))

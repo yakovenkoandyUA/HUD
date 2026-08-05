@@ -47,6 +47,12 @@ interface RecipesState {
   reset: () => void
 }
 
+// Guards against a slow fetchRecipes() (called on mount from Dashboard,
+// recipes list/detail/planner, and Sprint) overwriting a recipe added/
+// edited/rated while it was still in flight with stale data — see
+// spacesStore.ts for the same pattern.
+let recipesReqId = 0
+
 export const useRecipesStore = create<RecipesState>()(
   persist(
     (set, get) => ({
@@ -63,6 +69,7 @@ export const useRecipesStore = create<RecipesState>()(
 
       fetchRecipes: async (scope) => {
         if (!getToken()) { set({ isLoading: false }); return }
+        const reqId = ++recipesReqId
         try {
           const s = scope ?? get().scope
           const res = await authFetch(`/api/recipes?scope=${s}`)
@@ -72,14 +79,16 @@ export const useRecipesStore = create<RecipesState>()(
           const recipes = data.map((d: Record<string, unknown>) =>
             toRecipe(s === 'mine' ? { ...d, isOwn: true } : d)
           )
+          if (reqId !== recipesReqId) return // a mutation happened while this was in flight — stale, drop it
           set({ recipes, scope: s })
         } finally {
-          set({ isLoading: false })
+          if (reqId === recipesReqId) set({ isLoading: false })
         }
       },
 
       addRecipe: async (data) => {
         const tempId = crypto.randomUUID()
+        recipesReqId++
         set(s => ({ recipes: [{ id: tempId, ...data, isOwn: true }, ...s.recipes] }))
         const res = await authFetch('/api/recipes', {
           method: 'POST',
@@ -96,6 +105,7 @@ export const useRecipesStore = create<RecipesState>()(
       },
 
       updateRecipe: async (id, data) => {
+        recipesReqId++
         set(s => ({ recipes: s.recipes.map(r => r.id === id ? { ...r, ...data } : r) }))
         await authFetch(`/api/recipes/${id}`, {
           method: 'PUT',
@@ -104,6 +114,7 @@ export const useRecipesStore = create<RecipesState>()(
       },
 
       deleteRecipe: async (id) => {
+        recipesReqId++
         set(s => ({
           recipes: s.recipes.filter(r => r.id !== id),
           wishlistIds: s.wishlistIds.filter(wid => wid !== id),
@@ -120,6 +131,7 @@ export const useRecipesStore = create<RecipesState>()(
       },
 
       rateRecipe: async (id, score) => {
+        recipesReqId++
         set(s => ({
           recipes: s.recipes.map(r => r.id === id ? { ...r, myRating: score } : r),
         }))

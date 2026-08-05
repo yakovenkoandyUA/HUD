@@ -228,6 +228,13 @@ function taskBody(item: Partial<UnifiedTodo> & { type?: string }): Record<string
   }
 }
 
+// Guards against a slow fetchItems() (called on mount from Dashboard, Sprint,
+// and DayOverlay) overwriting a task added/edited while it was still in
+// flight with stale data — see spacesStore.ts for the same pattern. One
+// shared counter across items/trashItems/globalLabels keeps this simple;
+// worst case a fetch gets conservatively dropped when it was actually fine.
+let sprintReqId = 0
+
 export const useSprintStore = create<TodoState>((set, get) => ({
   items:        [],
   trashItems:   [],
@@ -242,10 +249,12 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   fetchLabels: async () => {
     if (!getToken() || !isBackendConfigured()) return
+    const reqId = ++sprintReqId
     try {
       const res = await authFetch('/api/labels')
       if (!res.ok) return
       const data: ApiLabel[] = await res.json()
+      if (reqId !== sprintReqId) return // a mutation happened while this was in flight — stale, drop it
       if (data.length > 0) {
         set({ globalLabels: data.map(l => ({ id: l._id, title: l.title, color: l.color })) })
       } else {
@@ -260,6 +269,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
               .catch(() => l)
           )
         )
+        if (reqId !== sprintReqId) return
         set({ globalLabels: seeded })
       }
     } catch { /* offline — keep current labels */ }
@@ -269,6 +279,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   fetchItems: async () => {
     if (!getToken() || !isBackendConfigured()) return
+    const reqId = ++sprintReqId
     set({ loading: true, syncStatus: 'syncing' })
     await get().fetchLabels()
 
@@ -317,9 +328,10 @@ export const useSprintStore = create<TodoState>((set, get) => ({
         }
       })
 
+      if (reqId !== sprintReqId) return // a mutation happened while this was in flight — stale, drop it
       set({ items: sortItems(mapped), loading: false, syncStatus: 'synced' })
     } catch {
-      set({ loading: false, syncStatus: 'error' })
+      if (reqId === sprintReqId) set({ loading: false, syncStatus: 'error' })
     }
   },
 
@@ -327,6 +339,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   fetchTrash: async () => {
     if (!getToken() || !isBackendConfigured()) return
+    const reqId = ++sprintReqId
     try {
       const r = await authFetch('/api/sprint/tasks/trash')
       if (!r.ok) return
@@ -348,6 +361,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           deletedAt: (t as unknown as { deletedAt?: string }).deletedAt,
         }
       })
+      if (reqId !== sprintReqId) return // a mutation happened while this was in flight — stale, drop it
       set({ trashItems: mapped })
     } catch { /* offline */ }
   },
@@ -355,6 +369,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   restoreItem: (id) => {
     const item = get().trashItems.find(i => i.id === id)
     if (!item) return
+    sprintReqId++
     set(s => ({
       trashItems: s.trashItems.filter(i => i.id !== id),
       items: sortItems([...s.items, { ...item, deletedAt: undefined }]),
@@ -365,6 +380,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   },
 
   purgeItem: (id) => {
+    sprintReqId++
     set(s => ({ trashItems: s.trashItems.filter(i => i.id !== id) }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch(`/api/sprint/tasks/${id}/purge`, { method: 'DELETE' }).catch(() => {})
@@ -426,6 +442,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
       createdAt: new Date().toISOString(),
       ...data,
     }
+    sprintReqId++
     set(s => ({ items: sortItems([...s.items, item]) }))
     if (!getToken() || !isBackendConfigured()) return
 
@@ -470,6 +487,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
       createdAt: new Date().toISOString(),
       ...data,
     }))
+    sprintReqId++
     set(s => ({ items: sortItems([...s.items, ...newItems]) }))
     if (!getToken() || !isBackendConfigured()) return
 
@@ -499,6 +517,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   // ── Update item (rich fields + backend sync) ──────────────────────────────
 
   updateTask: (id, updates) => {
+    sprintReqId++
     set(s => ({ items: s.items.map(i => i.id === id ? { ...i, ...updates } : i) }))
     if (!getToken() || !isBackendConfigured()) return
 
@@ -523,6 +542,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   addChecklistItem: (taskId, title) => {
     const newItem: ChecklistItem = { id: crypto.randomUUID(), title, done: false }
     let newChecklist: ChecklistItem[] = []
+    sprintReqId++
     set(s => {
       const updated = s.items.map(i => {
         if (i.id !== taskId) return i
@@ -540,6 +560,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   toggleChecklistItem: (taskId, itemId) => {
     let newChecklist: ChecklistItem[] = []
+    sprintReqId++
     set(s => {
       const updated = s.items.map(i => {
         if (i.id !== taskId) return i
@@ -557,6 +578,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   removeChecklistItem: (taskId, itemId) => {
     let newChecklist: ChecklistItem[] = []
+    sprintReqId++
     set(s => {
       const updated = s.items.map(i => {
         if (i.id !== taskId) return i
@@ -573,6 +595,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   },
 
   updateChecklist: (taskId, newList) => {
+    sprintReqId++
     set(s => ({
       items: s.items.map(i => i.id === taskId ? { ...i, checklist: newList } : i)
     }))
@@ -587,6 +610,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   addLabel: (taskId, label) => {
     let newLabels: SprintLabel[] = []
+    sprintReqId++
     set(s => {
       const updated = s.items.map(i => {
         if (i.id !== taskId) return i
@@ -604,6 +628,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   removeLabel: (taskId, labelId) => {
     let newLabels: SprintLabel[] = []
+    sprintReqId++
     set(s => {
       const updated = s.items.map(i => {
         if (i.id !== taskId) return i
@@ -624,6 +649,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   addGlobalLabel: (label) => {
     const tempId = label.id || crypto.randomUUID()
     const withId = { ...label, id: tempId }
+    sprintReqId++
     set(s => ({ globalLabels: [...s.globalLabels, withId] }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch('/api/labels', {
@@ -638,6 +664,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   },
 
   updateGlobalLabel: (id, updates) => {
+    sprintReqId++
     set(s => ({
       globalLabels: s.globalLabels.map(l => l.id === id ? { ...l, ...updates } : l),
       items: s.items.map(i => ({
@@ -653,6 +680,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   },
 
   deleteGlobalLabel: (id) => {
+    sprintReqId++
     set(s => ({
       globalLabels: s.globalLabels.filter(l => l.id !== id),
       items: s.items.map(i => ({ ...i, labels: (i.labels ?? []).filter(l => l.id !== id) })),
@@ -664,6 +692,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   // ── Reminder ──────────────────────────────────────────────────────────────
 
   setReminder: (id, reminder) => {
+    sprintReqId++
     set(s => ({ items: s.items.map(i => i.id === id ? { ...i, reminder } : i) }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch(`/api/sprint/tasks/${id}`, {
@@ -677,6 +706,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   toggleItem: (id, date) => {
     const item = get().items.find(i => i.id === id)
     if (!item) return
+    sprintReqId++
 
     if (isRecurring(item)) {
       const completionDateStr = date ?? localDateStr(new Date())
@@ -741,6 +771,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   pinItem: (id) => {
     const current = get().items.find(i => i.id === id)
     const newPinned = !(current?.isPinned ?? false)
+    sprintReqId++
     set(s => ({
       items: s.items.map(i => ({
         ...i,
@@ -755,6 +786,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   },
 
   reorderTasks: async (orderedIds) => {
+    sprintReqId++
     set(s => ({
       items: s.items.map(t => {
         const i = orderedIds.indexOf(t.id)
@@ -771,6 +803,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   // ── Delete ────────────────────────────────────────────────────────────────
 
   deleteItem: (id) => {
+    sprintReqId++
     set(s => ({ items: s.items.filter(i => i.id !== id) }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch(`/api/sprint/tasks/${id}`, { method: 'DELETE' }).catch(() => {})

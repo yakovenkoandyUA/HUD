@@ -40,18 +40,26 @@ interface DrinksState {
   buyDrink: (drinkId: string, amount: number, date: string, note?: string) => Promise<void>
 }
 
+// Guards against a slow fetchDrinks() (called on mount from the drinks page,
+// its dashboard preview card, and CellarSpaceView) overwriting a drink
+// added/edited/rated while it was still in flight with stale data — see
+// spacesStore.ts for the same pattern.
+let drinksReqId = 0
+
 export const useDrinksStore = create<DrinksState>((set, get) => ({
   drinks: [],
   isLoading: false,
 
   fetchDrinks: async () => {
+    const reqId = ++drinksReqId
     set({ isLoading: true })
     try {
       const res = await authFetch('/api/drinks')
       const data = await res.json() as Record<string, unknown>[]
+      if (reqId !== drinksReqId) return // a mutation happened while this was in flight — stale, drop it
       set({ drinks: data.map(toDrink) })
     } finally {
-      set({ isLoading: false })
+      if (reqId === drinksReqId) set({ isLoading: false })
     }
   },
 
@@ -64,6 +72,7 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
     const res = await authFetch('/api/drinks', { method: 'POST', body: JSON.stringify(payload) })
     const raw = await res.json() as Record<string, unknown>
     const drink = toDrink(raw)
+    drinksReqId++
     set(s => ({ drinks: [drink, ...s.drinks] }))
     return drink
   },
@@ -73,6 +82,7 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
     if (patch.abv !== undefined)   payload.abv   = patch.abv   ? parseFloat(patch.abv)   : null
     if (patch.price !== undefined) payload.price = patch.price ? parseFloat(patch.price) : null
 
+    drinksReqId++
     set(s => ({ drinks: s.drinks.map(d => d._id === id ? { ...d, ...payload } as Drink : d) }))
     const res = await authFetch(`/api/drinks/${id}`, { method: 'PATCH', body: JSON.stringify(payload) })
     const raw = await res.json() as Record<string, unknown>
@@ -80,6 +90,7 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
   },
 
   deleteDrink: async (id) => {
+    drinksReqId++
     set(s => ({ drinks: s.drinks.filter(d => d._id !== id) }))
     await authFetch(`/api/drinks/${id}`, { method: 'DELETE' })
   },
@@ -93,16 +104,19 @@ export const useDrinksStore = create<DrinksState>((set, get) => ({
     const raw = await res.json() as Record<string, unknown>
     if (!raw._id) return
     const updated = toDrink(raw)
+    drinksReqId++
     set(s => ({ drinks: s.drinks.map(d => d._id === id ? updated : d) }))
   },
 
   addTasting: async (drinkId, tasting) => {
     const res = await authFetch(`/api/drinks/${drinkId}/tasting`, { method: 'POST', body: JSON.stringify(tasting) })
     const raw = await res.json() as Record<string, unknown>
+    drinksReqId++
     set(s => ({ drinks: s.drinks.map(d => d._id === drinkId ? toDrink(raw) : d) }))
   },
 
   deleteTasting: async (drinkId, tastingId) => {
+    drinksReqId++
     set(s => ({
       drinks: s.drinks.map(d => d._id === drinkId
         ? { ...d, tastings: d.tastings.filter(t => t._id !== tastingId) }

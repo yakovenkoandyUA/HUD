@@ -23,6 +23,12 @@ interface CategoryState {
   reset: () => void
 }
 
+// Guards against a slow fetchCategories() (called on mount from WalletTab,
+// ExpenseForm, ExpenseChart, and TransactionList) overwriting a category
+// toggled while it was still in flight with stale data — see spacesStore.ts
+// for the same pattern.
+let categoryReqId = 0
+
 export const useCategoryStore = create<CategoryState>()(
   persist(
     (set, get) => ({
@@ -32,23 +38,26 @@ export const useCategoryStore = create<CategoryState>()(
 
       fetchCategories: async () => {
         if (get().loading) return
+        const reqId = ++categoryReqId
         set({ loading: true })
         try {
           const res = await authFetch('/api/categories')
           if (res.ok) {
             const data: Category[] = await res.json()
-            set({ categories: data })
+            if (reqId === categoryReqId) set({ categories: data })
           }
         } catch { /* offline */ } finally {
-          set({ loading: false })
+          if (reqId === categoryReqId) set({ loading: false })
         }
       },
 
       addCategory: (cat: Category) => {
+        categoryReqId++
         set(s => ({ categories: [...s.categories, cat] }))
       },
 
       removeCategory: (id: string) => {
+        categoryReqId++
         set(s => ({ categories: s.categories.filter(c => c._id !== id) }))
       },
 
@@ -56,6 +65,7 @@ export const useCategoryStore = create<CategoryState>()(
         const cat = get().categories.find(c => c._id === id)
         if (!cat) return
         const next = !cat.isActive
+        categoryReqId++
         set(s => ({ categories: s.categories.map(c => c._id === id ? { ...c, isActive: next } : c) }))
         try {
           await authFetch(`/api/categories/${id}`, {

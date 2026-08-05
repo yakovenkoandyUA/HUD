@@ -159,6 +159,12 @@ interface SpacesStore {
   reset: () => void
 }
 
+// Guards against a slow fetchSpaces() (e.g. the ones both SpacesStrip and
+// Dashboard fire on mount) overwriting a space created/edited while it was
+// still in flight with stale data. Every mutation bumps this; fetchSpaces
+// only applies its response if nothing else touched the store since it started.
+let spacesReqId = 0
+
 export const useSpacesStore = create<SpacesStore>((set, get) => ({
   spaces:         [],
   archivedSpaces: [],
@@ -167,14 +173,16 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
   reset: () => set({ spaces: [], archivedSpaces: [], loading: true }),
 
   fetchSpaces: async () => {
+    const reqId = ++spacesReqId
     set({ loading: true })
     try {
       const res = await authFetch('/api/spaces')
       if (!res.ok) throw new Error('fetch failed')
       const data: Space[] = await res.json()
+      if (reqId !== spacesReqId) return // a mutation happened while this was in flight — stale, drop it
       set({ spaces: data, loading: false })
     } catch (err) {
-      set({ loading: false })
+      if (reqId === spacesReqId) set({ loading: false })
       throw err
     }
   },
@@ -194,6 +202,7 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
     })
     if (!res.ok) throw new Error('Create failed')
     const space: Space = await res.json()
+    spacesReqId++
     set(s => ({ spaces: [space, ...s.spaces] }))
     return space
   },
@@ -206,6 +215,7 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
     })
     if (!res.ok) return
     const updated: Space = await res.json()
+    spacesReqId++
     set(s => ({ spaces: s.spaces.map(sp => sp.id === id ? updated : sp) }))
   },
 
@@ -253,6 +263,7 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
     })
     if (!res.ok) return
     const archived: Space = await res.json()
+    spacesReqId++
     // optimistic: remove from active, add to archived list
     set(s => ({
       spaces:         s.spaces.filter(sp => sp.id !== id),
@@ -268,6 +279,7 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
     })
     if (!res.ok) return
     const active: Space = await res.json()
+    spacesReqId++
     set(s => ({
       archivedSpaces: s.archivedSpaces.filter(sp => sp.id !== id),
       spaces:         [active, ...s.spaces],
@@ -276,6 +288,7 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
 
   deleteSpace: async (id) => {
     await authFetch(`/api/spaces/${id}`, { method: 'DELETE' })
+    spacesReqId++
     set(s => ({
       spaces:         s.spaces.filter(sp => sp.id !== id),
       archivedSpaces: s.archivedSpaces.filter(sp => sp.id !== id),
@@ -293,11 +306,13 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
       throw new Error(err.error ?? 'Failed')
     }
     const updated: Space = await res.json()
+    spacesReqId++
     set(s => ({ spaces: s.spaces.map(sp => sp.id === spaceId ? updated : sp) }))
   },
 
   removeMember: async (spaceId, userId) => {
     await authFetch(`/api/spaces/${spaceId}/members/${userId}`, { method: 'DELETE' })
+    spacesReqId++
     set(s => ({
       spaces: s.spaces.map(sp =>
         sp.id === spaceId
@@ -317,6 +332,7 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
           body: JSON.stringify({ name: 'Drink Deep' }),
         })
         const renamed = { ...existing, name: 'Drink Deep' }
+        spacesReqId++
         set(s => ({ spaces: s.spaces.map(sp => sp.id === existing.id ? renamed : sp) }))
         return renamed
       }
@@ -329,6 +345,7 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
     })
     if (!res.ok) throw new Error('Create cellar failed')
     const space: Space = await res.json()
+    spacesReqId++
     set(s => ({ spaces: [space, ...s.spaces] }))
     return space
   },
