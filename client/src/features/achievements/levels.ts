@@ -10,14 +10,14 @@ export interface Level {
 
 export const LEVELS: Level[] = [
   { level: 1,  minRunes: 0,    label: 'МАНДРІВНИК',   hint: 'ПОЧАТОК',        color: 'var(--text3)' },
-  { level: 2,  minRunes: 30,   label: 'УЧЕНЬ',         hint: 'ДИСЦИПЛІНА',     color: 'var(--text2)' },
-  { level: 3,  minRunes: 80,   label: 'СЛІДОПИТ',      hint: 'ПОШУК',          color: 'var(--accent)', unlocksTheme: 'arctic' },
-  { level: 4,  minRunes: 150,  label: 'ШУКАЧ',         hint: 'НАПОЛЕГЛИВІСТЬ', color: 'var(--accent)' },
-  { level: 5,  minRunes: 250,  label: 'ХРАНИТЕЛЬ',     hint: "ПАМ'ЯТЬ",       color: 'var(--second)', unlocksTheme: 'noir' },
-  { level: 6,  minRunes: 400,  label: 'ПРОВИДЕЦЬ',     hint: 'ПРОЗРІННЯ',     color: 'var(--second)' },
-  { level: 7,  minRunes: 550,  label: 'МУДРЕЦЬ',       hint: 'ГЛИБИНА',       color: 'var(--gold)',   unlocksTheme: 'cyber' },
+  { level: 2,  minRunes: 30,   label: 'УЧЕНЬ',         hint: 'ДИСЦИПЛІНА',     color: 'var(--text2)',  unlocksTheme: 'arctic' },
+  { level: 3,  minRunes: 80,   label: 'СЛІДОПИТ',      hint: 'ПОШУК',          color: 'var(--accent)' },
+  { level: 4,  minRunes: 150,  label: 'ШУКАЧ',         hint: 'НАПОЛЕГЛИВІСТЬ', color: 'var(--accent)', unlocksTheme: 'cyber' },
+  { level: 5,  minRunes: 250,  label: 'ХРАНИТЕЛЬ',     hint: "ПАМ'ЯТЬ",       color: 'var(--second)' },
+  { level: 6,  minRunes: 400,  label: 'ПРОВИДЕЦЬ',     hint: 'ПРОЗРІННЯ',     color: 'var(--second)', unlocksTheme: 'pixel' },
+  { level: 7,  minRunes: 550,  label: 'МУДРЕЦЬ',       hint: 'ГЛИБИНА',       color: 'var(--gold)' },
   { level: 8,  minRunes: 700,  label: 'ПРОСВІТЛЕНИЙ',  hint: 'ЯСНІСТЬ',       color: 'var(--gold)' },
-  { level: 9,  minRunes: 850,  label: 'ОРАКУЛ',        hint: 'ПРАВДА',        color: 'var(--gold)',   unlocksTheme: 'pixel' },
+  { level: 9,  minRunes: 850,  label: 'ОРАКУЛ',        hint: 'ПРАВДА',        color: 'var(--gold)' },
   { level: 10, minRunes: 1010, label: 'МІМІР',         hint: 'ЛЕГЕНДА',       color: 'var(--gold)' },
 ]
 
@@ -32,9 +32,9 @@ export const THEME_UNLOCK_CONDITIONS: Record<string, { hint: string }> = {
   aurum:  { hint: 'Доступна одразу' },
   vellum: { hint: 'Доступна одразу' },
   noir:   { hint: 'Після onboarding' },
-  arctic: { hint: 'Після першого досягнення' },
-  cyber:  { hint: 'Заверши перший квест' },
-  pixel:  { hint: '7 днів задач поспіль' },
+  arctic: { hint: 'Рівень 2 — УЧЕНЬ' },
+  cyber:  { hint: 'Рівень 4 — ШУКАЧ' },
+  pixel:  { hint: 'Рівень 6 — ПРОВИДЕЦЬ' },
 }
 
 export function getLevel(earned: number): Level {
@@ -61,18 +61,18 @@ export function getLevelProgress(earned: number): number {
  * Triggers (in order of ease):
  *   aurum, mimir — always
  *   noir          — onboarding completed
- *   arctic        — at least 1 achievement unlocked
- *   cyber         — 'completed-path' achievement (first quest finished)
- *   pixel         — 'seven-days-fire' achievement (7 consecutive sprint days)
+ *   arctic        — level 2 reached (30 runes)
+ *   cyber         — level 4 reached (150 runes)
+ *   pixel         — level 6 reached (400 runes)
  */
 export function getUnlockedThemes(
-  unlockedIds: ReadonlySet<string>,
   onboardingCompleted: boolean,
+  earnedRunes: number,
 ): string[] {
   const unlocked: string[] = [...DEFAULT_THEMES]
   if (onboardingCompleted)                     unlocked.push('noir')
-  if (unlockedIds.size >= 1)                   unlocked.push('arctic')
-  if (unlockedIds.has('completed-path'))        unlocked.push('cyber')
-  if (unlockedIds.has('seven-days-fire'))       unlocked.push('pixel')
+  if (getLevel(earnedRunes).level >= 2)         unlocked.push('arctic')
+  if (getLevel(earnedRunes).level >= 4)         unlocked.push('cyber')
+  if (getLevel(earnedRunes).level >= 6)         unlocked.push('pixel')
   return unlocked
 }

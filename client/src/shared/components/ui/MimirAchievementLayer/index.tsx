@@ -5,6 +5,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { MIMIR_DIALOGUE, getMimirText } from '@/shared/data/mimirDialogue'
 import { getMimirHistory, setMimirHistory } from '@/shared/utils/mimirHistory'
+import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
 
 /**
  * MimirAchievementLayer
@@ -35,6 +36,10 @@ const MimirAchievementLayer: React.FC = () => {
 
   const { id, achievementId } = mimirAchievementDialogue
   const entry = MIMIR_DIALOGUE[id]
+  // Rare achievements: use the achievement's own flavor line instead of the
+  // generic mode-based text, so each rare unlock feels like a unique Mimir moment.
+  const flavor = id === 'achievement_rare' ? ACHIEVEMENT_BY_ID[achievementId]?.flavor : undefined
+  const text = flavor ?? getMimirText(id, mimirMode)
 
   const handleDismiss = () => {
     const h = getMimirHistory(userId)
@@ -53,7 +58,7 @@ const MimirAchievementLayer: React.FC = () => {
     <MimirHint
       portal
       pose={entry.pose}
-      textKey={getMimirText(id, mimirMode)}
+      textKey={text}
       oneTime
       onDismiss={handleDismiss}
     />

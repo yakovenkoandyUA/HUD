@@ -5,6 +5,7 @@ import { ALL_NAV_SECTIONS, PROFILE_TABS } from '@/shared/components/layout/Botto
 import type { Theme, NavStyle, NavLabelMode } from '@/shared/store/uiStore'
 import { NAV_STYLE_MAX_PINNED } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { useAchievementScore } from '@/features/achievements/hooks/useAchievementProgress'
 import { getUnlockedThemes, THEME_UNLOCK_CONDITIONS } from '@/features/achievements/levels'
 import styles from './ProfilePage.module.css'
 
@@ -147,9 +148,9 @@ const LockIcon: React.FC = () => (
 const MeAppearance: React.FC = () => {
   const { activeProfile } = useProfileStore()
   const { theme, setTheme, navStyle, setNavStyle, navLabelMode, setNavLabelMode, pinnedSections, setPinnedSections, pinnedProfileTabs, setPinnedProfileTabs } = useUiStore()
-  const unlockedAchievementIds = new Set((activeProfile?.unlockedAchievements ?? []).map(u => u.id))
   const onboardingCompleted = activeProfile?.onboardingCompleted ?? false
-  const unlockedThemes = getUnlockedThemes(unlockedAchievementIds, onboardingCompleted)
+  const score = useAchievementScore()
+  const unlockedThemes = getUnlockedThemes(onboardingCompleted, score.earned)
   const [lockedInfo, setLockedInfo] = React.useState<{ name: string; hint: string } | null>(null)
 
   return (

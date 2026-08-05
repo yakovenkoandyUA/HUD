@@ -1,14 +1,7 @@
 import React from 'react'
 import type { AchievementWithStatus } from '../../types'
+import { ACHIEVEMENT_BADGE } from '../../data'
 import styles from './index.module.css'
-
-const RUNE_SRC: Record<string, string> = {
-  memory:    '/achive/mimir-runes-transparent/rune-memory.webp',
-  spaces:    '/achive/mimir-runes-transparent/rune-spaces.webp',
-  finance:   '/achive/mimir-runes-transparent/rune-finance.webp',
-  sprint:    '/achive/mimir-runes-transparent/rune-sprint.webp',
-  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.webp',
-}
 
 interface AchievementCardProps {
   achievement: AchievementWithStatus
@@ -34,7 +27,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement }) => {
 
   const fraction = target > 0 ? Math.min(progress / target, 1) : 0
 
-  const runeSrc     = RUNE_SRC[achievement.category]
+  const runeSrc     = ACHIEVEMENT_BADGE[achievement.id]
   const blockSrc    = '/achive/achive-block-dark.webp'
   const questionSrc = '/achive/achive-question-dark.webp'
 

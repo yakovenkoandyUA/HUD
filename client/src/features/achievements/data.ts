@@ -31,7 +31,7 @@ export const CATEGORY_WELL_BG: Record<AchievementCategory, string> = {
  * sigil beneath the roots. Same spot in all 5 branch renders (shared template),
  * so unlike the old well-mouth this is a single constant, not per-category.
  */
-export const TREE_RETURN_POS = { x: 50, y: 90 }
+export const TREE_RETURN_POS = { x: 12, y: 6 }
 
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // ── ПАМʼЯТЬ (10) ───────────────────────────────────────────────────────────
@@ -604,29 +604,35 @@ export const ACHIEVEMENT_MAX_SCORE = ACHIEVEMENT_DEFS.reduce((s, a) => s + a.rew
 export const ACHIEVEMENT_BY_ID: Record<string, AchievementDef> =
   Object.fromEntries(ACHIEVEMENT_DEFS.map(a => [a.id, a]))
 
+/** Per-achievement badge — public/achivement/badges/[category]/[id].webp */
+export const ACHIEVEMENT_BADGE: Record<string, string> =
+  Object.fromEntries(ACHIEVEMENT_DEFS.map(a => [a.id, `/achivement/badges/${a.category}/${a.id}.webp`]))
+
 // ── Branch node positions (% of canvas) ────────────────────────────────────
 // All 5 category-well/[cat].png renders share the same branch template —
-// only the medallion icons differ — so the 6 medallion sockets sit at the
+// only the medallion icons differ — so the medallion sockets sit at the
 // same coordinates in every image (measured against the artwork).
+// The branch art has 6 sockets total; only 5 are used as achievement nodes
+// (the second-from-top socket is left as unclaimed decoration) to keep the
+// map to 5 milestones per category.
 // Order is root (bottom, easiest) → tip (top, hardest), matching how the
 // tree grows: foundational achievements near the ground, the pinnacle near
 // the crown.
 
 const BRANCH_NODE_POS: { x: number; y: number }[] = [
-  { x: 50, y: 79 }, // root — bottom
-  { x: 48, y: 66 },
-  { x: 52, y: 53 },
-  { x: 47, y: 42 },
-  { x: 53, y: 30 },
-  { x: 50, y: 16 }, // tip — top
+  { x: 53.3, y: 76.8 }, // root — bottom
+  { x: 45, y: 66 },
+  { x: 53.6, y: 55 },
+  { x: 45.3, y: 43.6 },
+  { x: 54.5, y: 32.4 }, // tip — top
 ]
 
 const BRANCH_IDS: Record<AchievementCategory, string[]> = {
-  memory:    ['first-memory', 'past-memory', 'seven-days-memory', 'ten-memories', 'month-memory', 'archive-25'],
-  spaces:    ['first-space', 'space-with-profile', 'living-space', 'five-spaces', 'full-space', 'life-map'],
-  finance:   ['first-transaction', 'first-category', 'first-goal', 'daily-finance', 'first-pattern', 'month-watched'],
-  sprint:    ['first-quest', 'three-steps', 'three-day-chain', 'ten-steps', 'completed-path', 'return-after-fail'],
-  watchlist: ['first-watchlist', 'first-series', 'watched-completed', 'not-just-list', 'ten-watchlist', 'taste-archive'],
+  memory:    ['first-memory', 'past-memory', 'ten-memories', 'month-memory', 'archive-25'],
+  spaces:    ['first-space', 'space-with-profile', 'living-space', 'five-spaces', 'life-map'],
+  finance:   ['first-transaction', 'first-category', 'first-goal', 'first-pattern', 'month-watched'],
+  sprint:    ['first-quest', 'three-steps', 'three-day-chain', 'ten-steps', 'return-after-fail'],
+  watchlist: ['first-watchlist', 'first-series', 'watched-completed', 'not-just-list', 'taste-archive'],
 }
 
 export const TREE_NODES: Record<string, { id: string; x: number; y: number }[]> =
@@ -638,7 +644,7 @@ export const TREE_NODES: Record<string, { id: string; x: number; y: number }[]> 
   )
 
 // Linear chain: root → ... → tip
-const BRANCH_CHAIN: [number, number][] = [[0,1],[1,2],[2,3],[3,4],[4,5]]
+const BRANCH_CHAIN: [number, number][] = [[0,1],[1,2],[2,3],[3,4]]
 
 export const TREE_CONNECTIONS: Record<string, [number, number][]> = {
   memory:   BRANCH_CHAIN,

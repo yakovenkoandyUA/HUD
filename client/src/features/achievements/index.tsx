@@ -17,9 +17,15 @@ const DIVE_MS = 320
  * + вузли досягнень), "Винирнути" повертає до вибору категорій.
  * Вкладка профілю доступна через ?tab=achievements.
  *
- * Props: none
+ * Props:
+ * @prop {(active: boolean) => void} [onBranchActiveChange] — викликається при вході/виході з гілки
+ * (щоб батьківський екран міг синхронно згорнути hero-картку та сховати кнопку "назад")
  */
-const AchievementsTab: React.FC = () => {
+interface AchievementsTabProps {
+  onBranchActiveChange?: (active: boolean) => void
+}
+
+const AchievementsTab: React.FC<AchievementsTabProps> = ({ onBranchActiveChange }) => {
   const [category, setCategory]         = useState<AchievementCategory | null>(null)
   const [origin, setOrigin]             = useState<{ x: number; y: number } | undefined>(undefined)
   const [transitioning, setTransitioning] = useState<'diving' | 'surfacing' | null>(null)
@@ -31,6 +37,7 @@ const AchievementsTab: React.FC = () => {
   const handleSelectCategory = (cat: AchievementCategory, pos: { x: number; y: number }) => {
     setOrigin(pos)
     setTransitioning('diving')
+    onBranchActiveChange?.(true)
     setTimeout(() => {
       setCategory(cat)
       setTransitioning(null)
@@ -40,6 +47,7 @@ const AchievementsTab: React.FC = () => {
   const handleBack = () => {
     setTransitioning('surfacing')
     setSelectedId(null)
+    onBranchActiveChange?.(false)
     setTimeout(() => {
       setCategory(null)
       setTransitioning(null)

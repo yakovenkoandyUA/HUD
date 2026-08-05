@@ -1,21 +1,8 @@
 import React from 'react'
 import InfoToggle from '@/shared/components/ui/InfoToggle'
-import { TREE_NODES, TREE_CONNECTIONS, CATEGORY_WELL_BG, TREE_RETURN_POS } from '../../data'
+import { TREE_NODES, TREE_CONNECTIONS, CATEGORY_WELL_BG, TREE_RETURN_POS, ACHIEVEMENT_BADGE } from '../../data'
 import type { AchievementWithStatus, AchievementCategory } from '../../types'
 import styles from './index.module.css'
-
-// SVG arc progress ring dimensions
-const RING_R   = 24   // radius of the progress arc
-const RING_W   = 3    // stroke width
-const CIRC     = 2 * Math.PI * RING_R
-
-const RUNE_SRC: Record<string, string> = {
-  memory:    '/achive/mimir-runes-transparent/rune-memory.webp',
-  spaces:    '/achive/mimir-runes-transparent/rune-spaces.webp',
-  finance:   '/achive/mimir-runes-transparent/rune-finance.webp',
-  sprint:    '/achive/mimir-runes-transparent/rune-sprint.webp',
-  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.webp',
-}
 
 interface AchievementNodeProps {
   achievement: AchievementWithStatus
@@ -27,16 +14,10 @@ interface AchievementNodeProps {
 }
 
 const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, onClick, selected, isNear }) => {
-  const { status, progress, target } = achievement
-  const fraction = target > 0 ? progress / target : 0
-  const arcFill  = fraction * CIRC
-
-  const svgSize  = (RING_R + RING_W) * 2 + 4
-  const cx       = svgSize / 2
-  const cy       = svgSize / 2
+  const { status } = achievement
 
   const blendNode   = status === 'locked' || status === 'hidden'
-  const runeSrc     = RUNE_SRC[achievement.category]
+  const runeSrc     = ACHIEVEMENT_BADGE[achievement.id]
   const blockSrc    = '/achive/achive-block-dark.webp'
   const questionSrc = '/achive/achive-question-dark.webp'
 
@@ -59,22 +40,17 @@ const AchievementNode: React.FC<AchievementNodeProps> = ({ achievement, x, y, on
 
       {status === 'unlocked' && (
         <div className={styles.runeWrap}>
-          <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
+          <div className={styles.runeImgClip}>
+            <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
+          </div>
         </div>
       )}
 
       {status === 'in_progress' && (
         <div className={styles.runeWrap}>
-          <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgDim}`} draggable={false} />
-          <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} className={styles.arcOverlay} aria-hidden="true">
-            <circle cx={cx} cy={cy} r={RING_R} fill="none" className={styles.ringTrack} strokeWidth={RING_W} />
-            <circle cx={cx} cy={cy} r={RING_R} fill="none" className={styles.ringArc}
-              strokeWidth={RING_W}
-              strokeDasharray={`${arcFill} ${CIRC}`}
-              transform={`rotate(-90 ${cx} ${cy})`}
-              strokeLinecap="round"
-            />
-          </svg>
+          <div className={styles.runeImgClip}>
+            <img src={runeSrc} alt="" className={`${styles.runeImg} ${styles.runeImgDim}`} draggable={false} />
+          </div>
         </div>
       )}
 
@@ -166,26 +142,6 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
           </svg>
         </button>
 
-        {/* Connection lines */}
-        <svg className={styles.connectionsSvg} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          {connections.map(([a, b], i) => {
-            const na = nodes[a]
-            const nb = nodes[b]
-            if (!na || !nb) return null
-            const aStatus = byId[na.id]?.status
-            const bStatus = byId[nb.id]?.status
-            const lit = aStatus === 'unlocked' && bStatus === 'unlocked'
-            return (
-              <line
-                key={i}
-                x1={na.x} y1={na.y}
-                x2={nb.x} y2={nb.y}
-                className={lit ? styles.connLit : styles.connDim}
-              />
-            )
-          })}
-        </svg>
-
         {/* Nodes */}
         {nodes.map(node => {
           const ach = byId[node.id]
@@ -203,27 +159,20 @@ const AchievementMap: React.FC<AchievementMapProps> = ({
           )
         })}
 
-        {/* Floating node detail popup */}
+        {/* Floating node detail popup — anchored beside the node, alternating sides */}
         {selectedId && (() => {
-          const ach  = byId[selectedId]
-          const node = nodes.find(n => n.id === selectedId)
+          const ach   = byId[selectedId]
+          const index = nodes.findIndex(n => n.id === selectedId)
+          const node  = nodes[index]
           if (!ach || !node || ach.status === 'hidden') return null
-          const showAbove = node.y > 55
+          const side = index % 2 === 0 ? 'right' : 'left'
           return (
             <div
               key={selectedId}
-              className={styles.nodePopupAnchor}
-              style={{
-                left: '50%',
-                top: showAbove
-                  ? `calc(${node.y}% - 38px)`
-                  : `calc(${node.y}% + 38px)`,
-                transform: showAbove
-                  ? 'translate(-50%, -100%)'
-                  : 'translate(-50%, 0)',
-              }}
+              className={`${styles.nodePopupAnchor} ${side === 'right' ? styles.nodePopupAnchorRight : styles.nodePopupAnchorLeft}`}
+              style={{ top: `${node.y}%` }}
             >
-              <div className={styles.nodePopup}>
+              <div className={`${styles.nodePopup} ${side === 'right' ? styles.nodePopupTailLeft : styles.nodePopupTailRight}`}>
                 <span className={styles.nodePopupTitle}>{ach.title}</span>
                 <p className={styles.nodePopupDesc}>{ach.description}</p>
                 {ach.status === 'in_progress' && (

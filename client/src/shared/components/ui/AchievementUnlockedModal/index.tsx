@@ -1,19 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { useProfileStore } from '@/shared/store/profileStore'
-import { ACHIEVEMENT_BY_ID } from '@/features/achievements/data'
+import { ACHIEVEMENT_BY_ID, ACHIEVEMENT_BADGE } from '@/features/achievements/data'
 import { getAchievementReward, TOTAL_ACHIEVEMENT_COUNT } from '@/shared/data/achievements'
 import styles from './AchievementUnlockedModal.module.css'
 
 const AUTO_DISMISS_MS = 6000
-
-const RUNE_SRC: Record<string, string> = {
-  memory:    '/achive/mimir-runes-transparent/rune-memory.webp',
-  spaces:    '/achive/mimir-runes-transparent/rune-spaces.webp',
-  finance:   '/achive/mimir-runes-transparent/rune-finance.webp',
-  sprint:    '/achive/mimir-runes-transparent/rune-sprint.webp',
-  watchlist: '/achive/mimir-runes-transparent/rune-watchlist.webp',
-}
 
 /**
  * AchievementUnlockedModal
@@ -57,8 +49,7 @@ const AchievementUnlockedModal: React.FC = () => {
   if (!pending) return null
 
   const meta     = ACHIEVEMENT_BY_ID[pending.id]
-  const category = meta?.category ?? 'memory'
-  const runeSrc  = RUNE_SRC[category]
+  const runeSrc  = ACHIEVEMENT_BADGE[pending.id]
   const reward      = getAchievementReward(pending.id)
   const totalAch    = TOTAL_ACHIEVEMENT_COUNT
 
@@ -94,7 +85,11 @@ const AchievementUnlockedModal: React.FC = () => {
         <div className={styles.runeWrap} style={{ '--ach-color': pending.color } as React.CSSProperties}>
           <div className={styles.runeGlow} />
           {runeSrc
-            ? <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
+            ? (
+              <div className={styles.runeImgClip}>
+                <img src={runeSrc} alt="" className={styles.runeImg} draggable={false} />
+              </div>
+            )
             : <div className={styles.runeFallback} style={{ color: pending.color }}>✦</div>
           }
         </div>
