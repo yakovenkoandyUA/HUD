@@ -65,6 +65,10 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
   const weather       = useWeather(profile?.city)
   const [now, setNow] = useState(() => new Date())
   const [geoState, setGeoState] = useState<'idle' | 'loading' | 'denied'>('idle')
+  // Id of the routine mid "drain" animation — kept in the list (not toggled
+  // in the store yet) until the animation finishes, so it doesn't just pop
+  // out of the list the instant it's tapped.
+  const [completingId, setCompletingId] = useState<string | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000)
@@ -99,6 +103,17 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
 
   const shownCount  = todayTeasers?.length ?? 0
   const hiddenCount = (todayTeasersTotal ?? 0) > shownCount ? (todayTeasersTotal ?? 0) - shownCount : 0
+
+  const DRAIN_MS = 820
+
+  const handleCompleteRoutine = (id: string) => {
+    if (completingId) return
+    setCompletingId(id)
+    setTimeout(() => {
+      toggleItem(id, todayLocalIso())
+      setCompletingId(null)
+    }, DRAIN_MS)
+  }
 
   const handleGeoRequest = () => {
     if (!navigator.geolocation || geoState === 'loading') return
@@ -166,18 +181,20 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
           todayTeasers.map((item, i) => {
             const isLast = i === todayTeasers.length - 1
             const isWorkout = item.kind === 'workout'
+            const isDraining = completingId === item.id
             return (
               <div key={item.id} className={styles.todayBottom}>
                 <button
                   type="button"
-                  className={styles.todayItem}
+                  className={`${styles.todayItem} ${isDraining ? styles.todayItemDraining : ''}`}
                   onClick={() => isWorkout
                     ? (item.spaceId && navigate(`/spaces/${item.spaceId}`))
-                    : toggleItem(item.id, todayLocalIso())
+                    : handleCompleteRoutine(item.id)
                   }
+                  disabled={!isWorkout && isDraining}
                   aria-label={isWorkout ? `Тренування: ${item.title}` : `Позначити виконаним: ${item.title}`}
                 >
-                  <span className={`${styles.todayDot} ${isWorkout ? styles.todayDotWorkout : ''}`} aria-hidden="true" />
+                  <span className={`${styles.todayDot} ${isWorkout ? styles.todayDotWorkout : ''} ${isDraining ? styles.todayDotDone : ''}`} aria-hidden="true" />
                   <span className={styles.todayText}>{item.title}</span>
                 </button>
                 {isLast && (
@@ -185,7 +202,11 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
                     {hiddenCount > 0 && (
                       <span className={styles.hiddenBadge}>+{hiddenCount}</span>
                     )}
-                    <button type="button" className={styles.todayLink} onClick={onOpenDay}>
+                    <button
+                      type="button"
+                      className={`${styles.todayLink} ${completingId ? styles.todayLinkPulse : ''}`}
+                      onClick={onOpenDay}
+                    >
                       детальніше
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M9 18l6-6-6-6"/>

@@ -20,21 +20,26 @@ async function persistPlan(plan: Record<DayKey, string[]>) {
   })
 }
 
+// Guards against a slow fetchPlan() overwriting a meal plan edited while it
+// was still in flight with stale data — see spacesStore.ts.
+let mealPlanReqId = 0
+
 export const useMealPlanStore = create<MealPlanState>((set, get) => ({
   plan: {},
   loading: false,
 
   fetchPlan: async () => {
     if (!getToken()) return
+    const reqId = ++mealPlanReqId
     set({ loading: true })
     try {
       const res = await authFetch('/api/meal-plan')
       if (res.ok) {
         const data = await res.json() as { plan: Record<DayKey, string[]> }
-        set({ plan: data.plan })
+        if (reqId === mealPlanReqId) set({ plan: data.plan })
       }
     } finally {
-      set({ loading: false })
+      if (reqId === mealPlanReqId) set({ loading: false })
     }
   },
 
@@ -43,6 +48,7 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
     const dayIds = prev[day] ?? []
     if (dayIds.includes(recipeId)) return
     const next = { ...prev, [day]: [...dayIds, recipeId] }
+    mealPlanReqId++
     set({ plan: next })
     await persistPlan(next)
   },
@@ -50,6 +56,7 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
   removeFromDay: async (day, recipeId) => {
     const prev = get().plan
     const next = { ...prev, [day]: (prev[day] ?? []).filter(id => id !== recipeId) }
+    mealPlanReqId++
     set({ plan: next })
     await persistPlan(next)
   },
@@ -58,6 +65,7 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
     const prev = get().plan
     const next = { ...prev }
     days.forEach(d => delete next[d])
+    mealPlanReqId++
     set({ plan: next })
     await persistPlan(next)
   },
@@ -73,6 +81,7 @@ export const useMealPlanStore = create<MealPlanState>((set, get) => ({
       const nextKey = d.toISOString().slice(0, 10)
       next[nextKey] = [...ids]
     })
+    mealPlanReqId++
     set({ plan: next })
     await persistPlan(next)
   },

@@ -43,18 +43,26 @@ interface PlansStore {
   addPhoto:    (id: string, url: string, caption?: string) => Promise<void>
 }
 
+// Guards against a slow fetchPlans() overwriting a plan added/edited while
+// it was still in flight with stale data — see spacesStore.ts.
+let plansReqId = 0
+
 export const usePlansStore = create<PlansStore>((set, get) => ({
   plans:   [],
   loading: false,
 
   fetchPlans: async () => {
     if (!getToken()) return
+    const reqId = ++plansReqId
     set({ loading: true })
     try {
       const r = await authFetch('/api/plans')
-      if (r.ok) set({ plans: await r.json() })
+      if (r.ok) {
+        const data = await r.json()
+        if (reqId === plansReqId) set({ plans: data })
+      }
     } catch { /* silent */ }
-    finally { set({ loading: false }) }
+    finally { if (reqId === plansReqId) set({ loading: false }) }
   },
 
   addPlan: async (data) => {
@@ -65,6 +73,7 @@ export const usePlansStore = create<PlansStore>((set, get) => ({
       userId:   '',
       createdAt: new Date().toISOString(),
     }
+    plansReqId++
     set(s => ({ plans: [temp, ...s.plans] }))
     try {
       const r = await authFetch('/api/plans', {
@@ -81,6 +90,7 @@ export const usePlansStore = create<PlansStore>((set, get) => ({
   },
 
   updatePlan: async (id, changes) => {
+    plansReqId++
     set(s => ({ plans: s.plans.map(p => p._id === id ? { ...p, ...changes } : p) }))
     try {
       await authFetch(`/api/plans/${id}`, {
@@ -93,6 +103,7 @@ export const usePlansStore = create<PlansStore>((set, get) => ({
   },
 
   deletePlan: async (id) => {
+    plansReqId++
     set(s => ({ plans: s.plans.filter(p => p._id !== id) }))
     await authFetch(`/api/plans/${id}`, { method: 'DELETE' })
   },
@@ -105,6 +116,7 @@ export const usePlansStore = create<PlansStore>((set, get) => ({
       })
       if (r.ok) {
         const updated: Plan = await r.json()
+        plansReqId++
         set(s => ({ plans: s.plans.map(p => p._id === id ? updated : p) }))
       }
     } catch { /* silent */ }

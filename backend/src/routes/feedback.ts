@@ -81,6 +81,20 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
   }
 })
 
+// GET /api/feedback/mine — own feedback history with admin replies, newest first
+router.get('/mine', async (req: Request, res: Response): Promise<void> => {
+  const entries = await Feedback.find({ userId: req.userId }).sort({ createdAt: -1 }).limit(50).lean()
+  res.json(entries.map(e => ({
+    id:         (e._id as { toString(): string }).toString(),
+    message:    e.message,
+    imageUrl:   e.imageUrl,
+    status:     e.status,
+    adminReply: e.adminReply,
+    repliedAt:  e.repliedAt,
+    createdAt:  e.createdAt,
+  })))
+})
+
 // GET /api/feedback — admin only, newest first
 router.get('/', requireAdmin, async (_req: Request, res: Response): Promise<void> => {
   const entries = await Feedback.find().sort({ createdAt: -1 }).limit(200).lean()

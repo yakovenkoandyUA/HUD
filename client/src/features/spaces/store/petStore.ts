@@ -53,16 +53,28 @@ interface PetStore {
   updateProfile: (spaceId: string, data: Partial<PetProfile>) => Promise<PetProfile>
 }
 
+// Guards against a slow fetchEvents(spaceId) overwriting an event created/
+// edited for that space while it was still in flight with stale data —
+// keyed per spaceId. See spacesStore.ts for the base pattern.
+const petReqIds = new Map<string, number>()
+function bumpPetReqId(spaceId: string): number {
+  const next = (petReqIds.get(spaceId) ?? 0) + 1
+  petReqIds.set(spaceId, next)
+  return next
+}
+
 export const usePetStore = create<PetStore>((set) => ({
   eventsBySpace: {},
   loading:       false,
 
   fetchEvents: async (spaceId) => {
+    const reqId = bumpPetReqId(spaceId)
     set({ loading: true })
     try {
       const res = await authFetch(`/api/spaces/${spaceId}/pet/events`)
       if (!res.ok) return
       const events: PetEvent[] = await res.json()
+      if (reqId !== petReqIds.get(spaceId)) return // stale — dropped
       set(s => ({ eventsBySpace: { ...s.eventsBySpace, [spaceId]: events } }))
     } finally {
       set({ loading: false })
@@ -77,6 +89,7 @@ export const usePetStore = create<PetStore>((set) => ({
     })
     if (!res.ok) throw new Error('Create failed')
     const event: PetEvent = await res.json()
+    bumpPetReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,
@@ -94,6 +107,7 @@ export const usePetStore = create<PetStore>((set) => ({
     })
     if (!res.ok) return
     const updated: PetEvent = await res.json()
+    bumpPetReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,
@@ -103,6 +117,7 @@ export const usePetStore = create<PetStore>((set) => ({
   },
 
   deleteEvent: async (spaceId, eventId) => {
+    bumpPetReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,

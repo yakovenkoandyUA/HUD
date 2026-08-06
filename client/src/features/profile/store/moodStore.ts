@@ -36,6 +36,10 @@ function toLocalIso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+// Guards against a slow fetchLogs() overwriting a mood set/edited while it
+// was still in flight with stale data — see spacesStore.ts.
+let moodReqId = 0
+
 export const useMoodStore = create<MoodStore>((set, get) => ({
   logs:              [],
   loading:           false,
@@ -43,6 +47,7 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
   familyMoodsByDate: {},
 
   fetchLogs: async (from, to) => {
+    const reqId = ++moodReqId
     set({ loading: true })
     try {
       const qs = new URLSearchParams()
@@ -51,9 +56,9 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
       const res = await authFetch(`/api/mood${qs.toString() ? `?${qs}` : ''}`)
       if (!res.ok) return
       const data: MoodLog[] = await res.json()
-      set({ logs: data })
+      if (reqId === moodReqId) set({ logs: data })
     } finally {
-      set({ loading: false })
+      if (reqId === moodReqId) set({ loading: false })
     }
   },
 
@@ -72,6 +77,7 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
   },
 
   setMood: async (date, score) => {
+    moodReqId++
     set(s => ({
       logs: s.logs.some(l => l.date === date)
         ? s.logs.map(l => l.date === date ? { ...l, score } : l)
@@ -94,6 +100,7 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
   },
 
   setNote: async (date, note) => {
+    moodReqId++
     set(s => ({
       logs: s.logs.map(l => l.date === date ? { ...l, note } : l),
     }))
@@ -109,6 +116,7 @@ export const useMoodStore = create<MoodStore>((set, get) => ({
   },
 
   deleteMood: async (date) => {
+    moodReqId++
     set(s => ({ logs: s.logs.filter(l => l.date !== date) }))
     await authFetch(`/api/mood/${date}`, { method: 'DELETE' })
   },

@@ -418,6 +418,7 @@
 .overlay {
   position: fixed;
   inset: 0;
+  overflow: hidden;
   z-index: 200;
   background: rgba(0, 0, 0, 0.55);
   display: flex;

@@ -3,20 +3,24 @@ import { sendPushToUser } from '../services/webpush'
 import { User } from '../models/User'
 import MoodLog from '../models/MoodLog'
 
-function todayKyivIso(): string {
-  const d = new Date(Date.now() + 3 * 60 * 60 * 1000)
-  return d.toISOString().slice(0, 10)
+// Kyiv-дата через Intl (не фіксований +3h — коректно і в UTC+2 зимою, і в UTC+3 влітку)
+function kyivIso(offsetDays = 0): string {
+  const d = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000)
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Kyiv' }).format(d)
 }
 
 // ── Evening recap push — 21:00 Kyiv (18:00 UTC) ───────────────────────────
 cron.schedule('0 18 * * *', async () => {
   try {
-    const today = todayKyivIso()
-    const [users, loggedToday] = await Promise.all([
+    // MoodLog.date зберігається за локальною датою пристрою юзера (не обов'язково Kyiv) —
+    // тому "вже відмітив" перевіряємо у вікні ±1 день від Kyiv-сьогодні, щоб не спамити
+    // юзерів з іншим часовим поясом пристрою, які вже зафіксували настрій.
+    const dateWindow = [kyivIso(-1), kyivIso(0), kyivIso(1)]
+    const [users, loggedRecently] = await Promise.all([
       User.find({}, '_id'),
-      MoodLog.find({ date: today }, 'userId'),
+      MoodLog.find({ date: { $in: dateWindow } }, 'userId'),
     ])
-    const loggedSet = new Set(loggedToday.map(l => l.userId))
+    const loggedSet = new Set(loggedRecently.map(l => l.userId))
     let sent = 0
     for (const user of users) {
       if (loggedSet.has(user._id.toString())) continue

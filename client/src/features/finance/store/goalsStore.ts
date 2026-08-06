@@ -56,6 +56,10 @@ interface GoalsState {
   reset: () => void
 }
 
+// Guards against a slow fetchGoals() overwriting a goal added/edited while
+// it was still in flight with stale data — see spacesStore.ts.
+let goalsReqId = 0
+
 export const useGoalsStore = create<GoalsState>()((set, get) => ({
   goals: readGoalsCache() ?? [],
   goalsLoading: !readGoalsCache(),
@@ -67,15 +71,17 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
 
   fetchGoals: async () => {
     if (!getToken() || !isBackendConfigured()) return
+    const reqId = ++goalsReqId
     try {
       const res = await authFetch('/api/goals')
       if (!res.ok) throw new Error()
       const data: ApiGoal[] = await res.json()
       const mapped = data.map(fromApi)
+      if (reqId !== goalsReqId) return // a mutation happened while this was in flight — stale, drop it
       set({ goals: mapped, goalsLoading: false })
       writeGoalsCache(mapped)
     } catch {
-      set({ goalsLoading: false })
+      if (reqId === goalsReqId) set({ goalsLoading: false })
     }
   },
 
@@ -88,6 +94,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
       currentAmount: 0,
       deadline,
     }
+    goalsReqId++
     set(s => ({ goals: [...s.goals, goal] }))
     useAchievementsStore.getState().unlock('first-goal')
     authFetch('/api/goals', {
@@ -105,6 +112,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
     const goal = get().goals.find(g => g.id === id)
     if (!goal) return
     const newAmount = Math.min(goal.currentAmount + amount, goal.targetAmount)
+    goalsReqId++
     set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, currentAmount: newAmount } : g) }))
     authFetch(`/api/goals/${id}/deposit`, {
       method: 'PATCH',
@@ -119,6 +127,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
   },
 
   updateImage: (id, imageUrl) => {
+    goalsReqId++
     set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, imageUrl } : g) }))
     authFetch(`/api/goals/${id}`, {
       method: 'PATCH',
@@ -127,6 +136,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
   },
 
   deleteGoal: (id) => {
+    goalsReqId++
     set(s => ({ goals: s.goals.filter(g => g.id !== id) }))
     authFetch(`/api/goals/${id}`, { method: 'DELETE' }).catch(() => {})
   },

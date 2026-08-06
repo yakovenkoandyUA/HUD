@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import Modal from '@/shared/components/ui/Modal'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
@@ -6,11 +6,22 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { authFetch } from '@/shared/services/api'
 import styles from './FeedbackSheet.module.css'
 
+interface FeedbackEntry {
+  id: string
+  message: string
+  imageUrl: string | null
+  status: 'open' | 'resolved'
+  adminReply: string | null
+  repliedAt: string | null
+  createdAt: string
+}
+
 /**
  * FeedbackSheet
  * -------------
  * Модалка для відправки фідбеку — текст + опціональний скріншот.
  * Надсилає в Telegram через POST /api/feedback.
+ * Показує історію власних фідбеків з відповідями адміна (GET /api/feedback/mine).
  *
  * Props:
  * @prop {boolean}    isOpen
@@ -21,12 +32,33 @@ interface FeedbackSheetProps {
   onClose: () => void
 }
 
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+
 const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
   const { showToast } = useUiStore()
   const location = useLocation()
   const [message, setMessage] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [loading, setLoading] = useState(false)
+  const [history, setHistory] = useState<FeedbackEntry[] | null>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const res = await authFetch('/api/feedback/mine')
+        if (!res.ok) throw new Error()
+        const data = await res.json() as FeedbackEntry[]
+        if (!cancelled) setHistory(data)
+      } catch {
+        if (!cancelled) setHistory([])
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [isOpen])
 
   const handleClose = () => {
     setMessage('')
@@ -48,6 +80,15 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
       })
       if (!res.ok) throw new Error(`${res.status}`)
       showToast('Фідбек надіслано, дякую!', 'success')
+      setHistory(prev => [{
+        id: `local-${Date.now()}`,
+        message: message.trim(),
+        imageUrl: imageUrl || null,
+        status: 'open',
+        adminReply: null,
+        repliedAt: null,
+        createdAt: new Date().toISOString(),
+      }, ...(prev ?? [])])
       handleClose()
     } catch {
       showToast('Не вдалося надіслати, спробуй ще', 'error')
@@ -68,6 +109,22 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
           onChange={e => setMessage(e.target.value)}
           rows={4}
         />
+
+        {!!history?.length && (
+          <div className={styles.history}>
+            {history.map(e => (
+              <div key={e.id} className={styles.historyItem}>
+                <p className={styles.historyMessage}>{e.message}</p>
+                {e.adminReply ? (
+                  <p className={styles.historyReply}>Відповідь: {e.adminReply}</p>
+                ) : (
+                  <span className={styles.historyPending}>Очікує відповіді</span>
+                )}
+                <span className={styles.historyDate}>{formatDate(e.createdAt)}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className={styles.uploadLabel}>Скріншот (необов'язково)</div>
         <ImageUploadButton

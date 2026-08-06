@@ -68,17 +68,30 @@ interface VehicleStore {
   updateProfile:      (spaceId: string, data: Partial<VehicleProfile>) => Promise<VehicleProfile>
 }
 
+// Guards against a slow fetchEvents(spaceId) overwriting an event created/
+// edited for that space while it was still in flight with stale data —
+// keyed per spaceId so different spaces don't invalidate each other. See
+// spacesStore.ts for the base pattern.
+const vehicleReqIds = new Map<string, number>()
+function bumpVehicleReqId(spaceId: string): number {
+  const next = (vehicleReqIds.get(spaceId) ?? 0) + 1
+  vehicleReqIds.set(spaceId, next)
+  return next
+}
+
 export const useVehicleStore = create<VehicleStore>((set, get) => ({
   eventsBySpace: {},
   statsBySpace:  {},
   loading:       false,
 
   fetchEvents: async (spaceId) => {
+    const reqId = bumpVehicleReqId(spaceId)
     set({ loading: true })
     try {
       const res = await authFetch(`/api/spaces/${spaceId}/vehicle/events`)
       if (!res.ok) return
       const events: VehicleEvent[] = await res.json()
+      if (reqId !== vehicleReqIds.get(spaceId)) return // stale — dropped
       set(s => ({ eventsBySpace: { ...s.eventsBySpace, [spaceId]: events } }))
     } finally {
       set({ loading: false })
@@ -100,6 +113,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
     })
     if (!res.ok) throw new Error('Create failed')
     const event: VehicleEvent = await res.json()
+    bumpVehicleReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,
@@ -119,6 +133,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
     })
     if (!res.ok) return
     const updated: VehicleEvent = await res.json()
+    bumpVehicleReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,
@@ -129,6 +144,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
   },
 
   deleteEvent: async (spaceId, eventId) => {
+    bumpVehicleReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,

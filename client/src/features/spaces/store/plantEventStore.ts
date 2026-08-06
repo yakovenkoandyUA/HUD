@@ -47,6 +47,16 @@ interface PlantEventStore {
   saveHealthCheck: (spaceId: string, result: HealthResult) => void
 }
 
+// Guards against a slow fetchEvents(spaceId) overwriting an event created/
+// edited for that space while it was still in flight with stale data —
+// keyed per spaceId. See spacesStore.ts for the base pattern.
+const plantEventReqIds = new Map<string, number>()
+function bumpPlantEventReqId(spaceId: string): number {
+  const next = (plantEventReqIds.get(spaceId) ?? 0) + 1
+  plantEventReqIds.set(spaceId, next)
+  return next
+}
+
 export const usePlantEventStore = create<PlantEventStore>()(
   persist(
     (set) => ({
@@ -55,11 +65,13 @@ export const usePlantEventStore = create<PlantEventStore>()(
   loading:             false,
 
   fetchEvents: async (spaceId) => {
+    const reqId = bumpPlantEventReqId(spaceId)
     set({ loading: true })
     try {
       const res = await authFetch(`/api/spaces/${spaceId}/plant/events`)
       if (!res.ok) return
       const events: PlantEvent[] = await res.json()
+      if (reqId !== plantEventReqIds.get(spaceId)) return // stale — dropped
       set(s => ({ eventsBySpace: { ...s.eventsBySpace, [spaceId]: events } }))
     } finally {
       set({ loading: false })
@@ -74,6 +86,7 @@ export const usePlantEventStore = create<PlantEventStore>()(
     })
     if (!res.ok) throw new Error('Create failed')
     const event: PlantEvent = await res.json()
+    bumpPlantEventReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,
@@ -91,6 +104,7 @@ export const usePlantEventStore = create<PlantEventStore>()(
     })
     if (!res.ok) return
     const updated: PlantEvent = await res.json()
+    bumpPlantEventReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,
@@ -100,6 +114,7 @@ export const usePlantEventStore = create<PlantEventStore>()(
   },
 
   deleteEvent: async (spaceId, eventId) => {
+    bumpPlantEventReqId(spaceId)
     set(s => ({
       eventsBySpace: {
         ...s.eventsBySpace,

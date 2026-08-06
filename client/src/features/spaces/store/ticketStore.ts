@@ -31,13 +31,25 @@ interface TicketStore {
   remove:     (spaceId: string, ticketId: string) => Promise<void>
 }
 
+// Guards against a slow load(spaceId) overwriting a ticket created/edited
+// for that space while it was still in flight with stale data — keyed per
+// spaceId. See spacesStore.ts for the base pattern.
+const ticketReqIds = new Map<string, number>()
+function bumpTicketReqId(spaceId: string): number {
+  const next = (ticketReqIds.get(spaceId) ?? 0) + 1
+  ticketReqIds.set(spaceId, next)
+  return next
+}
+
 export const useTicketStore = create<TicketStore>((set) => ({
   tickets: {},
 
   load: async (spaceId) => {
+    const reqId = bumpTicketReqId(spaceId)
     const res = await authFetch(`/api/spaces/${spaceId}/tickets`)
     if (!res.ok) return
     const data = await res.json() as Ticket[]
+    if (reqId !== ticketReqIds.get(spaceId)) return // stale — dropped
     set(s => ({ tickets: { ...s.tickets, [spaceId]: data } }))
   },
 
@@ -49,6 +61,7 @@ export const useTicketStore = create<TicketStore>((set) => ({
     })
     if (!res.ok) throw new Error('Create failed')
     const ticket = await res.json() as Ticket
+    bumpTicketReqId(spaceId)
     set(s => ({
       tickets: {
         ...s.tickets,
@@ -68,6 +81,7 @@ export const useTicketStore = create<TicketStore>((set) => ({
     })
     if (!res.ok) throw new Error('Update failed')
     const updated = await res.json() as Ticket
+    bumpTicketReqId(spaceId)
     set(s => ({
       tickets: {
         ...s.tickets,
@@ -80,6 +94,7 @@ export const useTicketStore = create<TicketStore>((set) => ({
   remove: async (spaceId, ticketId) => {
     const res = await authFetch(`/api/spaces/${spaceId}/tickets/${ticketId}`, { method: 'DELETE' })
     if (!res.ok) throw new Error('Delete failed')
+    bumpTicketReqId(spaceId)
     set(s => ({
       tickets: {
         ...s.tickets,

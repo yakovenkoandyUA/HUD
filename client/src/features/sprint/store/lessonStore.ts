@@ -23,19 +23,25 @@ interface LessonState {
   setStatus: (id: string, status: LessonStatus) => Promise<void>
 }
 
+// Guards against a slow fetchLessons() overwriting a lesson added/edited
+// while it was still in flight with stale data — see spacesStore.ts.
+let lessonReqId = 0
+
 export const useLessonStore = create<LessonState>()((set) => ({
   lessons: [],
 
   fetchLessons: async () => {
     if (!getToken()) return
+    const reqId = ++lessonReqId
     const res = await authFetch('/api/lessons')
     if (!res.ok) return
     const data = await res.json()
-    set({ lessons: data.map(toLesson) })
+    if (reqId === lessonReqId) set({ lessons: data.map(toLesson) })
   },
 
   addLesson: async (title, description, date) => {
     const tempId = crypto.randomUUID()
+    lessonReqId++
     set(s => ({
       lessons: [{ id: tempId, title, description, notes: '', status: 'planned', date }, ...s.lessons],
     }))
@@ -52,6 +58,7 @@ export const useLessonStore = create<LessonState>()((set) => ({
   },
 
   updateLesson: async (id, patch) => {
+    lessonReqId++
     set(s => ({ lessons: s.lessons.map(l => l.id === id ? { ...l, ...patch } : l) }))
     const body: Record<string, unknown> = {}
     if (patch.title !== undefined)       body.title        = patch.title
@@ -70,11 +77,13 @@ export const useLessonStore = create<LessonState>()((set) => ({
   },
 
   deleteLesson: async (id) => {
+    lessonReqId++
     set(s => ({ lessons: s.lessons.filter(l => l.id !== id) }))
     await authFetch(`/api/lessons/${id}`, { method: 'DELETE' })
   },
 
   setStatus: async (id, status) => {
+    lessonReqId++
     set(s => ({ lessons: s.lessons.map(l => l.id === id ? { ...l, status } : l) }))
     const res = await authFetch(`/api/lessons/${id}`, {
       method: 'PUT',

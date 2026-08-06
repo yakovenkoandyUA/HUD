@@ -43,6 +43,13 @@
   --card-bg:       var(--surface);
   --card-bg-hover: var(--surface2);
   --card-border:   var(--border);
+  /* Alias — Drinks/Sport-Workout components reference --surface-raised for
+     input/field fill, but it was never defined as its own token anywhere.
+     It was rendering as transparent in every theme; only the border color
+     gave any visible edge, which is why light themes (low border/surface
+     contrast) looked nearly invisible while dark themes looked "fine" by
+     accident. --surface2 is the existing "raised" tone — alias it. */
+  --surface-raised: var(--surface2);
 
   /* ── Status panels ── */
   --panel-danger-bg:      color-mix(in srgb, var(--negative)  8%, var(--surface));

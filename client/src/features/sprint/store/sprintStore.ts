@@ -279,9 +279,11 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   fetchItems: async () => {
     if (!getToken() || !isBackendConfigured()) return
-    const reqId = ++sprintReqId
     set({ loading: true, syncStatus: 'syncing' })
     await get().fetchLabels()
+    // captured after fetchLabels() — that call bumps sprintReqId itself,
+    // which would otherwise make this fetch see itself as immediately stale
+    const reqId = ++sprintReqId
 
     try {
       const r = await authFetch('/api/sprint/tasks')

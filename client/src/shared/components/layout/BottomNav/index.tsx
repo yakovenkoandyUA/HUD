@@ -31,7 +31,7 @@ export interface NavSection {
 export const ALL_NAV_SECTIONS: NavSection[] = [
   { to: '/',          label: 'Головна', Icon: DashboardIcon },
   { to: '/finance',   label: 'Фінанси', Icon: WalletIcon },
-  { to: '/sprint',    label: 'Спринт',  Icon: SprintIcon },
+  { to: '/sprint',    label: 'Квести',  Icon: SprintIcon },
   { to: '/watchlist', label: 'Медіа',   Icon: WatchIcon },
   { to: '/recipes',   label: 'Рецепти', Icon: RecipeIcon },
   { to: '/memories',  label: 'Спогади', Icon: MemoriesIcon },

@@ -1,6 +1,6 @@
 /* ── Container ── */
 .calendar {
-  background-color: var(--surface);
+  backdrop-filter: blur(4px);
   padding: 0 8px;
   margin-top: -10px;
 }

@@ -52,27 +52,33 @@ interface GamesStore {
   deleteGame: (id: string) => void
 }
 
+// Guards against a slow fetchGames() overwriting a game added/edited while
+// it was still in flight with stale data — see spacesStore.ts.
+let gamesReqId = 0
+
 export const useGamesStore = create<GamesStore>()((set, get) => ({
   items:   [],
   loading: true,
 
   fetchGames: async () => {
     if (!getToken() || !isBackendConfigured()) { set({ loading: false }); return }
+    const reqId = ++gamesReqId
     set({ loading: true })
     try {
       const res = await authFetch('/api/games')
       if (!res.ok) throw new Error()
       const data: ApiGame[] = await res.json()
-      set({ items: data.map(fromApi) })
+      if (reqId === gamesReqId) set({ items: data.map(fromApi) })
     } catch {
       // silent
     } finally {
-      set({ loading: false })
+      if (reqId === gamesReqId) set({ loading: false })
     }
   },
 
   addGame: (game) => {
     const local: GameItem = { ...game, id: crypto.randomUUID(), addedAt: new Date().toISOString() }
+    gamesReqId++
     set(s => ({ items: [local, ...s.items] }))
     authFetch('/api/games', { method: 'POST', body: JSON.stringify(game) })
       .then(r => {
@@ -91,12 +97,14 @@ export const useGamesStore = create<GamesStore>()((set, get) => ({
   },
 
   updateGame: (id, updates) => {
+    gamesReqId++
     set(s => ({ items: s.items.map(i => i.id === id ? { ...i, ...updates } : i) }))
     authFetch(`/api/games/${id}`, { method: 'PATCH', body: JSON.stringify(updates) })
       .catch(() => get().fetchGames())
   },
 
   deleteGame: (id) => {
+    gamesReqId++
     set(s => ({ items: s.items.filter(i => i.id !== id) }))
     authFetch(`/api/games/${id}`, { method: 'DELETE' }).catch(() => get().fetchGames())
   },

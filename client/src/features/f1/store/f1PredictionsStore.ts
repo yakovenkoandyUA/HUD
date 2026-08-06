@@ -100,18 +100,23 @@ function fromApi(item: ApiPrediction): RacePrediction {
   }
 }
 
+// Guards against a slow fetchPredictions() overwriting a prediction saved/
+// checked while it was still in flight with stale data — see spacesStore.ts.
+let f1PredictionsReqId = 0
+
 export const useF1PredictionsStore = create<F1PredictionsStore>()((set, get) => ({
   predictions: [],
   totalPoints:  0,
 
   fetchPredictions: async () => {
     if (!getToken() || !isBackendConfigured()) return
+    const reqId = ++f1PredictionsReqId
     try {
       const res = await authFetch('/api/f1/predictions')
       if (!res.ok) return
       const data: ApiPrediction[] = await res.json()
       const predictions = data.map(fromApi)
-      set({ predictions, totalPoints: calcTotal(predictions) })
+      if (reqId === f1PredictionsReqId) set({ predictions, totalPoints: calcTotal(predictions) })
     } catch { /* offline */ }
   },
 
@@ -122,6 +127,7 @@ export const useF1PredictionsStore = create<F1PredictionsStore>()((set, get) => 
       raceId, raceName: race.name, raceRound: race.round,
       p1, p2, p3, constructorPick, driverOfTheDay, safetyCarPick, savedAt,
     }
+    f1PredictionsReqId++
     set(s => ({
       predictions: [
         ...s.predictions.filter(p => p.raceId !== raceId),
@@ -176,6 +182,7 @@ export const useF1PredictionsStore = create<F1PredictionsStore>()((set, get) => 
       points,
     }
 
+    f1PredictionsReqId++
     set(s => {
       const predictions = s.predictions.map(p =>
         p.raceId === raceId ? { ...p, result } : p

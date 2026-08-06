@@ -70,16 +70,21 @@ function fromApi(item: ApiItem): ShoppingItem {
   }
 }
 
+// Guards against a slow fetchItems() overwriting an item added/toggled
+// while it was still in flight with stale data — see spacesStore.ts.
+let shoppingReqId = 0
+
 export const useShoppingListStore = create<ShoppingListState>()((set, get) => ({
   items: [],
 
   fetchItems: async () => {
     if (!getToken() || !isBackendConfigured()) return
+    const reqId = ++shoppingReqId
     try {
       const res = await authFetch('/api/shopping')
       if (!res.ok) return
       const data: ApiItem[] = await res.json()
-      set({ items: data.map(fromApi) })
+      if (reqId === shoppingReqId) set({ items: data.map(fromApi) })
     } catch { /* offline */ }
   },
 
@@ -98,6 +103,7 @@ export const useShoppingListStore = create<ShoppingListState>()((set, get) => ({
     const toCreate: ShoppingItem[] = []
     const toUpdate: ShoppingItem[] = []
 
+    shoppingReqId++
     set(s => {
       const next = [...s.items]
       for (const p of parsed) {
@@ -152,6 +158,7 @@ export const useShoppingListStore = create<ShoppingListState>()((set, get) => ({
       recipeId: 'manual', recipeName: 'Вручну',
       checked: false,
     }
+    shoppingReqId++
     set(s => ({ items: [...s.items, item] }))
 
     if (!getToken() || !isBackendConfigured()) return
@@ -170,6 +177,7 @@ export const useShoppingListStore = create<ShoppingListState>()((set, get) => ({
     const item = get().items.find(i => i.id === id)
     if (!item) return
     const checked = !item.checked
+    shoppingReqId++
     set(s => ({ items: s.items.map(it => it.id === id ? { ...it, checked } : it) }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch(`/api/shopping/${id}`, {
@@ -179,18 +187,21 @@ export const useShoppingListStore = create<ShoppingListState>()((set, get) => ({
   },
 
   removeItem: (id) => {
+    shoppingReqId++
     set(s => ({ items: s.items.filter(it => it.id !== id) }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch(`/api/shopping/${id}`, { method: 'DELETE' }).catch(() => {})
   },
 
   clearAll: () => {
+    shoppingReqId++
     set({ items: [] })
     if (!getToken() || !isBackendConfigured()) return
     authFetch('/api/shopping', { method: 'DELETE' }).catch(() => {})
   },
 
   clearChecked: () => {
+    shoppingReqId++
     set(s => ({ items: s.items.filter(it => !it.checked) }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch('/api/shopping?checked=1', { method: 'DELETE' }).catch(() => {})
