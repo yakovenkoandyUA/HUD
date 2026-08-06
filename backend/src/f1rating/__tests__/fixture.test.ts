@@ -82,6 +82,19 @@ describe('Norris/Piastri synthetic fixture — full pipeline', () => {
     }
   })
 
+  it('every breakdown item explains its own sign direction and meaning without reading config code', () => {
+    // This is what makes it possible to explain "why is Norris's tyreStintManagement contribution
+    // higher despite a positive raw delta" from the API response alone, not by opening
+    // config/methodologyV1.ts — the exact gap flagged in review.
+    for (const item of [...norris.speed.breakdown, ...norris.precision.breakdown, ...norris.raceIq.breakdown]) {
+      expect(typeof item.higherIsBetter).toBe('boolean')
+      expect(item.description.length).toBeGreaterThan(0)
+    }
+    const tyreItem = norris.raceIq.breakdown.find(b => b.key === 'tyreStintManagement')!
+    expect(tyreItem.higherIsBetter).toBe(false)
+    expect(tyreItem.description).toMatch(/PROXY/)
+  })
+
   it('runs through the exact same pipeline as production data would (no fixture-specific branching in the engine)', () => {
     // Sanity check that the engine module never imports the fixture module.
     // (Static assertion by construction — engine/index.ts has no fixtures import.)

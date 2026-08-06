@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "f1rating:debug": "ts-node src/f1rating/cli/debugRating.ts"
+    "f1rating:debug": "ts-node src/f1rating/cli/debugRating.ts",
+    "f1rating:calibrate": "ts-node src/f1rating/cli/calibrationReport.ts"
   },
   "dependencies": {
     "@sentry/node": "^10.57.0",

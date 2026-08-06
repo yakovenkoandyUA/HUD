@@ -56,13 +56,20 @@ const raceIqWeights = {
  * `higherIsBetter: false` metrics are lap-time/error deltas where a smaller (or more
  * negative) raw value is the better outcome; `normalizeToReferenceRange` inverts them.
  *
- * ⚠️ CALIBRATION STATUS: the min/max windows below are plausible-shaped placeholders (informed
- * by general knowledge of F1 pace/consistency margins), NOT fitted against a real historical
- * dataset. They must be validated against multiple real seasons of ingested data (FastF1 exports
- * across several drivers/teams) before this methodology is used for anything user-facing.
- * Treat every number here as "reasonable starting guess, unverified" until that validation pass
- * happens — at which point the corrected values should ship as `mimir-f1-v2` per the version-bump
- * rule above, not a silent edit to v1.
+ * ⚠️ CALIBRATION STATUS: plausible-shaped placeholders, informed by general knowledge of F1
+ * pace/consistency margins, NOT fitted against real data. A first real-data pass has run (2025
+ * McLaren, Norris/Piastri, rounds 1/3/5/10/15 — see `npm run f1rating:calibrate` and
+ * `scripts/f1rating-collector/output/calibration-report.json`) and found several of these ranges
+ * too narrow for the observed real values. Those findings are recorded as `candidateReferenceRanges`
+ * in the calibration report — NOT applied here automatically. A range in this file only changes
+ * once a human has reviewed *why* the observed value fell outside it (real signal vs. a
+ * methodology bug in the metric itself — see the tyreStintManagement redesign for an example of
+ * the latter) and accepted the candidate. `calibrationStatus` stays `'unverified'` and
+ * `productionReady` stays `false` until that review process, on a real multi-team dataset, is done.
+ * While this methodology has never been `productionReady: true`, accepted range corrections may
+ * keep editing `v1` directly. Once `productionReady` is ever flipped to `true`, that guarantee
+ * ends — any further change to a weight or reference range must ship as `mimir-f1-v2` per the
+ * version-bump rule above, not a silent edit to the version already in use.
  */
 const referenceRanges: Record<string, ReferenceRange> = {
   teammateAdjustedQualifyingPace: {
@@ -88,7 +95,8 @@ const referenceRanges: Record<string, ReferenceRange> = {
   cleanRaceLapConsistency: {
     key: 'cleanRaceLapConsistency',
     min: 0, max: 2.5, higherIsBetter: false,
-    description: 'Coefficient of variation (%) of clean race laps within comparable stints.',
+    description: 'Coefficient of variation (%) of clean race laps within a single stint (never pooled ' +
+      'across stints/compounds — see engine/cleanRaceLapConsistency.ts for why that matters).',
   },
   cleanWeekendRate: {
     key: 'cleanWeekendRate',
@@ -117,8 +125,35 @@ const referenceRanges: Record<string, ReferenceRange> = {
   },
   tyreStintManagement: {
     key: 'tyreStintManagement',
-    min: 0, max: 150, higherIsBetter: false,
-    description: 'Average clean-lap degradation slope (ms/lap) across comparable stints.',
+    // ⚠️ CHANGELOG — formula changed within mimir-f1-v1 (still pre-productionReady, see the
+    // version-bump rule above for why this is allowed here and won't be once productionReady=true):
+    //   BEFORE: absolute clean-lap degradation slope (ms/lap) of a single driver's single stint.
+    //   AFTER:  teammate-relative COMPARABLE-STINT slope DELTA (driverSlope − teammateSlope),
+    //           averaged across stint pairs — see engine/tyreStintManagement.ts doc comment.
+    // Same metric key, same weight slot, DIFFERENT underlying quantity — anyone diffing a rating
+    // computed before vs. after this change is comparing two different measurements that happen
+    // to share a name. The v1-original absolute slope conflated tyre wear with fuel burn-off,
+    // track evolution and pace management (real data produced -53.85 ms/lap, i.e. laps getting
+    // FASTER — physically impossible for "pure tyre degradation"). The teammate-relative delta
+    // cancels most of that shared session-level noise the same way every other teammate-relative
+    // metric in this engine does.
+    //
+    // SIGN / DIRECTION: `higherIsBetter: false` — a MORE NEGATIVE delta scores HIGHER. Concretely:
+    // driverSlope more negative than teammateSlope means the driver's lap times fell (or rose
+    // less) relative to the teammate over a matched stint — scored as better, consistent with
+    // every other "gap to teammate" metric in this engine (smaller/more-negative gap = faster).
+    // This is a DIRECTIONAL PROXY, not a physical tyre-wear measurement — it does not claim the
+    // driver's tyres literally degraded less; it says their PACE EVOLVED more favorably than
+    // their teammate's on a matched stint, which residual factors (traffic, fuel offset from
+    // differing strategy, setup) can still influence. Treat as "relative stint pace evolution",
+    // per the internal `stintPaceEvolution` naming in the engine module.
+    //
+    // This range is an unverified placeholder for the new delta semantics — investigate-only,
+    // see candidateReferenceRanges in the calibration report; do not treat as calibrated.
+    min: -50, max: 50, higherIsBetter: false,
+    description: 'PROXY, not raw tyre wear: teammate-relative clean-lap pace-evolution delta ' +
+      '(ms/lap) on comparable stints (driverSlope − teammateSlope). Negative = driver\'s pace ' +
+      'evolved more favorably than teammate\'s on a matched stint — scored as better.',
   },
   startAndOpeningLapExecution: {
     key: 'startAndOpeningLapExecution',
@@ -185,6 +220,7 @@ export const methodologyV1: MethodologyVersion = {
     attributableLap1ContactPenaltyPositions: 2,
     minCleanLapsForStintAverage: 2,
     minCleanLapsForDegradationSlope: 3,
+    minCleanLapsForConsistencyStint: 3,
     maxManualAdjustmentMagnitude: 5,
     maxCumulativeManualAdjustmentPerComponent: 8,
   },

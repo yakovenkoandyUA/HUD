@@ -301,6 +301,8 @@ export interface MethodologyVersion {
     minCleanLapsForStintAverage: number
     /** Minimum clean laps in a stint before a degradation slope is trusted (`tyreStintManagement`). */
     minCleanLapsForDegradationSlope: number
+    /** Minimum clean laps in a single stint before its lap-time consistency is trusted (`cleanRaceLapConsistency`). */
+    minCleanLapsForConsistencyStint: number
     /**
      * System-wide ceiling on any single manual review adjustment's magnitude, enforced in
      * addition to (never above) each adjustment's own declared `maxAllowedMagnitude`. This is
@@ -332,6 +334,14 @@ export interface ComponentBreakdownItem {
   confidence: Confidence
   excluded: boolean
   exclusionReason?: string
+  /**
+   * Copied from the metric's `ReferenceRange` so a reader of the breakdown alone — without
+   * opening `config/methodologyV1.ts` — can tell what the raw value means and which direction
+   * is better. `higherIsBetter: false` on a metric like `tyreStintManagement` means a more
+   * NEGATIVE raw value produced a HIGHER normalized/contribution value.
+   */
+  higherIsBetter: boolean
+  description: string
 }
 
 export interface ComponentScore {

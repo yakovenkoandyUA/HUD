@@ -29,3 +29,17 @@ export function coefficientOfVariationPct(values: number[]): number | null {
   if (mean === null || stdDev === null || mean === 0) return null
   return (stdDev / mean) * 100
 }
+
+export function median(values: number[]): number | null {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+}
+
+/** Median absolute deviation — a consistency measure more robust to outlier laps than stddev. */
+export function medianAbsoluteDeviation(values: number[]): number | null {
+  const med = median(values)
+  if (med === null) return null
+  return median(values.map(v => Math.abs(v - med)))
+}

@@ -2,12 +2,14 @@ import type { DriverRating, ManualReviewAdjustment, MethodologyVersion, Round, S
 import { aggregateComponent } from './aggregate'
 import type { DriverSeasonInput } from './metrics'
 import {
-  cleanRaceLapConsistency, cleanWeekendRate, changingConditionAdaptability,
+  cleanWeekendRate, changingConditionAdaptability,
   documentedStrategicExecution, driverAttributableReliability, peakRepresentativePace,
   qualifyingConsistency, qualifyingHeadToHead, racecraftProxy, resultRelativeToExpectedPace,
   startAndOpeningLapExecution, teammateAdjustedCleanRacePace, teammateAdjustedQualifyingPace,
-  tyreStintManagement, unforcedErrorControl,
+  unforcedErrorControl,
 } from './metrics'
+import { cleanRaceLapConsistency } from './cleanRaceLapConsistency'
+import { tyreStintManagement } from './tyreStintManagement'
 
 export type { DriverSeasonInput, MetricResult } from './metrics'
 
@@ -52,7 +54,7 @@ export function computeDriverRating(input: ComputeDriverRatingInput): DriverRati
   const precision = aggregateComponent({
     component: 'precision',
     metricResults: {
-      cleanRaceLapConsistency: cleanRaceLapConsistency(driver),
+      cleanRaceLapConsistency: cleanRaceLapConsistency(driver, methodology.tunables),
       cleanWeekendRate: cleanWeekendRate(driver),
       driverAttributableReliability: driverAttributableReliability(driver),
       qualifyingConsistency: qualifyingConsistency(driver),
@@ -70,7 +72,7 @@ export function computeDriverRating(input: ComputeDriverRatingInput): DriverRati
     component: 'raceIq',
     metricResults: {
       resultRelativeToExpectedPace: resultRelativeToExpectedPace(driver),
-      tyreStintManagement: tyreStintManagement(driver, methodology.tunables),
+      tyreStintManagement: tyreStintManagement(driver, teammate, methodology.tunables, methodology.tyreAgeComparabilityThresholdLaps),
       startAndOpeningLapExecution: startAndOpeningLapExecution(driver, methodology.tunables),
       racecraftProxy: racecraftProxy(driver),
       changingConditionAdaptability: changingConditionAdaptability(driver, teammate),

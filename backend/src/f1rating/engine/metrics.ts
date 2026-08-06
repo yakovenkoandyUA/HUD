@@ -56,6 +56,14 @@ export function teammateAdjustedQualifyingPace(driver: DriverSeasonInput, teamma
   return { rawValue: value, sampleSize: gaps.length }
 }
 
+/**
+ * Pools ALL of a race's clean dry laps together (across every stint/compound). This is
+ * deliberately fine for an AVERAGE-pace metric (`teammateAdjustedCleanRacePace` below) — overall
+ * race pace legitimately reflects whatever compounds/strategy a driver actually ran — but it is
+ * NOT fine for a CONSISTENCY metric, where pooling different stints' different pace baselines
+ * inflates apparent variance without reflecting anything about the driver. See
+ * `cleanRaceLapConsistency.ts` for the per-stint version used for that reason.
+ */
 function dryCleanRaceLapTimes(race: RawRaceMetrics): number[] {
   const { kept } = filterCleanRaceLaps(race.laps)
   const byCondition = groupByCondition(kept)
@@ -114,18 +122,7 @@ export function qualifyingHeadToHead(driver: DriverSeasonInput): MetricResult {
 }
 
 // ── Precision ──────────────────────────────────────────────────────────────
-
-export function cleanRaceLapConsistency(driver: DriverSeasonInput): MetricResult {
-  const perRoundCov: number[] = []
-  for (const race of driver.race) {
-    const lapTimes = dryCleanRaceLapTimes(race)
-    if (lapTimes.length < 2) continue
-    const cov = coefficientOfVariationPct(lapTimes)
-    if (cov !== null) perRoundCov.push(cov)
-  }
-  const value = average(perRoundCov)
-  return { rawValue: value, sampleSize: perRoundCov.length }
-}
+// (cleanRaceLapConsistency lives in ./cleanRaceLapConsistency.ts — per-stint, not pooled here)
 
 export function cleanWeekendRate(driver: DriverSeasonInput): MetricResult {
   if (driver.race.length === 0) return NO_DATA
@@ -178,19 +175,8 @@ export function resultRelativeToExpectedPace(driver: DriverSeasonInput): MetricR
   return { rawValue: value, sampleSize: deltas.length }
 }
 
-export function tyreStintManagement(driver: DriverSeasonInput, tunables: MetricTunables): MetricResult {
-  const slopes: number[] = []
-  for (const race of driver.race) {
-    for (const stint of race.stints) {
-      if (stint.trackCondition !== 'dry') continue
-      if (stint.cleanLapCount < tunables.minCleanLapsForDegradationSlope) continue
-      if (stint.degradationMsPerLap === null) continue
-      slopes.push(stint.degradationMsPerLap)
-    }
-  }
-  const value = average(slopes)
-  return { rawValue: value, sampleSize: slopes.length }
-}
+// (tyreStintManagement lives in ./tyreStintManagement.ts — teammate-relative comparable-stint
+// delta, not an absolute slope; see that file's doc comment for why it was redesigned)
 
 export function startAndOpeningLapExecution(driver: DriverSeasonInput, tunables: MetricTunables): MetricResult {
   const values: number[] = []

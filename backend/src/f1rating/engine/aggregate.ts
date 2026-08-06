@@ -83,6 +83,8 @@ export function aggregateComponent(input: AggregateComponentInput): ComponentSco
       confidence: computeConfidence(result.sampleSize, minSampleSize[key] ?? 0, avail.available ? [] : [avail.exclusionReason ?? 'missing'], tunables),
       excluded: !avail.available,
       exclusionReason: avail.exclusionReason,
+      higherIsBetter: range.higherIsBetter,
+      description: range.description,
     })
   }
 

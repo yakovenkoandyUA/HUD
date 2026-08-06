@@ -45,6 +45,35 @@ export interface FastF1LapRow {
   position: number | null
 }
 
+// Must match `SCHEMA_VERSION` in scripts/f1rating-collector/collect.py — no automated
+// cross-language check exists, each side pins its own value and points at the other in a comment.
+export const SUPPORTED_SCHEMA_VERSION = 'fastf1-export-v1' as const
+
+/**
+ * Rejects a malformed or unsupported-version payload BEFORE any mapping runs — a bad export
+ * should fail loudly here, not produce a `RawRaceMetrics` with corrupted/default-filled fields.
+ */
+export function validateFastF1Export(session: FastF1SessionExport): void {
+  if (session.schemaVersion !== SUPPORTED_SCHEMA_VERSION) {
+    throw new Error(
+      `[f1rating] unsupported FastF1 export schemaVersion "${session.schemaVersion}" ` +
+      `(expected "${SUPPORTED_SCHEMA_VERSION}")`,
+    )
+  }
+  if (!session.driverId || typeof session.driverId !== 'string') {
+    throw new Error('[f1rating] FastF1 export missing/invalid driverId')
+  }
+  if (!session.constructorId || typeof session.constructorId !== 'string') {
+    throw new Error('[f1rating] FastF1 export missing/invalid constructorId')
+  }
+  if (!Array.isArray(session.laps)) {
+    throw new Error('[f1rating] FastF1 export "laps" must be an array')
+  }
+  if (typeof session.season !== 'number' || typeof session.round !== 'number') {
+    throw new Error('[f1rating] FastF1 export missing/invalid season or round')
+  }
+}
+
 function toLapExclusionSample(row: FastF1LapRow): RaceLapSample | null {
   if (row.lapTimeMs === null) return null
   return {
@@ -105,11 +134,18 @@ function buildStints(laps: FastF1LapRow[], minCleanLapsForDegradationSlope: numb
 }
 
 /**
- * Maps a validated `FastF1SessionExport` (Race session) into `RawRaceMetrics`. Start execution
- * metrics require `positionAfterLap1`, derived here from the `position` field of the first
- * completed lap — the export must include per-lap position for this to be non-zero-sampled;
- * if absent, `attributableContactOnLap1` must be supplied separately from an `IncidentRecord`
- * (this mapper never infers "contact" from lap-time anomalies alone).
+ * Maps a validated `FastF1SessionExport` (Race session) into `RawRaceMetrics`. Runs
+ * `validateFastF1Export` first — a malformed or unsupported-version payload throws rather than
+ * silently producing corrupted metrics. Start execution metrics require `positionAfterLap1`,
+ * derived here from the `position` field of the first completed lap — the export must include
+ * per-lap position for this to be non-zero-sampled; if absent, `attributableContactOnLap1` must
+ * be supplied separately from an `IncidentRecord` (this mapper never infers "contact" from
+ * lap-time anomalies alone).
+ *
+ * `gridPosition: null` throws rather than defaulting to a number — a classified race result
+ * missing its grid position is malformed input, and silently mapping that to `0` would fabricate
+ * a false "started on pole" for every driver with genuinely missing data (exactly the
+ * null-hidden-under-zero pattern this engine's data-quality invariants forbid everywhere else).
  */
 export function fastF1ExportToRaceMetrics(
   session: FastF1SessionExport,
@@ -118,14 +154,21 @@ export function fastF1ExportToRaceMetrics(
    * adapter can never silently drift from whatever methodology version is actually in use. */
   minCleanLapsForDegradationSlope: number,
 ): RawRaceMetrics {
+  validateFastF1Export(session)
   if (session.sessionType !== 'Race' && session.sessionType !== 'Sprint') {
     throw new Error(`[f1rating] fastF1ExportToRaceMetrics expects a Race/Sprint export, got "${session.sessionType}"`)
+  }
+  if (session.gridPosition === null) {
+    throw new Error(
+      `[f1rating] fastF1ExportToRaceMetrics: gridPosition is null for driver "${session.driverId}" ` +
+      `round ${session.round} — cannot compute start-execution metrics without it (this is a reject, not a 0-fallback)`,
+    )
   }
   const laps = session.laps.map(toLapExclusionSample).filter((l): l is RaceLapSample => l !== null)
   const stints = buildStints(session.laps, minCleanLapsForDegradationSlope)
 
   const lap1 = session.laps.find(l => l.lapNumber === 1)
-  const gridPosition = session.gridPosition ?? 0
+  const gridPosition = session.gridPosition
   const positionAfterLap1 = lap1?.position ?? gridPosition
 
   return {

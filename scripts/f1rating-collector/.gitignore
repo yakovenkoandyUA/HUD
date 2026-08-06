@@ -1,0 +1,10 @@
+.venv/
+cache/
+__pycache__/
+.pytest_cache/
+
+# Regenerable calibration-run output — has a live `generatedAt` timestamp and drifts every time
+# `npm run f1rating:calibrate` runs, so it is not a stable, reproducible artifact worth committing.
+# The 5 recorded real-data inputs above it (2025_*.json) ARE committed — they're what makes the
+# report reproducible on demand; the report itself is not meant to be a persisted fixture.
+output/calibration-report.json

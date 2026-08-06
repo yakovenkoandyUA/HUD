@@ -23,8 +23,10 @@ function printComponent(name: string, component: ComponentScore): void {
     console.log(
       `    - ${item.key.padEnd(32)} raw=${raw.padEnd(10)} normalized=${norm.padEnd(6)} ` +
       `weight=${item.weight.toFixed(2)} effWeight=${item.effectiveWeight.toFixed(2)} ` +
-      `contribution=${item.contribution.toFixed(2)} n=${item.sampleSize} [${status}]`,
+      `contribution=${item.contribution.toFixed(2)} n=${item.sampleSize} [${status}] ` +
+      `(${item.higherIsBetter ? 'higher is better' : 'lower/more-negative is better'})`,
     )
+    console.log(`        ${item.description}`)
   }
   if (component.appliedManualAdjustments.length > 0) {
     console.log('    manual adjustments applied:')
