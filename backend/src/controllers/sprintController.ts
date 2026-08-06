@@ -16,7 +16,7 @@ const OWNER_ALLOWED = [
 ]
 
 // Fields an assignee (non-owner) can update
-const ASSIGNEE_ALLOWED = ['done', 'completionHistory', 'timeOfDay']
+const ASSIGNEE_ALLOWED = ['done', 'completionHistory', 'timeOfDay', 'checklist']
 
 // Зміна дедлайну/часу/повторення/нагадування скидає прапорець "вже надіслано" — щоб нагадування пересчиталось
 const REMINDER_RESET_FIELDS = ['dueDate', 'dueTime', 'nextDue', 'reminder']
