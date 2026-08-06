@@ -83,11 +83,12 @@ export interface ISportPR {
 }
 
 export interface ISportProfile {
-  sport:    string
-  level:    'beginner' | 'intermediate' | 'advanced' | null
-  goal:     string
-  photoUrl: string
-  prs:      ISportPR[]
+  sport:        string
+  level:        'beginner' | 'intermediate' | 'advanced' | null
+  goal:         string
+  photoUrl:     string
+  prs:          ISportPR[]
+  measurements: ISportPR[]
 }
 
 export interface ISpace extends Document {
@@ -185,11 +186,12 @@ const sportPRSchema = new Schema<ISportPR>({
 }, { _id: false })
 
 const sportProfileSchema = new Schema<ISportProfile>({
-  sport:    { type: String, default: '' },
-  level:    { type: String, enum: ['beginner', 'intermediate', 'advanced', null], default: null },
-  goal:     { type: String, default: '' },
-  photoUrl: { type: String, default: '' },
-  prs:      { type: [sportPRSchema], default: [] },
+  sport:        { type: String, default: '' },
+  level:        { type: String, enum: ['beginner', 'intermediate', 'advanced', null], default: null },
+  goal:         { type: String, default: '' },
+  photoUrl:     { type: String, default: '' },
+  prs:          { type: [sportPRSchema], default: [] },
+  measurements: { type: [sportPRSchema], default: [] },
 }, { _id: false })
 
 const tripProfileSchema = new Schema<ITripProfile>({

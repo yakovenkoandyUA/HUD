@@ -87,11 +87,12 @@ export interface SportPR {
 }
 
 export interface SportProfile {
-  sport:    string
-  level:    'beginner' | 'intermediate' | 'advanced' | null
-  goal:     string
-  photoUrl: string
-  prs:      SportPR[]
+  sport:        string
+  level:        'beginner' | 'intermediate' | 'advanced' | null
+  goal:         string
+  photoUrl:     string
+  prs:          SportPR[]
+  measurements: SportPR[]
 }
 
 export interface Space {

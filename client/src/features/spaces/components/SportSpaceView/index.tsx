@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useSportStore, type SportEvent, type SportEventInput, type WorkoutProgram, type WorkoutExercise } from '../../store/sportStore'
+import { useSportStore, getSetTargets, type SportEvent, type SportEventInput, type WorkoutProgram, type WorkoutExercise, type WorkoutSetTarget, type WorkoutExerciseLog } from '../../store/sportStore'
 import type { SportProfile, SportPR } from '@/features/memories/store/spacesStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
+import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
+import PillSelector from '@/shared/components/ui/PillSelector'
 import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
 import AddWorkoutSheet from '../AddWorkoutSheet'
 import ActiveWorkoutSheet from '../ActiveWorkoutSheet'
@@ -61,6 +63,20 @@ const SPORT_OPTIONS = Object.entries(SPORT_LABELS).map(([value, label]) => ({ va
 
 const MONTHS_SHORT = ['січ.','лют.','бер.','квіт.','трав.','черв.','лип.','серп.','вер.','жов.','лист.','груд.']
 
+const BODY_MEASUREMENT_OPTIONS: { name: string; unit: string }[] = [
+  { name: 'Вага',              unit: 'кг' },
+  { name: 'Зріст',             unit: 'см' },
+  { name: 'Груди',             unit: 'см' },
+  { name: 'Талія',             unit: 'см' },
+  { name: 'Стегна',            unit: 'см' },
+  { name: 'Біцепс',            unit: 'см' },
+  { name: 'Плечі',             unit: 'см' },
+  { name: 'Передпліччя',       unit: 'см' },
+  { name: 'Литки',             unit: 'см' },
+  { name: 'Шия',               unit: 'см' },
+  { name: '% жиру',            unit: '%' },
+]
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function fmtDate(iso: string): string {
@@ -110,17 +126,19 @@ function genId(): string {
 // ── Profile edit sheet ─────────────────────────────────────────────────────
 
 interface ProfileSheetProps {
-  isOpen:    boolean
-  profile:   SportProfile | null
-  color:     string
-  onClose:   () => void
-  onSave:    (data: Partial<SportProfile>) => Promise<void>
+  isOpen:              boolean
+  profile:             SportProfile | null
+  color:               string
+  onClose:             () => void
+  onSave:              (data: Partial<SportProfile>) => Promise<void>
+  onMeasurementsSave:  (measurements: SportPR[]) => Promise<void>
 }
 
-const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color, onClose, onSave }) => {
-  const [sport, setSport]   = useState(profile?.sport ?? '')
-  const [level, setLevel]   = useState<SportProfile['level']>(profile?.level ?? null)
-  const [goal, setGoal]     = useState(profile?.goal ?? '')
+const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color, onClose, onSave, onMeasurementsSave }) => {
+  const [sport, setSport]     = useState(profile?.sport ?? '')
+  const [level, setLevel]     = useState<SportProfile['level']>(profile?.level ?? null)
+  const [goal, setGoal]       = useState(profile?.goal ?? '')
+  const [photoUrl, setPhotoUrl] = useState(profile?.photoUrl ?? '')
   const [busy, setBusy]     = useState(false)
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -136,6 +154,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
       setSport(profile?.sport ?? '')
       setLevel(profile?.level ?? null)
       setGoal(profile?.goal ?? '')
+      setPhotoUrl(profile?.photoUrl ?? '')
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
     } else {
@@ -148,7 +167,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
   const handleSave = async () => {
     setBusy(true)
     try {
-      await onSave({ sport, level, goal })
+      await onSave({ sport, level, goal, photoUrl })
       onClose()
     } finally {
       setBusy(false)
@@ -175,6 +194,16 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
         </div>
 
         <div ref={bodyRef} className={styles.sheetBody}>
+          <div className={`${styles.field} ${styles.photoField}`}>
+            <ImageUploadButton
+              currentUrl={photoUrl}
+              folder="sport-profile"
+              onUpload={setPhotoUrl}
+              variant="circle"
+              placeholder="Фото"
+            />
+          </div>
+
           <div className={styles.field}>
             <label className={styles.fieldLabel}>ВИД СПОРТУ</label>
             <div className={styles.sportGrid}>
@@ -218,6 +247,18 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
               placeholder="Пробігти марафон, жим 120 кг…"
             />
           </div>
+
+          <PRTracker
+            prs={profile?.measurements ?? []}
+            color={color}
+            onSave={onMeasurementsSave}
+            title="ПАРАМЕТРИ ТІЛА"
+            emptyText="Зафіксуй перший параметр — вага, зріст, обхват грудей…"
+            namePlaceholder="Назва параметра…"
+            addLabel="Додати параметр"
+            nameOptions={BODY_MEASUREMENT_OPTIONS}
+            bare
+          />
         </div>
 
         <div className={styles.sheetFooter}>
@@ -233,26 +274,62 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
 // ── PR Tracker ─────────────────────────────────────────────────────────────
 
 interface PRTrackerProps {
-  prs:     SportPR[]
-  color:   string
-  onSave:  (prs: SportPR[]) => Promise<void>
+  prs:              SportPR[]
+  color:            string
+  onSave:           (prs: SportPR[]) => Promise<void>
+  title?:           string
+  emptyText?:       string
+  namePlaceholder?: string
+  addLabel?:        string
+  /** Якщо задано — вибір назви через пігулки замість вільного тексту (+ "Інше" для кастомної) */
+  nameOptions?:     { name: string; unit: string }[]
+  /** Компактний варіант без секційних відступів — для вбудовування в інші форми (напр. ProfileEditSheet) */
+  bare?:            boolean
 }
 
-const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
+const CUSTOM_NAME = '__custom__'
+
+const PRTracker: React.FC<PRTrackerProps> = ({
+  prs, color, onSave,
+  title = 'РЕКОРДИ (PR)',
+  emptyText = 'Зафіксуй перший рекорд — жим, дистанція, час…',
+  namePlaceholder = 'Назва (Жим лежачи, 5 km…)',
+  addLabel = 'Додати рекорд',
+  nameOptions,
+  bare = false,
+}) => {
   const [open, setOpen]       = useState(false)
   const [name, setName]       = useState('')
+  const [customMode, setCustomMode] = useState(!nameOptions)
   const [value, setValue]     = useState('')
   const [unit, setUnit]       = useState('')
   const [dateOpen, setDateOpen] = useState(false)
   const [date, setDate]       = useState('')
   const [saving, setSaving]   = useState(false)
 
+  const resetForm = () => {
+    setName(''); setValue(''); setUnit(''); setDate(''); setCustomMode(!nameOptions)
+  }
+
+  const selectPreset = (value: string) => {
+    if (value === CUSTOM_NAME) {
+      setCustomMode(true)
+      setName('')
+      setUnit('')
+      return
+    }
+    const opt = nameOptions?.find(o => o.name === value)
+    setCustomMode(false)
+    setName(value)
+    setUnit(opt?.unit ?? '')
+  }
+
   const handleAdd = async () => {
     if (!name.trim() || !value.trim()) return
     setSaving(true)
     const newPR: SportPR = { id: genId(), name: name.trim(), value: value.trim(), unit: unit.trim(), date: date || null }
     try { await onSave([...prs, newPR]) } finally { setSaving(false) }
-    setName(''); setValue(''); setUnit(''); setDate(''); setOpen(false)
+    resetForm(); setOpen(false)
   }
 
   const handleDelete = async (id: string) => {
@@ -262,9 +339,11 @@ const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
   const colorVar = { '--space-color': color } as React.CSSProperties
 
   return (
-    <div className={styles.section} style={colorVar}>
+    <div className={bare ? styles.field : styles.section} style={colorVar}>
       <div className={styles.prHeader}>
-        <h3 className={styles.sectionTitle}>РЕКОРДИ (PR)</h3>
+        {bare
+          ? <label className={styles.fieldLabel}>{title}</label>
+          : <h3 className={styles.sectionTitle}>{title}</h3>}
       </div>
 
       {prs.length > 0 && (
@@ -290,14 +369,25 @@ const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
       )}
 
       {prs.length === 0 && !open && (
-        <p className={styles.prEmpty}>Зафіксуй перший рекорд — жим, дистанція, час…</p>
+        <p className={styles.prEmpty}>{emptyText}</p>
       )}
 
       {open ? (
         <div className={styles.prAddForm}>
-          <div className={styles.prAddRow}>
-            <input className={styles.fieldInput} value={name} onChange={e => setName(e.target.value)} placeholder="Назва (Жим лежачи, 5 km…)" />
-          </div>
+          {nameOptions && (
+            <div className={styles.prAddRow}>
+              <PillSelector
+                options={[...nameOptions.map(o => ({ value: o.name, label: o.name })), { value: CUSTOM_NAME, label: 'Інше' }]}
+                value={customMode ? CUSTOM_NAME : name}
+                onChange={selectPreset}
+              />
+            </div>
+          )}
+          {(!nameOptions || customMode) && (
+            <div className={styles.prAddRow}>
+              <input className={styles.fieldInput} value={name} onChange={e => setName(e.target.value)} placeholder={namePlaceholder} />
+            </div>
+          )}
           <div className={styles.prAddRow}>
             <input className={`${styles.fieldInput} ${styles.prAddValue}`} value={value} onChange={e => setValue(e.target.value)} placeholder="100" />
             <input className={`${styles.fieldInput} ${styles.prAddUnit}`}  value={unit}  onChange={e => setUnit(e.target.value)}  placeholder="кг" />
@@ -307,7 +397,7 @@ const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
           </div>
           {dateOpen && <CustomDatePicker value={date} onChange={v => { setDate(v); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
           <div className={styles.prAddBtns}>
-            <button type="button" className={styles.prCancelBtn} onClick={() => { setOpen(false); setName(''); setValue(''); setUnit(''); setDate('') }}>Скасувати</button>
+            <button type="button" className={styles.prCancelBtn} onClick={() => { setOpen(false); resetForm() }}>Скасувати</button>
             <button type="button" className={styles.prSaveBtn} style={{ background: color }} onClick={handleAdd} disabled={!name.trim() || !value.trim() || saving}>
               {saving ? '…' : 'Зберегти'}
             </button>
@@ -316,7 +406,7 @@ const PRTracker: React.FC<PRTrackerProps> = ({ prs, color, onSave }) => {
       ) : (
         <button type="button" className={styles.prOpenBtn} onClick={() => setOpen(true)}>
           <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
-          Додати рекорд
+          {addLabel}
         </button>
       )}
     </div>
@@ -353,7 +443,7 @@ const ProgramSheet: React.FC<ProgramSheetProps> = ({ isOpen, color, program, onC
   useEffect(() => {
     if (isOpen) {
       setName(program?.name ?? '')
-      setExercises(program?.exercises ?? [])
+      setExercises((program?.exercises ?? []).map(ex => ({ ...ex, setTargets: getSetTargets(ex) })))
       setConfirmDel(false)
       setMounted(true)
       requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
@@ -364,7 +454,7 @@ const ProgramSheet: React.FC<ProgramSheetProps> = ({ isOpen, color, program, onC
     }
   }, [isOpen, program])
 
-  const addExercise = () => setExercises(prev => [...prev, { id: genId(), name: '', sets: null, reps: null, restSec: null }])
+  const addExercise = () => setExercises(prev => [...prev, { id: genId(), name: '', setTargets: [{ reps: null, weight: null }], restSec: null }])
 
   const updateEx = (id: string, patch: Partial<WorkoutExercise>) => {
     setExercises(prev => prev.map(e => e.id === id ? { ...e, ...patch } : e))
@@ -372,6 +462,32 @@ const ProgramSheet: React.FC<ProgramSheetProps> = ({ isOpen, color, program, onC
   }
 
   const removeEx = (id: string) => setExercises(prev => prev.filter(e => e.id !== id))
+
+  const addSet = (exId: string) => {
+    setExercises(prev => prev.map(e => {
+      if (e.id !== exId) return e
+      const targets = getSetTargets(e)
+      const last = targets[targets.length - 1]
+      return { ...e, setTargets: [...targets, last ? { ...last } : { reps: null, weight: null }] }
+    }))
+  }
+
+  const removeSet = (exId: string, index: number) => {
+    setExercises(prev => prev.map(e => {
+      if (e.id !== exId) return e
+      const targets = getSetTargets(e)
+      if (targets.length <= 1) return e
+      return { ...e, setTargets: targets.filter((_, i) => i !== index) }
+    }))
+  }
+
+  const updateSetTarget = (exId: string, index: number, patch: Partial<WorkoutSetTarget>) => {
+    setExercises(prev => prev.map(e => {
+      if (e.id !== exId) return e
+      const targets = getSetTargets(e)
+      return { ...e, setTargets: targets.map((t, i) => i === index ? { ...t, ...patch } : t) }
+    }))
+  }
 
   const handleSave = async () => {
     if (!name.trim()) { showToast('Впиши назву програми', 'error'); return }
@@ -383,7 +499,14 @@ const ProgramSheet: React.FC<ProgramSheetProps> = ({ isOpen, color, program, onC
       return
     }
     setBusy(true)
-    try { await onSave(name.trim(), exercises); onClose() }
+    try {
+      const normalized = exercises.map(e => {
+        const setTargets = getSetTargets(e)
+        return { ...e, setTargets, sets: setTargets.length, reps: setTargets[0]?.reps ?? null }
+      })
+      await onSave(name.trim(), normalized)
+      onClose()
+    }
     catch { /* onSave вже показав toast з причиною */ }
     finally { setBusy(false) }
   }
@@ -411,48 +534,91 @@ const ProgramSheet: React.FC<ProgramSheetProps> = ({ isOpen, color, program, onC
 
           <div className={styles.field}>
             <label className={styles.fieldLabel}>ВПРАВИ</label>
-            {exercises.map((ex, i) => (
-              <div key={ex.id} className={styles.exRow}>
-                <div className={styles.exNum}>{i + 1}</div>
-                <div className={styles.exFields}>
-                  <input
-                    className={`${styles.fieldInput} ${invalidIds.has(ex.id) ? styles.fieldInputError : ''}`}
-                    value={ex.name}
-                    onChange={e => updateEx(ex.id, { name: e.target.value })}
-                    placeholder="Назва вправи…"
-                  />
-                  <div className={styles.exMeta}>
+            {exercises.map((ex, i) => {
+              const setTargets = getSetTargets(ex)
+              return (
+                <div key={ex.id} className={styles.exCard}>
+                  <div className={styles.exCardHeader}>
+                    <span className={styles.exNum}>{i + 1}</span>
                     <input
-                      className={`${styles.fieldInput} ${styles.exSmall}`}
-                      type="number" inputMode="numeric" min="1"
-                      value={ex.sets ?? ''} onChange={e => updateEx(ex.id, { sets: e.target.value ? +e.target.value : null })}
-                      placeholder="Підх."
+                      className={`${styles.exNameInput} ${invalidIds.has(ex.id) ? styles.fieldInputError : ''}`}
+                      value={ex.name}
+                      onChange={e => updateEx(ex.id, { name: e.target.value })}
+                      placeholder="Назва вправи…"
                     />
-                    <input
-                      className={`${styles.fieldInput} ${styles.exSmall}`}
-                      type="number" inputMode="numeric" min="1"
-                      value={ex.reps ?? ''} onChange={e => updateEx(ex.id, { reps: e.target.value ? +e.target.value : null })}
-                      placeholder="Повт."
-                    />
-                    <input
-                      className={`${styles.fieldInput} ${styles.exSmall}`}
-                      type="number" inputMode="numeric" min="0"
-                      value={ex.restSec ?? ''} onChange={e => updateEx(ex.id, { restSec: e.target.value ? +e.target.value : null })}
-                      placeholder="Відп. с"
-                    />
-                    <input
-                      className={`${styles.fieldInput} ${styles.exNotes}`}
-                      value={ex.notes ?? ''}
-                      onChange={e => updateEx(ex.id, { notes: e.target.value })}
-                      placeholder="Нотатка…"
-                    />
-                    <button type="button" className={styles.exRemove} onClick={() => removeEx(ex.id)} aria-label="Видалити">
+                    <button type="button" className={styles.exRemove} onClick={() => removeEx(ex.id)} aria-label="Видалити вправу">
                       <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
                     </button>
                   </div>
+
+                  <div className={styles.setTable}>
+                    <div className={styles.setTableHead}>
+                      <span>ПІДХІД</span>
+                      <span>ПОВТОРИ</span>
+                      <span>ВАГА</span>
+                      <span />
+                    </div>
+                    {setTargets.map((set, si) => (
+                      <div key={si} className={styles.setTableRow}>
+                        <span className={styles.setTableNum}>{si + 1}</span>
+                        <input
+                          className={styles.setTableInput}
+                          type="number" inputMode="numeric" min="0"
+                          value={set.reps ?? ''}
+                          onChange={e => updateSetTarget(ex.id, si, { reps: e.target.value ? +e.target.value : null })}
+                          placeholder="—"
+                        />
+                        <input
+                          className={styles.setTableInput}
+                          type="number" inputMode="numeric" min="0" step="0.5"
+                          value={set.weight ?? ''}
+                          onChange={e => updateSetTarget(ex.id, si, { weight: e.target.value ? +e.target.value : null })}
+                          placeholder="—"
+                        />
+                        {setTargets.length > 1 ? (
+                          <button type="button" className={styles.setRowRemove} onClick={() => removeSet(ex.id, si)} aria-label="Видалити підхід">
+                            <svg width="10" height="10" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
+                          </button>
+                        ) : <span />}
+                      </div>
+                    ))}
+                  </div>
+
+                  <button type="button" className={styles.addSetLink} onClick={() => addSet(ex.id)}>
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+                    Додати підхід
+                  </button>
+
+                  <div className={styles.exSecondaryRow}>
+                    <div className={styles.exSecondaryField}>
+                      <span className={styles.exSecondaryLabel}>ВІДПОЧИНОК, С</span>
+                      <input
+                        className={styles.exSecondaryInput}
+                        type="number" inputMode="numeric" min="0"
+                        value={ex.restSec ?? ''} onChange={e => updateEx(ex.id, { restSec: e.target.value ? +e.target.value : null })}
+                        placeholder="60"
+                      />
+                    </div>
+                    <div className={styles.exSecondaryField}>
+                      <span className={styles.exSecondaryLabel}>ТРИВАЛІСТЬ, С</span>
+                      <input
+                        className={styles.exSecondaryInput}
+                        type="number" inputMode="numeric" min="0"
+                        value={ex.duration ?? ''} onChange={e => updateEx(ex.id, { duration: e.target.value ? +e.target.value : null })}
+                        placeholder="—"
+                      />
+                    </div>
+                  </div>
+
+                  <input
+                    className={styles.exNotesInput}
+                    value={ex.notes ?? ''}
+                    onChange={e => updateEx(ex.id, { notes: e.target.value })}
+                    placeholder="Нотатка до вправи…"
+                  />
                 </div>
-              </div>
-            ))}
+              )
+            })}
             <button type="button" className={styles.addExBtn} onClick={addExercise}>
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
               Додати вправу
@@ -780,6 +946,15 @@ const SportSpaceView: React.FC<Props> = ({
     }
   }
 
+  const handleMeasurementsSave = async (measurements: SportPR[]) => {
+    try {
+      const updated = await updateProfile(spaceId, { measurements })
+      onProfileUpdate(updated)
+    } catch {
+      showToast('Помилка збереження', 'error')
+    }
+  }
+
   const handleProgramSave = async (name: string, exercises: WorkoutExercise[]) => {
     try {
       if (editingProgram) {
@@ -802,7 +977,7 @@ const SportSpaceView: React.FC<Props> = ({
     showToast('Програму видалено', 'success')
   }
 
-  const handleFinishWorkout = async (completedIds: string[]) => {
+  const handleFinishWorkout = async (completedIds: string[], exerciseLogs: WorkoutExerciseLog[]) => {
     if (!activeWorkout) return
     const today = new Date().toISOString().slice(0, 10)
     try {
@@ -812,6 +987,7 @@ const SportSpaceView: React.FC<Props> = ({
         date:               today,
         completedExercises: completedIds,
         totalExercises:     activeWorkout.exercises.length,
+        exerciseLogs,
         notes:              '',
       })
       await fetchEvents(spaceId)
@@ -917,6 +1093,7 @@ const SportSpaceView: React.FC<Props> = ({
 					</div>
 				) : (
 					<div className={styles.profileCard} onClick={() => setProfileOpen(true)}>
+						{profile?.photoUrl && <img src={profile.photoUrl} alt="" className={styles.profileAvatar} />}
 						<div className={styles.profileInfo}>
 							{profile?.sport && <span className={styles.sportBadge}>{SPORT_LABELS[profile.sport] ?? profile.sport}</span>}
 							{profile?.level && <span className={styles.levelText}>{LEVEL_LABELS[profile.level]}</span>}
@@ -1139,7 +1316,7 @@ const SportSpaceView: React.FC<Props> = ({
 				programs={programs}
 			/>
 
-			<ProfileEditSheet isOpen={profileOpen} profile={profile} color={color} onClose={() => setProfileOpen(false)} onSave={handleProfileSave} />
+			<ProfileEditSheet isOpen={profileOpen} profile={profile} color={color} onClose={() => setProfileOpen(false)} onSave={handleProfileSave} onMeasurementsSave={handleMeasurementsSave} />
 
 			<ProgramSheet
 				isOpen={programSheetOpen}

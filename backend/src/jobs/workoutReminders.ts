@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import { SportEvent } from '../models/SportEvent'
 import PushSubscription from '../models/PushSubscription'
 import { sendNotification } from '../services/webpush'
+import { isSportEventDueOnDay } from '../controllers/sportController'
 
 // Мімір-голосом — випадкова фраза при кожному нагадуванні
 const MIMIR_WORKOUT_PHRASES = [
@@ -25,13 +26,24 @@ function parseDueAt(dateStr: string, timeStr?: string | null): Date {
 
 async function sendWorkoutReminders(): Promise<void> {
   const now = new Date()
-  const events = await SportEvent.find({ reminder: { $ne: null }, reminderSent: { $ne: true } }).lean()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const todayIso = today.toISOString().slice(0, 10)
+
+  const events = await SportEvent.find({ reminder: { $ne: null } }).lean()
   if (events.length === 0) return
 
   let sentCount = 0
   for (const event of events) {
     if (!event.reminder) continue
-    const dueAt = parseDueAt(event.date, event.time)
+
+    // Яке саме входження серії актуальне сьогодні (для repeat='none' — сама подія)
+    const dueDateIso = (!event.repeat || event.repeat === 'none')
+      ? event.date
+      : isSportEventDueOnDay(event, today, todayIso) ? todayIso : null
+    if (!dueDateIso) continue
+    if (event.reminderSentFor === dueDateIso) continue
+
+    const dueAt = parseDueAt(dueDateIso, event.time)
     const reminderAt = new Date(dueAt)
     const { amount, unit } = event.reminder
     if (unit === 'minutes') reminderAt.setMinutes(reminderAt.getMinutes() - amount)
@@ -40,7 +52,9 @@ async function sendWorkoutReminders(): Promise<void> {
     else if (unit === 'weeks') reminderAt.setDate(reminderAt.getDate() - amount * 7)
 
     if (now < reminderAt) continue
-    // Пропущене нагадування (сервер був недоступний/деплой) — не спамити через добу
+    // Пропущене нагадування (сервер був недоступний/деплой) — не спамити через добу.
+    // Для recurring подій це стосується лише сьогоднішнього входження — завтра dueDateIso
+    // зміниться і перевірка почнеться заново.
     if (now.getTime() - dueAt.getTime() > 24 * 60 * 60 * 1000) continue
 
     const subs = await PushSubscription.find({ userId: event.userId }).lean()
@@ -48,7 +62,7 @@ async function sendWorkoutReminders(): Promise<void> {
       try {
         await sendNotification(
           { endpoint: sub.endpoint, keys: sub.keys },
-          { title: 'Мімір нагадує', body: randomPhrase(), url: `/spaces/${event.spaceId}`, tag: `workout-${String(event._id)}` }
+          { title: 'Мімір нагадує', body: randomPhrase(), url: `/spaces/${event.spaceId}`, tag: `workout-${String(event._id)}-${dueDateIso}` }
         )
       } catch (err: unknown) {
         if ((err as { expired?: boolean }).expired) {
@@ -56,7 +70,7 @@ async function sendWorkoutReminders(): Promise<void> {
         }
       }
     }
-    await SportEvent.updateOne({ _id: event._id }, { reminderSent: true })
+    await SportEvent.updateOne({ _id: event._id }, { reminderSentFor: dueDateIso })
     sentCount++
   }
   if (sentCount > 0) console.log(`🏋 Workout reminders sent (${sentCount})`)

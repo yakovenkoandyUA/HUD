@@ -30,10 +30,12 @@ function formatReminderShort(amount: number, unit: ReminderUnit): string {
 }
 
 const REPEAT_OPTIONS: { value: SportRepeatType; label: string }[] = [
-  { value: 'none',   label: 'Ніколи' },
-  { value: 'daily',  label: 'Щодня' },
-  { value: 'weekly', label: 'Щотижня' },
-  { value: 'custom', label: 'Кастом' },
+  { value: 'none',    label: 'Ніколи' },
+  { value: 'daily',   label: 'Щодня' },
+  { value: 'weekly',  label: 'Щотижня' },
+  { value: 'monthly', label: 'Щомісяця' },
+  { value: 'yearly',  label: 'Щороку' },
+  { value: 'custom',  label: 'Кастом' },
 ]
 
 const UNIT_MAP: Record<Exclude<SportRepeatType, 'none' | 'custom'>, RepeatConfig['unit']> = {
@@ -41,9 +43,11 @@ const UNIT_MAP: Record<Exclude<SportRepeatType, 'none' | 'custom'>, RepeatConfig
 }
 
 function formatRepeatSummary(repeat: SportRepeatType, config: RepeatConfig | null): string {
-  if (repeat === 'none')   return 'Не повторюється'
-  if (repeat === 'daily')  return 'Щодня'
-  if (repeat === 'weekly') return 'Щотижня'
+  if (repeat === 'none')    return 'Не повторюється'
+  if (repeat === 'daily')   return 'Щодня'
+  if (repeat === 'weekly')  return 'Щотижня'
+  if (repeat === 'monthly') return 'Щомісяця'
+  if (repeat === 'yearly')  return 'Щороку'
   if (repeat === 'custom' && config) {
     const WEEK_DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
     const UNITS: Record<RepeatConfig['unit'], [string, string]> = {
@@ -435,7 +439,7 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
           {/* Повторення */}
           <div className={styles.field}>
             <label className={styles.fieldLabel}>ПОВТОРЕННЯ</label>
-            <PillSelector options={REPEAT_OPTIONS} value={repeat} onChange={selectRepeat} columns={4} />
+            <PillSelector options={REPEAT_OPTIONS} value={repeat} onChange={selectRepeat} columns={3} />
             {repeat === 'custom' && (
               <button type="button" className={styles.dateBtn} onClick={() => setShowRepeatScreen(true)}>
                 {formatRepeatSummary(repeat, repeatConfig)}

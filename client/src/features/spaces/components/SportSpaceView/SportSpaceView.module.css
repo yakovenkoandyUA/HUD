@@ -200,6 +200,14 @@
 }
 .profileCard:hover { border-color: var(--space-color, var(--accent)); }
 
+.profileAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 .profileInfo {
   flex: 1;
   display: flex;
@@ -352,18 +360,18 @@
   align-items: center;
 }
 
-.prAddValue {
+.fieldInput.prAddValue {
   width: 80px;
   flex-shrink: 0;
   text-align: center;
 }
 
-.prAddUnit {
+.fieldInput.prAddUnit {
   width: 64px;
   flex-shrink: 0;
 }
 
-.prDateBtn {
+.fieldInput.prDateBtn {
   flex: 1;
   width: auto;
   min-width: 0;
@@ -964,6 +972,10 @@
   gap: 8px;
 }
 
+.photoField {
+  align-items: center;
+}
+
 .fieldLabel {
   font-size: 10px;
   font-weight: 700;
@@ -1122,23 +1134,165 @@
 .programSessionDeleteBtn:hover { color: var(--negative); }
 
 /* ── Program sheet ── */
-.exRow { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+/* ── Exercise card ── */
+.exCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.exCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .exNum {
-  width: 22px; height: 22px; flex-shrink: 0; margin-top: 9px;
+  width: 20px; height: 20px; flex-shrink: 0;
   border-radius: 50%; background: var(--surface2);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-mono); font-size: 0.68rem; color: var(--text3);
+  font-family: var(--font-mono); font-size: 0.65rem; color: var(--text3);
 }
-.exFields { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
-.exMeta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.exSmall { width: 58px; flex-shrink: 0; }
-.exNotes { flex: 1; min-width: 90px; }
+
+.exNameInput {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 4px 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.exNameInput:focus { border-color: var(--space-color, var(--accent)); outline: none; }
+
 .exRemove {
-  width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   border: none; background: none; color: var(--text3); cursor: pointer; border-radius: 6px;
-  transition: color 0.15s; margin-top: 1px;
+  transition: color 0.15s;
 }
 .exRemove:active { color: #ef4444; }
+
+/* ── Set table ── */
+.setTable {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setTableHead {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr 20px;
+  gap: 8px;
+  padding: 0 2px;
+}
+.setTableHead span {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+
+.setTableRow {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr 20px;
+  gap: 8px;
+  align-items: center;
+}
+
+.setTableNum {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.setTableInput {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: none;
+  border-radius: 7px;
+  padding: 8px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text);
+  text-align: center;
+}
+.setTableInput:focus { outline: 1.5px solid var(--space-color, var(--accent)); }
+
+.setRowRemove {
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--text3); cursor: pointer; padding: 0;
+}
+.setRowRemove:active { color: var(--negative); }
+
+.addSetLink {
+  margin-block: 10px;
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+  cursor: pointer;
+}
+.addSetLink:hover { color: var(--space-color, var(--accent)); }
+
+.exSecondaryRow {
+  display: flex;
+  gap: 10px;
+}
+
+.exSecondaryField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.exSecondaryLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+
+.exSecondaryInput {
+  box-sizing: border-box;
+  background: var(--surface);
+  border: none;
+  border-radius: 7px;
+  padding: 7px 8px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+.exSecondaryInput:focus { outline: 1.5px solid var(--space-color, var(--accent)); }
+
+.exNotesInput {
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--surface2);
+  border: none;
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--text);
+}
+.exNotesInput:focus { outline: 1.5px solid var(--space-color, var(--accent)); }
+
 .addExBtn {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 12px; border: 1px dashed var(--border); border-radius: 8px;

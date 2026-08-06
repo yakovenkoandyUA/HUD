@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
-import type { WorkoutExercise, WorkoutProgram } from '../../store/sportStore'
+import { getSetTargets, type WorkoutExercise, type WorkoutProgram, type WorkoutSetLog, type WorkoutExerciseLog } from '../../store/sportStore'
 import styles from './ActiveWorkoutSheet.module.css'
 
 const DEFAULT_REST_SEC = 60
@@ -17,11 +17,11 @@ interface Props {
   color:    string
   program:  WorkoutProgram | null
   onClose:  () => void
-  onFinish: (completedIds: string[]) => Promise<void>
+  onFinish: (completedIds: string[], exerciseLogs: WorkoutExerciseLog[]) => Promise<void>
 }
 
 function targetSetsOf(ex: WorkoutExercise): number {
-  return ex.sets && ex.sets > 0 ? ex.sets : 1
+  return getSetTargets(ex).length
 }
 
 function pluralUk(n: number, [one, few, many]: [string, string, string]): string {
@@ -33,20 +33,15 @@ function pluralUk(n: number, [one, few, many]: [string, string, string]): string
 }
 
 const SET_WORD: [string, string, string] = ['підхід', 'підходи', 'підходів']
-const REP_WORD: [string, string, string] = ['повторення', 'повторення', 'повторень']
 
-// Активна картка: розгорнутий опис — "2 підходи × 10 повторень"
-function metaLineActive(ex: WorkoutExercise): string {
+function targetLabel(reps: number | null, weight: number | null): string {
   const parts: string[] = []
-  if (ex.sets && ex.reps) parts.push(`${ex.sets} ${pluralUk(ex.sets, SET_WORD)} × ${ex.reps} ${pluralUk(ex.reps, REP_WORD)}`)
-  else if (ex.sets) parts.push(`${ex.sets} ${pluralUk(ex.sets, SET_WORD)}`)
-  else if (ex.reps) parts.push(`${ex.reps} ${pluralUk(ex.reps, REP_WORD)}`)
-  if (ex.duration) parts.push(`${ex.duration}с`)
-  if (ex.notes) parts.push(ex.notes)
-  return parts.join(' · ')
+  if (reps) parts.push(`${reps} повт.`)
+  if (weight) parts.push(`${weight} кг`)
+  return parts.join(' × ')
 }
 
-// Locked-рядок: короткий підпис — "1 підхід"
+// Locked-рядок: короткий підпис — "3 підходи"
 function metaLineLocked(ex: WorkoutExercise): string {
   const target = targetSetsOf(ex)
   return `${target} ${pluralUk(target, SET_WORD)}`
@@ -77,7 +72,11 @@ function fmtClock(sec: number): string {
  */
 const ActiveWorkoutSheet: React.FC<Props> = ({ isOpen, color, program, onClose, onFinish }) => {
   const [completedSets, setCompletedSets] = useState<Record<string, number>>({})
+  const [actualLogs, setActualLogs]       = useState<Record<string, WorkoutSetLog[]>>({})
   const [restState, setRestState]         = useState<RestState | null>(null)
+  const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null)
+  const [editReps, setEditReps]     = useState('')
+  const [editWeight, setEditWeight] = useState('')
   const [busy, setBusy]     = useState(false)
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -91,6 +90,8 @@ const ActiveWorkoutSheet: React.FC<Props> = ({ isOpen, color, program, onClose, 
   useEffect(() => {
     const open = () => {
       setCompletedSets({})
+      setActualLogs({})
+      setEditingExerciseId(null)
       setRestState(null)
       setBusy(false)
       setMounted(true)
@@ -109,20 +110,23 @@ const ActiveWorkoutSheet: React.FC<Props> = ({ isOpen, color, program, onClose, 
     return () => clearTimeout(t)
   }, [isOpen])
 
-  // Rest timer tick — chained setTimeout, 1s cadence
+  // Rest timer tick — один steady interval на сесію відпочинку (не перезапускається
+  // від adjustRest, бо залежить лише від exerciseId, а не від secondsLeft)
   useEffect(() => {
     if (!restState) return
-    const isDone = restState.secondsLeft <= 0
-    const t = setTimeout(() => {
-      if (isDone) {
-        if (navigator.vibrate) navigator.vibrate(200)
-        setRestState(null)
-      } else {
-        setRestState(prev => prev ? { ...prev, secondsLeft: prev.secondsLeft - 1 } : prev)
-      }
-    }, isDone ? 0 : 1000)
-    return () => clearTimeout(t)
-  }, [restState])
+    const interval = setInterval(() => {
+      setRestState(prev => {
+        if (!prev) return prev
+        const nextSeconds = prev.secondsLeft - 1
+        if (nextSeconds <= 0) {
+          if (navigator.vibrate) navigator.vibrate(200)
+          return null
+        }
+        return { ...prev, secondsLeft: nextSeconds }
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [restState?.exerciseId]) // eslint-disable-line react-hooks/exhaustive-deps -- interval живе всю сесію відпочинку; залежність від secondsLeft перезапускала б його при кожному +15с/−15с
 
   if (!mounted || !program) return null
 
@@ -137,10 +141,12 @@ const ActiveWorkoutSheet: React.FC<Props> = ({ isOpen, color, program, onClose, 
   const totalSetsAll     = exercises.reduce((sum, ex) => sum + targetSetsOf(ex), 0)
   const completedSetsAll = exercises.reduce((sum, ex) => sum + Math.min(doneCountOf(ex), targetSetsOf(ex)), 0)
 
-  const completeSet = (ex: WorkoutExercise, exIndex: number) => {
+  const confirmSet = (ex: WorkoutExercise, exIndex: number, log: WorkoutSetLog) => {
     const target = targetSetsOf(ex)
     const next   = doneCountOf(ex) + 1
     setCompletedSets(prev => ({ ...prev, [ex.id]: next }))
+    setActualLogs(prev => ({ ...prev, [ex.id]: [...(prev[ex.id] ?? []), log] }))
+    setEditingExerciseId(null)
 
     const isLastSetOfExercise = next >= target
     const isLastExercise      = exIndex === exercises.length - 1
@@ -150,6 +156,25 @@ const ActiveWorkoutSheet: React.FC<Props> = ({ isOpen, color, program, onClose, 
     setRestState({ exerciseId: ex.id, totalSec: restSec, secondsLeft: restSec })
   }
 
+  // Достроково завершити вправу — решта запланованих підходів пропускається без логу
+  const skipRestOfExercise = (ex: WorkoutExercise, exIndex: number) => {
+    const target = targetSetsOf(ex)
+    setCompletedSets(prev => ({ ...prev, [ex.id]: target }))
+    setEditingExerciseId(null)
+
+    const isLastExercise = exIndex === exercises.length - 1
+    if (isLastExercise) return
+
+    const restSec = ex.restSec && ex.restSec > 0 ? ex.restSec : DEFAULT_REST_SEC
+    setRestState({ exerciseId: ex.id, totalSec: restSec, secondsLeft: restSec })
+  }
+
+  const startEdit = (ex: WorkoutExercise, target: { reps: number | null; weight: number | null }) => {
+    setEditingExerciseId(ex.id)
+    setEditReps(target.reps != null ? String(target.reps) : '')
+    setEditWeight(target.weight != null ? String(target.weight) : '')
+  }
+
   const adjustRest = (delta: number) => {
     setRestState(prev => prev ? { ...prev, secondsLeft: Math.max(0, prev.secondsLeft + delta) } : prev)
   }
@@ -157,7 +182,10 @@ const ActiveWorkoutSheet: React.FC<Props> = ({ isOpen, color, program, onClose, 
   const handleFinish = async () => {
     setBusy(true)
     try {
-      await onFinish(exercises.filter(isExDone).map(e => e.id))
+      const exerciseLogs: WorkoutExerciseLog[] = exercises
+        .filter(ex => (actualLogs[ex.id]?.length ?? 0) > 0)
+        .map(ex => ({ exerciseId: ex.id, name: ex.name, sets: actualLogs[ex.id] }))
+      await onFinish(exercises.filter(isExDone).map(e => e.id), exerciseLogs)
       onClose()
     } finally {
       setBusy(false)
@@ -197,9 +225,12 @@ const ActiveWorkoutSheet: React.FC<Props> = ({ isOpen, color, program, onClose, 
             {exercises.map((ex, i) => {
               const done   = isExDone(ex)
               const active = i === activeIndex
-              const target = targetSetsOf(ex)
+              const setTargets = getSetTargets(ex)
+              const target = setTargets.length
               const cur    = doneCountOf(ex)
               const isResting = restState?.exerciseId === ex.id
+              const currentTarget = setTargets[cur] ?? null
+              const isEditing = editingExerciseId === ex.id
 
               const isLastSet = cur + 1 >= target
 
@@ -227,14 +258,51 @@ const ActiveWorkoutSheet: React.FC<Props> = ({ isOpen, color, program, onClose, 
                   ) : active ? (
                     <div className={styles.stepCard} style={{ borderColor: `color-mix(in srgb, ${color} 35%, var(--border))` }}>
                       <span className={styles.stepName}>{ex.name}</span>
-                      {metaLineActive(ex) && <span className={styles.stepMeta}>{metaLineActive(ex)}</span>}
+                      {ex.notes && <span className={styles.stepMeta}>{ex.notes}</span>}
 
                       {!isResting && (
                         <>
                           {target > 1 && <span className={styles.setProgressLabel}>Підхід {cur + 1} із {target}</span>}
-                          <button type="button" className={styles.setDoneBtn} style={{ background: color }} onClick={() => completeSet(ex, i)}>
-                            {isLastSet ? 'Завершити вправу' : `Завершити підхід ${cur + 1}`}
-                          </button>
+                          {currentTarget && targetLabel(currentTarget.reps, currentTarget.weight) && (
+                            <span className={styles.setTargetLabel}>{targetLabel(currentTarget.reps, currentTarget.weight)}</span>
+                          )}
+
+                          {isEditing ? (
+                            <div className={styles.setEditRow}>
+                              <input
+                                className={styles.setEditInput} type="number" inputMode="numeric" min="0"
+                                value={editReps} onChange={e => setEditReps(e.target.value)} placeholder="повт."
+                              />
+                              <input
+                                className={styles.setEditInput} type="number" inputMode="numeric" min="0" step="0.5"
+                                value={editWeight} onChange={e => setEditWeight(e.target.value)} placeholder="кг"
+                              />
+                              <button
+                                type="button" className={styles.setDoneBtn} style={{ background: color }}
+                                onClick={() => confirmSet(ex, i, { reps: editReps ? +editReps : null, weight: editWeight ? +editWeight : null })}
+                              >
+                                Зберегти
+                              </button>
+                            </div>
+                          ) : (
+                            <div className={styles.setActionRow}>
+                              <button
+                                type="button" className={styles.setDoneBtn} style={{ background: color }}
+                                onClick={() => confirmSet(ex, i, { reps: currentTarget?.reps ?? null, weight: currentTarget?.weight ?? null })}
+                              >
+                                {isLastSet ? 'Завершити вправу' : `Завершити підхід ${cur + 1}`}
+                              </button>
+                              <button type="button" className={styles.editSetLink} onClick={() => startEdit(ex, currentTarget ?? { reps: null, weight: null })}>
+                                змінити цифри
+                              </button>
+                            </div>
+                          )}
+
+                          {target > 1 && !isLastSet && (
+                            <button type="button" className={styles.skipExerciseLink} onClick={() => skipRestOfExercise(ex, i)}>
+                              Завершити вправу достроково
+                            </button>
+                          )}
                         </>
                       )}
 

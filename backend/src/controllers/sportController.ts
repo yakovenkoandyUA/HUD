@@ -22,9 +22,9 @@ export async function updateSportProfile(req: Request, res: Response): Promise<v
     const space = await Space.findOne({ _id: req.params.id, 'members.userId': req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
 
-    const allowed = ['sport', 'level', 'goal', 'photoUrl', 'prs'] as const
+    const allowed = ['sport', 'level', 'goal', 'photoUrl', 'prs', 'measurements'] as const
     if (!space.sportProfile) {
-      space.sportProfile = { sport: '', level: null, goal: '', photoUrl: '', prs: [] }
+      space.sportProfile = { sport: '', level: null, goal: '', photoUrl: '', prs: [], measurements: [] }
     }
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (space.sportProfile as unknown as Record<string, unknown>)[key] = req.body[key]
@@ -39,7 +39,8 @@ export async function updateSportProfile(req: Request, res: Response): Promise<v
 // Чи припадає SportEvent на конкретний день, з урахуванням repeat/repeatConfig.
 // Дзеркалить client/src/features/sprint/utils/sprint.ts isRoutineDueOnDay, адаптовано під
 // SportEvent (де date — сама дата початку серії, без окремого nextDue).
-function isSportEventDueOnDay(
+// Використовується тут (getTodaySportEvents) і в jobs/workoutReminders.ts.
+export function isSportEventDueOnDay(
   event: { date: string; repeat: string; repeatConfig: { unit?: string; weekDays?: number[]; interval?: number } | null },
   day: Date,
   dayIso: string
@@ -135,8 +136,8 @@ export async function createSportEvent(req: Request, res: Response): Promise<voi
       repeatConfig: repeatConfig ?? null,
       programIds:   programIds   ?? [],
       programNames: programNames ?? [],
-      reminder:     reminder ?? null,
-      reminderSent: false,
+      reminder:        reminder ?? null,
+      reminderSentFor: null,
     })
     res.status(201).json(event)
   } catch {
@@ -154,7 +155,7 @@ export async function updateSportEvent(req: Request, res: Response): Promise<voi
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (event as unknown as Record<string, unknown>)[key] = req.body[key]
     })
-    if (req.body.date !== undefined || req.body.time !== undefined || req.body.reminder !== undefined) event.reminderSent = false
+    if (req.body.date !== undefined || req.body.time !== undefined || req.body.reminder !== undefined) event.reminderSentFor = null
     await event.save()
     res.json(event)
   } catch {
@@ -270,9 +271,11 @@ export async function createWorkoutSession(req: Request, res: Response): Promise
     const space = await Space.findOne({ _id: req.params.id, 'members.userId': req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
 
-    const { programId, programName, date, completedExercises, totalExercises, notes } = req.body as {
+    const { programId, programName, date, completedExercises, totalExercises, exerciseLogs, notes } = req.body as {
       programId: string; programName: string; date: string
-      completedExercises: string[]; totalExercises: number; notes?: string
+      completedExercises: string[]; totalExercises: number
+      exerciseLogs?: { exerciseId: string; name: string; sets: { reps: number | null; weight: number | null }[] }[]
+      notes?: string
     }
 
     const session = await WorkoutSession.create({
@@ -281,6 +284,7 @@ export async function createWorkoutSession(req: Request, res: Response): Promise
       programId, programName, date,
       completedExercises: completedExercises ?? [],
       totalExercises,
+      exerciseLogs: exerciseLogs ?? [],
       notes: notes ?? '',
     })
 
