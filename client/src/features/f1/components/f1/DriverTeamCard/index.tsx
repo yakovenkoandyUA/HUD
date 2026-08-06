@@ -17,14 +17,21 @@ interface Props {
 }
 
 const DriverTeamCard: React.FC<Props> = ({ team }) => {
+  const image = team.logo ?? team.carImage
+
   return (
     <div className={styles.card} style={{ '--team-color': team.primary } as React.CSSProperties}>
       <span className={styles.title}>ПРО КОМАНДУ</span>
 
       <div className={styles.body}>
         <div className={styles.logoWrap}>
-          {team.carImage && (
-            <img src={team.carImage} alt={team.name} className={styles.carImage} onError={e => { e.currentTarget.style.display = 'none' }} />
+          {image && (
+            <img
+              src={image}
+              alt={team.name}
+              className={team.logo ? styles.logoImage : styles.carImage}
+              onError={e => { e.currentTarget.style.display = 'none' }}
+            />
           )}
         </div>
 

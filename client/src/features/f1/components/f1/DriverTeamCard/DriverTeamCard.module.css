@@ -36,6 +36,12 @@
   object-fit: contain;
 }
 
+.logoImage {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
 .info {
   flex: 1;
   min-width: 0;

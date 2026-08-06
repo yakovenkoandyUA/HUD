@@ -112,7 +112,7 @@ const DriverDetailHero: React.FC<Props> = ({ driver, stats, loading }) => {
       </div>
 
       <div className={styles.body}>
-        <span className={styles.posNumber}>{driver.position}</span>
+        <span className={styles.posNumber}>{stats?.number || driver.driver_number}</span>
 
         {nat && (
           <div className={styles.natRow}>

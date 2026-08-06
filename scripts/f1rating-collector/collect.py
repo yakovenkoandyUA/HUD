@@ -85,12 +85,16 @@ def nearest_rainfall(weather: pd.DataFrame, lap_time) -> bool:
     return bool(weather.loc[idx, "Rainfall"])
 
 
-def collect_qualifying(season: int, round_no: int, driver_codes: list[str]) -> list[dict]:
+def collect_qualifying(season: int, round_no: int, driver_codes: list[str] | None = None) -> list[dict]:
+    """`driver_codes=None` collects the FULL GRID as it actually lined up for this session —
+    never a hardcoded roster. This is what makes substitutions/mid-season swaps show up
+    correctly: the driver list comes from `session.results`, fresh per session."""
     session = fastf1.get_session(season, round_no, "Q")
     session.load(laps=False, telemetry=False, weather=False, messages=False)
     results = session.results
+    codes = driver_codes if driver_codes is not None else list(results["Abbreviation"])
     out = []
-    for code in driver_codes:
+    for code in codes:
         row = results[results["Abbreviation"] == code]
         if row.empty:
             print(f"warning: driver {code} not found in Q results for {season} round {round_no}", file=sys.stderr)
@@ -108,14 +112,16 @@ def collect_qualifying(season: int, round_no: int, driver_codes: list[str]) -> l
     return out
 
 
-def collect_race(season: int, round_no: int, driver_codes: list[str]) -> list[dict]:
+def collect_race(season: int, round_no: int, driver_codes: list[str] | None = None) -> list[dict]:
+    """`driver_codes=None` collects the full grid — see `collect_qualifying` docstring."""
     session = fastf1.get_session(season, round_no, "R")
     session.load(laps=True, telemetry=False, weather=True, messages=False)
     results = session.results
     weather = session.weather_data
+    codes = driver_codes if driver_codes is not None else list(results["Abbreviation"])
 
     out = []
-    for code in driver_codes:
+    for code in codes:
         result_row = results[results["Abbreviation"] == code]
         if result_row.empty:
             print(f"warning: driver {code} not found in R results for {season} round {round_no}", file=sys.stderr)
@@ -156,6 +162,24 @@ def collect_race(season: int, round_no: int, driver_codes: list[str]) -> list[di
     return out
 
 
+def collect_round(season: int, round_no: int, driver_codes: list[str] | None = None) -> dict:
+    """Shared by the single-round CLI (`main`) and `batch_collect.py` — the ONE place that
+    assembles a full round payload, so batch collection can never silently diverge from what
+    `collect.py --round N` would produce for the same inputs."""
+    event = fastf1.get_event(season, round_no)
+    qualifying = collect_qualifying(season, round_no, driver_codes)
+    race = collect_race(season, round_no, driver_codes)
+    return {
+        "schemaVersion": SCHEMA_VERSION,
+        "season": season,
+        "round": round_no,
+        "eventName": event["EventName"],
+        "fastf1Version": fastf1.__version__,
+        "qualifying": qualifying,
+        "race": race,
+    }
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="MIMIR F1 rating — FastF1 collector")
     parser.add_argument("--season", type=int, required=True)
@@ -181,16 +205,7 @@ def main() -> None:
     fastf1.Cache.enable_cache(str(cache_dir))
 
     print(f"Collecting season={args.season} round={args.round} drivers={driver_codes}...", file=sys.stderr)
-    qualifying = collect_qualifying(args.season, args.round, driver_codes)
-    race = collect_race(args.season, args.round, driver_codes)
-
-    payload = {
-        "schemaVersion": SCHEMA_VERSION,
-        "season": args.season,
-        "round": args.round,
-        "qualifying": qualifying,
-        "race": race,
-    }
+    payload = collect_round(args.season, args.round, driver_codes)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)

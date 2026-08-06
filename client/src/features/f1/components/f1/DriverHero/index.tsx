@@ -115,7 +115,7 @@ const DriverHero: React.FC<Props> = ({ driver, cachedStats, onStats }) => {
 
       <div className={styles.identityRow}>
         <div className={styles.numberCol}>
-          <span className={styles.posNumber}>{driver.position}</span>
+          <span className={styles.posNumber}>{stats?.number || driver.driver_number}</span>
           {nat && (
             <span className={styles.flagBox}>
               <span className={styles.flag}>{nat.flag}</span>

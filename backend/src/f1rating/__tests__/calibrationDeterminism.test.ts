@@ -46,8 +46,8 @@ describe('calibration pipeline determinism (timestamp excluded)', () => {
   it('buildCandidateRange is deterministic for the same observed values and range', () => {
     const values = [-0.5, 0.3, -1.2, 0.8]
     const range = methodologyV1.referenceRanges.peakRepresentativePace
-    const first = buildCandidateRange(values, range, false, 'note')
-    const second = buildCandidateRange(values, range, false, 'note')
+    const first = buildCandidateRange({ values, range, teamCount: 1, driverCount: 2, roundCount: 1, forceInvestigate: false, note: 'note' })
+    const second = buildCandidateRange({ values, range, teamCount: 1, driverCount: 2, roundCount: 1, forceInvestigate: false, note: 'note' })
     expect(first).toEqual(second)
   })
 

@@ -178,11 +178,7 @@
 
 /* Selected driver — the one currently shown in the hero above the list */
 .selectedRow {
-  /* border-radius: var(--radius-lg); */
-  border: 1px solid var(--accent-dim);
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
-              0 6px 18px -10px color-mix(in srgb, var(--accent) 60%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--surface)) 0%, var(--surface) 75%);
 }
 .selectedRow .rowSelectBtn:hover { background: color-mix(in srgb, var(--accent) 15%, var(--surface)); }
 .selectedRow .pointsFill { background: var(--accent); }

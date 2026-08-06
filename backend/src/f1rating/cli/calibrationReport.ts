@@ -39,60 +39,23 @@ import {
 } from '../engine/metrics'
 import { explainCleanRaceLapConsistency, type StintConsistencySample } from '../engine/cleanRaceLapConsistency'
 import { explainStintPaceEvolution, type ComparableStintPairDelta } from '../engine/tyreStintManagement'
-import { jolpicaQualifyingToRawMetrics, classifyJolpicaStatus, type JolpicaQualifyingResult } from '../adapters/jolpicaAdapter'
-import { fastF1ExportToRaceMetrics, type FastF1SessionExport } from '../adapters/fastF1Adapter'
-import { buildDnfRecord } from '../adapters/manualIncidentAdapter'
 import { buildCandidateRange, type CandidateRangeEntry } from '../engine/calibrationCandidates'
-import type { DnfRecord } from '../types'
-
-interface CollectedRound {
-  schemaVersion: string
-  season: number
-  round: number
-  qualifying: JolpicaQualifyingResult[]
-  race: (FastF1SessionExport & { status: string })[]
-}
+import { loadCollectedRounds, type CollectedRound } from '../dataset/collectedRound'
+import { buildDriverSeasonInputFromRounds } from '../dataset/buildDriverSeasonInput'
 
 const OUTPUT_DIR = path.resolve(__dirname, '../../../../scripts/f1rating-collector/output')
 
 function loadRounds(): CollectedRound[] {
-  if (!fs.existsSync(OUTPUT_DIR)) {
-    console.error(`No collected data found at ${OUTPUT_DIR}. Run collect.py first.`)
+  try {
+    return loadCollectedRounds(OUTPUT_DIR)
+  } catch (err) {
+    console.error((err as Error).message)
     process.exit(1)
   }
-  const files = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.json') && !f.startsWith('calibration-report'))
-  return files
-    .map(f => JSON.parse(fs.readFileSync(path.join(OUTPUT_DIR, f), 'utf-8')) as CollectedRound)
-    .sort((a, b) => a.round - b.round)
 }
 
 function buildDriverSeasonInput(driverId: string, rounds: CollectedRound[]): DriverSeasonInput {
-  const qualifying = []
-  const race = []
-  const dnfs: DnfRecord[] = []
-
-  for (const round of rounds) {
-    const qDriver = round.qualifying.find(q => q.driverId === driverId)
-    const qTeammate = round.qualifying.find(q => q.driverId !== driverId) ?? null
-    if (qDriver) qualifying.push(jolpicaQualifyingToRawMetrics(qDriver, qTeammate, round.season, round.round))
-
-    const rDriver = round.race.find(r => r.driverId === driverId)
-    if (rDriver) {
-      race.push(fastF1ExportToRaceMetrics(rDriver, false, methodologyV1.tunables.minCleanLapsForDegradationSlope))
-      const cause = classifyJolpicaStatus(rDriver.status)
-      if (cause !== 'finished') {
-        dnfs.push(buildDnfRecord({
-          id: `${round.season}-r${round.round}-${driverId}`,
-          season: round.season, round: round.round, driverId,
-          cause: cause === 'technical' ? 'technical' : 'unknown',
-          lapNumber: null,
-          notes: `auto-classified from status="${rDriver.status}" — fault not determined (needs manual review)`,
-        }))
-      }
-    }
-  }
-
-  return { driverId, qualifying, race, dnfs, incidents: [] }
+  return buildDriverSeasonInputFromRounds(driverId, rounds, methodologyV1.tunables)
 }
 
 interface MetricSampleCollector { key: string; values: number[] }
@@ -227,12 +190,14 @@ function main(): void {
       : (key === 'cleanRaceLapConsistency'
         ? 'formula redesigned this iteration (per-stint, not pooled) — re-observed value should be compared against the ORIGINAL 2.5 ceiling, not the previously-widened 4'
         : 'candidate proposed from observed real-data spread; NOT applied to active methodology')
-    candidateReferenceRanges[key] = buildCandidateRange(values, range, forceInvestigate, note)
+    candidateReferenceRanges[key] = buildCandidateRange({
+      values, range, teamCount: 1, driverCount: 2, roundCount: rounds.length, forceInvestigate, note,
+    })
   }
 
   console.log('\n=== Candidate reference ranges (proposals only — active methodology unchanged) ===')
   for (const [key, c] of Object.entries(candidateReferenceRanges)) {
-    if (c.sampleCount === 0) continue
+    if (!c.distribution) continue
     console.log(
       `${key.padEnd(32)} recommendation=${c.recommendation.padEnd(11)} current=[${c.currentRange}] ` +
       `candidate=${c.candidateRange ? `[${c.candidateRange.map(v => v.toFixed(2))}]` : 'null'} ` +

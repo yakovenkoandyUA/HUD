@@ -8,3 +8,12 @@ __pycache__/
 # The 5 recorded real-data inputs above it (2025_*.json) ARE committed — they're what makes the
 # report reproducible on demand; the report itself is not meant to be a persisted fixture.
 output/calibration-report.json
+output/collection-summary-*.json
+
+# Full-grid raw exports (9 rounds x ~20 drivers, ~3.7MB of lap-by-lap telemetry) — too large to
+# treat as a "small recorded input" the way the 5 McLaren-only files above are. Regenerable on
+# demand via `batch_collect.py --season 2025 --rounds 1,4,7,10,13,16,19,22,24`. What DOES get
+# committed from this run is the dataset manifest + checksums + compact aggregated calibration
+# fixtures (grid-calibration output), not the raw per-lap JSON.
+output_grid/
+

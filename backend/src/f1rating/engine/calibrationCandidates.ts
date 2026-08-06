@@ -1,75 +1,177 @@
 import type { ReferenceRange } from '../types'
+import { median, medianAbsoluteDeviation } from './teammateRelative'
 
 /**
- * Pure helpers behind the calibration report's "candidate reference ranges" — kept here, not
- * inline in `cli/calibrationReport.ts`, so they're independently unit-testable and so it's
- * structurally obvious they never touch `config/methodologyV1.ts`: every function here takes a
- * `ReferenceRange` by value and returns a new proposal object, nothing is mutated in place.
+ * Statistically robust candidate reference ranges — replaces the earlier naive
+ * observed-min/observed-max(+margin) approach, which a single outlier could stretch arbitrarily
+ * (exactly the failure mode flagged in review: "один outlier розтягне шкалу"). Used by BOTH the
+ * 2-driver McLaren smoke check (`cli/calibrationReport.ts`) and the grid-wide dataset tooling —
+ * single implementation, no duplicated calibration math.
  */
+
+const MIN_SAMPLE_FOR_CANDIDATE = 5
+const MIN_SAMPLE_FOR_EXTREME_PERCENTILE = 30
+const PERCENTILE_PADDING_FRACTION = 0.10
+/** How close the distribution's median must be to 0 (relative to the robust half-width) before
+ * a signed delta metric is proposed as a SYMMETRIC range instead of following the raw skew. */
+const SYMMETRY_SKEW_TOLERANCE = 0.15
+
+export interface DistributionStats {
+  sampleCount: number
+  min: number
+  max: number
+  mean: number
+  median: number
+  p5: number
+  p25: number
+  p75: number
+  p95: number
+  p2_5: number
+  p97_5: number
+  mad: number
+  iqr: number
+}
+
+export type CandidateRecommendation = 'accept-candidate' | 'investigate' | 'insufficient-data' | 'reject'
 
 export interface CandidateRangeEntry {
   currentRange: [number, number]
   candidateRange: [number, number] | null
-  observedMin: number
-  observedMax: number
-  sampleCount: number
+  distribution: DistributionStats | null
+  teamCount: number
+  driverCount: number
+  roundCount: number
+  outlierCount: number
   saturationBefore: number
   saturationAfter: number
+  algorithm: string
   confidence: 'low' | 'medium' | 'high'
-  recommendation: 'accept' | 'investigate' | 'reject'
+  recommendation: CandidateRecommendation
   note: string
 }
 
-/** Fraction of `values` that fall outside `range` — i.e. would be clamped/clipped by it. */
+/** Linear-interpolation percentile (values need not be pre-sorted). */
+export function percentile(values: number[], p: number): number {
+  if (values.length === 0) return NaN
+  const sorted = [...values].sort((a, b) => a - b)
+  if (sorted.length === 1) return sorted[0]
+  const idx = (p / 100) * (sorted.length - 1)
+  const lower = Math.floor(idx)
+  const upper = Math.ceil(idx)
+  if (lower === upper) return sorted[lower]
+  const weight = idx - lower
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight
+}
+
+export function computeDistributionStats(values: number[]): DistributionStats | null {
+  if (values.length === 0) return null
+  const mean = values.reduce((a, b) => a + b, 0) / values.length
+  return {
+    sampleCount: values.length,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    mean,
+    median: median(values) as number,
+    p5: percentile(values, 5),
+    p25: percentile(values, 25),
+    p75: percentile(values, 75),
+    p95: percentile(values, 95),
+    p2_5: percentile(values, 2.5),
+    p97_5: percentile(values, 97.5),
+    mad: medianAbsoluteDeviation(values) as number,
+    iqr: percentile(values, 75) - percentile(values, 25),
+  }
+}
+
+/** Tukey's rule: values outside [P25 - 1.5*IQR, P75 + 1.5*IQR]. */
+export function countOutliers(values: number[], stats: DistributionStats): number {
+  const lower = stats.p25 - 1.5 * stats.iqr
+  const upper = stats.p75 + 1.5 * stats.iqr
+  return values.filter(v => v < lower || v > upper).length
+}
+
 export function clippedFraction(values: number[], range: [number, number]): number {
   if (values.length === 0) return 0
   const clipped = values.filter(v => v < range[0] || v > range[1]).length
   return clipped / values.length
 }
 
+export interface CandidateRangeInput {
+  values: number[]
+  range: ReferenceRange
+  teamCount: number
+  driverCount: number
+  roundCount: number
+  forceInvestigate: boolean
+  note: string
+}
+
 /**
- * Proposes a candidate range from observed real values. NEVER mutates `range` or any config —
- * purely returns a proposal object. `forceInvestigate` is used for metrics whose formula itself
- * changed this iteration (e.g. tyreStintManagement) — those are never auto-recommended for
- * acceptance regardless of how clean the observed stats look, until validated on a second dataset.
+ * Proposes a candidate reference range from a robust percentile window (P5–P95, or P2.5–P97.5
+ * once the sample is large enough for the more extreme percentiles to be meaningful), padded
+ * documented-ly, with a zero-centered SYMMETRIC range for signed teammate-relative deltas whose
+ * distribution isn't meaningfully skewed — an asymmetric range is only proposed when the
+ * distribution's median sits far enough from 0 to justify it (see `SYMMETRY_SKEW_TOLERANCE`).
+ * Never touches `range` or any config — purely returns a proposal object.
  */
-export function buildCandidateRange(
-  values: number[],
-  range: ReferenceRange,
-  forceInvestigate: boolean,
-  note: string,
-): CandidateRangeEntry {
+export function buildCandidateRange(input: CandidateRangeInput): CandidateRangeEntry {
+  const { values, range, teamCount, driverCount, roundCount, forceInvestigate, note } = input
   const current: [number, number] = [range.min, range.max]
-  if (values.length === 0) {
+  const stats = computeDistributionStats(values)
+
+  if (!stats || stats.sampleCount < MIN_SAMPLE_FOR_CANDIDATE) {
     return {
-      currentRange: current, candidateRange: null, observedMin: NaN, observedMax: NaN,
-      sampleCount: 0, saturationBefore: 0, saturationAfter: 0, confidence: 'low',
-      recommendation: 'reject', note: 'no samples collected in this pass',
+      currentRange: current, candidateRange: null, distribution: stats,
+      teamCount, driverCount, roundCount, outlierCount: 0,
+      saturationBefore: clippedFraction(values, current), saturationAfter: 0,
+      algorithm: `insufficient sample (n=${values.length} < ${MIN_SAMPLE_FOR_CANDIDATE})`,
+      confidence: 'low', recommendation: 'insufficient-data',
+      note: 'not enough samples to propose a statistically meaningful range',
     }
   }
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const saturationBefore = clippedFraction(values, current)
-  const margin = Math.max((max - min) * 0.15, 0.05)
-  // Only a range whose CURRENT floor is exactly 0 (a percentage/rate, e.g. qualifyingHeadToHead
-  // 0..100) is guarded against proposing a negative floor. A range like racecraftProxy (-3..3)
-  // already spans negative territory by design (losing positions is a legitimate outcome) — it
-  // must be free to propose a more-negative candidate, not clamped up to 0.
-  const candidateMin = range.min === 0 && range.higherIsBetter
-    ? Math.max(0, Math.min(range.min, min - margin))
-    : Math.min(range.min, min - margin)
-  const candidate: [number, number] = [candidateMin, Math.max(range.max, max + margin)]
-  const saturationAfter = clippedFraction(values, candidate)
-  const confidence: CandidateRangeEntry['confidence'] = values.length >= 15 ? 'medium' : 'low'
 
-  let recommendation: CandidateRangeEntry['recommendation'] = 'reject'
-  if (forceInvestigate) recommendation = 'investigate'
-  else if (saturationBefore > 0) recommendation = 'investigate'
+  const useExtreme = stats.sampleCount >= MIN_SAMPLE_FOR_EXTREME_PERCENTILE
+  const [robustLow, robustHigh] = useExtreme ? [stats.p2_5, stats.p97_5] : [stats.p5, stats.p95]
+  const percentileLabel = useExtreme ? 'P2.5-P97.5' : 'P5-P95'
+
+  const width = robustHigh - robustLow
+  const padding = Math.max(width * PERCENTILE_PADDING_FRACTION, 0.01)
+
+  const isSignedDelta = range.min < 0 && range.max > 0
+  const halfWidthForSymmetry = Math.max(Math.abs(robustLow), Math.abs(robustHigh)) + padding
+  const skewRatio = width > 0 ? Math.abs(stats.median) / (width / 2) : 0
+  const useSymmetric = isSignedDelta && skewRatio < SYMMETRY_SKEW_TOLERANCE
+
+  const candidate: [number, number] = useSymmetric
+    ? [-halfWidthForSymmetry, halfWidthForSymmetry]
+    : [robustLow - padding, robustHigh + padding]
+
+  const saturationBefore = clippedFraction(values, current)
+  const saturationAfter = clippedFraction(values, candidate)
+  const outlierCount = countOutliers(values, stats)
+
+  const confidence: CandidateRangeEntry['confidence'] =
+    stats.sampleCount >= 30 && teamCount >= 5 && driverCount >= 8 ? 'high' :
+    stats.sampleCount >= 10 && teamCount >= 3 ? 'medium' : 'low'
+
+  let recommendation: CandidateRecommendation
+  if (forceInvestigate) {
+    recommendation = 'investigate'
+  } else if (saturationBefore === 0) {
+    recommendation = 'reject' // current range already covers the robust window — no change warranted
+  } else if (saturationAfter === 0 && confidence !== 'low') {
+    recommendation = 'accept-candidate'
+  } else {
+    recommendation = 'investigate'
+  }
+
+  const algorithm = `${percentileLabel} robust window, +${(PERCENTILE_PADDING_FRACTION * 100).toFixed(0)}% padding` +
+    (isSignedDelta ? (useSymmetric ? ', symmetric around 0 (signed delta, median close to 0)' : ', asymmetric (signed delta but distribution skewed away from 0)') : '')
 
   return {
     currentRange: current,
-    candidateRange: saturationBefore > 0 || forceInvestigate ? candidate : null,
-    observedMin: min, observedMax: max, sampleCount: values.length,
-    saturationBefore, saturationAfter, confidence, recommendation, note,
+    candidateRange: (saturationBefore > 0 || forceInvestigate) ? candidate : null,
+    distribution: stats, teamCount, driverCount, roundCount, outlierCount,
+    saturationBefore, saturationAfter, algorithm, confidence, recommendation, note,
   }
 }
