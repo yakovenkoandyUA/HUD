@@ -21,6 +21,7 @@ const F1Screen = lazy(() => import('@/features/f1'))
 const F1Live = lazy(() => import('@/features/f1/live'))
 const RaceDetailPage = lazy(() => import('@/features/f1/raceDetail'))
 const MySeasonPage = lazy(() => import('@/features/f1/mySeasonPage'))
+const DriverDetailPage = lazy(() => import('@/features/f1/driverDetail'))
 const Sprint = lazy(() => import('@/features/sprint'))
 const Recipes = lazy(() => import('@/features/recipes'))
 const RecipeDetailScreen = lazy(() => import('@/features/recipes/detail'))
@@ -145,6 +146,7 @@ const AnimatedRoutes: React.FC = () => {
             <Route path="/f1" element={<F1Screen />} />
             <Route path="/f1/live" element={<F1Live />} />
             <Route path="/f1/my-season" element={<MySeasonPage />} />
+            <Route path="/f1/drivers/:driverId" element={<DriverDetailPage />} />
             <Route path="/f1/:round" element={<RaceDetailPage />} />
           </Route>
         </Route>
@@ -163,6 +165,7 @@ const NavGuard: React.FC = () => {
   if (!token) return null
   if (/^\/f1\/\d+$/.test(pathname)) return null
   if (pathname === '/f1/my-season') return null
+  if (/^\/f1\/drivers\/.+/.test(pathname)) return null
   if (/^\/memories\/.+/.test(pathname)) return null
   if (/^\/spaces\/.+/.test(pathname)) return null
   if (pathname === '/recipes/planner') return null

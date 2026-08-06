@@ -29,7 +29,9 @@ const F1Screen: React.FC = () => {
   const f1Enabled = activeProfile?.f1Enabled ?? false
   const footballEnabled = activeProfile?.footballEnabled ?? false
   const [sportTab, setSportTab] = useState<SportTab>(f1Enabled ? 'f1' : 'football')
-  const [tab, setTab] = useState<F1Tab>('calendar')
+  const [tab, setTab] = useState<F1Tab>(() => {
+    try { return (sessionStorage.getItem('hud-f1-tab') as F1Tab) || 'calendar' } catch { return 'calendar' }
+  })
   const { theme } = useUiStore()
   const { fetchPredictions, predictions } = useF1PredictionsStore()
 
@@ -87,16 +89,33 @@ const F1Screen: React.FC = () => {
     fetchPredictions()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Remember last visited tab across navigation away/back (e.g. from driver detail page)
+  useEffect(() => {
+    try { sessionStorage.setItem('hud-f1-tab', tab) } catch { /* noop */ }
+  }, [tab])
+
   useEffect(() => {
     const content = contentRef.current
     const bg = bgRef.current
     if (!content || !bg) return
     const onScroll = () => {
       bg.style.transform = `translateY(${-content.scrollTop * 0.3}px)`
+      try { sessionStorage.setItem(`hud-f1-scroll-${tab}`, String(content.scrollTop)) } catch { /* noop */ }
     }
     content.addEventListener('scroll', onScroll, { passive: true })
     return () => content.removeEventListener('scroll', onScroll)
-  }, [showBg])
+  }, [showBg, tab])
+
+  // Restore scroll position for the active tab (e.g. after navigating back from a driver page)
+  useEffect(() => {
+    const content = contentRef.current
+    if (!content) return
+    let saved = 0
+    try { saved = Number(sessionStorage.getItem(`hud-f1-scroll-${tab}`) ?? 0) } catch { /* noop */ }
+    if (!saved) return
+    const raf = requestAnimationFrame(() => { content.scrollTop = saved })
+    return () => cancelAnimationFrame(raf)
+  }, [tab])
 
   return (
     <div className={styles.screen}>

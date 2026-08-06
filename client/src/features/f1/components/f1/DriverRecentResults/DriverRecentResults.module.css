@@ -1,0 +1,97 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg2);
+  cursor: pointer;
+}
+
+.row:active { background: var(--bg3); }
+
+.flag { font-size: 18px; flex-shrink: 0; }
+
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.circuit {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.posBadge {
+  flex-shrink: 0;
+  min-width: 26px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 6px;
+}
+
+.posGold   { color: var(--gold); background: var(--gold-dim); }
+.posSilver { color: var(--text2); background: var(--bg3); }
+.posBronze { color: var(--accent); background: var(--accent-soft); }
+.posOther  { color: var(--text2); background: var(--bg3); }
+
+.points {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text3);
+  font-size: 16px;
+}
+
+.skRow {
+  height: 48px;
+  background: var(--bg2);
+}
+
+.empty {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text3);
+  text-align: center;
+  padding: 20px 0;
+}

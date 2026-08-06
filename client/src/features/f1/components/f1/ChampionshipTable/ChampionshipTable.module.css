@@ -2,18 +2,19 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background-color: rgba(0,0,0,0.7)
+  /* background-color: rgba(0,0,0,0.7) */
 }
 
 /* Table */
 .table {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  /* border: 1px solid var(--border); */
+  /* border-radius: var(--radius-lg); */
   overflow: hidden;
 }
 
+/* Constructors — whole row is one clickable div (expand/collapse in place, unchanged) */
 .row {
   display: flex;
   align-items: center;
@@ -25,13 +26,63 @@
 .row:last-child { border-bottom: none; }
 .row:hover { background: var(--surface2); }
 
+/* Drivers — row wraps two sibling controls: select button + nav button */
+.driverRow {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.driverRow:last-child { border-bottom: none; }
+
+/* Row content — the actual selection control */
+.rowSelectBtn {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 6px 10px 14px;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.rowSelectBtn:hover { background: var(--surface2); }
+.rowSelectBtn:active { background: var(--surface2); opacity: 0.85; }
+.rowSelectBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Navigation to the full driver profile — separate control from selection */
+.navBtn {
+  flex-shrink: 0;
+  width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.navBtn:hover { background: var(--surface2); }
+.navBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 /* Podium highlights */
 .gold   { background: rgba(220, 201, 169, 0.07); }
 .silver { background: rgba(180, 180, 180, 0.05); }
 .bronze { background: rgba(184, 115, 51, 0.06); }
-.gold:hover   { background: rgba(220, 201, 169, 0.13); }
-.silver:hover { background: rgba(180, 180, 180, 0.10); }
-.bronze:hover { background: rgba(184, 115, 51, 0.11); }
+.gold   .rowSelectBtn:hover { background: rgba(220, 201, 169, 0.13); }
+.silver .rowSelectBtn:hover { background: rgba(180, 180, 180, 0.10); }
+.bronze .rowSelectBtn:hover { background: rgba(184, 115, 51, 0.11); }
 
 .pos {
   font-family: var(--font-mono);
@@ -125,6 +176,18 @@
 }
 .driverGroup:last-child { border-bottom: none; }
 
+/* Selected driver — the one currently shown in the hero above the list */
+.selectedRow {
+  /* border-radius: var(--radius-lg); */
+  border: 1px solid var(--accent-dim);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
+              0 6px 18px -10px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.selectedRow .rowSelectBtn:hover { background: color-mix(in srgb, var(--accent) 15%, var(--surface)); }
+.selectedRow .pointsFill { background: var(--accent); }
+
+/* Constructors tab — rows still expand/collapse in place (unchanged) */
 .rowClickable {
   cursor: pointer;
   border-bottom: none !important;
@@ -145,7 +208,7 @@
 
 .arrow {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 18px;
   color: var(--gold);
   flex-shrink: 0;
   transition: transform 0.25s ease;
@@ -201,10 +264,6 @@
   background: var(--gold);
   border-radius: 1px;
   transition: width 0.3s ease;
-}
-
-.driverGroup:first-child .pointsFill {
-  background: var(--accent);
 }
 
 /* Skeleton */

@@ -1,0 +1,240 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 280px;
+  border-bottom: 1px solid color-mix(in srgb, var(--team-color) 40%, var(--border2));
+  background: var(--bg2);
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: var(--team-color);
+  border-style: solid;
+  z-index: 3;
+  pointer-events: none;
+}
+.tl { top: -1px;    left: -1px;  border-width: 2px 0 0 2px; border-radius: 6px 0 0 0; }
+.br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-radius: 0 0 6px 0; }
+
+/* ── Full-bleed portrait background ── */
+.photoLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  opacity: 0.9;
+}
+
+.speedLines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.photoGradient {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, var(--bg2) 0%, color-mix(in srgb, var(--bg2) 75%, transparent) 32%, transparent 62%),
+    linear-gradient(0deg, var(--bg2) 0%, transparent 42%);
+}
+
+.top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.24em;
+  color: var(--team-color);
+}
+
+.dots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text3);
+  opacity: 0.5;
+}
+
+.body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 66%;
+  margin-bottom: 14px;
+}
+
+.posNumber {
+  font-family: var(--font-display);
+  font-size: 64px;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--team-color);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--team-color) 65%, transparent);
+}
+
+.natRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.flag { font-size: 18px; line-height: 1; }
+
+.natCode {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+}
+
+.nameBlock {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.firstName {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--team-color);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.lastName {
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: var(--text);
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.team {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--team-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* ── Stats box: 4-cell grid + inline mini row ── */
+.statsBox {
+  position: relative;
+  z-index: 1;
+  border: 1px solid color-mix(in srgb, var(--team-color) 30%, var(--border2));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
+  overflow: hidden;
+}
+
+.statsRow1 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid color-mix(in srgb, var(--team-color) 25%, var(--border2));
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 4px 8px;
+  min-width: 0;
+  border-right: 1px solid color-mix(in srgb, var(--team-color) 20%, var(--border2));
+}
+.cell:last-child { border-right: none; }
+
+.cellTop {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cellIcon { color: var(--team-color); flex-shrink: 0; }
+
+.cellValue {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cellLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
+.statsRow2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 6px;
+  gap: 4px;
+}
+
+.miniStat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.miniIcon { color: var(--team-color); flex-shrink: 0; }
+
+.miniLabel {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.miniValue {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  flex-shrink: 0;
+}

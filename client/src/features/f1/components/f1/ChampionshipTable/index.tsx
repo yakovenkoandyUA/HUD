@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useChampionshipStandings, type DriverStanding } from '../../../hooks/useChampionshipStandings'
 // import PixelCar from '../../PixelCar'
-import DriverStatsCard, { type DriverStats } from '../DriverStatsCard'
+import DriverHero from '../DriverHero'
 import ConstructorStatsCard, { type ConstructorStats } from '../ConstructorStatsCard'
+import type { DriverStats } from '../../../hooks/useDriverStats'
 import { getDriverHeadshot } from '../../../utils/f1'
 import styles from './ChampionshipTable.module.css'
 
@@ -39,6 +41,13 @@ function rowClass(pos: number): string {
   if (pos === 2) return `${styles.row} ${styles.silver}`
   if (pos === 3) return `${styles.row} ${styles.bronze}`
   return styles.row
+}
+
+function driverRowClass(pos: number): string {
+  if (pos === 1) return `${styles.driverRow} ${styles.gold}`
+  if (pos === 2) return `${styles.driverRow} ${styles.silver}`
+  if (pos === 3) return `${styles.driverRow} ${styles.bronze}`
+  return styles.driverRow
 }
 
 function posClass(pos: number): string {
@@ -111,11 +120,16 @@ function Skeleton() {
 }
 
 const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
+  const navigate = useNavigate()
   const { drivers, constructors, loading, error, refetch } = useChampionshipStandings()
-  const [expandedDriver, setExpandedDriver]           = useState<string | null>(null)
   const [statsCache, setStatsCache]                   = useState<Map<string, DriverStats>>(new Map())
+  const [selectedDriverId, setSelectedDriverId]       = useState<string | null>(null)
   const [expandedConstructor, setExpandedConstructor] = useState<string | null>(null)
   const [constrCache, setConstrCache]                 = useState<Map<string, ConstructorStats>>(new Map())
+
+  // No explicit selection yet (or a stale id from a previous load) → default to
+  // the first driver in the current standings. Never hardcoded.
+  const heroDriver = drivers.find(d => d.driverId === selectedDriverId) ?? drivers[0]
 
   const handleStats = (id: string, stats: DriverStats) => {
     setStatsCache(prev => new Map(prev).set(id, stats))
@@ -144,50 +158,57 @@ const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
           {drivers.length === 0 && (
             <p className={styles.emptyText}>Дані відсутні</p>
           )}
+          {heroDriver && (
+            <DriverHero
+              driver={heroDriver}
+              cachedStats={statsCache.get(heroDriver.driverId ?? '')}
+              onStats={handleStats}
+            />
+          )}
           {drivers.map((d) => {
-            const driverId = d.driverId ?? ''
-            const isOpen   = expandedDriver === driverId
-            const maxPts   = drivers[0]?.points ?? 1
+            const driverId   = d.driverId ?? ''
+            const maxPts     = drivers[0]?.points ?? 1
+            const isSelected = !!driverId && driverId === (heroDriver?.driverId ?? '')
             return (
               <div key={d.driver_number} className={styles.driverGroup}>
-                <div
-                  className={`${rowClass(d.position)} ${styles.rowClickable}`}
-                  onClick={() => driverId && setExpandedDriver(isOpen ? null : driverId)}
-                >
-                  <span className={`${styles.pos} ${posClass(d.position)}`}>{d.position}</span>
-                  <DriverAvatar driver={d} />
-                  <div className={styles.info}>
-                    <span className={styles.name}>{d.full_name}</span>
-                    <div className={styles.teamRow}>
-                      <span
-                        className={styles.teamDot}
-                        style={{ background: TEAM_COLORS[d.team_name] ?? 'var(--border2)' }}
-                      />
-                      <span className={styles.team}>{d.team_name}</span>
+                <div className={`${driverRowClass(d.position)} ${isSelected ? styles.selectedRow : ''}`}>
+                  <button
+                    type="button"
+                    className={styles.rowSelectBtn}
+                    aria-current={isSelected ? 'true' : undefined}
+                    onClick={() => driverId && setSelectedDriverId(driverId)}
+                  >
+                    <span className={`${styles.pos} ${posClass(d.position)}`}>{d.position}</span>
+                    <DriverAvatar driver={d} />
+                    <div className={styles.info}>
+                      <span className={styles.name}>{d.full_name}</span>
+                      <div className={styles.teamRow}>
+                        <span
+                          className={styles.teamDot}
+                          style={{ background: TEAM_COLORS[d.team_name] ?? 'var(--border2)' }}
+                        />
+                        <span className={styles.team}>{d.team_name}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className={styles.pointsWrap}>
-                    <span className={styles.points}>{d.points}</span>
-                    <div className={styles.pointsBar}>
-                      <div
-                        className={styles.pointsFill}
-                        style={{ width: `${(d.points / maxPts) * 100}%` }}
-                      />
+                    <div className={styles.pointsWrap}>
+                      <span className={styles.points}>{d.points}</span>
+                      <div className={styles.pointsBar}>
+                        <div
+                          className={styles.pointsFill}
+                          style={{ width: `${(d.points / maxPts) * 100}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </button>
                   {driverId && (
-                    <span className={`${styles.arrow} ${isOpen ? styles.arrowUp : ''}`}>▼</span>
-                  )}
-                </div>
-                <div className={`${styles.expandable} ${isOpen ? styles.expandableOpen : ''}`}>
-                  {isOpen && driverId && (
-                    <DriverStatsCard
-                      driverId={driverId}
-                      points={d.points}
-                      maxPoints={maxPts}
-                      cachedStats={statsCache.get(driverId)}
-                      onStats={handleStats}
-                    />
+                    <button
+                      type="button"
+                      className={styles.navBtn}
+                      aria-label={`Детальніше про ${d.full_name}`}
+                      onClick={() => navigate(`/f1/drivers/${driverId}`)}
+                    >
+                      <span className={styles.arrow}>›</span>
+                    </button>
                   )}
                 </div>
               </div>
