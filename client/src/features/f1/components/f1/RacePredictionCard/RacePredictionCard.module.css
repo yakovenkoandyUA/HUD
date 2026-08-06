@@ -55,21 +55,48 @@
   flex-shrink: 0;
 }
 
-/* ── Result block ── */
-.resultBlock {
+/* ── Result card (compact, no accent bar) ── */
+.resultCard {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.resultRaceLabel {
+.resultHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.resultHeaderIcon {
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.resultTitle {
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   color: var(--text3);
-  text-transform: uppercase;
-  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+.resultGpName {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text2);
+  letter-spacing: 0.05em;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .resultRow {
@@ -136,13 +163,6 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--gold);
-}
-
-/* ── Divider ── */
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 2px 0;
 }
 
 /* ── Shared position label ── */
@@ -352,14 +372,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 8px 6px;
+  border-radius: 12px;
+  padding: 9px 6px;
   cursor: pointer;
   flex-shrink: 0;
-  width: 54px;
+  width: 66px;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -379,8 +399,8 @@
 }
 
 .chipAvatar {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   overflow: hidden;
   border: 1.5px solid var(--border2);
@@ -400,7 +420,7 @@
 
 .chipCode {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--text2);
   letter-spacing: 0.03em;

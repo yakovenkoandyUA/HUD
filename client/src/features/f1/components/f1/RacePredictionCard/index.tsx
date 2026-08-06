@@ -158,35 +158,24 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
     .sort((a, b) => b.raceRound - a.raceRound)[0]
 
   const showResultFor    = currentPred?.result ? currentPred : (latestResult ?? null)
-  const resultForCurrent = showResultFor === currentPred
   const showPredForm     = !currentPred?.result
   const showForm         = showPredForm && (!currentPred || isEditing)
   const canSave          = !locked && showForm && !!p1 && !!p2 && !!p3 && new Set([p1, p2, p3]).size === 3
 
   return (
-    <div className={styles.card}>
+    <>
 
-      {/* ── Header ── */}
-      <div className={styles.header}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={styles.headerIcon}>
-          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/>
-        </svg>
-        <span className={styles.title}>МІЙ ПРОГНОЗ</span>
-        <span className={styles.dot}>·</span>
-        <span className={styles.gpName}>{race.name.toUpperCase()}</span>
-        {currentPred && !isEditing && (
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={styles.savedMark} aria-label="збережено">
-            <path d="M2 6l2.8 3L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
-      </div>
-
-      {/* ── Result section ── */}
+      {/* ── Result card (previous GP) ── */}
       {showResultFor && (
-        <div className={styles.resultBlock}>
-          {!resultForCurrent && (
-            <div className={styles.resultRaceLabel}>{showResultFor.raceName}</div>
-          )}
+        <div className={styles.resultCard}>
+          <div className={styles.resultHeader}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={styles.resultHeaderIcon}>
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+            </svg>
+            <span className={styles.resultTitle}>РЕЗУЛЬТАТ</span>
+            <span className={styles.dot}>·</span>
+            <span className={styles.resultGpName}>{showResultFor.raceName}</span>
+          </div>
           {POSITIONS.map((pos, i) => {
             const driverId  = showResultFor[pos]
             const matchKey  = `${pos}Match` as 'p1Match'
@@ -247,10 +236,27 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
         </div>
       )}
 
-      {showResultFor && showPredForm && <div className={styles.divider} />}
+      {/* ── New prediction card ── */}
+      {showPredForm && (
+      <div className={styles.card}>
+
+        {/* ── Header ── */}
+        <div className={styles.header}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={styles.headerIcon}>
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/>
+          </svg>
+          <span className={styles.title}>НОВИЙ ПРОГНОЗ</span>
+          <span className={styles.dot}>·</span>
+          <span className={styles.gpName}>{race.name.toUpperCase()}</span>
+          {currentPred && !isEditing && (
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={styles.savedMark} aria-label="збережено">
+              <path d="M2 6l2.8 3L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </div>
 
       {/* ── Summary (collapsed saved prediction) ── */}
-      {showPredForm && currentPred && !isEditing && (
+      {currentPred && !isEditing && (
         <div className={styles.summary}>
           <div className={styles.summaryPodium}>
             {POSITIONS.map((pos, i) => (
@@ -302,7 +308,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
           {/* Top-3 */}
           <div className={styles.section}>
             <p className={styles.sectionLabel}>
-              ТОП-3 ФІНІШУ
+              Топ-3 фінішу
               <span className={styles.pts}>до +30 pts</span>
             </p>
             <div className={styles.positionSlots}>
@@ -344,7 +350,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
           {/* Constructor */}
           <div className={styles.section}>
             <p className={styles.sectionLabel}>
-              КОНСТРУКТОР
+              Конструктор
               <span className={styles.pts}>+5 pts</span>
             </p>
             <div className={styles.chipScroll}>
@@ -367,7 +373,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
           {/* DOTD */}
           <div className={styles.section}>
             <p className={styles.sectionLabel}>
-              DRIVER OF THE DAY
+              Driver of the Day
               <span className={styles.pts}>+5 pts</span>
             </p>
             <div className={styles.driverScroll}>
@@ -397,7 +403,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
           <div className={styles.section}>
             <div className={styles.scRow}>
               <p className={styles.sectionLabel} style={{ margin: 0 }}>
-                SAFETY CAR?
+                Safety Car?
                 <span className={styles.pts}>+3 pts</span>
               </p>
               <div className={styles.scToggle}>
@@ -428,6 +434,9 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
             <p className={styles.lockNote}><ClockIcon /> Закривається через {hoursLeft} год</p>
           ) : null}
         </>
+      )}
+
+      </div>
       )}
 
       {/* ── Driver picker sheet ── */}
@@ -488,7 +497,7 @@ const RacePredictionCard: React.FC<Props> = ({ race }) => {
         document.body
       )}
 
-    </div>
+    </>
   )
 }
 
