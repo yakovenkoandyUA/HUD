@@ -78,11 +78,66 @@ def format_ergast_time(td) -> str | None:
     return f"{minutes}:{seconds:02d}.{millis:03d}"
 
 
-def nearest_rainfall(weather: pd.DataFrame, lap_time) -> bool:
+CONDITION_WINDOW_SECONDS = 90
+# Rain-fraction bands within the weather window. Below DRY_MAX -> confidently dry; above WET_MIN
+# -> confidently wet; the band between the two is itself "the weather signal disagrees with
+# itself" (some samples in the window rained, some didn't) -> uncertain regardless of compound.
+WEATHER_DRY_MAX_FRACTION = 0.2
+WEATHER_WET_MIN_FRACTION = 0.8
+# FastF1 raw compound strings (see COMPOUND_MAP) that imply a driver believed the track was wet.
+WET_IMPLYING_COMPOUNDS = {"INTERMEDIATE", "WET"}
+
+
+def _weather_rain_fraction(weather: pd.DataFrame, lap_time, window_seconds: int) -> float | None:
+    """Fraction of weather samples showing rain within `window_seconds` of `lap_time`.
+    Returns None (not 0.0) when there's nothing to measure — insufficient data is a distinct
+    case from "measured zero rain", and the caller must not conflate them.
+    """
     if pd.isna(lap_time) or weather.empty:
-        return False
-    idx = (weather["Time"] - lap_time).abs().idxmin()
-    return bool(weather.loc[idx, "Rainfall"])
+        return None
+    window = weather[
+        (weather["Time"] >= lap_time - pd.Timedelta(seconds=window_seconds)) &
+        (weather["Time"] <= lap_time + pd.Timedelta(seconds=window_seconds))
+    ]
+    if window.empty:
+        idx = (weather["Time"] - lap_time).abs().idxmin()
+        return 1.0 if bool(weather.loc[idx, "Rainfall"]) else 0.0
+    return float(window["Rainfall"].mean())
+
+
+def classify_lap_condition(weather: pd.DataFrame, lap_time, compound: str, window_seconds: int = CONDITION_WINDOW_SECONDS) -> str:
+    """Classifies a lap as 'dry', 'wet', or 'uncertain' — NEVER guessed into dry/wet when signals
+    are insufficient or conflicting. Combines TWO independent signals, per the explicit
+    instruction not to trust compound alone:
+      1. Weather: a MAJORITY VOTE of rainfall samples within a time window around the lap (not a
+         single nearest sample — real 2025 data caught a bug where a single-sample lookup
+         flip-flops lap-to-lap right at a wet/dry transition, since samples are ~60s apart).
+      2. Compound: INTERMEDIATE/WET tyres imply the driver/team believed the track was wet;
+         slicks imply dry.
+    Rules:
+      - No weather data at all -> 'uncertain' (never defaults to dry).
+      - Weather signal itself ambiguous (rain fraction strictly between the dry/wet bands, i.e.
+        the window straddles a real transition) -> 'uncertain'.
+      - Weather confidently dry/wet but compound disagrees (e.g. still on inters after the rain
+        sensor reads dry, or slicks while it's raining) -> 'uncertain' — a real crossover lap,
+        not a classification error to paper over.
+      - Weather and compound agree -> that condition, confidently.
+    """
+    rain_fraction = _weather_rain_fraction(weather, lap_time, window_seconds)
+    if rain_fraction is None:
+        return "uncertain"
+
+    if rain_fraction <= WEATHER_DRY_MAX_FRACTION:
+        weather_signal = "dry"
+    elif rain_fraction >= WEATHER_WET_MIN_FRACTION:
+        weather_signal = "wet"
+    else:
+        return "uncertain"
+
+    compound_signal = "wet" if compound in WET_IMPLYING_COMPOUNDS else "dry"
+    if weather_signal != compound_signal:
+        return "uncertain"
+    return weather_signal
 
 
 def collect_qualifying(season: int, round_no: int, driver_codes: list[str] | None = None) -> list[dict]:
@@ -138,7 +193,7 @@ def collect_race(season: int, round_no: int, driver_codes: list[str] | None = No
                 "tyreLifeLaps": int(lap["TyreLife"]) if pd.notna(lap["TyreLife"]) else 0,
                 "stintNumber": int(lap["Stint"]) if pd.notna(lap["Stint"]) else 1,
                 "trackStatus": map_track_status(lap["TrackStatus"]),
-                "trackCondition": "wet" if nearest_rainfall(weather, lap["LapStartTime"]) else "dry",
+                "trackCondition": classify_lap_condition(weather, lap["LapStartTime"], lap["Compound"]),
                 "isPitOutLap": bool(pd.notna(lap["PitOutTime"])),
                 "isPitInLap": bool(pd.notna(lap["PitInTime"])),
                 "isAccurate": bool(lap["IsAccurate"]),

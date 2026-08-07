@@ -54,15 +54,17 @@ export function filterValidQualifyingLaps(laps: QualifyingLapSample[]): Exclusio
 export function groupByCondition<T extends { trackCondition: TrackCondition }>(
   samples: T[],
 ): Record<TrackCondition, T[]> {
-  const groups: Record<TrackCondition, T[]> = { dry: [], wet: [], mixed: [] }
+  const groups: Record<TrackCondition, T[]> = { dry: [], wet: [], mixed: [], uncertain: [] }
   for (const sample of samples) groups[sample.trackCondition].push(sample)
   return groups
 }
 
 /**
- * Two stints are tyre-comparable only if they ran the same compound and their tyre age
- * (laps on the tyre) differs by no more than `thresholdLaps`. Different compounds, or a
- * fresh-tyre stint vs a heavily-worn one, are never compared directly.
+ * Two stints are tyre-comparable only if they ran the same compound, the SAME classified track
+ * condition (both dry or both wet — a dry stint is never compared against a wet one even if
+ * compounds happen to match), and their tyre age (laps on the tyre) differs by no more than
+ * `thresholdLaps`. Different compounds, mismatched conditions, or a fresh-tyre stint vs a
+ * heavily-worn one, are never compared directly.
  */
 export function areStintsTyreComparable(
   a: StintMetrics,
@@ -70,6 +72,7 @@ export function areStintsTyreComparable(
   thresholdLaps: number,
 ): boolean {
   if (a.compound !== b.compound) return false
+  if (a.trackCondition !== b.trackCondition) return false
   const ageA = a.endLap - a.startLap
   const ageB = b.endLap - b.startLap
   return Math.abs(ageA - ageB) <= thresholdLaps

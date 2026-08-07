@@ -40,7 +40,19 @@ export type QualifyingSegment = 'Q1' | 'Q2' | 'Q3'
 
 // ── Track / tyre conditions ──────────────────────────────────────────────
 
-export type TrackCondition = 'dry' | 'wet' | 'mixed'
+/**
+ * `'dry'`/`'wet'` — confidently classified (weather signal and compound choice agree).
+ * `'uncertain'` — a LAP-level state: the weather (rainfall) signal and the compound-implied
+ *   signal disagree, or there isn't enough weather data to classify confidently. Real example
+ *   this exists for: a driver still on intermediates after the rain sensor reads dry (grip not
+ *   yet fully recovered) or slicks on a track that isn't confidently dry yet. Never guessed into
+ *   'dry' — see `classify_lap_condition` in collect.py and its TS-side consumers.
+ * `'mixed'` — a STINT-level-only state: a stint whose laps are confidently classified but
+ *   disagree with each other (e.g. genuinely raining again partway through — see the 2025
+ *   Australian GP Verstappen/Lawson stint 5 case, where real rain returned on the stint's last
+ *   lap). No single lap is ever 'mixed' — only `resolveStintCondition`'s aggregation produces it.
+ */
+export type TrackCondition = 'dry' | 'wet' | 'mixed' | 'uncertain'
 
 export type TyreCompound = 'soft' | 'medium' | 'hard' | 'intermediate' | 'wet'
 
@@ -252,7 +264,16 @@ export interface ReferenceRange {
 
 export type WeightsMap = Record<string, number>
 
-export type CalibrationStatus = 'unverified' | 'calibrated'
+/**
+ * `'unverified'`  — plausible-shaped placeholder ranges, not validated against real data.
+ * `'candidate'`   — ranges derived from a documented statistical calibration run (percentiles,
+ *                   outlier audit, coverage/confidence checks — see `dataset/` tooling) against
+ *                   a recorded dataset, but not yet reviewed/approved as the active methodology.
+ *                   A candidate is proposed for human review, never auto-promoted.
+ * `'calibrated'`  — reviewed and approved as fit for the active methodology (still independent
+ *                   of `productionReady`, which additionally gates whether it's served to users).
+ */
+export type CalibrationStatus = 'unverified' | 'candidate' | 'calibrated'
 
 export interface MethodologyVersion {
   id: string
@@ -264,6 +285,12 @@ export interface MethodologyVersion {
    * that have not been validated against real historical data (see `productionReady`).
    */
   calibrationStatus: CalibrationStatus
+  /**
+   * Present only on `calibrationStatus: 'candidate'` methodologies — links back to the
+   * `DatasetManifest.datasetId` (see `dataset/manifest.ts`) the candidate ranges were derived
+   * from, so a candidate's numbers are always traceable to a specific recorded dataset.
+   */
+  calibrationDatasetId?: string
   /**
    * A production endpoint MUST check this before serving a rating computed under this
    * methodology version to a user — see `engine/weights.ts` `assertProductionReady`.

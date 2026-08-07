@@ -44,16 +44,23 @@ describe('Norris/Piastri synthetic fixture — full pipeline', () => {
     expect((norris.speed.score as number)).toBeGreaterThan(piastri.speed.score as number)
   })
 
-  it('does not let Piastri\'s technical DNF reduce his driver-attributable reliability', () => {
+  // NO-SIGNAL METRIC (v1): `driverAttributableReliability` always reports missing data — see the
+  // doc comment on the function itself. Piastri's technical DNF (or any DNF) can no longer
+  // "reduce" or "not reduce" this metric because it never computes from input in v1.
+  it('reports no data for driver-attributable reliability regardless of Piastri\'s technical DNF', () => {
     const reliabilityItem = piastri.precision.breakdown.find(b => b.key === 'driverAttributableReliability')
     expect(reliabilityItem).toBeDefined()
-    expect(reliabilityItem!.rawValue).toBe(100)
+    expect(reliabilityItem!.rawValue).toBeNull()
   })
 
-  it('reflects Norris\'s attributable incident in a lower cleanWeekendRate than Piastri\'s', () => {
+  // NO-SIGNAL METRIC (v1): `cleanWeekendRate` always reports missing data — see the doc comment
+  // on the function itself. Norris's attributable incident can no longer produce a lower rate
+  // than Piastri's because neither driver's input is consulted in v1.
+  it('reports no data for cleanWeekendRate for both drivers, even with Norris\'s attributable incident present', () => {
     const norrisClean = norris.precision.breakdown.find(b => b.key === 'cleanWeekendRate')!
     const piastriClean = piastri.precision.breakdown.find(b => b.key === 'cleanWeekendRate')!
-    expect(norrisClean.rawValue as number).toBeLessThan(piastriClean.rawValue as number)
+    expect(norrisClean.rawValue).toBeNull()
+    expect(piastriClean.rawValue).toBeNull()
   })
 
   it('applies the fixture manual adjustment to Norris\'s Race IQ and not to Piastri\'s', () => {

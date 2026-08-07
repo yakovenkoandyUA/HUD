@@ -1,0 +1,1120 @@
+{
+  "datasetId": "mimir-f1-2025-grid-dcb5249a08d1",
+  "season": 2025,
+  "includedRounds": [
+    1,
+    4,
+    7,
+    10,
+    13,
+    16,
+    19,
+    22,
+    24
+  ],
+  "missingRounds": [
+    2,
+    3,
+    5,
+    6,
+    8,
+    9,
+    11,
+    12,
+    14,
+    15,
+    17,
+    18,
+    20,
+    21,
+    23
+  ],
+  "includedSessions": [
+    {
+      "round": 1,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "round": 4,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "round": 7,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "round": 10,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "round": 13,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "round": 16,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "round": 19,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "round": 22,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "round": 24,
+      "sessions": [
+        "Q",
+        "R"
+      ]
+    }
+  ],
+  "missingSessions": [],
+  "teams": [
+    "alpine",
+    "aston_martin",
+    "ferrari",
+    "haas",
+    "mclaren",
+    "mercedes",
+    "rb",
+    "red_bull",
+    "sauber",
+    "williams"
+  ],
+  "drivers": [
+    "albon",
+    "alonso",
+    "antonelli",
+    "bearman",
+    "bortoleto",
+    "colapinto",
+    "doohan",
+    "gasly",
+    "hadjar",
+    "hamilton",
+    "hulkenberg",
+    "lawson",
+    "leclerc",
+    "max_verstappen",
+    "norris",
+    "ocon",
+    "piastri",
+    "russell",
+    "sainz",
+    "stroll",
+    "tsunoda"
+  ],
+  "driverTeamRoundMap": [
+    {
+      "round": 1,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 1,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 1,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 1,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 1,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 1,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 1,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 1,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 1,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 1,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 1,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 1,
+      "driverId": "tsunoda",
+      "constructorId": "rb"
+    },
+    {
+      "round": 1,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 1,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 1,
+      "driverId": "lawson",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 1,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 1,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 1,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 1,
+      "driverId": "doohan",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 1,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 4,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 4,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 4,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 4,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 4,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 4,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 4,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 4,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 4,
+      "driverId": "tsunoda",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 4,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 4,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 4,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 4,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 4,
+      "driverId": "doohan",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 4,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 4,
+      "driverId": "lawson",
+      "constructorId": "rb"
+    },
+    {
+      "round": 4,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 4,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 4,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 4,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 7,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 7,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 7,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 7,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 7,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 7,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 7,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 7,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 7,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 7,
+      "driverId": "tsunoda",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 7,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 7,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 7,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 7,
+      "driverId": "lawson",
+      "constructorId": "rb"
+    },
+    {
+      "round": 7,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 7,
+      "driverId": "colapinto",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 7,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 7,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 7,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 7,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 10,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 10,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 10,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 10,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 10,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 10,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 10,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 10,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 10,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 10,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 10,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 10,
+      "driverId": "tsunoda",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 10,
+      "driverId": "colapinto",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 10,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 10,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 10,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 10,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 10,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 10,
+      "driverId": "lawson",
+      "constructorId": "rb"
+    },
+    {
+      "round": 10,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 13,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 13,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 13,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 13,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 13,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 13,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 13,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 13,
+      "driverId": "lawson",
+      "constructorId": "rb"
+    },
+    {
+      "round": 13,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 13,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 13,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 13,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 13,
+      "driverId": "tsunoda",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 13,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 13,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 13,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 13,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 13,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 13,
+      "driverId": "colapinto",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 13,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 16,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 16,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 16,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 16,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 16,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 16,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 16,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 16,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 16,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 16,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 16,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 16,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 16,
+      "driverId": "tsunoda",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 16,
+      "driverId": "lawson",
+      "constructorId": "rb"
+    },
+    {
+      "round": 16,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 16,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 16,
+      "driverId": "colapinto",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 16,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 16,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 16,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 19,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 19,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 19,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 19,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 19,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 19,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 19,
+      "driverId": "tsunoda",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 19,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 19,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 19,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 19,
+      "driverId": "lawson",
+      "constructorId": "rb"
+    },
+    {
+      "round": 19,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 19,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 19,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 19,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 19,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 19,
+      "driverId": "colapinto",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 19,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 19,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 19,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 22,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 22,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 22,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 22,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 22,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 22,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 22,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 22,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 22,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 22,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 22,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 22,
+      "driverId": "tsunoda",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 22,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 22,
+      "driverId": "lawson",
+      "constructorId": "rb"
+    },
+    {
+      "round": 22,
+      "driverId": "colapinto",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 22,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 22,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 22,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 22,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 22,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 24,
+      "driverId": "max_verstappen",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 24,
+      "driverId": "piastri",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 24,
+      "driverId": "norris",
+      "constructorId": "mclaren"
+    },
+    {
+      "round": 24,
+      "driverId": "leclerc",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 24,
+      "driverId": "russell",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 24,
+      "driverId": "alonso",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 24,
+      "driverId": "ocon",
+      "constructorId": "haas"
+    },
+    {
+      "round": 24,
+      "driverId": "hamilton",
+      "constructorId": "ferrari"
+    },
+    {
+      "round": 24,
+      "driverId": "hulkenberg",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 24,
+      "driverId": "stroll",
+      "constructorId": "aston_martin"
+    },
+    {
+      "round": 24,
+      "driverId": "bortoleto",
+      "constructorId": "sauber"
+    },
+    {
+      "round": 24,
+      "driverId": "bearman",
+      "constructorId": "haas"
+    },
+    {
+      "round": 24,
+      "driverId": "sainz",
+      "constructorId": "williams"
+    },
+    {
+      "round": 24,
+      "driverId": "tsunoda",
+      "constructorId": "red_bull"
+    },
+    {
+      "round": 24,
+      "driverId": "antonelli",
+      "constructorId": "mercedes"
+    },
+    {
+      "round": 24,
+      "driverId": "albon",
+      "constructorId": "williams"
+    },
+    {
+      "round": 24,
+      "driverId": "hadjar",
+      "constructorId": "rb"
+    },
+    {
+      "round": 24,
+      "driverId": "lawson",
+      "constructorId": "rb"
+    },
+    {
+      "round": 24,
+      "driverId": "gasly",
+      "constructorId": "alpine"
+    },
+    {
+      "round": 24,
+      "driverId": "colapinto",
+      "constructorId": "alpine"
+    }
+  ],
+  "substitutions": [
+    {
+      "constructorId": "rb",
+      "outDriverId": "tsunoda",
+      "inDriverId": "lawson",
+      "detectedBetweenRounds": [
+        1,
+        4
+      ]
+    },
+    {
+      "constructorId": "red_bull",
+      "outDriverId": "lawson",
+      "inDriverId": "tsunoda",
+      "detectedBetweenRounds": [
+        1,
+        4
+      ]
+    },
+    {
+      "constructorId": "alpine",
+      "outDriverId": "doohan",
+      "inDriverId": "colapinto",
+      "detectedBetweenRounds": [
+        4,
+        7
+      ]
+    }
+  ],
+  "fastf1Version": "3.8.3",
+  "exportSchemaVersion": "fastf1-export-v1",
+  "generatedAt": "2026-08-07T03:49:54.699Z",
+  "sourceFiles": [
+    {
+      "round": 1,
+      "path": "2025_01.json",
+      "checksum": "920046812f3c757132aff73fbb14da7b8993f4ef04e19b7529d7e43d99914669"
+    },
+    {
+      "round": 4,
+      "path": "2025_04.json",
+      "checksum": "8972e34ea46cc7d5d2b72da3e94f976a9a735e5186c7d01b310425a2d8237a9e"
+    },
+    {
+      "round": 7,
+      "path": "2025_07.json",
+      "checksum": "832f3b92e6b92f06ee667663a8545d50d313c451c2c19d828f7669f2c2733851"
+    },
+    {
+      "round": 10,
+      "path": "2025_10.json",
+      "checksum": "5c19cead42183d7016e383f4701882e238bb6c5b690abebd4c5b59bd56a1b109"
+    },
+    {
+      "round": 13,
+      "path": "2025_13.json",
+      "checksum": "12bff8c53ba0167e77f40b642eee71748bd008bf42c5854333116fc96e10c421"
+    },
+    {
+      "round": 16,
+      "path": "2025_16.json",
+      "checksum": "ea27eb1d406bf4ce60890d32192ae7ce9731f6fddda78c4b646eeff15da569d2"
+    },
+    {
+      "round": 19,
+      "path": "2025_19.json",
+      "checksum": "3d3231d11aadc8b3e7c9c2342e214906ab39d81eaa9cb04f3337688fdb759df6"
+    },
+    {
+      "round": 22,
+      "path": "2025_22.json",
+      "checksum": "5cf13b9679af785a5828d35a6730ab44b3bcf4138e0924faa5628d57c15112a2"
+    },
+    {
+      "round": 24,
+      "path": "2025_24.json",
+      "checksum": "6c90b3bcea8b149812b237af193fcb67fe03c0c1b945999076ebf31bbbc7cb7b"
+    }
+  ],
+  "knownGaps": [
+    "15 of 24 season rounds not collected: 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23",
+    "Sprint/SprintQualifying sessions are never collected — only Qualifying (Q) and Race (R).",
+    "Substitutions are only detectable BETWEEN two included rounds — an intermediate change on a round that was not collected is invisible to this manifest."
+  ],
+  "warnings": []
+}

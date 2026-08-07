@@ -85,22 +85,96 @@ class TestFormatErgastTime:
         assert collect.format_ergast_time(td) == "0:59.001"
 
 
-class TestNearestRainfall:
-    def test_empty_weather_returns_false(self):
+class TestClassifyLapCondition:
+    """`classify_lap_condition` combines a weather (rainfall) signal with a compound-implied
+    signal — see its docstring for the full rule set. Tests use SOFT for a dry-implying compound
+    and INTERMEDIATE for a wet-implying one, per `WET_IMPLYING_COMPOUNDS`.
+    """
+
+    def test_empty_weather_is_uncertain_not_dry(self):
+        # No data to measure -> uncertain. Never silently defaults to "dry".
         empty = pd.DataFrame(columns=["Time", "Rainfall"])
-        assert collect.nearest_rainfall(empty, pd.Timedelta(seconds=10)) is False
+        assert collect.classify_lap_condition(empty, pd.Timedelta(seconds=10), "SOFT") == "uncertain"
 
-    def test_nat_lap_time_returns_false(self):
+    def test_nat_lap_time_is_uncertain(self):
         weather = pd.DataFrame({"Time": [pd.Timedelta(seconds=0)], "Rainfall": [True]})
-        assert collect.nearest_rainfall(weather, pd.NaT) is False
+        assert collect.classify_lap_condition(weather, pd.NaT, "SOFT") == "uncertain"
 
-    def test_picks_the_nearest_sample_by_time(self):
+    def test_dry_slick_lap_with_confidently_dry_weather_is_dry(self):
         weather = pd.DataFrame({
             "Time": [pd.Timedelta(seconds=0), pd.Timedelta(seconds=60), pd.Timedelta(seconds=120)],
-            "Rainfall": [False, True, False],
+            "Rainfall": [False, False, False],
         })
-        assert collect.nearest_rainfall(weather, pd.Timedelta(seconds=61)) is True
-        assert collect.nearest_rainfall(weather, pd.Timedelta(seconds=1)) is False
+        assert collect.classify_lap_condition(weather, pd.Timedelta(seconds=60), "MEDIUM") == "dry"
+
+    def test_wet_compound_with_confidently_wet_weather_is_wet(self):
+        weather = pd.DataFrame({
+            "Time": [pd.Timedelta(seconds=0), pd.Timedelta(seconds=60), pd.Timedelta(seconds=120)],
+            "Rainfall": [True, True, True],
+        })
+        assert collect.classify_lap_condition(weather, pd.Timedelta(seconds=60), "WET") == "wet"
+
+    def test_intermediate_compound_with_confidently_wet_weather_is_wet(self):
+        weather = pd.DataFrame({"Time": [pd.Timedelta(seconds=0)], "Rainfall": [True]})
+        assert collect.classify_lap_condition(weather, pd.Timedelta(seconds=0), "INTERMEDIATE") == "wet"
+
+    def test_intermediate_on_a_confidently_dry_sensor_is_uncertain_not_dry(self):
+        # Real 2025 case Jonny flagged: driver still on inters after the rain sensor reads dry —
+        # a genuine crossover lap, not something to guess into "dry" just because the sensor says so.
+        weather = pd.DataFrame({
+            "Time": [pd.Timedelta(seconds=0), pd.Timedelta(seconds=60), pd.Timedelta(seconds=120)],
+            "Rainfall": [False, False, False],
+        })
+        assert collect.classify_lap_condition(weather, pd.Timedelta(seconds=60), "INTERMEDIATE") == "uncertain"
+
+    def test_slick_on_a_confidently_wet_sensor_is_uncertain_not_wet(self):
+        weather = pd.DataFrame({
+            "Time": [pd.Timedelta(seconds=0), pd.Timedelta(seconds=60), pd.Timedelta(seconds=120)],
+            "Rainfall": [True, True, True],
+        })
+        assert collect.classify_lap_condition(weather, pd.Timedelta(seconds=60), "SOFT") == "uncertain"
+
+    def test_ambiguous_weather_window_is_uncertain_regardless_of_compound(self):
+        # Window straddles a real transition (roughly half rain, half not) -> weather signal
+        # itself is ambiguous, so the lap is uncertain even if compound would otherwise agree
+        # with one interpretation.
+        weather = pd.DataFrame({
+            "Time": [pd.Timedelta(seconds=0), pd.Timedelta(seconds=60)],
+            "Rainfall": [True, False],
+        })
+        assert collect.classify_lap_condition(weather, pd.Timedelta(seconds=30), "MEDIUM") == "uncertain"
+
+    def test_uses_majority_vote_within_the_window_not_a_single_nearest_sample(self):
+        # 9 samples within the ±90s window around t=61, only ONE (t=60, the single nearest
+        # sample) is wet -> rain fraction 1/9 ≈ 0.11, confidently dry (<= the 0.2 dry band),
+        # agreeing with the slick compound. The old single-nearest-sample lookup would have
+        # flip-flopped to "wet" here since t=60 is the closest sample to t=61.
+        times = [0, 15, 30, 45, 60, 75, 90, 105, 120]
+        weather = pd.DataFrame({
+            "Time": [pd.Timedelta(seconds=t) for t in times],
+            "Rainfall": [t == 60 for t in times],
+        })
+        assert collect.classify_lap_condition(weather, pd.Timedelta(seconds=61), "MEDIUM", window_seconds=90) == "dry"
+
+    def test_is_deterministic_for_the_same_inputs(self):
+        weather = pd.DataFrame({"Time": [pd.Timedelta(seconds=0)], "Rainfall": [False]})
+        a = collect.classify_lap_condition(weather, pd.Timedelta(seconds=0), "SOFT")
+        b = collect.classify_lap_condition(weather, pd.Timedelta(seconds=0), "SOFT")
+        assert a == b == "dry"
+
+
+class TestWeatherRainFraction:
+    def test_none_for_empty_weather(self):
+        empty = pd.DataFrame(columns=["Time", "Rainfall"])
+        assert collect._weather_rain_fraction(empty, pd.Timedelta(seconds=10), 90) is None
+
+    def test_none_for_nat_lap_time(self):
+        weather = pd.DataFrame({"Time": [pd.Timedelta(seconds=0)], "Rainfall": [True]})
+        assert collect._weather_rain_fraction(weather, pd.NaT, 90) is None
+
+    def test_falls_back_to_nearest_sample_when_window_is_empty(self):
+        weather = pd.DataFrame({"Time": [pd.Timedelta(seconds=10_000)], "Rainfall": [True]})
+        assert collect._weather_rain_fraction(weather, pd.Timedelta(seconds=0), 90) == 1.0
 
 
 class TestParseDriverCodes:

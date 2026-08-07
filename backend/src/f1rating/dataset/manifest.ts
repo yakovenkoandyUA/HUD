@@ -88,14 +88,17 @@ export function buildDatasetManifest(
   const substitutions = detectSubstitutions(driverTeamRoundMap, includedRounds)
 
   const sourceFiles = rounds.map(round => {
-    const filePath = path.join(sourceDir, `${round.season}_${String(round.round).padStart(2, '0')}.json`)
+    const fileName = `${round.season}_${String(round.round).padStart(2, '0')}.json`
+    // Read from the caller's `sourceDir` (may be an absolute local path) for the checksum, but
+    // NEVER store that absolute path in the manifest — only the relative file name. The manifest
+    // is meant to be committed; a machine-specific absolute path has no business in it.
     let checksum = 'unavailable'
     try {
-      checksum = sha256(fs.readFileSync(filePath, 'utf-8'))
+      checksum = sha256(fs.readFileSync(path.join(sourceDir, fileName), 'utf-8'))
     } catch {
-      warnings.push(`round ${round.round}: source file not found at ${filePath} for checksum`)
+      warnings.push(`round ${round.round}: source file "${fileName}" not found for checksum`)
     }
-    return { round: round.round, path: filePath, checksum }
+    return { round: round.round, path: fileName, checksum }
   })
 
   const fastf1Version = rounds.find(r => r.fastf1Version)?.fastf1Version ?? null

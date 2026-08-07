@@ -9,7 +9,12 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "f1rating:debug": "ts-node src/f1rating/cli/debugRating.ts",
-    "f1rating:calibrate": "ts-node src/f1rating/cli/calibrationReport.ts"
+    "f1rating:calibrate": "ts-node src/f1rating/cli/calibrationReport.ts",
+    "f1rating:validate-dataset": "ts-node src/f1rating/cli/validateDataset.ts",
+    "f1rating:grid-calibrate": "ts-node src/f1rating/cli/gridCalibrationReport.ts",
+    "f1rating:grid-diagnostic": "ts-node src/f1rating/cli/gridDiagnosticReport.ts",
+    "f1rating:candidate-proposal": "ts-node src/f1rating/cli/candidateMethodologyProposal.ts",
+    "f1rating:stability": "ts-node src/f1rating/cli/stabilityReport.ts"
   },
   "dependencies": {
     "@sentry/node": "^10.57.0",

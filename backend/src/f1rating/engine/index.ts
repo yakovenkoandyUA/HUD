@@ -55,10 +55,10 @@ export function computeDriverRating(input: ComputeDriverRatingInput): DriverRati
     component: 'precision',
     metricResults: {
       cleanRaceLapConsistency: cleanRaceLapConsistency(driver, methodology.tunables),
-      cleanWeekendRate: cleanWeekendRate(driver),
-      driverAttributableReliability: driverAttributableReliability(driver),
+      cleanWeekendRate: cleanWeekendRate(),
+      driverAttributableReliability: driverAttributableReliability(),
       qualifyingConsistency: qualifyingConsistency(driver),
-      unforcedErrorControl: unforcedErrorControl(driver),
+      unforcedErrorControl: unforcedErrorControl(),
     },
     weights: methodology.precisionWeights,
     referenceRanges: methodology.referenceRanges,

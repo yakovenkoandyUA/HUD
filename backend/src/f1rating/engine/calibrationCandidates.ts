@@ -15,6 +15,11 @@ const PERCENTILE_PADDING_FRACTION = 0.10
 /** How close the distribution's median must be to 0 (relative to the robust half-width) before
  * a signed delta metric is proposed as a SYMMETRIC range instead of following the raw skew. */
 const SYMMETRY_SKEW_TOLERANCE = 0.15
+/** A percentile-based candidate is EXPECTED to still exclude a small residual of genuine extreme
+ * outliers (that's the entire point of using P5-P95/P2.5-P97.5 instead of raw min/max) — requiring
+ * `saturationAfter === 0` would mean "accept-candidate" could almost never fire. Accept when the
+ * candidate reduces clipping to at most this fraction AND meaningfully improves on the current range. */
+const MAX_RESIDUAL_SATURATION_FOR_ACCEPT = 0.03
 
 export interface DistributionStats {
   sampleCount: number
@@ -159,7 +164,7 @@ export function buildCandidateRange(input: CandidateRangeInput): CandidateRangeE
     recommendation = 'investigate'
   } else if (saturationBefore === 0) {
     recommendation = 'reject' // current range already covers the robust window — no change warranted
-  } else if (saturationAfter === 0 && confidence !== 'low') {
+  } else if (saturationAfter <= MAX_RESIDUAL_SATURATION_FOR_ACCEPT && saturationAfter < saturationBefore && confidence !== 'low') {
     recommendation = 'accept-candidate'
   } else {
     recommendation = 'investigate'

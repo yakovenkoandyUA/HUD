@@ -1,0 +1,989 @@
+{
+  "authoritative": true,
+  "stabilityValidated": true,
+  "generatedAt": "2026-08-07T07:19:53.626Z",
+  "smallerDatasetId": "mimir-f1-2025-grid-f8518ae715bf",
+  "largerDatasetId": "mimir-f1-2025-grid-f5952823620e",
+  "thresholds": {
+    "stableMaxRelativeShift": 0.15,
+    "moderateMaxRelativeShift": 0.4
+  },
+  "stability": {
+    "teammateAdjustedQualifyingPace": {
+      "metric": "teammateAdjustedQualifyingPace",
+      "recommendationSmaller": "investigate",
+      "recommendationLarger": "investigate",
+      "recommendationFlipped": false,
+      "classification": "unstable",
+      "smallerRange": [
+        -3.9908238252573556,
+        3.9908238252573556
+      ],
+      "largerRange": [
+        -2.0690427385175463,
+        2.0690427385175463
+      ],
+      "absoluteCenterShift": 0,
+      "relativeShift": 0.4815499683491741,
+      "saturationChangeSmallerToLarger": -0.03137620378999689,
+      "percentileShift": {
+        "p5": 0.25612874781492323,
+        "p50": -8.541969236958852e-7,
+        "p95": -0.263588258937947
+      },
+      "note": "relative shift 48.2% (stable<=15%, moderate<=40%)"
+    },
+    "teammateAdjustedCleanRacePace": {
+      "metric": "teammateAdjustedCleanRacePace",
+      "recommendationSmaller": "accept-candidate",
+      "recommendationLarger": "accept-candidate",
+      "recommendationFlipped": false,
+      "classification": "stable",
+      "smallerRange": [
+        -2.2906190200283487,
+        2.2906190200283487
+      ],
+      "largerRange": [
+        -2.3202114160534464,
+        2.3202114160534464
+      ],
+      "absoluteCenterShift": 0,
+      "relativeShift": 0.012754180856256937,
+      "saturationChangeSmallerToLarger": 0.01725082146768893,
+      "percentileShift": {
+        "p5": -0.20322297535104705,
+        "p50": 0,
+        "p95": 0.20817067838187775
+      },
+      "note": "relative shift 1.3% (stable<=15%, moderate<=40%)"
+    },
+    "peakRepresentativePace": {
+      "metric": "peakRepresentativePace",
+      "recommendationSmaller": "accept-candidate",
+      "recommendationLarger": "accept-candidate",
+      "recommendationFlipped": false,
+      "classification": "stable",
+      "smallerRange": [
+        -2.8884901910775858,
+        2.8884901910775858
+      ],
+      "largerRange": [
+        -2.8735535058825614,
+        2.8735535058825614
+      ],
+      "absoluteCenterShift": 0,
+      "relativeShift": 0.005171104697243935,
+      "saturationChangeSmallerToLarger": -0.021153846153846134,
+      "percentileShift": {
+        "p5": 0.06661223892599866,
+        "p50": 0,
+        "p95": -0.06934254851925026
+      },
+      "note": "relative shift 0.5% (stable<=15%, moderate<=40%)"
+    },
+    "qualifyingHeadToHead": {
+      "metric": "qualifyingHeadToHead",
+      "recommendationSmaller": "reject",
+      "recommendationLarger": "reject",
+      "recommendationFlipped": false,
+      "classification": "stable",
+      "smallerRange": [
+        0,
+        100
+      ],
+      "largerRange": [
+        0,
+        100
+      ],
+      "absoluteCenterShift": 0,
+      "relativeShift": 0,
+      "saturationChangeSmallerToLarger": 0,
+      "percentileShift": {
+        "p5": 0,
+        "p50": 0,
+        "p95": 0
+      },
+      "note": "relative shift 0.0% (stable<=15%, moderate<=40%)"
+    },
+    "cleanRaceLapConsistency": {
+      "metric": "cleanRaceLapConsistency",
+      "recommendationSmaller": "investigate",
+      "recommendationLarger": "accept-candidate",
+      "recommendationFlipped": true,
+      "classification": "unstable",
+      "smallerRange": [
+        0.20087055333557688,
+        1.361168205308781
+      ],
+      "largerRange": [
+        0.1184597427347435,
+        2.785380103279012
+      ],
+      "absoluteCenterShift": 0.6709005436846989,
+      "relativeShift": 0.564929771005082,
+      "saturationChangeSmallerToLarger": 0.019331507827846893,
+      "percentileShift": {
+        "p5": 0.029313406666096664,
+        "p50": 0.05294111419253078,
+        "p95": 0.7256038760798951
+      },
+      "note": "recommendation changed from \"investigate\" to \"accept-candidate\" between datasets — treated as unstable regardless of numeric shift"
+    },
+    "cleanWeekendRate": {
+      "metric": "cleanWeekendRate",
+      "recommendationSmaller": "insufficient-data",
+      "recommendationLarger": "insufficient-data",
+      "recommendationFlipped": false,
+      "classification": "insufficient-data",
+      "smallerRange": null,
+      "largerRange": null,
+      "absoluteCenterShift": null,
+      "relativeShift": null,
+      "saturationChangeSmallerToLarger": null,
+      "percentileShift": {
+        "p5": null,
+        "p50": null,
+        "p95": null
+      },
+      "note": "one or both datasets have no distribution for this metric — cannot assess stability"
+    },
+    "driverAttributableReliability": {
+      "metric": "driverAttributableReliability",
+      "recommendationSmaller": "insufficient-data",
+      "recommendationLarger": "insufficient-data",
+      "recommendationFlipped": false,
+      "classification": "insufficient-data",
+      "smallerRange": null,
+      "largerRange": null,
+      "absoluteCenterShift": null,
+      "relativeShift": null,
+      "saturationChangeSmallerToLarger": null,
+      "percentileShift": {
+        "p5": null,
+        "p50": null,
+        "p95": null
+      },
+      "note": "one or both datasets have no distribution for this metric — cannot assess stability"
+    },
+    "qualifyingConsistency": {
+      "metric": "qualifyingConsistency",
+      "recommendationSmaller": "accept-candidate",
+      "recommendationLarger": "investigate",
+      "recommendationFlipped": true,
+      "classification": "unstable",
+      "smallerRange": [
+        -0.2107001149383647,
+        2.8130691915928674
+      ],
+      "largerRange": [
+        -0.14296040751346764,
+        2.058367631535555
+      ],
+      "absoluteCenterShift": 0.34348092631620764,
+      "relativeShift": 0.27199206821293076,
+      "saturationChangeSmallerToLarger": -0.032196969696969696,
+      "percentileShift": {
+        "p5": -0.0182126591118313,
+        "p50": -0.0030434523718153583,
+        "p95": -1.1936035794686255
+      },
+      "note": "recommendation changed from \"accept-candidate\" to \"investigate\" between datasets — treated as unstable regardless of numeric shift"
+    },
+    "unforcedErrorControl": {
+      "metric": "unforcedErrorControl",
+      "recommendationSmaller": "insufficient-data",
+      "recommendationLarger": "insufficient-data",
+      "recommendationFlipped": false,
+      "classification": "insufficient-data",
+      "smallerRange": null,
+      "largerRange": null,
+      "absoluteCenterShift": null,
+      "relativeShift": null,
+      "saturationChangeSmallerToLarger": null,
+      "percentileShift": {
+        "p5": null,
+        "p50": null,
+        "p95": null
+      },
+      "note": "one or both datasets have no distribution for this metric — cannot assess stability"
+    },
+    "resultRelativeToExpectedPace": {
+      "metric": "resultRelativeToExpectedPace",
+      "recommendationSmaller": "insufficient-data",
+      "recommendationLarger": "insufficient-data",
+      "recommendationFlipped": false,
+      "classification": "insufficient-data",
+      "smallerRange": null,
+      "largerRange": null,
+      "absoluteCenterShift": null,
+      "relativeShift": null,
+      "saturationChangeSmallerToLarger": null,
+      "percentileShift": {
+        "p5": null,
+        "p50": null,
+        "p95": null
+      },
+      "note": "one or both datasets have no distribution for this metric — cannot assess stability"
+    },
+    "tyreStintManagement": {
+      "metric": "tyreStintManagement",
+      "recommendationSmaller": "investigate",
+      "recommendationLarger": "investigate",
+      "recommendationFlipped": false,
+      "classification": "unstable",
+      "smallerRange": [
+        -140.88304945054944,
+        140.88304945054944
+      ],
+      "largerRange": [
+        -374.39582983193276,
+        374.39582983193276
+      ],
+      "absoluteCenterShift": 0,
+      "relativeShift": 0.6237056125497119,
+      "saturationChangeSmallerToLarger": -0.046322556248818314,
+      "percentileShift": {
+        "p5": -12.306294852868433,
+        "p50": 0,
+        "p95": 12.306294852868433
+      },
+      "note": "relative shift 62.4% (stable<=15%, moderate<=40%)"
+    },
+    "startAndOpeningLapExecution": {
+      "metric": "startAndOpeningLapExecution",
+      "recommendationSmaller": "accept-candidate",
+      "recommendationLarger": "investigate",
+      "recommendationFlipped": true,
+      "classification": "unstable",
+      "smallerRange": [
+        -4.177500000000006,
+        4.177500000000006
+      ],
+      "largerRange": [
+        -4.705000000000001,
+        4.705000000000001
+      ],
+      "absoluteCenterShift": 0,
+      "relativeShift": 0.11211477151965875,
+      "saturationChangeSmallerToLarger": 0.010542797494780792,
+      "percentileShift": {
+        "p5": -1,
+        "p50": 0,
+        "p95": 0
+      },
+      "note": "recommendation changed from \"accept-candidate\" to \"investigate\" between datasets — treated as unstable regardless of numeric shift"
+    },
+    "racecraftProxy": {
+      "metric": "racecraftProxy",
+      "recommendationSmaller": "accept-candidate",
+      "recommendationLarger": "accept-candidate",
+      "recommendationFlipped": false,
+      "classification": "moderately-shifted",
+      "smallerRange": [
+        -10.242499999999982,
+        10.242499999999982
+      ],
+      "largerRange": [
+        -8.3,
+        8.3
+      ],
+      "absoluteCenterShift": 0,
+      "relativeShift": 0.18965096412008636,
+      "saturationChangeSmallerToLarger": -0.06609195402298851,
+      "percentileShift": {
+        "p5": 1,
+        "p50": 0,
+        "p95": -1
+      },
+      "note": "relative shift 19.0% (stable<=15%, moderate<=40%)"
+    },
+    "changingConditionAdaptability": {
+      "metric": "changingConditionAdaptability",
+      "recommendationSmaller": "investigate",
+      "recommendationLarger": "accept-candidate",
+      "recommendationFlipped": true,
+      "classification": "unstable",
+      "smallerRange": [
+        -1.4444556049136401,
+        1.4444556049136401
+      ],
+      "largerRange": [
+        -2.4926984983333895,
+        2.4926984983333895
+      ],
+      "absoluteCenterShift": 0,
+      "relativeShift": 0.420525343967833,
+      "saturationChangeSmallerToLarger": 0.15714285714285714,
+      "percentileShift": {
+        "p5": -0.8514415235789596,
+        "p50": 0,
+        "p95": 0.8755443100562303
+      },
+      "note": "recommendation changed from \"investigate\" to \"accept-candidate\" between datasets — treated as unstable regardless of numeric shift"
+    },
+    "documentedStrategicExecution": {
+      "metric": "documentedStrategicExecution",
+      "recommendationSmaller": "insufficient-data",
+      "recommendationLarger": "insufficient-data",
+      "recommendationFlipped": false,
+      "classification": "insufficient-data",
+      "smallerRange": null,
+      "largerRange": null,
+      "absoluteCenterShift": null,
+      "relativeShift": null,
+      "saturationChangeSmallerToLarger": null,
+      "percentileShift": {
+        "p5": null,
+        "p50": null,
+        "p95": null
+      },
+      "note": "one or both datasets have no distribution for this metric — cannot assess stability"
+    }
+  },
+  "downgradedFromAcceptCandidate": [
+    "cleanRaceLapConsistency",
+    "racecraftProxy",
+    "changingConditionAdaptability"
+  ],
+  "gatedCandidateReferenceRanges": {
+    "teammateAdjustedQualifyingPace": {
+      "currentRange": [
+        -1.5,
+        1.5
+      ],
+      "candidateRange": [
+        -2.0690427385175463,
+        2.0690427385175463
+      ],
+      "distribution": {
+        "sampleCount": 444,
+        "min": -7.312625216185209,
+        "max": 7.889559104723021,
+        "mean": 0.007447231773157101,
+        "median": 3.934319166339767e-7,
+        "p5": -1.2831594319306991,
+        "p25": -0.44609413832011,
+        "p75": 0.44809307244564694,
+        "p95": 1.2998384583965215,
+        "p2_5": -1.6973361096906736,
+        "p97_5": 1.7266446614077082,
+        "mad": 0.4478439125548096,
+        "iqr": 0.8941872107657569
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 22,
+      "saturationBefore": 0.07207207207207207,
+      "saturationAfter": 0.04504504504504504,
+      "algorithm": "P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)",
+      "confidence": "high",
+      "recommendation": "investigate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds"
+    },
+    "teammateAdjustedCleanRacePace": {
+      "currentRange": [
+        -1.2,
+        1.2
+      ],
+      "candidateRange": [
+        -2.3202114160534464,
+        2.3202114160534464
+      ],
+      "distribution": {
+        "sampleCount": 440,
+        "min": -8.234885295900582,
+        "max": 8.973873483898895,
+        "mean": 0.005549829649602271,
+        "median": 1.3938845886437949e-8,
+        "p5": -1.297317831457386,
+        "p25": -0.4085273485612996,
+        "p75": 0.4102031418717548,
+        "p95": 1.3143751748482582,
+        "p2_5": -1.8997835083855827,
+        "p97_5": 1.9365755138317167,
+        "mad": 0.4095710124813191,
+        "iqr": 0.8187304904330543
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 34,
+      "saturationBefore": 0.11363636363636363,
+      "saturationAfter": 0.029545454545454545,
+      "algorithm": "P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)",
+      "confidence": "high",
+      "recommendation": "accept-candidate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds"
+    },
+    "peakRepresentativePace": {
+      "currentRange": [
+        -1,
+        1
+      ],
+      "candidateRange": [
+        -2.8735535058825614,
+        2.8735535058825614
+      ],
+      "distribution": {
+        "sampleCount": 416,
+        "min": -3.435776274603182,
+        "max": 3.5580219485568727,
+        "mean": 0.0063560962428084395,
+        "median": 5.1340733714074285e-9,
+        "p5": -1.954966256814667,
+        "p25": -0.6999627698434135,
+        "p75": 0.7048968441849031,
+        "p95": 1.993948064661391,
+        "p2_5": -2.343094314963553,
+        "p97_5": 2.399312794896551,
+        "mad": 0.7038109135115589,
+        "iqr": 1.4048596140283167
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 9,
+      "saturationBefore": 0.31009615384615385,
+      "saturationAfter": 0.016826923076923076,
+      "algorithm": "P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)",
+      "confidence": "high",
+      "recommendation": "accept-candidate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds"
+    },
+    "qualifyingHeadToHead": {
+      "currentRange": [
+        0,
+        100
+      ],
+      "candidateRange": null,
+      "distribution": {
+        "sampleCount": 21,
+        "min": 0,
+        "max": 100,
+        "mean": 47.90660225442834,
+        "median": 50,
+        "p5": 0,
+        "p25": 22.727272727272727,
+        "p75": 72.72727272727273,
+        "p95": 100,
+        "p2_5": 0,
+        "p97_5": 100,
+        "mad": 27.272727272727273,
+        "iqr": 50.00000000000001
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 0,
+      "saturationBefore": 0,
+      "saturationAfter": 0,
+      "algorithm": "P5-P95 robust window, +10% padding",
+      "confidence": "medium",
+      "recommendation": "reject",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds"
+    },
+    "cleanRaceLapConsistency": {
+      "currentRange": [
+        0,
+        2.5
+      ],
+      "candidateRange": [
+        0.1184597427347435,
+        2.785380103279012
+      ],
+      "distribution": {
+        "sampleCount": 428,
+        "min": 0.24999143115471473,
+        "max": 5.94824853495018,
+        "mean": 0.8319246151164564,
+        "median": 0.6554652565578581,
+        "p5": 0.37015881425610436,
+        "p25": 0.5152297725335904,
+        "p75": 0.8844737912578937,
+        "p95": 1.8163845790886273,
+        "p2_5": 0.3407031061134325,
+        "p97_5": 2.563136739900323,
+        "mad": 0.17346196919613222,
+        "iqr": 0.36924401872430335
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 34,
+      "saturationBefore": 0.02570093457943925,
+      "saturationAfter": 0.02336448598130841,
+      "algorithm": "P2.5-P97.5 robust window, +10% padding",
+      "confidence": "high",
+      "recommendation": "investigate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds [downgraded from accept-candidate: unstable vs prior sample — recommendation changed from \"investigate\" to \"accept-candidate\" between datasets — treated as unstable regardless of numeric shift]"
+    },
+    "cleanWeekendRate": {
+      "currentRange": [
+        0,
+        100
+      ],
+      "candidateRange": null,
+      "distribution": null,
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 0,
+      "saturationBefore": 0,
+      "saturationAfter": 0,
+      "algorithm": "insufficient sample (n=0 < 5)",
+      "confidence": "low",
+      "recommendation": "insufficient-data",
+      "note": "not enough samples to propose a statistically meaningful range"
+    },
+    "driverAttributableReliability": {
+      "currentRange": [
+        0,
+        100
+      ],
+      "candidateRange": null,
+      "distribution": null,
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 0,
+      "saturationBefore": 0,
+      "saturationAfter": 0,
+      "algorithm": "insufficient sample (n=0 < 5)",
+      "confidence": "low",
+      "recommendation": "insufficient-data",
+      "note": "not enough samples to propose a statistically meaningful range"
+    },
+    "qualifyingConsistency": {
+      "currentRange": [
+        0,
+        2
+      ],
+      "candidateRange": [
+        -0.14296040751346764,
+        2.058367631535555
+      ],
+      "distribution": {
+        "sampleCount": 336,
+        "min": 0,
+        "max": 3.3819988851794505,
+        "mean": 0.41658192296572905,
+        "median": 0.32838369365294684,
+        "p5": 0.07469109695296954,
+        "p25": 0.1850168231082747,
+        "p75": 0.5160135001176713,
+        "p95": 0.8773645948792534,
+        "p2_5": 0.0404835957406176,
+        "p97_5": 1.8749236282814699,
+        "mad": 0.16152643574119174,
+        "iqr": 0.3309966770093966
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 14,
+      "saturationBefore": 0.020833333333333332,
+      "saturationAfter": 0.020833333333333332,
+      "algorithm": "P2.5-P97.5 robust window, +10% padding",
+      "confidence": "high",
+      "recommendation": "investigate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds"
+    },
+    "unforcedErrorControl": {
+      "currentRange": [
+        0,
+        2
+      ],
+      "candidateRange": null,
+      "distribution": null,
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 0,
+      "saturationBefore": 0,
+      "saturationAfter": 0,
+      "algorithm": "insufficient sample (n=0 < 5)",
+      "confidence": "low",
+      "recommendation": "insufficient-data",
+      "note": "not enough samples to propose a statistically meaningful range"
+    },
+    "resultRelativeToExpectedPace": {
+      "currentRange": [
+        -5,
+        5
+      ],
+      "candidateRange": null,
+      "distribution": null,
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 0,
+      "saturationBefore": 0,
+      "saturationAfter": 0,
+      "algorithm": "insufficient sample (n=0 < 5)",
+      "confidence": "low",
+      "recommendation": "insufficient-data",
+      "note": "not enough samples to propose a statistically meaningful range"
+    },
+    "tyreStintManagement": {
+      "currentRange": [
+        -50,
+        50
+      ],
+      "candidateRange": [
+        -374.39582983193276,
+        374.39582983193276
+      ],
+      "distribution": {
+        "sampleCount": 246,
+        "min": -597.8696969696969,
+        "max": 597.8696969696969,
+        "mean": 0.24814652757644537,
+        "median": 0,
+        "p5": -118.76516098673457,
+        "p25": -27.331862521536436,
+        "p75": 26.919594853396905,
+        "p95": 118.76516098673457,
+        "p2_5": -311.996524859944,
+        "p97_5": 311.996524859944,
+        "mad": 27.298394721220813,
+        "iqr": 54.25145737493334
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 32,
+      "saturationBefore": 0.33739837398373984,
+      "saturationAfter": 0.032520325203252036,
+      "algorithm": "P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)",
+      "confidence": "high",
+      "recommendation": "investigate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds"
+    },
+    "startAndOpeningLapExecution": {
+      "currentRange": [
+        -3,
+        3
+      ],
+      "candidateRange": [
+        -4.705000000000001,
+        4.705000000000001
+      ],
+      "distribution": {
+        "sampleCount": 479,
+        "min": -11,
+        "max": 8,
+        "mean": 0.19624217118997914,
+        "median": 0,
+        "p5": -3,
+        "p25": 0,
+        "p75": 1,
+        "p95": 3,
+        "p2_5": -4,
+        "p97_5": 3.0500000000000114,
+        "mad": 1,
+        "iqr": 1
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 92,
+      "saturationBefore": 0.060542797494780795,
+      "saturationAfter": 0.031315240083507306,
+      "algorithm": "P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)",
+      "confidence": "high",
+      "recommendation": "investigate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds"
+    },
+    "racecraftProxy": {
+      "currentRange": [
+        -3,
+        3
+      ],
+      "candidateRange": [
+        -8.3,
+        8.3
+      ],
+      "distribution": {
+        "sampleCount": 460,
+        "min": -12,
+        "max": 13,
+        "mean": 0.43478260869565216,
+        "median": 0,
+        "p5": -5,
+        "p25": -1,
+        "p75": 2,
+        "p95": 6,
+        "p2_5": -6,
+        "p97_5": 7,
+        "mad": 2,
+        "iqr": 3
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 40,
+      "saturationBefore": 0.25,
+      "saturationAfter": 0.02826086956521739,
+      "algorithm": "P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)",
+      "confidence": "high",
+      "recommendation": "investigate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds [downgraded from accept-candidate: moderately-shifted vs prior sample — relative shift 19.0% (stable<=15%, moderate<=40%)]"
+    },
+    "changingConditionAdaptability": {
+      "currentRange": [
+        -1.5,
+        1.5
+      ],
+      "candidateRange": [
+        -2.4926984983333895,
+        2.4926984983333895
+      ],
+      "distribution": {
+        "sampleCount": 20,
+        "min": -2.0544112071922442,
+        "max": 2.0975025343286333,
+        "mean": 0.0066465466863534686,
+        "median": 0.0000832604081375532,
+        "p5": -2.0383690800909395,
+        "p25": -0.4713626741973884,
+        "p75": 0.4736038497905426,
+        "p95": 2.0807832639311776,
+        "p2_5": -2.0463901436415917,
+        "p97_5": 2.0891428991299055,
+        "mad": 0.48942714179643954,
+        "iqr": 0.944966523987931
+      },
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 4,
+      "saturationBefore": 0.3,
+      "saturationAfter": 0,
+      "algorithm": "P5-P95 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)",
+      "confidence": "medium",
+      "recommendation": "investigate",
+      "note": "grid-wide sample across 10 teams, 21 drivers, 24 rounds [downgraded from accept-candidate: unstable vs prior sample — recommendation changed from \"investigate\" to \"accept-candidate\" between datasets — treated as unstable regardless of numeric shift]"
+    },
+    "documentedStrategicExecution": {
+      "currentRange": [
+        0,
+        100
+      ],
+      "candidateRange": null,
+      "distribution": null,
+      "teamCount": 10,
+      "driverCount": 21,
+      "roundCount": 24,
+      "outlierCount": 0,
+      "saturationBefore": 0,
+      "saturationAfter": 0,
+      "algorithm": "insufficient sample (n=0 < 5)",
+      "confidence": "low",
+      "recommendation": "insufficient-data",
+      "note": "not enough samples to propose a statistically meaningful range"
+    }
+  },
+  "metricTotals": {
+    "totalMetrics": 15,
+    "observedMetrics": 10,
+    "noSignalMetrics": 4,
+    "insufficientDataMetrics": 1,
+    "excludedMetrics": 0,
+    "acceptedCandidateMetrics": 2,
+    "totalCandidateMetrics": 15
+  },
+  "v2CandidateGated": {
+    "created": true,
+    "reasonNotCreated": null,
+    "calibratedMetricKeys": [
+      "teammateAdjustedCleanRacePace",
+      "peakRepresentativePace"
+    ],
+    "inheritedUnverifiedKeys": [
+      "teammateAdjustedQualifyingPace",
+      "qualifyingHeadToHead",
+      "cleanRaceLapConsistency",
+      "cleanWeekendRate",
+      "driverAttributableReliability",
+      "qualifyingConsistency",
+      "unforcedErrorControl",
+      "resultRelativeToExpectedPace",
+      "tyreStintManagement",
+      "startAndOpeningLapExecution",
+      "racecraftProxy",
+      "changingConditionAdaptability",
+      "documentedStrategicExecution"
+    ],
+    "methodology": {
+      "id": "mimir-f1-v2-candidate",
+      "effectiveFrom": "2026-08-07",
+      "description": "Experimental candidate methodology — reference ranges calibrated against grid-wide dataset mimir-f1-2025-grid-f5952823620e where sufficient data existed (2 of 15 ranges); everything else (weights, tunables, remaining ranges) inherited unchanged from mimir-f1-v1. NOT for production use — see productionReady.",
+      "calibrationStatus": "candidate",
+      "productionReady": false,
+      "minSampleSize": {
+        "teammateAdjustedQualifyingPace": 3,
+        "teammateAdjustedCleanRacePace": 3,
+        "peakRepresentativePace": 2,
+        "qualifyingHeadToHead": 3,
+        "cleanRaceLapConsistency": 3,
+        "cleanWeekendRate": 3,
+        "driverAttributableReliability": 3,
+        "qualifyingConsistency": 3,
+        "unforcedErrorControl": 3,
+        "resultRelativeToExpectedPace": 3,
+        "tyreStintManagement": 2,
+        "startAndOpeningLapExecution": 2,
+        "racecraftProxy": 2,
+        "changingConditionAdaptability": 1,
+        "documentedStrategicExecution": 0
+      },
+      "speedWeights": {
+        "teammateAdjustedQualifyingPace": 0.4,
+        "teammateAdjustedCleanRacePace": 0.3,
+        "peakRepresentativePace": 0.15,
+        "qualifyingHeadToHead": 0.15
+      },
+      "precisionWeights": {
+        "cleanRaceLapConsistency": 0.3,
+        "cleanWeekendRate": 0.25,
+        "driverAttributableReliability": 0.2,
+        "qualifyingConsistency": 0.15,
+        "unforcedErrorControl": 0.1
+      },
+      "raceIqWeights": {
+        "resultRelativeToExpectedPace": 0.25,
+        "tyreStintManagement": 0.2,
+        "startAndOpeningLapExecution": 0.2,
+        "racecraftProxy": 0.15,
+        "changingConditionAdaptability": 0.1,
+        "documentedStrategicExecution": 0.1
+      },
+      "referenceRanges": {
+        "teammateAdjustedQualifyingPace": {
+          "key": "teammateAdjustedQualifyingPace",
+          "min": -1.5,
+          "max": 1.5,
+          "higherIsBetter": false,
+          "description": "% gap of representative qualifying lap time vs teammate (negative = faster)."
+        },
+        "teammateAdjustedCleanRacePace": {
+          "key": "teammateAdjustedCleanRacePace",
+          "min": -2.3202114160534464,
+          "max": 2.3202114160534464,
+          "higherIsBetter": false,
+          "description": "% gap of average clean-lap race pace vs teammate on comparable stints. [v2-candidate: calibrated from dataset mimir-f1-2025-grid-f5952823620e, algorithm: P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)]"
+        },
+        "peakRepresentativePace": {
+          "key": "peakRepresentativePace",
+          "min": -2.8735535058825614,
+          "max": 2.8735535058825614,
+          "higherIsBetter": false,
+          "description": "% gap of best sustained-stint average pace vs teammate (never a single fastest lap). [v2-candidate: calibrated from dataset mimir-f1-2025-grid-f5952823620e, algorithm: P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)]"
+        },
+        "qualifyingHeadToHead": {
+          "key": "qualifyingHeadToHead",
+          "min": 0,
+          "max": 100,
+          "higherIsBetter": true,
+          "description": "% of comparable qualifying sessions won directly against the teammate."
+        },
+        "cleanRaceLapConsistency": {
+          "key": "cleanRaceLapConsistency",
+          "min": 0,
+          "max": 2.5,
+          "higherIsBetter": false,
+          "description": "Coefficient of variation (%) of clean race laps within a single stint (never pooled across stints/compounds — see engine/cleanRaceLapConsistency.ts for why that matters)."
+        },
+        "cleanWeekendRate": {
+          "key": "cleanWeekendRate",
+          "min": 0,
+          "max": 100,
+          "higherIsBetter": true,
+          "description": "% of rounds with no driver-attributable incident and no driver-attributable DNF."
+        },
+        "driverAttributableReliability": {
+          "key": "driverAttributableReliability",
+          "min": 0,
+          "max": 100,
+          "higherIsBetter": true,
+          "description": "% of starts without a driver-attributable DNF (technical DNFs excluded from the penalty)."
+        },
+        "qualifyingConsistency": {
+          "key": "qualifyingConsistency",
+          "min": 0,
+          "max": 2,
+          "higherIsBetter": false,
+          "description": "Coefficient of variation (%) of valid qualifying laps within the same segment."
+        },
+        "unforcedErrorControl": {
+          "key": "unforcedErrorControl",
+          "min": 0,
+          "max": 2,
+          "higherIsBetter": false,
+          "description": "Attributable unforced-error incidents per round."
+        },
+        "resultRelativeToExpectedPace": {
+          "key": "resultRelativeToExpectedPace",
+          "min": -5,
+          "max": 5,
+          "higherIsBetter": true,
+          "description": "Average (expectedFinishPosition − actualFinishPosition); positive = beat pace-based expectation."
+        },
+        "tyreStintManagement": {
+          "key": "tyreStintManagement",
+          "min": -50,
+          "max": 50,
+          "higherIsBetter": false,
+          "description": "PROXY, not raw tyre wear: teammate-relative clean-lap pace-evolution delta (ms/lap) on comparable stints (driverSlope − teammateSlope). Negative = driver's pace evolved more favorably than teammate's on a matched stint — scored as better."
+        },
+        "startAndOpeningLapExecution": {
+          "key": "startAndOpeningLapExecution",
+          "min": -3,
+          "max": 3,
+          "higherIsBetter": true,
+          "description": "Average positions gained/lost from grid to end of lap 1, penalized for attributable contact."
+        },
+        "racecraftProxy": {
+          "key": "racecraftProxy",
+          "min": -3,
+          "max": 3,
+          "higherIsBetter": true,
+          "description": "Average net position change during green-flag racing, excluding lap 1 and pit-stop laps. v1 limitation: this is a position-delta proxy, not a true overtake/defend count — it cannot distinguish a strategy-driven position change from an on-track battle."
+        },
+        "changingConditionAdaptability": {
+          "key": "changingConditionAdaptability",
+          "min": -1.5,
+          "max": 1.5,
+          "higherIsBetter": false,
+          "description": "% teammate pace gap computed only across wet/mixed-condition rounds (normalized separately from dry)."
+        },
+        "documentedStrategicExecution": {
+          "key": "documentedStrategicExecution",
+          "min": 0,
+          "max": 100,
+          "higherIsBetter": true,
+          "description": "v1 has no objective telemetry proxy for strategic execution — this sub-component always reports missing raw data and is reweighted away unless a manual review adjustment (category \"strategic_intervention\") is recorded for the round."
+        }
+      },
+      "finalScale": {
+        "min": 70,
+        "max": 99
+      },
+      "tyreAgeComparabilityThresholdLaps": 3,
+      "tunables": {
+        "confidenceMissingPenaltyPerItem": 0.15,
+        "confidenceMissingPenaltyCap": 0.6,
+        "confidenceHighThreshold": 0.75,
+        "confidenceMediumThreshold": 0.4,
+        "attributableLap1ContactPenaltyPositions": 2,
+        "minCleanLapsForStintAverage": 2,
+        "minCleanLapsForDegradationSlope": 3,
+        "minCleanLapsForConsistencyStint": 3,
+        "maxManualAdjustmentMagnitude": 5,
+        "maxCumulativeManualAdjustmentPerComponent": 8
+      },
+      "calibrationDatasetId": "mimir-f1-2025-grid-f5952823620e"
+    }
+  }
+}

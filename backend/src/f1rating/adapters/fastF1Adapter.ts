@@ -114,6 +114,27 @@ function isCleanLap(row: FastF1LapRow): boolean {
     row.trackStatus === 'green'
 }
 
+/**
+ * A stint's condition is 'dry' only if EVERY lap in it was classified dry, 'wet' only if every
+ * lap was wet — otherwise 'mixed'. Real 2025 data caught the bug this fixes: a stint's condition
+ * used to be taken from its FIRST lap only, so a stint that started dry but actually straddled a
+ * wet/dry transition (real example: 2025 Australian GP, Verstappen/Lawson stint 5 — laps
+ * genuinely alternate dry/wet per-lap classification mid-stint) got labeled uniformly 'dry' and
+ * fed straight into `tyreStintManagement`'s regression, producing a physically-impossible
+ * ±1921 ms/lap "degradation" pair. `eligibleDryStints` (in `engine/tyreStintManagement.ts`) and
+ * the equivalent dry-only filters in `cleanRaceLapConsistency.ts`/`peakRepresentativePace` all
+ * gate on `trackCondition === 'dry'` — labeling a straddling stint 'mixed' here is what makes
+ * them correctly exclude it, per the "uncertain → exclude, never guess dry" rule.
+ */
+function resolveStintCondition(stintLaps: FastF1LapRow[]): TrackCondition {
+  // Any single uncertain lap makes the whole stint uncertain — we don't even confidently know
+  // that lap's true condition, so we can't confidently say the stint merely "disagrees" (mixed).
+  if (stintLaps.some(l => l.trackCondition === 'uncertain')) return 'uncertain'
+  const conditions = new Set(stintLaps.map(l => l.trackCondition))
+  if (conditions.size === 1) return [...conditions][0]
+  return 'mixed'
+}
+
 function buildStints(laps: FastF1LapRow[], minCleanLapsForDegradationSlope: number): StintMetrics[] {
   const stintNumbers = [...new Set(laps.map(l => l.stintNumber))].sort((a, b) => a - b)
   return stintNumbers.map(stintNumber => {
@@ -125,7 +146,7 @@ function buildStints(laps: FastF1LapRow[], minCleanLapsForDegradationSlope: numb
       compound: stintLaps[0]?.compound ?? 'medium',
       startLap: Math.min(...stintLaps.map(l => l.lapNumber)),
       endLap: Math.max(...stintLaps.map(l => l.lapNumber)),
-      trackCondition: stintLaps[0]?.trackCondition ?? 'dry',
+      trackCondition: resolveStintCondition(stintLaps),
       avgCleanLapTimeMs: cleanTimes.length > 0 ? cleanTimes.reduce((a, b) => a + b, 0) / cleanTimes.length : null,
       degradationMsPerLap: linearDegradationSlopeMsPerLap(cleanLaps, minCleanLapsForDegradationSlope),
       cleanLapCount: cleanLaps.length,

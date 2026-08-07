@@ -21,9 +21,10 @@ import { average } from './teammateRelative'
  * dominated by shared session-level effects, not driver-attributable tyre management skill.
  *
  * FIX: the metric now reports a TEAMMATE-RELATIVE delta (`driverSlope − teammateSlope`) computed
- * only on stint PAIRS that are genuinely comparable (same round, same dry session, same
- * compound, tyre-age window within `tyreAgeComparabilityThresholdLaps` — see
- * `areStintsTyreComparable`). Because both cars experience essentially the same fuel-burn curve
+ * only on stint PAIRS that are genuinely comparable (same round, same classified condition —
+ * dry-dry or wet-wet, never mixed/uncertain — same compound, tyre-age window within
+ * `tyreAgeComparabilityThresholdLaps` — see `areStintsTyreComparable`). Because both cars
+ * experience essentially the same fuel-burn curve
  * and track evolution within the same comparable-stint window, that shared noise mostly cancels
  * out of the delta, the same way every other teammate-relative metric in this engine cancels car
  * performance. If no comparable stint pair exists for a round, that round contributes nothing —
@@ -56,8 +57,16 @@ export interface StintPaceEvolutionExplain {
 
 type Tunables = MethodologyVersion['tunables']
 
-function eligibleDryStints(stints: StintMetrics[], minCleanLaps: number): StintMetrics[] {
-  return stints.filter(s => s.trackCondition === 'dry' && s.cleanLapCount >= minCleanLaps && s.degradationMsPerLap !== null)
+/**
+ * Eligible stints for pairing: condition must be confidently 'dry' OR 'wet' — NEVER 'mixed'
+ * (laps disagree, e.g. real rain returning mid-stint) or 'uncertain' (couldn't confidently
+ * classify at all). This is the "uncertain → exclude, never guess" rule in code.
+ */
+function eligibleComparableStints(stints: StintMetrics[], minCleanLaps: number): StintMetrics[] {
+  return stints.filter(
+    s => (s.trackCondition === 'dry' || s.trackCondition === 'wet') &&
+      s.cleanLapCount >= minCleanLaps && s.degradationMsPerLap !== null,
+  )
 }
 
 function tyreAge(s: StintMetrics): number {
@@ -107,8 +116,8 @@ export function explainStintPaceEvolution(
       continue
     }
 
-    const driverStints = eligibleDryStints(race.stints, tunables.minCleanLapsForDegradationSlope)
-    const teammateStints = eligibleDryStints(teammateRace.stints, tunables.minCleanLapsForDegradationSlope)
+    const driverStints = eligibleComparableStints(race.stints, tunables.minCleanLapsForDegradationSlope)
+    const teammateStints = eligibleComparableStints(teammateRace.stints, tunables.minCleanLapsForDegradationSlope)
 
     const usedTeammateStints = new Set<number>()
     let foundPairThisRound = false
@@ -139,8 +148,8 @@ export function explainStintPaceEvolution(
       excludedRounds.push({
         round: race.round,
         reason: driverStints.length === 0 || teammateStints.length === 0
-          ? 'no eligible dry stint (insufficient clean laps) for driver and/or teammate'
-          : 'no dry stint pair matched on compound + tyre-age window (areStintsTyreComparable)',
+          ? 'no eligible dry/wet stint (mixed/uncertain condition, or insufficient clean laps) for driver and/or teammate'
+          : 'no stint pair matched on condition + compound + tyre-age window (areStintsTyreComparable)',
       })
     }
   }

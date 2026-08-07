@@ -124,25 +124,48 @@ export function qualifyingHeadToHead(driver: DriverSeasonInput): MetricResult {
 // ── Precision ──────────────────────────────────────────────────────────────
 // (cleanRaceLapConsistency lives in ./cleanRaceLapConsistency.ts — per-stint, not pooled here)
 
-export function cleanWeekendRate(driver: DriverSeasonInput): MetricResult {
-  if (driver.race.length === 0) return NO_DATA
-  const attributableIncidentRounds = new Set(
-    driver.incidents.filter(i => i.attributable).map(i => i.round),
-  )
-  const attributableDnfRounds = new Set(
-    driver.dnfs.filter(d => d.driverAttributable).map(d => d.round),
-  )
-  const cleanRounds = driver.race.filter(
-    r => !attributableIncidentRounds.has(r.round) && !attributableDnfRounds.has(r.round),
-  ).length
-  return { rawValue: (cleanRounds / driver.race.length) * 100, sampleSize: driver.race.length }
+/**
+ * NO-SIGNAL METRIC (v1) — always reports missing data, same pattern as
+ * `documentedStrategicExecution`. The formula below (rounds without an attributable
+ * incident/DNF) is methodologically correct, but v1's pipeline has NO connected incident data
+ * source anywhere (`adapters/manualIncidentAdapter.ts` exists as a boundary/contract, but
+ * nothing calls it with real FIA/manual-review data yet) — `driver.incidents` is always `[]` in
+ * every real dataset this repo can currently produce. Computing "100% clean" from an
+ * always-empty incidents array is not a measurement, it's the constant output of missing data,
+ * and reporting it as n=(round count) with zero variance would misrepresent an absent signal as
+ * a calibrated one. Once a real incident source is connected, replace this with the commented-out
+ * computation below (kept for that purpose, not dead code to be deleted casually).
+ *
+ *   const attributableIncidentRounds = new Set(driver.incidents.filter(i => i.attributable).map(i => i.round))
+ *   const attributableDnfRounds = new Set(driver.dnfs.filter(d => d.driverAttributable).map(d => d.round))
+ *   const cleanRounds = driver.race.filter(r => !attributableIncidentRounds.has(r.round) && !attributableDnfRounds.has(r.round)).length
+ *   return { rawValue: (cleanRounds / driver.race.length) * 100, sampleSize: driver.race.length }
+ */
+export function cleanWeekendRate(): MetricResult {
+  return NO_DATA
 }
 
-export function driverAttributableReliability(driver: DriverSeasonInput): MetricResult {
-  const totalStarts = driver.race.length
-  if (totalStarts === 0) return NO_DATA
-  const attributableFailures = driver.dnfs.filter(d => d.driverAttributable).length
-  return { rawValue: (1 - attributableFailures / totalStarts) * 100, sampleSize: totalStarts }
+/**
+ * NO-SIGNAL METRIC (v1) — always reports missing data. `driver.dnfs` IS populated in v1 (from
+ * Ergast/FastF1 `status` strings via `classifyJolpicaStatus`), but `buildDnfRecord` can only
+ * ever produce `cause: 'technical'` or `cause: 'unknown'` from that automated classification —
+ * it NEVER derives `driver_error`/`contact_at_fault` (fault attribution requires human review,
+ * per the engine's own data-quality invariants). So `driverAttributableReliability` computed
+ * from v1's real DNF data would ALWAYS show 0 attributable failures for every driver — not
+ * because reliability is genuinely uniform, but because the automated pipeline structurally
+ * cannot produce the one input (a driver-attributable DNF) that would make this metric vary.
+ * Reporting a suspiciously perfect 100% for the whole grid would misrepresent "our classifier
+ * never says it's the driver's fault" as "no driver was ever at fault". Once a real manual-review
+ * layer can produce `driver_error`/`contact_at_fault` DNF records, replace this with the
+ * commented-out computation below.
+ *
+ *   const totalStarts = driver.race.length
+ *   if (totalStarts === 0) return NO_DATA
+ *   const attributableFailures = driver.dnfs.filter(d => d.driverAttributable).length
+ *   return { rawValue: (1 - attributableFailures / totalStarts) * 100, sampleSize: totalStarts }
+ */
+export function driverAttributableReliability(): MetricResult {
+  return NO_DATA
 }
 
 export function qualifyingConsistency(driver: DriverSeasonInput): MetricResult {
@@ -157,10 +180,17 @@ export function qualifyingConsistency(driver: DriverSeasonInput): MetricResult {
   return { rawValue: value, sampleSize: perRoundCov.length }
 }
 
-export function unforcedErrorControl(driver: DriverSeasonInput): MetricResult {
-  if (driver.race.length === 0) return NO_DATA
-  const errorCount = driver.incidents.filter(i => i.attributable && i.type === 'unforced_error').length
-  return { rawValue: errorCount / driver.race.length, sampleSize: driver.race.length }
+/**
+ * NO-SIGNAL METRIC (v1) — always reports missing data, same reason as `cleanWeekendRate`:
+ * `driver.incidents` is always `[]` in v1 (no connected incident data source). Once a real
+ * source exists, replace this with the commented-out computation below.
+ *
+ *   if (driver.race.length === 0) return NO_DATA
+ *   const errorCount = driver.incidents.filter(i => i.attributable && i.type === 'unforced_error').length
+ *   return { rawValue: errorCount / driver.race.length, sampleSize: driver.race.length }
+ */
+export function unforcedErrorControl(): MetricResult {
+  return NO_DATA
 }
 
 // ── Race IQ ─────────────────────────────────────────────────────────────────

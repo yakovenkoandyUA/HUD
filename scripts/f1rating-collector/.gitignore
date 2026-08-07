@@ -12,8 +12,33 @@ output/collection-summary-*.json
 
 # Full-grid raw exports (9 rounds x ~20 drivers, ~3.7MB of lap-by-lap telemetry) — too large to
 # treat as a "small recorded input" the way the 5 McLaren-only files above are. Regenerable on
-# demand via `batch_collect.py --season 2025 --rounds 1,4,7,10,13,16,19,22,24`. What DOES get
-# committed from this run is the dataset manifest + checksums + compact aggregated calibration
-# fixtures (grid-calibration output), not the raw per-lap JSON.
-output_grid/
+# demand via `batch_collect.py --season 2025 --rounds 1,4,7,10,13,16,19,22,24`.
+#
+# What DOES get committed from this run: the dataset manifest (deterministic content modulo its
+# own `generatedAt` stamp — same pattern as any manifest) and the v2-candidate methodology
+# proposal — the two genuinely compact, valuable artifacts. The full `grid-calibration-report.json`
+# (outlier audit + per-driver coverage, ~30KB, same live-`generatedAt` instability as
+# `output/calibration-report.json` above) stays local/regenerable, not committed.
+output_grid/*
+!output_grid/reports/
+output_grid/reports/*
+!output_grid/reports/manifest.json
+!output_grid/reports/v2-candidate-proposal.json
+
+# Full-season (24/24 round) grid export — same rationale as output_grid/ above, scaled up.
+# Committed: manifest (dataset provenance), the RAW (ungated) v2-candidate-proposal from the
+# 24-round run alone, and stability-report.json (9-round-vs-24-round comparison + the
+# STABILITY-GATED v2-candidate that actually supersedes the ungated one — see
+# cli/stabilityReport.ts). grid-calibration-report.json stays local (live `generatedAt`, ~30KB
+# outlier/coverage dump, regenerable via `npm run f1rating:grid-calibrate`).
+output_grid_full/*
+!output_grid_full/reports/
+output_grid_full/reports/*
+!output_grid_full/reports/manifest.json
+!output_grid_full/reports/v2-candidate-proposal.json
+!output_grid_full/reports/stability-report.json
+
+# 9-round subset copied out of output_grid_full/ purely to feed the stability comparison above —
+# not a distinct dataset, fully regenerable by re-copying those 9 files, never committed.
+output_grid_subset9/
 
