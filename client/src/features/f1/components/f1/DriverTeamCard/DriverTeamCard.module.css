@@ -16,35 +16,22 @@
   letter-spacing: 0.08em;
 }
 
-.body {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.logoWrap {
-  width: 96px;
-  flex-shrink: 0;
+.logoBanner {
+  width: 100%;
+  aspect-ratio: 2.2 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.carImage {
+.logoImg {
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
+  object-position: center;
 }
 
-.logoImage {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-}
-
-.info {
-  flex: 1;
-  min-width: 0;
+.body {
   display: flex;
   flex-direction: column;
 }

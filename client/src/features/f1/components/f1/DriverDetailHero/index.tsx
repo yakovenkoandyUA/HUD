@@ -102,10 +102,10 @@ const DriverDetailHero: React.FC<Props> = ({ driver, stats, loading }) => {
           <line x1="290" y1="-10" x2="390" y2="230" stroke="var(--team-color)" strokeWidth="2" opacity="0.18" />
         </svg>
         <div className={styles.photoGradient} />
+        <div className={styles.dotsTexture} />
       </div>
 
       <div className={styles.top}>
-        <span className={styles.brand}>MIMIR</span>
         <div className={styles.dots}>
           {Array.from({ length: 9 }).map((_, i) => <span key={i} className={styles.dot} />)}
         </div>

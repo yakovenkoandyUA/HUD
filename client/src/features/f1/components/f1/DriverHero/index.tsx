@@ -107,7 +107,6 @@ const DriverHero: React.FC<Props> = ({ driver, cachedStats, onStats }) => {
       </div>
 
       <div className={styles.top}>
-        <span className={styles.brand}>MIMIR</span>
         <div className={styles.dots}>
           {Array.from({ length: 9 }).map((_, i) => <span key={i} className={styles.dot} />)}
         </div>

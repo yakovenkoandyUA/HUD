@@ -3,7 +3,9 @@
   overflow: hidden;
   min-height: 280px;
   border-bottom: 1px solid color-mix(in srgb, var(--team-color) 40%, var(--border2));
-  background: var(--bg2);
+  background:
+    radial-gradient(130% 100% at 10% 0%, color-mix(in srgb, var(--team-color) 55%, transparent) 0%, transparent 55%),
+    linear-gradient(150deg, color-mix(in srgb, var(--team-color) 32%, var(--bg2)) 0%, var(--bg2) 65%);
   padding: 16px 16px 14px;
   display: flex;
   flex-direction: column;
@@ -54,20 +56,24 @@
     linear-gradient(0deg, var(--bg2) 0%, transparent 42%);
 }
 
+/* Halftone dot texture over the whole hero — echoes F1.com driver banners */
+.dotsTexture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(color-mix(in srgb, var(--team-color) 80%, white) 1px, transparent 1.3px);
+  background-size: 7px 7px;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+}
+
 .top {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-bottom: 14px;
-}
-
-.brand {
-  font-family: var(--font-display);
-  font-size: 13px;
-  letter-spacing: 0.24em;
-  color: var(--team-color);
 }
 
 .dots {

@@ -77,15 +77,8 @@
   z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 14px 14px 0;
-}
-
-.brand {
-  font-family: var(--font-display);
-  font-size: 12px;
-  letter-spacing: 0.22em;
-  color: var(--team-color);
 }
 
 .dots {
@@ -106,9 +99,9 @@
   position: relative;
   z-index: 2;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 12px;
-  padding: 10px 14px 16px;
+  padding: 0 14px 16px;
 }
 
 .numberCol {
