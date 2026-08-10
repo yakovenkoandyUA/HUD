@@ -58,8 +58,6 @@ function parseArgs(): { datasets: DatasetSpec[]; out: string } {
   return { datasets, out: out || path.join(datasets[datasets.length - 1].dir, 'reports', 'multi-season-strategy-report.json') }
 }
 
-type FinalRecommendation = 'fixed' | 'pooled' | 'season-normalized' | 'insufficient-data' | 'manual-only' | 'investigate'
-
 interface MetricStrategyResult {
   metric: string
   eligibility: { strategy: NormalizationStrategy; nTotal: number; nBySeason: Record<number, number>; note: string }
