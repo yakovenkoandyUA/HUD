@@ -101,7 +101,9 @@ export const createTaskSchema = updateTaskSchema.extend({
 export const createTransactionSchema = z.object({
   amount:      z.number().positive('Сума має бути більше 0'),
   type:        z.enum(['income', 'expense']),
-  desc:        z.string().max(200).optional(),
+  // Regular descriptions are short, but a scanned receipt stores its full item
+  // list here as JSON ({store, items: [...]}) — needs much more headroom than 200.
+  desc:        z.string().max(5000).optional(),
   date:        z.string().min(1, 'Дата обов\'язкова'),
   category:    z.string().optional(),
   categoryId:  z.string().optional(),

@@ -131,7 +131,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
       <ReceiptScanner
         file={scannerFile}
         allCategories={scanCategories}
-        onSave={(amt, desc, cat) => { onExpense(amt, desc, cat) }}
+        onSave={(amt, desc, cat, scanDate) => { onExpense(amt, desc, cat, undefined, undefined, scanDate) }}
         onCancel={() => setScannerFile(null)}
       />
     )

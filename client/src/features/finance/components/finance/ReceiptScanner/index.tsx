@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { authFetch } from '@/shared/services/api'
 import { useUiStore } from '@/shared/store/uiStore'
 import { compressImage } from '@/shared/utils/uploadToCloudinary'
+import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import styles from './ReceiptScanner.module.css'
 
 /**
@@ -14,7 +15,7 @@ import styles from './ReceiptScanner.module.css'
  * Props:
  * @prop {File}                          file           — фото чеку (вже вибрано користувачем)
  * @prop {{ label: string, value: string }[]} allCategories — список категорій для select
- * @prop {Function}                      onSave         — (amount, description, category)
+ * @prop {Function}                      onSave         — (amount, description, category, date?)
  * @prop {Function}                      onCancel       — повернутись до форми
  */
 interface ReceiptItem {
@@ -33,12 +34,14 @@ interface ReceiptResult {
 interface ReceiptScannerProps {
   file: File
   allCategories: { label: string; value: string }[]
-  onSave: (amount: number, description: string, category: string) => void
+  onSave: (amount: number, description: string, category: string, date?: string) => void
   onCancel: () => void
 }
 
 const fmtPrice = (n: number) =>
   n.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, onSave, onCancel }) => {
   const [status, setStatus]       = useState<'loading' | 'preview'>('loading')
@@ -46,7 +49,13 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
   const [storeName, setStoreName] = useState('')
   const [items, setItems]         = useState<ReceiptItem[]>([])
   const [category, setCategory]   = useState(allCategories[0]?.value ?? 'продукти')
+  const [date, setDate]           = useState<string>(new Date().toISOString().slice(0, 10))
+  const [showDatePicker, setShowDatePicker] = useState(false)
   const { showToast }             = useUiStore()
+
+  const today   = new Date().toISOString().slice(0, 10)
+  const isToday = date === today
+  const dateLabel = isToday ? 'Сьогодні' : new Date(date + 'T12:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })
 
   useEffect(() => {
     let cancelled = false
@@ -76,6 +85,7 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
           setResult(data)
           setStoreName(data.store || '')
           setItems(data.items)
+          if (data.date && DATE_RE.test(data.date)) setDate(data.date)
           setStatus('preview')
         }
       } catch (err) {
@@ -107,12 +117,12 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
     setItems(prev => prev.filter((_, idx) => idx !== i))
   }
 
-  const computedTotal = items.reduce((sum, item) => sum + (item.price || 0), 0)
+  const computedTotal = Math.round(items.reduce((sum, item) => sum + (item.price || 0), 0) * 100) / 100
 
   const handleSave = () => {
     if (!result) return
     const description = JSON.stringify({ store: storeName || result.store, items })
-    onSave(computedTotal, description, category)
+    onSave(computedTotal, description, category, isToday ? undefined : date)
   }
 
   if (status === 'loading') {
@@ -195,6 +205,36 @@ const ReceiptScanner: React.FC<ReceiptScannerProps> = ({ file, allCategories, on
               <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
+        </div>
+
+        <div className={styles.dateSection}>
+          <div className={styles.dateRow}>
+            <button
+              type="button"
+              className={`${styles.dateBtn} ${!isToday ? styles.dateBtnActive : ''}`}
+              onClick={() => setShowDatePicker(v => !v)}
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <rect x="1" y="3" width="14" height="12" rx="1.5"/>
+                <path d="M5 1v4M11 1v4M1 7h14"/>
+              </svg>
+              {dateLabel}
+            </button>
+            {!isToday && (
+              <button type="button" className={styles.dateClear} onClick={() => { setDate(today); setShowDatePicker(false) }}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M2 2l6 6M8 2l-6 6"/>
+                </svg>
+              </button>
+            )}
+          </div>
+          {showDatePicker && (
+            <CustomDatePicker
+              value={date}
+              onChange={d => { setDate(d); setShowDatePicker(false) }}
+              onClose={() => setShowDatePicker(false)}
+            />
+          )}
         </div>
 
         <div className={styles.actions}>

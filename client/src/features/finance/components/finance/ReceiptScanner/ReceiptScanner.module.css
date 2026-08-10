@@ -221,6 +221,55 @@
   pointer-events: none;
 }
 
+/* ── Date ── */
+.dateSection {
+  padding: 0 14px 10px;
+}
+
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dateBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text3);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.dateBtn:hover { color: var(--text); border-color: var(--border); }
+
+.dateBtnActive {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+  background: var(--accent-soft);
+}
+
+.dateClear {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.dateClear:hover { color: var(--accent); }
+
 /* ── Actions ── */
 .actions {
   display: flex;
