@@ -152,9 +152,16 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       .then((created: ApiTransaction) => {
         financeReqId++
         set(s => {
-          const transactions = s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t)
-          writeCache(transactions, s.balance)
-          return { syncStatus: 'synced', transactions }
+          // A fetchTransactions() may have raced in and already replaced the list
+          // (without this optimistic entry, since the POST hadn't committed yet) —
+          // re-insert from the server response instead of silently dropping it.
+          const exists = s.transactions.some(t => t.id === tx.id)
+          const transactions = exists
+            ? s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t)
+            : [fromApi(created), ...s.transactions.filter(t => t.id !== created._id)]
+          const balance = exists ? s.balance : calcBalance(transactions)
+          writeCache(transactions, balance)
+          return { balance, syncStatus: 'synced', transactions }
         })
       })
       .catch(() => {
@@ -192,9 +199,15 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
       .then((created: ApiTransaction) => {
         financeReqId++
         set(s => {
-          const transactions = s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t)
-          writeCache(transactions, s.balance)
-          return { syncStatus: 'synced', transactions }
+          // Same self-healing insert-or-update as addTopup — a raced fetchTransactions()
+          // may have already overwritten the list without this optimistic entry.
+          const exists = s.transactions.some(t => t.id === tx.id)
+          const transactions = exists
+            ? s.transactions.map(t => t.id === tx.id ? { ...t, id: created._id } : t)
+            : [fromApi(created), ...s.transactions.filter(t => t.id !== created._id)]
+          const balance = exists ? s.balance : calcBalance(transactions)
+          writeCache(transactions, balance)
+          return { balance, syncStatus: 'synced', transactions }
         })
       })
       .catch(() => {
