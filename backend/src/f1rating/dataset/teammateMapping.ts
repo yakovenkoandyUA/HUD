@@ -1,5 +1,6 @@
-import type { DriverId, ConstructorId, RawQualifyingMetrics, RawRaceMetrics, Round } from '../types'
+import type { DriverId, ConstructorId, RawQualifyingMetrics, RawRaceMetrics, Round, Season } from '../types'
 import type { DriverSeasonInput } from '../engine/metrics'
+import { seasonRoundKey } from '../engine/seasonRoundKey'
 
 /**
  * Per-event teammate resolution — the foundation grid-wide calibration is built on. Never
@@ -63,10 +64,13 @@ export function resolveTeammates(roster: RosterEntry[]): TeammateResolution[] {
 
 export interface CompositeTeammateInput {
   driverSeasonInput: DriverSeasonInput
-  /** Which round -> which real driverId actually supplied that round's teammate data (audit trail). */
-  teammateByRound: Map<Round, DriverId>
-  /** Rounds `driverId` raced in but had no resolvable teammate (single-driver-only that session). */
-  roundsWithoutTeammate: Round[]
+  /** (season, round) key -> which real driverId actually supplied that round's teammate data
+   * (audit trail). Keyed via `seasonRoundKey` — see that module for why a bare round number is
+   * never a safe map key here. */
+  teammateByRound: Map<string, DriverId>
+  /** Rounds `driverId` raced in but had no resolvable teammate (single-driver-only that
+   * session). Season-tagged so multi-season callers can't misattribute a gap to the wrong year. */
+  roundsWithoutTeammate: { season: Season; round: Round }[]
 }
 
 /**
@@ -84,37 +88,38 @@ export interface CompositeTeammateInput {
 export function buildCompositeTeammateInput(
   driverId: DriverId,
   allDrivers: Map<DriverId, DriverSeasonInput>,
-  rosterByRound: Map<Round, RosterEntry[]>,
+  rosterByRound: Map<string, RosterEntry[]>,
 ): CompositeTeammateInput {
   const driver = allDrivers.get(driverId)
   const qualifying: RawQualifyingMetrics[] = []
   const race: RawRaceMetrics[] = []
-  const teammateByRound = new Map<Round, DriverId>()
-  const roundsWithoutTeammate: Round[] = []
+  const teammateByRound = new Map<string, DriverId>()
+  const roundsWithoutTeammate: { season: Season; round: Round }[] = []
 
-  const rounds = new Set<Round>([
-    ...(driver?.qualifying.map(q => q.round) ?? []),
-    ...(driver?.race.map(r => r.round) ?? []),
-  ])
+  // Deduplicated by (season, round) key, but the VALUE carries the real season+round pair — a
+  // bare `Set<Round>` would collapse round 1 of every season into one entry.
+  const seasonRounds = new Map<string, { season: Season; round: Round }>()
+  for (const q of driver?.qualifying ?? []) seasonRounds.set(seasonRoundKey(q.season, q.round), { season: q.season, round: q.round })
+  for (const r of driver?.race ?? []) seasonRounds.set(seasonRoundKey(r.season, r.round), { season: r.season, round: r.round })
 
-  for (const round of rounds) {
-    const roster = rosterByRound.get(round) ?? []
+  for (const [key, { season, round }] of seasonRounds) {
+    const roster = rosterByRound.get(key) ?? []
     const resolutions = resolveTeammates(roster)
     const mine = resolutions.find(r => r.driverId === driverId)
     if (!mine || !mine.teammateId) {
-      roundsWithoutTeammate.push(round)
+      roundsWithoutTeammate.push({ season, round })
       continue
     }
     const teammateDriver = allDrivers.get(mine.teammateId)
     if (!teammateDriver) {
-      roundsWithoutTeammate.push(round)
+      roundsWithoutTeammate.push({ season, round })
       continue
     }
-    const teammateQ = teammateDriver.qualifying.find(q => q.round === round)
-    const teammateR = teammateDriver.race.find(r => r.round === round)
+    const teammateQ = teammateDriver.qualifying.find(q => q.season === season && q.round === round)
+    const teammateR = teammateDriver.race.find(r => r.season === season && r.round === round)
     if (teammateQ) qualifying.push(teammateQ)
     if (teammateR) race.push(teammateR)
-    if (teammateQ || teammateR) teammateByRound.set(round, mine.teammateId)
+    if (teammateQ || teammateR) teammateByRound.set(key, mine.teammateId)
   }
 
   return {

@@ -25,7 +25,7 @@
   width: 72px;
   height: 52px;
   border-radius: 8px;
-  background: var(--bg-surface);
+  background: var(--bg2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,7 +41,7 @@
 .vehicleName {
   font-family: var(--font-furore);
   font-size: 1.05rem;
-  color: var(--text-primary);
+  color: var(--text);
   margin: 0 0 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -54,12 +54,12 @@
   gap: 8px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  color: var(--text-secondary);
+  color: var(--text2);
   flex-wrap: wrap;
 }
 
 .vehiclePlate {
-  background: var(--bg-surface);
+  background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 3px;
   padding: 1px 5px;
@@ -76,8 +76,8 @@
   display: inline-block;
   margin-top: 4px;
   font-size: 0.68rem;
-  color: var(--text-muted);
-  background: var(--bg-surface);
+  color: var(--text3);
+  background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1px 7px;
@@ -85,7 +85,7 @@
 
 .vehicleEmpty {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--text3);
 }
 
 .vehicleEditBtn {
@@ -96,7 +96,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 5px;
-  color: var(--text-secondary);
+  color: var(--text2);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -111,51 +111,66 @@
 
 /* ── Stats ── */
 .statsBlock {
-  padding: 16px 16px 0;
-}
-
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.statItem {
-  background: color-mix(in srgb, var(--space-color) 6%, var(--bg-card));
-  border: 1px solid color-mix(in srgb, var(--space-color) 18%, transparent);
-  border-radius: 8px;
-  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 10px;
 }
 
-.statValue {
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--space-color);
+/* ── Expenses panel (replaces the 4-tile stats grid) ── */
+.expensesPanel {
+  background: color-mix(in srgb, var(--space-color) 5%, var(--surface));
+ 
+  border-radius: 12px;
+  padding: 12px 14px;
 }
 
-.statLabel {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.expiringDocs {
+.expensesHeadline {
   display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  font-size: 0.75rem;
-  color: var(--color-warning, #f39c12);
-  background: color-mix(in srgb, #f39c12 8%, var(--bg-card));
-  border: 1px solid color-mix(in srgb, #f39c12 25%, transparent);
-  border-radius: 8px;
-  padding: 9px 12px;
-  margin-bottom: 6px;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.expensesAmount {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.expensesMonth {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.expensesBreakdown {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.expensesBreakdownRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.expensesBreakdownLabel {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.expensesBreakdownValue {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 /* ── Service badge ── */
@@ -179,7 +194,6 @@
 
 /* ── Trip cost calculator ── */
 .tripCalc {
-  margin-top: 10px;
   padding: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -266,9 +280,9 @@
 
 .timelineItem {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 0;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border);
   position: relative;
 }
@@ -278,10 +292,10 @@
 }
 
 .timelineIcon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--space-color) 10%, var(--bg-surface));
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--space-color) 10%, var(--bg2));
   border: 1px solid color-mix(in srgb, var(--space-color) 25%, transparent);
   color: var(--space-color);
   display: flex;
@@ -305,30 +319,39 @@
 }
 
 .timelineType {
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
 }
 
 .timelineDate {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--text-muted);
+  font-size: 0.74rem;
+  color: var(--text3);
   flex-shrink: 0;
 }
 
 .timelineMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  font-size: 0.72rem;
-  color: var(--text-secondary);
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88rem;
+  color: var(--text2);
 }
 
-.timelineCost {
-  font-family: var(--font-ui);
-  font-weight: 600;
-  color: var(--space-color);
+.timelineDivider {
+  color: var(--text3);
+  opacity: 0.5;
+}
+
+.timelineCost,
+.timelineTag,
+.timelineMuted {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 
 .timelineMileage {
@@ -342,7 +365,7 @@
 .timelineNotes {
   margin: 4px 0 0;
   font-size: 0.72rem;
-  color: var(--text-secondary);
+  color: var(--text2);
   line-height: 1.4;
 }
 
@@ -366,30 +389,10 @@
   opacity: 0.85;
 }
 
-.timelineDeleteBtn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 4px;
-  margin-top: 4px;
-  flex-shrink: 0;
-  transition: color 0.15s;
-  opacity: 0;
-}
-
-.timelineItem:hover .timelineDeleteBtn {
-  opacity: 1;
-}
-
-.timelineDeleteBtn:hover {
-  color: var(--color-error, #e74c3c);
-}
-
 .timelineSkeleton {
   height: 52px;
   border-radius: 8px;
-  background: var(--bg-surface);
+  background: var(--bg2);
   animation: pulse 1.4s ease-in-out infinite;
   margin-bottom: 8px;
 }
@@ -397,7 +400,7 @@
 .timelineEmpty {
   padding: 24px 0;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--text3);
   font-size: 0.82rem;
 }
 
@@ -437,7 +440,7 @@
 .sheetTitle {
   font-family: var(--font-furore);
   font-size: 0.9rem;
-  color: var(--text-primary);
+  color: var(--text);
   margin: 0 0 16px;
   letter-spacing: 0.04em;
 }
@@ -446,26 +449,87 @@
   font-family: var(--font-furore);
   font-size: 0.62rem;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: var(--text3);
   margin: 0 0 12px;
+}
+
+.sectionTitleSpaced {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.vehiclePhotoPickerText {
+  font-size: 0.78rem;
+  color: var(--text2);
+}
+
+/* ── "Додаткові дані" accordion (VIN / Frame number) ── */
+.additionalToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text3);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  font-family: var(--font-furore);
+  cursor: pointer;
+}
+
+.additionalChevron,
+.additionalChevronOpen {
+  transition: transform 0.2s ease;
+}
+
+.additionalChevronOpen {
+  transform: rotate(90deg);
+}
+
+.additionalBody {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 260ms ease-in-out, opacity 200ms ease-in-out;
+}
+
+.additionalBodyOpen {
+  max-height: 260px;
+  opacity: 1;
 }
 
 .fieldLabel {
   display: block;
   font-size: 0.62rem;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: var(--text3);
   margin: 12px 0 5px;
+}
+
+.optionalHint {
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 0.65;
+}
+
+.pricePerLiterHint {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text3);
+  margin-top: 4px;
 }
 
 .fieldInput {
   width: 100%;
-  background: var(--bg-surface);
+  background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 0.88rem;
-  color: var(--text-primary);
+  color: var(--text);
   outline: none;
   transition: border-color 0.15s;
   box-sizing: border-box;
@@ -475,14 +539,18 @@
   border-color: var(--accent);
 }
 
+.fieldInput::placeholder {
+  color: var(--text3);
+}
+
 .dateField {
   width: 100%;
-  background: var(--bg-surface);
+  background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 0.88rem;
-  color: var(--text-primary);
+  color: var(--text);
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s;
@@ -495,12 +563,12 @@
 
 .textarea {
   width: 100%;
-  background: var(--bg-surface);
+  background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 0.85rem;
-  color: var(--text-primary);
+  color: var(--text);
   resize: none;
   outline: none;
   font-family: inherit;
@@ -531,7 +599,7 @@
   border: 1.5px solid var(--border);
   border-radius: 20px;
   font-size: 0.78rem;
-  color: var(--text-secondary);
+  color: var(--text2);
   background: none;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
@@ -546,12 +614,12 @@
 .primaryBtn {
   width: 100%;
   margin-top: 20px;
-  padding: 13px;
+  padding: 11px;
   border: none;
   border-radius: 10px;
   background: var(--space-color);
   color: #fff;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;
@@ -560,6 +628,69 @@
 .primaryBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── Delete record (inside edit sheets) ── */
+.deleteRecordBtn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-error, #e74c3c) 30%, transparent);
+  border-radius: 10px;
+  background: none;
+  color: var(--color-error, #e74c3c);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.deleteRecordBtn:hover {
+  background: color-mix(in srgb, var(--color-error, #e74c3c) 8%, transparent);
+}
+
+.deleteConfirmRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-error, #e74c3c) 30%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-error, #e74c3c) 6%, transparent);
+}
+
+.deleteConfirmText {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+.deleteConfirmCancel {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: var(--text2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deleteConfirmYes {
+  padding: 7px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-error, #e74c3c);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* ── Attachments ── */
@@ -595,7 +726,7 @@
   border-radius: 50%;
   background: var(--bg);
   border: 1px solid var(--border);
-  color: var(--text-secondary);
+  color: var(--text2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -616,7 +747,7 @@
   border: 1.5px dashed var(--border);
   border-radius: 8px;
   background: none;
-  color: var(--text-secondary);
+  color: var(--text2);
   font-size: 0.8rem;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
@@ -675,7 +806,7 @@
   border-radius: 10px;
   overflow: hidden;
   border: 1.5px dashed var(--border);
-  background: var(--bg-surface);
+  background: var(--bg2);
   cursor: pointer;
   margin-bottom: 4px;
   transition: border-color 0.15s;
@@ -701,8 +832,11 @@
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  color: var(--text3);
 }
 
 .vehiclePhotoOverlay {
@@ -733,15 +867,18 @@
 
 .decodeBtn {
   flex-shrink: 0;
-  width: 38px;
   height: 38px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
   border: 1.5px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  background: var(--bg2);
+  color: var(--text2);
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
@@ -783,35 +920,33 @@
   border-color: var(--space-color);
 }
 
-/* ── Station row (AZS field + find-on-map link) ── */
+/* ── Station row (AZS field + find-on-map link, merged into one control) ── */
 .stationRow {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  position: relative;
 }
 
 .stationRow .fieldInput {
-  flex: 1;
   margin: 0;
+  padding-right: 38px;
 }
 
 .findStationBtn {
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: 38px;
-  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
+  border: none;
+  background: none;
+  color: var(--text3);
   text-decoration: none;
-  transition: border-color 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 
 .findStationBtn:hover {
-  border-color: var(--accent);
   color: var(--accent);
 }
 
@@ -858,14 +993,14 @@
   background: var(--surface);
   margin: -12px -12px 0;
 }
-.vehicleHeroCovered { min-height: 200px; }
+.vehicleHeroCovered { min-height: 148px; }
 .vehicleHeroCoverImg {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; pointer-events: none; user-select: none;
+  filter: brightness(1.13) saturate(1.05);
 }
 .vehicleHeroCoverOverlay {
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.62) 100%);
   pointer-events: none;
 }
 .vehicleHeroBackBtn {
@@ -935,8 +1070,8 @@
 
 .vehicleMedallion {
   flex-shrink: 0;
-  width: 90px;
-  height: 90px;
+  width: 68px;
+  height: 68px;
   color: var(--space-color);
   display: flex;
   align-items: center;
@@ -945,8 +1080,8 @@
 }
 
 .vehicleMedallionPhoto {
-  width: 90px;
-  height: 90px;
+  width: 68px;
+  height: 68px;
   object-fit: cover;
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--space-color) 30%, var(--border));
@@ -1098,25 +1233,10 @@
   user-select: none;
 }
 
-.vehicleStatStripItem {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.vehicleStatStripNum {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-}
-
-.vehicleStatStripLabel {
+.vehicleStatStripValue {
   font-family: var(--font-ui);
-  font-size: 10px;
-  color: var(--text3);
-  letter-spacing: 0.03em;
+  font-size: 11px;
+  color: var(--text2);
 }
 
 /* ── Onboarding checklist ── */
@@ -1245,6 +1365,46 @@
   flex-shrink: 0;
 }
 
+/* ── Onboarding — compact single-row variant (once the space has records) ── */
+.vehicleOnboardingCompact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--space-color) 18%, var(--border));
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vehicleOnboardingCompactLabel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.vehicleOnboardingCompact .vehicleOnboardingBar {
+  width: 40px;
+}
+
+.vehicleOnboardingCompactCta {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--space-color);
+  text-align: right;
+}
+
 /* ── Vehicle state block ── */
 .vehicleStateBlock {
   background: color-mix(in srgb, var(--space-color) 5%, var(--surface));
@@ -1253,15 +1413,29 @@
   padding: 12px 14px;
 }
 
-.vehicleStateTitle {
-  display: block;
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--text3);
+.vehicleStateHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.vehicleStateCarName {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--text);
   text-transform: uppercase;
-  margin-bottom: 10px;
+}
+
+.vehicleStateMileage {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--space-color);
+  flex-shrink: 0;
 }
 
 .vehicleStateItems {
@@ -1326,11 +1500,11 @@
 .vehicleActionCard {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  gap: 9px;
+  padding: 9px 10px;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 10px;
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, background 0.15s;
@@ -1343,42 +1517,28 @@
 }
 
 .vehicleActionCardIcon {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: color-mix(in srgb, var(--space-color) 10%, transparent);
-  border-radius: 8px;
+  border-radius: 7px;
   color: var(--space-color);
   flex-shrink: 0;
-}
-
-.vehicleActionCardText {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
 }
 
 .vehicleActionCardLabel {
   font-family: var(--font-ui);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
   line-height: 1.2;
 }
 
-.vehicleActionCardDesc {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  color: var(--text3);
-}
-
 /* ── Timeline card ── */
 .vehicleTimelineCard {
-  background: var(--surface);
-  border: 1px solid var(--border);
+
   border-radius: 14px;
   padding: 14px;
 }
@@ -1493,17 +1653,6 @@
   background: color-mix(in srgb, var(--space-color) 8%, transparent);
 }
 
-/* ── vehicle photo in edit sheet (flat img tag) ── */
-.vehiclePhotoPreview {
-  width: 100%;
-  max-height: 120px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  margin-bottom: 6px;
-  display: block;
-}
-
 /* ── Module cards (finance, tasks etc.) ── */
 .vehicleModuleCard {
   background: var(--surface2);
@@ -1603,32 +1752,23 @@
   padding-top: 8px;
 }
 
-/* ── Timeline actions (edit + delete) ── */
-.timelineActions {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.timelineItem:hover .timelineActions {
-  opacity: 1;
-}
-
+/* ── Timeline row — single, larger edit target (delete lives inside the sheet now) ── */
 .timelineEditBtn {
+  align-self: center;
   background: none;
   border: none;
   color: var(--text3);
   cursor: pointer;
-  padding: 4px;
+  padding: 9px;
   flex-shrink: 0;
-  transition: color 0.15s;
+  transition: color 0.15s, background 0.15s;
+  border-radius: 8px;
 }
 
-.timelineEditBtn:hover {
-  color: var(--accent);
+.timelineEditBtn:hover,
+.timelineEditBtn:active {
+  color: var(--space-color);
+  background: color-mix(in srgb, var(--space-color) 8%, transparent);
 }
 
 /* ── Tall sheet variant (AllRecordsSheet) ── */

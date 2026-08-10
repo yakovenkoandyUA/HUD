@@ -192,7 +192,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
 
   const [pendingDelete, setPendingDelete]         = useState<string | null>(null)
   const [typeFilter, setTypeFilter]               = useState<TypeFilter>('all')
-  const [categoryFilter, setCategoryFilter]       = useState('all')
+  const [categoryFilter, setCategoryFilter]       = useState<string[]>([])
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<Transaction | null>(null)
   const [isAnimating, setIsAnimating]             = useState(false)
   const [displayedList, setDisplayedList]         = useState<Transaction[]>([])
@@ -210,18 +210,33 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const [itemEditKey, setItemEditKey]         = useState<string | null>(null) // "idx-name" | "idx-price"
   const [savingReceipt, setSavingReceipt]     = useState(false)
 
-  const currentMonth = new Date().toISOString().slice(0, 7)
+  const uniqueCategoryNames = [...new Set(
+    transactions
+      .filter(t => t.category)
+      .map(t => t.category as string),
+  )].sort()
 
-  const monthlyCategories: DropOption[] = [
-    { value: 'all', label: 'Категорія' },
-    ...[...new Set(
-      transactions
-        .filter(t => t.date.startsWith(currentMonth) && t.category)
-        .map(t => t.category as string),
-    )].sort().map(c => ({ value: c, label: c })),
-  ]
+  const [catPickerOpen, setCatPickerOpen] = useState(false)
+  const catTriggerRef = useRef<HTMLDivElement>(null)
+  const catPillRowRef  = useRef<HTMLDivElement>(null)
 
-  const isDefault = typeFilter === 'all' && categoryFilter === 'all'
+  useEffect(() => {
+    if (!catPickerOpen) return
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node
+      const inTrigger = catTriggerRef.current?.contains(target)
+      const inPillRow = catPillRowRef.current?.contains(target)
+      if (!inTrigger && !inPillRow) setCatPickerOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [catPickerOpen])
+
+  const toggleCategoryFilter = (name: string) => {
+    setCategoryFilter(prev => prev.includes(name) ? prev.filter(c => c !== name) : [...prev, name])
+  }
+
+  const isDefault = typeFilter === 'all' && categoryFilter.length === 0
 
   const sorted = useMemo(() =>
     [...transactions].sort((a, b) => {
@@ -238,10 +253,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const filteredAll = useMemo(() => isDefault
     ? sorted
     : sorted
-        .filter(t => t.date.startsWith(currentMonth))
         .filter(t => typeFilter === 'all' || (typeFilter === 'income' ? t.type === 'topup' : t.type === 'expense'))
-        .filter(t => categoryFilter === 'all' || t.category === categoryFilter),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+        .filter(t => categoryFilter.length === 0 || (!!t.category && categoryFilter.includes(t.category))),
   [sorted, typeFilter, categoryFilter, isDefault])
 
   const list = useMemo(() => filteredAll.slice(0, visibleCount), [filteredAll, visibleCount])
@@ -366,13 +379,55 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
             onChange={v => setTypeFilter(v as TypeFilter)}
             defaultLabel="Всі"
           />
-          <DropdownSelect
-            value={categoryFilter}
-            options={monthlyCategories}
-            onChange={setCategoryFilter}
-            defaultLabel="Категорія"
-          />
+          <div className={styles.dropWrap} ref={catTriggerRef}>
+            <button
+              type="button"
+              className={`${styles.dropTrigger} ${categoryFilter.length > 0 ? styles.dropTriggerActive : ''}`}
+              onClick={() => setCatPickerOpen(v => !v)}
+            >
+              {categoryFilter.length === 0
+                ? 'Категорія'
+                : categoryFilter.length === 1
+                  ? categoryFilter[0]
+                  : `${categoryFilter.length} категорії`}
+              <span className={`${styles.dropChevron} ${catPickerOpen ? styles.dropChevronOpen : ''}`}>
+                <ChevronDown />
+              </span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div className={`${styles.catPillRow} ${catPickerOpen ? styles.catPillRowOpen : ''}`} ref={catPillRowRef}>
+        <button
+          type="button"
+          className={`${styles.catPill} ${categoryFilter.length === 0 ? styles.catPillActive : ''}`}
+          onClick={() => { setCategoryFilter([]); setCatPickerOpen(false) }}
+        >
+          <span className={styles.catPillIcon}>
+            <i className="ti ti-apps" />
+          </span>
+          Всі
+        </button>
+        {uniqueCategoryNames.map(name => {
+          const cat = categories.find(c => c.name.toLowerCase() === name.toLowerCase())
+          return (
+            <button
+              key={name}
+              type="button"
+              className={`${styles.catPill} ${categoryFilter.includes(name) ? styles.catPillActive : ''}`}
+              style={cat ? ({ '--cat-color': cat.color } as React.CSSProperties) : undefined}
+              onClick={() => toggleCategoryFilter(name)}
+            >
+              {cat && (
+                <span className={styles.catPillIcon}>
+                  <i className={`ti ${cat.icon}`} />
+                </span>
+              )}
+              {name}
+            </button>
+          )
+        })}
       </div>
 
       {/* ── List ── */}

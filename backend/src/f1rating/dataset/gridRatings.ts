@@ -9,12 +9,13 @@ import {
 import { cleanRaceLapConsistency } from '../engine/cleanRaceLapConsistency'
 import { tyreStintManagement } from '../engine/tyreStintManagement'
 import { getCanonicalMetricKeys } from '../engine/metricRegistry'
+import { seasonRoundKey } from '../engine/seasonRoundKey'
 import { methodologyV1 } from '../config/methodologyV1'
 import { loadCollectedRounds, type CollectedRound } from './collectedRound'
 import { buildDriverSeasonInputFromRounds, collectAllDriverIds, rosterForRound } from './buildDriverSeasonInput'
 import { buildCompositeTeammateInput, type RosterEntry } from './teammateMapping'
 import { buildDatasetManifest, type DatasetManifest } from './manifest'
-import type { ComponentScore, DriverRating, MethodologyVersion, Round } from '../types'
+import type { ComponentScore, DriverRating, MethodologyVersion, Round, Season } from '../types'
 
 /**
  * Shared "loop over the whole grid and compute everything the engine produces" step, so
@@ -30,7 +31,10 @@ import type { ComponentScore, DriverRating, MethodologyVersion, Round } from '..
 // time — exactly the class of bug this derivation makes structurally impossible going forward.
 export const METRIC_KEYS = getCanonicalMetricKeys(methodologyV1)
 
-export interface EventSample { round: Round; driverId: string; teamId: string; value: number }
+// `season` is carried on every sample (not just `round`) so downstream multi-season tooling
+// (pooling, season-normalization — see dataset/multiSeasonPool.ts) can group/label samples
+// correctly; a bare `round` is not a unique event identifier across seasons.
+export interface EventSample { season: Season; round: Round; driverId: string; teamId: string; value: number }
 export type SampleBank = Record<string, EventSample[]>
 
 function emptyBank(): SampleBank {
@@ -39,13 +43,13 @@ function emptyBank(): SampleBank {
   return bank
 }
 
-function singleRoundInput(full: DriverSeasonInput, round: Round): DriverSeasonInput {
+function singleRoundInput(full: DriverSeasonInput, season: Season, round: Round): DriverSeasonInput {
   return {
     driverId: full.driverId,
-    qualifying: full.qualifying.filter(q => q.round === round),
-    race: full.race.filter(r => r.round === round),
-    dnfs: full.dnfs.filter(d => d.round === round),
-    incidents: full.incidents.filter(i => i.round === round),
+    qualifying: full.qualifying.filter(q => q.season === season && q.round === round),
+    race: full.race.filter(r => r.season === season && r.round === round),
+    dnfs: full.dnfs.filter(d => d.season === season && d.round === round),
+    incidents: full.incidents.filter(i => i.season === season && i.round === round),
   }
 }
 
@@ -53,32 +57,36 @@ function collectEventSamples(
   driverId: string, teamId: string, driver: DriverSeasonInput, teammate: DriverSeasonInput,
   tunables: MethodologyVersion['tunables'], tyreAgeThreshold: number, bank: SampleBank,
 ): void {
-  const push = (key: string, round: Round, v: number | null) => {
-    if (v !== null) bank[key].push({ round, driverId, teamId, value: v })
+  const push = (key: string, season: Season, round: Round, v: number | null) => {
+    if (v !== null) bank[key].push({ season, round, driverId, teamId, value: v })
   }
   for (const race of driver.race) {
-    const round = race.round
-    const dRound = singleRoundInput(driver, round)
-    const tRound = singleRoundInput(teammate, round)
-    push('teammateAdjustedQualifyingPace', round, teammateAdjustedQualifyingPace(dRound, tRound).rawValue)
-    push('teammateAdjustedCleanRacePace', round, teammateAdjustedCleanRacePace(dRound, tRound).rawValue)
-    push('peakRepresentativePace', round, peakRepresentativePace(dRound, tRound, tunables).rawValue)
-    push('qualifyingConsistency', round, qualifyingConsistency(dRound).rawValue)
-    push('cleanWeekendRate', round, cleanWeekendRate().rawValue)
-    push('driverAttributableReliability', round, driverAttributableReliability().rawValue)
-    push('unforcedErrorControl', round, unforcedErrorControl().rawValue)
-    push('resultRelativeToExpectedPace', round, resultRelativeToExpectedPace(dRound).rawValue)
-    push('startAndOpeningLapExecution', round, startAndOpeningLapExecution(dRound, tunables).rawValue)
-    push('racecraftProxy', round, racecraftProxy(dRound).rawValue)
-    push('changingConditionAdaptability', round, changingConditionAdaptability(dRound, tRound).rawValue)
-    push('cleanRaceLapConsistency', round, cleanRaceLapConsistency(dRound, tunables).rawValue)
-    push('tyreStintManagement', round, tyreStintManagement(dRound, tRound, tunables, tyreAgeThreshold).rawValue)
+    const { season, round } = race
+    const dRound = singleRoundInput(driver, season, round)
+    const tRound = singleRoundInput(teammate, season, round)
+    push('teammateAdjustedQualifyingPace', season, round, teammateAdjustedQualifyingPace(dRound, tRound).rawValue)
+    push('teammateAdjustedCleanRacePace', season, round, teammateAdjustedCleanRacePace(dRound, tRound).rawValue)
+    push('peakRepresentativePace', season, round, peakRepresentativePace(dRound, tRound, tunables).rawValue)
+    push('qualifyingConsistency', season, round, qualifyingConsistency(dRound).rawValue)
+    push('cleanWeekendRate', season, round, cleanWeekendRate().rawValue)
+    push('driverAttributableReliability', season, round, driverAttributableReliability().rawValue)
+    push('unforcedErrorControl', season, round, unforcedErrorControl().rawValue)
+    push('resultRelativeToExpectedPace', season, round, resultRelativeToExpectedPace(dRound).rawValue)
+    push('startAndOpeningLapExecution', season, round, startAndOpeningLapExecution(dRound, tunables).rawValue)
+    push('racecraftProxy', season, round, racecraftProxy(dRound).rawValue)
+    push('changingConditionAdaptability', season, round, changingConditionAdaptability(dRound, tRound).rawValue)
+    push('cleanRaceLapConsistency', season, round, cleanRaceLapConsistency(dRound, tunables).rawValue)
+    push('tyreStintManagement', season, round, tyreStintManagement(dRound, tRound, tunables, tyreAgeThreshold).rawValue)
     // Always NO_DATA in v1 (structural no-signal — see engine/metricRegistry.ts) — pushed anyway
     // so the bank always has a (permanently empty) entry for it, same as the other no-signal keys.
-    push('documentedStrategicExecution', round, documentedStrategicExecution().rawValue)
+    push('documentedStrategicExecution', season, round, documentedStrategicExecution().rawValue)
   }
   const qh = qualifyingHeadToHead(driver).rawValue
-  if (qh !== null && driver.qualifying[0]) bank.qualifyingHeadToHead.push({ round: driver.qualifying[0].round, driverId, teamId, value: qh })
+  if (qh !== null && driver.qualifying[0]) {
+    bank.qualifyingHeadToHead.push({
+      season: driver.qualifying[0].season, round: driver.qualifying[0].round, driverId, teamId, value: qh,
+    })
+  }
 }
 
 export interface DriverCoverage {
@@ -106,7 +114,7 @@ export interface GridRatingsResult {
   ratings: DriverRating[]
   coverageReport: DriverCoverage[]
   bank: SampleBank
-  roundsWithoutTeammateByDriver: Record<string, Round[]>
+  roundsWithoutTeammateByDriver: Record<string, { season: Season; round: Round }[]>
 }
 
 export function computeGridRatings(inputDir: string, methodology: MethodologyVersion, totalSeasonRounds: number | null): GridRatingsResult {
@@ -119,8 +127,9 @@ export function computeGridRatings(inputDir: string, methodology: MethodologyVer
     allDrivers.set(driverId, buildDriverSeasonInputFromRounds(driverId, rounds, methodology.tunables))
   }
 
-  const rosterByRound = new Map<Round, RosterEntry[]>()
-  for (const round of rounds) rosterByRound.set(round.round, rosterForRound(round))
+  // Keyed by (season, round) composite — a bare round number collides across seasons.
+  const rosterByRound = new Map<string, RosterEntry[]>()
+  for (const round of rounds) rosterByRound.set(seasonRoundKey(round.season, round.round), rosterForRound(round))
 
   const teamOf = new Map<string, string>()
   for (const round of rounds) for (const r of round.race) teamOf.set(r.driverId, r.constructorId)
@@ -128,7 +137,7 @@ export function computeGridRatings(inputDir: string, methodology: MethodologyVer
   const bank = emptyBank()
   const ratings: DriverRating[] = []
   const coverageReport: DriverCoverage[] = []
-  const roundsWithoutTeammateByDriver: Record<string, Round[]> = {}
+  const roundsWithoutTeammateByDriver: Record<string, { season: Season; round: Round }[]> = {}
 
   for (const driverId of allDriverIds) {
     const driver = allDrivers.get(driverId)!
@@ -140,6 +149,11 @@ export function computeGridRatings(inputDir: string, methodology: MethodologyVer
       methodology.tunables, methodology.tyreAgeComparabilityThresholdLaps, bank,
     )
 
+    // `computeGridRatings` is only ever called with a SINGLE season's rounds (one directory =
+    // one season, enforced by `rounds[0].season` below) — safe to take a bare round max here.
+    // Multi-season analysis (pooling/season-normalization) runs `computeGridRatings` once PER
+    // season and combines the resulting SampleBanks afterward (see dataset/multiSeasonPool.ts),
+    // never by feeding multiple seasons' rounds into one call.
     const lastRound = Math.max(...driver.race.map(r => r.round), 0)
     const rating = computeDriverRating({
       driver, teammate: composite.driverSeasonInput, season: rounds[0].season,
@@ -155,7 +169,10 @@ export function computeGridRatings(inputDir: string, methodology: MethodologyVer
     if (speed.maxEffectiveWeight > 0.6) warnings.push(`Speed: one sub-metric reweighted to ${(speed.maxEffectiveWeight * 100).toFixed(0)}% effective weight`)
     if (precision.maxEffectiveWeight > 0.6) warnings.push(`Precision: one sub-metric reweighted to ${(precision.maxEffectiveWeight * 100).toFixed(0)}% effective weight`)
     if (raceIq.maxEffectiveWeight > 0.6) warnings.push(`RaceIQ: one sub-metric reweighted to ${(raceIq.maxEffectiveWeight * 100).toFixed(0)}% effective weight`)
-    if (composite.roundsWithoutTeammate.length > 0) warnings.push(`${composite.roundsWithoutTeammate.length} round(s) with no resolvable teammate: ${composite.roundsWithoutTeammate.join(',')}`)
+    if (composite.roundsWithoutTeammate.length > 0) {
+      const list = composite.roundsWithoutTeammate.map(r => `${r.season}-${r.round}`).join(',')
+      warnings.push(`${composite.roundsWithoutTeammate.length} round(s) with no resolvable teammate: ${list}`)
+    }
 
     coverageReport.push({
       driverId, team: teamOf.get(driverId) ?? 'unknown', roundsRaced: driver.race.length,

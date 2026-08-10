@@ -87,7 +87,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     label: 'Duo',
     limits: {
       maxSpaces: 10,
-      maxSharedSpaces: 3,
+      maxSharedSpaces: 5,
       maxMembersPerSharedSpace: 5,
       timelineHistoryYears: -1,
       maxTaskImages: 5,

@@ -9,12 +9,14 @@ import styles from './FeedbackSheet.module.css'
 interface FeedbackEntry {
   id: string
   message: string
-  imageUrl: string | null
+  imageUrls: string[]
   status: 'open' | 'resolved'
   adminReply: string | null
   repliedAt: string | null
   createdAt: string
 }
+
+const MAX_PHOTOS = 3
 
 /**
  * FeedbackSheet
@@ -39,7 +41,7 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
   const { showToast } = useUiStore()
   const location = useLocation()
   const [message, setMessage] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
+  const [imageUrls, setImageUrls] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [history, setHistory] = useState<FeedbackEntry[] | null>(null)
 
@@ -62,8 +64,17 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
 
   const handleClose = () => {
     setMessage('')
-    setImageUrl('')
+    setImageUrls([])
     onClose()
+  }
+
+  const setPhotoAt = (index: number, url: string) => {
+    setImageUrls(prev => {
+      const next = [...prev]
+      if (url) next[index] = url
+      else next.splice(index, 1)
+      return next.filter(Boolean)
+    })
   }
 
   const handleSubmit = async () => {
@@ -74,7 +85,7 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
         method: 'POST',
         body: JSON.stringify({
           message: message.trim(),
-          imageUrl: imageUrl || undefined,
+          imageUrls: imageUrls.length ? imageUrls : undefined,
           page: location.pathname,
         }),
       })
@@ -83,7 +94,7 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
       setHistory(prev => [{
         id: `local-${Date.now()}`,
         message: message.trim(),
-        imageUrl: imageUrl || null,
+        imageUrls,
         status: 'open',
         adminReply: null,
         repliedAt: null,
@@ -126,14 +137,20 @@ const FeedbackSheet: React.FC<FeedbackSheetProps> = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        <div className={styles.uploadLabel}>Скріншот (необов'язково)</div>
-        <ImageUploadButton
-          currentUrl={imageUrl}
-          folder="feedback"
-          onUpload={url => setImageUrl(url)}
-          placeholder="Прикріпити скріншот"
-          variant="wide"
-        />
+        <div className={styles.uploadLabel}>Скріншоти (до {MAX_PHOTOS}, необов'язково)</div>
+        <div className={styles.photoRow}>
+          {Array.from({ length: Math.min(imageUrls.length + 1, MAX_PHOTOS) }).map((_, i) => (
+            <div key={i} className={styles.photoSlot}>
+              <ImageUploadButton
+                currentUrl={imageUrls[i]}
+                folder="feedback"
+                onUpload={url => setPhotoAt(i, url)}
+                placeholder="Скріншот"
+                variant="square"
+              />
+            </div>
+          ))}
+        </div>
 
         <button
           type="button"

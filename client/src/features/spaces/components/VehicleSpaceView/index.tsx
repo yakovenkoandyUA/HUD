@@ -6,7 +6,9 @@ import { useProfileStore } from '@/shared/store/profileStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { useImageUpload } from '@/shared/hooks/useImageUpload'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
+import PillSelector from '@/shared/components/ui/PillSelector'
 import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
+import { fetchNearbyGasStations } from '../../utils/nearbyGasStations'
 import styles from './VehicleSpaceView.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -41,16 +43,39 @@ type SheetType = 'fuel' | 'maintenance' | 'repair' | 'tire' | 'document' | 'note
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
+// "Пальне" — що заливається в бак. "Електро" не пальне, тому тут його нема —
+// це окремий атрибут ТИП СИЛОВОЇ УСТАНОВКИ (drivetrain) нижче.
+const FUEL_TYPE_OPTIONS = [
+  { value: 'Бензин', label: 'Бензин' },
+  { value: 'Дизель', label: 'Дизель' },
+  { value: 'Газ',    label: 'Газ' },
+]
+
+const DRIVETRAIN_OPTIONS = [
+  { value: 'ДВЗ',     label: 'ДВЗ' },
+  { value: 'Гібрид',  label: 'Гібрид' },
+  { value: 'PHEV',    label: 'PHEV' },
+  { value: 'Електро', label: 'Електро' },
+]
+
 function mapFuelType(nhtsa: string): string {
   if (!nhtsa) return ''
   const l = nhtsa.toLowerCase()
-  if (l.includes('electric') && (l.includes('gas') || l.includes('hybrid'))) return 'Гібрид'
-  if (l.includes('electric')) return 'Електро'
-  if (l.includes('hybrid')) return 'Гібрид'
+  if (l.includes('electric')) return ''
   if (l.includes('diesel')) return 'Дизель'
   if (l.includes('gasoline') || l.includes('petrol')) return 'Бензин'
   if (l.includes('gas')) return 'Газ'
   return nhtsa
+}
+
+function mapDrivetrain(nhtsa: string): string {
+  if (!nhtsa) return ''
+  const l = nhtsa.toLowerCase()
+  if (l.includes('electric') && (l.includes('gas') || l.includes('hybrid'))) return 'PHEV'
+  if (l.includes('electric')) return 'Електро'
+  if (l.includes('hybrid')) return 'Гібрид'
+  if (l.includes('diesel') || l.includes('gasoline') || l.includes('petrol') || l.includes('gas')) return 'ДВЗ'
+  return ''
 }
 
 const EVENT_LABELS: Record<VehicleEventType, string> = {
@@ -76,9 +101,33 @@ function pluralDays(n: number): string {
   return 'днів'
 }
 
+function pluralRecords(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return 'запис'
+  if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'записи'
+  return 'записів'
+}
+
+function pluralDocs(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return 'документ'
+  if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'документи'
+  return 'документів'
+}
+
 function fmtDate(iso: string): string {
   const [y, m, d] = iso.slice(0, 10).split('-')
   return `${d}.${m}.${y}`
+}
+
+const MONTH_ABBR_UA = ['січ','лют','берез','квіт','трав','черв','лип','серп','вер','жовт','лист','груд']
+
+/** Compact chronicle date — "Сьогодні"/"Вчора" for recency, "10 серп" otherwise */
+function fmtDateShort(iso: string): string {
+  const date = iso.slice(0, 10)
+  if (date === todayISO()) return 'Сьогодні'
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+  if (date === yesterday) return 'Вчора'
+  const [, m, d] = date.split('-')
+  return `${parseInt(d, 10)} ${MONTH_ABBR_UA[parseInt(m, 10) - 1]}`
 }
 
 function fmtMileage(n: number | null): string {
@@ -156,7 +205,7 @@ function EventIcon({ type, size = 16 }: { type: VehicleEventType; size?: number 
 const VehicleMedallion: React.FC = () => {
   const ticks = [0, 45, 90, 135, 180, 225, 270, 315]
   return (
-    <svg width="90" height="90" viewBox="0 0 90 90" fill="none" aria-hidden="true">
+    <svg width="100%" height="100%" viewBox="0 0 90 90" fill="none" aria-hidden="true">
       <defs>
         <clipPath id="medallion-clip">
           <circle cx="45" cy="45" r="33"/>
@@ -204,7 +253,6 @@ interface HeroProps {
   spaceName:      string
   color:          string
   profile:        VehicleProfile | null
-  lastEvent:      VehicleEvent | null
   isOwner:        boolean
   coverUrl?:      string
   coverPosition?: string
@@ -212,12 +260,13 @@ interface HeroProps {
   onEditSpace:    () => void
 }
 
-const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, lastEvent, isOwner, coverUrl, coverPosition, onBack, onEditSpace }) => {
+const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, isOwner, coverUrl, coverPosition, onBack, onEditSpace }) => {
   const [editOpen, setEditOpen]           = useState(false)
   const [form, setForm]                   = useState<Partial<VehicleProfile>>({})
   const [saving, setSaving]               = useState(false)
   const [decoding, setDecoding]           = useState(false)
   const [purchaseDateOpen, setPurchaseDateOpen] = useState(false)
+  const [additionalOpen, setAdditionalOpen]     = useState(false)
   const { showToast }           = useUiStore()
   const { updateProfile }       = useVehicleStore()
   const { setVehicleProfile }   = useSpacesStore()
@@ -246,10 +295,11 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
         if (!cancelled) {
           setForm(p => ({
             ...p,
-            make:     r.Make     || p.make,
-            model:    r.Model    || p.model,
-            year:     r.ModelYear ? Number(r.ModelYear) : p.year,
-            fuelType: mapFuelType(r.FuelTypePrimary) || p.fuelType,
+            make:       r.Make     || p.make,
+            model:      r.Model    || p.model,
+            year:       r.ModelYear ? Number(r.ModelYear) : p.year,
+            fuelType:   mapFuelType(r.FuelTypePrimary)   || p.fuelType,
+            drivetrain: mapDrivetrain(r.FuelTypePrimary) || p.drivetrain,
           }))
           showToast('Дані авто заповнено', 'success')
         }
@@ -311,8 +361,14 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
         )}
 
         <div className={styles.vehicleHeroContent}>
-          <span className={`${styles.vehicleHeroTypeLabel} ${coverUrl ? styles.vehicleHeroTypeLabelCovered : ''}`}>АВТО</span>
-          <h1 className={`${styles.vehicleHeroName} ${coverUrl ? styles.vehicleHeroNameCovered : ''}`}>{spaceName}</h1>
+          <span className={`${styles.vehicleHeroTypeLabel} ${coverUrl ? styles.vehicleHeroTypeLabelCovered : ''}`}>
+            {profile?.make || profile?.model ? 'МІЙ АВТОМОБІЛЬ' : 'АВТО'}
+          </span>
+          <h1 className={`${styles.vehicleHeroName} ${coverUrl ? styles.vehicleHeroNameCovered : ''}`}>
+            {profile?.make || profile?.model
+              ? [profile.make, profile.model].filter(Boolean).join(' ')
+              : spaceName}
+          </h1>
         </div>
       </div>
 
@@ -328,27 +384,11 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
         <div className={styles.vehicleHeroInfo}>
           {profile?.make || profile?.model ? (
             <span className={styles.vehicleHeroSubtitle}>
-              {[profile.make, profile.model, profile.year].filter(Boolean).join(' ')}
-              {profile.plateNumber ? ` · ${profile.plateNumber}` : ''}
+              {[profile.year, profile.plateNumber].filter(Boolean).join(' · ')}
             </span>
           ) : (
             <span className={styles.vehicleHeroDesc}>Хроніка авто: заправки, ТО, документи й витрати в одному місці.</span>
           )}
-          <div className={styles.vehicleHeroLastEntry}>
-            <span className={styles.vehicleHeroLastEntryIcon}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </span>
-            <div className={styles.vehicleHeroLastEntryInfo}>
-              <span className={styles.vehicleHeroLastEntryLabel}>Останній запис</span>
-              <span className={styles.vehicleHeroLastEntryValue}>
-                {lastEvent
-                  ? `${fmtDate(lastEvent.date)} · ${EVENT_LABELS[lastEvent.type]}`
-                  : 'Ще немає записів'}
-              </span>
-            </div>
-          </div>
         </div>
 
         {isOwner && (
@@ -372,6 +412,19 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
                 <img src={form.photoUrl ?? profile?.photoUrl ?? ''} className={styles.vehiclePhotoPreview} alt="авто" />
                 <button
                   type="button"
+                  className={styles.vehiclePhotoOverlay}
+                  onClick={triggerPhoto}
+                  disabled={uploadingPhoto}
+                  aria-label="Змінити фото"
+                >
+                  {uploadingPhoto ? <span className={styles.attachSpinner} /> : (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
+                    </svg>
+                  )}
+                </button>
+                <button
+                  type="button"
                   className={styles.vehiclePhotoDeleteBtn}
                   onClick={() => setForm(p => ({ ...p, photoUrl: '' }))}
                   aria-label="Видалити фото"
@@ -381,17 +434,26 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
                   </svg>
                 </button>
               </div>
-            ) : null}
-            <button type="button" className={styles.attachBtn} onClick={triggerPhoto} disabled={uploadingPhoto}>
-              {uploadingPhoto ? <span className={styles.attachSpinner} /> : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-              )}
-              {uploadingPhoto ? 'Завантаження…' : 'Фото авто'}
-            </button>
+            ) : (
+              <button type="button" className={styles.vehiclePhotoPicker} onClick={triggerPhoto} disabled={uploadingPhoto}>
+                <span className={styles.vehiclePhotoPlaceholderPicker}>
+                  {uploadingPhoto ? <span className={styles.attachSpinner} /> : (
+                    <>
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 17h1.5l1.2-3.6A2 2 0 0 1 7.6 12h8.8a2 2 0 0 1 1.9 1.4L19.5 17H21"/>
+                        <path d="M5 17v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1"/>
+                        <path d="M16 17v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1"/>
+                        <rect x="3" y="17" width="18" height="0.01"/>
+                        <path d="M3 17v-1a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      <span className={styles.vehiclePhotoPickerText}>Додати фото авто</span>
+                    </>
+                  )}
+                </span>
+              </button>
+            )}
+
+            <h4 className={`${styles.sectionTitle} ${styles.sectionTitleSpaced}`}>ОСНОВНЕ</h4>
 
             {(['make','model'] as const).map(f => (
               <React.Fragment key={f}>
@@ -405,15 +467,42 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
               </React.Fragment>
             ))}
 
-            <label className={styles.fieldLabel}>РІК</label>
-            <input className={styles.fieldInput} type="number" value={form.year ?? ''} onChange={e => setForm(p => ({ ...p, year: e.target.value ? Number(e.target.value) : undefined }))} placeholder="2020" />
+            <div className={styles.twoCol}>
+              <div>
+                <label className={styles.fieldLabel}>РІК</label>
+                <input className={styles.fieldInput} type="number" value={form.year ?? ''} onChange={e => setForm(p => ({ ...p, year: e.target.value ? Number(e.target.value) : undefined }))} placeholder="2020" />
+              </div>
+              <div>
+                <label className={styles.fieldLabel}>ДЕРЖ. НОМЕР</label>
+                <input className={styles.fieldInput} value={form.plateNumber ?? ''} onChange={e => setForm(p => ({ ...p, plateNumber: e.target.value }))} placeholder="АА 1234 ВВ" />
+              </div>
+            </div>
 
-            <label className={styles.fieldLabel}>ДЕРЖ. НОМЕР</label>
-            <input className={styles.fieldInput} value={form.plateNumber ?? ''} onChange={e => setForm(p => ({ ...p, plateNumber: e.target.value }))} placeholder="АА 1234 ВВ" />
+            <h4 className={`${styles.sectionTitle} ${styles.sectionTitleSpaced}`}>ЕКСПЛУАТАЦІЯ</h4>
+
+            <label className={styles.fieldLabel}>ПАЛЬНЕ</label>
+            <PillSelector
+              options={FUEL_TYPE_OPTIONS}
+              value={form.fuelType ?? ''}
+              onChange={v => setForm(p => ({ ...p, fuelType: v }))}
+            />
+
+            <label className={styles.fieldLabel}>ТИП СИЛОВОЇ УСТАНОВКИ</label>
+            <PillSelector
+              options={DRIVETRAIN_OPTIONS}
+              value={form.drivetrain ?? ''}
+              onChange={v => setForm(p => ({ ...p, drivetrain: v }))}
+            />
+
+            <label className={styles.fieldLabel}>ПРОБІГ (км)</label>
+            <input className={styles.fieldInput} type="number" value={form.currentMileage ?? ''} onChange={e => setForm(p => ({ ...p, currentMileage: e.target.value ? Number(e.target.value) : undefined }))} placeholder="123 000" />
+
+            <label className={styles.fieldLabel}>НАСТУПНЕ ТО (км)</label>
+            <input className={styles.fieldInput} type="number" value={form.nextServiceMileage ?? ''} onChange={e => setForm(p => ({ ...p, nextServiceMileage: e.target.value ? Number(e.target.value) : undefined }))} placeholder="150 000" />
 
             <label className={styles.fieldLabel}>ДАТА КУПІВЛІ</label>
             <button type="button" className={styles.dateField} onClick={() => setPurchaseDateOpen(true)}>
-              {form.purchaseDate ? fmtDate(form.purchaseDate) : 'Не вказано'}
+              {form.purchaseDate ? fmtDate(form.purchaseDate) : 'Оберіть дату'}
             </button>
             {purchaseDateOpen && (
               <CustomDatePicker
@@ -423,29 +512,32 @@ const VehicleHero: React.FC<HeroProps> = ({ spaceId, spaceName, color, profile, 
               />
             )}
 
-            <label className={styles.fieldLabel}>VIN</label>
-            <div className={styles.vinRow}>
-              <input className={styles.fieldInput} value={form.vin ?? ''} onChange={e => setForm(p => ({ ...p, vin: e.target.value.toUpperCase() }))} placeholder="WBA3A5G50FN..." maxLength={17} />
-              <button type="button" className={styles.decodeBtn} onClick={handleDecodeVin} disabled={decoding || (form.vin ?? '').trim().length !== 17}>
-                {decoding ? <span className={styles.attachSpinner} /> : (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                  </svg>
-                )}
-              </button>
+            <button type="button" className={styles.additionalToggle} onClick={() => setAdditionalOpen(o => !o)}>
+              ДОДАТКОВІ ДАНІ
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={additionalOpen ? styles.additionalChevronOpen : styles.additionalChevron}>
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+            <div className={`${styles.additionalBody} ${additionalOpen ? styles.additionalBodyOpen : ''}`}>
+              <label className={styles.fieldLabel}>VIN</label>
+              <div className={styles.vinRow}>
+                <input className={styles.fieldInput} value={form.vin ?? ''} onChange={e => setForm(p => ({ ...p, vin: e.target.value.toUpperCase() }))} placeholder="WBA3A5G50FN..." maxLength={17} />
+                <button type="button" className={styles.decodeBtn} onClick={handleDecodeVin} disabled={decoding || (form.vin ?? '').trim().length !== 17}>
+                  {decoding ? <span className={styles.attachSpinner} /> : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                  )}
+                  Перевірити VIN
+                </button>
+              </div>
+
+              <label className={styles.fieldLabel}>
+                FRAME / НОМЕР КУЗОВА
+                <span className={styles.optionalHint}> — для японських автомобілів</span>
+              </label>
+              <input className={styles.fieldInput} value={form.frameNumber ?? ''} onChange={e => setForm(p => ({ ...p, frameNumber: e.target.value.toUpperCase() }))} placeholder="DBA-ZVW30 / ZVW30-1234567" />
             </div>
-
-            <label className={styles.fieldLabel}>FRAME NUMBER <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: 0, opacity: 0.6 }}>(для Японії)</span></label>
-            <input className={styles.fieldInput} value={form.frameNumber ?? ''} onChange={e => setForm(p => ({ ...p, frameNumber: e.target.value.toUpperCase() }))} placeholder="DBA-ZVW30 / ZVW30-1234567" />
-
-            <label className={styles.fieldLabel}>ПАЛЬНЕ</label>
-            <input className={styles.fieldInput} value={form.fuelType ?? ''} onChange={e => setForm(p => ({ ...p, fuelType: e.target.value }))} placeholder="Бензин / Дизель / Гібрид / Електро" />
-
-            <label className={styles.fieldLabel}>ПРОБІГ (км)</label>
-            <input className={styles.fieldInput} type="number" value={form.currentMileage ?? ''} onChange={e => setForm(p => ({ ...p, currentMileage: e.target.value ? Number(e.target.value) : undefined }))} placeholder="123 000" />
-
-            <label className={styles.fieldLabel}>НАСТУПНЕ ТО (км)</label>
-            <input className={styles.fieldInput} type="number" value={form.nextServiceMileage ?? ''} onChange={e => setForm(p => ({ ...p, nextServiceMileage: e.target.value ? Number(e.target.value) : undefined }))} placeholder="150 000" />
 
             <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving}>
               {saving ? 'Зберігаємо…' : 'Зберегти'}
@@ -466,6 +558,8 @@ interface StatsProps {
   color:   string
 }
 
+const MONTH_NAMES_UA = ['січень','лютий','березень','квітень','травень','червень','липень','серпень','вересень','жовтень','листопад','грудень']
+
 const VehicleStats: React.FC<StatsProps> = ({ spaceId, color }) => {
   const stats  = useVehicleStore(s => s.statsBySpace[spaceId])
   const events = useVehicleStore(s => s.eventsBySpace[spaceId] ?? EMPTY_VEHICLE_EVENTS)
@@ -473,13 +567,6 @@ const VehicleStats: React.FC<StatsProps> = ({ spaceId, color }) => {
   const colorVar = { '--space-color': color } as React.CSSProperties
 
   if (!stats) return null
-
-  const items = [
-    { label: 'Цього місяця',     value: stats.totalCostMonth > 0 ? `₴${stats.totalCostMonth.toLocaleString('uk-UA')}` : null },
-    { label: 'Цього року',       value: stats.totalCostYear  > 0 ? `₴${stats.totalCostYear.toLocaleString('uk-UA')}`  : null },
-    { label: 'Витрата л/100 км', value: stats.avgFuelConsumption != null ? `${stats.avgFuelConsumption} л` : null },
-    { label: 'Вартість км',      value: stats.costPerKm != null ? `₴${stats.costPerKm}` : null },
-  ].filter(i => i.value != null)
 
   const lastFuelWithPrice = [...events]
     .filter(e => e.type === 'fuel' && e.liters != null && e.liters > 0 && e.cost != null && e.cost > 0)
@@ -492,19 +579,38 @@ const VehicleStats: React.FC<StatsProps> = ({ spaceId, color }) => {
     ? Math.round((km * stats.avgFuelConsumption! / 100) * pricePerLiter!)
     : null
 
-  if (items.length === 0 && stats.expiringDocs.length === 0 && !canCalculate) return null
+  // Cost breakdown for the current month, by category
+  const nowMonthKey = todayISO().slice(0, 7)
+  const monthEvents = events.filter(e => e.date.slice(0, 7) === nowMonthKey && e.cost != null)
+  const sumByTypes = (types: VehicleEventType[]) =>
+    monthEvents.filter(e => types.includes(e.type)).reduce((sum, e) => sum + (e.cost ?? 0), 0)
+  const breakdown = [
+    { label: 'Пальне', value: sumByTypes(['fuel']) },
+    { label: 'ТО',      value: sumByTypes(['maintenance', 'repair', 'tire_change']) },
+    { label: 'Інше',    value: sumByTypes(['document', 'insurance', 'inspection', 'note']) },
+  ].filter(b => b.value > 0)
+
+  if (stats.totalCostMonth === 0 && !canCalculate) return null
 
   return (
     <div className={styles.statsBlock}>
-      <h3 className={styles.sectionTitle}>СТАТИСТИКА</h3>
-      {items.length > 0 && (
-        <div className={styles.statsGrid}>
-          {items.map(item => (
-            <div key={item.label} className={styles.statItem} style={colorVar}>
-              <span className={styles.statValue}>{item.value}</span>
-              <span className={styles.statLabel}>{item.label}</span>
+      {stats.totalCostMonth > 0 && (
+        <div className={styles.expensesPanel} style={colorVar}>
+          <span className={styles.sectionTitle}>ВИТРАТИ</span>
+          <div className={styles.expensesHeadline}>
+            <span className={styles.expensesAmount}>₴{stats.totalCostMonth.toLocaleString('uk-UA')}</span>
+            <span className={styles.expensesMonth}>{MONTH_NAMES_UA[new Date().getMonth()]}</span>
+          </div>
+          {breakdown.length > 0 && (
+            <div className={styles.expensesBreakdown}>
+              {breakdown.map(b => (
+                <div key={b.label} className={styles.expensesBreakdownRow}>
+                  <span className={styles.expensesBreakdownLabel}>{b.label}</span>
+                  <span className={styles.expensesBreakdownValue}>₴{b.value.toLocaleString('uk-UA')}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
       {canCalculate && (
@@ -517,14 +623,6 @@ const VehicleStats: React.FC<StatsProps> = ({ spaceId, color }) => {
           {pricePerLiter != null && (
             <span className={styles.tripCalcHint}>{stats.avgFuelConsumption} л/100 км · ₴{pricePerLiter.toFixed(2)}/л</span>
           )}
-        </div>
-      )}
-      {stats.expiringDocs.length > 0 && (
-        <div className={styles.expiringDocs}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <span>Документи спливають: {stats.expiringDocs.map(d => `${d.docType || 'Документ'} — ${fmtDate(d.docExpiresAt)}`).join(', ')}</span>
         </div>
       )}
     </div>
@@ -592,14 +690,55 @@ interface SheetProps {
   editEvent?: VehicleEvent
 }
 
+/** Delete action inside an edit sheet — replaces the old per-row delete icon */
+const DeleteRecordButton: React.FC<{ spaceId: string; eventId: string; onClose: () => void }> = ({ spaceId, eventId, onClose }) => {
+  const { deleteEvent } = useVehicleStore()
+  const { showToast }   = useUiStore()
+  const [confirming, setConfirming] = useState(false)
+
+  const handleDelete = () => {
+    deleteEvent(spaceId, eventId)
+    showToast('Видалено', 'success')
+    onClose()
+  }
+
+  if (confirming) {
+    return (
+      <div className={styles.deleteConfirmRow}>
+        <span className={styles.deleteConfirmText}>Видалити запис?</span>
+        <button type="button" className={styles.deleteConfirmCancel} onClick={() => setConfirming(false)}>Ні</button>
+        <button type="button" className={styles.deleteConfirmYes} onClick={handleDelete}>Так, видалити</button>
+      </div>
+    )
+  }
+
+  return (
+    <button type="button" className={styles.deleteRecordBtn} onClick={() => setConfirming(true)}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      </svg>
+      Видалити запис
+    </button>
+  )
+}
+
 const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, editEvent }) => {
+  const events = useVehicleStore(s => s.eventsBySpace[spaceId] ?? EMPTY_VEHICLE_EVENTS)
+  const pastFuelEvents = events
+    .filter(e => e.type === 'fuel')
+    .sort((a, b) => b.date.localeCompare(a.date))
+  const lastFuelType = pastFuelEvents.find(e => e.fuelType)?.fuelType ?? ''
+  const vendorSuggestions = Array.from(new Set(pastFuelEvents.map(e => e.vendor).filter(Boolean)))
+  const lastPriceEvent = pastFuelEvents.find(e => e.liters != null && e.liters > 0 && e.cost != null && e.cost > 0)
+  const lastPricePerLiter = lastPriceEvent ? lastPriceEvent.cost! / lastPriceEvent.liters! : null
+
   const [date, setDate]         = useState(editEvent?.date ?? todayISO())
   const [dateOpen, setDateOpen] = useState(false)
   const [mileage, setMileage]   = useState(editEvent?.mileage != null ? String(editEvent.mileage) : '')
   const [liters, setLiters]     = useState(editEvent?.liters  != null ? String(editEvent.liters)  : '')
   const [cost, setCost]         = useState(editEvent?.cost    != null ? String(editEvent.cost)    : '')
   const [vendor, setVendor]     = useState(editEvent?.vendor    ?? '')
-  const [fuelType, setFuelType] = useState(editEvent?.fuelType  ?? '')
+  const [fuelType, setFuelType] = useState(editEvent?.fuelType  ?? lastFuelType)
   const [saving, setSaving]     = useState(false)
   const { createEvent, updateEvent, updateProfile } = useVehicleStore()
   const { setVehicleProfile }                       = useSpacesStore()
@@ -607,6 +746,32 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, edi
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
   const colorVar   = { '--space-color': color } as React.CSSProperties
+
+  const [nearbyStations, setNearbyStations] = useState<string[]>([])
+
+  useEffect(() => {
+    if (editEvent || !navigator.geolocation) return
+    let cancelled = false
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        fetchNearbyGasStations(pos.coords.latitude, pos.coords.longitude)
+          .then(names => { if (!cancelled) setNearbyStations(names) })
+          .catch(() => { /* тихо ігноруємо — юзер лишається з історією заправок */ })
+      },
+      () => { /* доступ до геолокації не надано — не критично */ },
+      { timeout: 8000 },
+    )
+    return () => { cancelled = true }
+  }, [editEvent])
+
+  const allVendorSuggestions = Array.from(new Set([...nearbyStations, ...vendorSuggestions]))
+
+  const handleLitersChange = (v: string) => {
+    setLiters(v)
+    if (!cost && lastPricePerLiter && Number(v) > 0) {
+      setCost(String(Math.round(Number(v) * lastPricePerLiter)))
+    }
+  }
 
   const handleSave = () => {
     if (!date) return
@@ -655,7 +820,7 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, edi
         <div className={styles.twoCol}>
           <div>
             <label className={styles.fieldLabel}>ЛІТРИ</label>
-            <input className={styles.fieldInput} type="number" value={liters} onChange={e => setLiters(e.target.value)} placeholder="45.0" />
+            <input className={styles.fieldInput} type="number" value={liters} onChange={e => handleLitersChange(e.target.value)} placeholder="45.0" />
           </div>
           <div>
             <label className={styles.fieldLabel}>ПАЛЬНЕ</label>
@@ -664,9 +829,17 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, edi
         </div>
         <label className={styles.fieldLabel}>СУМА (₴)</label>
         <input className={styles.fieldInput} type="number" value={cost} onChange={e => setCost(e.target.value)} placeholder="1 800" />
+        {Number(liters) > 0 && Number(cost) > 0 && (
+          <span className={styles.pricePerLiterHint}>≈{(Number(cost) / Number(liters)).toFixed(2)} ₴/л</span>
+        )}
         <label className={styles.fieldLabel}>АЗС</label>
         <div className={styles.stationRow}>
-          <input className={styles.fieldInput} value={vendor} onChange={e => setVendor(e.target.value)} placeholder="WOG, ОККО…" />
+          <input className={styles.fieldInput} value={vendor} onChange={e => setVendor(e.target.value)} placeholder="WOG, ОККО…" list={`azs-suggestions-${spaceId}`} />
+          {allVendorSuggestions.length > 0 && (
+            <datalist id={`azs-suggestions-${spaceId}`}>
+              {allVendorSuggestions.map(v => <option key={v} value={v} />)}
+            </datalist>
+          )}
           <a
             href={/iphone|ipad|ipod|mac/i.test(navigator.userAgent) ? 'maps://?q=gas+station' : 'https://maps.google.com/?q=gas+station'}
             target="_blank"
@@ -680,11 +853,12 @@ const FuelSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, edi
             </svg>
           </a>
         </div>
-        <label className={styles.fieldLabel} style={{ marginTop: '8px', opacity: 0.6 }}>ПРОБІГ (км) — необов'язково</label>
-        <input className={styles.fieldInput} type="number" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="123 450" style={{ opacity: 0.7 }} />
+        <label className={styles.fieldLabel}>ПРОБІГ (км) <span className={styles.optionalHint}>необов&rsquo;язково</span></label>
+        <input className={styles.fieldInput} type="number" value={mileage} onChange={e => setMileage(e.target.value)} placeholder="123 450" />
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
+        {editEvent && <DeleteRecordButton spaceId={spaceId} eventId={editEvent._id} onClose={onClose} />}
       </div>
     </div>
   )
@@ -789,6 +963,7 @@ const MaintenanceSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profi
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
+        {editEvent && <DeleteRecordButton spaceId={spaceId} eventId={editEvent._id} onClose={onClose} />}
       </div>
     </div>
   )
@@ -860,6 +1035,7 @@ const DocumentSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, editEven
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
+        {editEvent && <DeleteRecordButton spaceId={spaceId} eventId={editEvent._id} onClose={onClose} />}
       </div>
     </div>
   )
@@ -911,6 +1087,7 @@ const NoteSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, editEvent })
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !notes.trim()}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
+        {editEvent && <DeleteRecordButton spaceId={spaceId} eventId={editEvent._id} onClose={onClose} />}
       </div>
     </div>
   )
@@ -994,6 +1171,7 @@ const RepairSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, e
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
+        {editEvent && <DeleteRecordButton spaceId={spaceId} eventId={editEvent._id} onClose={onClose} />}
       </div>
     </div>
   )
@@ -1074,7 +1252,99 @@ const TireSheet: React.FC<SheetProps> = ({ spaceId, color, onClose, profile, edi
         <button type="button" className={styles.primaryBtn} style={colorVar} onClick={handleSave} disabled={saving || !date}>
           {saving ? 'Зберігаємо…' : 'Зберегти'}
         </button>
+        {editEvent && <DeleteRecordButton spaceId={spaceId} eventId={editEvent._id} onClose={onClose} />}
       </div>
+    </div>
+  )
+}
+
+// ── TimelineRow — shared between the dashboard chronicle and "Всі записи" ──
+
+interface TimelineRowProps {
+  event:            VehicleEvent
+  color:            string
+  onEdit:           (event: VehicleEvent) => void
+  showAttachments?: boolean
+}
+
+const TimelineRow: React.FC<TimelineRowProps> = ({ event: e, color, onEdit, showAttachments }) => {
+  const colorVar = { '--space-color': color } as React.CSSProperties
+  const pricePerLiter = e.type === 'fuel' && e.liters != null && e.liters > 0 && e.cost != null
+    ? e.cost / e.liters
+    : null
+
+  return (
+    <div className={styles.timelineItem}>
+      <div className={styles.timelineIcon} style={colorVar}>
+        <EventIcon type={e.type} />
+      </div>
+      <div className={styles.timelineBody}>
+        <div className={styles.timelineTop}>
+          <span className={styles.timelineType}>{EVENT_LABELS[e.type]}</span>
+          <span className={styles.timelineDate}>{fmtDateShort(e.date)}</span>
+        </div>
+        <div className={styles.timelineMeta}>
+          {e.cost != null && <span className={styles.timelineCost}>{fmtCost(e.cost, e.currency)}</span>}
+          {e.liters != null && (
+            <>
+              <span className={styles.timelineDivider}>·</span>
+              <span>{e.liters} л</span>
+            </>
+          )}
+          {pricePerLiter != null && (
+            <>
+              <span className={styles.timelineDivider}>·</span>
+              <span className={styles.timelineMuted}>₴{pricePerLiter.toFixed(2)}/л</span>
+            </>
+          )}
+          {e.fuelType && (
+            <>
+              <span className={styles.timelineDivider}>·</span>
+              <span className={styles.timelineTag}>{e.fuelType}</span>
+            </>
+          )}
+          {e.vendor && (
+            <>
+              <span className={styles.timelineDivider}>·</span>
+              <span>{e.vendor}</span>
+            </>
+          )}
+          {e.mileage != null && (
+            <>
+              <span className={styles.timelineDivider}>·</span>
+              <span className={styles.timelineMileage}>{fmtMileage(e.mileage)}</span>
+            </>
+          )}
+          {e.docType && (
+            <>
+              <span className={styles.timelineDivider}>·</span>
+              <span>{e.docType}</span>
+            </>
+          )}
+          {e.docExpiresAt && (
+            <>
+              <span className={styles.timelineDivider}>·</span>
+              <span className={styles.timelineExpiry}>до {fmtDate(e.docExpiresAt)}</span>
+            </>
+          )}
+        </div>
+        {e.notes && <p className={styles.timelineNotes}>{e.notes}</p>}
+        {showAttachments && e.attachments.length > 0 && (
+          <div className={styles.timelineAttachments}>
+            {e.attachments.map((url, i) => (
+              <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                <img src={url} alt={`фото ${i + 1}`} className={styles.timelineAttachThumb} />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+      <button type="button" className={styles.timelineEditBtn} onClick={() => onEdit(e)} aria-label="Редагувати запис">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
     </div>
   )
 }
@@ -1096,10 +1366,9 @@ interface AllRecordsProps {
   color:    string
   onClose:  () => void
   onEdit:   (event: VehicleEvent) => void
-  onDelete: (id: string) => void
 }
 
-const AllRecordsSheet: React.FC<AllRecordsProps> = ({ events, color, onClose, onEdit, onDelete }) => {
+const AllRecordsSheet: React.FC<AllRecordsProps> = ({ events, color, onClose, onEdit }) => {
   const [filter, setFilter] = useState<VehicleEventType | 'all'>('all')
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(onClose, { enabled: true, overlayRef })
@@ -1132,39 +1401,13 @@ const AllRecordsSheet: React.FC<AllRecordsProps> = ({ events, color, onClose, on
         </div>
         <div className={styles.allRecordsList}>
           {filtered.map(e => (
-            <div key={e._id} className={styles.timelineItem}>
-              <div className={styles.timelineIcon} style={colorVar}>
-                <EventIcon type={e.type} />
-              </div>
-              <div className={styles.timelineBody}>
-                <div className={styles.timelineTop}>
-                  <span className={styles.timelineType}>{EVENT_LABELS[e.type]}</span>
-                  <span className={styles.timelineDate}>{fmtDate(e.date)}</span>
-                </div>
-                <div className={styles.timelineMeta}>
-                  {e.cost    != null && <span className={styles.timelineCost}>{fmtCost(e.cost, e.currency)}</span>}
-                  {e.mileage != null && <span className={styles.timelineMileage}>{fmtMileage(e.mileage)}</span>}
-                  {e.liters  != null && <span>{e.liters} л</span>}
-                  {e.vendor  && <span>{e.vendor}</span>}
-                  {e.docType && <span>{e.docType}</span>}
-                  {e.docExpiresAt && <span className={styles.timelineExpiry}>до {fmtDate(e.docExpiresAt)}</span>}
-                </div>
-                {e.notes && <p className={styles.timelineNotes}>{e.notes}</p>}
-              </div>
-              <div className={styles.timelineActions}>
-                <button type="button" className={styles.timelineEditBtn} onClick={() => { onClose(); onEdit(e) }} aria-label="Редагувати">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                  </svg>
-                </button>
-                <button type="button" className={styles.timelineDeleteBtn} onClick={() => onDelete(e._id)} aria-label="Видалити">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <TimelineRow
+              key={e._id}
+              event={e}
+              color={color}
+              onEdit={(ev) => { onClose(); onEdit(ev) }}
+              showAttachments
+            />
           ))}
           {filtered.length === 0 && (
             <p className={styles.empty}>Немає записів цього типу</p>
@@ -1239,20 +1482,20 @@ const VehicleStateBlock: React.FC<StateBlockProps> = ({ profile, events, stats, 
     })
   }
 
-  if (stats?.totalCostMonth && stats.totalCostMonth > 0) {
-    items.push({
-      icon:   'coins',
-      label:  'Цього місяця',
-      value:  `₴${stats.totalCostMonth.toLocaleString('uk-UA')}`,
-      status: 'ok',
-    })
-  }
+  const carName = [profile?.make, profile?.model].filter(Boolean).join(' ')
 
-  if (items.length === 0) return null
+  if (items.length === 0 && !carName) return null
 
   return (
     <div className={styles.vehicleStateBlock} style={colorVar}>
-      <span className={styles.vehicleStateTitle}>СТАН АВТО</span>
+      {(carName || profile?.currentMileage != null) && (
+        <div className={styles.vehicleStateHeader}>
+          <span className={styles.vehicleStateCarName}>{carName || 'Авто'}</span>
+          {profile?.currentMileage != null && (
+            <span className={styles.vehicleStateMileage}>{fmtMileage(profile.currentMileage)}</span>
+          )}
+        </div>
+      )}
       <div className={styles.vehicleStateItems}>
         {items.map((item, i) => (
           <div key={i} className={styles.vehicleStateItem}>
@@ -1276,7 +1519,6 @@ interface TimelineProps {
   events:           VehicleEvent[]
   color:            string
   loading:          boolean
-  spaceId:          string
   onAddFuel:        () => void
   onAddMaintenance: () => void
   onEdit:           (event: VehicleEvent) => void
@@ -1291,16 +1533,9 @@ function useCarIllustration(): string {
   return '/car/car-default.png'
 }
 
-const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spaceId, onAddFuel, onAddMaintenance, onEdit }) => {
-  const { deleteEvent } = useVehicleStore()
-  const { showToast }   = useUiStore()
-  const carImg          = useCarIllustration()
+const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, onAddFuel, onAddMaintenance, onEdit }) => {
+  const carImg   = useCarIllustration()
   const colorVar = { '--space-color': color } as React.CSSProperties
-
-  const handleDelete = async (id: string) => {
-    deleteEvent(spaceId, id)
-    showToast('Видалено', 'success')
-  }
 
   if (loading) {
     return (
@@ -1342,48 +1577,13 @@ const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spac
   return (
     <div className={styles.timelineList}>
       {events.map(e => (
-        <div key={e._id} className={styles.timelineItem}>
-          <div className={styles.timelineIcon} style={colorVar}>
-            <EventIcon type={e.type} />
-          </div>
-          <div className={styles.timelineBody}>
-            <div className={styles.timelineTop}>
-              <span className={styles.timelineType}>{EVENT_LABELS[e.type]}</span>
-              <span className={styles.timelineDate}>{fmtDate(e.date)}</span>
-            </div>
-            <div className={styles.timelineMeta}>
-              {e.cost   != null && <span className={styles.timelineCost}>{fmtCost(e.cost, e.currency)}</span>}
-              {e.mileage != null && <span className={styles.timelineMileage}>{fmtMileage(e.mileage)}</span>}
-              {e.liters != null && <span>{e.liters} л</span>}
-              {e.vendor && <span>{e.vendor}</span>}
-              {e.docType && <span>{e.docType}</span>}
-              {e.docExpiresAt && <span className={styles.timelineExpiry}>до {fmtDate(e.docExpiresAt)}</span>}
-            </div>
-            {e.notes && <p className={styles.timelineNotes}>{e.notes}</p>}
-            {e.attachments.length > 0 && (
-              <div className={styles.timelineAttachments}>
-                {e.attachments.map((url, i) => (
-                  <a key={url} href={url} target="_blank" rel="noopener noreferrer">
-                    <img src={url} alt={`фото ${i + 1}`} className={styles.timelineAttachThumb} />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className={styles.timelineActions}>
-            <button type="button" className={styles.timelineEditBtn} onClick={() => onEdit(e)} aria-label="Редагувати">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
-            <button type="button" className={styles.timelineDeleteBtn} onClick={() => handleDelete(e._id)} aria-label="Видалити">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-        </div>
+        <TimelineRow
+          key={e._id}
+          event={e}
+          color={color}
+          onEdit={onEdit}
+          showAttachments
+        />
       ))}
     </div>
   )
@@ -1411,7 +1611,7 @@ const VehicleTimeline: React.FC<TimelineProps> = ({ events, color, loading, spac
  * @prop {() => void} onEditSpace — opens parent space edit sheet
  */
 const VehicleSpaceView: React.FC<Props> = ({
-  spaceId, color, spaceName, memoriesCount, plansCount, tasksCount, membersCount,
+  spaceId, color, spaceName,
   modules, spaceTxs, isOwner, coverUrl, coverPosition, onEditSpace, onBack,
 }) => {
   const [sheet, setSheet]               = useState<SheetType>(null)
@@ -1435,9 +1635,6 @@ const VehicleSpaceView: React.FC<Props> = ({
   const colorVar = { '--space-color': color } as React.CSSProperties
 
   const profile  = space?.vehicleProfile ?? null
-  const lastEvent = events.length > 0
-    ? [...events].sort((a, b) => b.date.localeCompare(a.date))[0]
-    : null
 
   useEffect(() => {
     let cancelled = false
@@ -1458,26 +1655,14 @@ const VehicleSpaceView: React.FC<Props> = ({
   const onboardingCount = onboardingSteps.filter(Boolean).length
 
   const hasFinanceModule = modules.includes('finance')
-  const hasTasksModule   = modules.includes('tasks')
 
-  // Stats items — tasks shown only when tasks module is enabled
-  const STATS = [
-    {
-      num: memoriesCount, label: 'Спогади',
-      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M3 21v-1a9 9 0 0 1 18 0v1"/></svg>,
-    },
-    {
-      num: plansCount, label: 'Плани',
-      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-    },
-    ...(hasTasksModule ? [{
-      num: tasksCount, label: 'Задачі',
-      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12l2.5 2.5 4-5"/></svg>,
-    }] : []),
-    {
-      num: membersCount, label: 'Учасники',
-      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-4 3.1-7 7-7s7 3 7 7"/><circle cx="17" cy="8" r="3"/><path d="M22 20c0-3-2.1-5.5-5-6"/></svg>,
-    },
+  // Car-specific meta strip — replaces generic Space metadata (Спогади/Плани/Учасники),
+  // which read as semantically weak for a vehicle-type space.
+  const documentsCount = events.filter(e => e.type === 'document').length
+  const META = [
+    { value: `${events.length} ${pluralRecords(events.length)}` },
+    ...(stats?.totalCostMonth ? [{ value: `₴${stats.totalCostMonth.toLocaleString('uk-UA')} цього місяця` }] : []),
+    ...(documentsCount > 0 ? [{ value: `${documentsCount} ${pluralDocs(documentsCount)}` }] : []),
   ]
 
   // Action cards
@@ -1485,37 +1670,31 @@ const VehicleSpaceView: React.FC<Props> = ({
     {
       key: 'fuel' as SheetType,
       label: '+ Заправитись',
-      desc: 'Записати заправку',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M3 22h12M15 8h2a2 2 0 0 1 2 2v6a1 1 0 0 0 2 0V9l-2-2"/></svg>,
     },
     {
       key: 'maintenance' as SheetType,
-      label: '+ ТО / ремонт',
-      desc: 'Записати обслуговування',
+      label: '+ ТО',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>,
     },
     {
       key: 'repair' as SheetType,
       label: '+ Ремонт',
-      desc: 'Записати ремонт',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>,
     },
     {
       key: 'tire' as SheetType,
       label: '+ Шини',
-      desc: 'Заміна шин',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="3" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="21" y2="12"/></svg>,
     },
     {
       key: 'document' as SheetType,
       label: '+ Документ',
-      desc: 'Додати документ',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>,
     },
     {
       key: 'note' as SheetType,
       label: '+ Нотатка',
-      desc: 'Зробити нотатку',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
     },
   ]
@@ -1527,6 +1706,7 @@ const VehicleSpaceView: React.FC<Props> = ({
     { label: 'Додай першу заправку',  done: hasFuelEvent,          onClick: () => setSheet('fuel') },
     { label: 'Завантаж документ',     done: hasDocumentEvent,      onClick: () => setSheet('document') },
   ]
+  const nextOnboardingItem = ONBOARDING_ITEMS.find(i => !i.done)
 
   return (
     <div className={styles.vehicleRoot}>
@@ -1536,7 +1716,6 @@ const VehicleSpaceView: React.FC<Props> = ({
         spaceName={spaceName}
         color={color}
         profile={profile}
-        lastEvent={lastEvent}
         isOwner={isOwner}
         coverUrl={coverUrl}
         coverPosition={coverPosition}
@@ -1544,24 +1723,23 @@ const VehicleSpaceView: React.FC<Props> = ({
         onBack={onBack}
       />
 
-      {/* ── Stats strip ── */}
-      <div className={styles.vehicleStatStrip}>
-        {STATS.map((s, i) => (
-          <React.Fragment key={s.label}>
-            {i > 0 && <span className={styles.vehicleStatStripDot}>·</span>}
-            <span className={styles.vehicleStatStripItem}>
-              <span className={styles.vehicleStatStripNum}>{s.num}</span>
-              <span className={styles.vehicleStatStripLabel}>{s.label}</span>
-            </span>
-          </React.Fragment>
-        ))}
-      </div>
+      {/* ── Meta strip — car-specific, not generic Space metadata ── */}
+      {META.length > 0 && (
+        <div className={styles.vehicleStatStrip}>
+          {META.map((m, i) => (
+            <React.Fragment key={m.value}>
+              {i > 0 && <span className={styles.vehicleStatStripDot}>·</span>}
+              <span className={styles.vehicleStatStripValue}>{m.value}</span>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
 
-      {/* ── Onboarding checklist ── */}
-      {!onboardingDone && (
+      {/* ── Onboarding — full checklist only for a genuinely new (empty) vehicle ── */}
+      {events.length === 0 && !onboardingDone && (
         <div className={styles.vehicleOnboarding} style={colorVar}>
           <div className={styles.vehicleOnboardingHeader}>
-            <span className={styles.vehicleOnboardingTitle}>Почни з цього</span>
+            <span className={styles.vehicleOnboardingTitle}>Новий автомобіль</span>
             <div className={styles.vehicleOnboardingProgressWrap}>
               <span className={styles.vehicleOnboardingProgressLabel}>{onboardingCount} / 4 виконано</span>
               <div className={styles.vehicleOnboardingBar}>
@@ -1595,20 +1773,36 @@ const VehicleSpaceView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* ── Vehicle state (replaces onboarding after completion) ── */}
-      {onboardingDone && (
-        <VehicleStateBlock profile={profile} events={events} stats={stats} color={color} />
+      {/* ── Onboarding — compact progress + single CTA once the space has records ── */}
+      {events.length > 0 && !onboardingDone && nextOnboardingItem && (
+        <button
+          type="button"
+          className={styles.vehicleOnboardingCompact}
+          style={colorVar}
+          onClick={nextOnboardingItem.onClick}
+        >
+          <span className={styles.vehicleOnboardingCompactLabel}>Налаштуй авто · {onboardingCount}/4</span>
+          <div className={styles.vehicleOnboardingBar}>
+            <div className={styles.vehicleOnboardingFill} style={{ width: `${onboardingCount / 4 * 100}%` }} />
+          </div>
+          <span className={styles.vehicleOnboardingCompactCta}>
+            {nextOnboardingItem.label}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 3l4 4-4 4"/>
+            </svg>
+          </span>
+        </button>
       )}
+
+      {/* ── Vehicle state — make/model, mileage, next TO/document, last record ── */}
+      <VehicleStateBlock profile={profile} events={events} stats={stats} color={color} />
 
       {/* ── Action grid 2×2 ── */}
       <div className={styles.vehicleActionGrid} style={colorVar}>
         {ACTION_CARDS.map(a => (
           <button key={a.key} type="button" className={styles.vehicleActionCard} onClick={() => setSheet(a.key)}>
             <span className={styles.vehicleActionCardIcon}>{a.icon}</span>
-            <span className={styles.vehicleActionCardText}>
-              <span className={styles.vehicleActionCardLabel}>{a.label}</span>
-              <span className={styles.vehicleActionCardDesc}>{a.desc}</span>
-            </span>
+            <span className={styles.vehicleActionCardLabel}>{a.label}</span>
           </button>
         ))}
       </div>
@@ -1665,7 +1859,6 @@ const VehicleSpaceView: React.FC<Props> = ({
           events={events}
           color={color}
           loading={loading}
-          spaceId={spaceId}
           onAddFuel={() => setSheet('fuel')}
           onAddMaintenance={() => setSheet('maintenance')}
           onEdit={handleEditEvent}
@@ -1687,7 +1880,6 @@ const VehicleSpaceView: React.FC<Props> = ({
           color={color}
           onClose={() => setAllRecordsOpen(false)}
           onEdit={handleEditEvent}
-          onDelete={(id: string) => { useVehicleStore.getState().deleteEvent(spaceId, id) }}
         />
       )}
     </div>

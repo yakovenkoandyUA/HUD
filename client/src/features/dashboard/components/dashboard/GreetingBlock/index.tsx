@@ -135,7 +135,7 @@ const GreetingBlock: React.FC<GreetingBlockProps> = ({ onWeatherClick, onOpenDay
 
   return (
     <div
-      className={`${styles.card} ${photoUrl ? styles.cardPhoto : ''} ${shownCount === 1 ? styles.cardCompact : ''}`}
+      className={`${styles.card} ${photoUrl ? styles.cardPhoto : ''} ${shownCount >= 2 ? styles.cardCompact : ''}`}
       style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}
     >
       {/* Top: date + weather */}

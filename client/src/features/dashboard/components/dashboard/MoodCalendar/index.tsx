@@ -65,6 +65,7 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs, popKey = 0, onSelectD
   const cells = useMemo(() => {
     const result: Array<{
       date:     string
+      day:      number
       score:    (1 | 2 | 3 | 4 | 5) | null
       isFuture: boolean
       isToday:  boolean
@@ -76,6 +77,7 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs, popKey = 0, onSelectD
       const iso = toLocalIso(d)
       result.push({
         date:     iso,
+        day:      d.getDate(),
         score:    logMap[iso] ?? null,
         isFuture: d > today,
         isToday:  iso === todayIso,
@@ -117,6 +119,8 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ logs, popKey = 0, onSelectD
             >
               {cell.score ? (
                 <MoodIcon score={cell.score} size={22} color="rgba(255,255,255,0.88)" />
+              ) : !cell.isFuture ? (
+                <span className={styles.cellDay}>{cell.day}</span>
               ) : null}
             </button>
           )

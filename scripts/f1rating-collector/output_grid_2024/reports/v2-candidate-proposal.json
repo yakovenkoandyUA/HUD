@@ -1,0 +1,213 @@
+{
+  "authoritative": false,
+  "stabilityValidated": false,
+  "supersededBy": "stability-report.json (cli/stabilityReport.ts), when available",
+  "datasetId": "mimir-f1-2024-grid-c32c4df11a2b",
+  "generatedAt": "2026-08-07T07:44:13.287Z",
+  "created": true,
+  "reasonNotCreated": null,
+  "calibratedMetricKeys": [
+    "cleanRaceLapConsistency",
+    "qualifyingConsistency",
+    "racecraftProxy"
+  ],
+  "inheritedUnverifiedKeys": [
+    "teammateAdjustedQualifyingPace",
+    "teammateAdjustedCleanRacePace",
+    "peakRepresentativePace",
+    "qualifyingHeadToHead",
+    "cleanWeekendRate",
+    "driverAttributableReliability",
+    "unforcedErrorControl",
+    "resultRelativeToExpectedPace",
+    "tyreStintManagement",
+    "startAndOpeningLapExecution",
+    "changingConditionAdaptability",
+    "documentedStrategicExecution"
+  ],
+  "keyMetricKeys": [
+    "teammateAdjustedQualifyingPace",
+    "teammateAdjustedCleanRacePace",
+    "cleanRaceLapConsistency",
+    "cleanWeekendRate",
+    "driverAttributableReliability",
+    "resultRelativeToExpectedPace",
+    "tyreStintManagement",
+    "startAndOpeningLapExecution"
+  ],
+  "insufficientKeyMetricKeys": [
+    "cleanWeekendRate",
+    "driverAttributableReliability",
+    "resultRelativeToExpectedPace"
+  ],
+  "methodology": {
+    "id": "mimir-f1-v2-candidate",
+    "effectiveFrom": "2026-08-07",
+    "description": "Experimental candidate methodology — reference ranges calibrated against grid-wide dataset mimir-f1-2024-grid-c32c4df11a2b where sufficient data existed (3 of 15 ranges); everything else (weights, tunables, remaining ranges) inherited unchanged from mimir-f1-v1. NOT for production use — see productionReady.",
+    "calibrationStatus": "candidate",
+    "productionReady": false,
+    "minSampleSize": {
+      "teammateAdjustedQualifyingPace": 3,
+      "teammateAdjustedCleanRacePace": 3,
+      "peakRepresentativePace": 2,
+      "qualifyingHeadToHead": 3,
+      "cleanRaceLapConsistency": 3,
+      "cleanWeekendRate": 3,
+      "driverAttributableReliability": 3,
+      "qualifyingConsistency": 3,
+      "unforcedErrorControl": 3,
+      "resultRelativeToExpectedPace": 3,
+      "tyreStintManagement": 2,
+      "startAndOpeningLapExecution": 2,
+      "racecraftProxy": 2,
+      "changingConditionAdaptability": 1,
+      "documentedStrategicExecution": 0
+    },
+    "speedWeights": {
+      "teammateAdjustedQualifyingPace": 0.4,
+      "teammateAdjustedCleanRacePace": 0.3,
+      "peakRepresentativePace": 0.15,
+      "qualifyingHeadToHead": 0.15
+    },
+    "precisionWeights": {
+      "cleanRaceLapConsistency": 0.3,
+      "cleanWeekendRate": 0.25,
+      "driverAttributableReliability": 0.2,
+      "qualifyingConsistency": 0.15,
+      "unforcedErrorControl": 0.1
+    },
+    "raceIqWeights": {
+      "resultRelativeToExpectedPace": 0.25,
+      "tyreStintManagement": 0.2,
+      "startAndOpeningLapExecution": 0.2,
+      "racecraftProxy": 0.15,
+      "changingConditionAdaptability": 0.1,
+      "documentedStrategicExecution": 0.1
+    },
+    "referenceRanges": {
+      "teammateAdjustedQualifyingPace": {
+        "key": "teammateAdjustedQualifyingPace",
+        "min": -1.5,
+        "max": 1.5,
+        "higherIsBetter": false,
+        "description": "% gap of representative qualifying lap time vs teammate (negative = faster)."
+      },
+      "teammateAdjustedCleanRacePace": {
+        "key": "teammateAdjustedCleanRacePace",
+        "min": -1.2,
+        "max": 1.2,
+        "higherIsBetter": false,
+        "description": "% gap of average clean-lap race pace vs teammate on comparable stints."
+      },
+      "peakRepresentativePace": {
+        "key": "peakRepresentativePace",
+        "min": -1,
+        "max": 1,
+        "higherIsBetter": false,
+        "description": "% gap of best sustained-stint average pace vs teammate (never a single fastest lap)."
+      },
+      "qualifyingHeadToHead": {
+        "key": "qualifyingHeadToHead",
+        "min": 0,
+        "max": 100,
+        "higherIsBetter": true,
+        "description": "% of comparable qualifying sessions won directly against the teammate."
+      },
+      "cleanRaceLapConsistency": {
+        "key": "cleanRaceLapConsistency",
+        "min": 0.032976675181225656,
+        "max": 3.452042822048339,
+        "higherIsBetter": false,
+        "description": "Coefficient of variation (%) of clean race laps within a single stint (never pooled across stints/compounds — see engine/cleanRaceLapConsistency.ts for why that matters). [v2-candidate: calibrated from dataset mimir-f1-2024-grid-c32c4df11a2b, algorithm: P2.5-P97.5 robust window, +10% padding]"
+      },
+      "cleanWeekendRate": {
+        "key": "cleanWeekendRate",
+        "min": 0,
+        "max": 100,
+        "higherIsBetter": true,
+        "description": "% of rounds with no driver-attributable incident and no driver-attributable DNF."
+      },
+      "driverAttributableReliability": {
+        "key": "driverAttributableReliability",
+        "min": 0,
+        "max": 100,
+        "higherIsBetter": true,
+        "description": "% of starts without a driver-attributable DNF (technical DNFs excluded from the penalty)."
+      },
+      "qualifyingConsistency": {
+        "key": "qualifyingConsistency",
+        "min": -0.2874848842839993,
+        "max": 3.540517960887531,
+        "higherIsBetter": false,
+        "description": "Coefficient of variation (%) of valid qualifying laps within the same segment. [v2-candidate: calibrated from dataset mimir-f1-2024-grid-c32c4df11a2b, algorithm: P2.5-P97.5 robust window, +10% padding]"
+      },
+      "unforcedErrorControl": {
+        "key": "unforcedErrorControl",
+        "min": 0,
+        "max": 2,
+        "higherIsBetter": false,
+        "description": "Attributable unforced-error incidents per round."
+      },
+      "resultRelativeToExpectedPace": {
+        "key": "resultRelativeToExpectedPace",
+        "min": -5,
+        "max": 5,
+        "higherIsBetter": true,
+        "description": "Average (expectedFinishPosition − actualFinishPosition); positive = beat pace-based expectation."
+      },
+      "tyreStintManagement": {
+        "key": "tyreStintManagement",
+        "min": -50,
+        "max": 50,
+        "higherIsBetter": false,
+        "description": "PROXY, not raw tyre wear: teammate-relative clean-lap pace-evolution delta (ms/lap) on comparable stints (driverSlope − teammateSlope). Negative = driver's pace evolved more favorably than teammate's on a matched stint — scored as better."
+      },
+      "startAndOpeningLapExecution": {
+        "key": "startAndOpeningLapExecution",
+        "min": -3,
+        "max": 3,
+        "higherIsBetter": true,
+        "description": "Average positions gained/lost from grid to end of lap 1, penalized for attributable contact."
+      },
+      "racecraftProxy": {
+        "key": "racecraftProxy",
+        "min": -8.3,
+        "max": 8.3,
+        "higherIsBetter": true,
+        "description": "Average net position change during green-flag racing, excluding lap 1 and pit-stop laps. v1 limitation: this is a position-delta proxy, not a true overtake/defend count — it cannot distinguish a strategy-driven position change from an on-track battle. [v2-candidate: calibrated from dataset mimir-f1-2024-grid-c32c4df11a2b, algorithm: P2.5-P97.5 robust window, +10% padding, symmetric around 0 (signed delta, median close to 0)]"
+      },
+      "changingConditionAdaptability": {
+        "key": "changingConditionAdaptability",
+        "min": -1.5,
+        "max": 1.5,
+        "higherIsBetter": false,
+        "description": "% teammate pace gap computed only across wet/mixed-condition rounds (normalized separately from dry)."
+      },
+      "documentedStrategicExecution": {
+        "key": "documentedStrategicExecution",
+        "min": 0,
+        "max": 100,
+        "higherIsBetter": true,
+        "description": "v1 has no objective telemetry proxy for strategic execution — this sub-component always reports missing raw data and is reweighted away unless a manual review adjustment (category \"strategic_intervention\") is recorded for the round."
+      }
+    },
+    "finalScale": {
+      "min": 70,
+      "max": 99
+    },
+    "tyreAgeComparabilityThresholdLaps": 3,
+    "tunables": {
+      "confidenceMissingPenaltyPerItem": 0.15,
+      "confidenceMissingPenaltyCap": 0.6,
+      "confidenceHighThreshold": 0.75,
+      "confidenceMediumThreshold": 0.4,
+      "attributableLap1ContactPenaltyPositions": 2,
+      "minCleanLapsForStintAverage": 2,
+      "minCleanLapsForDegradationSlope": 3,
+      "minCleanLapsForConsistencyStint": 3,
+      "maxManualAdjustmentMagnitude": 5,
+      "maxCumulativeManualAdjustmentPerComponent": 8
+    },
+    "calibrationDatasetId": "mimir-f1-2024-grid-c32c4df11a2b"
+  }
+}

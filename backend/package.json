@@ -14,7 +14,8 @@
     "f1rating:grid-calibrate": "ts-node src/f1rating/cli/gridCalibrationReport.ts",
     "f1rating:grid-diagnostic": "ts-node src/f1rating/cli/gridDiagnosticReport.ts",
     "f1rating:candidate-proposal": "ts-node src/f1rating/cli/candidateMethodologyProposal.ts",
-    "f1rating:stability": "ts-node src/f1rating/cli/stabilityReport.ts"
+    "f1rating:stability": "ts-node src/f1rating/cli/stabilityReport.ts",
+    "f1rating:multi-season": "ts-node src/f1rating/cli/multiSeasonStrategyReport.ts"
   },
   "dependencies": {
     "@sentry/node": "^10.57.0",

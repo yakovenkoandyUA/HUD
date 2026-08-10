@@ -54,6 +54,19 @@ export function buildDatasetManifest(
   totalSeasonRounds: number | null,
 ): DatasetManifest {
   const season = rounds[0]?.season ?? 0
+  // A manifest describes ONE season — `includedRounds`/substitution detection below compares
+  // CONSECUTIVE round numbers, which is only meaningful within a single season (round 24 of one
+  // season and round 1 of the next are not "consecutive" in any sense this manifest can express).
+  // Multi-season analysis builds one manifest PER season and combines results afterward (see
+  // dataset/multiSeasonPool.ts) — it never feeds mixed-season rounds into this function.
+  const mixedSeasons = rounds.some(r => r.season !== season)
+  if (mixedSeasons) {
+    throw new Error(
+      `[f1rating] buildDatasetManifest received rounds from multiple seasons ` +
+      `(${[...new Set(rounds.map(r => r.season))].join(', ')}) — a manifest is season-scoped by ` +
+      `design; build one manifest per season instead.`,
+    )
+  }
   const includedRounds = rounds.map(r => r.round).sort((a, b) => a - b)
   const missingRounds = totalSeasonRounds
     ? Array.from({ length: totalSeasonRounds }, (_, i) => i + 1).filter(r => !includedRounds.includes(r))

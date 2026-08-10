@@ -20,6 +20,7 @@ export interface VehicleProfile {
   frameNumber:        string
   currentMileage:     number | null
   fuelType:           string
+  drivetrain:         string
   purchaseDate:       string | null
   photoUrl:           string
   nextServiceMileage: number | null

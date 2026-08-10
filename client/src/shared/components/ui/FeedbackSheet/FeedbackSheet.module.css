@@ -85,6 +85,16 @@
   color: var(--text3);
 }
 
+.photoRow {
+  display: flex;
+  gap: 8px;
+}
+
+.photoSlot {
+  flex: 1;
+  max-width: 100px;
+}
+
 .uploadLabel {
   font-family: var(--font-ui);
   font-size: 11px;

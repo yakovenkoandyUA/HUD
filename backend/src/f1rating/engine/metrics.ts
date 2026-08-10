@@ -5,6 +5,7 @@ import type {
 type MetricTunables = MethodologyVersion['tunables']
 import { filterCleanRaceLaps, filterValidQualifyingLaps, groupByCondition } from './exclusions'
 import { average, coefficientOfVariationPct, teammatePercentGap } from './teammateRelative'
+import { seasonRoundKey } from './seasonRoundKey'
 
 /**
  * Everything the engine knows about one driver for one season, keyed by round via array
@@ -34,8 +35,10 @@ function representativeQualifyingLapMs(session: RawQualifyingMetrics): number | 
   return Math.min(...pool.map(l => l.lapTimeMs))
 }
 
-function byRound<T extends { round: number }>(items: T[]): Map<number, T> {
-  return new Map(items.map(i => [i.round, i]))
+// Keyed by (season, round) composite, NOT bare round number — a plain `round` collides across
+// seasons (round 1 exists in every season). See engine/seasonRoundKey.ts.
+function byRound<T extends { round: number; season: number }>(items: T[]): Map<string, T> {
+  return new Map(items.map(i => [seasonRoundKey(i.season, i.round), i]))
 }
 
 // ── Speed ──────────────────────────────────────────────────────────────────
@@ -44,7 +47,7 @@ export function teammateAdjustedQualifyingPace(driver: DriverSeasonInput, teamma
   const teammateByRound = byRound(teammate.qualifying)
   const gaps: number[] = []
   for (const session of driver.qualifying) {
-    const teammateSession = teammateByRound.get(session.round)
+    const teammateSession = teammateByRound.get(seasonRoundKey(session.season, session.round))
     if (!teammateSession) continue
     const driverMs = representativeQualifyingLapMs(session)
     const teammateMs = representativeQualifyingLapMs(teammateSession)
@@ -74,7 +77,7 @@ export function teammateAdjustedCleanRacePace(driver: DriverSeasonInput, teammat
   const teammateByRound = byRound(teammate.race)
   const gaps: number[] = []
   for (const race of driver.race) {
-    const teammateRace = teammateByRound.get(race.round)
+    const teammateRace = teammateByRound.get(seasonRoundKey(race.season, race.round))
     if (!teammateRace) continue
     const driverAvg = average(dryCleanRaceLapTimes(race))
     const teammateAvg = average(dryCleanRaceLapTimes(teammateRace))
@@ -102,7 +105,7 @@ export function peakRepresentativePace(
   const teammateByRound = byRound(teammate.race)
   const gaps: number[] = []
   for (const race of driver.race) {
-    const teammateRace = teammateByRound.get(race.round)
+    const teammateRace = teammateByRound.get(seasonRoundKey(race.season, race.round))
     if (!teammateRace) continue
     const driverMs = bestSustainedStintPaceMs(race.stints, tunables.minCleanLapsForStintAverage)
     const teammateMs = bestSustainedStintPaceMs(teammateRace.stints, tunables.minCleanLapsForStintAverage)
@@ -243,7 +246,7 @@ export function changingConditionAdaptability(driver: DriverSeasonInput, teammat
   const teammateByRound = byRound(teammate.race)
   const gaps: number[] = []
   for (const race of driver.race) {
-    const teammateRace = teammateByRound.get(race.round)
+    const teammateRace = teammateByRound.get(seasonRoundKey(race.season, race.round))
     if (!teammateRace) continue
     const { kept: driverClean } = filterCleanRaceLaps(race.laps)
     const { kept: teammateClean } = filterCleanRaceLaps(teammateRace.laps)

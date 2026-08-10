@@ -7,9 +7,12 @@
  * data — an experimental `mimir-f1-v2-candidate` methodology proposal. NEVER touches
  * `productionReady`/mutates `methodologyV1`, NEVER connects to UI/API.
  *
- * Usage: `npm run f1rating:grid-calibrate -- --input <dir> [--out <dir>]`
+ * Usage: `npm run f1rating:grid-calibrate -- --input <dir> [--out <dir>] [--total-rounds <n>]`
  *   --input defaults to scripts/f1rating-collector/output_grid (local, gitignored, produced by
- *   `batch_collect.py`) --out defaults to the same directory.
+ *   `batch_collect.py`) --out defaults to the same directory. --total-rounds defaults to 24 (the
+ *   2025 season length) — MUST be passed explicitly for any other season (e.g. 22 for 2023),
+ *   otherwise genuinely-nonexistent rounds get misreported as "missing" from a season that never
+ *   had them.
  *
  * Exits 0 on success, 1 if the input directory has no collectable rounds. Finite process: no
  * watcher, no server, no writes to any database.
@@ -26,14 +29,14 @@ import {
 
 const DEFAULT_DIR = path.resolve(__dirname, '../../../../scripts/f1rating-collector/output_grid')
 
-function parseArgs(): { input: string; out: string } {
+function parseArgs(): { input: string; out: string; totalRounds: number } {
   const args = process.argv.slice(2)
   const get = (flag: string, fallback: string) => {
     const idx = args.indexOf(flag)
     return idx >= 0 && args[idx + 1] ? args[idx + 1] : fallback
   }
   const input = get('--input', DEFAULT_DIR)
-  return { input, out: get('--out', path.join(input, 'reports')) }
+  return { input, out: get('--out', path.join(input, 'reports')), totalRounds: Number(get('--total-rounds', '24')) }
 }
 
 function pearsonCorrelation(xs: number[], ys: number[]): number | null {
@@ -71,11 +74,11 @@ function computeTeamStrengthProxy(rounds: { race: { constructorId: string; finis
 }
 
 function main(): void {
-  const { input, out } = parseArgs()
+  const { input, out, totalRounds } = parseArgs()
 
   let grid: ReturnType<typeof computeGridRatings>
   try {
-    grid = computeGridRatings(input, methodologyV1, 24)
+    grid = computeGridRatings(input, methodologyV1, totalRounds)
   } catch (err) {
     console.error((err as Error).message)
     process.exit(1)

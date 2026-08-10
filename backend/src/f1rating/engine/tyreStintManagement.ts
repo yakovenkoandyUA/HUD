@@ -2,6 +2,7 @@ import type { MethodologyVersion, StintMetrics } from '../types'
 import type { DriverSeasonInput, MetricResult } from './metrics'
 import { areStintsTyreComparable } from './exclusions'
 import { average } from './teammateRelative'
+import { seasonRoundKey } from './seasonRoundKey'
 
 /**
  * REDESIGN NOTE (corrective iteration after real-data calibration)
@@ -107,10 +108,11 @@ export function explainStintPaceEvolution(
 ): StintPaceEvolutionExplain {
   const pairs: ComparableStintPairDelta[] = []
   const excludedRounds: { round: number; reason: string }[] = []
-  const teammateRaceByRound = new Map(teammate.race.map(r => [r.round, r]))
+  // Keyed by (season, round) composite — a bare round number collides across seasons.
+  const teammateRaceByRound = new Map(teammate.race.map(r => [seasonRoundKey(r.season, r.round), r]))
 
   for (const race of driver.race) {
-    const teammateRace = teammateRaceByRound.get(race.round)
+    const teammateRace = teammateRaceByRound.get(seasonRoundKey(race.season, race.round))
     if (!teammateRace) {
       excludedRounds.push({ round: race.round, reason: 'teammate has no race entry for this round' })
       continue

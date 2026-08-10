@@ -80,7 +80,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     id: 'couple',
     limits: {
       maxSpaces: 10,
-      maxSharedSpaces: 3,
+      maxSharedSpaces: 5,
       maxMembersPerSharedSpace: 5,
       timelineHistoryYears: -1,
       maxReceiptScansPerMonth: -1,

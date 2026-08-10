@@ -5,7 +5,11 @@ export function fmt(n: number): string {
 export function getDaysLeftInMonth(salaryDay = 1): number {
   const now = new Date()
   const today = now.getDate()
-  const nextPayday = today < salaryDay
+  // <= (not <): on salaryDay itself, treat today as the tail of the previous
+  // cycle rather than day 1 of a fresh one — the new income likely isn't
+  // logged as a transaction yet, so dividing the pre-payday balance across
+  // a full new month would show a misleadingly tiny daily budget.
+  const nextPayday = today <= salaryDay
     ? new Date(now.getFullYear(), now.getMonth(), salaryDay)
     : new Date(now.getFullYear(), now.getMonth() + 1, salaryDay)
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), today)

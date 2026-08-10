@@ -10,9 +10,9 @@ router.use(requireAuth)
 
 // POST /api/feedback
 router.post('/', async (req: Request, res: Response): Promise<void> => {
-  const { message, imageUrl } = req.body as {
+  const { message, imageUrls } = req.body as {
     message: string
-    imageUrl?: string
+    imageUrls?: string[]
   }
 
   if (!message?.trim()) {
@@ -20,12 +20,14 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     return
   }
 
+  const photos = (imageUrls ?? []).filter(Boolean).slice(0, 3)
+
   const user = await User.findById(req.userId).select('name username email').lean()
 
   await Feedback.create({
-    userId:   req.userId,
-    message:  message.trim(),
-    imageUrl: imageUrl ?? null,
+    userId:    req.userId,
+    message:   message.trim(),
+    imageUrls: photos,
   })
 
   const token = process.env.TELEGRAM_BOT_TOKEN
@@ -51,13 +53,27 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
   const text = lines.join('\n')
 
   try {
-    if (imageUrl) {
+    if (photos.length > 1) {
+      const r = await fetch(`https://api.telegram.org/bot${token}/sendMediaGroup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          media: photos.map((url, i) => ({
+            type: 'photo',
+            media: url,
+            ...(i === 0 ? { caption: text } : {}),
+          })),
+        }),
+      })
+      if (!r.ok) throw new Error(await r.text())
+    } else if (photos.length === 1) {
       const r = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
-          photo: imageUrl,
+          photo: photos[0],
           caption: text,
         }),
       })
@@ -87,7 +103,7 @@ router.get('/mine', async (req: Request, res: Response): Promise<void> => {
   res.json(entries.map(e => ({
     id:         (e._id as { toString(): string }).toString(),
     message:    e.message,
-    imageUrl:   e.imageUrl,
+    imageUrls:  e.imageUrls?.length ? e.imageUrls : (e.imageUrl ? [e.imageUrl] : []),
     status:     e.status,
     adminReply: e.adminReply,
     repliedAt:  e.repliedAt,
@@ -109,7 +125,7 @@ router.get('/', requireAdmin, async (_req: Request, res: Response): Promise<void
       userName:   u?.name ?? 'Хтось',
       userAvatar: u?.avatarUrl ?? null,
       message:    e.message,
-      imageUrl:   e.imageUrl,
+      imageUrls:  e.imageUrls?.length ? e.imageUrls : (e.imageUrl ? [e.imageUrl] : []),
       status:     e.status,
       adminReply: e.adminReply,
       repliedAt:  e.repliedAt,

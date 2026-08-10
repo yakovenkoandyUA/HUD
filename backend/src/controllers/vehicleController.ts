@@ -22,9 +22,9 @@ export async function updateVehicleProfile(req: Request, res: Response): Promise
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
     if (space.type !== 'vehicle') { res.status(400).json({ error: 'Not a vehicle space' }); return }
 
-    const allowed = ['make','model','year','plateNumber','vin','frameNumber','currentMileage','fuelType','purchaseDate','photoUrl','nextServiceMileage'] as const
+    const allowed = ['make','model','year','plateNumber','vin','frameNumber','currentMileage','fuelType','drivetrain','purchaseDate','photoUrl','nextServiceMileage'] as const
     if (!space.vehicleProfile) {
-      space.vehicleProfile = { make:'', model:'', year:null, plateNumber:'', vin:'', frameNumber:'', currentMileage:null, fuelType:'', purchaseDate:null, photoUrl:'', nextServiceMileage:null }
+      space.vehicleProfile = { make:'', model:'', year:null, plateNumber:'', vin:'', frameNumber:'', currentMileage:null, fuelType:'', drivetrain:'', purchaseDate:null, photoUrl:'', nextServiceMileage:null }
     }
     allowed.forEach(key => {
       if (req.body[key] !== undefined) (space.vehicleProfile as unknown as Record<string, unknown>)[key] = req.body[key]

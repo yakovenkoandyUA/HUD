@@ -3002,9 +3002,16 @@
 }
 
 /* ── Admin: feedback reply ── */
+.feedbackImgRow {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
 .feedbackImg {
-	width: 100%;
-	max-width: 220px;
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
 	border-radius: 8px;
 	border: 1px solid var(--border);
 	display: block;

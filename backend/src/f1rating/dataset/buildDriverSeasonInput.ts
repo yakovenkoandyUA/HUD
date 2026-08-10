@@ -39,7 +39,19 @@ export function buildDriverSeasonInputFromRounds(
 
     const rDriver = round.race.find(r => r.driverId === driverId)
     if (rDriver) {
-      race.push(fastF1ExportToRaceMetrics(rDriver, false, tunables.minCleanLapsForDegradationSlope))
+      // `fastF1ExportToRaceMetrics` THROWS on malformed per-driver data (e.g. `gridPosition:
+      // null` — a real 2023 case: a driver who missed qualifying entirely and started from the
+      // pit lane) rather than fabricating a fallback value. At single-driver-pair scale that
+      // throw is meant to stop and get investigated; at grid-wide multi-season scale it must not
+      // crash the ENTIRE batch over one driver's one round — excluded here (this round is simply
+      // absent from the driver's `race` array, same as "no race entry" everywhere else in this
+      // pipeline) and surfaced via a loud console.warn so the gap is visible, never silent.
+      try {
+        race.push(fastF1ExportToRaceMetrics(rDriver, false, tunables.minCleanLapsForDegradationSlope))
+      } catch (err) {
+        console.warn(`[f1rating] excluding ${driverId} round ${round.round} from race data: ${(err as Error).message}`)
+        continue
+      }
       const cause = classifyJolpicaStatus(rDriver.status)
       if (cause !== 'finished') {
         dnfs.push(buildDnfRecord({

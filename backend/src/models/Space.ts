@@ -16,6 +16,7 @@ export interface IVehicleProfile {
   frameNumber:        string
   currentMileage:     number | null
   fuelType:           string
+  drivetrain:         string
   purchaseDate:       string | null
   photoUrl:           string
   nextServiceMileage: number | null
@@ -128,6 +129,7 @@ const vehicleProfileSchema = new Schema<IVehicleProfile>({
   frameNumber:    { type: String, default: '' },
   currentMileage: { type: Number, default: null },
   fuelType:       { type: String, default: '' },
+  drivetrain:     { type: String, default: '' },
   purchaseDate:       { type: String, default: null },
   photoUrl:           { type: String, default: '' },
   nextServiceMileage: { type: Number, default: null },

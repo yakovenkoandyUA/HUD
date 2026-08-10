@@ -197,7 +197,7 @@ interface FeedbackEntry {
   userName: string
   userAvatar: string | null
   message: string
-  imageUrl: string | null
+  imageUrls: string[]
   status: 'open' | 'resolved'
   adminReply: string | null
   repliedAt: string | null
@@ -291,8 +291,12 @@ const FeedbackPanel: React.FC = () => {
 
                 {isExpanded && (
                   <div className={styles.adminExpanded}>
-                    {e.imageUrl && (
-                      <img src={e.imageUrl} alt="" className={styles.feedbackImg} />
+                    {!!e.imageUrls?.length && (
+                      <div className={styles.feedbackImgRow}>
+                        {e.imageUrls.map((url, i) => (
+                          <img key={i} src={url} alt="" className={styles.feedbackImg} />
+                        ))}
+                      </div>
                     )}
                     {e.adminReply && (
                       <p className={styles.adminEmpty}>Твоя відповідь: {e.adminReply}</p>

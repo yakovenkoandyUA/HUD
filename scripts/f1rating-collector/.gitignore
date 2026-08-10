@@ -37,8 +37,31 @@ output_grid_full/reports/*
 !output_grid_full/reports/manifest.json
 !output_grid_full/reports/v2-candidate-proposal.json
 !output_grid_full/reports/stability-report.json
+# Multi-season (2023/2024 vs 2025) cross-season stability comparisons — the actual
+# multi-season-validation deliverable (see cli/stabilityReport.ts), kept alongside the
+# within-2025 9-vs-24-round comparison above for the same reason: compact, valuable, reproducible.
+!output_grid_full/reports/stability-report-2023-vs-2025.json
+!output_grid_full/reports/stability-report-2024-vs-2025.json
+!output_grid_full/reports/stability-report-2023-vs-2024.json
 
 # 9-round subset copied out of output_grid_full/ purely to feed the stability comparison above —
 # not a distinct dataset, fully regenerable by re-copying those 9 files, never committed.
 output_grid_subset9/
+
+# Multi-season validation (2023/2024, alongside the 2025 output_grid_full/ above) — same
+# rationale: raw per-round exports stay local/regenerable, only manifest + authoritative
+# stability-report.json (once produced) are compact enough to commit as provenance.
+output_grid_2023/*
+!output_grid_2023/reports/
+output_grid_2023/reports/*
+!output_grid_2023/reports/manifest.json
+!output_grid_2023/reports/v2-candidate-proposal.json
+!output_grid_2023/reports/stability-report.json
+
+output_grid_2024/*
+!output_grid_2024/reports/
+output_grid_2024/reports/*
+!output_grid_2024/reports/manifest.json
+!output_grid_2024/reports/v2-candidate-proposal.json
+!output_grid_2024/reports/stability-report.json
 

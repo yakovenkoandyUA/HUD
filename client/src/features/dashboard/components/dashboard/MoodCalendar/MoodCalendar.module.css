@@ -78,6 +78,14 @@
   opacity: 0.45;
 }
 
+.cellDay {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-shadow: 0 0 6px var(--accent), 0 0 10px var(--accent);
+}
+
 /* filled day */
 .cellFilled {
   /* color + glow from score classes below */
