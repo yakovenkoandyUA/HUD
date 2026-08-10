@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react'
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
@@ -72,8 +72,10 @@ const WalletTab: React.FC = () => {
     connection, loading: bankLoading, syncing,
     fetchStatus, disconnect, sync,
     authPending, authAcceptUrl, authTokenRequestId,
-    cancelMonoAuth, pollMonoAuth,
+    initMonoAuth, cancelMonoAuth, pollMonoAuth,
   } = useBankStore()
+
+  const isMobile = useMemo(() => /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent), [])
 
   // Salary day
   const [salaryDay, setSalaryDay]   = useState(activeProfile?.salaryDay ?? 1)
@@ -140,6 +142,14 @@ const WalletTab: React.FC = () => {
     }
   }, [authTokenRequestId, pollMonoAuth, showToast])
 
+
+  const handleStartAuth = useCallback(async () => {
+    try {
+      await initMonoAuth()
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Помилка підключення', 'error')
+    }
+  }, [initMonoAuth, showToast])
 
   const handleConnect = useCallback(async () => {
     if (!tokenInput.trim() || connecting) return
@@ -377,12 +387,16 @@ const WalletTab: React.FC = () => {
                 </svg>
                 Відкрити Monobank
               </a>
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(authAcceptUrl)}`}
-                alt="QR"
-                className={styles.monoAuthQr}
-              />
-              <p className={styles.monoAuthQrHint}>або відскануйте QR у застосунку</p>
+              {!isMobile && (
+                <>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(authAcceptUrl)}`}
+                    alt="QR"
+                    className={styles.monoAuthQr}
+                  />
+                  <p className={styles.monoAuthQrHint}>або відскануйте QR телефоном із застосунком Monobank</p>
+                </>
+              )}
               <button type="button" className={styles.monoAuthCancelBtn} onClick={cancelMonoAuth}>
                 Скасувати
               </button>
@@ -391,19 +405,24 @@ const WalletTab: React.FC = () => {
         ) : (
           <div className={styles.cardPadded}>
             {!showManual ? (
-              <button type="button" className={styles.bankAddBtn} onClick={() => setShowManual(true)}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="5" y="2" width="14" height="20" rx="2"/>
-                  <line x1="12" y1="18" x2="12" y2="18" strokeWidth="3" strokeLinecap="round"/>
-                </svg>
-                <span>Підключити Monobank</span>
-              </button>
+              <div className={styles.bankConnectWrap}>
+                <button type="button" className={styles.bankAddBtn} onClick={handleStartAuth}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="5" y="2" width="14" height="20" rx="2"/>
+                    <line x1="12" y1="18" x2="12" y2="18" strokeWidth="3" strokeLinecap="round"/>
+                  </svg>
+                  <span>Підключити Monobank</span>
+                </button>
+                <button type="button" className={styles.bankManualLink} onClick={() => setShowManual(true)}>
+                  або вручну, токеном
+                </button>
+              </div>
             ) : (
               <div className={styles.bankConnectForm}>
                 <div className={styles.bankConnectSteps}>
-                  <span className={styles.bankConnectStep}>1. Відкрий Monobank API</span>
-                  <span className={styles.bankConnectStep}>2. Активуй токен (копіюється тільки раз!)</span>
-                  <span className={styles.bankConnectStep}>3. Встав сюди:</span>
+                  <span className={styles.bankConnectStep}>1. Відкрий сайт Monobank API і увійди в акаунт</span>
+                  <span className={styles.bankConnectStep}>2. Натисни «Створити токен» — <strong style={{ color: 'var(--accent)' }}>він показується лише один раз</strong>, одразу скопіюй</span>
+                  <span className={styles.bankConnectStep}>3. Встав скопійований токен у поле нижче</span>
                 </div>
                 <a
                   href="https://api.monobank.ua"
