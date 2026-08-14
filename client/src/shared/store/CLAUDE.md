@@ -30,8 +30,9 @@ interface ProfileState {
 - `f1Enabled: boolean` — показ F1 фіч (BottomNav іконка, HeroCard F1 блок, `/f1`)
 - `isVerified: boolean` — верифікований email (gate для AI-фіч)
 - `onboardingCompleted: boolean` — пройдений onboarding (redirect /onboarding якщо false)
-- `plan: 'free'|'personal'|'couple'|'family'` — тарифний план (billing)
+- `plan: 'free'|'personal'|'couple'|'family'` — власний тарифний план (billing)
 - `subscriptionStatus: 'active'|'past_due'|'cancelled'|'trialing'|null`
+- `effectivePlan`/`planSource: 'own'|'group'`/`planPayerName` — реальний план з урахуванням Plan Group (Duo/Group shared payer): якщо юзер в чиїйсь групі й план payer'а вищий за власний — `effectivePlan` = план payer'а. `usePlan()` хук читає `effectivePlan`, не `plan` напряму. Керування групою — `features/profile/store/planGroupStore.ts` (не shared, лише PlanTab)
 - `accountStatus: 'active'|'deletion_requested'|'deleted'`
 - `salaryDay: number` — день поповнення (для Finance)
 - `city: string` — місто (для погоди і геолокації за замовчанням)

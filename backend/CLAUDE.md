@@ -32,6 +32,16 @@
 - Guards навішані: `requireFeature('aiChat'/'aiChefChat')` у `routes/ai.ts`, `requireFeature('receiptScanner')` у `routes/receipt.ts`, `requireFeature('yearbookGenerate')` у `routes/yearbook.ts`, `requireFeature('advancedFinance')` у `routes/finance.ts`, `assertLimit(maxSpaces/sharedSpaces)` у `spaceController.ts`, timeline history у `timelineController.ts`
 - **Близькі (FamilyLink) — не feature-гейт, а ліміт:** `assertLimit(user, 'maxFamilyLinks', currentLinksCount)` інлайн у `familyController.sendRequest` (не middleware, бо потрібен async count query перед перевіркою). `maxFamilyLinks`: free/personal — 2, couple/family — безліміт (-1). Рахується як `FamilyLink.countDocuments({$or:[{requester},{recipient}]})` — будь-який статус (pending+accepted) враховується в ліміт
 
+## Plan Group (Duo/Group shared payer)
+
+Один payer купує `couple`(Duo, 2 місця)/`family`(Group, 5 місць) і запрошує учасників — вони отримують тарифні права безкоштовно, поки в групі й payer має активну підписку. Окремий механізм від FamilyLink (соціальний граф "Близькі") — навмисно не змішані.
+
+- `User.planGroupPayerId`/`planGroupJoinedAt` — якщо не null, юзер успадковує план цього payer'а (якщо він вищий за власний)
+- `PlanGroupInvite` модель — payerId/inviteeId/status (pending/accepted/declined/cancelled)
+- `backend/src/utils/planGroup.ts` — `resolveEffectivePlan(user)` порівнює власний план і план payer'а за `PLAN_RANK`, повертає вищий; **самозагоюване** — якщо payer перестає платити, учасники автоматично падають на власний план без крон-джобів. `GROUP_SEATS`: couple=2, family=5
+- `loadUser` middleware — якщо `planGroupPayerId` є, викликає `resolveEffectivePlan` і ставить **plain-властивість** `user.effectivePlan` (НЕ mongoose `.set()`, щоб випадковий `.save()` не записав чужий план в БД). `entitlements.ts.getUserPlan` читає `effectivePlan ?? plan`
+- `/auth/me` повертає `effectivePlan`/`planSource` (`own`/`group`)/`planPayerName`
+
 ## API ендпоінти
 
 | Route | Методи |
@@ -55,6 +65,13 @@
 | `/api/family/request` | POST — { recipientId } |
 | `/api/family/accept/:linkId` | POST |
 | `/api/family/:linkId` | DELETE |
+| `/api/plan-group` | GET — роль (`payer`/`member`/`none`) + members/pendingInvites/receivedInvites |
+| `/api/plan-group/invite` | POST — { identifier } payer запрошує по username/email |
+| `/api/plan-group/invite/:id/accept` | POST — invitee приймає |
+| `/api/plan-group/invite/:id/decline` | POST — invitee відхиляє |
+| `/api/plan-group/invite/:id` | DELETE — payer скасовує pending-запрошення |
+| `/api/plan-group/member/:userId` | DELETE — payer видаляє учасника |
+| `/api/plan-group/leave` | POST — member сам покидає групу |
 | `/api/transactions` | GET, POST |
 | `/api/transactions/:id` | DELETE |
 | `/api/transactions/count` | GET ?category= — кількість транзакцій по категорії |
@@ -170,7 +187,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 ## Моделі — ключові поля
 
-**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `footballEnabled: boolean` (обидва — feature-флаги модулів на екрані `/f1`, який тепер таб-хаб "Спорт"), `isVerified: boolean` (default false), `verificationToken: string|null`, `resetPasswordToken: string|null`, `resetPasswordExpires: Date|null` (1г TTL), `lastLoginAt: Date|null` (оновлюється при login/register/google/refresh — proxy для "активний юзер"), `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`
+**User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `footballEnabled: boolean` (обидва — feature-флаги модулів на екрані `/f1`, який тепер таб-хаб "Спорт"), `isVerified: boolean` (default false), `verificationToken: string|null`, `resetPasswordToken: string|null`, `resetPasswordExpires: Date|null` (1г TTL), `lastLoginAt: Date|null` (оновлюється при login/register/google/refresh — proxy для "активний юзер"), `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`. Plan Group: `planGroupPayerId: ObjectId|null` (indexed), `planGroupJoinedAt: Date|null`
 
 **BillingOrder** — `userId`, `provider: 'wayforpay'|'paddle'`, `orderReference` (unique, opaque: `mimir_{YYYYMMDD}_{16hex}`), `planId: 'personal'|'couple'|'family'`, `interval: 'month'|'year'`, `amount` (копійки), `currency: 'UAH'`, `status: 'pending'|'paid'|'failed'|'refunded'|'expired'`, `expiresAt`, `paidAt`, `rawProviderPayload`. Indexes: unique orderReference, `{userId, createdAt: -1}`, `{status, expiresAt}` для cleanup cron
 
@@ -184,9 +201,11 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для звичок, `dueTime?: string`, `reminderSent: boolean`, `timeOfDay?: 'morning'|'afternoon'|'evening'|null` (слот для RoutineRing/TodayHabits)
 
-**WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members), `totalSeasons` з TMDB, `category: 'movie'|'series'|'anime'|'book'|'game'`, `runtimeMin`/`episodeRuntimeMin` — реальна тривалість з TMDB (фільм/епізод, хв) для точного підрахунку годин у WatchlistStatsSheet
+**WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members), `totalSeasons` з TMDB, `category: 'movie'|'series'|'anime'|'book'|'game'`, `runtimeMin`/`episodeRuntimeMin` — реальна тривалість з TMDB (фільм/епізод, хв) для точного підрахунку годин у WatchlistStatsSheet, `moodProfile: { humor, tension, romance, action, drama, atmosphere }` (0-5 кожна, вручну виставляється в WatchlistDetail, за аналогією з `Drink.flavor`)
 
 **FamilyLink** — `requester: string`, `recipient: string`, `status: 'pending'|'accepted'`. Унікальний compound index `{requester, recipient}`. `getAcceptedFamilyIds(userId)` — shared helper.
+
+**PlanGroupInvite** — `payerId`, `inviteeId`, `status: 'pending'|'accepted'|'declined'|'cancelled'`, `respondedAt: Date|null`. Не пов'язана з FamilyLink — окремий механізм для Duo/Group shared-payer тарифу.
 
 **Memory** — `photos[]` subdocument array, `tags: string[]`, `notes: string`, `location: string`, `lat`/`lng: number|null` (для пінів на MemoryMap), `places: IMemoryPlace[]` (`{name, address, lat, lng}` — заклади всередині спогаду, рендеряться окремими пінами на MemoryMap; зберігаються через звичайний `PATCH /api/memories/:id`, **UI додавання ще не реалізований** — поле читається/рендериться, але форми створення place немає), `dateEnd: string|null` (кінець поїздки, default null), `isTrip: boolean` (default false). GET повертає `ownerName` + `ownerAvatarUrl` для сімейних записів.
 

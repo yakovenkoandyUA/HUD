@@ -77,7 +77,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - `/recipes` — сітка, фільтри, AI-генератор, «Що є вдома?» ingredient search
 - `/recipes/:id` — Складові/Приготування таби, step checklist, CookLog, wishlist
 - `/recipes/planner` — тижневий планер Пн–Нд
-- `/watchlist` — movie/series/anime/book/game (OpenMoji таби), TMDB пошук; налаштування видимості табів у профілі; **game tab** — повний UI (RAWG пошук через GameSearch overlay, сортування, фільтр жанрів, GameHero, статуси); WatchlistStatsSheet (кнопка статистики) — реальна тривалість з TMDB (з фолбеком на оцінку для елементів без даних), SVG-іконки замість emoji; **bug fix:** `countEpisodes` тепер пріоритизує `watchedEpisodes.length` над `totalEpisodes` (TMDB міг повертати завищену кількість включно з майбутніми сезонами)
+- `/watchlist` — movie/series/anime/book/game (OpenMoji таби), TMDB пошук; налаштування видимості табів у профілі; **game tab** — повний UI (RAWG пошук через GameSearch overlay, сортування, фільтр жанрів, GameHero, статуси); WatchlistStatsSheet (кнопка статистики) — реальна тривалість з TMDB (з фолбеком на оцінку для елементів без даних), SVG-іконки замість emoji; **bug fix:** `countEpisodes` тепер пріоритизує `watchedEpisodes.length` над `totalEpisodes` (TMDB міг повертати завищену кількість включно з майбутніми сезонами); **настрій-профіль (радар)** — секція "НАСТРІЙ" у WatchlistDetail (movie/series/anime), 6 осей (Гумор/Напруга/Романтика/Екшн/Драма/Атмосферність) 0-5, виставляється вручну pill-кнопками, той самий `RadarChart` що й флейвор-профіль напоїв (вінесено в спільний `shared/components/ui/RadarChart`)
 - `/memories` — таймлайн + сітка + Mapbox GL карта (globe projection, теми, 3D, маршрути, карусель пінів), "Цей день рік тому", статистика відстаней; МІСЦЕ через LocationSearch (Mapbox Search Box автокомпліт) або LocationMapPicker (тап на карті)
 - `/memories/:id` — фото, Canvas export → PNG/Web Share з мінікартою-бейджем (поставити обкладинкою — лише з галереї фото або EditMemoryModal, без накладання тексту); fixed bottomBar (фото/поділитись/нотатка/теги); trip-спогади: блок "ВИТРАТИ В ПОЇЗДЦІ" з підсумком і до 5 транзакцій (`tripMemoryId` на Transaction)
 - `/notes` — inline edit, пошук
@@ -304,6 +304,25 @@ Game tab повністю інтегрований у `/watchlist` (GameSearch o
 - Пульсуюча крапка на аватарі в TopBar (видима з будь-якого екрану)
 - ~~Видимий банер внизу Profile → таб "Я" з кнопкою ОНОВИТИ (`window.location.reload()`)~~ → **замінено** на рядок оновлення в `ProfileDrawer` під пунктом "Налаштування" з відкриттям `ChangelogSheet` (журнал змін перед перезавантаженням)
 - `uiStore.updateAvailable` — сет через `controllerchange` event Service Worker
+
+### ~~8б. 💳 Duo/Group — реальний shared-payer тариф~~ ✅ Зроблено (2026-08-14)
+
+До цього "couple"/"family" були просто дорожчими **персональними** тарифами з вищими лімітами — кожен запрошений юзер платив за себе сам, хоча маркетинг обіцяв "поділись з одним"/"необмежені учасники". Тепер один платник (payer) купує Duo (2 місця) або Group (5 місць) і запрошує учасників, які отримують тарифні права безкоштовно, поки вони в групі й payer має активну підписку.
+
+**Backend:**
+- `User.planGroupPayerId`/`planGroupJoinedAt` — якщо не null, юзер може успадкувати план цього payer'а
+- `PlanGroupInvite` — нова модель (payerId, inviteeId, status: pending/accepted/declined/cancelled)
+- `backend/src/utils/planGroup.ts` — `resolveEffectivePlan(user)` (own vs group plan, бере вищий за рангом, self-healing: якщо payer перестає платити — учасники миттєво падають на власний план без крон-джобів), `PLAN_RANK`, `GROUP_SEATS` (couple: 2, family: 5)
+- `loadUser` middleware резолвить `effectivePlan` (plain property, не mongoose `.set()` — щоб випадковий `.save()` не запис чужий план в БД), `entitlements.ts.getUserPlan` читає `effectivePlan ?? plan`
+- `planGroupController.ts` + `/api/plan-group/*` — invite/accept/decline/cancel/removeMember/leave, пошук інвайта по username/email (як family search)
+- `/auth/me` повертає `effectivePlan`/`planSource`/`planPayerName`
+
+**Frontend:**
+- `usePlan()` читає `effectivePlan` замість `plan` напряму
+- `PlanTab.tsx`: банер "Ви на плані Duo/Group завдяки {payer}" + "Покинути групу" для member; секція "Учасники плану" (пошук, seats-індикатор, remove/cancel) для payer; список вхідних запрошень (accept/decline) для будь-кого
+- `features/profile/store/planGroupStore.ts` — новий feature store
+
+**Свідомо поза MVP:** дублювання `client/shared/config/plans.ts` ↔ `backend/config/plans.ts` не усунено; email-запрошення незареєстрованих юзерів не підтримується (тільки existing users); адмін не керує seats напряму — тільки payer.
 
 ### 9-11. 💳 Білінг Phase 4B/4C/5A — WayForPay Checkout + Callback
 > **⏸ НА ПАУЗІ — виконати тільки за явною вказівкою розробника**
