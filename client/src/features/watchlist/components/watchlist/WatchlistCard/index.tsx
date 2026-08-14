@@ -89,7 +89,16 @@ const WatchlistCard: React.FC<WatchlistCardProps> = ({ item, onClick }) => {
 			<div className={styles.info}>
 				<p className={styles.title}>{item.title}</p>
 				<div className={styles.meta}>
-					{item.year && <span className={styles.year}>{item.year}</span>}
+					<span className={styles.yearRow}>
+						{item.year && <span className={styles.year}>{item.year}</span>}
+						{((item.watchedWith && item.watchedWith.length > 0) || item.watchTogether) && (
+							<svg className={styles.togetherIcon} width="10" height="10" viewBox="0 0 16 16" fill="none" aria-label="Дивились разом">
+								<path d="M5 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.5"/>
+								<path d="M11 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.5"/>
+								<path d="M1 14s0-3 4-3M15 14s0-3-4-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+							</svg>
+						)}
+					</span>
 					{item.status === 'watched' && item.rating != null && item.rating > 0 && <span className={styles.ratingTag}>★ {item.rating}</span>}
 				</div>
 			</div>

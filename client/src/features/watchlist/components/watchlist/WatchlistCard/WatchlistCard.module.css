@@ -132,6 +132,17 @@
   justify-content: space-between;
 }
 
+.yearRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.togetherIcon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
 .togetherBadge {
   position: absolute;
   bottom: 8px;
