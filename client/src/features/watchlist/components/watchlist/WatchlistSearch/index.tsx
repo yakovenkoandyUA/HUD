@@ -103,6 +103,33 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
     inputRef.current?.blur()
   }
 
+  // Anime fallback — AniList only matches romaji/english/native titles, so a Ukrainian
+  // query ("Атака титанів") finds nothing there. Re-search TMDB (which does understand
+  // uk-language queries) and filter down to anime the same way the old search used to.
+  const searchAnimeTmdbFallback = async (q: string): Promise<SearchResult[]> => {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=uk&page=1`
+    )
+    const data = await res.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const list = (data.results ?? []).filter((r: any) =>
+      r.genre_ids?.includes(16) &&
+      (r.origin_country?.includes('JP') || r.original_language === 'ja')
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return list.slice(0, 10).map((r: any) => ({
+      tmdbId: r.id,
+      title: r.name ?? 'Без назви',
+      originalTitle: r.original_name ?? '',
+      posterPath: r.poster_path ?? null,
+      backdropPath: r.backdrop_path ?? null,
+      overview: r.overview ?? '',
+      year: (r.first_air_date ?? '').slice(0, 4),
+      genres: (r.genre_ids ?? []).map((id: number) => TMDB_GENRES[id]).filter(Boolean),
+      source: 'tmdb' as const,
+    }))
+  }
+
   const search = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); setIsOpen(false); return }
     setLoading(true)
@@ -112,7 +139,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
         const res = await authFetch(`/api/anime/search?q=${encodeURIComponent(q)}`)
         const data = await res.json()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const items: SearchResult[] = (Array.isArray(data) ? data : []).map((r: any) => ({
+        let items: SearchResult[] = (Array.isArray(data) ? data : []).map((r: any) => ({
           tmdbId: r.anilistId,
           title: r.title,
           originalTitle: r.originalTitle ?? '',
@@ -134,7 +161,11 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
             profilePath: null,
             imageUrl: c.image ?? null,
           })),
+          source: 'anilist' as const,
         }))
+        if (items.length === 0 && TMDB_KEY) {
+          try { items = await searchAnimeTmdbFallback(q) } catch { /* keep empty */ }
+        }
         setResults(items)
         setIsOpen(true)
         return
@@ -192,9 +223,10 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
     setPreviewCast([])
     setSelectedStatus('want')
 
-    // Anime search already returns everything (description, genres, episodes, cast) —
-    // no separate details/credits call needed, unlike TMDB movie/series.
-    if (category === 'anime') {
+    // AniList search already returns everything (description, genres, episodes, cast) —
+    // no separate details/credits call needed. TMDB fallback results still need the
+    // usual movie/series-style details+credits fetch below.
+    if (category === 'anime' && result.source === 'anilist') {
       setPreviewCast(result.cast ?? [])
       return
     }
@@ -257,9 +289,9 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
       rating:        null,
       seasonReminder: false,
       reminderDate:  null,
-      totalEpisodes:   category === 'anime' ? (preview.totalEpisodes ?? null) : (d?.number_of_episodes ?? null),
+      totalEpisodes:   preview.source === 'anilist' ? (preview.totalEpisodes ?? null) : (d?.number_of_episodes ?? null),
       totalSeasons:    d?.number_of_seasons    ?? null,
-      nextEpisodeDate: category === 'anime' ? (preview.nextEpisodeDate ?? null) : (d?.next_episode_to_air?.air_date ?? null),
+      nextEpisodeDate: preview.source === 'anilist' ? (preview.nextEpisodeDate ?? null) : (d?.next_episode_to_air?.air_date ?? null),
       runtimeMin:        category === 'movie' ? (d?.runtime ?? null) : null,
       episodeRuntimeMin: category !== 'movie' ? (d?.episode_run_time?.[0] ?? null) : null,
     })
