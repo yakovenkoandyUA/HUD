@@ -299,6 +299,186 @@
   flex-shrink: 0;
 }
 
+/* ── Plan group (Duo/Group shared payer) ── */
+.groupBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+.groupBannerInfo { display: flex; flex-direction: column; gap: 2px; }
+.groupBannerTitle {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+.groupBannerSub {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text3);
+}
+.groupLeaveBtn {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.groupInvitesWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupManage {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.groupManageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.groupManageTitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+.groupSeats {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.groupMemberRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.groupAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text3);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.groupAvatarImg { width: 100%; height: 100%; object-fit: cover; }
+.groupMemberInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.groupMemberName {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.groupMemberSub {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
+}
+.groupRemoveBtn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+  cursor: pointer;
+}
+.groupRemoveBtn:hover { color: var(--negative); border-color: var(--negative); }
+
+.groupInviteBtns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.groupAcceptBtn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.groupDeclineBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+}
+
+.groupInviteRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+.groupInviteInput {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text);
+}
+.groupInviteInput:focus { outline: none; border-color: var(--accent); }
+.groupInviteBtn {
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border-radius: 9px;
+  border: none;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.groupInviteBtn:disabled { opacity: 0.5; cursor: default; }
+
 /* ── Feature comparison ── */
 .tableScroll {
   overflow-x: auto;

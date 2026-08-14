@@ -190,6 +190,15 @@ export interface Recipe {
 export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'
 export type WatchlistStatus = 'want' | 'watching' | 'watched' | 'dropped'
 
+export interface MoodProfile {
+  humor: number
+  tension: number
+  romance: number
+  action: number
+  drama: number
+  atmosphere: number
+}
+
 export interface WatchlistItem {
   id: string
   tmdbId: number
@@ -220,6 +229,7 @@ export interface WatchlistItem {
   watchedEpisodes?: { season: number; episode: number; userId: string }[]
   watchTogether?: boolean
   watchedWith?: string[]
+  moodProfile?: MoodProfile
   author?: string
   pageCount?: number | null
   isbn?: string | null

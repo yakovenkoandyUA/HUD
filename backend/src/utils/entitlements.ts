@@ -8,7 +8,7 @@ export function isBillingEnforcementEnabled(): boolean {
 }
 
 export function getUserPlan(user: IUser) {
-  return user.plan ?? 'free'
+  return (user as unknown as { effectivePlan?: IUser['plan'] }).effectivePlan ?? user.plan ?? 'free'
 }
 
 export function getPlanConfig(user: IUser) {

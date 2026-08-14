@@ -9,6 +9,7 @@ import { RefreshToken } from '../models/RefreshToken'
 import { FamilyLink } from '../models/FamilyLink'
 import { seedCategoriesForUser } from '../scripts/seedCategories'
 import { validateEmailDomain } from '../utils/emailValidation'
+import { resolveEffectivePlan, type EffectivePlan } from '../utils/planGroup'
 
 const CLIENT_URL = process.env.CLIENT_URL ?? 'https://hud-murex.vercel.app'
 
@@ -160,7 +161,7 @@ async function sendPasswordResetEmail(email: string, token: string, name: string
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
-const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
+const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>, effective?: EffectivePlan) => ({
   id: (user._id as { toString(): string }).toString(),
   name: user.name,
   username: user.username,
@@ -195,6 +196,9 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>) => ({
   mimirSeenHints: user.mimirSeenHints ?? [],
   plan: user.plan ?? 'free',
   subscriptionStatus: user.subscriptionStatus ?? 'none',
+  effectivePlan: effective?.plan ?? user.plan ?? 'free',
+  planSource: effective?.source ?? 'own',
+  planPayerName: effective?.payerName ?? null,
 })
 
 const COOKIE_NAME = 'rt'
@@ -597,7 +601,8 @@ export async function me(req: Request, res: Response): Promise<void> {
       res.status(404).json({ error: 'User not found' })
       return
     }
-    res.json({ ...USER_PUBLIC_FIELDS(user), userId: req.userId, role: req.userRole })
+    const effective = user.planGroupPayerId ? await resolveEffectivePlan(user) : undefined
+    res.json({ ...USER_PUBLIC_FIELDS(user, effective), userId: req.userId, role: req.userRole })
   } catch {
     res.status(500).json({ error: 'Failed to fetch user' })
   }

@@ -7,7 +7,7 @@ import { PLANS, type Feature, type PlanLimits } from '@/shared/config/plans'
  */
 export function usePlan() {
   const profile = useProfileStore(s => s.activeProfile)
-  const planId = profile?.role === 'admin' ? 'family' : (profile?.plan ?? 'free')
+  const planId = profile?.role === 'admin' ? 'family' : (profile?.effectivePlan ?? profile?.plan ?? 'free')
   const config = PLANS[planId]
 
   return {
@@ -15,6 +15,8 @@ export function usePlan() {
     label: config.label,
     limits: config.limits,
     subscriptionStatus: profile?.subscriptionStatus ?? 'none',
+    planSource: profile?.planSource ?? 'own',
+    planPayerName: profile?.planPayerName ?? null,
     can: (feature: Feature): boolean => config.features[feature],
     isAtLimit: (limitKey: keyof PlanLimits, count: number): boolean => {
       const limit = config.limits[limitKey]

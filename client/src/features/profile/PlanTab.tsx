@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { usePlan } from '@/shared/hooks/usePlan'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { useUiStore } from '@/shared/store/uiStore'
+import { useProfileStore } from '@/shared/store/profileStore'
+import { usePlanGroupStore } from './store/planGroupStore'
 import type { PlanId } from '@/shared/config/plans'
 import styles from './PlanTab.module.css'
 
@@ -112,11 +114,59 @@ const PlanTab: React.FC = () => {
   const [supportOpen, setSupportOpen] = useState(false)
   const [copied, setCopied]         = useState(false)
 
-  const { plan: currentPlan } = usePlan()
+  const { plan: currentPlan, planSource, planPayerName } = usePlan()
   const { showToast }         = useUiStore()
+  const refreshProfile        = useProfileStore(s => s.refreshProfile)
+
+  const {
+    role: groupRole, seatsLimit, seatsUsed, members, pendingInvites, receivedInvites,
+    fetchPlanGroup, invite, cancelInvite, removeMember, leaveGroup, acceptInvite, declineInvite,
+  } = usePlanGroupStore()
+
+  const [inviteQuery, setInviteQuery]   = useState('')
+  const [inviteLoading, setInviteLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      if (!cancelled) await fetchPlanGroup()
+    }
+    load()
+    return () => { cancelled = true }
+  }, [fetchPlanGroup, currentPlan])
 
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(() => setSupportOpen(false), { enabled: supportOpen, overlayRef })
+
+  const handleInvite = async () => {
+    if (!inviteQuery.trim()) return
+    setInviteLoading(true)
+    try {
+      await invite(inviteQuery.trim())
+      setInviteQuery('')
+      showToast('Запрошення надіслано', 'success')
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Помилка', 'error')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  const handleAcceptInvite = async (inviteId: string) => {
+    try {
+      await acceptInvite(inviteId)
+      await refreshProfile()
+      showToast('Ви приєднались до плану', 'success')
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Помилка', 'error')
+    }
+  }
+
+  const handleLeaveGroup = async () => {
+    await leaveGroup()
+    await refreshProfile()
+    showToast('Ви покинули групу', 'success')
+  }
 
   const visibleFeatures = expanded ? FEATURES : FEATURES.slice(0, 7)
 
@@ -146,6 +196,40 @@ const PlanTab: React.FC = () => {
         </svg>
         <span>Ранній доступ — знижка <strong>33%</strong> на перший рік для перших користувачів</span>
       </div>
+
+      {/* ── Group membership banner ── */}
+      {planSource === 'group' && (
+        <div className={styles.groupBanner}>
+          <div className={styles.groupBannerInfo}>
+            <span className={styles.groupBannerTitle}>Ви на плані {currentPlan === 'couple' ? 'DUO' : 'GROUP'}</span>
+            <span className={styles.groupBannerSub}>завдяки {planPayerName ?? 'учаснику групи'}</span>
+          </div>
+          <button type="button" className={styles.groupLeaveBtn} onClick={handleLeaveGroup}>
+            Покинути групу
+          </button>
+        </div>
+      )}
+
+      {/* ── Received plan-group invites ── */}
+      {receivedInvites.length > 0 && (
+        <div className={styles.groupInvitesWrap}>
+          {receivedInvites.map(inv => (
+            <div key={inv.inviteId} className={styles.groupMemberRow}>
+              <div className={styles.groupAvatar}>
+                {inv.avatarUrl ? <img src={inv.avatarUrl} alt={inv.name} className={styles.groupAvatarImg} /> : <span>{inv.name[0]}</span>}
+              </div>
+              <div className={styles.groupMemberInfo}>
+                <span className={styles.groupMemberName}>{inv.name}</span>
+                <span className={styles.groupMemberSub}>запрошує на тариф</span>
+              </div>
+              <div className={styles.groupInviteBtns}>
+                <button type="button" className={styles.groupAcceptBtn} onClick={() => handleAcceptInvite(inv.inviteId)}>Прийняти</button>
+                <button type="button" className={styles.groupDeclineBtn} onClick={() => declineInvite(inv.inviteId)}>✕</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Billing toggle ── */}
       <div className={styles.cycleRow}>
@@ -275,6 +359,61 @@ const PlanTab: React.FC = () => {
           </div>
         )
       })}
+
+      {/* ── Group members management (payer only) ── */}
+      {groupRole === 'payer' && (
+        <div className={styles.groupManage}>
+          <div className={styles.groupManageHeader}>
+            <span className={styles.groupManageTitle}>УЧАСНИКИ ПЛАНУ</span>
+            <span className={styles.groupSeats}>{seatsUsed ?? 1}/{seatsLimit ?? 1}</span>
+          </div>
+
+          {members.map(m => (
+            <div key={m.id} className={styles.groupMemberRow}>
+              <div className={styles.groupAvatar}>
+                {m.avatarUrl ? <img src={m.avatarUrl} alt={m.name} className={styles.groupAvatarImg} /> : <span>{m.name[0]}</span>}
+              </div>
+              <div className={styles.groupMemberInfo}>
+                <span className={styles.groupMemberName}>{m.name}</span>
+                <span className={styles.groupMemberSub}>@{m.username}</span>
+              </div>
+              <button type="button" className={styles.groupRemoveBtn} onClick={() => removeMember(m.id)}>
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="none"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          ))}
+
+          {pendingInvites.map(inv => (
+            <div key={inv.inviteId} className={styles.groupMemberRow}>
+              <div className={styles.groupAvatar}>
+                {inv.avatarUrl ? <img src={inv.avatarUrl} alt={inv.name} className={styles.groupAvatarImg} /> : <span>{inv.name[0]}</span>}
+              </div>
+              <div className={styles.groupMemberInfo}>
+                <span className={styles.groupMemberName}>{inv.name}</span>
+                <span className={styles.groupMemberSub}>Очікує підтвердження</span>
+              </div>
+              <button type="button" className={styles.groupRemoveBtn} onClick={() => cancelInvite(inv.inviteId)}>
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="none"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+          ))}
+
+          {(seatsUsed ?? 1) < (seatsLimit ?? 1) && (
+            <div className={styles.groupInviteRow}>
+              <input
+                className={styles.groupInviteInput}
+                type="text"
+                placeholder="Логін або email"
+                value={inviteQuery}
+                onChange={e => setInviteQuery(e.target.value)}
+              />
+              <button type="button" className={styles.groupInviteBtn} onClick={handleInvite} disabled={inviteLoading || !inviteQuery.trim()}>
+                Запросити
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Feature comparison ── */}
       <div className={styles.tableScroll}>

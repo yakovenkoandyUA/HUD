@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose'
+import { Schema, model, Document, Types } from 'mongoose'
 
 export type PlanId = 'free' | 'personal' | 'couple' | 'family'
 export type SubscriptionStatus = 'none' | 'trialing' | 'active' | 'past_due' | 'canceled'
@@ -63,6 +63,9 @@ export interface IUser extends Document {
   // Account lifecycle
   accountStatus: AccountStatus
   deletedAt: Date | null
+  // Plan group (Duo/Group shared payer)
+  planGroupPayerId: Types.ObjectId | null
+  planGroupJoinedAt: Date | null
 }
 
 const schema = new Schema<IUser>({
@@ -128,6 +131,9 @@ const schema = new Schema<IUser>({
   // Account lifecycle — safe defaults, no migration needed
   accountStatus: { type: String, enum: ['active', 'deletion_requested', 'deleted'], default: 'active' },
   deletedAt:     { type: Date, default: null },
+  // Plan group (Duo/Group shared payer)
+  planGroupPayerId: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+  planGroupJoinedAt: { type: Date, default: null },
 })
 
 export const User = model<IUser>('User', schema)

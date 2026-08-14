@@ -49,6 +49,9 @@ export interface Profile {
   mimirSeenHints: string[]
   plan?: PlanId
   subscriptionStatus?: SubscriptionStatus
+  effectivePlan?: PlanId
+  planSource?: 'own' | 'group'
+  planPayerName?: string | null
 }
 
 interface ProfileState {
