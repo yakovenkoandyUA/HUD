@@ -3,6 +3,7 @@ import styles from './WatchlistSearch.module.css'
 import type { WatchlistCategory, WatchlistItem, WatchlistStatus } from '@/shared/types'
 import { TMDB_GENRES } from '../../../utils/tmdbGenres'
 import { useUiStore } from '@/shared/store/uiStore'
+import { authFetch } from '@/shared/services/api'
 
 const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY
 const TMDB_IMG  = 'https://image.tmdb.org/t/p/w92'
@@ -13,6 +14,8 @@ interface CastMember {
   name: string
   character: string
   profilePath: string | null
+  /** Full image URL — used for non-TMDB sources (e.g. AniList), takes priority over profilePath */
+  imageUrl?: string | null
 }
 
 interface SearchResult {
@@ -27,6 +30,11 @@ interface SearchResult {
   totalEpisodes?: number | null
   totalSeasons?: number | null
   nextEpisodeDate?: string | null
+  /** Full poster URL — used for non-TMDB sources (e.g. AniList), takes priority over posterPath */
+  posterUrl?: string | null
+  studio?: string | null
+  score?: number | null
+  cast?: CastMember[]
 }
 
 /**
@@ -98,20 +106,44 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
     setLoading(true)
     setError('')
     try {
+      if (category === 'anime') {
+        const res = await authFetch(`/api/anime/search?q=${encodeURIComponent(q)}`)
+        const data = await res.json()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const items: SearchResult[] = (Array.isArray(data) ? data : []).map((r: any) => ({
+          tmdbId: r.anilistId,
+          title: r.title,
+          originalTitle: r.originalTitle ?? '',
+          posterPath: null,
+          backdropPath: null,
+          posterUrl: r.posterUrl ?? null,
+          overview: r.overview ?? '',
+          year: r.year ?? '',
+          genres: r.genres ?? [],
+          totalEpisodes: r.episodes ?? null,
+          nextEpisodeDate: r.nextEpisodeDate ?? null,
+          studio: r.studio ?? null,
+          score: r.score ?? null,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          cast: (r.cast ?? []).map((c: any, i: number) => ({
+            id: i,
+            name: c.name,
+            character: c.character ?? '',
+            profilePath: null,
+            imageUrl: c.image ?? null,
+          })),
+        }))
+        setResults(items)
+        setIsOpen(true)
+        return
+      }
+
       const endpoint = category === 'movie' ? 'search/movie' : 'search/tv'
       const res = await fetch(
         `https://api.themoviedb.org/3/${endpoint}?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=uk&page=1`
       )
       const data = await res.json()
-      let list = data.results ?? []
-
-      if (category === 'anime') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        list = list.filter((r: any) =>
-          r.genre_ids?.includes(16) &&
-          (r.origin_country?.includes('JP') || r.original_language === 'ja')
-        )
-      }
+      const list = data.results ?? []
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const items: SearchResult[] = list.slice(0, 10).map((r: any) => ({
@@ -157,6 +189,13 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
     setPreviewDetails(null)
     setPreviewCast([])
     setSelectedStatus('want')
+
+    // Anime search already returns everything (description, genres, episodes, cast) —
+    // no separate details/credits call needed, unlike TMDB movie/series.
+    if (category === 'anime') {
+      setPreviewCast(result.cast ?? [])
+      return
+    }
 
     let cancelled = false
 
@@ -209,22 +248,23 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
       status:        selectedStatus,
       posterPath:    preview.posterPath,
       backdropPath,
+      thumbnail:     preview.posterUrl ?? undefined,
       overview:      d?.overview || preview.overview,
       year:          preview.year,
       genres,
       rating:        null,
       seasonReminder: false,
       reminderDate:  null,
-      totalEpisodes:   d?.number_of_episodes   ?? null,
+      totalEpisodes:   category === 'anime' ? (preview.totalEpisodes ?? null) : (d?.number_of_episodes ?? null),
       totalSeasons:    d?.number_of_seasons    ?? null,
-      nextEpisodeDate: d?.next_episode_to_air?.air_date ?? null,
+      nextEpisodeDate: category === 'anime' ? (preview.nextEpisodeDate ?? null) : (d?.next_episode_to_air?.air_date ?? null),
       runtimeMin:        category === 'movie' ? (d?.runtime ?? null) : null,
       episodeRuntimeMin: category !== 'movie' ? (d?.episode_run_time?.[0] ?? null) : null,
     })
     deactivateSearch()
   }
 
-  const hasKey = !!TMDB_KEY && TMDB_KEY !== 'your_tmdb_api_key_here'
+  const hasKey = category === 'anime' || (!!TMDB_KEY && TMDB_KEY !== 'your_tmdb_api_key_here')
   const showResults = searchActive && !preview && (isOpen || !!error || !hasKey)
 
   const placeholder =
@@ -248,6 +288,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
     if (previewDetails?.backdrop_path) return `https://image.tmdb.org/t/p/w780${previewDetails.backdrop_path}`
     if (preview.backdropPath)          return `https://image.tmdb.org/t/p/w780${preview.backdropPath}`
     if (preview.posterPath)            return `https://image.tmdb.org/t/p/w500${preview.posterPath}`
+    if (preview.posterUrl)             return preview.posterUrl
     return null
   })()
 
@@ -322,7 +363,7 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
           {error && <p className={styles.err}>{error}</p>}
 
           {isOpen && results.length > 0 && results.map((r, i) => {
-            const thumb = r.posterPath ? `${TMDB_IMG}${r.posterPath}` : null
+            const thumb = r.posterPath ? `${TMDB_IMG}${r.posterPath}` : (r.posterUrl ?? null)
             return (
               <button
                 key={`${r.tmdbId}-${i}`}
@@ -431,6 +472,15 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
                       ★ {previewDetails.vote_average.toFixed(1)}
                     </span>
                   )}
+                  {category === 'anime' && preview.totalEpisodes != null && (
+                    <span className={styles.previewMetaChip}>{preview.totalEpisodes} еп.</span>
+                  )}
+                  {category === 'anime' && preview.studio && (
+                    <span className={styles.previewMetaChip}>{preview.studio}</span>
+                  )}
+                  {category === 'anime' && preview.score != null && (
+                    <span className={styles.previewRating}>★ {preview.score.toFixed(1)}</span>
+                  )}
                 </div>
 
                 {/* Genres */}
@@ -461,9 +511,9 @@ const WatchlistSearch: React.FC<WatchlistSearchProps> = ({ category, onAdd, icon
                       {previewCast.map(m => (
                         <div key={m.id} className={styles.castMember}>
                           <div className={styles.castPhoto}>
-                            {m.profilePath ? (
+                            {m.imageUrl || m.profilePath ? (
                               <img
-                                src={`${TMDB_FACE}${m.profilePath}`}
+                                src={m.imageUrl ?? `${TMDB_FACE}${m.profilePath}`}
                                 alt={m.name}
                                 className={styles.castImg}
                               />

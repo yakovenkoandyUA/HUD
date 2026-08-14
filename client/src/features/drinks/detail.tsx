@@ -7,7 +7,8 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { DRINK_TYPE_LABELS, DRINK_STATUS_LABELS } from './types'
 import type { DrinkFormState } from './types'
-import FlavorRadar from './components/FlavorRadar'
+import RadarChart from '@/shared/components/ui/RadarChart'
+import { FLAVOR_AXES } from './types'
 import AddDrinkSheet from './components/AddDrinkSheet'
 import TastingSheet from './components/TastingSheet'
 import BuySheet from './components/BuySheet'
@@ -146,7 +147,7 @@ const DrinkDetail: React.FC = () => {
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>ФЛЕЙВОР-ПРОФІЛЬ</h2>
             <div className={styles.radarWrap}>
-              <FlavorRadar flavor={drink.flavor} size={240} />
+              <RadarChart axes={FLAVOR_AXES} values={drink.flavor} size={240} />
             </div>
           </div>
         )}

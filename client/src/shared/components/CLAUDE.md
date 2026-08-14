@@ -105,6 +105,9 @@ Slide-down toast при розблокуванні ачівки (non-blocking, �
 ### LegalDocModal
 Рендерить Terms/Privacy документи в модальному вікні.
 
+### RadarChart
+Generic SVG radar/spider chart (`{ axes: {key,label}[], values: Record<string, number>, max?, size? }`). Без сторонньої бібліотеки — чистий SVG + trig. Використовується для будь-якого N-осьового 0..max профілю: флейвор напоїв (`drinks/types.ts` → `FLAVOR_AXES`), настрій фільмів/серіалів (`watchlist/utils/moodProfile.ts` → `MOOD_AXES`). Оцінки виставляються вручну — ряд pill-кнопок 1-5 на вісь (tap = встановити, повторний tap на активному значенні = скинути в 0), той самий патерн що й `AddDrinkSheet` слайдери.
+
 ### Інше (ui/, недокументовані детально)
 `Button`, `Card`, `Input`, `Badge`, `ErrorBoundary`, `PinLock`, `PasswordToggleButton`, `ProfileEditModal`, `PwaInstallBanner`, `WeatherSplash`, `FeedbackSheet`, `FabHint`, `AutoUnlockWatcher`, `MimirAchievementLayer` (глобальний overlay для achievement-діалогів Міміра, монтується в `App.tsx`), `IngredientIcon`, `UnitPicker` (рецепти).
 

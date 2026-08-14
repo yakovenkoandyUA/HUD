@@ -51,6 +51,7 @@ import recipeCommentsRouter from './routes/recipeComments'
 import plansRouter from './routes/plans'
 import aiRouter from './routes/ai'
 import familyRouter from './routes/family'
+import planGroupRouter from './routes/planGroup'
 import financeRouter from './routes/finance'
 import notesRouter from './routes/notes'
 import moodRouter from './routes/mood'
@@ -66,6 +67,7 @@ import billingRouter from './routes/billing'
 import mimirRouter from './routes/mimir'
 import feedbackRouter from './routes/feedback'
 import booksRouter from './routes/books'
+import animeRouter from './routes/anime'
 import waitlistRouter from './routes/waitlist'
 import drinksRouter from './routes/drinks'
 
@@ -118,6 +120,7 @@ app.use('/api/labels', labelRoutes)
 app.use('/api/plans', plansRouter)
 app.use('/api/ai', aiRouter)
 app.use('/api/family', familyRouter)
+app.use('/api/plan-group', planGroupRouter)
 app.use('/api/finance', financeRouter)
 app.use('/api/notes', notesRouter)
 app.use('/api/mood', moodRouter)
@@ -134,6 +137,7 @@ app.use('/api/mimir', mimirRouter)
 app.use('/api/drinks', drinksRouter)
 app.use('/api/feedback', feedbackRouter)
 app.use('/api/books', booksRouter)
+app.use('/api/anime', animeRouter)
 app.use('/api/waitlist', waitlistRouter)
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))

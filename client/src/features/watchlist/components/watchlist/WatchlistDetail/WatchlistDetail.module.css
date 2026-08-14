@@ -277,6 +277,63 @@
   text-decoration: underline;
 }
 
+/* ── Mood profile ── */
+.moodSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.moodRadarWrap {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.moodSliders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.moodSliderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.moodSliderName {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.moodSliderTrack {
+  display: flex;
+  gap: 5px;
+  flex: 1;
+}
+
+.moodSliderDot {
+  flex: 1;
+  height: 14px;
+  border-radius: 7px;
+  border: none;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  padding: 0;
+  opacity: 0.35;
+}
+
+.moodSliderDotActive {
+  background: var(--accent);
+  opacity: 1;
+}
+
 /* ── Notify section ── */
 .notifySection {
   display: flex;

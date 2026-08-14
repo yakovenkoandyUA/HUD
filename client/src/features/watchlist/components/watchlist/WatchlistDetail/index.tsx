@@ -11,8 +11,10 @@ import { useSeriesEpisodes } from '../../../hooks/useSeriesEpisodes'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import { useUiStore } from '@/shared/store/uiStore'
+import RadarChart from '@/shared/components/ui/RadarChart'
+import { MOOD_AXES, DEFAULT_MOOD_PROFILE } from '../../../utils/moodProfile'
 import styles from './WatchlistDetail.module.css'
-import type { WatchlistItem, WatchlistStatus } from '@/shared/types'
+import type { WatchlistItem, WatchlistStatus, MoodProfile } from '@/shared/types'
 
 const TMDB_KEY  = import.meta.env.VITE_TMDB_API_KEY as string | undefined
 const TMDB_FACE = 'https://image.tmdb.org/t/p/w185'
@@ -151,6 +153,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [similarStatus, setSimilarStatus]         = useState<WatchlistStatus>('want')
   const [loadingSimilarDet, setLoadingSimilarDet] = useState(false)
   const [localRating, setLocalRating] = useState<number>(item.rating ?? 0)
+  const [moodProfile, setMoodProfile] = useState<MoodProfile>(item.moodProfile ?? DEFAULT_MOOD_PROFILE)
 
   const [cast, setCast]                             = useState<CastMember[]>([])
   const [selectedActor, setSelectedActor]           = useState<CastMember | null>(null)
@@ -217,6 +220,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     setWatchedEpisodes(item.watchedEpisodes ?? [])
     setNextEpisodeDate(item.nextEpisodeDate ? new Date(item.nextEpisodeDate) : null)
     setNextSeasonDate(item.nextSeasonDate ?? null)
+    setMoodProfile(item.moodProfile ?? DEFAULT_MOOD_PROFILE)
     initialNextEpRef.current = item.nextEpisodeDate
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.id])
@@ -459,6 +463,16 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
+  const handleMoodChange = (key: keyof MoodProfile, value: number) => {
+    const nextVal = moodProfile[key] === value ? 0 : value
+    const updated = { ...moodProfile, [key]: nextVal }
+    setMoodProfile(updated)
+    authFetch(`/api/watchlist/${item.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ moodProfile: updated }),
+    }).catch(console.error)
+  }
+
   const handleStartWatching = () => {
     onStatusChange('watching')
     setTimeout(() => {
@@ -477,6 +491,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     : null
 
   const canRemind = item.category === 'series' || item.category === 'anime'
+  const hasMoodData = Object.values(moodProfile).some(v => v > 0)
 
   const allEpisodesAired = episodes.length > 0 &&
     episodes.every(ep => ep.air_date && new Date(ep.air_date) <= new Date())
@@ -657,6 +672,35 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                     прибрати
                   </button>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Mood profile */}
+          {!isBook && (
+            <div className={styles.moodSection}>
+              <p className={styles.sectionLabel}>НАСТРІЙ</p>
+              {hasMoodData && (
+                <div className={styles.moodRadarWrap}>
+                  <RadarChart axes={MOOD_AXES} values={moodProfile} size={220} />
+                </div>
+              )}
+              <div className={styles.moodSliders}>
+                {MOOD_AXES.map(({ key, label }) => (
+                  <div key={key} className={styles.moodSliderRow}>
+                    <span className={styles.moodSliderName}>{label}</span>
+                    <div className={styles.moodSliderTrack}>
+                      {[1, 2, 3, 4, 5].map(v => (
+                        <button
+                          key={v}
+                          type="button"
+                          className={`${styles.moodSliderDot} ${(moodProfile[key as keyof MoodProfile] ?? 0) >= v ? styles.moodSliderDotActive : ''}`}
+                          onClick={() => handleMoodChange(key as keyof MoodProfile, v)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

@@ -1,3 +1,5 @@
+import type { RadarAxis } from '@/shared/components/ui/RadarChart'
+
 export type DrinkType = 'whisky' | 'wine' | 'beer' | 'gin' | 'rum' | 'cognac' | 'vodka' | 'liqueur' | 'other'
 export type DrinkStatus = 'wishlist' | 'have' | 'finished'
 
@@ -9,6 +11,15 @@ export interface FlavorProfile {
   woody: number
   floral: number
 }
+
+export const FLAVOR_AXES: RadarAxis[] = [
+  { key: 'sweet',  label: 'СОЛОДКІСТЬ' },
+  { key: 'smoky',  label: 'ДИМНІСТЬ'   },
+  { key: 'fruity', label: 'ФРУКТОВІСТЬ' },
+  { key: 'spicy',  label: 'ПРЯНІСТЬ'   },
+  { key: 'woody',  label: 'ДЕРЕВИНА'   },
+  { key: 'floral', label: 'КВІТКОВІСТЬ' },
+]
 
 export interface Tasting {
   _id: string

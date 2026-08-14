@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { WatchlistItem, WatchlistStatus } from '@/shared/types'
+import type { WatchlistItem, WatchlistStatus, MoodProfile } from '@/shared/types'
 import { getToken, authFetch, isBackendConfigured } from '@/shared/services/api'
 
 export type SyncStatus = 'local' | 'syncing' | 'synced' | 'error'
@@ -35,6 +35,7 @@ interface ApiWatchlistItem {
   userId?: string
   watchTogether?: boolean
   watchedWith?: string[]
+  moodProfile?: MoodProfile
 }
 
 function fromApi(raw: ApiWatchlistItem): WatchlistItem {
@@ -69,6 +70,7 @@ function fromApi(raw: ApiWatchlistItem): WatchlistItem {
     })),
     watchTogether: raw.watchTogether ?? false,
     watchedWith: raw.watchedWith ?? [],
+    moodProfile: raw.moodProfile,
   }
 }
 

@@ -31,6 +31,14 @@ export interface IWatchlistItem extends Document {
   watchedEpisodes: { season: number; episode: number; userId: string }[]
   watchTogether: boolean
   watchedWith: string[]
+  moodProfile: {
+    humor: number
+    tension: number
+    romance: number
+    action: number
+    drama: number
+    atmosphere: number
+  }
   userId: string
   addedAt: string
 }
@@ -73,6 +81,14 @@ const schema = new Schema<IWatchlistItem>({
   },
   watchTogether: { type: Boolean, default: false },
   watchedWith:   { type: [String], default: [] },
+  moodProfile: {
+    humor:      { type: Number, default: 0 },
+    tension:    { type: Number, default: 0 },
+    romance:    { type: Number, default: 0 },
+    action:     { type: Number, default: 0 },
+    drama:      { type: Number, default: 0 },
+    atmosphere: { type: Number, default: 0 },
+  },
   userId:  { type: String, required: true, index: true },
   addedAt: { type: String, default: () => new Date().toISOString() },
 }, { timestamps: true })
