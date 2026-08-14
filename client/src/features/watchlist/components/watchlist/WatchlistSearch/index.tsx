@@ -35,6 +35,8 @@ interface SearchResult {
   studio?: string | null
   score?: number | null
   cast?: CastMember[]
+  /** Anime only — which API this result came from (AniList first, TMDB fallback for uk-language queries) */
+  source?: 'anilist' | 'tmdb'
 }
 
 /**
