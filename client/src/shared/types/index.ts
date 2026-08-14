@@ -191,6 +191,7 @@ export type WatchlistCategory = 'movie' | 'series' | 'anime' | 'book'
 export type WatchlistStatus = 'want' | 'watching' | 'watched' | 'dropped'
 
 export interface MoodProfile {
+  [key: string]: number
   humor: number
   tension: number
   romance: number

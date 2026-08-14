@@ -4,6 +4,7 @@ export type DrinkType = 'whisky' | 'wine' | 'beer' | 'gin' | 'rum' | 'cognac' | 
 export type DrinkStatus = 'wishlist' | 'have' | 'finished'
 
 export interface FlavorProfile {
+  [key: string]: number
   sweet: number
   smoky: number
   fruity: number
