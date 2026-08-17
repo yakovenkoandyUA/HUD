@@ -3,16 +3,16 @@ export type InternalStatus = 'want' | 'watching' | 'watched' | 'dropped'
 export const STATUS_KEYWORDS: Record<InternalStatus, string[]> = {
   watching: [
     'смотрю', 'дивлюся', 'дивлюсь', 'watching', 'in progress',
-    'в процессе', 'зараз дивлюся', 'currently watching', 'ongoing',
-  ],
-  watched: [
-    'полностью посмотрел', 'переглянув', 'completed', 'watched', 'finished',
-    'подивився', 'дивився', 'complete', 'done', 'переглянуто',
+    'в процессе', 'зараз дивлюся', 'currently watching', 'ongoing', 'currently-reading', 'currently reading',
   ],
   want: [
     'буду смотреть', 'планую', 'хочу', 'want to watch', 'plan to watch',
     'planned', 'буду дивитись', 'want', 'plan', 'wishlist', 'хочу переглянути',
-    'буду дивитися',
+    'буду дивитися', 'to-read', 'to read',
+  ],
+  watched: [
+    'полностью посмотрел', 'переглянув', 'completed', 'watched', 'finished',
+    'подивився', 'дивився', 'complete', 'done', 'переглянуто', 'read',
   ],
   dropped: [
     'перестал', 'dropped', 'покинув', 'кинув', 'abandoned', 'quit',

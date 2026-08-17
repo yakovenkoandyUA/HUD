@@ -144,6 +144,7 @@ function buildOptions(
       { value: '__sep__', label: '', separator: true },
       { value: `${CONST_PREFIX}movie`, label: 'Фільм (всі записи)' },
       { value: `${CONST_PREFIX}series`, label: 'Серіал (всі записи)' },
+      { value: `${CONST_PREFIX}book`, label: 'Книга (всі записи)' },
     )
   }
 

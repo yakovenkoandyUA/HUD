@@ -9,21 +9,28 @@ export type MimirField =
   | 'currentEpisode'
   | 'totalEpisodes'
   | 'currentSeason'
+  | 'author'
+  | 'isbn'
+  | 'pageCount'
 
 export const MIMIR_FIELD_LABELS: Record<MimirField, string> = {
   title:          'Назва',
   status:         'Статус',
   rating:         'Оцінка',
-  category:       'Тип (фільм/серіал)',
+  category:       'Тип (фільм/серіал/книга)',
   year:           'Рік',
   currentEpisode: 'Поточний епізод',
   totalEpisodes:  'Всього епізодів',
   currentSeason:  'Поточний сезон',
+  author:         'Автор',
+  isbn:           'ISBN',
+  pageCount:      'Кількість сторінок',
 }
 
 export const ALL_MIMIR_FIELDS: MimirField[] = [
   'title', 'status', 'rating', 'category', 'year',
   'currentEpisode', 'totalEpisodes', 'currentSeason',
+  'author', 'isbn', 'pageCount',
 ]
 
 export type ColumnMapping = Partial<Record<MimirField, string | null>>
@@ -69,6 +76,7 @@ interface ImportWatchlistState {
 const DEFAULT_MAPPING: ColumnMapping = {
   title: null, status: null, rating: null, category: null,
   year: null, currentEpisode: null, totalEpisodes: null, currentSeason: null,
+  author: null, isbn: null, pageCount: null,
 }
 
 export const useImportWatchlistStore = create<ImportWatchlistState>((set) => ({

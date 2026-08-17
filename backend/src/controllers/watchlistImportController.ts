@@ -14,6 +14,9 @@ type MimirField =
   | 'currentEpisode'
   | 'totalEpisodes'
   | 'currentSeason'
+  | 'author'
+  | 'isbn'
+  | 'pageCount'
 
 type ColumnMapping = Partial<Record<MimirField, string>>
 
@@ -34,6 +37,9 @@ interface ConfirmRow {
   currentEpisode?: string
   totalEpisodes?: string
   currentSeason?: string
+  author?: string
+  isbn?: string
+  pageCount?: string
 }
 
 // ── Auto-mapping keywords ─────────────────────────────────────────────────────
@@ -49,6 +55,9 @@ const FIELD_KEYWORDS: Record<MimirField, string[]> = {
   totalEpisodes:  ['всього серій', 'total episodes', 'episodes total', 'всего эпизодов',
                    'total ep', 'episodes count'],
   currentSeason:  ['season', 'сезон', 'se'],
+  author:         ['author', 'автор'],
+  isbn:           ['isbn'],
+  pageCount:      ['number of pages', 'page count', 'сторінок', 'pages'],
 }
 
 function suggestMapping(headers: string[]): ColumnMapping {
@@ -168,6 +177,39 @@ async function searchTmdb(
   }
 }
 
+// ── Google Books search ─────────────────────────────────────────────────────
+
+interface GoogleBooksResult {
+  id: string
+  volumeInfo?: {
+    title?: string
+    authors?: string[]
+    description?: string
+    publishedDate?: string
+    pageCount?: number
+    categories?: string[]
+    imageLinks?: { thumbnail?: string }
+    industryIdentifiers?: { type: string; identifier: string }[]
+  }
+}
+
+async function searchGoogleBooks(title: string, author: string): Promise<GoogleBooksResult | null> {
+  const key = process.env.GOOGLE_BOOKS_KEY
+  if (!key) return null
+
+  const query = author ? `${title} inauthor:${author}` : title
+  const qs = new URLSearchParams({ q: query, maxResults: '1', key })
+
+  try {
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${qs}`)
+    if (!res.ok) return null
+    const data = await res.json() as { items?: GoogleBooksResult[] }
+    return data.items?.[0] ?? null
+  } catch {
+    return null
+  }
+}
+
 // ── Parse file endpoint ───────────────────────────────────────────────────────
 
 export async function parseImportFile(req: Request, res: Response): Promise<void> {
@@ -237,12 +279,16 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
       currentEpisode: mapping.currentEpisode ? (row[mapping.currentEpisode] ?? '').trim() : undefined,
       totalEpisodes:  mapping.totalEpisodes  ? (row[mapping.totalEpisodes]  ?? '').trim() : undefined,
       currentSeason:  mapping.currentSeason  ? (row[mapping.currentSeason]  ?? '').trim() : undefined,
+      author:         mapping.author         ? (row[mapping.author]         ?? '').trim() : undefined,
+      isbn:           mapping.isbn           ? (row[mapping.isbn]           ?? '').trim() : undefined,
+      pageCount:      mapping.pageCount      ? (row[mapping.pageCount]      ?? '').trim() : undefined,
     }))
 
   // Fetch existing tmdbIds to detect duplicates
-  const existingItems = await WatchlistItem.find({ userId }, { tmdbId: 1, title: 1 }).lean()
+  const existingItems = await WatchlistItem.find({ userId }, { tmdbId: 1, title: 1, isbn: 1 }).lean()
   const existingTmdbIds = new Set(existingItems.map(i => i.tmdbId).filter(id => id > 0))
   const existingTitles  = new Set(existingItems.map(i => i.title.toLowerCase()))
+  const existingIsbns   = new Set(existingItems.map(i => i.isbn).filter((v): v is string => !!v))
 
   let imported = 0
   let skipped  = 0
@@ -261,11 +307,13 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
       if (!row.title) { skipped++; return }
 
       const rawCategory = (row.category ?? '').toLowerCase()
-      let category: 'movie' | 'series' | 'anime' = 'movie'
+      let category: 'movie' | 'series' | 'anime' | 'book' = 'movie'
       if (rawCategory.includes('series') || rawCategory.includes('серіал') || rawCategory.includes('сериал')) {
         category = 'series'
       } else if (rawCategory.includes('anime') || rawCategory.includes('аніме') || rawCategory.includes('аниме')) {
         category = 'anime'
+      } else if (rawCategory.includes('book') || rawCategory.includes('книг')) {
+        category = 'book'
       }
 
       const internalStatus = row.status ? (mapStatus(row.status) ?? 'watched') : 'watched'
@@ -280,8 +328,6 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
         rating = Math.min(10, Math.max(1, rating))
       }
 
-      const tmdbResult = await searchTmdb(row.title, row.year ?? '', category)
-
       // addedAt: use year from file or TMDB release date for chronological ordering
       const addedAt = (() => {
         const rawYear = row.year?.trim()
@@ -293,6 +339,44 @@ export async function confirmImport(req: Request, res: Response): Promise<void> 
         }
         return new Date().toISOString()
       })()
+
+      if (category === 'book') {
+        const isbn = row.isbn?.trim() || null
+        if (isbn && existingIsbns.has(isbn)) { duplicates++; return }
+        const titleLower = row.title.toLowerCase()
+        if (!isbn && existingTitles.has(titleLower)) { duplicates++; return }
+
+        const bookResult = await searchGoogleBooks(row.title, row.author ?? '')
+        const info = bookResult?.volumeInfo
+
+        if (isbn) existingIsbns.add(isbn)
+        else existingTitles.add(titleLower)
+        if (!bookResult) notFoundInTmdb.push(row.title)
+
+        toInsert.push({
+          tmdbId:        0,
+          title:         info?.title ?? row.title,
+          originalTitle: '',
+          category:      'book',
+          status:        internalStatus,
+          posterPath:    '',
+          // Google Books returns a full https URL — not a TMDB path fragment
+          thumbnail:     info?.imageLinks?.thumbnail?.replace('http://', 'https://') ?? '',
+          backdropPath:  '',
+          overview:      info?.description ?? '',
+          year:          (info?.publishedDate ?? row.year ?? '').slice(0, 4),
+          genres:        info?.categories ?? [],
+          rating,
+          author:        row.author || info?.authors?.join(', ') || '',
+          isbn:          isbn ?? info?.industryIdentifiers?.find(i => i.type === 'ISBN_13')?.identifier ?? null,
+          pageCount:     row.pageCount ? (parseInt(row.pageCount, 10) || null) : (info?.pageCount ?? null),
+          addedAt,
+          userId,
+        })
+        return
+      }
+
+      const tmdbResult = await searchTmdb(row.title, row.year ?? '', category)
 
       if (tmdbResult) {
         if (existingTmdbIds.has(tmdbResult.id)) { duplicates++; return }
