@@ -154,6 +154,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
   const [loadingSimilarDet, setLoadingSimilarDet] = useState(false)
   const [localRating, setLocalRating] = useState<number>(item.rating ?? 0)
   const [moodProfile, setMoodProfile] = useState<MoodProfile>(item.moodProfile ?? DEFAULT_MOOD_PROFILE)
+  const [overviewExpanded, setOverviewExpanded] = useState(false)
 
   const [cast, setCast]                             = useState<CastMember[]>([])
   const [selectedActor, setSelectedActor]           = useState<CastMember | null>(null)
@@ -221,6 +222,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
     setNextEpisodeDate(item.nextEpisodeDate ? new Date(item.nextEpisodeDate) : null)
     setNextSeasonDate(item.nextSeasonDate ?? null)
     setMoodProfile(item.moodProfile ?? DEFAULT_MOOD_PROFILE)
+    setOverviewExpanded(false)
     initialNextEpRef.current = item.nextEpisodeDate
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.id])
@@ -519,7 +521,9 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
           <div className={styles.backdropGrad} />
           <div className={styles.handle} />
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
-            ✕
+            <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
           </button>
           <div className={styles.backdropTitle}>
             <h2 className={styles.title}>{item.title}</h2>
@@ -567,12 +571,25 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
 
           {/* Overview */}
           {item.overview && (
-            <p className={styles.overview}>{item.overview}</p>
+            <div>
+              <p className={`${styles.overview} ${overviewExpanded ? styles.overviewExpanded : ''}`}>
+                {item.overview}
+              </p>
+              {item.overview.length > 160 && (
+                <button
+                  type="button"
+                  className={styles.overviewToggle}
+                  onClick={() => setOverviewExpanded(v => !v)}
+                >
+                  {overviewExpanded ? 'Згорнути' : 'Читати далі'}
+                </button>
+              )}
+            </div>
           )}
 
           {/* Book-specific meta */}
           {isBook && (item.author || item.pageCount) && (
-            <div className={styles.metaRow} style={{ flexWrap: 'wrap', gap: '8px' }}>
+            <div className={styles.bookMetaRow}>
               {item.author && (
                 <span className={styles.year}>{item.author}</span>
               )}
@@ -580,7 +597,7 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                 <span className={styles.year}>{item.pageCount} стор.</span>
               )}
               {item.isbn && (
-                <span className={styles.year} style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>ISBN {item.isbn}</span>
+                <span className={`${styles.year} ${styles.isbnText}`}>ISBN {item.isbn}</span>
               )}
             </div>
           )}
@@ -630,8 +647,11 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                     type="button"
                     className={styles.clearRating}
                     onClick={() => { setLocalRating(0); onRatingChange(null) }}
+                    aria-label="Прибрати оцінку"
                   >
-                    прибрати
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
                   </button>
                 )}
               </div>
@@ -668,8 +688,11 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                     type="button"
                     className={styles.clearRating}
                     onClick={() => { setLocalRating(0); onRatingChange(null) }}
+                    aria-label="Прибрати оцінку"
                   >
-                    прибрати
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
                   </button>
                 )}
               </div>
@@ -679,14 +702,19 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
           {/* Mood profile */}
           {!isBook && (
             <div className={styles.moodSection}>
-              <p className={styles.sectionLabel}>НАСТРІЙ</p>
+              <div className={styles.moodHeader}>
+                <p className={styles.sectionLabel}>НАСТРІЙ</p>
+                <span className={styles.moodScaleHint}>слабко → сильно</span>
+              </div>
               {hasMoodData && (
                 <div className={styles.moodRadarWrap}>
                   <RadarChart axes={MOOD_AXES} values={moodProfile} size={220} />
                 </div>
               )}
               <div className={styles.moodSliders}>
-                {MOOD_AXES.map(({ key, label }) => (
+                {MOOD_AXES.map(({ key, label }) => {
+                  const current = moodProfile[key as keyof MoodProfile] ?? 0
+                  return (
                   <div key={key} className={styles.moodSliderRow}>
                     <span className={styles.moodSliderName}>{label}</span>
                     <div className={styles.moodSliderTrack}>
@@ -694,13 +722,17 @@ const WatchlistDetail: React.FC<WatchlistDetailProps> = ({
                         <button
                           key={v}
                           type="button"
-                          className={`${styles.moodSliderDot} ${(moodProfile[key as keyof MoodProfile] ?? 0) >= v ? styles.moodSliderDotActive : ''}`}
+                          className={`${styles.moodSliderDot} ${current >= v ? styles.moodSliderDotActive : ''}`}
                           onClick={() => handleMoodChange(key as keyof MoodProfile, v)}
                         />
                       ))}
                     </div>
+                    <span className={`${styles.moodSliderValue} ${current > 0 ? styles.moodSliderValueActive : ''}`}>
+                      {current || '—'}
+                    </span>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}

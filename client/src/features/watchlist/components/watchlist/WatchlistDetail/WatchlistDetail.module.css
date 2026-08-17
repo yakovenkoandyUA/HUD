@@ -74,12 +74,11 @@
   position: absolute;
   top: 12px;
   right: 14px;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.38);
   border: none;
-  color: #fff;
-  font-size: 14px;
-  width: 28px;
-  height: 28px;
+  color: rgba(255,255,255,0.9);
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -124,15 +123,6 @@
   gap: 8px;
   margin-bottom: 0;
 }
-.metaChip {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text3);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 2px 8px;
-}
 .year {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -155,6 +145,17 @@
   user-select: none;
 }
 
+.bookMetaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.isbnText {
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
 /* ── Overview ── */
 .overview {
   font-family: var(--font-body);
@@ -162,9 +163,23 @@
   color: var(--text2);
   line-height: 1.6;
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin: 0;
+}
+.overviewExpanded {
+  -webkit-line-clamp: unset;
+}
+.overviewToggle {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 5px 0 0;
 }
 
 /* ── Sections ── */
@@ -192,12 +207,12 @@
 }
 
 .statusChip {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 8px;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text3);
@@ -268,20 +283,38 @@
   gap: 10px;
 }
 .clearRating {
-  background: none;
-  border: none;
+  background: var(--surface2);
+  border: 1px solid var(--border);
   color: var(--text3);
-  font-family: var(--font-body);
-  font-size: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  text-decoration: underline;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
 }
+.clearRating:hover { color: var(--negative); border-color: var(--negative); }
 
 /* ── Mood profile ── */
 .moodSection {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.moodHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.moodScaleHint {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text3);
 }
 
 .moodRadarWrap {
@@ -321,17 +354,30 @@
   flex: 1;
   height: 14px;
   border-radius: 7px;
-  border: none;
-  background: var(--border);
+  border: 1px solid var(--border);
+  background: var(--surface2);
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
   padding: 0;
-  opacity: 0.35;
 }
+.moodSliderDot:active { transform: scale(0.92); }
 
 .moodSliderDotActive {
   background: var(--accent);
-  opacity: 1;
+  border-color: var(--accent);
+}
+
+.moodSliderValue {
+  width: 14px;
+  flex-shrink: 0;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+.moodSliderValueActive {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 /* ── Notify section ── */
@@ -376,12 +422,6 @@
 .pickDateBtn:active { border-color: var(--accent); color: var(--accent); }
 
 /* ── Toggle ── */
-.reminderRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .toggleBtn {
   position: relative;
   width: 44px;
@@ -406,28 +446,6 @@
   transition: transform 0.2s;
 }
 .toggleOn .toggleKnob { transform: translateX(20px); }
-
-.reminderDateTrigger {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 6px;
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 12px;
-  padding: 6px 10px;
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.15s;
-}
-.reminderDateTrigger:hover { border-color: var(--accent); }
-
-.reminderNote {
-  font-family: var(--font-body);
-  font-size: 12px;
-  color: var(--text3);
-  margin-top: -8px;
-}
 
 /* ── Delete ── */
 .deleteSection { margin-top: 4px; }
@@ -509,35 +527,6 @@
   color: var(--text2);
 }
 
-.genreRemove {
-  background: none;
-  border: none;
-  color: var(--text3);
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1;
-  padding: 0;
-  display: flex;
-  align-items: center;
-}
-
-.genreInputWrap {
-  display: flex;
-  align-items: center;
-}
-
-.genreInput {
-  background: none;
-  border: 1px dashed var(--border2);
-  border-radius: 20px;
-  padding: 4px 10px;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  color: var(--text);
-  width: 80px;
-  outline: none;
-}
-.genreInput::placeholder { color: var(--text3); }
 
 /* ── Similar ── */
 .similarSection {
@@ -547,7 +536,7 @@
 
 .similarRow {
   display: flex;
-  gap: 10px;
+  gap: 14px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
@@ -590,9 +579,11 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
+  line-height: 1.3;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   max-width: 90px;
 }
 
@@ -823,27 +814,6 @@
 }
 .startWatchingBtn:active { opacity: 0.8; }
 
-/* ── Watch Together (kept for potential reuse) ── */
-.togetherRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-top: 1px solid var(--border);
-}
-.togetherInfo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text2);
-}
-.togetherLabel {
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-
 /* ── Watched With (family selector) ── */
 .watchedWithSection {
   border-top: 1px solid var(--border);
@@ -861,9 +831,9 @@
 .watchedWithChip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px 5px 5px;
-  border-radius: 20px;
+  gap: 5px;
+  padding: 4px 9px 4px 4px;
+  border-radius: 18px;
   border: 1px solid var(--border);
   background: var(--surface2);
   color: var(--text2);
@@ -877,29 +847,29 @@
 }
 
 .watchedWithAvatar {
-  width: 22px;
-  height: 22px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .watchedWithInitial {
-  width: 22px;
-  height: 22px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
   background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--accent);
   text-transform: uppercase;
 }
 
 .watchedWithName {
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -1044,7 +1014,7 @@
 
 .castRow {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -1057,9 +1027,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   flex-shrink: 0;
-  width: 64px;
+  width: 72px;
   background: none;
   border: none;
   cursor: pointer;
@@ -1067,8 +1037,8 @@
 }
 
 .castPhoto {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   overflow: hidden;
   background: var(--surface2);
@@ -1110,8 +1080,8 @@
 
 .castChar {
   font-family: var(--font-body);
-  font-size: 9px;
-  color: var(--text3);
+  font-size: 10px;
+  color: var(--text2);
   text-align: center;
   width: 100%;
   overflow: hidden;

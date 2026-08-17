@@ -131,6 +131,18 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - ~~**Книги (Books)**~~ ✅ Тоггл в профілі і UI в Watchlist вже працюють (2026-07-30, підтверджено юзером — попередній запис був застарілий).
 - ~~**Goodreads імпорт**~~ ✅ Зроблено (2026-08-17) — той самий generic CSV/XLSX import flow (`watchlistImportController.ts`), додано `author`/`isbn`/`pageCount` в `MimirField`+`FIELD_KEYWORDS`, категорія `'book'` в детекції + константа "Книга (всі записи)" в `ColumnMappingStep`, `searchGoogleBooks()` (аналог `searchTmdb`) замінює TMDB-пошук для книжкових рядків — обкладинка пишеться в `thumbnail` (повний URL), не `posterPath` (той зарезервований під TMDB-шлях). Dedup для книг — по `isbn`, fallback на title. `statusMappingDictionary.ts`: Goodreads `Exclusive Shelf` (`read`/`currently-reading`/`to-read`) додано в `watched`/`watching`/`want` (з реордером `want` перед `watched`, бо `'to-read'.includes('read')` інакше хибно матчився як watched).
 
+### ✅ WatchlistDetail — рев'ю від Джонні, частина 1 (2026-08-17)
+
+Фідбек по detail-модалці фільму/серіалу. Зроблено все крім двох пунктів (навмисно пропущені — не додають ваги без окремої продуктової фічі): перетворення "Дивитись разом" у full social block з "Запросити" (бо invite-механізму тут нема, це не Plan Group) і загальна ре-ієрархізація ваги секцій (потребує мокапу, не тільки тексту).
+
+- **Опис** — clamp з 5 до 3 рядків + "Читати далі"/"Згорнути" toggle (`overviewExpanded` state)
+- **Close-кнопка на hero** — символ `✕` замінено на SVG (проєктне правило "іконка не символ"), трохи легша (26px, менш контрастний фон)
+- **"Прибрати" оцінку** — текстовий лінк замінено на невелику круглу icon-кнопку (X), в обох місцях (звичайний і `watchedStatsRow` для завершених серіалів)
+- **Статус-чіпи** — компактніші (padding 8→6px, font 12→11px), склад не міняли (4 стани лишились рівноправні)
+- **Настрій** — додано підказку шкали "слабко → сильно" в заголовку і числовий індикатор (1-5/—) в кінці кожного рядка; крапки тепер мають бордер у неактивному стані (раніше — просто притлумлений колір, зливались)
+- **Актори/Схожі** — назви/імена тепер `line-clamp: 2` замість грубого single-line ellipsis, ширші картки й gap (cast 64→72px/12→16px gap, similar gap 10→14px), підпис ролі актора трохи контрастніший (9px text3 → 10px text2)
+- **Дивитись разом** — компактніші чіпи (avatar 22→19px, padding/font зменшені), без зміни логіки видимості
+
 ### ✅ AI Chef-асистент — зроблено
 Кнопка "Шеф" в `RecipeDetail` (поряд з Wishlist/Покупки/Приготував) відкриває `ChefChatSheet` — той самий UI-паттерн що `AiChatSheet` з Dashboard (SSE streaming, Claude Haiku). Контекст рецепту (title/ingredients/instructions/servings/difficulty/cookTime/calories) передається в тілі запиту з фронтенду напряму в `POST /api/ai/chef-chat` — без додаткового похід в БД і дублювання scope-логіки доступу до рецептів (mine/family/all).
 
