@@ -129,7 +129,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 
 ### 🟡 Не починалось (продуктові фічі)
 - ~~**Книги (Books)**~~ ✅ Тоггл в профілі і UI в Watchlist вже працюють (2026-07-30, підтверджено юзером — попередній запис був застарілий).
-- **Goodreads імпорт** — books тепер живий таб, але власного імпорту (Goodreads CSV) ще нема — окрема задача від універсального CSV/XLSX-парсера вище.
+- ~~**Goodreads імпорт**~~ ✅ Зроблено (2026-08-17) — той самий generic CSV/XLSX import flow (`watchlistImportController.ts`), додано `author`/`isbn`/`pageCount` в `MimirField`+`FIELD_KEYWORDS`, категорія `'book'` в детекції + константа "Книга (всі записи)" в `ColumnMappingStep`, `searchGoogleBooks()` (аналог `searchTmdb`) замінює TMDB-пошук для книжкових рядків — обкладинка пишеться в `thumbnail` (повний URL), не `posterPath` (той зарезервований під TMDB-шлях). Dedup для книг — по `isbn`, fallback на title. `statusMappingDictionary.ts`: Goodreads `Exclusive Shelf` (`read`/`currently-reading`/`to-read`) додано в `watched`/`watching`/`want` (з реордером `want` перед `watched`, бо `'to-read'.includes('read')` інакше хибно матчився як watched).
 
 ### ✅ AI Chef-асистент — зроблено
 Кнопка "Шеф" в `RecipeDetail` (поряд з Wishlist/Покупки/Приготував) відкриває `ChefChatSheet` — той самий UI-паттерн що `AiChatSheet` з Dashboard (SSE streaming, Claude Haiku). Контекст рецепту (title/ingredients/instructions/servings/difficulty/cookTime/calories) передається в тілі запиту з фронтенду напряму в `POST /api/ai/chef-chat` — без додаткового похід в БД і дублювання scope-логіки доступу до рецептів (mine/family/all).
@@ -238,7 +238,14 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - Login + Register: legal footer links (Умови · Конфіденційність)
 
 **Пропущено:** AI-чати (немає persistent storage); GameLog/CookLog/WatchlistComment (внутрішні, не власний контент)
-**Не реалізовано:** hard delete cascade, реальне автоматичне видалення через 30 днів (потребує cron job)
+
+### ✅ Hard delete cascade + 30-денний cron (2026-08-17)
+
+`DELETE /api/user/me` й далі робить тільки soft-delete (`accountStatus:'deletion_requested'`). Додано:
+- `backend/src/scripts/hardDeleteUser.ts` — `hardDeleteUser(userId)`: видаляє ~40 колекцій власних даних юзера (за патерном `dedupeCategories.ts`, з CLI-entry `railway run npx ts-node src/scripts/hardDeleteUser.ts <userId>`), видаляє власні Spaces + все що в них за `spaceId` (щоб не лишити осиротілі записи інших учасників простору), скрабить посилання на юзера в чужих документах (`FamilyLink`, `PlanGroupInvite`, `User.planGroupPayerId`, `Space.members[]`, `WatchlistItem.watchedWith[]`/`watchedEpisodes[]`, `Recipe.ratings[]`, `SprintTask.assignedTo[]`, `Memory.withProfiles[]`), і зрештою видаляє сам `User` документ.
+- `backend/src/jobs/accountDeletionCron.ts` — щоденний cron (04:00 UTC, патерн `cleanupSprintImages.ts`), шукає `accountStatus:'deletion_requested'` з `deletedAt` старшим за 30 днів, викликає `hardDeleteUser` для кожного.
+- Свідомо НЕ видаляються: `BillingOrder`, `ProcessedBillingEvent` (фінансовий аудит), `Feedback` (історія підтримки) — лишаються з осиротілим `userId`, ніде не JOIN-яться для показу іншим юзерам.
+- `User.accountStatus` отримав індекс (для `find` в кроні).
 
 ### 🔵 Стратегічне (Фаза 2+)
 - ~~**Onboarding flow**~~ ✅ Зроблено
