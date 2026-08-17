@@ -11,6 +11,7 @@ import MimirIcon from '@/shared/components/ui/MimirIcon'
 import DoodleIllustration from '@/shared/components/ui/DoodleIllustration'
 import FabHint from '@/shared/components/ui/FabHint'
 import { useRecipesStore } from '@/features/recipes/store/recipesStore'
+import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import { useUiStore } from '@/shared/store/uiStore'
@@ -39,6 +40,8 @@ const Recipes: React.FC = () => {
   const { accepted: familyAccepted, fetchFamily } = useFamilyStore()
   const { showToast } = useUiStore()
   const canUseAi = useCanUseFeature('aiChat')
+  const { fetchSpaces, ensureCellarSpace } = useSpacesStore()
+  const [openingCellar, setOpeningCellar] = useState(false)
 
   const hasFamily = familyAccepted.length > 0
   const scopeTabs = hasFamily ? ALL_SCOPE_TABS : ALL_SCOPE_TABS.filter(t => t.value !== 'family')
@@ -125,6 +128,20 @@ const Recipes: React.FC = () => {
     }
     return [...map.entries()].sort((a, b) => b[1] - a[1]).map(([cat]) => cat)
   }, [baseRecipes])
+
+  const handleOpenCellar = async () => {
+    if (openingCellar) return
+    setOpeningCellar(true)
+    try {
+      await fetchSpaces()
+      const cellar = await ensureCellarSpace()
+      navigate(`/spaces/${cellar.id}`)
+    } catch {
+      showToast('Не вдалося відкрити Drink Deep', 'error')
+    } finally {
+      setOpeningCellar(false)
+    }
+  }
 
   const emptyMsg = recipes.length === 0
     ? scope === 'mine'   ? 'Додай свій перший рецепт'
@@ -293,6 +310,22 @@ const Recipes: React.FC = () => {
             </svg>
           )}
         </button>
+        {activeProfile?.drinksEnabled && (
+          <button
+            type="button"
+            className={styles.fabAi}
+            onClick={handleOpenCellar}
+            disabled={openingCellar}
+            aria-label="Drink Deep"
+            title="Drink Deep"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M6 3h12l-1.2 8.5a5 5 0 0 1-4.95 4.3h-.1a5 5 0 0 1-4.95-4.3L6 3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
+              <path d="M12 15.8V21M8.5 21h7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+              <path d="M7 7h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
         <button
           type="button"
           className={styles.fab}

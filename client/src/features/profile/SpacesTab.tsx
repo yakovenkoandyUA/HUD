@@ -65,11 +65,13 @@ const COLORS = [
  */
 const SpacesTab: React.FC = () => {
   const {
-    spaces, archivedSpaces, loading,
+    spaces: allSpaces, archivedSpaces, loading,
     fetchSpaces, fetchArchived, createSpace, updateSpace, deleteSpace,
     addMember, removeMember, archiveSpace, unarchiveSpace,
     setVehicleProfile, setPetProfile, setTripProfile,
   } = useSpacesStore()
+  // "Drink Deep" (cellar) has its own entry point on Recipes — not managed here
+  const spaces = allSpaces.filter(s => s.type !== 'cellar')
   const navigate = useNavigate()
   const { activeProfile } = useProfileStore()
   const { showToast } = useUiStore()
@@ -144,9 +146,9 @@ const SpacesTab: React.FC = () => {
   // keep detailSpace in sync when store updates
   useEffect(() => {
     if (!detailSpace) return
-    const updated = spaces.find(s => s.id === detailSpace.id)
+    const updated = allSpaces.find(s => s.id === detailSpace.id)
     if (updated) setDetailSpace(updated)
-  }, [spaces, detailSpace])
+  }, [allSpaces, detailSpace])
 
   const resetProfileFields = () => {
     setVehicleMake(''); setVehicleModel(''); setVehicleYear(''); setVehiclePlate('')
@@ -442,12 +444,12 @@ const SpacesTab: React.FC = () => {
 					{limits.maxSpaces !== -1 && (
 						<span className={styles.titleCount}>
 							{' '}
-							{spaces.length}/{limits.maxSpaces}
+							{allSpaces.length}/{limits.maxSpaces}
 						</span>
 					)}
 				</span>
-				{isAtLimit('maxSpaces', spaces.length) ? (
-					<UpgradePrompt limitKey="maxSpaces" currentCount={spaces.length} compact />
+				{isAtLimit('maxSpaces', allSpaces.length) ? (
+					<UpgradePrompt limitKey="maxSpaces" currentCount={allSpaces.length} compact />
 				) : (
 					<button type="button" className={styles.addBtn} onClick={openCreate} aria-label="Створити простір">
 						<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">

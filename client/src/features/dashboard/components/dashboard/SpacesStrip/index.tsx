@@ -34,7 +34,9 @@ const PlusIcon: React.FC = () => (
 )
 
 const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
-  const { spaces, loading: spacesLoading, fetchSpaces, createSpace } = useSpacesStore()
+  const { spaces: allSpaces, loading: spacesLoading, fetchSpaces, createSpace } = useSpacesStore()
+  // "Drink Deep" (cellar) has its own entry point on Recipes — not shown here
+  const spaces = allSpaces.filter(s => s.type !== 'cellar')
   const { showToast } = useUiStore()
   const navigate  = useNavigate()
   const location  = useLocation()

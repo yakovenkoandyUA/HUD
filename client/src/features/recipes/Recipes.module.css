@@ -394,6 +394,7 @@
 }
 .fabAi:hover { background: var(--surface); }
 .fabAi:active { transform: scale(0.93); }
+.fabAi:disabled { opacity: 0.5; cursor: default; }
 
 .fabAiLock {
   position: absolute;
