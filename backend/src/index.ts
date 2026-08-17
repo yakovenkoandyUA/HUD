@@ -27,6 +27,7 @@ import './jobs/vehicleDocReminders'
 import './jobs/spaceWeeklyDigest'
 import './jobs/workoutReminders'
 import { startCleanupSprintImages } from './jobs/cleanupSprintImages'
+import { startAccountDeletionCron } from './jobs/accountDeletionCron'
 import { errorHandler } from './middleware/errorHandler'
 
 import authRoutes from './routes/auth'
@@ -150,6 +151,7 @@ async function start() {
   initWebPush()
   startF1Scheduler()
   startCleanupSprintImages()
+  startAccountDeletionCron()
   app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`))
 }
 

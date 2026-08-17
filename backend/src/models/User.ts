@@ -129,7 +129,7 @@ const schema = new Schema<IUser>({
   planExpiresAt:             { type: Date, default: null },
   planExpiryWarningSentAt:   { type: Date, default: null },
   // Account lifecycle — safe defaults, no migration needed
-  accountStatus: { type: String, enum: ['active', 'deletion_requested', 'deleted'], default: 'active' },
+  accountStatus: { type: String, enum: ['active', 'deletion_requested', 'deleted'], default: 'active', index: true },
   deletedAt:     { type: Date, default: null },
   // Plan group (Duo/Group shared payer)
   planGroupPayerId: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
