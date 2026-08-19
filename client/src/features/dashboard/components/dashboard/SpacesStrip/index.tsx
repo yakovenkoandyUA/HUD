@@ -56,6 +56,7 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
 
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(() => setOpen(false), { enabled: open, overlayRef })
+  const gridRef    = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -109,7 +110,13 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
       setSaving(true)
       try {
         await createSpace({ name: name.trim(), type, color })
-        if (!cancelled) { setOpen(false); showToast('Простір створено', 'success') }
+        if (!cancelled) {
+          setOpen(false)
+          showToast('Простір створено', 'success')
+          // New space is prepended to the front — scroll the strip back
+          // so it's actually visible instead of landing off-screen left.
+          gridRef.current?.scrollTo({ left: 0, behavior: 'smooth' })
+        }
       } catch {
         if (!cancelled) showToast('Помилка створення', 'error')
       } finally {
@@ -132,7 +139,7 @@ const SpacesStrip: React.FC<SpacesStripProps> = ({ f1Enabled = true }) => {
         </button>
       </div>
 
-      <div className={styles.grid}>
+      <div className={styles.grid} ref={gridRef}>
         {spaces.length === 0 && !spacesLoading && (
           <button type="button" className={`${styles.card} ${styles.addCard}`} onClick={openSheet}>
             <span className={styles.avatar}>
