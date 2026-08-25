@@ -1066,6 +1066,27 @@
 }
 .saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.syncPromptText {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}
+.syncPromptActions {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.syncDismissBtn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.syncDismissBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ── Programs section ── */
 .programsSection {
   padding: 14px 16px;

@@ -6,6 +6,7 @@ import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import PillSelector from '@/shared/components/ui/PillSelector'
+import Modal from '@/shared/components/ui/Modal'
 import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
 import AddWorkoutSheet from '../AddWorkoutSheet'
 import ActiveWorkoutSheet from '../ActiveWorkoutSheet'
@@ -121,6 +122,39 @@ function calcStreak(events: SportEvent[]): number {
 
 function genId(): string {
   return Math.random().toString(36).slice(2, 10)
+}
+
+// Мерджить фактично записані під час тренування reps/weight назад у setTargets
+// вправи (за індексом підходу) — джерело правди для порівняння лишається
+// getSetTargets, тож legacy sets/reps поля не чіпаємо.
+function mergeSetTargetsFromLog(ex: WorkoutExercise, log: WorkoutExerciseLog): { exercise: WorkoutExercise; changed: boolean } {
+  const targets = getSetTargets(ex)
+  let changed = false
+  const merged: WorkoutSetTarget[] = targets.map((t, i) => {
+    const logged = log.sets[i]
+    if (!logged) return t
+    const reps   = logged.reps   ?? t.reps
+    const weight = logged.weight ?? t.weight
+    if (reps !== t.reps || weight !== t.weight) changed = true
+    return { reps, weight }
+  })
+  return { exercise: { ...ex, setTargets: merged }, changed }
+}
+
+// Порівнює факт з тренування (exerciseLogs) з планом програми — повертає
+// оновлений список вправ лише якщо хоч одне значення реально відрізняється.
+function buildSyncedExercises(program: WorkoutProgram, exerciseLogs: WorkoutExerciseLog[]): WorkoutExercise[] | null {
+  if (exerciseLogs.length === 0) return null
+  const logsByExId = new Map(exerciseLogs.map(l => [l.exerciseId, l]))
+  let changed = false
+  const exercises = program.exercises.map(ex => {
+    const log = logsByExId.get(ex.id)
+    if (!log) return ex
+    const merged = mergeSetTargetsFromLog(ex, log)
+    if (merged.changed) changed = true
+    return merged.exercise
+  })
+  return changed ? exercises : null
 }
 
 // ── Profile edit sheet ─────────────────────────────────────────────────────
@@ -861,6 +895,8 @@ const SportSpaceView: React.FC<Props> = ({
   const [programSheetOpen, setProgramSheetOpen] = useState(false)
   const [editingProgram, setEditingProgram]     = useState<WorkoutProgram | null>(null)
   const [activeWorkout, setActiveWorkout]       = useState<WorkoutProgram | null>(null)
+  const [syncPrompt, setSyncPrompt]             = useState<{ programId: string; exercises: WorkoutExercise[] } | null>(null)
+  const [syncing, setSyncing]                   = useState(false)
 
   const events = eventsBySpace[spaceId] ?? []
 
@@ -992,9 +1028,28 @@ const SportSpaceView: React.FC<Props> = ({
       })
       await fetchEvents(spaceId)
       showToast('Тренування завершено', 'success')
+
+      const syncedExercises = buildSyncedExercises(activeWorkout, exerciseLogs)
+      if (syncedExercises) {
+        setSyncPrompt({ programId: activeWorkout._id, exercises: syncedExercises })
+      }
     } catch {
       showToast('Помилка збереження', 'error')
       throw new Error('Failed')
+    }
+  }
+
+  const handleConfirmSync = async () => {
+    if (!syncPrompt) return
+    setSyncing(true)
+    try {
+      await updateProgram(spaceId, syncPrompt.programId, { exercises: syncPrompt.exercises })
+      showToast('Програму оновлено', 'success')
+      setSyncPrompt(null)
+    } catch {
+      showToast('Помилка оновлення програми', 'error')
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -1331,6 +1386,20 @@ const SportSpaceView: React.FC<Props> = ({
 			/>
 
 			<ActiveWorkoutSheet isOpen={activeWorkout !== null} color={color} program={activeWorkout} onClose={() => setActiveWorkout(null)} onFinish={handleFinishWorkout} />
+
+			<Modal isOpen={syncPrompt !== null} onClose={() => setSyncPrompt(null)} title="Оновити програму?">
+				<p className={styles.syncPromptText}>
+					Під час тренування ви змінили вагу або кількість повторів. Оновити програму тренувань цими значеннями?
+				</p>
+				<div className={styles.syncPromptActions}>
+					<button type="button" className={styles.saveBtn} style={{ background: color }} onClick={handleConfirmSync} disabled={syncing}>
+						{syncing ? 'Оновлення…' : 'Оновити програму'}
+					</button>
+					<button type="button" className={styles.syncDismissBtn} onClick={() => setSyncPrompt(null)} disabled={syncing}>
+						Не зараз
+					</button>
+				</div>
+			</Modal>
 		</div>
 	)
 }
