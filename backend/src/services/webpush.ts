@@ -15,10 +15,11 @@ export function initWebPush(): void {
 
 export async function sendNotification(
   subscription: PushSubscription,
-  payload: { title: string; body: string; icon?: string; url?: string; tag?: string }
+  payload: { title: string; body: string; icon?: string; url?: string; tag?: string },
+  ttlSeconds?: number
 ): Promise<SendResult | null> {
   try {
-    return await webpush.sendNotification(subscription, JSON.stringify(payload))
+    return await webpush.sendNotification(subscription, JSON.stringify(payload), ttlSeconds !== undefined ? { TTL: ttlSeconds } : undefined)
   } catch (err: unknown) {
     const status = (err as { statusCode?: number }).statusCode
     if (status === 410 || status === 404) {
@@ -32,13 +33,14 @@ export async function sendNotification(
 
 export async function sendPushToUser(
   userId: string,
-  payload: { title: string; body: string; icon?: string; url?: string; tag?: string }
+  payload: { title: string; body: string; icon?: string; url?: string; tag?: string },
+  ttlSeconds?: number
 ): Promise<void> {
   const subs = await PushSubscriptionModel.find({ userId })
   await Promise.allSettled(
     subs.map(async (sub) => {
       try {
-        await sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload)
+        await sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload, ttlSeconds)
       } catch (err: unknown) {
         if ((err as { expired?: boolean }).expired) {
           await PushSubscriptionModel.deleteOne({ _id: sub._id })

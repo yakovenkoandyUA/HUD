@@ -24,12 +24,14 @@ cron.schedule('0 18 * * *', async () => {
     let sent = 0
     for (const user of users) {
       if (loggedSet.has(user._id.toString())) continue
+      // TTL 6г — якщо пристрій offline о 21:00, пуш має "згоріти" до ранку,
+      // а не доставитись запізно вранці й виглядати як другий/дублікат
       await sendPushToUser(user._id.toString(), {
         title: 'День добігає кінця',
         body:  'Як себе почуваєш? Відзнач настрій і зафіксуй підсумки',
         url:   '/',
         tag:   'day-recap',
-      })
+      }, 6 * 60 * 60)
       sent++
     }
     console.log(`[Push] Day recap sent to ${sent}/${users.length} users`)
