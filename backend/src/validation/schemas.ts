@@ -96,6 +96,11 @@ export const createTaskSchema = updateTaskSchema.extend({
   type:  z.enum(['task', 'routine', 'todo', 'shopping']).optional(),
 })
 
+export const breakdownTaskSchema = z.object({
+  title:       z.string().min(1, 'Назва обов\'язкова').max(200),
+  description: z.string().max(2000).optional(),
+})
+
 // ── Transactions ──────────────────────────────────────────────────────────────
 
 export const createTransactionSchema = z.object({

@@ -17,12 +17,14 @@ const MIMIR_THINKING_SRC = '/mimir/mimir-thinking.webp'
  * Підтримує AI-дії: створення нотаток і квестів через природну мову.
  *
  * Props:
- * @prop {boolean}    isOpen  — видимість шіта
- * @prop {() => void} onClose — callback закриття
+ * @prop {boolean}    isOpen      — видимість шіта
+ * @prop {() => void} onClose     — callback закриття
+ * @prop {string[]}   [suggestions] — контекстні приклади питань замість дефолтних (напр. відкрито з фінансів)
  */
 interface AiChatSheetProps {
   isOpen: boolean
   onClose: () => void
+  suggestions?: string[]
 }
 
 interface ActionResult {
@@ -64,7 +66,7 @@ const QuestIcon: React.FC = () => (
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
+const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions }) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput]       = useState('')
   const [busy, setBusy]         = useState(false)
@@ -229,7 +231,7 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose }) => {
               <img src={MIMIR_EMPTY_SRC} alt="Mimir" className={styles.emptyMimir} draggable={false} />
               <p className={styles.emptyText}>Я допоможу знайти відповідь у твоїх фінансах,<br/>задачах, рецептах і медіа.</p>
               <div className={styles.suggestions}>
-                {SUGGESTIONS.map(s => (
+                {(suggestions ?? SUGGESTIONS).map(s => (
                   <button
                     key={s}
                     type="button"

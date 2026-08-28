@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import AppHeader from '@/shared/components/layout/AppHeader'
 import BalanceHero from './components/finance/BalanceHero'
 import GoalsList from './components/finance/GoalsList'
@@ -14,7 +14,8 @@ import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useBankStore } from '@/features/finance/store/bankStore'
-import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart } from './utils/finance'
+import { useRecurringPaymentStore } from '@/features/finance/store/recurringPaymentStore'
+import { getDaysLeftInMonth, getDaysElapsed, calcDailyBudget, getPeriodStart, calcSalaryForecast } from './utils/finance'
 import { getToken } from '@/shared/services/api'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import MimirHint from '@/shared/components/ui/MimirHint'
@@ -40,6 +41,7 @@ const Finance: React.FC = () => {
   const salaryDay = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const userId    = useProfileStore(s => s.activeProfile?.id ?? '')
   const { connection, syncing, importing, fetchStatus, sync, importCsv, recategorize } = useBankStore()
+  const { payments: recurringPayments, fetchPayments: fetchRecurringPayments } = useRecurringPaymentStore()
 
   const [showTopup, setShowTopup]     = useState(false)
   const [showExpense, setShowExpense] = useState(false)
@@ -71,6 +73,7 @@ const Finance: React.FC = () => {
     let cancelled = false
     const init = async () => {
       fetchTransactions()
+      fetchRecurringPayments()
       await fetchStatus()
       if (cancelled) return
       // Auto-sync if bank connected — silent background refresh
@@ -149,6 +152,11 @@ const Finance: React.FC = () => {
 
   const avgPerDay = daysElapsed > 0 ? Math.round(totalExpense / daysElapsed) : 0
 
+  const salaryForecast = useMemo(
+    () => calcSalaryForecast(balance, transactions, recurringPayments, salaryDay).projected,
+    [balance, transactions, recurringPayments, salaryDay],
+  )
+
   const handleTopup = (amount: number, description: string, category: string, spaceId?: string | null) => {
     addTopup(amount, description, category, spaceId)
     useAchievementsStore.getState().unlock('first-transaction')
@@ -196,6 +204,7 @@ const Finance: React.FC = () => {
 					avgPerDay={avgPerDay}
 					daysLeft={daysLeft}
 					todaySpent={todaySpent}
+					salaryForecast={salaryForecast}
 				/>
 
 				<div className={styles.mimirFloat}>

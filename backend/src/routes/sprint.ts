@@ -4,13 +4,19 @@ import {
   reorderTasks,
   getTodos, createTodo, updateTodo, removeTodo, rollbackImages,
 } from '../controllers/sprintController'
+import { breakdownTask } from '../controllers/sprintAiController'
 import { requireAuth } from '../middleware/auth'
+import { requireVerified } from '../middleware/requireVerified'
+import { loadUser } from '../middleware/loadUser'
+import { requireFeature } from '../utils/entitlements'
 import { validate } from '../middleware/validate'
-import { createTaskSchema, updateTaskSchema } from '../validation/schemas'
+import { createTaskSchema, updateTaskSchema, breakdownTaskSchema } from '../validation/schemas'
 
 const router = Router()
 
 router.use(requireAuth)
+
+router.post('/ai/breakdown', requireVerified, loadUser, requireFeature('sprintAi'), validate(breakdownTaskSchema), breakdownTask)
 
 router.get('/tasks', getTasks)
 router.get('/tasks/trash', getTrash)

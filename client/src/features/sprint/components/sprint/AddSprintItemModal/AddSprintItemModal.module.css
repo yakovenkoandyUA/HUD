@@ -350,6 +350,22 @@
   background: var(--accent-soft);
 }
 
+.dueSuggestion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px dashed var(--accent-dim);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .metaChipClear {
   margin-left: 1px;
   font-size: 10px;

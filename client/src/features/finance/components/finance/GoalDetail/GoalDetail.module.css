@@ -163,6 +163,100 @@
 }
 .contribBtn:hover { opacity: 0.85; }
 
+/* ── What-if calculator ── */
+.whatIf {
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.whatIfToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.whatIfChevron {
+  color: var(--text3);
+  transition: transform 0.2s ease;
+}
+.whatIfChevronOpen { transform: rotate(180deg); }
+
+.whatIfBody {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 260ms ease-in-out, opacity 200ms ease-in-out;
+}
+.whatIfBodyOpen {
+  max-height: 300px;
+  opacity: 1;
+}
+
+.whatIfInner {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.whatIfPresets {
+  display: flex;
+  gap: 6px;
+}
+
+.whatIfPreset {
+  flex: 1;
+  padding: 7px 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.whatIfPreset:hover { border-color: var(--accent); }
+
+.whatIfPresetActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.whatIfInput {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.whatIfInput:focus { border-color: var(--accent); }
+.whatIfInput::placeholder { color: var(--text3); }
+
+.whatIfResult {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text2);
+  margin: 0;
+}
+.whatIfResult strong { color: var(--gold); font-family: var(--font-mono); }
+
 /* ── Deposits history ── */
 .history {
   display: flex;

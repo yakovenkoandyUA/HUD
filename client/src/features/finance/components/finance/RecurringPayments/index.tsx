@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { authFetch } from '@/shared/services/api'
-import { fmt } from '../../../utils/finance'
+import { fmt, detectRecurringCandidates, type RecurringCandidate } from '../../../utils/finance'
 import { getServiceLogoUrl, getServiceEmoji } from '../../../utils/serviceLogos'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
+import { useRecurringPaymentStore, type RecurringPayment } from '@/features/finance/store/recurringPaymentStore'
 import Modal from '@/shared/components/ui/Modal'
 import styles from './RecurringPayments.module.css'
 
@@ -20,19 +21,6 @@ const CURRENCIES = ['UAH', 'USD', 'EUR'] as const
 type Currency = typeof CURRENCIES[number]
 const CURRENCY_SYMBOL: Record<Currency, string> = { UAH: '₴', USD: '$', EUR: '€' }
 const VISIBLE_LIMIT = 4
-
-interface RecurringPayment {
-  _id: string
-  name: string
-  amount: number
-  amountForeign?: number | null
-  currency?: Currency
-  dayOfMonth: number
-  category: string
-  isActive: boolean
-  reminderDays?: number[]
-  lastConfirmedMonth?: string
-}
 
 interface FormState {
   name: string
@@ -92,30 +80,42 @@ function dayLabel(day: number): string {
   return `${day}-го`
 }
 
-const CACHE_KEY = 'hud-recurring-v1'
-const CACHE_TTL = 5 * 60 * 1000
-
-function readCache(): RecurringPayment[] | null {
-  try {
-    const raw = sessionStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    const { data, ts } = JSON.parse(raw)
-    if (Date.now() - ts > CACHE_TTL) return null
-    return data
-  } catch { return null }
+interface CandidateBannerProps {
+  candidates: RecurringCandidate[]
+  onAdd:      (c: RecurringCandidate) => void
+  onDismiss:  (key: string) => void
 }
 
-function writeCache(data: RecurringPayment[]) {
-  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })) } catch { /* quota */ }
+/** Банер з автовиявленими кандидатами на регулярний платіж (евристика по історії витрат) */
+const CandidateBanner: React.FC<CandidateBannerProps> = ({ candidates, onAdd, onDismiss }) => {
+  if (candidates.length === 0) return null
+  return (
+    <div className={styles.candidateList}>
+      {candidates.map(c => (
+        <div key={c.key} className={styles.candidateRow}>
+          <svg className={styles.candidateIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-8 3.58-8 8s3.58 8 8 8a8 8 0 007.75-6M20 4v5h-5" />
+          </svg>
+          <div className={styles.candidateInfo}>
+            <span className={styles.candidateName}>{c.name}</span>
+            <span className={styles.candidateMeta}>{fmt(c.amount)} ₴ · {c.occurrences}× за останні місяці</span>
+          </div>
+          <button type="button" className={styles.candidateAddBtn} onClick={() => onAdd(c)}>Додати</button>
+          <button type="button" className={styles.candidateDismissBtn} onClick={() => onDismiss(c.key)} aria-label="Не пропонувати">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11"/></svg>
+          </button>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 const RecurringPayments: React.FC = () => {
-  const fetchTransactions = useFinanceStore(s => s.fetchTransactions)
-  const cached = readCache()
-  const [payments, setPayments]         = useState<RecurringPayment[]>(cached ?? [])
-  const [loading, setLoading]           = useState(!cached)
+  const { transactions, fetchTransactions } = useFinanceStore()
+  const { payments, loading, fetchPayments, updatePayment } = useRecurringPaymentStore()
   const [showAll, setShowAll]           = useState(false)
   const [showAdd, setShowAdd]           = useState(false)
+  const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set())
   const [editPayment, setEditPayment]   = useState<RecurringPayment | null>(null)
   const [form, setForm]                 = useState<FormState>(EMPTY_FORM)
   const [errors, setErrors]             = useState<FormErrors>({})
@@ -126,19 +126,6 @@ const RecurringPayments: React.FC = () => {
 
   const today = new Date().getDate()
   const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
-
-  const fetchPayments = useCallback(async () => {
-    try {
-      const r = await authFetch('/api/recurring')
-      if (r.ok) {
-        const data: RecurringPayment[] = await r.json()
-        setPayments(data)
-        writeCache(data)
-      }
-    } catch { /* silent */ } finally {
-      setLoading(false)
-    }
-  }, [])
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
 
@@ -230,7 +217,7 @@ const RecurringPayments: React.FC = () => {
           currency,
           dayOfMonth: day,
         }
-        setPayments(prev => prev.map(p => p._id === editPayment._id ? updated : p))
+        updatePayment(editPayment._id, updated)
         setEditPayment(null)
       }
     } finally { setSaving(false) }
@@ -262,15 +249,28 @@ const RecurringPayments: React.FC = () => {
     setShowAdd(true)
   }
 
+  const candidates = useMemo(
+    () => detectRecurringCandidates(transactions, payments).filter(c => !dismissedKeys.has(c.key)),
+    [transactions, payments, dismissedKeys],
+  )
+
+  const openAddFromCandidate = (c: RecurringCandidate) => {
+    setForm({ name: c.name, amount: String(c.amount), dayOfMonth: String(c.dayOfMonth), reminderDays: [] })
+    setCurrency('UAH')
+    setErrors({})
+    setShowAdd(true)
+    setDismissedKeys(prev => new Set(prev).add(c.key))
+  }
+
+  const dismissCandidate = (key: string) => {
+    setDismissedKeys(prev => new Set(prev).add(key))
+  }
+
   const handleConfirm = async (p: RecurringPayment) => {
     const r = await authFetch(`/api/recurring/${p._id}/confirm`, { method: 'POST' })
     if (!r.ok) return
     const { payment } = await r.json()
-    setPayments(prev => {
-      const updated = prev.map(x => x._id === p._id ? { ...x, lastConfirmedMonth: payment.lastConfirmedMonth } : x)
-      writeCache(updated)
-      return updated
-    })
+    updatePayment(p._id, { lastConfirmedMonth: payment.lastConfirmedMonth })
     fetchTransactions()
   }
 
@@ -406,6 +406,7 @@ const RecurringPayments: React.FC = () => {
             Додати
           </button>
         </div>
+        <CandidateBanner candidates={candidates} onAdd={openAddFromCandidate} onDismiss={dismissCandidate} />
       </div>
     )
   }
@@ -426,6 +427,8 @@ const RecurringPayments: React.FC = () => {
           Додати
         </button>
       </div>
+
+      <CandidateBanner candidates={candidates} onAdd={openAddFromCandidate} onDismiss={dismissCandidate} />
 
       <div className={styles.list}>
         {visiblePayments.map((p, i) => {

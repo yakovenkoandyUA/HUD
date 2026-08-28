@@ -18,6 +18,7 @@ import styles from './BalanceHero.module.css'
  * @prop {number}  avgPerDay    — середнє витрат на день
  * @prop {number}  daysLeft     — днів до наступного поповнення
  * @prop {number}  todaySpent   — витрачено сьогодні
+ * @prop {number}  salaryForecast — прогнозований баланс на день зарплати (calcSalaryForecast), враховує підписки
  */
 interface BalanceHeroProps {
   balance: number
@@ -27,6 +28,7 @@ interface BalanceHeroProps {
   avgPerDay: number
   daysLeft: number
   todaySpent: number
+  salaryForecast: number
 }
 
 const BalanceHero: React.FC<BalanceHeroProps> = ({
@@ -37,6 +39,7 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   avgPerDay,
   daysLeft,
   todaySpent,
+  salaryForecast,
 }) => {
   const { checkToday } = useStreakStore()
 
@@ -47,8 +50,6 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
   const progressPct = dailyBudget > 0 ? Math.min(100, Math.round((todaySpent / dailyBudget) * 100)) : 0
   const progressColor: 'red' | 'green' = todaySpent > dailyBudget ? 'red' : 'green'
   const delta = dailyBudget - todaySpent
-  // прогноз: якщо витрачати і далі в темпі avgPerDay, скільки залишиться до зарплати
-  const projected = balance - avgPerDay * daysLeft
 
   return (
     <div className={styles.hero}>
@@ -90,9 +91,9 @@ const BalanceHero: React.FC<BalanceHeroProps> = ({
 
       {daysLeft > 0 && avgPerDay > 0 && (
         <div className={styles.forecast}>
-          {projected >= 0
-            ? <>При такому темпі залишиться{' '}<span className={styles.forecastPos}>~{fmt(projected)} ₴</span></>
-            : <>При такому темпі не вистачить{' '}<span className={styles.forecastNeg}>~{fmt(Math.abs(projected))} ₴</span></>
+          {salaryForecast >= 0
+            ? <>При такому темпі залишиться{' '}<span className={styles.forecastPos}>~{fmt(salaryForecast)} ₴</span></>
+            : <>При такому темпі не вистачить{' '}<span className={styles.forecastNeg}>~{fmt(Math.abs(salaryForecast))} ₴</span></>
           }
         </div>
       )}

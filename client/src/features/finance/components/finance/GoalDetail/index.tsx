@@ -53,6 +53,8 @@ const GoalDetail: React.FC<GoalDetailProps> = ({ goal, isOpen, onClose }) => {
   const [contribAmount, setContribAmount] = useState('')
   const [contribError, setContribError]   = useState<string | undefined>()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showWhatIf, setShowWhatIf] = useState(false)
+  const [whatIfMonthly, setWhatIfMonthly] = useState('')
 
   const { trigger, uploading, error: uploadError, inputElement } = useImageUpload(
     'mimir/goals',
@@ -91,6 +93,11 @@ const GoalDetail: React.FC<GoalDetailProps> = ({ goal, isOpen, onClose }) => {
     if (!goal.deposits) return []
     return [...goal.deposits].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   }, [goal.deposits])
+
+  const remaining = Math.max(goal.targetAmount - goal.currentAmount, 0)
+  const whatIfMonthlyNum = parseFloat(whatIfMonthly)
+  const whatIfMonths = whatIfMonthlyNum > 0 ? Math.ceil(remaining / whatIfMonthlyNum) : null
+  const WHATIF_PRESETS = [500, 1000, 2000]
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} draggable>
@@ -184,6 +191,54 @@ const GoalDetail: React.FC<GoalDetailProps> = ({ goal, isOpen, onClose }) => {
             </div>
             <button type="submit" className={styles.contribBtn}>Поповнити</button>
           </form>
+        )}
+
+        {!done && (
+          <div className={styles.whatIf}>
+            <button
+              type="button"
+              className={styles.whatIfToggle}
+              onClick={() => setShowWhatIf(v => !v)}
+              aria-expanded={showWhatIf}
+            >
+              Що якщо?
+              <svg
+                className={`${styles.whatIfChevron} ${showWhatIf ? styles.whatIfChevronOpen : ''}`}
+                width="14" height="14" viewBox="0 0 16 16" fill="none"
+              >
+                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <div className={`${styles.whatIfBody} ${showWhatIf ? styles.whatIfBodyOpen : ''}`}>
+              <div className={styles.whatIfInner}>
+                <div className={styles.whatIfPresets}>
+                  {WHATIF_PRESETS.map(p => (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`${styles.whatIfPreset} ${whatIfMonthly === String(p) ? styles.whatIfPresetActive : ''}`}
+                      onClick={() => setWhatIfMonthly(String(p))}
+                    >
+                      {p} ₴/міс
+                    </button>
+                  ))}
+                </div>
+                <input
+                  className={styles.whatIfInput}
+                  type="number"
+                  placeholder="Своя сума ₴/міс"
+                  value={whatIfMonthly}
+                  onChange={e => setWhatIfMonthly(e.target.value)}
+                />
+                {whatIfMonths !== null && (
+                  <p className={styles.whatIfResult}>
+                    Якщо відкладати <strong>{fmt(whatIfMonthlyNum)} ₴/міс</strong> → ціль через{' '}
+                    <strong>{whatIfMonths} {whatIfMonths === 1 ? 'місяць' : whatIfMonths < 5 ? 'місяці' : 'місяців'}</strong>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {sortedDeposits.length > 0 && (

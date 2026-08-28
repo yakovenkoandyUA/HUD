@@ -115,8 +115,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem, deleteItem } = useSprintStore()
   const { accepted, fetchFamily } = useFamilyStore()
   const { spaces, fetchSpaces } = useSpacesStore()
-  const { limits } = usePlan()
+  const { limits, can } = usePlan()
   const maxImages = limits.maxTaskImages
+  const [breakingDown, setBreakingDown] = useState(false)
 
   useEffect(() => {
     if (taskId && accepted.length === 0) fetchFamily()
@@ -339,6 +340,23 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     addChecklistItem(task.id, checkInput.trim())
     setCheckInput('')
     checkInputRef.current?.focus()
+  }
+
+  const handleAiBreakdown = async () => {
+    if (!task || breakingDown) return
+    setBreakingDown(true)
+    try {
+      const r = await authFetch('/api/sprint/ai/breakdown', {
+        method: 'POST',
+        body: JSON.stringify({ title: task.title, description: task.description }),
+      })
+      if (r.ok) {
+        const { checklist: steps } = await r.json() as { checklist: { id: string; title: string; done: boolean }[] }
+        if (steps.length > 0) updateTask(task.id, { checklist: [...checklist, ...steps] })
+      }
+    } finally {
+      setBreakingDown(false)
+    }
   }
 
   const handleDateChange = (date: string) => {
@@ -658,11 +676,26 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                 <div className={styles.section}>
                   <div className={styles.sectionHeaderRow}>
                     <p className={styles.sectionLabel}>Чек-ліст</p>
-                    {checklist.length > 0 && (
-                      <span className={styles.checklistCounter} style={{ color: progressColor }}>
-                        {checkDone}/{checklist.length}
-                      </span>
-                    )}
+                    <div className={styles.sectionHeaderRight}>
+                      {checklist.length > 0 && (
+                        <span className={styles.checklistCounter} style={{ color: progressColor }}>
+                          {checkDone}/{checklist.length}
+                        </span>
+                      )}
+                      {can('sprintAi') && (
+                        <button
+                          type="button"
+                          className={styles.aiBreakdownBtn}
+                          onClick={handleAiBreakdown}
+                          disabled={breakingDown}
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z" />
+                          </svg>
+                          {breakingDown ? 'Розбиваю…' : 'Розбити на кроки'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                       <div className={styles.checklistBar}>
                         <div

@@ -4,6 +4,7 @@ import { requireVerified } from '../middleware/requireVerified'
 import { loadUser } from '../middleware/loadUser'
 import { requireFeature } from '../utils/entitlements'
 import Transaction from '../models/Transaction'
+import RecurringPayment from '../models/RecurringPayment'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
 import Recipe from '../models/Recipe'
@@ -117,17 +118,49 @@ async function buildContext(userId: string, domains: string[]): Promise<string> 
   const today = new Date().toISOString().slice(0, 10)
 
   if (domains.includes('finance')) {
-    const user = await User.findById(userId).select('salaryDay').lean()
-    const txs = await Transaction.find({ userId }).sort({ createdAt: -1 }).limit(30).lean()
-    const balance = txs.reduce((s, t) => t.type === 'income' ? s + t.amount : s - t.amount, 0)
-    const thisMonth = txs.filter(t => t.date >= today.slice(0, 7))
-    const spent = thisMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    const income = thisMonth.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const recent = txs.slice(0, 10).map(t => `${t.date} ${t.type === 'expense' ? '-' : '+'}${t.amount}₴ ${t.desc || t.category || ''}`).join('\n')
+    const ym = today.slice(0, 7)
+    const [user, balanceAgg, monthTxs, recentTxs, recurring] = await Promise.all([
+      User.findById(userId).select('salaryDay').lean(),
+      Transaction.aggregate([{ $match: { userId } }, { $group: { _id: '$type', total: { $sum: '$amount' } } }]),
+      Transaction.find({ userId, date: { $gte: ym } }).lean(),
+      Transaction.find({ userId }).sort({ createdAt: -1 }).limit(10).lean(),
+      RecurringPayment.find({ userId, isActive: true }).lean(),
+    ])
+
+    const totalIncome  = (balanceAgg.find(b => b._id === 'income')  as { total?: number } | undefined)?.total ?? 0
+    const totalExpense = (balanceAgg.find(b => b._id === 'expense') as { total?: number } | undefined)?.total ?? 0
+    const balance = totalIncome - totalExpense
+
+    const monthExpenses = monthTxs.filter(t => t.type === 'expense')
+    const spent  = monthExpenses.reduce((s, t) => s + t.amount, 0)
+    const income = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+
+    // Категорії витрат цього місяця — рахуємо кодом, LLM тільки пояснює
+    const catMap: Record<string, number> = {}
+    monthExpenses.forEach(t => { const cat = t.category || 'інше'; catMap[cat] = (catMap[cat] ?? 0) + t.amount })
+    const topCats = Object.entries(catMap).sort((a, b) => b[1] - a[1])
+      .map(([cat, amt]) => `${cat}: ${Math.round(amt)}₴`).join(', ')
+
+    // Витрати по днях тижня цього місяця
+    const DOW_UA = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+    const dowMap: Record<string, number> = {}
+    monthExpenses.forEach(t => { const d = DOW_UA[new Date(t.date).getDay()]; dowMap[d] = (dowMap[d] ?? 0) + t.amount })
+    const dowLine = Object.entries(dowMap).sort((a, b) => b[1] - a[1])
+      .map(([d, amt]) => `${d}: ${Math.round(amt)}₴`).join(', ')
+
+    const recurringLine = recurring.length > 0
+      ? recurring.map(r => `${r.name} — ${r.amount}₴/міс (${r.dayOfMonth} числа)`).join(', ')
+      : 'немає'
+
+    const recent = recentTxs.map(t => `${t.date} ${t.type === 'expense' ? '-' : '+'}${t.amount}₴ ${t.desc || t.category || ''}`).join('\n')
+
     parts.push(`ФІНАНСИ:
 Баланс: ${Math.round(balance)}₴
 Цього місяця витрачено: ${Math.round(spent)}₴, доходи: ${Math.round(income)}₴
-День зарплати: ${(user as { salaryDay?: number })?.salaryDay ?? 1}
+Категорії витрат цього місяця: ${topCats || 'немає'}
+Витрати по днях тижня цього місяця: ${dowLine || 'немає'}
+Регулярні платежі (підписки): ${recurringLine}
+День зарплати: ${(user as { salaryDay?: number } | null)?.salaryDay ?? 1}
 Останні транзакції:
 ${recent}`)
   }

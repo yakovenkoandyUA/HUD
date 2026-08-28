@@ -10,6 +10,7 @@ export type Feature =
   | 'advancedFinance'
   | 'sharedSpaces'
   | 'mimirAi'
+  | 'sprintAi'
 
 export interface PlanLimits {
   maxSpaces: number                  // -1 = unlimited
@@ -20,6 +21,7 @@ export interface PlanLimits {
   maxReceiptScansPerMonth: number    // -1 = unlimited
   maxFinancialReportsPerMonth: number // -1 = unlimited
   maxFamilyLinks: number             // -1 = unlimited
+  maxChecklistBreakdownsPerMonth: number // -1 = unlimited
 }
 
 export interface PlanConfig {
@@ -42,6 +44,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxReceiptScansPerMonth: 5,
       maxFinancialReportsPerMonth: 1,
       maxFamilyLinks: 2,
+      maxChecklistBreakdownsPerMonth: 0,
     },
     features: {
       aiChat: false,
@@ -53,6 +56,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedFinance: true,
       sharedSpaces: true,
       mimirAi: false,
+      sprintAi: false,
     },
   },
 
@@ -68,6 +72,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxReceiptScansPerMonth: -1,
       maxFinancialReportsPerMonth: -1,
       maxFamilyLinks: 2,
+      maxChecklistBreakdownsPerMonth: -1,
     },
     features: {
       aiChat: true,
@@ -79,6 +84,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedFinance: true,
       sharedSpaces: false,
       mimirAi: true,
+      sprintAi: true,
     },
   },
 
@@ -94,6 +100,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxReceiptScansPerMonth: -1,
       maxFinancialReportsPerMonth: -1,
       maxFamilyLinks: -1,
+      maxChecklistBreakdownsPerMonth: -1,
     },
     features: {
       aiChat: true,
@@ -105,6 +112,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedFinance: true,
       sharedSpaces: true,
       mimirAi: true,
+      sprintAi: true,
     },
   },
 
@@ -120,6 +128,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       maxReceiptScansPerMonth: -1,
       maxFinancialReportsPerMonth: -1,
       maxFamilyLinks: -1,
+      maxChecklistBreakdownsPerMonth: -1,
     },
     features: {
       aiChat: true,
@@ -131,6 +140,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedFinance: true,
       sharedSpaces: true,
       mimirAi: true,
+      sprintAi: true,
     },
   },
 }

@@ -29,6 +29,10 @@ interface UiState {
   pinnedSections: string[]
   pinnedProfileTabs: string[]
   updateAvailable: boolean
+  aiChatOpen: boolean
+  aiChatSuggestions: string[] | null
+  openAiChat: (suggestions?: string[]) => void
+  closeAiChat: () => void
   mimirMode: MimirMode
   setMimirMode: (mode: MimirMode) => void
   mimirFrequency: MimirFrequency
@@ -59,6 +63,10 @@ export const useUiStore = create<UiState>()(
       pinnedSections: DEFAULT_PINNED_SECTIONS,
       pinnedProfileTabs: DEFAULT_PINNED_PROFILE_TABS,
       updateAvailable: false,
+      aiChatOpen: false,
+      aiChatSuggestions: null,
+      openAiChat: (suggestions) => set({ aiChatOpen: true, aiChatSuggestions: suggestions ?? null }),
+      closeAiChat: () => set({ aiChatOpen: false }),
       mimirMode: 'wise',
       setMimirMode: (mimirMode) => set({ mimirMode }),
       mimirFrequency: 'balanced',

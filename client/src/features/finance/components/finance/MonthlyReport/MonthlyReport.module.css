@@ -153,7 +153,19 @@
 .catRow {
   display: flex;
   flex-direction: column;
+}
+
+.catRowBtn {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .catMeta {
@@ -161,6 +173,14 @@
   align-items: center;
   gap: 6px;
 }
+
+.catChevron {
+  color: var(--text3);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.catChevronOpen { transform: rotate(180deg); }
 
 .catDot {
   width: 8px;
@@ -194,12 +214,112 @@
   padding: 1px 5px;
 }
 
+.catAmountRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.catSub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  opacity: 0.6;
+  margin-right: auto;
+}
+
+.sparkline {
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+.catPct {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  opacity: 0.7;
+}
+
 .catAmount {
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--text3);
-  align-self: flex-end;
 }
+
+/* ── Category drill-down (transactions accordion) ── */
+.catTxBody {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 240ms ease-in-out, opacity 180ms ease-in-out;
+}
+.catTxBodyOpen {
+  max-height: 600px;
+  opacity: 1;
+}
+
+.catTxInner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0 2px 14px;
+}
+
+.catTxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.catTxRow:last-child { border-bottom: none; }
+
+.catTxDate {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.catTxDesc {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text2);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catTxAmount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.showAllBtn {
+  display: block;
+  width: 100%;
+  margin: -6px 0 16px;
+  padding: 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: none;
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.showAllBtn:hover { border-color: var(--accent); background: var(--accent-soft); }
+.showAllBtn:active { opacity: 0.8; }
 
 .barWrap {
   height: 4px;

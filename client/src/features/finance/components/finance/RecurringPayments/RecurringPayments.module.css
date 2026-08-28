@@ -51,6 +51,77 @@
 }
 .addBtn:hover { opacity: 0.8; }
 
+/* ── Autodetected candidates ── */
+.candidateList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.candidateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px dashed var(--accent-dim);
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+
+.candidateIcon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.candidateInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.candidateName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidateMeta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.candidateAddBtn {
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent-dim);
+  border-radius: 5px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+
+.candidateDismissBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--text3);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
 /* ── List ── */
 .list {
   display: flex;

@@ -314,6 +314,28 @@
   font-weight: 700;
 }
 
+.sectionHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aiBreakdownBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-dim);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.aiBreakdownBtn:disabled { opacity: 0.6; cursor: default; }
+
 /* ── Labels row ── */
 .labelsBadge {
   display: flex;

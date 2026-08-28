@@ -14,6 +14,7 @@ import { usePlan } from '@/shared/hooks/usePlan'
 import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
+import { suggestDueFromLabels } from '@/features/sprint/utils/sprint'
 import type { TodoPriority, SprintLabel, RepeatConfig } from '@/shared/types'
 import styles from './AddSprintItemModal.module.css'
 
@@ -164,6 +165,18 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, defaultType, initialDate])
+
+  const dueSuggestion = useMemo(() => {
+    if (newType !== 'todo' || newRepeat !== 'none' || quickAddDate || newLabels.length === 0) return null
+    return suggestDueFromLabels(items, newLabels.map(l => l.id))
+  }, [newType, newRepeat, quickAddDate, newLabels, items])
+
+  const applyDueSuggestion = () => {
+    if (!dueSuggestion) return
+    const d = new Date()
+    d.setDate(d.getDate() + dueSuggestion.dueOffsetDays)
+    setQuickAddDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+  }
 
   const duplicateItem = useMemo(() => {
     const t = newTitle.trim().toLowerCase()
@@ -437,6 +450,15 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                     </button>
                   ))}
                 </div>
+              )}
+
+              {dueSuggestion && (
+                <button type="button" className={styles.dueSuggestion} onClick={applyDueSuggestion}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" />
+                  </svg>
+                  Схожі задачі зазвичай — дедлайн за {dueSuggestion.dueOffsetDays} дн.
+                </button>
               )}
 
               <div className={styles.metaRow}>

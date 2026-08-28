@@ -49,6 +49,153 @@ export function calcRollingDailyAllowance(
   return Math.floor(remaining / daysLeft)
 }
 
+export interface RecurringCandidate {
+  key:         string
+  name:        string
+  amount:      number
+  dayOfMonth:  number
+  category:    string
+  occurrences: number
+  lastDate:    string
+}
+
+interface RecurringDetectionTransaction {
+  type:          'topup' | 'expense'
+  amount:        number
+  date:          string
+  title?:        string
+  description:   string
+  category?:     string
+  recurringId?:  string | null
+}
+
+interface RecurringDetectionActivePayment {
+  name: string
+}
+
+function normalizeTxName(s: string): string {
+  return s.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+/**
+ * Групує витрати за назвою + приблизно тією ж сумою і шукає кандидатів на
+ * регулярний платіж — 2+ входження з інтервалом ~місяць (26-33 дні), яких ще
+ * немає серед активних RecurringPayment. Чиста евристика, без LLM.
+ */
+export function detectRecurringCandidates(
+  transactions: RecurringDetectionTransaction[],
+  activeRecurring: RecurringDetectionActivePayment[],
+): RecurringCandidate[] {
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - 4)
+  const cutoffStr = cutoff.toISOString().slice(0, 10)
+
+  const activeNames = new Set(activeRecurring.map(p => normalizeTxName(p.name)))
+
+  const groups = new Map<string, RecurringDetectionTransaction[]>()
+  for (const t of transactions) {
+    if (t.type !== 'expense' || t.recurringId || t.date < cutoffStr) continue
+    const rawName = (t.title || t.description || '').trim()
+    if (!rawName) continue
+    const normName = normalizeTxName(rawName)
+    if (activeNames.has(normName)) continue
+    // бакет суми — округлення до найближчих 10, щоб зловити невеликі коливання (fx, чайові)
+    const amountBucket = Math.round(t.amount / 10) * 10
+    const key = `${normName}|${amountBucket}`
+    const list = groups.get(key) ?? []
+    list.push(t)
+    groups.set(key, list)
+  }
+
+  const candidates: RecurringCandidate[] = []
+  for (const [key, list] of groups) {
+    if (list.length < 2) continue
+    const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date))
+    const first = new Date(sorted[0].date)
+    const last  = sorted[sorted.length - 1].date
+    const lastDate = new Date(last)
+    const avgGapDays = (lastDate.getTime() - first.getTime()) / 86_400_000 / (sorted.length - 1)
+    if (avgGapDays < 26 || avgGapDays > 33) continue
+
+    const lastTx = sorted[sorted.length - 1]
+    candidates.push({
+      key,
+      name:        (lastTx.title || lastTx.description || '').trim(),
+      amount:      Math.round(sorted.reduce((s, t) => s + t.amount, 0) / sorted.length),
+      dayOfMonth:  lastDate.getDate(),
+      category:    lastTx.category || '',
+      occurrences: sorted.length,
+      lastDate:    last,
+    })
+  }
+
+  return candidates.sort((a, b) => b.lastDate.localeCompare(a.lastDate))
+}
+
+export interface SalaryForecastTransaction {
+  type:         'topup' | 'expense'
+  amount:       number
+  date:         string
+  recurringId?: string | null
+}
+
+export interface SalaryForecastRecurringPayment {
+  amount:     number
+  dayOfMonth: number
+  isActive:   boolean
+}
+
+export interface SalaryForecast {
+  /** Прогнозований баланс на день зарплати */
+  projected:              number
+  /** Сума активних підписок, що спишуться до зарплати */
+  upcomingRecurringTotal: number
+  /** Середні витрати на день, без урахування підписок (щоб не задвоювати) */
+  avgPerDayExRecurring:   number
+}
+
+/**
+ * Прогноз "чи вистачить до зарплати" — на відміну від наївного
+ * balance - avgPerDay*daysLeft, окремо враховує ще не списані підписки
+ * (RecurringPayment) і рахує середнє витрат без них, щоб великий одноразовий
+ * платіж підписки не спотворював щоденне середнє.
+ */
+export function calcSalaryForecast(
+  balance: number,
+  transactions: SalaryForecastTransaction[],
+  recurringPayments: SalaryForecastRecurringPayment[],
+  salaryDay = 1,
+): SalaryForecast {
+  const daysLeft     = getDaysLeftInMonth(salaryDay)
+  const daysElapsed  = getDaysElapsed(salaryDay)
+  const periodStart  = getPeriodStart(salaryDay)
+
+  const expenseExRecurring = transactions
+    .filter(t => t.type === 'expense' && !t.recurringId && t.date >= periodStart)
+    .reduce((s, t) => s + t.amount, 0)
+  const avgPerDayExRecurring = daysElapsed > 0 ? Math.round(expenseExRecurring / daysElapsed) : 0
+
+  // Той самий "наступна зарплата" розрахунок що й getDaysLeftInMonth
+  const now      = new Date()
+  const today    = now.getDate()
+  const monthsAhead = today <= salaryDay ? 0 : 1
+  const nextPayday   = new Date(now.getFullYear(), now.getMonth() + monthsAhead, salaryDay)
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), today)
+
+  const upcomingRecurringTotal = recurringPayments
+    .filter(p => p.isActive)
+    .reduce((sum, p) => {
+      const daysInTargetMonth = new Date(now.getFullYear(), now.getMonth() + monthsAhead + 1, 0).getDate()
+      const chargeDay  = Math.min(p.dayOfMonth, daysInTargetMonth)
+      const chargeDate = new Date(now.getFullYear(), now.getMonth() + monthsAhead, chargeDay)
+      const isUpcoming = chargeDate.getTime() > todayMidnight.getTime() && chargeDate.getTime() <= nextPayday.getTime()
+      return isUpcoming ? sum + p.amount : sum
+    }, 0)
+
+  const projected = balance - avgPerDayExRecurring * daysLeft - upcomingRecurringTotal
+  return { projected, upcomingRecurringTotal, avgPerDayExRecurring }
+}
+
 export function getPeriodStart(salaryDay = 1): string {
   const now = new Date()
   const today = now.getDate()

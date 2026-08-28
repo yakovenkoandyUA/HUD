@@ -159,6 +159,37 @@ export function buildMonthGrid(task: UnifiedTodo, year: number, month: number): 
   return weeks
 }
 
+export interface LabelDueSuggestion {
+  dueOffsetDays: number
+  sampleSize:    number
+}
+
+/**
+ * Евристична підказка дедлайну для нової задачі — медіанна відстань
+ * (в днях) між createdAt і dueDate серед минулих задач з тим самим лейблом.
+ * null якщо даних замало (< 2 задач) для надійної підказки.
+ */
+export function suggestDueFromLabels(tasks: UnifiedTodo[], labelIds: string[]): LabelDueSuggestion | null {
+  if (labelIds.length === 0) return null
+  const labelSet = new Set(labelIds)
+  const offsets: number[] = []
+
+  for (const t of tasks) {
+    if (!t.dueDate || !t.createdAt || !t.labels?.length) continue
+    if (!t.labels.some(l => labelSet.has(l.id))) continue
+    const created = new Date(t.createdAt).getTime()
+    const due     = new Date(t.dueDate).getTime()
+    const diffDays = Math.round((due - created) / 86_400_000)
+    if (diffDays >= 0) offsets.push(diffDays)
+  }
+
+  if (offsets.length < 2) return null
+  offsets.sort((a, b) => a - b)
+  const mid = Math.floor(offsets.length / 2)
+  const dueOffsetDays = offsets.length % 2 ? offsets[mid] : Math.round((offsets[mid - 1] + offsets[mid]) / 2)
+  return { dueOffsetDays, sampleSize: offsets.length }
+}
+
 export function isRoutineDueOnDay(task: UnifiedTodo, day: Date): boolean {
   if (isRegular(task)) return false
 

@@ -7,6 +7,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
 import Modal from '@/shared/components/ui/Modal'
+import { renderMarkdown } from '@/shared/utils/markdown'
 import type { Transaction } from '@/shared/types'
 import styles from './MonthlyReport.module.css'
 
@@ -17,59 +18,7 @@ interface FinanceContextItem {
   createdAt: string
 }
 
-function applyInline(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-}
-
-function renderMarkdown(md: string): React.ReactNode[] {
-  const nodes: React.ReactNode[] = []
-  let listItems: string[] = []
-  let listKey = 0
-
-  const flushList = () => {
-    if (listItems.length === 0) return
-    nodes.push(
-      <ul key={`list-${listKey++}`} className={styles.aiList}>
-        {listItems.map((item, j) => (
-          <li key={j} className={styles.aiListItem} dangerouslySetInnerHTML={{ __html: applyInline(item) }} />
-        ))}
-      </ul>
-    )
-    listItems = []
-  }
-
-  for (const line of md.split('\n')) {
-    // Skip markdown table rows and separators
-    if (line.trim().startsWith('|')) continue
-
-    if (line.startsWith('## ')) {
-      flushList()
-      nodes.push(<p key={nodes.length} className={styles.aiSection}>{line.slice(3)}</p>)
-      continue
-    }
-
-    if (line.match(/^[-*] /)) {
-      listItems.push(line.slice(2))
-      continue
-    }
-
-    flushList()
-
-    if (line.trim() === '' || line.trim() === '—' || line.trim() === '--') {
-      nodes.push(<div key={nodes.length} className={styles.aiSpacer} />)
-      continue
-    }
-
-    nodes.push(
-      <p key={nodes.length} className={styles.aiLine} dangerouslySetInnerHTML={{ __html: applyInline(line) }} />
-    )
-  }
-
-  flushList()
-  return nodes
-}
+const MD_CLASSES = { section: styles.aiSection, list: styles.aiList, listItem: styles.aiListItem, spacer: styles.aiSpacer, line: styles.aiLine }
 
 /**
  * MonthlyReport
@@ -118,6 +67,38 @@ function getWeeksOfMonth(year: number, month: number): { label: string; start: s
 
 const FALLBACK_COLOR = '#7a7a8c'
 
+interface SparklineProps {
+  values: number[]
+  color: string
+}
+
+const Sparkline: React.FC<SparklineProps> = ({ values, color }) => {
+  const max = Math.max(...values, 1)
+  const barW = 4
+  const gap = 2
+  const w = values.length * barW + (values.length - 1) * gap
+  return (
+    <svg className={styles.sparkline} width={w} height={16} viewBox={`0 0 ${w} 16`}>
+      {values.map((v, i) => {
+        const h = Math.max((v / max) * 16, v > 0 ? 2 : 1)
+        const isLast = i === values.length - 1
+        return (
+          <rect
+            key={i}
+            x={i * (barW + gap)}
+            y={16 - h}
+            width={barW}
+            height={h}
+            rx={1}
+            fill={color}
+            opacity={isLast ? 0.9 : 0.35}
+          />
+        )
+      })}
+    </svg>
+  )
+}
+
 const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const { categories } = useCategoryStore()
   const { activeProfile } = useProfileStore()
@@ -144,6 +125,8 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const [noteCategory, setNoteCategory] = useState('')
   const [noteSaving, setNoteSaving] = useState(false)
   const [contextLoaded, setContextLoaded] = useState(false)
+  const [showAllCats, setShowAllCats] = useState(false)
+  const [expandedCat, setExpandedCat] = useState<string | null>(null)
 
   const LOADING_PHASES = [
     'Збираю транзакції за місяць…',
@@ -234,6 +217,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
     setAiContent(null)
     setAiError(false)
     setAiGeneratedAt(null)
+    setExpandedCat(null)
   }, [ym])
 
   useEffect(() => {
@@ -303,7 +287,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const expensesOf = (ym: string) =>
     transactions.filter(t => t.type === 'expense' && t.date.startsWith(ym))
 
-  const { top3, totalCur, totalPrev, weekData, recommendation, txCount } = useMemo(() => {
+  const { allCats, catTxs, totalCur, totalPrev, weekData, recommendation, txCount } = useMemo(() => {
     const ymCur  = toYearMonth(year, month)
     const ymPrev = toYearMonth(prevYear, prevMonth)
 
@@ -327,13 +311,32 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
     const totalCur  = Object.values(curMap).reduce((s, v) => s + v, 0)
     const totalPrev = Object.values(prevMap).reduce((s, v) => s + v, 0)
 
-    const top3 = Object.entries(curMap)
+    // Transactions grouped by category (current month) — for count/avg + drill-down
+    const catTxs: Record<string, Transaction[]> = {}
+    curTxs.forEach(t => {
+      const cat = (t.category ?? 'інше').toLowerCase()
+      if (cat === 'накопичення') return
+      ;(catTxs[cat] ??= []).push(t)
+    })
+    Object.values(catTxs).forEach(txs => txs.sort((a, b) => b.date.localeCompare(a.date)))
+
+    // Last 6 months (oldest → newest, current month included) — per-category trend
+    const trendMaps: Record<string, number>[] = []
+    for (let i = 5; i >= 0; i--) {
+      let y = year, m = month - i
+      while (m < 0) { m += 12; y -= 1 }
+      trendMaps.push(buildMap(expensesOf(toYearMonth(y, m))))
+    }
+
+    const allCats = Object.entries(curMap)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
       .map(([cat, amount]) => {
         const prev  = prevMap[cat] ?? null
         const delta = prev !== null ? amount - prev : null
-        return { cat, amount, prev, delta }
+        const count = catTxs[cat]?.length ?? 0
+        const avg   = count > 0 ? amount / count : 0
+        const trend = trendMaps.map(m => m[cat] ?? 0)
+        return { cat, amount, prev, delta, count, avg, trend }
       })
 
     // Weeks
@@ -361,7 +364,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
       }
     }
 
-    return { top3, totalCur, totalPrev, weekData: weekData.map(w => ({ ...w, maxWeek })), recommendation, txCount: curTxs.length }
+    return { allCats, catTxs, totalCur, totalPrev, weekData: weekData.map(w => ({ ...w, maxWeek })), recommendation, txCount: curTxs.length }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions, year, month])
 
@@ -383,7 +386,8 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
   const canAnalyse = txCount >= MIN_TX
   const lowDataWarning = txCount >= MIN_TX && txCount < WARN_TX
 
-  const maxBar = top3.length > 0 ? top3[0].amount : 1
+  const maxBar = allCats.length > 0 ? allCats[0].amount : 1
+  const visibleCats = showAllCats ? allCats : allCats.slice(0, 3)
 
   return (
     <div className={styles.wrap}>
@@ -507,7 +511,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                   {aiError && <p className={styles.aiError}>{aiErrorMessage ?? 'Помилка генерації. Спробуйте ще раз.'}</p>}
                   {aiContent && (
                     <div className={`${styles.aiContent} ${!aiTextExpanded ? styles.aiContentCollapsed : ''}`}>
-                      {renderMarkdown(aiContent)}
+                      {renderMarkdown(aiContent, MD_CLASSES)}
                       {!aiTextExpanded && <div className={styles.aiContentFade} />}
                     </div>
                   )}
@@ -554,37 +558,80 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ transactions }) => {
                 )}
               </div>
 
-              {/* Top-3 categories */}
-              <p className={styles.sectionLabel}>ТОП КАТЕГОРІЇ</p>
+              {/* Category ranking */}
+              <p className={styles.sectionLabel}>{showAllCats ? 'ВСІ КАТЕГОРІЇ' : 'ТОП КАТЕГОРІЇ'}</p>
               <div className={styles.catList}>
-                {top3.map(({ cat, amount, delta }) => (
-                  <div key={cat} className={styles.catRow}>
-                    <div className={styles.catMeta}>
-                      <span
-                        className={styles.catDot}
-                        style={{ background: colorOf(cat) }}
-                      />
-                      <span className={styles.catName}>{cat}</span>
-                      {delta !== null && (
-                        <span className={`${styles.catDelta} ${delta <= 0 ? styles.pos : styles.neg}`}>
-                          {delta > 0 ? '↑' : '↓'} {fmt(Math.abs(delta))} ₴
-                        </span>
-                      )}
-                      {delta === null && <span className={styles.catNew}>NEW</span>}
+                {visibleCats.map(({ cat, amount, delta, count, avg, trend }) => {
+                  const isExpanded = expandedCat === cat
+                  return (
+                    <div key={cat} className={styles.catRow}>
+                      <button
+                        type="button"
+                        className={styles.catRowBtn}
+                        onClick={() => setExpandedCat(v => v === cat ? null : cat)}
+                        aria-expanded={isExpanded}
+                      >
+                        <div className={styles.catMeta}>
+                          <span
+                            className={styles.catDot}
+                            style={{ background: colorOf(cat) }}
+                          />
+                          <span className={styles.catName}>{cat}</span>
+                          {delta !== null && (
+                            <span className={`${styles.catDelta} ${delta <= 0 ? styles.pos : styles.neg}`}>
+                              {delta > 0 ? '↑' : '↓'} {fmt(Math.abs(delta))} ₴
+                            </span>
+                          )}
+                          {delta === null && <span className={styles.catNew}>NEW</span>}
+                          <svg
+                            className={`${styles.catChevron} ${isExpanded ? styles.catChevronOpen : ''}`}
+                            width="12" height="12" viewBox="0 0 16 16" fill="none"
+                          >
+                            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        <div className={styles.barWrap}>
+                          <div
+                            className={styles.bar}
+                            style={{
+                              width: `${Math.round((amount / maxBar) * 100)}%`,
+                              background: colorOf(cat),
+                            }}
+                          />
+                        </div>
+                        <div className={styles.catAmountRow}>
+                          <span className={styles.catSub}>{count} × ~{fmt(Math.round(avg))} ₴</span>
+                          <Sparkline values={trend} color={colorOf(cat)} />
+                          <span className={styles.catPct}>{totalCur > 0 ? Math.round((amount / totalCur) * 100) : 0}%</span>
+                          <span className={styles.catAmount}>{fmt(amount)} ₴</span>
+                        </div>
+                      </button>
+                      <div className={`${styles.catTxBody} ${isExpanded ? styles.catTxBodyOpen : ''}`}>
+                        <div className={styles.catTxInner}>
+                          {(catTxs[cat] ?? []).map(t => (
+                            <div key={t.id} className={styles.catTxRow}>
+                              <span className={styles.catTxDate}>
+                                {new Date(t.date).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' })}
+                              </span>
+                              <span className={styles.catTxDesc}>{t.title || t.description}</span>
+                              <span className={styles.catTxAmount}>{fmt(t.amount)} ₴</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div className={styles.barWrap}>
-                      <div
-                        className={styles.bar}
-                        style={{
-                          width: `${Math.round((amount / maxBar) * 100)}%`,
-                          background: colorOf(cat),
-                        }}
-                      />
-                    </div>
-                    <span className={styles.catAmount}>{fmt(amount)} ₴</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
+              {allCats.length > 3 && (
+                <button
+                  type="button"
+                  className={styles.showAllBtn}
+                  onClick={() => setShowAllCats(v => !v)}
+                >
+                  {showAllCats ? 'Згорнути' : `Показати всі категорії (${allCats.length})`}
+                </button>
+              )}
 
               {/* Weeks */}
               <p className={styles.sectionLabel}>ТИЖНІ</p>

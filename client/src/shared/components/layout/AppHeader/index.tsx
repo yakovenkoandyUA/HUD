@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import MimirLogo from '@/assets/mimir-logo.svg?react'
 import VerificationBanner from '@/shared/components/ui/VerificationBanner'
 import AiChatSheet from '@/features/dashboard/components/dashboard/AiChatSheet'
@@ -14,6 +14,13 @@ import { getLevel } from '@/features/achievements/levels'
 import { usePwaInstall } from '@/shared/hooks/usePwaInstall'
 import FeedbackSheet from '@/shared/components/ui/FeedbackSheet'
 import styles from './AppHeader.module.css'
+
+const FINANCE_AI_SUGGESTIONS = [
+  'Куди я витратив найбільше цього місяця?',
+  'Чому цей місяць дорожчий за минулий?',
+  'Скільки я витрачаю на підписки?',
+  'У які дні тижня я витрачаю найбільше?',
+]
 
 /**
  * AppHeader
@@ -29,12 +36,12 @@ interface AppHeaderProps {
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
-  const [showChat, setShowChat] = useState(false)
   const [showDrawer, setShowDrawer] = useState(false)
   const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
-  const { showToast, updateAvailable } = useUiStore()
+  const { showToast, updateAvailable, aiChatOpen, aiChatSuggestions, openAiChat, closeAiChat } = useUiStore()
   const navigate = useNavigate()
+  const location = useLocation()
   const canUseAI = useCanUseFeature('aiChat')
   const runeScore = useRuneScore()
   const level = getLevel(runeScore)
@@ -104,7 +111,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
             onClick={() => {
               if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-асистента', 'error'); return }
               if (!canUseAI) { navigate('/profile?tab=plan'); return }
-              setShowChat(true)
+              openAiChat(location.pathname.startsWith('/finance') ? FINANCE_AI_SUGGESTIONS : undefined)
             }}
             aria-label="AI асистент"
           >
@@ -121,7 +128,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
 
       <VerificationBanner />
 
-      <AiChatSheet isOpen={showChat} onClose={() => setShowChat(false)} />
+      <AiChatSheet isOpen={aiChatOpen} onClose={closeAiChat} suggestions={aiChatSuggestions ?? undefined} />
       <FeedbackSheet isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
       <ProfileDrawer isOpen={showDrawer} onClose={() => setShowDrawer(false)} />
     </>
