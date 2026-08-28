@@ -29,7 +29,8 @@
   - `assertLimit(user, limitKey, currentCount)` — кидає `{ status:403, code:'PLAN_LIMIT', limitKey, limit }` (no-op аналогічно)
   - `requireFeature(feature)` — Express middleware factory, передає помилку в `next(err)`
 - `errorHandler.ts` — обробляє `PLAN_GATE` → `{ error, code, feature }` і `PLAN_LIMIT` → `{ error, code, limitKey, limit }`
-- Guards навішані: `requireFeature('aiChat'/'aiChefChat')` у `routes/ai.ts`, `requireFeature('receiptScanner')` у `routes/receipt.ts`, `requireFeature('yearbookGenerate')` у `routes/yearbook.ts`, `requireFeature('advancedFinance')` у `routes/finance.ts`, `assertLimit(maxSpaces/sharedSpaces)` у `spaceController.ts`, timeline history у `timelineController.ts`
+- Guards навішані: `requireFeature('aiChat'/'aiChefChat')` у `routes/ai.ts`, `requireFeature('receiptScanner')` у `routes/receipt.ts`, `requireFeature('yearbookGenerate')` у `routes/yearbook.ts`, `requireFeature('advancedFinance')` у `routes/finance.ts`, `requireFeature('sprintAi')` у `routes/sprint.ts` (AI checklist breakdown), `assertLimit(maxSpaces/sharedSpaces)` у `spaceController.ts`, timeline history у `timelineController.ts`
+- `backend/src/utils/anthropic.ts` — `callAnthropicText(messages, opts)` спільний non-streaming helper для one-shot AI фіч (checklist breakdown). Старі AI-роути (finance.ts, mimirController.ts, ai.ts) досі роблять прямий `fetch()` до Anthropic — не рефакторено, щоб не чіпати робочий код поза скоупом сесії.
 - **Близькі (FamilyLink) — не feature-гейт, а ліміт:** `assertLimit(user, 'maxFamilyLinks', currentLinksCount)` інлайн у `familyController.sendRequest` (не middleware, бо потрібен async count query перед перевіркою). `maxFamilyLinks`: free/personal — 2, couple/family — безліміт (-1). Рахується як `FamilyLink.countDocuments({$or:[{requester},{recipient}]})` — будь-який статус (pending+accepted) враховується в ліміт
 
 ## Plan Group (Duo/Group shared payer)
@@ -82,6 +83,7 @@
 | `/api/sprint/todos` | GET, POST |
 | `/api/sprint/todos/:id` | PATCH, DELETE |
 | `/api/sprint/trash` | GET — soft-deleted tasks (TTL 24г) |
+| `/api/sprint/ai/breakdown` | POST — AI розбивка задачі на checklist кроки (requireFeature('sprintAi')) |
 | `/api/lessons` | GET, POST |
 | `/api/lessons/:id` | PATCH, DELETE |
 | `/api/goals` | GET, POST |
@@ -123,7 +125,7 @@
 | `/api/push/subscribe` | POST — зберегти підписку |
 | `/api/push/unsubscribe` | POST |
 | `/api/push/test` | POST — тестова нотифікація |
-| `/api/ai/chat` | POST — SSE streaming (Claude Haiku), domain-aware context |
+| `/api/ai/chat` | POST — SSE streaming (Claude Haiku), domain-aware context. Фінансовий домен: категорії/дні тижня/підписки рахуються кодом (`buildContext` в `routes/ai.ts`), баланс — через `Transaction.aggregate` по всій історії (не `.limit(30)`) |
 | `/api/ai/chef-chat` | POST — SSE streaming (Claude Haiku), контекст рецепту з тіла запиту |
 | `/api/finance/report/:month` | GET — AI-аналіз витрат по місяцю (Anthropic) |
 | `/api/bank/connect` | POST — Monobank OAuth initiate |

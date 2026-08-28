@@ -62,7 +62,11 @@ interface UiState {
   toasts: Toast[]              // масив, не одиночний об'єкт
   activeModal: string | null
   modalDepth: number
+  aiChatOpen: boolean
+  aiChatSuggestions: string[] | null
   // actions
+  openAiChat(suggestions?: string[]): void
+  closeAiChat(): void
   setTheme(theme): void
   setNavStyle(style): void
   setNavLabelMode(mode): void
@@ -86,6 +90,7 @@ interface UiState {
 - `mimirMode`/`mimirFrequency` — характер і частота підказок Міміра (Профіль → Вигляд)
 - `pinnedSections`/`pinnedProfileTabs` — закріплені розділи дашборду / вкладки профілю (дефолти: `DEFAULT_PINNED_SECTIONS`/`DEFAULT_PINNED_PROFILE_TABS`)
 - `activeModal`/`modalDepth` + `pushModal`/`popModal`/`openModal`/`closeModal` — стек модалок для коректної поведінки back-button (`useModalHistory`)
+- `aiChatOpen`/`aiChatSuggestions` + `openAiChat(suggestions?)`/`closeAiChat()` — глобальний стан AI-чату (`AiChatSheet`), змонтованого один раз в `AppHeader`. Не персистується. `AppHeader` сам підставляє контекстні suggestions за поточним роутом (напр. фінансові приклади питань на `/finance`) замість дефолтних із `AiChatSheet`
 
 ---
 
@@ -195,6 +200,23 @@ interface FinanceState {
 - Транзакції кешуються в `sessionStorage` (max 200 записів у пам'яті)
 - `fetchTransactions(month)` — якщо передано місяць, кеш НЕ оновлюється (фільтрований результат)
 - `tagTripExpenses` — bulk PATCH: optimistic update + паралельний PATCH для кожного id (fire-and-forget з `.catch(() => {})`)
+
+---
+
+## recurringPaymentStore (`features/finance/store/recurringPaymentStore.ts`)
+
+```ts
+// persist: sessionStorage 'hud-recurring-v1', TTL 5хв
+interface RecurringPaymentState {
+  payments: RecurringPayment[]
+  loading: boolean
+  fetchPayments(): Promise<void>
+  setPayments(payments): void
+  updatePayment(id, patch): void
+}
+```
+
+Винесено з `RecurringPayments` компонента (раніше тримав список локально) — потрібен був спільний доступ для `BalanceHero` (прогноз до зарплати враховує заплановані платежі, `calcSalaryForecast()` в `finance/utils/finance.ts`).
 
 ---
 

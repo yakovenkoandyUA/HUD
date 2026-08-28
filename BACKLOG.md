@@ -131,6 +131,39 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 - ~~**Книги (Books)**~~ ✅ Тоггл в профілі і UI в Watchlist вже працюють (2026-07-30, підтверджено юзером — попередній запис був застарілий).
 - ~~**Goodreads імпорт**~~ ✅ Зроблено (2026-08-17) — той самий generic CSV/XLSX import flow (`watchlistImportController.ts`), додано `author`/`isbn`/`pageCount` в `MimirField`+`FIELD_KEYWORDS`, категорія `'book'` в детекції + константа "Книга (всі записи)" в `ColumnMappingStep`, `searchGoogleBooks()` (аналог `searchTmdb`) замінює TMDB-пошук для книжкових рядків — обкладинка пишеться в `thumbnail` (повний URL), не `posterPath` (той зарезервований під TMDB-шлях). Dedup для книг — по `isbn`, fallback на title. `statusMappingDictionary.ts`: Goodreads `Exclusive Shelf` (`read`/`currently-reading`/`to-read`) додано в `watched`/`watching`/`want` (з реордером `want` перед `watched`, бо `'to-read'.includes('read')` інакше хибно матчився як watched).
 
+### ✅ AI/евристичні фічі — Гаманець + Квести (2026-08-28)
+
+Юзерський запит: "AI на гаманці і квестах розкритий не повністю". 4 фіч, 3 з них — чиста евристика без Anthropic-виклику (миттєво, безкоштовно), 1 — LLM-генерація тексту. Тижневий AI-дайджест квестів був реалізований, але прибраний одразу після — юзеру не сподобався UI, вирішили не тримати.
+
+**Гаманець:**
+- **Автовиявлення регулярних платежів** — `detectRecurringCandidates()` (`client/src/features/finance/utils/finance.ts`) групує витрати за назвою+сумою (±толеранс), шукає 2+ входжень з інтервалом ~місяць (26-33 дні), виключає вже відстежувані `RecurringPayment`. Банер-картки "Схоже це регулярний платіж?" в `RecurringPayments` з кнопкою "Додати" (prefill форми) і dismiss (session-only).
+- **Прогноз "чи вистачить до зарплати" (покращення)** — `calcSalaryForecast()` замінює наївний `balance - avgPerDay*daysLeft` в `BalanceHero`: рахує `avgPerDay` без транзакцій з `recurringId` (щоб підписки не спотворювали середнє) і окремо віднімає суму запланованих `RecurringPayment` до дня зарплати. Знадобився новий `recurringPaymentStore.ts` (Zustand) — раніше `RecurringPayments` тримав список локально, `BalanceHero` доступу не мав.
+
+**Квести (Спринт):**
+- **Підказка due date з лейблів** (евристика) — `suggestDueFromLabels()` (`sprint/utils/sprint.ts`) рахує медіанну відстань `dueDate - createdAt` серед минулих задач з тим самим лейблом, показує ненав'язливу підказку в `AddSprintItemModal` з кнопкою "Застосувати" (без auto-fill). Пріоритет свідомо не займали — в поточній формі `priority` стосується лише shopping-айтемів, не todo/labels.
+- **AI-розбивка задачі на checklist** — `POST /api/sprint/ai/breakdown` (`sprintAiController.ts`, гейт `requireFeature('sprintAi')` + `maxChecklistBreakdownsPerMonth`), кнопка "Розбити на кроки" в `TaskDetailModal` біля чек-листа, append (не replace) існуючих пунктів.
+
+**Технічний борг закритий по дорозі:** `renderMarkdown` (легкий markdown-рендерер для AI-текстів) винесено з `MonthlyReport` у спільний `client/src/shared/utils/markdown.ts` (класи стилів передаються ззовні). Новий backend-helper `callAnthropicText()` (`backend/src/utils/anthropic.ts`) для нового ендпоінта — старі 4 прямі `fetch()` виклики (finance/mimir/ai routes) свідомо не чіпали (поза скоупом сесії).
+
+**Новий feature-флаг `sprintAi`** в `plans.ts` (client+backend, обидва мають дублікат конфігу) — free: вимкнено, personal/couple/family: увімкнено. Ліміт: `maxChecklistBreakdownsPerMonth`.
+
+### ✅ Фінансовий аналіз — таблиця замість графіка (2026-08-28)
+
+Юзерський запит: "графіка мені замало, хочу бачити куди йдуть гроші в розрізі таблиці". Звірили бриф Джонні (10 ідей: Safe to Spend, прогноз, AI-аналітик, Ask Mimir, автодетекція, аномалії, what-if, мультибанк, автокатегоризація, патерни) з кодом — 4 вже були реалізовані повністю/частково, обрали 3 для роботи: Safe to Spend (відкликано юзером — сплутав з прогнозом внизу картки, суперечили одне одному), what-if для цілей, Ask Mimir.
+
+**`MonthlyReport`** (`client/src/features/finance/components/finance/MonthlyReport/`):
+- Топ-3 → повний ранжований список категорій (кнопка "Показати всі (N)"), кожен рядок: % від загального, delta vs минулий місяць, кількість покупок + середній чек (`N × ~X ₴`)
+- Тап на категорію → акордеон з транзакціями цієї категорії за місяць (дата/опис/сума)
+- Спарклайн 6 місяців поруч з кожною категорією (`Sparkline` — інлайн SVG, без бібліотеки)
+
+**What-if калькулятор цілей** (`GoalDetail`) — акордеон "Що якщо?": пресети 500/1000/2000 ₴/міс або своя сума → "ціль через N місяців" (з `remaining / monthlyAmount`).
+
+**Ask Mimir для фінансів** — окрему кнопку на сторінці не стали робити (юзер: вже є AI-чат в хедері, не множити входи). Замість цього:
+- `uiStore` тепер власник глобального стану чату (`aiChatOpen`/`aiChatSuggestions` + `openAiChat()`/`closeAiChat()`) — раніше `showChat` жив локально в `AppHeader`
+- `AiChatSheet` приймає `suggestions?: string[]` замість хардкоджених прикладів
+- `AppHeader` підставляє фінансові приклади питань, коли `location.pathname.startsWith('/finance')`
+- Бекенд (`routes/ai.ts` → `buildContext`) тепер рахує категорії витрат, дні тижня і активні підписки кодом для домену `finance` (не LLM-здогадками) + виправив баланс — раніше рахувався тільки з останніх 30 транзакцій (`.limit(30)`), тепер через `Transaction.aggregate` по всій історії
+
 ### ✅ WatchlistDetail — рев'ю від Джонні, частина 1 (2026-08-17)
 
 Фідбек по detail-модалці фільму/серіалу. Зроблено все крім двох пунктів (навмисно пропущені — не додають ваги без окремої продуктової фічі): перетворення "Дивитись разом" у full social block з "Запросити" (бо invite-механізму тут нема, це не Plan Group) і загальна ре-ієрархізація ваги секцій (потребує мокапу, не тільки тексту).
