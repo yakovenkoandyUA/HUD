@@ -57,3 +57,29 @@ export function isTodayOrTomorrow(isoDate: string): 'today' | 'tomorrow' | null 
   if (date.getTime() === tomorrow.getTime()) return 'tomorrow'
   return null
 }
+
+/**
+ * formatTxDateHeader
+ * ------------------
+ * Форматує ISO date string для заголовка групи транзакцій — "Сьогодні",
+ * "Вчора" або "25 серпня" (з роком, якщо не поточний). Той самий формат що
+ * й на сторінці Гаманця.
+ */
+export function formatTxDateHeader(isoDate: string): string {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  const [y, m, d] = isoDate.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+
+  if (date.getTime() === today.getTime())     return 'Сьогодні'
+  if (date.getTime() === yesterday.getTime()) return 'Вчора'
+
+  const sameYear = y === today.getFullYear()
+  return date.toLocaleDateString('uk-UA', {
+    day: 'numeric', month: 'long',
+    ...(!sameYear && { year: 'numeric' }),
+  })
+}

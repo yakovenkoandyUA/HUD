@@ -6,6 +6,7 @@ import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import InfoToggle from '@/shared/components/ui/InfoToggle'
 import { uploadToCloudinary } from '@/shared/utils/uploadToCloudinary'
+import { formatTxDateHeader } from '@/shared/utils/formatDate'
 import { SPACE_TYPE_CONFIG } from '../../data/spaceTypes'
 import styles from './PetSpaceView.module.css'
 
@@ -1352,9 +1353,11 @@ const PetSpaceView: React.FC<Props> = ({
               const prevDate = idx > 0 ? spaceTxs[idx - 1].date.slice(0, 10) : null
               const isIncome = t.type === 'income'
               const catColor = isIncome ? 'var(--positive)' : 'var(--negative)'
+              const txTitle  = t.title || t.desc || t.category || '—'
+              const showSub  = t.category && t.category.toLowerCase() !== txTitle.toLowerCase()
               return (
 								<React.Fragment key={t._id}>
-									{curDate !== prevDate && <div className={styles.txDateHeader}>{curDate}</div>}
+									{curDate !== prevDate && <div className={styles.txDateHeader}>{formatTxDateHeader(curDate)}</div>}
 									<div className={styles.spaceTx}>
 										<div className={styles.txLeft}>
 											<div className={styles.txTypeIcon} style={{ '--cat-color': catColor } as React.CSSProperties}>
@@ -1363,8 +1366,8 @@ const PetSpaceView: React.FC<Props> = ({
 												</svg>
 											</div>
 											<div className={styles.txContent}>
-												<span className={styles.txTitle}>{t.title || t.desc || t.category || '—'}</span>
-												{t.category && <span className={styles.txSub}>{t.category}</span>}
+												<span className={styles.txTitle}>{txTitle}</span>
+												{showSub && <span className={styles.txSub}>{t.category}</span>}
 											</div>
 										</div>
 										<span className={`${styles.txAmount} ${isIncome ? styles.txAmountPos : styles.txAmountNeg}`}>

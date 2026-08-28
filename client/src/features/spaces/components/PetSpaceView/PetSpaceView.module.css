@@ -162,7 +162,7 @@
 }
 .spaceTx {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 0; border-bottom: 1px solid var(--border);
+  padding: 0 0 10px; border-bottom: 1px solid var(--border);
 }
 .spaceTx:last-child { border-bottom: none; }
 .txLeft { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
