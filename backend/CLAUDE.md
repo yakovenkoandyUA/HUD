@@ -199,7 +199,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **Category** — `name`, `icon` (Tabler ti-*), `color` (hex), `userId`, `isDefault`, `isActive`, `parentId` (субкатегорії), `order: number`
 
-**SprintTask** — `weekNumber + year` = ідентифікатор тижня, `type: 'task'|'routine'`, `repeat: string` для звичок, `completionLog[]`, `checklist[]`, `labels[]`, `assignedTo[]`, `deletedAt` (soft-delete), `dueTime?: string` (HH:MM, опційний час дедлайну), `reminderSent: boolean` (анти-дубль для 5-хвилинного reminder-циклу, скидається при зміні `dueDate`/`dueTime`/`nextDue`/`reminder`), `spaceId?: string | null` (simple string ref, не ObjectId — для фільтра `GET /api/sprint/tasks?spaceId=`)
+**SprintTask** — `weekNumber + year` = ідентифікатор тижня, `type: 'task'|'routine'`, `repeat: string` для звичок, `completionLog[]`, `checklist[]` (Mixed, `{id, title, done, parentId?, assigneeId?}` — `parentId` дає вкладеність до 3 рівнів, `assigneeId` призначає пункт на конкретного члена сім'ї з `assignedTo[]` задачі; `parent.done` рахується автоматично від дітей на фронтенді, не валідується окремо), `labels[]`, `assignedTo[]`, `deletedAt` (soft-delete), `dueTime?: string` (HH:MM, опційний час дедлайну), `reminderSent: boolean` (анти-дубль для 5-хвилинного reminder-циклу, скидається при зміні `dueDate`/`dueTime`/`nextDue`/`reminder`), `spaceId?: string | null` (simple string ref, не ObjectId — для фільтра `GET /api/sprint/tasks?spaceId=`)
 
 **TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для звичок, `dueTime?: string`, `reminderSent: boolean`, `timeOfDay?: 'morning'|'afternoon'|'evening'|null` (слот для RoutineRing/TodayHabits)
 
