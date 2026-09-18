@@ -23,7 +23,7 @@ export interface ISprintTask extends Document {
   completionHistory?: string[]
   reminder?: { amount: number; unit: string }
   reminderSent?: boolean
-  checklist?: Array<{ id: string; title: string; done: boolean }>
+  checklist?: Array<{ id: string; title: string; done: boolean; parentId?: string | null; assigneeId?: string | null }>
   isPinned?: boolean
   deletedAt?: Date | null
   userId: string

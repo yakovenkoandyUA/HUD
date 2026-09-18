@@ -112,7 +112,7 @@ function formatReminderLabel(reminder: { amount: number; unit: string }): string
 }
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) => {
-  const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, addLabel, removeLabel, setReminder, pinItem, deleteItem } = useSprintStore()
+  const { items, updateTask, toggleItem, addChecklistItem, toggleChecklistItem, removeChecklistItem, updateChecklist, setChecklistAssignee, addLabel, removeLabel, setReminder, pinItem, deleteItem } = useSprintStore()
   const { accepted, fetchFamily } = useFamilyStore()
   const { spaces, fetchSpaces } = useSpacesStore()
   const { limits, can } = usePlan()
@@ -173,7 +173,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [titleDraft, setTitleDraft]     = useState('')
   const [descDraft, setDescDraft]       = useState('')
   const [checkInput, setCheckInput]     = useState('')
-  const [editingIdx, setEditingIdx]     = useState<number | null>(null)
+  const [editingId, setEditingId]       = useState<string | null>(null)
+  const [addingChildFor, setAddingChildFor] = useState<string | null>(null)
+  const [childInput, setChildInput]     = useState('')
 
   const now = new Date()
   const [calYear, setCalYear]   = useState(now.getFullYear())
@@ -342,6 +344,22 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     checkInputRef.current?.focus()
   }
 
+  const handleAddChild = (parentId: string) => {
+    if (!task || !childInput.trim()) return
+    addChecklistItem(task.id, childInput.trim(), parentId)
+    setChildInput('')
+    setAddingChildFor(null)
+  }
+
+  const cycleChecklistAssignee = (itemId: string, currentAssigneeId: string | null | undefined) => {
+    if (!task) return
+    const pool = accepted.filter(m => localAssignedTo.includes(m.id))
+    if (pool.length === 0) return
+    const idx = currentAssigneeId ? pool.findIndex(m => m.id === currentAssigneeId) : -1
+    const next = idx + 1 >= pool.length ? null : pool[idx + 1].id
+    setChecklistAssignee(task.id, itemId, next)
+  }
+
   const handleAiBreakdown = async () => {
     if (!task || breakingDown) return
     setBreakingDown(true)
@@ -387,24 +405,60 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
   const recurring  = isRecurring(task)
   const checklist      = task.checklist ?? []
-  const sortedChecklist = [...checklist].sort((a, b) => {
-    const aDone = a.done && !animatingIds.has(a.id)
-    const bDone = b.done && !animatingIds.has(b.id)
-    if (aDone === bDone) return 0
-    return aDone ? 1 : -1
-  })
-  const checkDone    = checklist.filter(c => c.done).length
-  const checkPct     = checklist.length > 0 ? Math.round((checkDone / checklist.length) * 100) : 0
+  const hasChildren = (id: string) => checklist.some(c => c.parentId === id)
+  // Depth-first order that keeps parent/children grouped together; within each
+  // sibling group, done items sink to the bottom (same UX as before nesting).
+  const checklistRows: Array<{ item: typeof checklist[number]; depth: number }> = []
+  {
+    const byParent = new Map<string, typeof checklist>()
+    checklist.forEach(c => {
+      const key = c.parentId ?? '__root__'
+      byParent.set(key, [...(byParent.get(key) ?? []), c])
+    })
+    const sortSiblings = (arr: typeof checklist) => [...arr].sort((a, b) => {
+      const aDone = a.done && !animatingIds.has(a.id)
+      const bDone = b.done && !animatingIds.has(b.id)
+      if (aDone === bDone) return 0
+      return aDone ? 1 : -1
+    })
+    const walk = (parentKey: string, depth: number) => {
+      sortSiblings(byParent.get(parentKey) ?? []).forEach(item => {
+        checklistRows.push({ item, depth })
+        if (depth < 2) walk(item.id, depth + 1)
+      })
+    }
+    walk('__root__', 0)
+  }
+  const leafItems    = checklist.filter(c => !hasChildren(c.id))
+  const checkDone    = leafItems.filter(c => c.done).length
+  const checkPct     = leafItems.length > 0 ? Math.round((checkDone / leafItems.length) * 100) : 0
   const progressColor = checkPct === 100 ? 'var(--positive)' : checkPct >= 50 ? 'var(--gold)' : 'var(--negative)'
   const taskLabels   = task.labels ?? []
+  const assigneePool = accepted.filter(m => localAssignedTo.includes(m.id))
+
+  // The "add sub-item" input for `addingChildFor` renders after the LAST existing
+  // child of that item (end of its subtree), not right under the item itself —
+  // otherwise it appears above already-added siblings instead of below them.
+  let addChildAfterIdx = -1
+  let addChildDepth = 0
+  if (addingChildFor) {
+    const parentIdx = checklistRows.findIndex(r => r.item.id === addingChildFor)
+    if (parentIdx !== -1) {
+      const parentDepth = checklistRows[parentIdx].depth
+      let j = parentIdx
+      while (j + 1 < checklistRows.length && checklistRows[j + 1].depth > parentDepth) j++
+      addChildAfterIdx = j
+      addChildDepth = parentDepth + 1
+    }
+  }
 
 
-  const saveEdit = (sortedIdx: number, value: string) => {
+  const saveEdit = (itemId: string, value: string) => {
     const trimmed = value.trim()
-    setEditingIdx(null)
-    if (!trimmed || trimmed === sortedChecklist[sortedIdx]?.title) return
-    const newList = [...sortedChecklist]
-    newList[sortedIdx] = { ...newList[sortedIdx], title: trimmed }
+    setEditingId(null)
+    const original = checklist.find(c => c.id === itemId)
+    if (!trimmed || !original || trimmed === original.title) return
+    const newList = checklist.map(c => c.id === itemId ? { ...c, title: trimmed } : c)
     updateChecklist(task.id, newList)
   }
 
@@ -677,9 +731,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   <div className={styles.sectionHeaderRow}>
                     <p className={styles.sectionLabel}>Чек-ліст</p>
                     <div className={styles.sectionHeaderRight}>
-                      {checklist.length > 0 && (
+                      {leafItems.length > 0 && (
                         <span className={styles.checklistCounter} style={{ color: progressColor }}>
-                          {checkDone}/{checklist.length}
+                          {checkDone}/{leafItems.length}
                         </span>
                       )}
                       {can('sprintAi') && (
@@ -726,72 +780,132 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   {checklist.length > 0 && (
                     <>
                       <div className={styles.checklistList}>
-                        {sortedChecklist.map((item, idx) => {
-                          const isEditing   = editingIdx === idx
+                        {checklistRows.map(({ item, depth }, idx) => {
+                          const isEditing   = editingId === item.id
+                          const isParent    = hasChildren(item.id)
                           const isDone      = item.done
                           const isAnimating = animatingIds.has(item.id)
+                          const assignee    = item.assigneeId ? assigneePool.find(m => m.id === item.assigneeId) : undefined
                           return (
-                            <div
-                              key={item.id}
-                              className={[
-                                styles.checkItem,
-                                isDone      ? styles.checkItemDone      : '',
-                                isAnimating ? styles.checkItemAnimating : '',
-                              ].filter(Boolean).join(' ')}
-                            >
-                              {/* Checkbox */}
-                              <button
-                                type="button"
-                                className={`${styles.checkbox} ${isDone ? styles.checkboxDone : ''}`}
-                                onClick={() => handleCheckItemToggle(item.id, isDone)}
-                                aria-label={isDone ? 'Позначити невиконаним' : 'Виконати'}
+                            <React.Fragment key={item.id}>
+                              <div
+                                className={[
+                                  styles.checkItem,
+                                  isDone      ? styles.checkItemDone      : '',
+                                  isAnimating ? styles.checkItemAnimating : '',
+                                ].filter(Boolean).join(' ')}
+                                style={depth > 0 ? { paddingLeft: depth * 18 } : undefined}
                               >
-                                {isDone && (
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                    <polyline points="20 6 9 17 4 12"/>
-                                  </svg>
-                                )}
-                              </button>
-
-                              {/* Text or inline edit */}
-                              {isEditing ? (
-                                <input
-                                  className={styles.checklistTextInput}
-                                  defaultValue={item.title}
-                                  autoFocus
-                                  inputMode="text"
-                                  enterKeyHint="done"
-                                  onBlur={e  => saveEdit(idx, e.target.value)}
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter')  { e.preventDefault(); saveEdit(idx, e.currentTarget.value) }
-                                    if (e.key === 'Escape') setEditingIdx(null)
-                                  }}
-                                />
-                              ) : (
-                                <span
-                                  className={[
-                                    styles.checkItemText,
-                                    isDone      ? styles.checkItemTextDone      : '',
-                                    isAnimating ? styles.checkItemTextAnimating : '',
-                                  ].filter(Boolean).join(' ')}
-                                  onClick={() => { if (!isDone) setEditingIdx(idx) }}
+                                {/* Checkbox */}
+                                <button
+                                  type="button"
+                                  className={[styles.checkbox, isDone ? styles.checkboxDone : '', isParent ? styles.checkboxAuto : ''].filter(Boolean).join(' ')}
+                                  onClick={isParent ? undefined : () => handleCheckItemToggle(item.id, isDone)}
+                                  aria-label={isParent ? 'Виконується автоматично' : (isDone ? 'Позначити невиконаним' : 'Виконати')}
                                 >
-                                  {item.title}
-                                </span>
-                              )}
+                                  {isDone && (
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                      <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                  )}
+                                </button>
 
-                              {/* Delete */}
-                              <button
-                                type="button"
-                                className={styles.checkItemBtnDelete}
-                                onClick={() => removeChecklistItem(task.id, item.id)}
-                                aria-label="Видалити підзадачу"
-                              >
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                              </button>
-                            </div>
+                                {/* Text or inline edit */}
+                                {isEditing ? (
+                                  <input
+                                    className={styles.checklistTextInput}
+                                    defaultValue={item.title}
+                                    autoFocus
+                                    inputMode="text"
+                                    enterKeyHint="done"
+                                    onBlur={e  => saveEdit(item.id, e.target.value)}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter')  { e.preventDefault(); saveEdit(item.id, e.currentTarget.value) }
+                                      if (e.key === 'Escape') setEditingId(null)
+                                    }}
+                                  />
+                                ) : (
+                                  <span
+                                    className={[
+                                      styles.checkItemText,
+                                      isDone      ? styles.checkItemTextDone      : '',
+                                      isAnimating ? styles.checkItemTextAnimating : '',
+                                    ].filter(Boolean).join(' ')}
+                                    onClick={() => { if (!isDone) setEditingId(item.id) }}
+                                  >
+                                    {item.title}
+                                  </span>
+                                )}
+
+                                {/* Assignee badge — cycles through family members assigned to the quest */}
+                                {assigneePool.length > 0 && (
+                                  <button
+                                    type="button"
+                                    className={`${styles.checkItemAssignee} ${assignee ? styles.checkItemAssigneeOn : ''}`}
+                                    onClick={() => cycleChecklistAssignee(item.id, item.assigneeId)}
+                                    aria-label={assignee ? `Для ${assignee.name}` : 'Не призначено — тапни щоб обрати'}
+                                    title={assignee ? assignee.name : 'Не призначено'}
+                                  >
+                                    {assignee ? (
+                                      assignee.avatarUrl
+                                        ? <img src={assignee.avatarUrl} alt={assignee.name} className={styles.checkItemAssigneeImg} />
+                                        : <span className={styles.checkItemAssigneeInitial}>{assignee.name.charAt(0).toUpperCase()}</span>
+                                    ) : null}
+                                  </button>
+                                )}
+
+                                {/* Add sub-item (max 3 levels) */}
+                                {depth < 2 && (
+                                  <button
+                                    type="button"
+                                    className={`${styles.checkItemBtnAdd} ${addingChildFor === item.id ? styles.checkItemBtnAddActive : ''}`}
+                                    onClick={() => { setChildInput(''); setAddingChildFor(addingChildFor === item.id ? null : item.id) }}
+                                    aria-label="Додати підпункт"
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                  </button>
+                                )}
+
+                                {/* Delete */}
+                                <button
+                                  type="button"
+                                  className={styles.checkItemBtnDelete}
+                                  onClick={() => removeChecklistItem(task.id, item.id)}
+                                  aria-label="Видалити підзадачу"
+                                >
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                  </svg>
+                                </button>
+                              </div>
+
+                              {/* Add-child input floats to the end of this item's subtree, not right under it */}
+                              {idx === addChildAfterIdx && addingChildFor && (
+                                <div className={styles.checklistChildAdd} style={{ paddingLeft: addChildDepth * 18 }}>
+                                  <input
+                                    className={styles.checklistInput}
+                                    inputMode="text"
+                                    enterKeyHint="done"
+                                    autoFocus
+                                    value={childInput}
+                                    onChange={e => setChildInput(e.target.value)}
+                                    placeholder="Додати підпункт..."
+                                    onKeyUp={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddChild(addingChildFor) } }}
+                                    onBlur={() => { if (!childInput.trim()) setAddingChildFor(null) }}
+                                  />
+                                  <button
+                                    type="button"
+                                    className={styles.checklistAddBtn}
+                                    onClick={() => handleAddChild(addingChildFor)}
+                                    disabled={!childInput.trim()}
+                                  >
+                                    Додати
+                                  </button>
+                                </div>
+                              )}
+                            </React.Fragment>
                           )
                         })}
                       </div>

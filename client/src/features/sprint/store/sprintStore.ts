@@ -30,6 +30,23 @@ export const LABEL_COLORS = [
 
 export type SyncStatus = 'local' | 'syncing' | 'synced' | 'error'
 
+// ── Checklist helper: parent items auto-complete when all children are done ──
+// Max nesting is 3 levels (root → child → grandchild), so two bottom-up passes
+// are enough: pass 1 rolls grandchildren into their parent, pass 2 rolls the
+// now-updated level into the root.
+function withAutoParents(list: ChecklistItem[]): ChecklistItem[] {
+  let next = list
+  for (let pass = 0; pass < 2; pass++) {
+    next = next.map(item => {
+      const kids = next.filter(c => c.parentId === item.id)
+      if (kids.length === 0) return item
+      const done = kids.every(k => k.done)
+      return item.done === done ? item : { ...item, done }
+    })
+  }
+  return next
+}
+
 // ── Week helpers ──────────────────────────────────────────────────────────────
 
 function localDateStr(d: Date): string {
@@ -64,7 +81,7 @@ export function currentWeekStart(): string {
 
 // ── API shapes ────────────────────────────────────────────────────────────────
 
-interface ApiChecklist { id: string; title: string; done: boolean }
+interface ApiChecklist { id: string; title: string; done: boolean; parentId?: string | null; assigneeId?: string | null }
 
 interface ApiTask {
   _id: string
@@ -183,10 +200,11 @@ interface TodoState {
   setSyncStatus: (s: SyncStatus) => void
   setReminder: (id: string, reminder: UnifiedTodo['reminder']) => void
   updateTask: (id: string, updates: Partial<UnifiedTodo>) => void
-  addChecklistItem: (taskId: string, title: string) => void
+  addChecklistItem: (taskId: string, title: string, parentId?: string | null) => void
   toggleChecklistItem: (taskId: string, itemId: string) => void
   removeChecklistItem: (taskId: string, itemId: string) => void
   updateChecklist: (taskId: string, newList: ChecklistItem[]) => void
+  setChecklistAssignee: (taskId: string, itemId: string, assigneeId: string | null) => void
   addLabel: (taskId: string, label: SprintLabel) => void
   removeLabel: (taskId: string, labelId: string) => void
   addGlobalLabel: (label: SprintLabel) => void
@@ -541,14 +559,14 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   // ── Checklist ─────────────────────────────────────────────────────────────
 
-  addChecklistItem: (taskId, title) => {
-    const newItem: ChecklistItem = { id: crypto.randomUUID(), title, done: false }
+  addChecklistItem: (taskId, title, parentId = null) => {
+    const newItem: ChecklistItem = { id: crypto.randomUUID(), title, done: false, parentId }
     let newChecklist: ChecklistItem[] = []
     sprintReqId++
     set(s => {
       const updated = s.items.map(i => {
         if (i.id !== taskId) return i
-        newChecklist = [...(i.checklist ?? []), newItem]
+        newChecklist = withAutoParents([...(i.checklist ?? []), newItem])
         return { ...i, checklist: newChecklist }
       })
       return { items: updated }
@@ -566,7 +584,8 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     set(s => {
       const updated = s.items.map(i => {
         if (i.id !== taskId) return i
-        newChecklist = (i.checklist ?? []).map(c => c.id === itemId ? { ...c, done: !c.done } : c)
+        const toggled = (i.checklist ?? []).map(c => c.id === itemId ? { ...c, done: !c.done } : c)
+        newChecklist = withAutoParents(toggled)
         return { ...i, checklist: newChecklist }
       })
       return { items: updated }
@@ -584,7 +603,20 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     set(s => {
       const updated = s.items.map(i => {
         if (i.id !== taskId) return i
-        newChecklist = (i.checklist ?? []).filter(c => c.id !== itemId)
+        const list = i.checklist ?? []
+        // Cascade-delete descendants (up to 3 nesting levels)
+        const toRemove = new Set([itemId])
+        let changed = true
+        while (changed) {
+          changed = false
+          list.forEach(c => {
+            if (c.parentId && toRemove.has(c.parentId) && !toRemove.has(c.id)) {
+              toRemove.add(c.id)
+              changed = true
+            }
+          })
+        }
+        newChecklist = withAutoParents(list.filter(c => !toRemove.has(c.id)))
         return { ...i, checklist: newChecklist }
       })
       return { items: updated }
@@ -597,14 +629,33 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   },
 
   updateChecklist: (taskId, newList) => {
+    const normalized = withAutoParents(newList)
     sprintReqId++
     set(s => ({
-      items: s.items.map(i => i.id === taskId ? { ...i, checklist: newList } : i)
+      items: s.items.map(i => i.id === taskId ? { ...i, checklist: normalized } : i)
     }))
     if (!getToken() || !isBackendConfigured()) return
     authFetch(`/api/sprint/tasks/${taskId}`, {
       method: 'PATCH',
-      body: JSON.stringify({ checklist: newList }),
+      body: JSON.stringify({ checklist: normalized }),
+    }).catch(() => {})
+  },
+
+  setChecklistAssignee: (taskId, itemId, assigneeId) => {
+    let newChecklist: ChecklistItem[] = []
+    sprintReqId++
+    set(s => {
+      const updated = s.items.map(i => {
+        if (i.id !== taskId) return i
+        newChecklist = (i.checklist ?? []).map(c => c.id === itemId ? { ...c, assigneeId } : c)
+        return { ...i, checklist: newChecklist }
+      })
+      return { items: updated }
+    })
+    if (!getToken() || !isBackendConfigured()) return
+    authFetch(`/api/sprint/tasks/${taskId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ checklist: newChecklist }),
     }).catch(() => {})
   },
 

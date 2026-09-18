@@ -104,8 +104,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, onToggle, onDelete, onOpenDet
   const spaces     = useSpacesStore(s => s.spaces)
   const taskSpace  = item.spaceId ? spaces.find(s => s.id === item.spaceId) : undefined
 
-  const checkDone  = (item.checklist ?? []).filter(c => c.done).length
-  const checkTotal = (item.checklist ?? []).length
+  const checklistLeaves = (item.checklist ?? []).filter(c => !(item.checklist ?? []).some(k => k.parentId === c.id))
+  const checkDone  = checklistLeaves.filter(c => c.done).length
+  const checkTotal = checklistLeaves.length
   const checkPct   = checkTotal > 0 ? Math.round((checkDone / checkTotal) * 100) : 0
 
   const missedDays   = getMissedDays(item)

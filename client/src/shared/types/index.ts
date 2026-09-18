@@ -85,12 +85,15 @@ export type SprintTag = 'mentorship' | 'dev' | 'personal' | 'learning'
 /**
  * ChecklistItem
  * -------------
- * Підзадача всередині Sprint задачі.
+ * Підзадача всередині Sprint задачі. Підтримує вкладеність (до 3 рівнів через
+ * ланцюжок parentId) і призначення на конкретного члена сім'ї (assigneeId).
  */
 export interface ChecklistItem {
   id: string
   title: string
   done: boolean
+  parentId?: string | null
+  assigneeId?: string | null
 }
 
 /**
