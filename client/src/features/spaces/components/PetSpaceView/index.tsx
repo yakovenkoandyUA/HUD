@@ -27,11 +27,10 @@ interface Props {
   color:           string
   spaceName:       string
   profile:         PetProfile | null
-  onProfileUpdate: (p: PetProfile) => void
+  onFoodLogChange: (foodLog: PetFoodItem[]) => Promise<void>
   coverUrl?:       string
   coverPosition?:  string
-  isOwner?:        boolean
-  onEditSpace?:    () => void
+  onEditProfile?:  () => void
   onBack?:         () => void
   spaceTxs?:       SpaceTx[]
 }
@@ -144,7 +143,7 @@ function pluralDays(n: number): string {
   return 'днів'
 }
 
-interface UpcomingItem { label: string; date: string; daysLeft: number }
+interface UpcomingItem { type: PetEventType; label: string; date: string; daysLeft: number }
 
 function getUpcoming(events: PetEvent[]): UpcomingItem[] {
   const today = new Date().toISOString().slice(0, 10)
@@ -157,7 +156,7 @@ function getUpcoming(events: PetEvent[]): UpcomingItem[] {
     seen.add(key)
     const days = daysUntil(e.nextDue)
     if (days > 90) continue
-    items.push({ label: EVENT_LABELS[e.type], date: e.nextDue, daysLeft: days })
+    items.push({ type: e.type, label: EVENT_LABELS[e.type], date: e.nextDue, daysLeft: days })
   }
   items.sort((a, b) => a.daysLeft - b.daysLeft)
   return items.filter(i => i.date >= today || i.daysLeft >= -7)
@@ -381,333 +380,6 @@ const AddEventSheet: React.FC<AddSheetProps> = ({ isOpen, type, onClose, onSave,
             {busy ? 'Збереження…' : editEvent ? 'Оновити' : 'Зберегти'}
           </button>
         </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Profile edit sheet ─────────────────────────────────────────────────────
-
-interface ProfileSheetProps {
-  isOpen:    boolean
-  profile:   PetProfile | null
-  spaceName: string
-  onClose:   () => void
-  onSave:    (data: Partial<PetProfile>) => Promise<void>
-  color:     string
-}
-
-const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, spaceName, onClose, onSave, color }) => {
-  const { showToast } = useUiStore()
-
-  const [name, setName]         = useState(profile?.name || spaceName)
-  const [species, setSpecies]   = useState(profile?.species ?? '')
-  const [breed, setBreed]       = useState(profile?.breed ?? '')
-  const [birthDate, setBirthDate]         = useState(profile?.birthDate ?? '')
-  const [birthDateOpen, setBirthDateOpen] = useState(false)
-  const [weight, setWeight]     = useState(profile?.weight?.toString() ?? '')
-  const [photoUrl, setPhotoUrl] = useState(profile?.photoUrl ?? '')
-  const [chipNum, setChipNum]   = useState(profile?.chipNumber ?? '')
-  const [passport, setPassport] = useState(profile?.passportNumber ?? '')
-  const [busy, setBusy]         = useState(false)
-  const [mounted, setMounted]   = useState(false)
-  const [visible, setVisible]   = useState(false)
-
-  const [pendingImgSrc, setPendingImgSrc] = useState<string | null>(null)
-  const [cropOffset, setCropOffset]       = useState({ x: 0, y: 0 })
-  const [cropScale, setCropScale]         = useState(1)
-  const [cropBusy, setCropBusy]           = useState(false)
-  const [naturalSize, setNaturalSize]     = useState({ w: 0, h: 0 })
-
-  const sheetRef       = useRef<HTMLDivElement>(null)
-  const overlayRef     = useRef<HTMLDivElement>(null)
-  const bodyRef        = useRef<HTMLDivElement>(null)
-  const fileInputRef   = useRef<HTMLInputElement>(null)
-  const cropCircleRef  = useRef<HTMLDivElement>(null)
-  const cropImgRef     = useRef<HTMLImageElement>(null)
-  const cropOverlayRef = useRef<HTMLDivElement>(null)
-  const cropDragRef    = useRef<{ startX: number; startY: number; startOffX: number; startOffY: number } | null>(null)
-  const pointersRef    = useRef<Map<number, { x: number; y: number }>>(new Map())
-  const pinchStartRef  = useRef<{ dist: number; scale: number } | null>(null)
-
-  useSwipeToDismiss(onClose, { enabled: isOpen && !pendingImgSrc, bodyRef, overlayRef, sheetRef })
-
-  useEffect(() => {
-    if (isOpen) {
-      setName(profile?.name || spaceName)
-      setSpecies(profile?.species ?? '')
-      setBreed(profile?.breed ?? '')
-      setBirthDate(profile?.birthDate ?? '')
-      setWeight(profile?.weight?.toString() ?? '')
-      setPhotoUrl(profile?.photoUrl ?? '')
-      setChipNum(profile?.chipNumber ?? '')
-      setPassport(profile?.passportNumber ?? '')
-      setPendingImgSrc(null); setCropOffset({ x: 0, y: 0 }); setCropScale(1)
-      setMounted(true)
-      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
-    } else {
-      setVisible(false)
-      const t = setTimeout(() => setMounted(false), 320)
-      return () => clearTimeout(t)
-    }
-  }, [isOpen, profile, spaceName])
-
-  useEffect(() => {
-    if (!pendingImgSrc || !cropOverlayRef.current) return
-    const el = cropOverlayRef.current
-    const stop = (e: TouchEvent) => e.stopPropagation()
-    el.addEventListener('touchstart', stop, { passive: true })
-    el.addEventListener('touchmove',  stop, { passive: false })
-    return () => {
-      el.removeEventListener('touchstart', stop)
-      el.removeEventListener('touchmove',  stop)
-    }
-  }, [pendingImgSrc])
-
-  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (pendingImgSrc) URL.revokeObjectURL(pendingImgSrc)
-    setPendingImgSrc(URL.createObjectURL(file))
-    setCropOffset({ x: 0, y: 0 }); setCropScale(1)
-    e.target.value = ''
-  }
-
-  const handleCropImgLoad = () => {
-    const img = cropImgRef.current; const circle = cropCircleRef.current
-    if (!img || !circle) return
-    const size  = circle.offsetWidth
-    const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight)
-    setNaturalSize({ w: img.naturalWidth, h: img.naturalHeight })
-    setCropScale(scale)
-  }
-
-  const handleCropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation()
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    const pts = [...pointersRef.current.values()]
-    if (pts.length === 1) {
-      cropDragRef.current = { startX: e.clientX, startY: e.clientY, startOffX: cropOffset.x, startOffY: cropOffset.y }
-      pinchStartRef.current = null
-    } else if (pts.length === 2) {
-      cropDragRef.current = null
-      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
-      pinchStartRef.current = { dist, scale: cropScale }
-    }
-  }
-
-  const handleCropPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation()
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    const pts = [...pointersRef.current.values()]
-    if (pts.length === 2 && pinchStartRef.current) {
-      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
-      setCropScale(Math.max(0.3, Math.min(6, pinchStartRef.current.scale * (dist / pinchStartRef.current.dist))))
-    } else if (pts.length === 1 && cropDragRef.current) {
-      setCropOffset({ x: cropDragRef.current.startOffX + e.clientX - cropDragRef.current.startX, y: cropDragRef.current.startOffY + e.clientY - cropDragRef.current.startY })
-    }
-  }
-
-  const handleCropPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation()
-    pointersRef.current.delete(e.pointerId)
-    const pts = [...pointersRef.current.values()]
-    if (pts.length === 1) {
-      cropDragRef.current = { startX: pts[0].x, startY: pts[0].y, startOffX: cropOffset.x, startOffY: cropOffset.y }
-      pinchStartRef.current = null
-    } else if (pts.length === 0) {
-      cropDragRef.current = null; pinchStartRef.current = null
-    }
-  }
-
-  const handleCropWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.stopPropagation()
-    setCropScale(s => Math.max(0.3, Math.min(6, s * (1 - e.deltaY * 0.001))))
-  }
-
-  const handleCropConfirm = async () => {
-    if (!cropImgRef.current || !cropCircleRef.current || !pendingImgSrc) return
-    setCropBusy(true)
-    try {
-      const size = 400
-      const canvas = document.createElement('canvas')
-      canvas.width = size; canvas.height = size
-      const ctx = canvas.getContext('2d')!
-      ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip()
-      const circleSize = cropCircleRef.current.offsetWidth
-      const drawW = naturalSize.w * cropScale; const drawH = naturalSize.h * cropScale
-      const drawX = (circleSize - drawW) / 2 + cropOffset.x; const drawY = (circleSize - drawH) / 2 + cropOffset.y
-      const ratio = size / circleSize
-      ctx.drawImage(cropImgRef.current, drawX * ratio, drawY * ratio, drawW * ratio, drawH * ratio)
-      const blob = await new Promise<Blob>((resolve, reject) =>
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.92)
-      )
-      const file = new File([blob], 'pet-avatar.jpg', { type: 'image/jpeg' })
-      const url = await uploadToCloudinary(file, 'spaces')
-      setPhotoUrl(url)
-      URL.revokeObjectURL(pendingImgSrc); setPendingImgSrc(null)
-    } catch {
-      showToast('Помилка завантаження — спробуй ще раз', 'error')
-    } finally {
-      setCropBusy(false)
-    }
-  }
-
-  const handleCropCancel = () => {
-    if (pendingImgSrc) URL.revokeObjectURL(pendingImgSrc)
-    setPendingImgSrc(null); setCropOffset({ x: 0, y: 0 }); setCropScale(1)
-  }
-
-  const handleSave = async () => {
-    setBusy(true)
-    try {
-      await onSave({
-        name:           name     || undefined,
-        species:        species  || undefined,
-        breed:          breed    || undefined,
-        birthDate:      birthDate || null,
-        weight:         weight ? parseFloat(weight) : null,
-        photoUrl:       photoUrl  || '',
-        chipNumber:     chipNum   || '',
-        passportNumber: passport  || '',
-      })
-      onClose()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  if (!mounted) return null
-  const colorVar = { '--space-color': color } as React.CSSProperties
-
-  return (
-    <div
-      ref={overlayRef}
-      className={`${styles.overlay} ${visible ? styles.overlayVisible : ''}`}
-      style={colorVar}
-      onClick={e => { if (e.target === overlayRef.current) onClose() }}
-    >
-      <div ref={sheetRef} className={`${styles.sheet} ${visible ? styles.sheetVisible : ''}`}>
-        <div className={styles.handle} />
-
-        {pendingImgSrc ? (
-          <>
-            <div className={styles.sheetHeader}>
-              <span className={styles.sheetTitle}>КАДРУВАННЯ ФОТО</span>
-              <button type="button" className={styles.closeBtn} onClick={handleCropCancel} aria-label="Скасувати">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-            <div ref={cropOverlayRef} className={styles.cropBody}>
-              <div
-                ref={cropCircleRef}
-                className={styles.cropCircle}
-                onPointerDown={handleCropPointerDown}
-                onPointerMove={handleCropPointerMove}
-                onPointerUp={handleCropPointerUp}
-                onPointerCancel={handleCropPointerUp}
-                onWheel={handleCropWheel}
-              >
-                <img
-                  ref={cropImgRef}
-                  src={pendingImgSrc}
-                  alt=""
-                  onLoad={handleCropImgLoad}
-                  className={styles.cropImg}
-                  style={{ transform: `translate(calc(-50% + ${cropOffset.x}px), calc(-50% + ${cropOffset.y}px)) scale(${cropScale})` }}
-                  draggable={false}
-                />
-              </div>
-              <p className={styles.cropHint}>Перетягни · зводь пальці для масштабу</p>
-            </div>
-            <div className={styles.sheetFooter}>
-              <div className={styles.cropFooterBtns}>
-                <button type="button" className={styles.cropCancelBtn} onClick={handleCropCancel}>Скасувати</button>
-                <button type="button" className={styles.cropConfirmBtn} style={{ background: color }} onClick={handleCropConfirm} disabled={cropBusy}>
-                  {cropBusy ? 'Завантаження…' : 'Підтвердити'}
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className={styles.sheetHeader}>
-              <span className={styles.sheetTitle}>ПРОФІЛЬ УЛЮБЛЕНЦЯ</span>
-              <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Закрити">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-
-            <div ref={bodyRef} className={styles.sheetBody}>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
-              <div className={styles.avatarHero}>
-                <div className={styles.avatarSection}>
-                  <div className={styles.avatarWrap} onClick={() => fileInputRef.current?.click()}>
-                    <div className={styles.avatarCircle}>
-                      {photoUrl
-                        ? <img src={photoUrl} alt="" className={styles.avatarCircleImg} />
-                        : <svg className={styles.avatarPlaceholderIcon} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
-                          </svg>
-                      }
-                    </div>
-                    <div className={styles.avatarEditBadge} aria-hidden="true">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    </div>
-                  </div>
-                  {photoUrl && (
-                    <button type="button" className={styles.avatarRemoveBtn} onClick={() => setPhotoUrl('')}>Видалити фото</button>
-                  )}
-                </div>
-
-                <div className={styles.avatarFields}>
-                  <div className={styles.field}>
-                    <label className={styles.fieldLabel}>КЛИЧКА</label>
-                    <input className={styles.fieldInput} value={name} onChange={e => setName(e.target.value)} placeholder="—" />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.fieldLabel}>ВИД</label>
-                    <input className={styles.fieldInput} value={species} onChange={e => setSpecies(e.target.value)} placeholder="Кіт, Собака…" />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.fieldLabel}>ПОРОДА</label>
-                    <input className={styles.fieldInput} value={breed} onChange={e => setBreed(e.target.value)} placeholder="—" />
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.fieldRow}>
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel}>ДАТА НАРОДЖЕННЯ</label>
-                  <button type="button" className={styles.dateField} onClick={() => setBirthDateOpen(true)}>
-                    {birthDate ? fmtDate(birthDate) : 'Не вказано'}
-                  </button>
-                  {birthDateOpen && <CustomDatePicker value={birthDate} onChange={v => { setBirthDate(v); setBirthDateOpen(false) }} onClose={() => setBirthDateOpen(false)} />}
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel}>ВАГА (кг)</label>
-                  <input className={styles.fieldInput} type="number" inputMode="decimal" step="0.1" value={weight} onChange={e => setWeight(e.target.value)} placeholder="—" />
-                </div>
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.fieldLabel}>НОМЕР МІКРОЧІПА</label>
-                <input className={styles.fieldInput} value={chipNum} onChange={e => setChipNum(e.target.value)} placeholder="—" />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.fieldLabel}>НОМЕР ПАСПОРТА</label>
-                <input className={styles.fieldInput} value={passport} onChange={e => setPassport(e.target.value)} placeholder="—" />
-              </div>
-            </div>
-
-            <div className={styles.sheetFooter}>
-              <button type="button" className={styles.saveBtn} style={{ background: color }} onClick={handleSave} disabled={busy}>
-                {busy ? 'Збереження…' : 'Зберегти'}
-              </button>
-            </div>
-          </>
-        )}
       </div>
     </div>
   )
@@ -1000,24 +672,22 @@ const PetEventRow: React.FC<EventRowProps> = ({ event, color, onDelete, onEdit }
  * @prop color           — колір простору для акцентів
  * @prop spaceName       — назва простору
  * @prop profile         — поточний petProfile
- * @prop onProfileUpdate — callback після збереження профілю
  * @prop coverUrl        — URL обкладинки
  * @prop coverPosition   — позиція обкладинки
  * @prop isOwner         — чи поточний юзер є власником
- * @prop onEditSpace     — відкрити шторку редагування простору
+ * @prop onEditProfile   — відкрити спільний редактор
  * @prop onBack          — навігація назад
  * @prop spaceTxs        — транзакції простору
  */
 const PetSpaceView: React.FC<Props> = ({
-  spaceId, color, spaceName, profile, onProfileUpdate,
-  coverUrl, coverPosition, isOwner, onEditSpace, onBack, spaceTxs = [],
+  spaceId, color, spaceName, profile, onFoodLogChange,
+  coverUrl, coverPosition, onEditProfile, onBack, spaceTxs = [],
 }) => {
   const showToast = useUiStore(s => s.showToast)
-  const { eventsBySpace, loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile } = usePetStore()
+  const { eventsBySpace, loading, fetchEvents, createEvent, updateEvent, deleteEvent } = usePetStore()
 
   const [addSheet, setAddSheet]           = useState<SheetType>(null)
   const [editingEvent, setEditingEvent]   = useState<PetEvent | null>(null)
-  const [profileOpen, setProfileOpen]     = useState(false)
 
   const events = eventsBySpace[spaceId] ?? []
 
@@ -1064,17 +734,6 @@ const PetSpaceView: React.FC<Props> = ({
     showToast('Видалено', 'success')
   }
 
-  const handleProfileSave = async (data: Partial<PetProfile>) => {
-    try {
-      const updated = await updateProfile(spaceId, data)
-      onProfileUpdate(updated)
-      showToast('Збережено', 'success')
-    } catch {
-      showToast('Помилка збереження', 'error')
-      throw new Error('Failed')
-    }
-  }
-
   // ── Derived ──
 
   const age          = calcAge(profile?.birthDate ?? null)
@@ -1089,25 +748,14 @@ const PetSpaceView: React.FC<Props> = ({
       .reduce((s, t) => s + t.amount, 0)
   })()
 
-  const healthItems = (() => {
-    const items: { label: string; value: string; urgent: boolean }[] = []
-    const nextVacc = [...events]
-      .filter(e => e.type === 'vaccination' && e.nextDue)
-      .sort((a, b) => (a.nextDue ?? '').localeCompare(b.nextDue ?? ''))[0]
-    if (nextVacc?.nextDue) {
-      items.push({ label: 'Наступне щеплення', value: fmtDate(nextVacc.nextDue), urgent: daysUntil(nextVacc.nextDue) <= 7 })
-    }
-    const lastVet = [...events].filter(e => e.type === 'vet_visit').sort((a, b) => b.date.localeCompare(a.date))[0]
-    if (lastVet) {
-      items.push({ label: 'Останній візит', value: fmtDate(lastVet.date), urgent: false })
-    }
-    if (profile?.weight != null) {
-      items.push({ label: 'Поточна вага', value: `${profile.weight} кг`, urgent: false })
-    }
-    return items
-  })()
-
-  const isProfileEmpty = !profile?.name && !profile?.species && !profile?.breed && !profile?.birthDate && profile?.weight == null
+  const lastVet = events.filter(event => event.type === 'vet_visit').sort((a, b) => b.date.localeCompare(a.date))[0]
+  const nextVaccination = nextUpcoming?.type === 'vaccination'
+    ? null
+    : events.filter(event => event.type === 'vaccination' && event.nextDue)
+      .sort((a, b) => (a.nextDue ?? '').localeCompare(b.nextDue ?? ''))[0]?.nextDue
+  const name = profile?.name?.trim() || spaceName
+  const description = [profile?.species, profile?.breed, age].filter(Boolean).join(' · ')
+  const weight = profile?.weight
 
   const colorVar = { '--space-color': color } as React.CSSProperties
 
@@ -1115,7 +763,7 @@ const PetSpaceView: React.FC<Props> = ({
     <div className={styles.root} style={colorVar}>
 
       {/* ── Compact hero ── */}
-      <div className={`${styles.hero} ${styles.heroCovered}`}>
+      <div className={styles.hero}>
         <img
           src={coverUrl || SPACE_TYPE_CONFIG.pet.iconSrc}
           alt=""
@@ -1132,141 +780,62 @@ const PetSpaceView: React.FC<Props> = ({
         </button>
 
         <div className={styles.heroContent}>
-          <h1 className={`${styles.heroName} ${coverUrl ? styles.heroNameCovered : ''}`}>{spaceName}</h1>
-          <span className={styles.heroTypeLabel}>Вихованець</span>
-          {(age || profile?.weight != null || nextUpcoming) && (
-            <div className={styles.heroStatus}>
-              {age && <span className={styles.heroStatusItem}>{age}</span>}
-              {profile?.weight != null && (
-                <><span className={styles.heroStatusDot}>·</span><span className={styles.heroStatusItem}>{profile.weight} кг</span></>
-              )}
-              {nextUpcoming && (
-                <><span className={styles.heroStatusDot}>·</span><span className={styles.heroStatusItem}>{nextUpcoming.label} {fmtDateShort(nextUpcoming.date)}</span></>
-              )}
-            </div>
-          )}
+          {profile?.photoUrl && <img src={profile.photoUrl} alt="" className={styles.heroAvatar} />}
+          <div className={styles.heroIdentity}>
+            <h1 className={styles.heroName}>{name}</h1>
+            <p className={styles.heroDescription}>{description || 'Улюбленець'}</p>
+          </div>
         </div>
 
-        {isOwner && (
-          <button type="button" className={styles.heroEditBtn} onClick={onEditSpace} aria-label="Редагувати простір">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        {onEditProfile && (
+          <button type="button" className={styles.heroEditBtn} onClick={onEditProfile} aria-label="Редагувати улюбленця">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M11 2.5l2.5 2.5L5 13.5H2.5V11L11 2.5z"/>
             </svg>
           </button>
         )}
       </div>
 
-      {/* ── Metrics row ── */}
-      <div className={styles.metricsRow}>
-        <div className={styles.metricCard}>
-          <span className={styles.metricVal}>{profile?.weight != null ? profile.weight : '—'}</span>
-          <span className={styles.metricLabel}>кг вага</span>
-        </div>
-        <div className={styles.metricCard}>
-          {nextUpcoming
-            ? <>
-                <span className={styles.metricVal}>{fmtDateShort(nextUpcoming.date)}</span>
-                <span className={`${styles.metricLabel} ${nextUpcoming.daysLeft <= 7 ? styles.metricLabelUrgent : ''}`}>
-                  {nextUpcoming.label.toLowerCase()}
-                </span>
-              </>
-            : <><span className={styles.metricVal}>—</span><span className={styles.metricLabel}>щеплення</span></>
-          }
-        </div>
-        <div className={styles.metricCard}>
-          <span className={styles.metricVal}>{monthlyExpenses > 0 ? `₴${Math.round(monthlyExpenses)}` : '—'}</span>
-          <span className={styles.metricLabel}>за місяць</span>
-        </div>
-      </div>
-
-      {/* ── Profile card ── */}
-      <div className={styles.profileSection}>
-        <div className={styles.profileSectionHeader}>
-          <span className={styles.sectionTitle}>ПРОФІЛЬ УЛЮБЛЕНЦЯ</span>
-          {!isProfileEmpty && (
-            <button type="button" className={styles.profileEditBtn} onClick={() => setProfileOpen(true)} aria-label="Редагувати профіль">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
+      {(weight != null || nextUpcoming || monthlyExpenses > 0) && (
+        <div className={styles.metricsRow}>
+          {weight != null && (
+            <div className={styles.metricCard}>
+              <span className={styles.metricVal}>{weight} кг</span>
+              <span className={styles.metricLabel}>Вага</span>
+            </div>
+          )}
+          {nextUpcoming && (
+            <div className={styles.metricCard}>
+              <span className={styles.metricVal}>{fmtDateShort(nextUpcoming.date)}</span>
+              <span className={`${styles.metricLabel} ${nextUpcoming.daysLeft <= 7 ? styles.metricLabelUrgent : ''}`}>
+                {nextUpcoming.label}
+              </span>
+            </div>
+          )}
+          {monthlyExpenses > 0 && (
+            <div className={styles.metricCard}>
+              <span className={styles.metricVal}>{fmtCost(Math.round(monthlyExpenses), 'UAH')}</span>
+              <span className={styles.metricLabel}>Витрати за місяць</span>
+            </div>
           )}
         </div>
+      )}
 
-        {isProfileEmpty ? (
-          <div className={styles.profileSetupCard}>
-            <div className={styles.profileSetupRows}>
-              {[
-                { label: 'Кличка', value: 'не вказано' },
-                { label: 'Вид / порода', value: 'не вказано' },
-                { label: 'Дата народження', value: 'не вказано' },
-              ].map(row => (
-                <div key={row.label} className={styles.profileSetupRow}>
-                  <span className={styles.profileSetupLabel}>{row.label}</span>
-                  <span className={styles.profileSetupValue}>{row.value}</span>
-                </div>
-              ))}
-            </div>
-            <button type="button" className={styles.profileSetupBtn} onClick={() => setProfileOpen(true)}>Заповнити профіль</button>
-          </div>
-        ) : (
-          <div className={styles.profileCard} onClick={() => setProfileOpen(true)}>
-            {profile?.photoUrl
-              ? <img src={profile.photoUrl} alt={profile.name || ''} className={styles.profilePhoto} />
-              : (
-                <div className={styles.profilePhotoPlaceholder}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="14" r="5"/><circle cx="5" cy="8" r="2"/><circle cx="19" cy="8" r="2"/><circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/>
-                  </svg>
-                </div>
-              )
-            }
-            <div className={styles.profileInfo}>
-              {profile?.name && profile.name.trim().toLowerCase() !== spaceName.trim().toLowerCase() && (
-                <div className={styles.profileName}>{profile.name}</div>
-              )}
-              <div className={styles.profileMetaRow}>
-                {profile?.species    && <span className={styles.speciesBadge}>{profile.species}</span>}
-                {profile?.breed      && <span className={styles.metaItem}>{profile.breed}</span>}
-                {profile?.birthDate  && <span className={styles.metaItem}>{calcAge(profile.birthDate)}</span>}
-                {profile?.weight != null && <span className={styles.metaItem}>{profile.weight} кг</span>}
-              </div>
-              {(profile?.birthDate || profile?.chipNumber) && (
-                <div className={styles.profileDetailsRow}>
-                  {profile.birthDate && (
-                    <span className={styles.profileDetail}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                      {fmtDate(profile.birthDate)}
-                    </span>
-                  )}
-                  {profile.chipNumber && (
-                    <span className={styles.profileDetail}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="8" width="20" height="8" rx="2"/><path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M6 16v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2"/><path d="M10 12h4"/></svg>
-                      чіп {profile.chipNumber.slice(0, 8)}{profile.chipNumber.length > 8 ? '…' : ''}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={styles.profileChevron} aria-hidden="true">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </div>
-        )}
-      </div>
-
-      {/* ── Health block ── */}
-      {!loading && healthItems.length > 0 && (
+      {!loading && (lastVet || nextVaccination) && (
         <div className={styles.healthBlock}>
           <span className={styles.sectionTitle}>ЗДОРОВ'Я</span>
-          <div className={styles.healthRows}>
-            {healthItems.map(item => (
-              <div key={item.label} className={styles.healthRow}>
-                <span className={styles.healthRowLabel}>{item.label}</span>
-                <span className={`${styles.healthRowValue} ${item.urgent ? styles.healthRowValueUrgent : ''}`}>{item.value}</span>
-              </div>
-            ))}
-          </div>
+          {nextVaccination && (
+            <div className={styles.healthRow}>
+              <span className={styles.healthRowLabel}>Наступне щеплення</span>
+              <span className={styles.healthRowValue}>{fmtDate(nextVaccination)}</span>
+            </div>
+          )}
+          {lastVet && (
+            <div className={styles.healthRow}>
+              <span className={styles.healthRowLabel}>Останній візит</span>
+              <span className={styles.healthRowValue}>{fmtDate(lastVet.date)}</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -1341,7 +910,7 @@ const PetSpaceView: React.FC<Props> = ({
       </div>
 
       {/* ── Food log ── */}
-      <FoodLog foodLog={profile?.foodLog ?? []} color={color} onSave={async (foodLog) => { await handleProfileSave({ foodLog }) }} />
+      <FoodLog foodLog={profile?.foodLog ?? []} color={color} onSave={onFoodLogChange} />
 
       {/* ── Expenses ── */}
       {spaceTxs.length > 0 && (
@@ -1390,7 +959,6 @@ const PetSpaceView: React.FC<Props> = ({
         color={color}
         editEvent={editingEvent ?? undefined}
       />
-      <ProfileEditSheet isOpen={profileOpen} profile={profile} spaceName={spaceName} onClose={() => setProfileOpen(false)} onSave={handleProfileSave} color={color} />
     </div>
   )
 }

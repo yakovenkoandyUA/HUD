@@ -49,6 +49,7 @@ function PillSelector<T extends string = string>({
         <button
           key={opt.value}
           type="button"
+          aria-pressed={value === opt.value}
           className={`${styles.pill} ${value === opt.value ? styles.pillActive : ''}`}
           onClick={() => onChange(opt.value)}
         >

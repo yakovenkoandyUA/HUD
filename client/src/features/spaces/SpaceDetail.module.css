@@ -882,6 +882,26 @@
   margin: 0 0 20px;
 }
 
+.petEditorTabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -8px 0 10px;
+  padding: 8px 0;
+  background: var(--bg2);
+}
+
+.petEditorTabs button { min-height: 44px; }
+
+.petSettingsFields {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.editError { margin: 16px 0 0; color: var(--negative); font-size: 0.875rem; }
+
 .fieldLabel {
   display: block;
   font-size: 9px;

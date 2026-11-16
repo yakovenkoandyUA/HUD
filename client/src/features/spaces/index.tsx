@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import AppHeader from '@/shared/components/layout/AppHeader'
-import { useSpacesStore, type Space, type SpaceType } from '@/features/memories/store/spacesStore'
+import { useSpacesStore, type Space, type SpaceType, type PetProfile, type SpaceInput } from '@/features/memories/store/spacesStore'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
@@ -16,6 +16,10 @@ import { useNotesStore, type Note } from '@/features/notes/notesStore'
 import type { Memory } from '@/features/memories/types/memory'
 import type { AddMemoryData } from '@/features/memories/components/memories/AddMemoryModal'
 import type { PlanInput } from '@/features/memories/store/plansStore'
+import Modal from '@/shared/components/ui/Modal'
+import PillSelector from '@/shared/components/ui/PillSelector'
+import { usePetStore } from './store/petStore'
+import PetProfileEditor from './components/PetProfileEditor'
 import ImageUploadButton from '@/shared/components/ui/ImageUploadButton'
 import { useImageUpload } from '@/shared/hooks/useImageUpload'
 import ProgressBar from '@/shared/components/ui/ProgressBar'
@@ -236,6 +240,9 @@ const SpaceDetailScreen: React.FC = () => {
   // ── Edit sheet ──
   const [chatOpen, setChatOpen]     = useState(false)
   const [editOpen, setEditOpen]     = useState(false)
+  const [editTab, setEditTab] = useState<'pet' | 'space'>('pet')
+  const [editSession, setEditSession] = useState(0)
+  const updatePetProfile = usePetStore(state => state.updateProfile)
   const [editName, setEditName]       = useState('')
   const [editEmoji, setEditEmoji]     = useState('')
   const [editColor, setEditColor]     = useState(COLORS[0])
@@ -246,6 +253,8 @@ const SpaceDetailScreen: React.FC = () => {
   const [editBudgetCurrency, setEditBudgetCurrency] = useState('UAH')
   const [editModules, setEditModules] = useState<string[]>([])
   const [editSaving, setEditSaving]               = useState(false)
+  const [editError, setEditError] = useState('')
+  const originalSettings = useRef<Partial<SpaceInput>>({})
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const [coverPickerOpen, setCoverPickerOpen] = useState(false)
@@ -276,7 +285,7 @@ const SpaceDetailScreen: React.FC = () => {
   const noteTextareaRef  = useRef<HTMLTextAreaElement>(null)
   const notesSectionRef  = useRef<HTMLElement>(null)
   const editOverlayRef   = useRef<HTMLDivElement>(null)
-  const editSheetRef     = useSwipeToDismiss(() => setEditOpen(false), { enabled: editOpen, overlayRef: editOverlayRef })
+  const editSheetRef     = useSwipeToDismiss(() => setEditOpen(false), { enabled: editOpen && space?.type !== 'pet', overlayRef: editOverlayRef })
 
   // ── Initial load ──
   useEffect(() => {
@@ -420,6 +429,18 @@ const SpaceDetailScreen: React.FC = () => {
   // Populate edit form when opening
   const openEdit = () => {
     if (!space) return
+    originalSettings.current = {
+      name: space.name,
+      emoji: space.emoji || undefined,
+      color: space.color,
+      type: space.type,
+      coverUrl: space.coverUrl ?? '',
+      coverPosition: space.coverPosition ?? 'center',
+      budget: space.budget ?? null,
+      budgetCurrency: space.budgetCurrency ?? 'UAH',
+      modules: space.modules ?? [],
+    }
+    setEditError('')
     setEditName(space.name)
     setEditEmoji(space.emoji ?? '')
     setEditColor(space.color)
@@ -430,6 +451,8 @@ const SpaceDetailScreen: React.FC = () => {
     setEditBudgetCurrency(space.budgetCurrency ?? 'UAH')
     setEditModules(space.modules ?? [])
     setConfirmDelete(false)
+    setEditTab('pet')
+    setEditSession(session => session + 1)
     setEditOpen(true)
   }
 
@@ -541,32 +564,68 @@ const SpaceDetailScreen: React.FC = () => {
   }
 
   const handleSaveEdit = async () => {
-    if (!space || !editName.trim()) return
-    let cancelled = false
-    const save = async () => {
-      setEditSaving(true)
-      try {
-        const budgetVal = editBudget.trim() ? parseFloat(editBudget) : null
-        await updateSpace(space.id, {
-          name:           editName.trim(),
-          emoji:          editEmoji.trim() || undefined,
-          color:          editColor,
-          type:           editType,
-          coverUrl:       editCoverUrl,
-          coverPosition:  editCoverPosition,
-          budget:         isNaN(budgetVal as number) ? null : budgetVal,
-          budgetCurrency: editBudgetCurrency,
-          modules:        editModules,
-        })
-        if (!cancelled) { setEditOpen(false); showToast('Збережено', 'success') }
-      } catch {
-        if (!cancelled) showToast('Помилка збереження', 'error')
-      } finally {
-        if (!cancelled) setEditSaving(false)
-      }
+    if (!space || space.ownerId !== myId || !editName.trim() || editSaving) return
+    setEditError('')
+    const budget = editBudget.trim() ? Number(editBudget) : null
+    if (budget !== null && (!Number.isFinite(budget) || budget < 0)) {
+      setEditError('Вкажи бюджет як невід’ємну суму.')
+      return
     }
-    save()
-    return () => { cancelled = true }
+
+    const settings = {
+      name: editName.trim(),
+      emoji: editEmoji.trim() || undefined,
+      color: editColor,
+      type: editType,
+      coverUrl: editCoverUrl,
+      coverPosition: editCoverPosition,
+      budget,
+      budgetCurrency: editBudgetCurrency,
+      modules: editModules,
+    }
+    const changes = Object.fromEntries(Object.entries(settings).filter(([key, value]) =>
+      JSON.stringify(originalSettings.current[key as keyof SpaceInput]) !== JSON.stringify(value),
+    )) as Partial<SpaceInput>
+
+    if (Object.keys(changes).length === 0) return
+    setEditSaving(true)
+    try {
+      if (!await updateSpace(space.id, changes)) throw new Error('Space update failed')
+      originalSettings.current = settings
+      if (space.type !== 'pet') setEditOpen(false)
+      showToast('Простір збережено', 'success')
+    } catch {
+      setEditError('Не вдалося зберегти простір. Спробуй ще раз.')
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
+  const savePetProfileChanges = async (data: Partial<PetProfile>) => {
+    if (!space) throw new Error('Pet space unavailable')
+    const profile = await updatePetProfile(space.id, data)
+    setPetProfile(space.id, profile)
+  }
+
+  const handleSavePetProfile = async (data: Partial<PetProfile>) => {
+    if (editSaving) return
+    setEditSaving(true)
+    try {
+      await savePetProfileChanges(data)
+      showToast('Профіль збережено', 'success')
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
+  const handleFoodLogChange = async (foodLog: PetProfile['foodLog']) => {
+    try {
+      await savePetProfileChanges({ foodLog })
+      showToast('Збережено', 'success')
+    } catch {
+      showToast('Не вдалося зберегти раціон', 'error')
+      throw new Error('Food log update failed')
+    }
   }
 
   const handleAcceptBudgetSuggestion = async (suggested: number) => {
@@ -643,6 +702,252 @@ const SpaceDetailScreen: React.FC = () => {
   const spaceColor = space?.color || 'var(--accent)'
   const colorVar = { '--space-color': spaceColor } as React.CSSProperties
   const isOwner = space?.ownerId === myId
+  const canEditPet = space?.type === 'pet' && (isOwner || space.members.some(member => member.userId === myId))
+
+  const spaceEditorFields = editOpen ? (
+    <>
+      <label htmlFor="space-edit-name" className={styles.fieldLabel}>{space?.type === 'pet' ? 'Назва простору' : 'Назва'}</label>
+      <input
+        id="space-edit-name"
+        className={styles.fieldInput}
+        value={editName}
+        onChange={e => setEditName(e.target.value)}
+        placeholder="Назва простору"
+        maxLength={60}
+      />
+
+      <label className={styles.fieldLabel}>КОЛІР</label>
+      <div className={styles.colorRow}>
+        {COLORS.map(c => (
+          <button
+            key={c || 'default'}
+            type="button"
+            className={`${styles.colorDot} ${c === '' ? styles.colorDotDefault : ''} ${editColor === c ? styles.colorDotOn : ''}`}
+            style={c ? { background: c } : undefined}
+            onClick={() => setEditColor(c)}
+            aria-label={c || 'За замовчуванням'}
+          />
+        ))}
+      </div>
+
+      <label className={styles.fieldLabel}>{space?.type === 'pet' ? 'Обкладинка простору' : 'Обкладинка'}</label>
+      <ImageUploadButton
+        currentUrl={editCoverUrl || undefined}
+        folder="spaces"
+        onUpload={setEditCoverUrl}
+        placeholder="Завантажити обкладинку"
+        variant="wide"
+        objectPosition={editCoverUrl ? `center ${editCoverPosition}` : undefined}
+      />
+      {editCoverUrl && (
+        <div className={styles.coverPositionRow}>
+          {(['top', 'center', 'bottom'] as const).map(pos => (
+            <button
+              key={pos}
+              type="button"
+              className={`${styles.coverPositionBtn} ${editCoverPosition === pos ? styles.coverPositionBtnActive : ''}`}
+              onClick={() => setEditCoverPosition(pos)}
+            >
+              {pos === 'top' ? 'Верх' : pos === 'center' ? 'Центр' : 'Низ'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <label className={styles.fieldLabel}>БЮДЖЕТ</label>
+      <div className={styles.budgetInputRow}>
+        <input
+          type="number"
+          className={`${styles.fieldInput} ${styles.budgetInput}`}
+          value={editBudget}
+          onChange={e => setEditBudget(e.target.value)}
+          placeholder="Не встановлено"
+          min={0}
+        />
+        <div className={styles.currencyPills}>
+          {(['UAH', 'USD', 'EUR'] as const).map(c => (
+            <button
+              key={c}
+              type="button"
+              className={`${styles.currencyPill} ${editBudgetCurrency === c ? styles.currencyPillOn : ''}`}
+              onClick={() => setEditBudgetCurrency(c)}
+              style={editBudgetCurrency === c ? colorVar : undefined}
+            >
+              {c === 'UAH' ? '₴' : c === 'USD' ? '$' : '€'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Modules (typed spaces: opt-in; blank/shared: opt-out hide:X) ── */}
+      {(['vehicle', 'plant', 'pet', 'trip'] as SpaceType[]).includes(editType) && (() => {
+        const ALL_MODULES: { key: string; label: string }[] = [
+          { key: 'finance',   label: 'Фінанси' },
+          { key: 'tasks',     label: 'Задачі' },
+          { key: 'memories',  label: 'Спогади' },
+          { key: 'plans',     label: 'Плани' },
+          { key: 'notes',     label: 'Нотатки' },
+        ]
+        const toggleModule = (key: string) =>
+          setEditModules(prev =>
+            prev.includes(key) ? prev.filter(m => m !== key) : [...prev, key]
+          )
+        return (
+          <>
+            <label className={styles.fieldLabel}>МОДУЛІ</label>
+            <div className={styles.moduleToggles}>
+              {ALL_MODULES.map(m => (
+                <button
+                  key={m.key}
+                  type="button"
+                  className={`${styles.moduleToggle} ${editModules.includes(m.key) ? styles.moduleToggleOn : ''}`}
+                  style={editModules.includes(m.key) ? colorVar : undefined}
+                  onClick={() => toggleModule(m.key)}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )
+      })()}
+
+      {(['blank', 'shared'] as SpaceType[]).includes(editType) && (() => {
+        const HIDE_SECTIONS: { key: string; label: string }[] = [
+          { key: 'hide:memories', label: 'Спогади' },
+          { key: 'hide:plans',    label: 'Плани' },
+          { key: 'hide:notes',    label: 'Нотатки' },
+          { key: 'hide:tasks',    label: 'Задачі' },
+        ]
+        const toggleHide = (key: string) =>
+          setEditModules(prev =>
+            prev.includes(key) ? prev.filter(m => m !== key) : [...prev, key]
+          )
+        return (
+          <>
+            <label className={styles.fieldLabel}>РОЗДІЛИ</label>
+            <div className={styles.moduleToggles}>
+              {HIDE_SECTIONS.map(s => {
+                const isVisible = !editModules.includes(s.key)
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    className={`${styles.moduleToggle} ${isVisible ? styles.moduleToggleOn : ''}`}
+                    style={isVisible ? colorVar : undefined}
+                    onClick={() => toggleHide(s.key)}
+                  >
+                    {s.label}
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )
+      })()}
+
+      {/* ── Members ── */}
+      {isOwner && space && (
+        <>
+          <label className={styles.fieldLabel}>УЧАСНИКИ</label>
+          <div className={styles.editMemberList}>
+            {space.members.map(m => (
+              <div key={m.userId} className={styles.editMemberRow}>
+                {m.avatarUrl
+                  ? <img src={m.avatarUrl} className={styles.editMemberAvatar} alt={m.name} />
+                  : <span className={styles.editMemberInitial} style={colorVar}>{m.name[0]?.toUpperCase()}</span>
+                }
+                <div className={styles.editMemberInfo}>
+                  <span className={styles.editMemberName}>{m.name}</span>
+                  <span className={styles.editMemberUsername}>@{m.username}</span>
+                </div>
+                {m.role === 'owner'
+                  ? <span className={styles.ownerBadge}>власник</span>
+                  : <button type="button" className={styles.editMemberRemove} onClick={() => removeMember(space.id, m.userId)} aria-label="Видалити">
+                      <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
+                    </button>
+                }
+              </div>
+            ))}
+          </div>
+
+          {/* Family quick-add chips */}
+          {family.filter(f => !space.members.some(m => m.userId === f.id)).length > 0 && (
+            <div className={styles.editFamilyRow}>
+              {family
+                .filter(f => !space.members.some(m => m.userId === f.id))
+                .map(f => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={styles.editFamilyChip}
+                    onClick={() => addMember(space.id, f.username).then(() => showToast(`${f.name} додано`, 'success')).catch(() => showToast('Помилка', 'error'))}
+                  >
+                    {f.avatarUrl
+                      ? <img src={f.avatarUrl} className={styles.editFamilyChipAvatar} alt={f.name} />
+                      : <span className={styles.editFamilyChipInitial}>{f.name[0]?.toUpperCase()}</span>
+                    }
+                    {f.name}
+                    <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
+                  </button>
+                ))}
+            </div>
+          )}
+
+          {/* Manual username input */}
+          <div className={styles.addMemberRow}>
+            <input
+              className={styles.fieldInput}
+              value={memberInput}
+              onChange={e => setMemberInput(e.target.value)}
+              placeholder="Додати за username…"
+              onKeyDown={e => { if (e.key === 'Enter') handleAddMember() }}
+            />
+            <button
+              type="button"
+              className={styles.addMemberBtn}
+              style={colorVar}
+              onClick={handleAddMember}
+              disabled={addingMember || !memberInput.trim()}
+            >
+              {addingMember ? '…' : 'Додати'}
+            </button>
+          </div>
+        </>
+      )}
+
+      {editError && <p className={styles.editError} role="alert">{editError}</p>}
+      <button
+        type="button"
+        className={styles.saveBtn}
+        style={colorVar}
+        onClick={handleSaveEdit}
+        disabled={editSaving || !editName.trim()}
+      >
+        {editSaving ? 'Зберігаємо…' : space?.type === 'pet' ? 'Зберегти простір' : 'Зберегти'}
+      </button>
+
+      <div className={styles.deleteDivider} />
+
+      {isOwner && (
+        <button type="button" className={styles.archiveSpaceBtn} onClick={handleArchive}>
+          Архівувати простір
+        </button>
+      )}
+
+      {!confirmDelete ? (
+        <button type="button" className={styles.deleteSpaceBtn} onClick={() => setConfirmDelete(true)}>
+          Видалити простір
+        </button>
+      ) : (
+        <div className={styles.deleteConfirmRow}>
+          <span className={styles.deleteConfirmText}>Видалити назавжди?</span>
+          <button type="button" className={styles.deleteConfirmYes} onClick={handleDelete}>Так</button>
+          <button type="button" className={styles.deleteConfirmNo} onClick={() => setConfirmDelete(false)}>Ні</button>
+        </div>
+      )}
+    </>
+  ) : null
 
   return (
     <div className={styles.root}>
@@ -872,11 +1177,10 @@ const SpaceDetailScreen: React.FC = () => {
           color={space.color || 'var(--accent)'}
           spaceName={space.name}
           profile={space.petProfile}
-          onProfileUpdate={p => setPetProfile(space.id, p)}
+          onFoodLogChange={handleFoodLogChange}
           coverUrl={space.coverUrl}
           coverPosition={space.coverPosition}
-          isOwner={isOwner}
-          onEditSpace={openEdit}
+          onEditProfile={canEditPet ? openEdit : undefined}
           onBack={() => navigate(-1)}
           spaceTxs={spaceTxs ?? []}
         />
@@ -1416,251 +1720,49 @@ const SpaceDetailScreen: React.FC = () => {
       {addPlanOpen && <PlanForm onClose={() => setAddPlanOpen(false)} onSubmit={handleAddPlan} initialSpaceId={spaceId} />}
       {space && <SpaceChatSheet isOpen={chatOpen} onClose={() => setChatOpen(false)} space={space} />}
 
+      {canEditPet && space && (
+        <Modal
+          isOpen={editOpen}
+          onClose={() => { if (!editSaving) setEditOpen(false) }}
+          title={isOwner ? 'Редагувати' : 'Профіль улюбленця'}
+          draggable={!editSaving}
+        >
+          {isOwner && (
+            <div role="group" aria-label="Розділи редагування" className={styles.petEditorTabs}>
+              <PillSelector<'pet' | 'space'>
+                options={[{ value: 'pet', label: 'Улюбленець' }, { value: 'space', label: 'Простір' }]}
+                value={editTab}
+                onChange={setEditTab}
+                columns={2}
+              />
+            </div>
+          )}
+          <div hidden={isOwner && editTab !== 'pet'}>
+            <PetProfileEditor
+              key={editSession}
+              profile={space.petProfile}
+              spaceName={space.name}
+              color={spaceColor}
+              saving={editSaving}
+              onSave={handleSavePetProfile}
+            />
+          </div>
+          {isOwner && (
+            <fieldset className={styles.petSettingsFields} hidden={editTab !== 'space'} disabled={editSaving}>
+              {spaceEditorFields}
+            </fieldset>
+          )}
+        </Modal>
+      )}
+
       {/* ══ Edit Sheet ══ */}
-      {editOpen && (
+      {editOpen && space?.type !== 'pet' && (
         <div className={styles.overlay} ref={editOverlayRef} onClick={() => setEditOpen(false)}>
           <div className={styles.editSheet} ref={editSheetRef} onClick={e => e.stopPropagation()}>
             <div className={styles.sheetHandle} />
             <h2 className={styles.sheetTitle}>Редагувати простір</h2>
 
-            <label className={styles.fieldLabel}>НАЗВА</label>
-            <input
-              className={styles.fieldInput}
-              value={editName}
-              onChange={e => setEditName(e.target.value)}
-              placeholder="Назва простору"
-              maxLength={60}
-            />
-
-            <label className={styles.fieldLabel}>КОЛІР</label>
-            <div className={styles.colorRow}>
-              {COLORS.map(c => (
-                <button
-                  key={c || 'default'}
-                  type="button"
-                  className={`${styles.colorDot} ${c === '' ? styles.colorDotDefault : ''} ${editColor === c ? styles.colorDotOn : ''}`}
-                  style={c ? { background: c } : undefined}
-                  onClick={() => setEditColor(c)}
-                  aria-label={c || 'За замовчуванням'}
-                />
-              ))}
-            </div>
-
-            <label className={styles.fieldLabel}>ОБКЛАДИНКА</label>
-            <ImageUploadButton
-              currentUrl={editCoverUrl || undefined}
-              folder="spaces"
-              onUpload={setEditCoverUrl}
-              placeholder="Завантажити обкладинку"
-              variant="wide"
-              objectPosition={editCoverUrl ? `center ${editCoverPosition}` : undefined}
-            />
-            {editCoverUrl && (
-              <div className={styles.coverPositionRow}>
-                {(['top', 'center', 'bottom'] as const).map(pos => (
-                  <button
-                    key={pos}
-                    type="button"
-                    className={`${styles.coverPositionBtn} ${editCoverPosition === pos ? styles.coverPositionBtnActive : ''}`}
-                    onClick={() => setEditCoverPosition(pos)}
-                  >
-                    {pos === 'top' ? 'Верх' : pos === 'center' ? 'Центр' : 'Низ'}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <label className={styles.fieldLabel}>БЮДЖЕТ</label>
-            <div className={styles.budgetInputRow}>
-              <input
-                type="number"
-                className={`${styles.fieldInput} ${styles.budgetInput}`}
-                value={editBudget}
-                onChange={e => setEditBudget(e.target.value)}
-                placeholder="Не встановлено"
-                min={0}
-              />
-              <div className={styles.currencyPills}>
-                {(['UAH', 'USD', 'EUR'] as const).map(c => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={`${styles.currencyPill} ${editBudgetCurrency === c ? styles.currencyPillOn : ''}`}
-                    onClick={() => setEditBudgetCurrency(c)}
-                    style={editBudgetCurrency === c ? colorVar : undefined}
-                  >
-                    {c === 'UAH' ? '₴' : c === 'USD' ? '$' : '€'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* ── Modules (typed spaces: opt-in; blank/shared: opt-out hide:X) ── */}
-            {(['vehicle', 'plant', 'pet', 'trip'] as SpaceType[]).includes(editType) && (() => {
-              const ALL_MODULES: { key: string; label: string }[] = [
-                { key: 'finance',   label: 'Фінанси' },
-                { key: 'tasks',     label: 'Задачі' },
-                { key: 'memories',  label: 'Спогади' },
-                { key: 'plans',     label: 'Плани' },
-                { key: 'notes',     label: 'Нотатки' },
-              ]
-              const toggleModule = (key: string) =>
-                setEditModules(prev =>
-                  prev.includes(key) ? prev.filter(m => m !== key) : [...prev, key]
-                )
-              return (
-                <>
-                  <label className={styles.fieldLabel}>МОДУЛІ</label>
-                  <div className={styles.moduleToggles}>
-                    {ALL_MODULES.map(m => (
-                      <button
-                        key={m.key}
-                        type="button"
-                        className={`${styles.moduleToggle} ${editModules.includes(m.key) ? styles.moduleToggleOn : ''}`}
-                        style={editModules.includes(m.key) ? colorVar : undefined}
-                        onClick={() => toggleModule(m.key)}
-                      >
-                        {m.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )
-            })()}
-
-            {(['blank', 'shared'] as SpaceType[]).includes(editType) && (() => {
-              const HIDE_SECTIONS: { key: string; label: string }[] = [
-                { key: 'hide:memories', label: 'Спогади' },
-                { key: 'hide:plans',    label: 'Плани' },
-                { key: 'hide:notes',    label: 'Нотатки' },
-                { key: 'hide:tasks',    label: 'Задачі' },
-              ]
-              const toggleHide = (key: string) =>
-                setEditModules(prev =>
-                  prev.includes(key) ? prev.filter(m => m !== key) : [...prev, key]
-                )
-              return (
-                <>
-                  <label className={styles.fieldLabel}>РОЗДІЛИ</label>
-                  <div className={styles.moduleToggles}>
-                    {HIDE_SECTIONS.map(s => {
-                      const isVisible = !editModules.includes(s.key)
-                      return (
-                        <button
-                          key={s.key}
-                          type="button"
-                          className={`${styles.moduleToggle} ${isVisible ? styles.moduleToggleOn : ''}`}
-                          style={isVisible ? colorVar : undefined}
-                          onClick={() => toggleHide(s.key)}
-                        >
-                          {s.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </>
-              )
-            })()}
-
-            {/* ── Members ── */}
-            {isOwner && space && (
-              <>
-                <label className={styles.fieldLabel}>УЧАСНИКИ</label>
-                <div className={styles.editMemberList}>
-                  {space.members.map(m => (
-                    <div key={m.userId} className={styles.editMemberRow}>
-                      {m.avatarUrl
-                        ? <img src={m.avatarUrl} className={styles.editMemberAvatar} alt={m.name} />
-                        : <span className={styles.editMemberInitial} style={colorVar}>{m.name[0]?.toUpperCase()}</span>
-                      }
-                      <div className={styles.editMemberInfo}>
-                        <span className={styles.editMemberName}>{m.name}</span>
-                        <span className={styles.editMemberUsername}>@{m.username}</span>
-                      </div>
-                      {m.role === 'owner'
-                        ? <span className={styles.ownerBadge}>власник</span>
-                        : <button type="button" className={styles.editMemberRemove} onClick={() => removeMember(space.id, m.userId)} aria-label="Видалити">
-                            <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg>
-                          </button>
-                      }
-                    </div>
-                  ))}
-                </div>
-
-                {/* Family quick-add chips */}
-                {family.filter(f => !space.members.some(m => m.userId === f.id)).length > 0 && (
-                  <div className={styles.editFamilyRow}>
-                    {family
-                      .filter(f => !space.members.some(m => m.userId === f.id))
-                      .map(f => (
-                        <button
-                          key={f.id}
-                          type="button"
-                          className={styles.editFamilyChip}
-                          onClick={() => addMember(space.id, f.username).then(() => showToast(`${f.name} додано`, 'success')).catch(() => showToast('Помилка', 'error'))}
-                        >
-                          {f.avatarUrl
-                            ? <img src={f.avatarUrl} className={styles.editFamilyChipAvatar} alt={f.name} />
-                            : <span className={styles.editFamilyChipInitial}>{f.name[0]?.toUpperCase()}</span>
-                          }
-                          {f.name}
-                          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M7 2v10M2 7h10"/></svg>
-                        </button>
-                      ))}
-                  </div>
-                )}
-
-                {/* Manual username input */}
-                <div className={styles.addMemberRow}>
-                  <input
-                    className={styles.fieldInput}
-                    value={memberInput}
-                    onChange={e => setMemberInput(e.target.value)}
-                    placeholder="Додати за username…"
-                    onKeyDown={e => { if (e.key === 'Enter') handleAddMember() }}
-                  />
-                  <button
-                    type="button"
-                    className={styles.addMemberBtn}
-                    style={colorVar}
-                    onClick={handleAddMember}
-                    disabled={addingMember || !memberInput.trim()}
-                  >
-                    {addingMember ? '…' : 'Додати'}
-                  </button>
-                </div>
-              </>
-            )}
-
-            <button
-              type="button"
-              className={styles.saveBtn}
-              style={colorVar}
-              onClick={handleSaveEdit}
-              disabled={editSaving || !editName.trim()}
-            >
-              {editSaving ? 'Зберігаємо…' : 'Зберегти'}
-            </button>
-
-            <div className={styles.deleteDivider} />
-
-            {isOwner && (
-              <button type="button" className={styles.archiveSpaceBtn} onClick={handleArchive}>
-                Архівувати простір
-              </button>
-            )}
-
-            {!confirmDelete ? (
-              <button type="button" className={styles.deleteSpaceBtn} onClick={() => setConfirmDelete(true)}>
-                Видалити простір
-              </button>
-            ) : (
-              <div className={styles.deleteConfirmRow}>
-                <span className={styles.deleteConfirmText}>Видалити назавжди?</span>
-                <button type="button" className={styles.deleteConfirmYes} onClick={handleDelete}>Так</button>
-                <button type="button" className={styles.deleteConfirmNo} onClick={() => setConfirmDelete(false)}>Ні</button>
-              </div>
-            )}
+            {spaceEditorFields}
           </div>
         </div>
       )}

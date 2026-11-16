@@ -145,7 +145,7 @@ interface SpacesStore {
   fetchSpaces:   () => Promise<void>
   fetchArchived: () => Promise<void>
   createSpace:   (data: SpaceInput) => Promise<Space>
-  updateSpace:          (id: string, changes: Partial<SpaceInput>) => Promise<void>
+  updateSpace:          (id: string, changes: Partial<SpaceInput>) => Promise<boolean>
   setVehicleProfile:    (id: string, profile: VehicleProfile) => void
   setHomeProfile:       (id: string, profile: HomeProfile) => void
   setPetProfile:        (id: string, profile: PetProfile) => void
@@ -215,10 +215,11 @@ export const useSpacesStore = create<SpacesStore>((set, get) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(changes),
     })
-    if (!res.ok) return
+    if (!res.ok) return false
     const updated: Space = await res.json()
     spacesReqId++
     set(s => ({ spaces: s.spaces.map(sp => sp.id === id ? updated : sp) }))
+    return true
   },
 
   setVehicleProfile: (id, profile) => {
