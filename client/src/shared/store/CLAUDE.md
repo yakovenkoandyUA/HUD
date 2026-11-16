@@ -65,7 +65,8 @@ interface UiState {
   aiChatOpen: boolean
   aiChatSuggestions: string[] | null
   // actions
-  openAiChat(suggestions?: string[]): void
+  aiChatDiscussOverdue: boolean
+  openAiChat(suggestions?: string[], discussOverdue?: boolean): void
   closeAiChat(): void
   setTheme(theme): void
   setNavStyle(style): void
@@ -88,6 +89,7 @@ interface UiState {
 - `theme` — пишеться як `data-theme` атрибут на `<html>` в App.tsx. **Історія перейменувань:** `japan→mimir` (v1→v2), `velvet→aurum` (v2→v3), `mimir→vellum` (v3→v4) — усі три міграції в persist `migrate()`
 - `toasts` — масив, кожен toast має свій `id` і auto-dismiss через 3с (`dismissToast(id)`), не одиночний об'єкт
 - `mimirMode`/`mimirFrequency` — характер і частота підказок Міміра (Профіль → Вигляд)
+- `aiChatDiscussOverdue` — передає тему прострочених задач від підказки на Dashboard до відкритого `AiChatSheet`; скидається при закритті, не персистується.
 - `pinnedSections`/`pinnedProfileTabs` — закріплені розділи дашборду / вкладки профілю (дефолти: `DEFAULT_PINNED_SECTIONS`/`DEFAULT_PINNED_PROFILE_TABS`)
 - `activeModal`/`modalDepth` + `pushModal`/`popModal`/`openModal`/`closeModal` — стек модалок для коректної поведінки back-button (`useModalHistory`)
 - `aiChatOpen`/`aiChatSuggestions` + `openAiChat(suggestions?)`/`closeAiChat()` — глобальний стан AI-чату (`AiChatSheet`), змонтованого один раз в `AppHeader`. Не персистується. `AppHeader` сам підставляє контекстні suggestions за поточним роутом (напр. фінансові приклади питань на `/finance`) замість дефолтних із `AiChatSheet`

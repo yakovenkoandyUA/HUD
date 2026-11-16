@@ -125,7 +125,8 @@
 | `/api/push/subscribe` | POST — зберегти підписку |
 | `/api/push/unsubscribe` | POST |
 | `/api/push/test` | POST — тестова нотифікація |
-| `/api/ai/chat` | POST — SSE streaming (Claude Haiku), domain-aware context. Фінансовий домен: категорії/дні тижня/підписки рахуються кодом (`buildContext` в `routes/ai.ts`), баланс — через `Transaction.aggregate` по всій історії (не `.limit(30)`) |
+| `/api/ai/chat` | POST — SSE streaming (Claude Haiku), domain-aware context. У пілоті приймає `discussOverdue` з Dashboard і використовує останні завершені репліки. Фінансовий домен: категорії/дні тижня/підписки рахуються кодом, баланс — через `Transaction.aggregate` |
+| `/api/ai/chat/history` | GET — `{ enabled, turns }` для поточного профілю, до 10 пар лише для пілота; чинні вимоги верифікації й доступу до AI-чату |
 | `/api/ai/chef-chat` | POST — SSE streaming (Claude Haiku), контекст рецепту з тіла запиту |
 | `/api/finance/report/:month` | GET — AI-аналіз витрат по місяцю (Anthropic) |
 | `/api/bank/connect` | POST — Monobank OAuth initiate |
@@ -192,6 +193,8 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 ## Моделі — ключові поля
 
 **MimirOpenAiCache** — окремий кеш і коротка пам’ять пілота з TTL 25 годин та унікальним ключем `userId + date + timeSlot` (часова зона `Europe/Kyiv`). До Responses API передаються поточна дата, час доби й два лічильники відкритих задач разом із максимум трьома попередніми репліками цього профілю та їхніми лічильниками; `store: false`. Старі записи без лічильників сумісні. При збої OpenAI endpoint повертає 503, і Dashboard показує статичну репліку.
+
+**MimirConversation** — один документ на пілотний профіль, до 10 пар запитання/відповідь із темами й результатом дії, якщо вона відбулася. Зберігається після завершення відповіді та видаляється разом з акаунтом.
 
 **User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `footballEnabled: boolean` (обидва — feature-флаги модулів на екрані `/f1`, який тепер таб-хаб "Спорт"), `isVerified: boolean` (default false), `verificationToken: string|null`, `resetPasswordToken: string|null`, `resetPasswordExpires: Date|null` (1г TTL), `lastLoginAt: Date|null` (оновлюється при login/register/google/refresh — proxy для "активний юзер"), `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`. Plan Group: `planGroupPayerId: ObjectId|null` (indexed), `planGroupJoinedAt: Date|null`
 

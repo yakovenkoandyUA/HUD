@@ -91,6 +91,7 @@ SVG ілюстрації досягнень. `variant` відповідає на
 ```
 Пов'язаний з `useMimirHint` / `useMimirAiHint` хуками.
 Для одноразової картки `onShown` записує факт показу, а `onDismiss` за наявності `onShown` спрацьовує лише після закриття.
+У пілотній репліці про прострочені задачі `onDiscussOverdue` відкриває наявний AI-чат із цією темою.
 
 ### UnsplashPicker (`features/memories/components/memories/UnsplashPicker`)
 Picker для обкладинок з Unsplash. Debounced пошук, 3×3 сітка, attribution overlay.
