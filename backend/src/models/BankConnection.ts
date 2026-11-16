@@ -10,6 +10,8 @@ export interface IBankConnection extends Document {
   enabled: boolean
   /** Last known card balance in UAH (from Monobank client-info), refreshed on every sync. */
   balance: number | null
+  /** Credit limit in UAH. Monobank's `balance` includes it, so own funds = balance − creditLimit. */
+  creditLimit: number
 }
 
 const schema = new Schema<IBankConnection>({
@@ -21,6 +23,7 @@ const schema = new Schema<IBankConnection>({
   lastSync:       { type: Date, default: null },
   enabled:        { type: Boolean, default: true },
   balance:        { type: Number, default: null },
+  creditLimit:    { type: Number, default: 0 },
 }, { timestamps: true })
 
 schema.index({ userId: 1, bank: 1 }, { unique: true })

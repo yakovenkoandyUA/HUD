@@ -144,6 +144,7 @@ router.post('/connect', ...requireMonobank, async (req: Request, res: Response) 
       enabled: true,
       lastSync: null,
       balance: uahAccount.balance / 100,
+      creditLimit: (uahAccount.creditLimit ?? 0) / 100,
     },
     { upsert: true, new: true },
   )
@@ -155,6 +156,7 @@ router.post('/connect', ...requireMonobank, async (req: Request, res: Response) 
     lastSync: conn.lastSync,
     enabled: conn.enabled,
     balance: conn.balance ?? null,
+    creditLimit: conn.creditLimit ?? 0,
   })
 })
 
@@ -170,6 +172,7 @@ router.get('/status', ...requireMonobank, async (req: Request, res: Response) =>
     lastSync: conn.lastSync,
     enabled: conn.enabled,
     balance: conn.balance ?? null,
+    creditLimit: conn.creditLimit ?? 0,
   })
 })
 
@@ -249,13 +252,16 @@ router.post('/sync', ...requireMonobank, async (req: Request, res: Response) => 
   try {
     const info = await monoFetch('/personal/client-info', token) as MonoClientInfo
     const acc = info.accounts.find(a => a.id === conn.accountId)
-    if (acc) conn.balance = acc.balance / 100
+    if (acc) {
+      conn.balance = acc.balance / 100
+      conn.creditLimit = (acc.creditLimit ?? 0) / 100
+    }
   } catch { /* keep the previous balance */ }
 
   conn.lastSync = new Date()
   await conn.save()
 
-  res.json({ imported: toInsert.length, lastSync: conn.lastSync, balance: conn.balance ?? null })
+  res.json({ imported: toInsert.length, lastSync: conn.lastSync, balance: conn.balance ?? null, creditLimit: conn.creditLimit ?? 0 })
 })
 
 // ── POST /api/bank/mono-auth-init ───────────────────────────────────────────
@@ -309,7 +315,7 @@ router.post('/mono-auth-webhook', async (req: Request, res: Response) => {
 
   await BankConnection.findOneAndUpdate(
     { userId, bank: 'monobank' },
-    { encryptedToken: encrypt(token), accountId: uahAccount.id, accountName: clientInfo.name, enabled: true, lastSync: null, balance: uahAccount.balance / 100 },
+    { encryptedToken: encrypt(token), accountId: uahAccount.id, accountName: clientInfo.name, enabled: true, lastSync: null, balance: uahAccount.balance / 100, creditLimit: (uahAccount.creditLimit ?? 0) / 100 },
     { upsert: true, new: true },
   )
 

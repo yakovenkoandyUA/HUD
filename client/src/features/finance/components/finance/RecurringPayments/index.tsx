@@ -5,6 +5,11 @@ import { getServiceLogoUrl, getServiceEmoji } from '../../../utils/serviceLogos'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { useRecurringPaymentStore, type RecurringPayment } from '@/features/finance/store/recurringPaymentStore'
 import Modal from '@/shared/components/ui/Modal'
+import PillSelector from '@/shared/components/ui/PillSelector'
+import Button from '@/shared/components/ui/Button'
+import { useProfileStore } from '@/shared/store/profileStore'
+import { WALLET_OPTIONS } from '../../../constants'
+import type { WalletId } from '@/shared/types'
 import styles from './RecurringPayments.module.css'
 
 /**
@@ -123,6 +128,10 @@ const RecurringPayments: React.FC = () => {
   const [currency, setCurrency]         = useState<Currency>('UAH')
   const [exchangeRate, setExchangeRate] = useState<number | null>(null)
   const [rateLoading, setRateLoading]   = useState(false)
+  // Multi-wallet profiles pick the card before a subscription is charged
+  const walletsEnabled = useProfileStore(s => s.activeProfile?.walletsEnabled ?? false)
+  const [pendingConfirm, setPendingConfirm] = useState<RecurringPayment | null>(null)
+  const [confirmWallet, setConfirmWallet]   = useState<WalletId>('sense')
 
   const today = new Date().getDate()
   const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
@@ -266,12 +275,24 @@ const RecurringPayments: React.FC = () => {
     setDismissedKeys(prev => new Set(prev).add(key))
   }
 
-  const handleConfirm = async (p: RecurringPayment) => {
-    const r = await authFetch(`/api/recurring/${p._id}/confirm`, { method: 'POST' })
+  const confirmPayment = async (p: RecurringPayment, walletId?: WalletId) => {
+    const r = await authFetch(`/api/recurring/${p._id}/confirm`, {
+      method: 'POST',
+      body: JSON.stringify(walletId ? { walletId } : {}),
+    })
     if (!r.ok) return
     const { payment } = await r.json()
     updatePayment(p._id, { lastConfirmedMonth: payment.lastConfirmedMonth })
     fetchTransactions()
+  }
+
+  const handleConfirm = async (p: RecurringPayment) => {
+    if (walletsEnabled) {
+      setConfirmWallet('sense')
+      setPendingConfirm(p)
+      return
+    }
+    await confirmPayment(p)
   }
 
   const setField = (field: keyof FormErrors, value: string) => {
@@ -492,6 +513,23 @@ const RecurringPayments: React.FC = () => {
           </div>
         </form>
       )}
+
+      <Modal isOpen={!!pendingConfirm} onClose={() => setPendingConfirm(null)} title="З якої картки списати?" draggable>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <PillSelector options={WALLET_OPTIONS} value={confirmWallet} onChange={setConfirmWallet} />
+          <Button
+            fullWidth
+            onClick={async () => {
+              const p = pendingConfirm
+              if (!p) return
+              setPendingConfirm(null)
+              await confirmPayment(p, confirmWallet)
+            }}
+          >
+            Списати {pendingConfirm ? `${fmt(pendingConfirm.amount)} ₴` : ''}
+          </Button>
+        </div>
+      </Modal>
 
       <Modal isOpen={!!editPayment} onClose={() => setEditPayment(null)} title="Редагування" draggable>
         {/* Fix 1: key forces form DOM reset when switching between payments */}

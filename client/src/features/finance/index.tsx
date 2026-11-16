@@ -142,8 +142,11 @@ const Finance: React.FC = () => {
   }
 
   // Mono balance: live from the Monobank API when connected, otherwise the sum of its recorded transactions.
-  const monoBalance = connection?.balance
-    ?? monoTransactions.reduce((sum, t) => (t.type === 'topup' ? sum + t.amount : sum - t.amount), 0)
+  // Monobank's balance includes the credit limit — subtract it so only own funds are counted.
+  const monoCreditLimit = connection?.balance != null ? (connection.creditLimit ?? 0) : 0
+  const monoBalance = connection?.balance != null
+    ? connection.balance - monoCreditLimit
+    : monoTransactions.reduce((sum, t) => (t.type === 'topup' ? sum + t.amount : sum - t.amount), 0)
 
   const daysLeft = getDaysLeftInMonth(salaryDay)
   const daysElapsed = getDaysElapsed(salaryDay)
@@ -228,6 +231,7 @@ const Finance: React.FC = () => {
 						balance={monoBalance}
 						live={connection?.balance != null}
 						lastSync={connection?.lastSync ? formatLastSync(connection.lastSync) : null}
+						creditLimit={monoCreditLimit}
 					/>
 				) : (
 					<BalanceHero
@@ -265,6 +269,9 @@ const Finance: React.FC = () => {
 						Поповнення
 					</button>
 				</div>
+
+				{/* Mono: лише розподіл витрат по категоріях (власні транзакції картки) */}
+				{monoView && <ShoppingTracker transactions={monoTransactions} />}
 
 				{/* Аналітика, цілі й регулярні платежі — тільки для головного гаманця (Sense) */}
 				{!monoView && (

@@ -10,6 +10,8 @@ export interface BankConnection {
   enabled: boolean
   /** Live card balance in UAH from Monobank (null until first successful sync). */
   balance?: number | null
+  /** Credit limit in UAH — included in `balance` by Monobank, so own funds = balance − creditLimit. */
+  creditLimit?: number
 }
 
 interface BankState {
@@ -89,9 +91,9 @@ export const useBankStore = create<BankState>((set, get) => ({
         const { error } = await res.json() as { error: string }
         throw new Error(error)
       }
-      const data = await res.json() as { imported: number; lastSync: string; balance?: number | null }
+      const data = await res.json() as { imported: number; lastSync: string; balance?: number | null; creditLimit?: number }
       bankReqId++
-      set(s => s.connection ? { connection: { ...s.connection, lastSync: data.lastSync, balance: data.balance ?? s.connection.balance } } : {})
+      set(s => s.connection ? { connection: { ...s.connection, lastSync: data.lastSync, balance: data.balance ?? s.connection.balance, creditLimit: data.creditLimit ?? s.connection.creditLimit } } : {})
       return { imported: data.imported }
     } finally {
       set({ syncing: false })

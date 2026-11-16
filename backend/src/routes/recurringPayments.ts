@@ -88,6 +88,8 @@ router.post('/:id/confirm', async (req: Request, res: Response): Promise<void> =
     desc:        'Регулярний платіж',
     date:        dateStr,
     recurringId: (item._id as { toString(): string }).toString(),
+    // Card the subscription is charged from; only multi-wallet clients send 'mono'
+    walletId:    (req.body as { walletId?: string } | undefined)?.walletId === 'mono' ? 'mono' : 'sense',
   })
 
   item.lastConfirmedMonth = currentMonth
