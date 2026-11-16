@@ -89,7 +89,7 @@ interface FinanceState {
   syncStatus: SyncStatus
 
   fetchTransactions: (month?: string) => Promise<void>
-  addTopup: (amount: number, description: string, incomeCategory?: string, spaceId?: string | null, walletId?: WalletId) => void
+  addTopup: (amount: number, description: string, incomeCategory?: string, spaceId?: string | null, walletId?: WalletId, date?: string) => void
   addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null, subcategory?: string | null, date?: string, walletId?: WalletId) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
@@ -186,7 +186,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => {
       }
     },
 
-    addTopup: (amount, description, incomeCategory, spaceId, walletId) => {
+    addTopup: (amount, description, incomeCategory, spaceId, walletId, date) => {
       const tx: Transaction = {
         id: crypto.randomUUID(),
         type: 'topup',
@@ -194,7 +194,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => {
         description,
         incomeCategory: incomeCategory ?? null,
         spaceId: spaceId ?? null,
-        date: new Date().toISOString(),
+        date: date ? `${date}T12:00:00.000Z` : new Date().toISOString(),
         walletId: walletId ?? 'sense',
       }
       addTransaction(tx, { spaceId: spaceId ?? null })

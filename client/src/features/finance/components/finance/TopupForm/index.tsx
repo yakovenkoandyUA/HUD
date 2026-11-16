@@ -3,6 +3,7 @@ import Input from '@/shared/components/ui/Input'
 import Button from '@/shared/components/ui/Button'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import PillSelector from '@/shared/components/ui/PillSelector'
+import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import { INCOME_CATEGORIES, WALLET_OPTIONS } from '../../../constants'
 import type { WalletId } from '@/shared/types'
 import styles from './TopupForm.module.css'
@@ -17,18 +18,24 @@ import styles from './TopupForm.module.css'
  * Якщо `showWalletPicker` — вибір картки зарахування (Sense / Mono), за замовчуванням `defaultWalletId`.
  *
  * Props:
- * @prop {(amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId) => void} onTopup
+ * @prop {(amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId, date?: string) => void} onTopup
  * @prop {boolean}  [showWalletPicker] — показати вибір картки (лише для профілів з walletsEnabled)
  * @prop {WalletId} [defaultWalletId]  — картка, обрана за замовчуванням (активна вкладка)
  */
 interface TopupFormProps {
-  onTopup: (amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId) => void
+  onTopup: (amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId, date?: string) => void
   showWalletPicker?: boolean
   defaultWalletId?: WalletId
 }
 
 const TopupForm: React.FC<TopupFormProps> = ({ onTopup, showWalletPicker = false, defaultWalletId = 'sense' }) => {
   const [walletId, setWalletId] = useState<WalletId>(defaultWalletId)
+  const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10))
+  const [showDatePicker, setShowDatePicker] = useState(false)
+
+  const today = new Date().toISOString().slice(0, 10)
+  const isToday = date === today
+  const dateLabel = isToday ? 'Сьогодні' : new Date(date + 'T12:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })
   const spaces = useSpacesStore(s => s.spaces)
   const financeSpaces = useMemo(() => spaces.filter(sp => !sp.archived && sp.modules.includes('finance')), [spaces])
 
@@ -41,11 +48,13 @@ const TopupForm: React.FC<TopupFormProps> = ({ onTopup, showWalletPicker = false
     e.preventDefault()
     const n = parseFloat(amount)
     if (!n || n <= 0) return
-    onTopup(n, description || 'Поповнення', category, selectedSpaceId, walletId)
+    onTopup(n, description || 'Поповнення', category, selectedSpaceId, walletId, isToday ? undefined : date)
     setAmount('')
     setDescription('')
     setCategory(INCOME_CATEGORIES[0].id)
     setSelectedSpaceId(null)
+    setDate(today)
+    setShowDatePicker(false)
   }
 
   return (
@@ -112,7 +121,37 @@ const TopupForm: React.FC<TopupFormProps> = ({ onTopup, showWalletPicker = false
         </div>
       )}
 
-      <Button type="submit" fullWidth>Поповнити</Button>
+      {/* ── Date selector ── */}
+      <div className={styles.dateRow}>
+        <button
+          type="button"
+          className={`${styles.dateBtn} ${!isToday ? styles.dateBtnActive : ''}`}
+          onClick={() => setShowDatePicker(v => !v)}
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+            <rect x="1" y="3" width="14" height="12" rx="1.5"/>
+            <path d="M5 1v4M11 1v4M1 7h14"/>
+          </svg>
+          {dateLabel}
+        </button>
+        {!isToday && (
+          <button type="button" className={styles.dateClear} onClick={() => { setDate(today); setShowDatePicker(false) }} aria-label="Скинути дату">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+              <path d="M2 2l6 6M8 2l-6 6"/>
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {showDatePicker && (
+        <CustomDatePicker
+          value={date}
+          onChange={d => { setDate(d); setShowDatePicker(false) }}
+          onClose={() => setShowDatePicker(false)}
+        />
+      )}
+
+      <Button type="submit" fullWidth>{isToday ? 'Поповнити' : `Поповнити за ${dateLabel}`}</Button>
     </form>
   )
 }

@@ -124,14 +124,14 @@ const Finance: React.FC = () => {
     }
     e.target.value = ''
     try {
-      const { imported } = await importCsv(text)
+      const { imported } = await importCsv(text, activeWallet)
       fetchTransactions()
       setShowCsvModal(false)
       showToast(imported > 0 ? `Імпортовано ${imported} транзакцій` : 'Нових транзакцій не знайдено', imported > 0 ? 'success' : 'info')
     } catch (e: unknown) {
       showToast(e instanceof Error ? e.message : 'Помилка імпорту', 'error')
     }
-  }, [importCsv, fetchTransactions, showToast])
+  }, [importCsv, activeWallet, fetchTransactions, showToast])
 
   const formatLastSync = (iso: string | null) => {
     if (!iso) return null
@@ -169,8 +169,8 @@ const Finance: React.FC = () => {
     [balance, transactions, recurringPayments, salaryDay],
   )
 
-  const handleTopup = (amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId) => {
-    addTopup(amount, description, category, spaceId, walletId)
+  const handleTopup = (amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId, date?: string) => {
+    addTopup(amount, description, category, spaceId, walletId, date)
     useAchievementsStore.getState().unlock('first-transaction')
     setShowTopup(false)
     showToast(`+${amount} ₴ додано`, 'success')
@@ -206,7 +206,6 @@ const Finance: React.FC = () => {
   return (
 		<div className={styles.screen}>
 			<AppHeader />
-			<div className={styles.content}>
 				{walletsEnabled && (
 					<div className={styles.walletTabs}>
 						{WALLET_OPTIONS.map(opt => (
@@ -221,6 +220,7 @@ const Finance: React.FC = () => {
 						))}
 					</div>
 				)}
+			<div className={styles.content}>
 
 				{/* 1. Баланс + статистика (єдиний hero) */}
 				{monoView ? (
@@ -316,6 +316,15 @@ const Finance: React.FC = () => {
 					{(!walletsEnabled || monoView) && !connection && (
 						<div className={styles.bankSyncBar}>
 							<span className={styles.bankSyncLabel} style={{ color: 'var(--text3)' }}>Банк не підключено</span>
+							<button type="button" className={styles.bankCsvBtn} onClick={() => setShowCsvModal(true)}>
+								Імпорт CSV
+							</button>
+						</div>
+					)}
+					{/* Sense не має API банку — для нього тільки імпорт виписки CSV */}
+					{walletsEnabled && !monoView && (
+						<div className={styles.bankSyncBar}>
+							<span className={styles.bankSyncLabel} style={{ color: 'var(--text3)' }}>Sense</span>
 							<button type="button" className={styles.bankCsvBtn} onClick={() => setShowCsvModal(true)}>
 								Імпорт CSV
 							</button>

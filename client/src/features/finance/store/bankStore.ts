@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { authFetch } from '@/shared/services/api'
+import type { WalletId } from '@/shared/types'
 
 export interface BankConnection {
   bank: 'monobank'
@@ -25,7 +26,7 @@ interface BankState {
   connect:        (token: string) => Promise<void>
   disconnect:     () => Promise<void>
   sync:           () => Promise<{ imported: number }>
-  importCsv:      (csv: string) => Promise<{ imported: number }>
+  importCsv:      (csv: string, walletId?: WalletId) => Promise<{ imported: number }>
   recategorize:   () => Promise<{ updated: number; skipped: number }>
   initMonoAuth:   () => Promise<void>
   cancelMonoAuth: () => void
@@ -97,12 +98,12 @@ export const useBankStore = create<BankState>((set, get) => ({
     }
   },
 
-  importCsv: async (csv: string) => {
+  importCsv: async (csv: string, walletId?: WalletId) => {
     set({ importing: true })
     try {
       const res = await authFetch('/api/bank/import-csv', {
         method: 'POST',
-        body: JSON.stringify({ csv }),
+        body: JSON.stringify({ csv, walletId }),
       })
       if (!res.ok) {
         const { error } = await res.json() as { error: string }

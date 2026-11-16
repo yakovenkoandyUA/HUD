@@ -331,7 +331,7 @@ router.get('/mono-auth-status/:tokenRequestId', ...requireMonobank, async (req: 
 //   Format B — web statement: [metadata rows]; Дата і час;Статус;Тип;Деталі;Адреса;MCC;Сума списання;Сума зарахування
 
 router.post('/import-csv', ...requireMonobank, async (req: Request, res: Response) => {
-  const { csv } = req.body as { csv?: string }
+  const { csv, walletId: requestedWallet } = req.body as { csv?: string; walletId?: 'sense' | 'mono' }
   if (!csv?.trim()) { res.status(400).json({ error: 'CSV required' }); return }
 
   // Strip UTF-8 BOM (U+FEFF) if present
@@ -379,6 +379,7 @@ router.post('/import-csv', ...requireMonobank, async (req: Request, res: Respons
   const dateIdx = headers.findIndex(h => h.includes('дата'))
   const descIdx = headers.findIndex(h => h.includes('деталі') || h.includes('опис'))
   const mccIdx  = headers.findIndex(h => h === 'mcc')
+  const statusIdx = headers.findIndex(h => h === 'статус')
 
   // Format A: single amount column
   const amountIdx = headers.findIndex(h =>
@@ -410,8 +411,8 @@ router.post('/import-csv', ...requireMonobank, async (req: Request, res: Respons
 
   const userCategories = await Category.find({ userId: req.userId, isActive: true })
   const toInsert: object[] = []
-  // CSV is a Monobank statement — for multi-wallet users it belongs to the Mono wallet.
-  const csvWalletId = req.user?.walletsEnabled ? 'mono' : 'sense'
+  // Multi-wallet users pick the target card (Sense tab / Mono tab); default stays Mono. Everyone else: Sense.
+  const csvWalletId = req.user?.walletsEnabled ? (requestedWallet === 'sense' ? 'sense' : 'mono') : 'sense'
   const homeSpaceId = await findHomeSpaceId(req.userId!)
 
   for (const line of dataLines) {
@@ -432,6 +433,10 @@ router.post('/import-csv', ...requireMonobank, async (req: Request, res: Respons
     }
 
     if (cols.length <= Math.max(dateIdx, descIdx)) continue
+
+    // Held (not yet settled) card operations have a placeholder description and reappear
+    // as "виконано" later — importing both would double-count.
+    if (statusIdx !== -1 && /заблок/i.test(cols[statusIdx] ?? '')) continue
 
     const rawDate = cols[dateIdx].replace(/"/g, '').trim()
     const rawDesc = cols[descIdx].replace(/"/g, '').trim()
@@ -466,11 +471,37 @@ router.post('/import-csv', ...requireMonobank, async (req: Request, res: Respons
     })
   }
 
-  if (toInsert.length > 0) {
-    await Transaction.insertMany(toInsert)
+  // Skip rows already imported from an earlier CSV (same date/type/amount/description/wallet).
+  // Counted per key, so genuine repeats within one statement (e.g. two 30 ₴ metro rides a day) still import,
+  // while re-uploading the same or an overlapping statement adds nothing.
+  type CsvRow = { date: string; type: string; amount: number; desc: string; walletId: string }
+  const rowKey = (r: CsvRow) => `${r.date}|${r.type}|${r.amount}|${r.desc}|${r.walletId}`
+  const rows = toInsert as CsvRow[]
+  let fresh = toInsert
+  if (rows.length > 0) {
+    const dates = rows.map(r => r.date).sort()
+    const existing = await Transaction.find({
+      userId: req.userId, source: 'csv', walletId: csvWalletId,
+      date: { $gte: dates[0], $lte: dates[dates.length - 1] },
+    }).select('date type amount desc walletId').lean()
+    const seen = new Map<string, number>()
+    for (const e of existing) {
+      const k = rowKey({ date: e.date, type: e.type, amount: e.amount, desc: e.desc ?? '', walletId: e.walletId ?? 'sense' })
+      seen.set(k, (seen.get(k) ?? 0) + 1)
+    }
+    fresh = rows.filter(r => {
+      const k = rowKey(r)
+      const left = seen.get(k) ?? 0
+      if (left > 0) { seen.set(k, left - 1); return false }
+      return true
+    })
   }
 
-  res.json({ imported: toInsert.length })
+  if (fresh.length > 0) {
+    await Transaction.insertMany(fresh)
+  }
+
+  res.json({ imported: fresh.length, skippedDuplicates: toInsert.length - fresh.length })
 })
 
 // ── POST /api/bank/recategorize ─────────────────────────────────────────────
