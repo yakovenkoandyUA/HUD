@@ -23,6 +23,8 @@ export interface ISprintTask extends Document {
   completionHistory?: string[]
   reminder?: { amount: number; unit: string }
   reminderSent?: boolean
+  automaticReminderSince?: Date | null
+  dueReminderSent?: boolean
   reminderClaimUntil?: Date | null
   checklist?: Array<{ id: string; title: string; done: boolean; parentId?: string | null; assigneeId?: string | null }>
   isPinned?: boolean
@@ -57,6 +59,8 @@ const schema = new Schema<ISprintTask>({
   completionHistory: { type: [String], default: [] },
   reminder:   { type: Schema.Types.Mixed, default: null },
   reminderSent: { type: Boolean, default: false },
+  automaticReminderSince: { type: Date },
+  dueReminderSent: { type: Boolean, default: false },
   reminderClaimUntil: { type: Date },
   checklist:  { type: Schema.Types.Mixed, default: [] },
   isPinned:   { type: Boolean, default: false },

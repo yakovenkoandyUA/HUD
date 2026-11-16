@@ -15,6 +15,8 @@ export interface ITodoItem extends Document {
   completionHistory?: string[]
   reminder?: { amount: number; unit: string }
   reminderSent?: boolean
+  automaticReminderSince?: Date | null
+  dueReminderSent?: boolean
   reminderClaimUntil?: Date | null
   description?: string
   checklist?: Array<{ id: string; title: string; done: boolean }>
@@ -37,6 +39,8 @@ const schema = new Schema<ITodoItem>({
   completionHistory: { type: [String], default: [] },
   reminder:  { type: Schema.Types.Mixed, default: null },
   reminderSent: { type: Boolean, default: false },
+  automaticReminderSince: { type: Date },
+  dueReminderSent: { type: Boolean, default: false },
   reminderClaimUntil: { type: Date },
   description: { type: String, default: '' },
   checklist:  { type: Schema.Types.Mixed, default: [] },

@@ -97,6 +97,7 @@ interface ApiTask {
   labels?: string[]
   dueDate?: string | null
   dueTime?: string | null
+  automaticReminderSince?: string | null
   description?: string
   order?: number
   repeat?: string
@@ -199,7 +200,7 @@ interface TodoState {
   purgeItem: (id: string) => void
   setSyncStatus: (s: SyncStatus) => void
   setReminder: (id: string, reminder: UnifiedTodo['reminder']) => Promise<boolean>
-  updateTask: (id: string, updates: Partial<UnifiedTodo>) => void
+  updateTask: (id: string, updates: Partial<UnifiedTodo>) => Promise<boolean>
   addChecklistItem: (taskId: string, title: string, parentId?: string | null) => void
   toggleChecklistItem: (taskId: string, itemId: string) => void
   removeChecklistItem: (taskId: string, itemId: string) => void
@@ -327,6 +328,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
           createdAt: t.createdAt ?? now,
           ...(t.dueDate     && { dueDate:     t.dueDate }),
           ...(t.dueTime     && { dueTime:     t.dueTime }),
+          ...(t.automaticReminderSince && { automaticReminderSince: t.automaticReminderSince }),
           ...(t.description && { description: t.description }),
           ...(t.category    && { category:    t.category }),
           ...(labelObjs.length && { labels:   labelObjs }),
@@ -457,7 +459,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   addItem: async (data, rollbackImagePublicIds) => {
     const canSync = Boolean(getToken() && isBackendConfigured())
-    if (!canSync && data.reminder) return false
+    if (!canSync && (data.reminder || data.dueTime)) return false
     const item: UnifiedTodo = {
       id: crypto.randomUUID(),
       done: false,
@@ -488,8 +490,10 @@ export const useSprintStore = create<TodoState>((set, get) => ({
       body: JSON.stringify(body),
     })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then((created: { _id: string }) => {
-        set(s => ({ items: s.items.map(i => i.id === item.id ? { ...i, id: created._id } : i) }))
+      .then((created: ApiTask) => {
+        set(s => ({ items: s.items.map(i => i.id === item.id ? {
+          ...i, id: created._id, automaticReminderSince: created.automaticReminderSince ?? undefined,
+        } : i) }))
         return true
       })
       .catch(() => {
@@ -541,10 +545,15 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   // ── Update item (rich fields + backend sync) ──────────────────────────────
 
-  updateTask: (id, updates) => {
+  updateTask: async (id, updates) => {
+    const changesDeadline = Object.hasOwn(updates, 'dueDate') || Object.hasOwn(updates, 'dueTime')
+    const canSync = Boolean(getToken() && isBackendConfigured())
+    const previous = get().items.find(item => item.id === id)
+    const expected = { ...previous, ...updates }
+    if (changesDeadline && expected.dueTime && !canSync) return false
     sprintReqId++
     set(s => ({ items: s.items.map(i => i.id === id ? { ...i, ...updates } : i) }))
-    if (!getToken() || !isBackendConfigured()) return
+    if (!canSync) return true
 
     // undefined → null: JSON.stringify strips undefined, so fields like dueDate/dueTime
     // that are intentionally cleared would never reach the backend otherwise
@@ -556,10 +565,36 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     if (updates.labels !== undefined) {
       body.labels = (updates.labels ?? []).map(l => l.id)
     }
-    authFetch(`/api/sprint/tasks/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(body),
-    }).catch(() => get().fetchItems())
+    const sameDeadline = (item: UnifiedTodo) => item.id === id
+      && item.dueDate === expected.dueDate && item.dueTime === expected.dueTime
+    try {
+      const response = await authFetch(`/api/sprint/tasks/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      })
+      if (!response.ok) throw new Error('Task update failed')
+      if (changesDeadline) {
+        const saved = await response.json() as ApiTask
+        sprintReqId++
+        set(s => ({ items: s.items.map(item => sameDeadline(item) ? {
+          ...item,
+          dueDate: saved.dueDate ?? undefined,
+          dueTime: saved.dueTime ?? undefined,
+          automaticReminderSince: saved.automaticReminderSince ?? undefined,
+          reminder: saved.reminder as UnifiedTodo['reminder'] ?? undefined,
+        } : item) }))
+      }
+      return true
+    } catch {
+      if (changesDeadline && previous) {
+        sprintReqId++
+        set(s => ({ items: s.items.map(item => sameDeadline(item) ? {
+          ...item, dueDate: previous.dueDate, dueTime: previous.dueTime,
+        } : item) }))
+      }
+      void get().fetchItems()
+      return false
+    }
   },
 
   // ── Checklist ─────────────────────────────────────────────────────────────

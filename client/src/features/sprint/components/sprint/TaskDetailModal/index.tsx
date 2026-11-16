@@ -149,6 +149,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [reminderAmount, setReminderAmount] = useState<number | ''>(1)
   const [reminderUnit, setReminderUnit] = useState<ReminderUnit>('days')
   const [showTimePicker, setShowTimePicker] = useState(false)
+  const [deadlineError, setDeadlineError] = useState('')
+  const [savingDeadline, setSavingDeadline] = useState(false)
   const [showConfirm, setShowConfirm]         = useState(false)
   const [animatingDone, setAnimatingDone]     = useState(false)
   const [localAssignedTo, setLocalAssignedTo] = useState<string[]>([])
@@ -381,15 +383,21 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     }
   }
 
-  const handleDateChange = (date: string) => {
-    if (!task) return
-    updateTask(task.id, { dueDate: date || undefined, ...(date ? {} : { dueTime: undefined }) })
+  const saveDeadline = async (updates: Partial<Pick<UnifiedTodo, 'dueDate' | 'dueTime'>>) => {
+    if (!task || savingDeadline) return
+    setDeadlineError('')
+    setSavingDeadline(true)
+    const saved = await updateTask(task.id, updates)
+    setSavingDeadline(false)
+    if (!saved) setDeadlineError('Не вдалося зберегти дедлайн')
   }
 
   const handleTimeSave = (time: string) => {
-    if (!task) return
-    updateTask(task.id, { dueTime: time })
     setShowTimePicker(false)
+    void saveDeadline({ dueTime: time })
+    void subscribeToPush().then(enabled => {
+      if (!enabled) useUiStore.getState().showToast('Щоб отримувати пуші на цьому пристрої, перевір Я → Система', 'error')
+    })
   }
 
   const handleRepeatSave = (config: RepeatConfig) => {
@@ -593,7 +601,21 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
           {/* ── Scrollable body ── */}
           <div ref={bodyRef} className={styles.body}>
 
-            {(recurring ? task.nextDue : task.dueDate) && !task.ownerName && (
+            {!recurring && task.dueDate && task.dueTime && task.automaticReminderSince && !task.ownerName && (
+              <div className={styles.section}>
+                <p className={styles.sectionLabel}>Сповіщення · час Києва</p>
+                <div className={styles.reminderActive}>
+                  <span className={styles.scheduleHint}>За 30 хв і о {task.dueTime}</span>
+                  <button type="button" className={styles.addReminderBtn} disabled={savingDeadline} onClick={() => {
+                    void saveDeadline({ dueTime: undefined })
+                  }}>
+                    Прибрати час
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(recurring ? task.nextDue : task.reminder && !task.automaticReminderSince) && !task.ownerName && (
               <div className={styles.section}>
                 <p className={styles.sectionLabel}>Сповіщення · час Києва</p>
                 <div className={styles.reminderActive}>
@@ -693,7 +715,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   <div className={styles.metaRight}>
                     <p className={styles.sectionLabel}>Дедлайн</p>
                     {!task.dueDate ? (
-                      <button type="button" className={styles.deadlineAddBtn} onClick={() => setShowDatePicker(true)}>
+                      <button type="button" className={styles.deadlineAddBtn} disabled={savingDeadline || !!task.ownerName} onClick={() => setShowDatePicker(true)}>
                         <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                           <rect x="1" y="2.5" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/>
                           <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2"/>
@@ -704,7 +726,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                     ) : (
                       <div className={styles.deadlineBadge}>
                         <div className={styles.deadlineBadgeStack}>
-                          <button type="button" className={styles.deadlineBadgePart} onClick={() => setShowDatePicker(true)}>
+                          <button type="button" className={styles.deadlineBadgePart} disabled={savingDeadline || !!task.ownerName} onClick={() => setShowDatePicker(true)}>
                             <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
                               <rect x="1" y="2.5" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/>
                               <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2"/>
@@ -712,7 +734,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                             </svg>
                             <span style={{ color: getDueDateColor(task.dueDate) }}>{formatDueDateHuman(task.dueDate)}</span>
                           </button>
-                          <button type="button" className={styles.deadlineBadgePart} onClick={() => setShowTimePicker(true)}>
+                          <button type="button" className={styles.deadlineBadgePart} disabled={savingDeadline || !!task.ownerName} onClick={() => setShowTimePicker(true)}>
                             <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
                               <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
                               <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -726,7 +748,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                         <button
                           type="button"
                           className={styles.deadlineBadgeClear}
-                          onClick={() => updateTask(task.id, { dueDate: undefined, dueTime: undefined })}
+                          disabled={savingDeadline || !!task.ownerName}
+                          onClick={() => { void saveDeadline({ dueDate: undefined, dueTime: undefined }) }}
                           aria-label="Скинути дедлайн"
                         >
                           <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
@@ -735,6 +758,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                         </button>
                       </div>
                     )}
+                    {deadlineError && <p className={styles.reminderError} role="alert">{deadlineError}</p>}
                   </div>
                 </div>
 
@@ -1170,7 +1194,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
       {showDatePicker && (
         <CustomDatePicker
           value={task.dueDate}
-          onChange={handleDateChange}
+          onChange={date => { void saveDeadline({ dueDate: date || undefined, ...(date ? {} : { dueTime: undefined }) }) }}
           onClose={() => setShowDatePicker(false)}
         />
       )}

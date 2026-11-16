@@ -126,6 +126,7 @@ export interface UnifiedTodo {
   description?: string
   dueDate?: string
   dueTime?: string
+  automaticReminderSince?: string
   labels?: SprintLabel[]
   checklist?: ChecklistItem[]
   recipeImageUrl?: string

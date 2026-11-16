@@ -68,8 +68,17 @@ describe('quest reminder cron', () => {
 
   async function tick() {
     startF1Scheduler()
-    const [, callback] = mocks.schedule.mock.calls.find(([spec]) => spec === '*/5 * * * *')!
+    const [, callback] = mocks.schedule.mock.calls.find(([spec]) => spec === '* * * * *')!
     await callback()
+  }
+
+  function timedShopping(scheduledAt: string, flags = {}) {
+    mocks.findTasks.mockReturnValue({
+      lean: async () => [{
+        ...task, type: 'shopping', reminder: null, automaticReminderSince: new Date(scheduledAt), ...flags,
+      }],
+    })
+    mocks.sendPushToUser.mockResolvedValue({ subscriptions: 1, accepted: 1 })
   }
 
   it.each([0, 1])('does not mark sent after zero acceptances across %i subscriptions', async subscriptions => {
@@ -109,6 +118,48 @@ describe('quest reminder cron', () => {
     vi.setSystemTime(new Date('2026-11-17T13:05:00Z'))
     await tick()
     expect(mocks.updateTask).not.toHaveBeenCalled()
+    expect(mocks.sendPushToUser).not.toHaveBeenCalled()
+  })
+
+  it('sends the preview independently from the deadline alert for a timed purchase', async () => {
+    timedShopping('2026-11-16T12:00:00Z')
+    vi.setSystemTime(new Date('2026-11-16T12:30:00Z'))
+    await tick()
+    expect(mocks.sendPushToUser).toHaveBeenLastCalledWith(
+      task.userId, expect.objectContaining({ title: 'Покупка за 30 хвилин', tag: 'reminder-quest-1' }), 1800,
+    )
+    expect(mocks.updateTask).toHaveBeenCalledWith(expect.anything(), { $set: { reminderSent: true } })
+
+    timedShopping('2026-11-16T12:00:00Z', { reminderSent: true })
+    vi.setSystemTime(new Date('2026-11-16T13:00:00Z'))
+    await tick()
+    expect(mocks.sendPushToUser).toHaveBeenLastCalledWith(
+      task.userId, expect.objectContaining({ tag: 'reminder-quest-1-due' }), 900,
+    )
+    expect(mocks.updateTask).toHaveBeenCalledWith(expect.anything(), { $set: { dueReminderSent: true } })
+  })
+
+  it('skips the preview when the schedule is saved less than 30 minutes before the deadline', async () => {
+    timedShopping('2026-11-16T12:45:00Z')
+    await tick()
+    expect(mocks.sendPushToUser).not.toHaveBeenCalled()
+
+    vi.setSystemTime(new Date('2026-11-16T13:00:00Z'))
+    await tick()
+    expect(mocks.sendPushToUser).toHaveBeenCalledOnce()
+  })
+
+  it('does not send a stale deadline alert', async () => {
+    timedShopping('2026-11-16T12:00:00Z')
+    vi.setSystemTime(new Date('2026-11-16T13:15:00Z'))
+    await tick()
+    expect(mocks.sendPushToUser).not.toHaveBeenCalled()
+  })
+
+  it('does not send deadline notifications for an older task without a configured reminder', async () => {
+    mocks.findTasks.mockReturnValue({ lean: async () => [{ ...task, reminder: null }] })
+    vi.setSystemTime(new Date('2026-11-16T13:00:00Z'))
+    await tick()
     expect(mocks.sendPushToUser).not.toHaveBeenCalled()
   })
 })

@@ -18,10 +18,35 @@ const OWNER_ALLOWED = [
 // Fields an assignee (non-owner) can update
 const ASSIGNEE_ALLOWED = ['done', 'completionHistory', 'timeOfDay', 'checklist']
 
-// Зміна дедлайну/часу/повторення/нагадування скидає прапорець "вже надіслано" — щоб нагадування пересчиталось
 const REMINDER_RESET_FIELDS = ['dueDate', 'dueTime', 'nextDue', 'repeat', 'reminder']
-function touchesReminderSchedule(body: Record<string, unknown>): boolean {
-  return REMINDER_RESET_FIELDS.some(k => body[k] !== undefined)
+function reminderSchedulePatch(
+  body: Record<string, unknown>,
+  previous: { dueDate?: string | null; dueTime?: string | null; repeat?: string; automaticReminderSince?: Date | null } = {},
+): Record<string, unknown> {
+  if (!REMINDER_RESET_FIELDS.some(key => body[key] !== undefined)) return {}
+  const date = body.dueDate === undefined ? previous.dueDate : body.dueDate
+  const time = body.dueTime === undefined ? previous.dueTime : body.dueTime
+  const repeat = body.repeat === undefined ? previous.repeat : body.repeat
+  const timed = Boolean(date && time && (!repeat || repeat === 'none'))
+  const rescheduled = date !== previous.dueDate || time !== previous.dueTime || repeat !== previous.repeat
+  if (timed && !body.reminder && (rescheduled || (!previous.automaticReminderSince && typeof body.dueTime === 'string'))) {
+    return { automaticReminderSince: new Date(), reminder: null, reminderSent: false, dueReminderSent: false }
+  }
+  if (timed && previous.automaticReminderSince && !body.reminder) return {}
+  return { automaticReminderSince: null, reminderSent: false, dueReminderSent: false }
+}
+
+async function patchLegacyTodo(id: string, userId: string, body: Record<string, unknown>) {
+  const filter = { _id: id, userId }
+  if (!REMINDER_RESET_FIELDS.some(key => body[key] !== undefined)) {
+    return TodoItem.findOneAndUpdate(filter, body, { new: true })
+  }
+  const todo = await TodoItem.findOne(filter)
+  if (!todo) return null
+  const reminderPatch = reminderSchedulePatch(body, todo)
+  todo.set({ ...body, ...reminderPatch })
+  for (const key of Object.keys(reminderPatch)) todo.markModified(key)
+  return todo.save()
 }
 
 export async function getTasks(req: Request, res: Response): Promise<void> {
@@ -78,7 +103,7 @@ export async function getTasks(req: Request, res: Response): Promise<void> {
 }
 
 export async function createTask(req: Request, res: Response): Promise<void> {
-  const item = await SprintTask.create({ ...req.body, userId: req.userId })
+  const item = await SprintTask.create({ ...req.body, ...reminderSchedulePatch(req.body), userId: req.userId })
   res.status(201).json(item)
 
   // Notify assigned users (fire-and-forget)
@@ -108,7 +133,7 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
   })
   if (task) {
     const isOwner = task.userId === req.userId
-    if (!isOwner && req.body.reminder !== undefined) {
+    if (!isOwner && (req.body.reminder !== undefined || req.body.dueDate !== undefined || req.body.dueTime !== undefined)) {
       res.status(403).json({ error: 'Only the owner can edit the reminder schedule' })
       return
     }
@@ -127,10 +152,13 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
     }
 
     const prevAssigned: string[] = task.assignedTo ?? []
+    const reminderPatch = isOwner ? reminderSchedulePatch(req.body, task) : {}
     allowedFields.forEach(key => {
       if (req.body[key] !== undefined) (task as unknown as Record<string, unknown>)[key] = req.body[key]
     })
-    if (isOwner && touchesReminderSchedule(req.body)) task.reminderSent = false
+    task.set(reminderPatch)
+    // Ensure a concurrent scheduler write cannot leave an old sent flag set.
+    for (const key of Object.keys(reminderPatch)) task.markModified(key)
     await task.save()
     res.json(task)
 
@@ -154,11 +182,7 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
   }
 
   // Fall back to TodoItem (legacy)
-  const todo = await TodoItem.findOneAndUpdate(
-    { _id: req.params.id, userId: req.userId },
-    touchesReminderSchedule(req.body) ? { ...req.body, reminderSent: false } : req.body,
-    { new: true }
-  )
+  const todo = await patchLegacyTodo(req.params.id, req.userId!, req.body)
   if (!todo) { res.status(404).json({ error: 'Not found' }); return }
   res.json(todo)
 }
@@ -226,16 +250,12 @@ export async function getTodos(req: Request, res: Response): Promise<void> {
 }
 
 export async function createTodo(req: Request, res: Response): Promise<void> {
-  const item = await TodoItem.create({ ...req.body, userId: req.userId })
+  const item = await TodoItem.create({ ...req.body, ...reminderSchedulePatch(req.body), userId: req.userId })
   res.status(201).json(item)
 }
 
 export async function updateTodo(req: Request, res: Response): Promise<void> {
-  const item = await TodoItem.findOneAndUpdate(
-    { _id: req.params.id, userId: req.userId },
-    touchesReminderSchedule(req.body) ? { ...req.body, reminderSent: false } : req.body,
-    { new: true }
-  )
+  const item = await patchLegacyTodo(req.params.id, req.userId!, req.body)
   if (!item) { res.status(404).json({ error: 'Not found' }); return }
   res.json(item)
 }

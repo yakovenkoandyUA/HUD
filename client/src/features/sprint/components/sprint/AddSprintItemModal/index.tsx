@@ -151,7 +151,6 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   const [quickAddDate, setQuickAddDate]         = useState<string | null>(null)
   const [quickAddTime, setQuickAddTime]         = useState<string | null>(null)
   const [showTimeEditor, setShowTimeEditor]               = useState(false)
-  const [showReminderEditor, setShowReminderEditor]       = useState(false)
   const [draftTime, setDraftTime]                         = useState('09:00')
   const [showInitialDatePicker, setShowInitialDatePicker] = useState(false)
   const [pendingImages, setPendingImages]       = useState<File[]>([])
@@ -191,6 +190,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     )
   }, [newTitle, newType, items])
 
+  const isRoutine = newType === 'todo' && newRepeat !== 'none'
+
   const reset = () => {
     setSaveError('')
     setNewTitle('')
@@ -213,7 +214,6 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     setQuickAddDate(null)
     setQuickAddTime(null)
     setShowTimeEditor(false)
-    setShowReminderEditor(false)
     setDraftTime('09:00')
     setShowInitialDatePicker(false)
     setPendingImages([])
@@ -230,8 +230,6 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     e.preventDefault()
     if (!newTitle.trim() || saving || imageUploading) return
     setSaveError('')
-
-    const isRoutine = newType === 'todo' && newRepeat !== 'none'
 
     // Upload images (only for non-routines)
     let imageUrls: string[] = []
@@ -265,9 +263,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
       type:     newType,
       title:    newTitle.trim(),
       priority: newType === 'shopping' ? (newPriority ?? undefined) : undefined,
-      ...(quickAddDate && newRepeat === 'none' ? { dueDate: quickAddDate } : {}),
-      ...(quickAddDate && newRepeat === 'none' && quickAddTime ? { dueTime: quickAddTime } : {}),
-      ...(quickAddDate && newRepeat === 'none' && newReminder ? { reminder: newReminder } : {}),
+      ...(quickAddDate && !isRoutine ? { dueDate: quickAddDate } : {}),
+      ...(quickAddDate && !isRoutine && quickAddTime ? { dueTime: quickAddTime } : {}),
       ...(newType === 'shopping' && newQuantity.trim() ? { quantity: newQuantity.trim() } : {}),
       ...(newType === 'todo' && newLabels.length > 0 ? { labels: newLabels } : {}),
       ...(newType === 'todo' && newRepeat !== 'none' ? {
@@ -303,6 +300,23 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
       if (!enabled) showToast('Щоб отримувати пуші на цьому пристрої, перевір Я → Система', 'error')
     })
   }
+
+  const calendarIcon = (
+    <svg width="15" height="15" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+      <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+  const clearIcon = (
+    <svg width="14" height="14" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+  const deadlineButton = (
+    <button type="button" className={styles.metaChip} onClick={() => setShowInitialDatePicker(true)}>
+      {calendarIcon} Дедлайн
+    </button>
+  )
 
   const modalTitle = newType === 'shopping' ? 'Нова покупка' : 'Новий квест'
 
@@ -516,16 +530,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                   </button>
                 )}
 
-                {/* Deadline chip — non-routine only; shows single chip when no date set */}
-                {newRepeat === 'none' && !showRepeatList && !quickAddDate && (
-                  <button type="button" className={styles.metaChip} onClick={() => setShowInitialDatePicker(true)}>
-                    <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
-                      <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-                      <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    </svg>
-                    Дедлайн
-                  </button>
-                )}
+                {newRepeat === 'none' && !showRepeatList && !quickAddDate && deadlineButton}
 
                 {/* Reminder — routines only (one-off reminder lives inside the Deadline sheet) */}
                 {newRepeat !== 'none' && !showRepeatList && (
@@ -556,50 +561,6 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                   )
                 )}
               </div>
-
-              {/* Deadline chips row — appears below metaRow when date is set */}
-              {newRepeat === 'none' && quickAddDate && (
-                <div className={styles.deadlineChipsRow}>
-                  {/* Date chip */}
-                  <button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowInitialDatePicker(true)}>
-                    <svg width="10" height="10" viewBox="0 0 11 11" fill="none">
-                      <rect x="1" y="2" width="9" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-                      <path d="M1 5h9M3.5 1v2M7.5 1v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                    </svg>
-                    {new Date(quickAddDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
-                    <span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setQuickAddDate(null); setQuickAddTime(null); setNewReminder(null); setShowTimeEditor(false); setShowReminderEditor(false) }}>✕</span>
-                  </button>
-                  {/* Time chip */}
-                  <button
-                    type="button"
-                    className={`${styles.metaChip} ${quickAddTime ? styles.metaChipActive : ''}`}
-                    onClick={() => { setDraftTime(quickAddTime ?? '09:00'); setShowTimeEditor(v => !v); setShowReminderEditor(false) }}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 15 15" fill="none">
-                      <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3" />
-                      <path d="M7.5 4.5v3.25l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    {quickAddTime ?? 'Час'}
-                    {quickAddTime && <span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setQuickAddTime(null); setShowTimeEditor(false) }}>✕</span>}
-                  </button>
-                  {/* Reminder chip */}
-                  <button
-                    type="button"
-                    className={`${styles.metaChip} ${newReminder ? styles.metaChipActive : ''}`}
-                    onClick={() => {
-                      if (!showReminderEditor) enableReminderPush()
-                      setShowReminderEditor(v => !v); setShowTimeEditor(false)
-                    }}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 16 18" fill="none">
-                      <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                    </svg>
-                    {newReminder ? formatReminderShort(newReminder.amount, newReminder.unit) : 'Нагадати'}
-                    {newReminder && <span className={styles.metaChipClear} onClick={e => { e.stopPropagation(); setNewReminder(null); setShowReminderEditor(false) }}>✕</span>}
-                  </button>
-                </div>
-              )}
 
               {/* Start date row — routines with weekly/monthly/yearly */}
               {(newRepeat === 'weekly' || newRepeat === 'monthly' || newRepeat === 'yearly') && !showRepeatList && (
@@ -673,40 +634,65 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
             </div>
           )}
 
-          {/* ── Inline deadline editors (time / reminder) ── */}
-          {newRepeat === 'none' && quickAddDate && (
-            <>
-              <div className={`${styles.deadlineAccordion} ${showTimeEditor ? styles.deadlineAccordionOpen : ''}`}>
-                <div className={styles.deadlineAccordionInner}>
-                  <TimeWheelRow value={draftTime} onChange={setDraftTime} />
-                  <button type="button" className={styles.deadlineConfirmBtn} onClick={() => { setQuickAddTime(draftTime); setShowTimeEditor(false) }}>
-                    Підтвердити
+          {newType === 'shopping' && !quickAddDate && <div className={styles.metaRow}>{deadlineButton}</div>}
+
+          {!isRoutine && quickAddDate && (
+            <div className={styles.schedule}>
+              <div className={styles.deadlineChipsRow}>
+                <div className={styles.scheduleControl}>
+                  <button type="button" className={`${styles.metaChip} ${styles.metaChipActive}`} onClick={() => setShowInitialDatePicker(true)}>
+                    {calendarIcon}
+                    {new Date(quickAddDate + 'T00:00:00').toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
+                  </button>
+                  <button type="button" className={styles.scheduleClear} aria-label="Прибрати дедлайн" onClick={() => {
+                    setQuickAddDate(null)
+                    setQuickAddTime(null)
+                    setShowTimeEditor(false)
+                  }}>
+                    {clearIcon}
                   </button>
                 </div>
-              </div>
-              <div className={`${styles.deadlineAccordion} ${showReminderEditor ? styles.deadlineAccordionOpen : ''}`}>
-                <div className={styles.deadlineAccordionInner}>
-                  <ReminderFields
-                    amount={newReminderAmount}
-                    unit={newReminderUnit}
-                    onAmountChange={setNewReminderAmount}
-                    onUnitChange={setNewReminderUnit}
-                    suffix="до дедлайну"
-                  />
+                <div className={styles.scheduleControl}>
                   <button
                     type="button"
-                    className={styles.deadlineConfirmBtn}
-                    onClick={() => { setNewReminder({ amount: Math.max(1, Math.min(999, Number(newReminderAmount) || 1)), unit: newReminderUnit }); setShowReminderEditor(false) }}
+                    className={`${styles.metaChip} ${quickAddTime ? styles.metaChipActive : ''}`}
+                    aria-expanded={showTimeEditor}
+                    onClick={() => { setDraftTime(quickAddTime ?? '09:00'); setShowTimeEditor(v => !v) }}
                   >
-                    Підтвердити
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                      <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" strokeWidth="1.3" />
+                      <path d="M7.5 4.5v3.25l2 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {quickAddTime ?? 'Час'}
+                  </button>
+                  {quickAddTime && (
+                    <button type="button" className={styles.scheduleClear} aria-label="Прибрати час" onClick={() => {
+                      setQuickAddTime(null)
+                      setShowTimeEditor(false)
+                    }}>
+                      {clearIcon}
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div inert={!showTimeEditor} className={`${styles.deadlineAccordion} ${showTimeEditor ? styles.deadlineAccordionOpen : ''}`}>
+                <div className={styles.deadlineAccordionInner}>
+                  <TimeWheelRow value={draftTime} onChange={setDraftTime} />
+                  <button type="button" className={styles.deadlineConfirmBtn} onClick={() => {
+                    setQuickAddTime(draftTime)
+                    setShowTimeEditor(false)
+                    enableReminderPush()
+                  }}>
+                    Зберегти час
                   </button>
                 </div>
               </div>
-            </>
+              {quickAddTime && <p className={styles.scheduleHint}>Пуші за 30 хв і в заданий час (Київ)</p>}
+            </div>
           )}
 
           {/* ── Image attachments (non-routine only) ── */}
-          {newRepeat === 'none' && (
+          {!isRoutine && (
             <div>
               <input
                 ref={imageInputRef}

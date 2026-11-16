@@ -208,7 +208,7 @@
   border-radius: var(--radius);
   padding: 8px 10px;
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text);
   outline: none;
   width: 100%;
@@ -312,38 +312,35 @@
 /* ── Meta chips row ── */
 .metaRow {
   display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 6px;
-  align-items: center;
-  margin: 0 -20px;
-  padding: 2px 20px 4px;
-  scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
-  mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.metaRow::-webkit-scrollbar { display: none; }
+
+.metaRow > .metaChip { flex: 1 1 92px; }
 
 .metaChip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 9px;
-  border-radius: 6px;
+  justify-content: center;
+  min-height: 40px;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
   border: 1px solid var(--border2);
   background: color-mix(in srgb, var(--text) 4%, transparent);
   color: var(--text2);
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  white-space: nowrap;
-  flex-shrink: 0;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 .metaChip:hover { color: var(--text); border-color: var(--border2); }
+.metaChip svg { flex-shrink: 0; }
+.metaChip:focus-visible,
+.scheduleClear:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .metaChipActive {
   border-color: var(--accent-dim);
@@ -622,10 +619,11 @@
 
 .deadlineConfirmBtn {
   width: 100%;
+  min-height: 44px;
   margin-top: 4px;
   padding: 11px;
   background: var(--accent);
-  color: #fff;
+  color: var(--bg);
   border: none;
   border-radius: 8px;
   font-family: var(--font-ui);
@@ -636,10 +634,37 @@
   cursor: pointer;
 }
 
-/* ── Deadline chips row (below metaRow, flex-wrap) ── */
-
 .deadlineChipsRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.schedule { min-width: 0; }
+
+.scheduleControl {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  min-width: 0;
+}
+
+.scheduleControl > .metaChip { flex: 1; font-size: 11px; }
+.scheduleControl:has(.scheduleClear) > .metaChip { border-radius: 8px 0 0 8px; }
+
+.scheduleClear {
+  display: grid;
+  flex: 0 0 44px;
+  place-items: center;
+  padding: 0;
+  color: var(--text2);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 0;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+}
+
+.scheduleHint {
+  margin: 6px 0 0;
+  color: var(--text2);
+  font-size: 12px;
 }
