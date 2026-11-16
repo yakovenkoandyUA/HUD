@@ -1,79 +1,32 @@
 import cron from 'node-cron'
-import PushSubscription from '../models/PushSubscription'
 import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
-import RecurringPayment from '../models/RecurringPayment'
 import F1SessionReminder from '../models/F1SessionReminder'
-import { isWebPushConfigured, sendNotification, sendToAll, sendPushToUser } from './webpush'
-import { questReminderTime } from '../utils/questReminderTime'
+import { User } from '../models/User'
+import { F1_RACES_2026 } from '../data/f1Season2026'
+import { isWebPushConfigured, sendScheduledPushToUser } from './webpush'
+import { kyivDate, kyivTime, questReminderTime } from '../utils/questReminderTime'
 
-// 2026 F1 race dates (race Sunday, ISO format)
-const F1_2026_RACES: Array<{ name: string; date: string; flag: string }> = [
-  { name: 'Australian GP',          flag: '🇦🇺', date: '2026-03-08' },
-  { name: 'Chinese GP',             flag: '🇨🇳', date: '2026-03-15' },
-  { name: 'Japanese GP',            flag: '🇯🇵', date: '2026-03-29' },
-  { name: 'Miami GP',               flag: '🇺🇸', date: '2026-05-03' },
-  { name: 'Canadian GP',            flag: '🇨🇦', date: '2026-05-24' },
-  { name: 'Monaco GP',              flag: '🇲🇨', date: '2026-06-07' },
-  { name: 'Spain GP',               flag: '🇪🇸', date: '2026-06-14' },
-  { name: 'Austrian GP',            flag: '🇦🇹', date: '2026-06-28' },
-  { name: 'British GP',             flag: '🇬🇧', date: '2026-07-05' },
-  { name: 'Belgian GP',             flag: '🇧🇪', date: '2026-07-19' },
-  { name: 'Hungarian GP',           flag: '🇭🇺', date: '2026-07-26' },
-  { name: 'Dutch GP',               flag: '🇳🇱', date: '2026-08-23' },
-  { name: 'Italian GP',             flag: '🇮🇹', date: '2026-09-06' },
-  { name: 'Spain GP',    flag: '🇪🇸', date: '2026-09-13' },
-  { name: 'Azerbaijan GP',          flag: '🇦🇿', date: '2026-09-26' },
-  { name: 'Singapore GP',           flag: '🇸🇬', date: '2026-10-11' },
-  { name: 'United States GP',       flag: '🇺🇸', date: '2026-10-25' },
-  { name: 'Mexico City GP',         flag: '🇲🇽', date: '2026-11-01' },
-  { name: 'São Paulo GP',           flag: '🇧🇷', date: '2026-11-08' },
-  { name: 'Las Vegas GP',           flag: '🇺🇸', date: '2026-11-21' },
-  { name: 'Qatar GP',               flag: '🇶🇦', date: '2026-11-29' },
-  { name: 'Abu Dhabi GP',           flag: '🇦🇪', date: '2026-12-06' },
-]
-
-// Returns the race happening this Sunday (called on Monday morning), if any.
-// "This Sunday" = 6 days after Monday = the same calendar week's Sunday.
-function getRaceThisSunday(): { name: string; flag: string } | null {
-  const now = new Date()
-  // Find next Sunday: from today (Monday) it's always +6 days
-  const sunday = new Date(now)
-  sunday.setHours(0, 0, 0, 0)
-  // getDay(): 0=Sun,1=Mon,...6=Sat — from Monday (+1) to Sunday is +6 days
-  const daysUntilSunday = (7 - now.getDay()) % 7 || 7
-  sunday.setDate(now.getDate() + daysUntilSunday)
-  const sundayStr = sunday.toISOString().slice(0, 10)
-
-  return F1_2026_RACES.find(race => race.date === sundayStr) ?? null
-}
-
-export async function sendRaceWeekendAlert(): Promise<void> {
-  const race = getRaceThisSunday()
+async function sendRaceWeekendAlert(): Promise<void> {
+  const date = kyivDate()
+  const monday = Date.parse(date + 'T00:00:00Z')
+  const nextMonday = new Date(monday + 7 * 86_400_000).toISOString().slice(0, 10)
+  const race = F1_RACES_2026.find(item => {
+    const day = kyivDate(Date.parse(item.raceUtc))
+    return day >= date && day < nextMonday
+  })
   if (!race) return
-
-  const subscriptions = await PushSubscription.find({}).lean()
-  if (subscriptions.length === 0) return
-
-  console.log(`🏎 Sending race weekend alert: ${race.name} to ${subscriptions.length} subscribers`)
-
-  await sendToAll(
-    subscriptions.map((s) => ({
-      id: String(s._id),
-      endpoint: s.endpoint,
-      keys: s.keys,
-    })),
-    {
+  const expiresAt = kyivTime(date, '09:00')
+  if (!expiresAt) return
+  const users = await User.find({ f1Enabled: true }, '_id').lean()
+  for (const user of users) {
+    await sendScheduledPushToUser(String(user._id), {
       title: '🏎️ Гоночний вікенд цього тижня',
       body: `${race.name} — не пропусти`,
-      url:  '/f1',
-      tag:  'f1-race-weekend',
-    },
-    async (expiredId) => {
-      await PushSubscription.findByIdAndDelete(expiredId)
-      console.log(`🗑 Removed expired subscription: ${expiredId}`)
-    }
-  )
+      url: `/f1/${race.round}`,
+      tag: `f1-race-weekend-${race.round}`,
+    }, { key: `f1-weekend-${race.raceUtc}`, expiresAt })
+  }
 }
 
 interface ReminderItem {
@@ -89,7 +42,6 @@ const REMINDER_GRACE_MS = 24 * 60 * 60 * 1000
 const REMINDER_CLAIM_MS = 2 * 60 * 1000
 const DEADLINE_GRACE_MS = 15 * 60 * 1000
 const ADVANCE_NOTICE_MINUTES = 30
-const KYIV_DATE = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Kyiv', dateStyle: 'short' })
 
 function getReminderAttempt(item: ReminderItem, date: string, now: number) {
   const automatic = item.automaticReminderSince
@@ -105,13 +57,12 @@ function getReminderAttempt(item: ReminderItem, date: string, now: number) {
   const expiresAt = automatic
     ? schedule.dueAt + (atDeadline ? DEADLINE_GRACE_MS : 0)
     : schedule.dueAt + REMINDER_GRACE_MS
-  const ttl = Math.min(Math.floor((expiresAt - now) / 1000), REMINDER_GRACE_MS / 1000)
-  if (ttl <= 0) return null
+  if (expiresAt - now < 1000) return null
 
   const title = automatic && !atDeadline
     ? (item.type === 'shopping' ? 'Покупка за 30 хвилин' : 'Квест за 30 хвилин')
     : (item.type === 'shopping' ? 'Час купити' : 'Час виконати')
-  return { sentField, ttl, title, atDeadline }
+  return { sentField, expiresAt, title, atDeadline }
 }
 
 async function processReminders(
@@ -152,13 +103,19 @@ async function processReminders(
 
     const claimFilter = { _id: item._id, reminderClaimUntil: claimUntil }
     try {
-      const { accepted } = await sendPushToUser(item.userId, {
+      const { accepted, pending } = await sendScheduledPushToUser(item.userId, {
         title: attempt.title,
         body: item.title,
         url: `/sprint?quest=${String(item._id)}`,
         tag: `reminder-${String(item._id)}${attempt.atDeadline ? '-due' : ''}`,
-      }, attempt.ttl)
-      if (accepted > 0) {
+      }, {
+        key: JSON.stringify([
+          'quest', String(item._id), dateStr, item.dueTime, item.automaticReminderSince,
+          item.reminder?.amount, item.reminder?.unit, attempt.sentField,
+        ]),
+        expiresAt: attempt.expiresAt,
+      })
+      if (accepted > 0 && pending === 0) {
         await Model.updateOne({ ...currentSchedule, ...claimFilter }, { $set: { [attempt.sentField]: true } })
         sentCount++
       }
@@ -179,7 +136,7 @@ async function sendReminderNotifications(): Promise<void> {
       {
         automaticReminderSince: { $ne: null },
         dueReminderSent: { $ne: true },
-        dueDate: { $gte: KYIV_DATE.format(now - DEADLINE_GRACE_MS), $lte: KYIV_DATE.format(now + ADVANCE_NOTICE_MINUTES * 60000) },
+        dueDate: { $gte: kyivDate(now - DEADLINE_GRACE_MS), $lte: kyivDate(now + ADVANCE_NOTICE_MINUTES * 60000) },
       },
     ],
   }
@@ -196,47 +153,27 @@ async function sendReminderNotifications(): Promise<void> {
   }
 }
 
-// Нагадування про конкретну сесію ГП (FP/Sprint/Quali/Race) — точні до сесії, окремо від задач
 async function sendF1SessionReminders(): Promise<void> {
   const now = new Date()
-  const due = await F1SessionReminder.find({ sent: false, remindAt: { $lte: now } }).lean()
-  if (due.length === 0) return
-
-  for (const r of due) {
-    // Пропущене нагадування (сервер був недоступний/деплой) — не спамити через добу
-    if (now.getTime() - new Date(r.remindAt).getTime() <= 24 * 60 * 60 * 1000) {
-      await sendPushToUser(r.userId, {
-        title: `🏎 ${r.sessionLabel} за 30 хв`,
-        body: 'Скоро початок сесії',
-        url: `/f1/${r.round}`,
-        tag: `f1-session-${r.round}-${r.sessionKey}`,
-      })
-    }
-    await F1SessionReminder.updateOne({ _id: r._id }, { sent: true })
-  }
-  console.log(`🏎 F1 session reminders sent (${due.length})`)
-}
-
-// Регулярні платежі — раз на добу, окремо від 5-хвилинного reminder-циклу
-async function sendRecurringPaymentNotifications(): Promise<void> {
-  const todayDay = new Date().getDate()
-  const payments = await RecurringPayment.find({ dayOfMonth: todayDay, isActive: true }).lean()
-  for (const payment of payments) {
-    const subs = await PushSubscription.find({ userId: String(payment.userId) }).lean()
-    for (const sub of subs) {
-      try {
-        await sendNotification(
-          { endpoint: sub.endpoint, keys: sub.keys },
-          { title: `💳 «${payment.name}» — сьогодні`, body: `${payment.amount} ₴ спишеться сьогодні`, url: '/finance', tag: `recurring-${String(payment._id)}` }
-        )
-      } catch (err: unknown) {
-        if ((err as { expired?: boolean }).expired) {
-          await PushSubscription.findByIdAndDelete(sub._id)
-        }
-      }
+  const due = await F1SessionReminder.find({
+    sent: false, remindAt: { $lte: now }, sessionAt: { $gt: now },
+  }).lean()
+  for (const reminder of due) {
+    const { accepted, pending } = await sendScheduledPushToUser(reminder.userId, {
+      title: `🏎 Скоро ${reminder.sessionLabel}`,
+      body: 'Скоро початок сесії',
+      url: `/f1/${reminder.round}`,
+      tag: `f1-session-${reminder.round}-${reminder.sessionKey}`,
+    }, {
+      key: `f1-session-${reminder._id}-${reminder.sessionAt.toISOString()}`,
+      expiresAt: reminder.sessionAt.getTime(),
+    })
+    if (accepted > 0 && pending === 0) {
+      await F1SessionReminder.updateOne({
+        _id: reminder._id, sessionAt: reminder.sessionAt,
+      }, { $set: { sent: true } })
     }
   }
-  if (payments.length > 0) console.log(`💳 Recurring payment notifications sent (${payments.length})`)
 }
 
 export function startF1Scheduler(): void {
@@ -247,23 +184,11 @@ export function startF1Scheduler(): void {
 
   // F1 race week alert — every Monday at 08:00 Kyiv
   // Checks if this week's Sunday has a race; if yes → push early in the week
-  cron.schedule('0 8 * * 1', () => {
-    sendRaceWeekendAlert().catch(console.error)
-  }, { timezone: 'Europe/Kyiv' })
-  console.log('🏎 F1 race week scheduler started (Mon 08:00 Kyiv time)')
+  cron.schedule('*/5 8 * * 1', () => sendRaceWeekendAlert().catch(console.error), { timezone: 'Europe/Kyiv', noOverlap: true })
 
   cron.schedule('* * * * *', () => sendReminderNotifications().catch(console.error), { noOverlap: true })
   console.log('🔔 Reminder scheduler started (every minute)')
 
   // F1 session reminders — every 5 minutes, precise to sessionAt - 30min
-  cron.schedule('*/5 * * * *', () => {
-    sendF1SessionReminders().catch(console.error)
-  })
-  console.log('🏎 F1 session reminder scheduler started (every 5 min)')
-
-  // Recurring payments — daily at 08:00 Kyiv (05:00 UTC)
-  cron.schedule('0 5 * * *', () => {
-    sendRecurringPaymentNotifications().catch(console.error)
-  })
-  console.log('💳 Recurring payment scheduler started (daily 05:00 UTC / 08:00 Kyiv)')
+  cron.schedule('*/5 * * * *', () => sendF1SessionReminders().catch(console.error), { noOverlap: true })
 }

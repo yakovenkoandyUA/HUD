@@ -1,58 +1,37 @@
 import cron from 'node-cron'
 import { VehicleEvent } from '../models/VehicleEvent'
 import { Space } from '../models/Space'
-import { sendPushToUser } from '../services/webpush'
+import { isWebPushConfigured, sendScheduledPushToUser } from '../services/webpush'
+import { kyivDate, kyivTime } from '../utils/questReminderTime'
 
 const REMIND_DAYS = [30, 14, 7, 3, 1]
 
-// Runs daily at 09:00 UTC (12:00 Kyiv)
-cron.schedule('0 9 * * *', async () => {
-  try {
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
+async function sendVehicleDocReminders(): Promise<void> {
+  if (!isWebPushConfigured()) return
+  const date = kyivDate()
+  const expiresAt = kyivTime(date, '13:00')
+  if (!expiresAt) return
+  const today = Date.parse(date + 'T00:00:00Z')
+  const docs = await VehicleEvent.find({ type: 'document', docExpiresAt: { $exists: true, $ne: null } }).lean()
 
-    const docs = await VehicleEvent.find({
-      type:         'document',
-      docExpiresAt: { $exists: true, $ne: null },
-    })
-
-    for (const doc of docs) {
-      if (!doc.docExpiresAt) continue
-
-      const expiry = new Date(doc.docExpiresAt)
-      expiry.setHours(0, 0, 0, 0)
-
-      const daysLeft = Math.round((expiry.getTime() - now.getTime()) / 86_400_000)
-      if (!REMIND_DAYS.includes(daysLeft)) continue
-
-      // get space to find members to notify
-      const space = await Space.findById(doc.spaceId)
-      if (!space) continue
-
-      const label =
-        daysLeft === 1 ? 'завтра' :
-        daysLeft <= 7  ? `через ${daysLeft} дн.` :
-                         `через ${daysLeft} днів`
-
-      const docLabel = doc.docType || 'Документ'
-      const spaceName = space.name
-
-      // notify all members
-      await Promise.allSettled(
-        space.members.map(m =>
-          sendPushToUser(m.userId, {
-            title: spaceName,
-            body:  `${docLabel} — закінчується ${label}`,
-            url:   `/spaces/${doc.spaceId}`,
-          })
-        )
-      )
-    }
-
-    console.log('[Push] Vehicle doc reminders processed')
-  } catch (err) {
-    console.error('[Push] Vehicle doc reminder error:', err)
+  for (const doc of docs) {
+    const expiry = doc.docExpiresAt?.slice(0, 10)
+    if (!expiry) continue
+    const daysLeft = (Date.parse(expiry + 'T00:00:00Z') - today) / 86_400_000
+    if (!REMIND_DAYS.includes(daysLeft)) continue
+    const space = await Space.findById(doc.spaceId).select('name members').lean()
+    if (!space) continue
+    const label = daysLeft === 1 ? 'завтра' : `через ${daysLeft} дн.`
+    const key = `vehicle-doc-${doc._id}-${expiry}-${date}`
+    await Promise.allSettled(space.members.map(member =>
+      sendScheduledPushToUser(member.userId, {
+        title: space.name,
+        body: `${doc.docType || 'Документ'} — закінчується ${label}`,
+        url: `/spaces/${doc.spaceId}`,
+        tag: key,
+      }, { key, expiresAt }),
+    ))
   }
-})
+}
 
-console.log('🚗 Vehicle document reminders scheduled (09:00 UTC)')
+cron.schedule('*/5 12 * * *', () => sendVehicleDocReminders().catch(console.error), { timezone: 'Europe/Kyiv', noOverlap: true })

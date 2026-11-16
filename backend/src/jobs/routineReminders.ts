@@ -1,65 +1,47 @@
 import cron from 'node-cron'
-import { sendPushToUser } from '../services/webpush'
+import { isWebPushConfigured, sendScheduledPushToUser } from '../services/webpush'
 import SprintTask, { ISprintTask } from '../models/SprintTask'
+import { isSportEventDueOnDay } from '../controllers/sportController'
+import { kyivDate, kyivTime } from '../utils/questReminderTime'
 
-function isRoutineDueToday(task: ISprintTask, today: Date): boolean {
-  if (!task.repeat || task.repeat === 'none') return false
+function isRoutineDueToday(task: ISprintTask & { createdAt?: Date }, today: Date, date: string): boolean {
+  const anchor = task.repeatStartDate ?? (task.createdAt && kyivDate(task.createdAt.getTime()))
+  if (anchor && date < anchor) return false
   if (task.repeat === 'daily') return true
   if (task.repeat === 'weekly') {
-    if (!task.nextDue) return false
-    const [y, m, d] = task.nextDue.split('-').map(Number)
-    return today.getDay() === new Date(y, m - 1, d).getDay()
+    return Boolean(task.nextDue && today.getDay() === new Date(task.nextDue + 'T00:00:00').getDay())
   }
   if (task.repeat === 'monthly') {
-    const dom = task.repeatDay ?? (task.nextDue ? parseInt(task.nextDue.split('-')[2], 10) : null)
-    return dom !== null && today.getDate() === dom
+    return today.getDate() === (task.repeatDay ?? Number(task.nextDue?.slice(8)))
   }
-  if (task.repeat === 'custom' && task.repeatConfig) {
-    const cfg = task.repeatConfig as { unit?: string; weekDays?: number[] }
-    if (cfg.unit === 'week' && cfg.weekDays?.length) {
-      return cfg.weekDays.includes((today.getDay() + 6) % 7)
-    }
-  }
-  return false
+  return Boolean(anchor && isSportEventDueOnDay({
+    date: anchor, repeat: task.repeat, repeatConfig: task.repeatConfig ?? null,
+  }, today, date))
 }
 
-// 09:00 UTC = 12:00 Kyiv (UTC+3)
-cron.schedule('0 9 * * *', async () => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-
-  try {
-    const routines = await SprintTask.find({
-      repeat: { $exists: true, $ne: 'none' },
-      done: false,
-    })
-
-    const byUser: Record<string, string[]> = {}
-    for (const task of routines) {
-      if (!isRoutineDueToday(task, today)) continue
-      if (task.completionHistory?.includes(todayIso)) continue
-      if (!byUser[task.userId]) byUser[task.userId] = []
-      byUser[task.userId].push(task.title)
-    }
-
-    for (const [userId, titles] of Object.entries(byUser)) {
-      const count = titles.length
-      const body = count === 1
-        ? `«${titles[0]}» ще чекає на тебе`
-        : `${count} звичок чекають — не зупиняй серію`
-      await sendPushToUser(userId, {
-        title: 'Звички ще не виконані',
-        body,
-        url:  '/sprint',
-        tag:  'routine-reminder',
-      })
-    }
-
-    console.log(`[Push] Routine reminders sent to ${Object.keys(byUser).length} users`)
-  } catch (err) {
-    console.error('[Push] Routine reminder error:', err)
+async function sendRoutineReminders(): Promise<void> {
+  if (!isWebPushConfigured()) return
+  const date = kyivDate()
+  const today = new Date(date + 'T00:00:00')
+  const expiresAt = kyivTime(date, '13:00')
+  if (!expiresAt) return
+  const routines = await SprintTask.find({ repeat: { $exists: true, $nin: ['none', null] }, done: false, deletedAt: null })
+  const byUser = new Map<string, string[]>()
+  for (const task of routines) {
+    if (task.completionHistory?.includes(date) || !isRoutineDueToday(task, today, date)) continue
+    const titles = byUser.get(task.userId) ?? []
+    titles.push(task.title)
+    byUser.set(task.userId, titles)
   }
-})
 
-console.log('📅 Routine reminders scheduled (09:00 UTC)')
+  for (const [userId, titles] of byUser) {
+    await sendScheduledPushToUser(userId, {
+      title: 'Звички ще не виконані',
+      body: titles.length === 1 ? `«${titles[0]}» ще чекає на тебе` : `${titles.length} звичок чекають — не зупиняй серію`,
+      url: '/sprint',
+      tag: `routine-reminder-${date}`,
+    }, { key: `routine-reminder-${date}`, expiresAt })
+  }
+}
+
+cron.schedule('*/5 12 * * *', () => sendRoutineReminders().catch(console.error), { timezone: 'Europe/Kyiv', noOverlap: true })

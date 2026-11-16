@@ -1,5 +1,6 @@
 import cron from 'node-cron'
-import { sendPushToUser } from '../services/webpush'
+import { isWebPushConfigured, sendScheduledPushToUser } from '../services/webpush'
+import { kyivDate, kyivTime } from '../utils/questReminderTime'
 import { Space } from '../models/Space'
 import SprintTask from '../models/SprintTask'
 import Memory from '../models/Memory'
@@ -16,9 +17,13 @@ function formatAmount(n: number): string {
   return n >= 1000 ? `${Math.round(n / 100) / 10}к` : String(Math.round(n))
 }
 
-// Sunday 08:00 UTC = 11:00 Kyiv — weekly digest for spaces
-cron.schedule('0 8 * * 0', async () => {
+// Sunday at 11:00 Kyiv, with retries during that hour.
+cron.schedule('*/5 11 * * 0', async () => {
+  if (!isWebPushConfigured()) return
   try {
+    const date = kyivDate()
+    const expiresAt = kyivTime(date, '12:00')
+    if (!expiresAt) return
     const since = weekStart()
     const sinceIso = since.toISOString().slice(0, 10)
 
@@ -70,17 +75,15 @@ cron.schedule('0 8 * * 0', async () => {
       if (mems.length) parts.push(`${mems.length} ${mems.length === 1 ? 'спогад' : 'спогади'}`)
       if (txs.length)  parts.push(`₴${formatAmount(spent)} витрат`)
 
-      await sendPushToUser(userId, {
+      await sendScheduledPushToUser(userId, {
         title: 'Тижневий дайджест',
         body: parts.join(' · '),
-        url: '/profile?tab=spaces',
-      })
+        url: '/profile/modules',
+        tag: `space-digest-${date}`,
+      }, { key: `space-digest-${date}`, expiresAt })
     }
 
-    console.log('[Push] Space weekly digest sent')
   } catch (err) {
     console.error('[Push] Space weekly digest error:', err)
   }
-})
-
-console.log('📅 Space weekly digest scheduled (Sun 08:00 UTC)')
+}, { timezone: 'Europe/Kyiv', noOverlap: true })

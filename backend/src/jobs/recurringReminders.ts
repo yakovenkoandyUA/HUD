@@ -1,44 +1,45 @@
 import cron from 'node-cron'
 import RecurringPayment from '../models/RecurringPayment'
-import { sendPushToUser } from '../services/webpush'
+import { isWebPushConfigured, sendScheduledPushToUser } from '../services/webpush'
+import { kyivDate, kyivTime } from '../utils/questReminderTime'
 
-// Runs daily at 09:00 UTC (12:00 Kyiv)
-cron.schedule('0 9 * * *', async () => {
-  const now = new Date()
-  const today = now.getDate()
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+const DAY = 86_400_000
 
-  try {
-    const payments = await RecurringPayment.find({
-      isActive: true,
-      reminderDays: { $exists: true, $not: { $size: 0 } },
-    })
+function getPaymentDate(date: Date, dayOfMonth: number): string {
+  const year = date.getUTCFullYear()
+  const month = date.getUTCMonth()
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+  return new Date(Date.UTC(year, month, Math.min(dayOfMonth, lastDay))).toISOString().slice(0, 10)
+}
 
-    for (const p of payments) {
-      if (!p.reminderDays?.length) continue
+async function sendPaymentReminders(hour: '08:00' | '12:00'): Promise<void> {
+  const today = kyivDate()
+  const expiryHour = hour === '08:00' ? '09:00' : '13:00'
+  const expiresAt = kyivTime(today, expiryHour)
+  if (!isWebPushConfigured() || !expiresAt) return
+  const midnight = Date.parse(today + 'T00:00:00Z')
+  const payments = await RecurringPayment.find({ isActive: true }).lean()
 
-      for (const days of p.reminderDays) {
-        // Account for month wrap (e.g. payment on 2nd, reminder 7 days before = 25th of prev month)
-        let targetDay = p.dayOfMonth - days
-        if (targetDay <= 0) targetDay += daysInMonth
-
-        if (targetDay !== today) continue
-
-        const label = days === 1 ? 'завтра' : `через ${days} ${days < 5 ? 'дні' : 'днів'}`
-        await sendPushToUser(p.userId, {
-          title: `💳 «${p.name}» — ${label}`,
-          body:  `${p.amount.toLocaleString('uk-UA')} ₴ спишеться ${label}`,
-          url:   '/finance',
-          tag:   `recurring-${String(p._id)}`,
-        })
-        break // one notification per payment per day
-      }
+  for (const payment of payments) {
+    const offsets = hour === '08:00' ? [0] : (payment.reminderDays ?? []).filter(days => Number.isInteger(days) && days > 0)
+    for (const days of new Set(offsets)) {
+      const date = new Date(midnight + days * DAY)
+      const dueDate = getPaymentDate(date, payment.dayOfMonth)
+      if (date.toISOString().slice(0, 10) !== dueDate || payment.lastConfirmedMonth === dueDate.slice(0, 7)) continue
+      const when = days === 0 ? 'сьогодні' : days === 1 ? 'завтра' : `через ${days} дн.`
+      const amount = payment.currency !== 'UAH' && payment.amountForeign != null
+        ? payment.amountForeign.toLocaleString('uk-UA', { style: 'currency', currency: payment.currency })
+        : `${payment.amount.toLocaleString('uk-UA')} ₴`
+      await sendScheduledPushToUser(payment.userId, {
+        title: `💳 «${payment.name}» — ${when}`,
+        body: `${amount} спишеться ${when}`,
+        url: '/finance',
+        tag: `recurring-${payment._id}-${today}`,
+      }, { key: `recurring-${payment._id}-${today}-${dueDate}`, expiresAt })
     }
-
-    console.log('[Push] Recurring payment reminders processed')
-  } catch (err) {
-    console.error('[Push] Recurring reminder error:', err)
   }
-})
+}
 
-console.log('📅 Recurring payment reminders scheduled (09:00 UTC)')
+const options = { timezone: 'Europe/Kyiv', noOverlap: true }
+cron.schedule('*/5 8 * * *', () => sendPaymentReminders('08:00').catch(console.error), options)
+cron.schedule('*/5 12 * * *', () => sendPaymentReminders('12:00').catch(console.error), options)
