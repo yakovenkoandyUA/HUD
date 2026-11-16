@@ -892,7 +892,22 @@
 }
 
 .petEditorSegments {
+  position: relative;
   gap: 0;
+}
+.petEditorSegments::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: -1px;
+  width: 50%;
+  height: 2px;
+  background: var(--accent);
+  pointer-events: none;
+  transition: transform 220ms ease-in-out;
+}
+.petEditorSegments:has(button:last-child[aria-pressed='true'])::after {
+  transform: translateX(100%);
 }
 .petEditorSegments button {
   min-height: 44px;
@@ -907,9 +922,9 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  transition: color 180ms ease;
 }
 .petEditorSegments button[aria-pressed='true'] {
-  border-bottom-color: var(--accent);
   color: var(--accent);
 }
 .petEditorSegments button:focus-visible {
@@ -917,6 +932,18 @@
   outline-offset: -4px;
 }
 .petEditorSegments button:active { transform: none; }
+
+.petEditorTabs ~ :not([hidden]) {
+  animation: petEditorPanelIn 220ms ease-out;
+}
+@keyframes petEditorPanelIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .petEditorSegments::after, .petEditorSegments button { transition: none; }
+  .petEditorTabs ~ :not([hidden]) { animation: none; }
+}
 
 .petSettingsFields {
   min-width: 0;
