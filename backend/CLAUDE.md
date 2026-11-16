@@ -201,6 +201,8 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, `source: 'manual'|'monobank'|'csv'`, `tripMemoryId?: string|null` (опційне посилання на trip-спогад для блоку "Витрати в поїздці"), `spaceId?: string|null` (для фільтра `GET /api/transactions?spaceId=`), `walletId: 'sense'|'mono'` (default 'sense'; старі документи без поля = Sense, тому всі агрегації головного балансу фільтрують `walletId: { $ne: 'mono' }` — stats, ai chat context, finance report, yearbook), сортувати по `createdAt`
 
+**Авто-маршрутизація «Комунальні» → «Житло»** (`utils/utilitiesSpace.ts`): витрата з категорією «Комунальні» без явного `spaceId` отримує `spaceId` активного простору «Житло» (тип `home` або назва «Житло», без вимоги модуля finance — у blank-просторів його немає). Працює в `transactionController.create`, Mono sync, CSV import і `/bank/recategorize`. **CSV import** пропускає заблоковані (`заблоковано`) рядки та дублі (ключ date/type/amount/desc/walletId, з урахуванням кратності) і повертає `skippedDuplicates`; приймає `walletId` (Sense/Mono вкладка). `POST /api/recurring/:id/confirm` приймає `{ walletId }` — картка списання підписки. Скрипти: `scripts/dedupeCsvImport.ts <username> [--confirm]` (прибирає двічі завантажений CSV).
+
 **Category** — `name`, `icon` (Tabler ti-*), `color` (hex), `userId`, `isDefault`, `isActive`, `parentId` (субкатегорії), `order: number`
 
 **SprintTask** — `weekNumber + year` = ідентифікатор тижня, `type: 'task'|'routine'`, `repeat: string` для звичок, `completionLog[]`, `checklist[]` (Mixed, `{id, title, done, parentId?, assigneeId?}` — `parentId` дає вкладеність до 3 рівнів, `assigneeId` призначає пункт на конкретного члена сім'ї з `assignedTo[]` задачі; `parent.done` рахується автоматично від дітей на фронтенді, не валідується окремо), `labels[]`, `assignedTo[]`, `deletedAt` (soft-delete), `dueTime?: string` (HH:MM, опційний час дедлайну), `reminderSent: boolean` (анти-дубль для 5-хвилинного reminder-циклу, скидається при зміні `dueDate`/`dueTime`/`nextDue`/`reminder`), `spaceId?: string | null` (simple string ref, не ObjectId — для фільтра `GET /api/sprint/tasks?spaceId=`)
@@ -237,7 +239,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **TripProfile sub-doc** — `destination, startDate: string|null, endDate: string|null, travelers: string[], status: 'planning'|'ongoing'|'completed'`
 
-**BankConnection** — `userId`, `bank: 'monobank'`, `encryptedToken` (AES-256-GCM), `accountId`, `lastSync`, `balance: number|null` (живий баланс картки з Monobank client-info, оновлюється на connect/sync). Для юзерів з `User.walletsEnabled` sync і CSV-імпорт пишуть транзакції з `walletId: 'mono'`; для решти — 'sense'. Скрипти: `scripts/enableWallets.ts <username>`, `scripts/resetFinance.ts <username> [--confirm]` (dry-run за замовчуванням)
+**BankConnection** — `userId`, `bank: 'monobank'`, `encryptedToken` (AES-256-GCM), `accountId`, `lastSync`, `balance: number|null` (живий баланс картки з Monobank client-info, оновлюється на connect/sync), `creditLimit: number` (Mono віддає balance разом з кредитним лімітом → власні кошти = balance − creditLimit; віднімається на клієнті). Для юзерів з `User.walletsEnabled` sync і CSV-імпорт пишуть транзакції з `walletId: 'mono'`; для решти — 'sense'. Скрипти: `scripts/enableWallets.ts <username>`, `scripts/resetFinance.ts <username> [--confirm]` (dry-run за замовчуванням)
 
 **MoodLog** — `userId`, `date: string`, `score: 1-5`, `notes: string`
 
