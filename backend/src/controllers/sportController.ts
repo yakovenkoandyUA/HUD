@@ -5,6 +5,10 @@ import { SportEvent } from '../models/SportEvent'
 import { WorkoutProgram } from '../models/WorkoutProgram'
 import { WorkoutSession } from '../models/WorkoutSession'
 
+function hasSpaceMembership(req: Request) {
+  return Space.exists({ _id: req.params.id, 'members.userId': req.userId })
+}
+
 /** GET /api/spaces/:id/sport/profile */
 export async function getSportProfile(req: Request, res: Response): Promise<void> {
   try {
@@ -148,6 +152,7 @@ export async function createSportEvent(req: Request, res: Response): Promise<voi
 /** PATCH /api/spaces/:id/sport/events/:eventId */
 export async function updateSportEvent(req: Request, res: Response): Promise<void> {
   try {
+    if (!await hasSpaceMembership(req)) { res.status(404).json({ error: 'Not found' }); return }
     const event = await SportEvent.findOne({ _id: req.params.eventId, spaceId: req.params.id })
     if (!event) { res.status(404).json({ error: 'Not found' }); return }
 
@@ -166,6 +171,7 @@ export async function updateSportEvent(req: Request, res: Response): Promise<voi
 /** DELETE /api/spaces/:id/sport/events/:eventId */
 export async function deleteSportEvent(req: Request, res: Response): Promise<void> {
   try {
+    if (!await hasSpaceMembership(req)) { res.status(404).json({ error: 'Not found' }); return }
     await SportEvent.deleteOne({ _id: req.params.eventId, spaceId: req.params.id })
     res.json({ ok: true })
   } catch {
@@ -217,6 +223,7 @@ export async function createWorkoutProgram(req: Request, res: Response): Promise
 /** PATCH /api/spaces/:id/sport/programs/:programId */
 export async function updateWorkoutProgram(req: Request, res: Response): Promise<void> {
   try {
+    if (!await hasSpaceMembership(req)) { res.status(404).json({ error: 'Not found' }); return }
     const program = await WorkoutProgram.findOne({ _id: req.params.programId, spaceId: req.params.id })
     if (!program) { res.status(404).json({ error: 'Not found' }); return }
 
@@ -241,8 +248,9 @@ export async function updateWorkoutProgram(req: Request, res: Response): Promise
 /** DELETE /api/spaces/:id/sport/programs/:programId */
 export async function deleteWorkoutProgram(req: Request, res: Response): Promise<void> {
   try {
+    if (!await hasSpaceMembership(req)) { res.status(404).json({ error: 'Not found' }); return }
     await WorkoutProgram.deleteOne({ _id: req.params.programId, spaceId: req.params.id })
-    await WorkoutSession.deleteMany({ programId: req.params.programId })
+    await WorkoutSession.deleteMany({ programId: req.params.programId, spaceId: req.params.id })
     res.json({ ok: true })
   } catch {
     res.status(500).json({ error: 'Server error' })

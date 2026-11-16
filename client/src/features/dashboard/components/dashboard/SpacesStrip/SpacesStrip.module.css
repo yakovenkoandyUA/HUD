@@ -40,7 +40,7 @@
 
 .grid {
   display: flex;
-  gap: 4px;
+  gap: 9px;
   overflow-x: auto;
   scroll-snap-type: x proximity;
   padding: 4px 0 6px;
@@ -72,11 +72,11 @@
 /* ── Circle avatar ── */
 
 .avatar {
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--space-color, var(--accent)) 14%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--space-color, var(--accent)) 40%, transparent);
+  border: 2px solid color-mix(in srgb, var(--space-color, var(--accent)) 40%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
