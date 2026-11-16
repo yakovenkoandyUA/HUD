@@ -1,3 +1,4 @@
+import type { WalletId } from '@/shared/types'
 export interface BaseCategory {
   id: string
   label: string
@@ -36,3 +37,9 @@ export const INCOME_CAT_NAMES = new Set(INCOME_CATEGORIES.map(c => c.label.toLow
 
 /** Category names that are income-only and must be excluded from the expense form. */
 export const INCOME_ONLY_NAMES = new Set(['інвестиції', 'заощадження'])
+
+/** Cards available when a profile has `walletsEnabled`. Sense is the main wallet (budget, forecast, reports). */
+export const WALLET_OPTIONS: { value: WalletId; label: string }[] = [
+  { value: 'sense', label: 'Sense' },
+  { value: 'mono',  label: 'Mono' },
+]

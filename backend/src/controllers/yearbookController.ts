@@ -76,7 +76,7 @@ async function buildSections(userId: string, year: number, dateStart: string, da
     WatchlistItem.find({ userId: { $in: sharedIds }, status: 'watched', addedAt: { $gte: dateStart, $lte: dateEnd } }),
     CookLog.find({ userId: { $in: sharedIds }, date: { $gte: dateStartObj, $lte: dateEndObj } }),
     MoodLog.find({ userId: { $in: sharedIds }, date: { $gte: dateStart, $lte: dateEnd } }),
-    Transaction.find({ userId, type: 'expense', date: { $gte: dateStart, $lte: dateEnd } }),
+    Transaction.find({ userId, walletId: { $ne: 'mono' }, type: 'expense', date: { $gte: dateStart, $lte: dateEnd } }),
     F1Prediction.find({ userId, raceId: { $regex: `^${year}-` } }),
     Space.find({ type: 'vehicle', 'members.userId': userId }).select('_id'),
   ])

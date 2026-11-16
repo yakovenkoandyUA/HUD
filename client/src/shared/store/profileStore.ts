@@ -28,6 +28,7 @@ export interface Profile {
   f1Enabled: boolean
   footballEnabled: boolean
   drinksEnabled: boolean
+  walletsEnabled?: boolean
   salaryDay: number
   monthlySpendLimit: number | null
   city: string

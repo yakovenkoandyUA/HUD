@@ -2,7 +2,9 @@ import React, { useMemo, useState } from 'react'
 import Input from '@/shared/components/ui/Input'
 import Button from '@/shared/components/ui/Button'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
-import { INCOME_CATEGORIES } from '../../../constants'
+import PillSelector from '@/shared/components/ui/PillSelector'
+import { INCOME_CATEGORIES, WALLET_OPTIONS } from '../../../constants'
+import type { WalletId } from '@/shared/types'
 import styles from './TopupForm.module.css'
 
 /**
@@ -12,14 +14,21 @@ import styles from './TopupForm.module.css'
  * Відображає категорії у 3-колонковому grid (catCell-стиль, єдиний з ExpenseForm).
  * Необов'язковий вибір простору — прив'язує дохід до простору з увімкненим модулем finance.
  *
+ * Якщо `showWalletPicker` — вибір картки зарахування (Sense / Mono), за замовчуванням `defaultWalletId`.
+ *
  * Props:
- * @prop {(amount: number, description: string, category: string, spaceId?: string | null) => void} onTopup
+ * @prop {(amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId) => void} onTopup
+ * @prop {boolean}  [showWalletPicker] — показати вибір картки (лише для профілів з walletsEnabled)
+ * @prop {WalletId} [defaultWalletId]  — картка, обрана за замовчуванням (активна вкладка)
  */
 interface TopupFormProps {
-  onTopup: (amount: number, description: string, category: string, spaceId?: string | null) => void
+  onTopup: (amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId) => void
+  showWalletPicker?: boolean
+  defaultWalletId?: WalletId
 }
 
-const TopupForm: React.FC<TopupFormProps> = ({ onTopup }) => {
+const TopupForm: React.FC<TopupFormProps> = ({ onTopup, showWalletPicker = false, defaultWalletId = 'sense' }) => {
+  const [walletId, setWalletId] = useState<WalletId>(defaultWalletId)
   const spaces = useSpacesStore(s => s.spaces)
   const financeSpaces = useMemo(() => spaces.filter(sp => !sp.archived && sp.modules.includes('finance')), [spaces])
 
@@ -32,7 +41,7 @@ const TopupForm: React.FC<TopupFormProps> = ({ onTopup }) => {
     e.preventDefault()
     const n = parseFloat(amount)
     if (!n || n <= 0) return
-    onTopup(n, description || 'Поповнення', category, selectedSpaceId)
+    onTopup(n, description || 'Поповнення', category, selectedSpaceId, walletId)
     setAmount('')
     setDescription('')
     setCategory(INCOME_CATEGORIES[0].id)
@@ -41,6 +50,13 @@ const TopupForm: React.FC<TopupFormProps> = ({ onTopup }) => {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
+      {showWalletPicker && (
+        <div className={styles.section}>
+          <span className={styles.sectionLabel}>На яку картку</span>
+          <PillSelector options={WALLET_OPTIONS} value={walletId} onChange={setWalletId} />
+        </div>
+      )}
+
       <Input
         label="Сума (₴)"
         type="number"

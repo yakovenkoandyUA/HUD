@@ -193,8 +193,8 @@ router.post('/report/:month', requireVerified, loadUser, requireFeature('advance
 
   const prev = prevMonth(month)
   const [curTxs, prevTxs] = await Promise.all([
-    Transaction.find({ userId: req.userId, type: 'expense', date: { $regex: `^${month}` } }),
-    Transaction.find({ userId: req.userId, type: 'expense', date: { $regex: `^${prev}` } }),
+    Transaction.find({ userId: req.userId, walletId: { $ne: 'mono' }, type: 'expense', date: { $regex: `^${month}` } }),
+    Transaction.find({ userId: req.userId, walletId: { $ne: 'mono' }, type: 'expense', date: { $regex: `^${prev}` } }),
   ])
 
   // Category totals

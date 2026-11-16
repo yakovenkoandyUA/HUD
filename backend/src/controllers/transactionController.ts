@@ -53,6 +53,7 @@ export async function countByCategory(req: Request, res: Response): Promise<void
   const { category } = req.query
   if (!category || typeof category !== 'string') { res.status(400).json({ error: 'category required' }); return }
   const count = await Transaction.countDocuments({ userId: req.userId, type: 'expense', category })
+  // (category usage is wallet-agnostic — categories are shared across wallets)
   res.json({ count })
 }
 

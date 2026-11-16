@@ -9,7 +9,10 @@ import TransactionList from './components/finance/TransactionList'
 import MonthlyReport from './components/finance/MonthlyReport'
 import RecurringPayments from './components/finance/RecurringPayments'
 import ShoppingTracker from './components/finance/ShoppingTracker'
+import MonoHero from './components/finance/MonoHero'
 import Modal from '@/shared/components/ui/Modal'
+import { WALLET_OPTIONS } from './constants'
+import type { WalletId } from '@/shared/types'
 import { useFinanceStore } from '@/features/finance/store/financeStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useProfileStore } from '@/shared/store/profileStore'
@@ -36,8 +39,13 @@ const IconTopup: React.FC = () => (
 )
 
 const Finance: React.FC = () => {
-  const { balance, transactions, addTopup, addExpense, deleteTransaction, fetchTransactions } = useFinanceStore()
+  const { balance, transactions, monoTransactions, addTopup, addExpense, deleteTransaction, fetchTransactions } = useFinanceStore()
   const { showToast, mimirMode } = useUiStore()
+  // Multi-wallet is opt-in per profile; without the flag the screen behaves exactly as before.
+  const walletsEnabled = useProfileStore(s => s.activeProfile?.walletsEnabled ?? false)
+  const [wallet, setWallet] = useState<WalletId>('sense')
+  const activeWallet: WalletId = walletsEnabled ? wallet : 'sense'
+  const monoView = activeWallet === 'mono'
   const salaryDay = useProfileStore(s => s.activeProfile?.salaryDay ?? 1)
   const userId    = useProfileStore(s => s.activeProfile?.id ?? '')
   const { connection, syncing, importing, fetchStatus, sync, importCsv, recategorize } = useBankStore()
@@ -133,6 +141,10 @@ const Finance: React.FC = () => {
     return isToday ? time : d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' }) + ' ' + time
   }
 
+  // Mono balance: live from the Monobank API when connected, otherwise the sum of its recorded transactions.
+  const monoBalance = connection?.balance
+    ?? monoTransactions.reduce((sum, t) => (t.type === 'topup' ? sum + t.amount : sum - t.amount), 0)
+
   const daysLeft = getDaysLeftInMonth(salaryDay)
   const daysElapsed = getDaysElapsed(salaryDay)
   const dailyBudget = calcDailyBudget(balance, salaryDay)
@@ -157,15 +169,15 @@ const Finance: React.FC = () => {
     [balance, transactions, recurringPayments, salaryDay],
   )
 
-  const handleTopup = (amount: number, description: string, category: string, spaceId?: string | null) => {
-    addTopup(amount, description, category, spaceId)
+  const handleTopup = (amount: number, description: string, category: string, spaceId?: string | null, walletId?: WalletId) => {
+    addTopup(amount, description, category, spaceId, walletId)
     useAchievementsStore.getState().unlock('first-transaction')
     setShowTopup(false)
     showToast(`+${amount} ₴ додано`, 'success')
   }
 
-  const handleExpense = (amount: number, description: string, category?: string, spaceId?: string | null, subcategory?: string | null, date?: string) => {
-    addExpense(amount, description, category, null, spaceId, subcategory, date)
+  const handleExpense = (amount: number, description: string, category?: string, spaceId?: string | null, subcategory?: string | null, date?: string, walletId?: WalletId) => {
+    addExpense(amount, description, category, null, spaceId, subcategory, date, walletId)
     useAchievementsStore.getState().unlock('first-transaction')
     setShowExpense(false)
     showToast(`−${amount} ₴ витрачено`, 'info')
@@ -195,17 +207,40 @@ const Finance: React.FC = () => {
 		<div className={styles.screen}>
 			<AppHeader />
 			<div className={styles.content}>
+				{walletsEnabled && (
+					<div className={styles.walletTabs}>
+						{WALLET_OPTIONS.map(opt => (
+							<button
+								key={opt.value}
+								type="button"
+								className={`${styles.walletTab} ${activeWallet === opt.value ? styles.walletTabActive : ''}`}
+								onClick={() => setWallet(opt.value)}
+							>
+								{opt.label}
+							</button>
+						))}
+					</div>
+				)}
+
 				{/* 1. Баланс + статистика (єдиний hero) */}
-				<BalanceHero
-					balance={balance}
-					dailyBudget={dailyBudget}
-					monthSpent={totalExpense}
-					totalTopup={totalTopup}
-					avgPerDay={avgPerDay}
-					daysLeft={daysLeft}
-					todaySpent={todaySpent}
-					salaryForecast={salaryForecast}
-				/>
+				{monoView ? (
+					<MonoHero
+						balance={monoBalance}
+						live={connection?.balance != null}
+						lastSync={connection?.lastSync ? formatLastSync(connection.lastSync) : null}
+					/>
+				) : (
+					<BalanceHero
+						balance={balance}
+						dailyBudget={dailyBudget}
+						monthSpent={totalExpense}
+						totalTopup={totalTopup}
+						avgPerDay={avgPerDay}
+						daysLeft={daysLeft}
+						todaySpent={todaySpent}
+						salaryForecast={salaryForecast}
+					/>
+				)}
 
 				<div className={styles.mimirFloat}>
 					{showFinanceEmpty ? (
@@ -231,20 +266,26 @@ const Finance: React.FC = () => {
 					</button>
 				</div>
 
-				{/* 4. Місячна аналітика + AI */}
-				<MonthlyReport transactions={transactions} />
+				{/* Аналітика, цілі й регулярні платежі — тільки для головного гаманця (Sense) */}
+				{!monoView && (
+					<>
+						{/* 4. Місячна аналітика + AI */}
+						<MonthlyReport transactions={transactions} />
 
-				{/* 5. Donut chart категорій */}
-				<ShoppingTracker transactions={transactions} />
+						{/* 5. Donut chart категорій */}
+						<ShoppingTracker transactions={transactions} />
 
-				{/* 6. Цілі накопичення */}
-				<GoalsList />
+						{/* 6. Цілі накопичення */}
+						<GoalsList />
 
-				{/* 7. Регулярні платежі */}
-				<RecurringPayments />
+						{/* 7. Регулярні платежі */}
+						<RecurringPayments />
+					</>
+				)}
 
 				<div className={styles.section}>
-					{connection && (
+					{/* Для walletsEnabled sync-бар Monobank живе тільки на вкладці Mono */}
+					{(!walletsEnabled || monoView) && connection && (
 						<div className={styles.bankSyncBar}>
 							<span className={styles.bankSyncLabel}>
 								<span className={styles.bankSyncDot} />
@@ -272,7 +313,7 @@ const Finance: React.FC = () => {
 							</div>
 						</div>
 					)}
-					{!connection && (
+					{(!walletsEnabled || monoView) && !connection && (
 						<div className={styles.bankSyncBar}>
 							<span className={styles.bankSyncLabel} style={{ color: 'var(--text3)' }}>Банк не підключено</span>
 							<button type="button" className={styles.bankCsvBtn} onClick={() => setShowCsvModal(true)}>
@@ -280,16 +321,16 @@ const Finance: React.FC = () => {
 							</button>
 						</div>
 					)}
-					<TransactionList transactions={transactions} onDelete={handleDelete} />
+					<TransactionList transactions={monoView ? monoTransactions : transactions} onDelete={handleDelete} />
 				</div>
 			</div>
 
 			<Modal isOpen={showTopup} onClose={() => setShowTopup(false)} title="Поповнення" draggable>
-				<TopupForm onTopup={handleTopup} />
+				<TopupForm onTopup={handleTopup} showWalletPicker={walletsEnabled} defaultWalletId={activeWallet} />
 			</Modal>
 
 			<Modal isOpen={showExpense} onClose={() => setShowExpense(false)} title="Витрата" draggable>
-				<ExpenseForm onExpense={handleExpense} />
+				<ExpenseForm onExpense={handleExpense} showWalletPicker={walletsEnabled} defaultWalletId={activeWallet} />
 			</Modal>
 
 			<Modal isOpen={showCsvModal} onClose={() => setShowCsvModal(false)} title="Імпорт виписки" draggable>

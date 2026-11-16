@@ -17,6 +17,7 @@ export interface ITransaction extends Document {
   tripMemoryId?: string | null
   spaceId?: string | null
   subcategory?: string | null
+  walletId?: 'sense' | 'mono'
 }
 
 const schema = new Schema<ITransaction>({
@@ -36,6 +37,8 @@ const schema = new Schema<ITransaction>({
   tripMemoryId:   { type: String, default: null },
   spaceId:        { type: String, default: null, index: true },
   subcategory:    { type: String, default: null },
+  // Legacy docs have no walletId — treat anything that isn't 'mono' as the main (Sense) wallet.
+  walletId:       { type: String, enum: ['sense', 'mono'], default: 'sense' },
 }, { timestamps: true })
 
 schema.index({ userId: 1, date: -1 })

@@ -225,3 +225,33 @@
   z-index: 3;
   pointer-events: none;
 }
+
+/* ── Wallet tabs (Sense / Mono) — same style as Memories tab bar ── */
+
+.walletTabs {
+	display: flex;
+	border-bottom: 1px solid var(--border);
+	flex-shrink: 0;
+}
+
+.walletTab {
+	flex: 1;
+	padding: 13px;
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	font-family: var(--font-ui);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text3);
+	cursor: pointer;
+	transition: color 0.15s, border-color 0.15s;
+	margin-bottom: -1px;
+}
+
+.walletTabActive {
+	color: var(--gold);
+	border-bottom-color: var(--gold);
+}

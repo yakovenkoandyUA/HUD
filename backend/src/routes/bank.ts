@@ -142,6 +142,7 @@ router.post('/connect', ...requireMonobank, async (req: Request, res: Response) 
       accountName: clientInfo.name,
       enabled: true,
       lastSync: null,
+      balance: uahAccount.balance / 100,
     },
     { upsert: true, new: true },
   )
@@ -152,6 +153,7 @@ router.post('/connect', ...requireMonobank, async (req: Request, res: Response) 
     accountId: conn.accountId,
     lastSync: conn.lastSync,
     enabled: conn.enabled,
+    balance: conn.balance ?? null,
   })
 })
 
@@ -166,6 +168,7 @@ router.get('/status', ...requireMonobank, async (req: Request, res: Response) =>
     accountId: conn.accountId,
     lastSync: conn.lastSync,
     enabled: conn.enabled,
+    balance: conn.balance ?? null,
   })
 })
 
@@ -211,6 +214,9 @@ router.post('/sync', ...requireMonobank, async (req: Request, res: Response) => 
 
   const userCategories = await Category.find({ userId: req.userId, isActive: true })
 
+  // Users with the multi-wallet flag keep Monobank in its own wallet; everyone else stays on the single balance.
+  const walletId = req.user?.walletsEnabled ? 'mono' : 'sense'
+
   const toInsert = statements
     .filter(s => s.currencyCode === 980 && s.amount !== 0 && !existingMonoIds.has(s.id))
     .map(s => {
@@ -228,6 +234,7 @@ router.post('/sync', ...requireMonobank, async (req: Request, res: Response) => 
         monoId:     s.id,
         mcc:        s.mcc || null,
         source:     'monobank' as const,
+        walletId,
       }
     })
 
@@ -235,10 +242,17 @@ router.post('/sync', ...requireMonobank, async (req: Request, res: Response) => 
     await Transaction.insertMany(toInsert)
   }
 
+  // Best-effort live balance (Monobank limits client-info to 1 req/min — a failure must not fail the sync)
+  try {
+    const info = await monoFetch('/personal/client-info', token) as MonoClientInfo
+    const acc = info.accounts.find(a => a.id === conn.accountId)
+    if (acc) conn.balance = acc.balance / 100
+  } catch { /* keep the previous balance */ }
+
   conn.lastSync = new Date()
   await conn.save()
 
-  res.json({ imported: toInsert.length, lastSync: conn.lastSync })
+  res.json({ imported: toInsert.length, lastSync: conn.lastSync, balance: conn.balance ?? null })
 })
 
 // ── POST /api/bank/mono-auth-init ───────────────────────────────────────────
@@ -292,7 +306,7 @@ router.post('/mono-auth-webhook', async (req: Request, res: Response) => {
 
   await BankConnection.findOneAndUpdate(
     { userId, bank: 'monobank' },
-    { encryptedToken: encrypt(token), accountId: uahAccount.id, accountName: clientInfo.name, enabled: true, lastSync: null },
+    { encryptedToken: encrypt(token), accountId: uahAccount.id, accountName: clientInfo.name, enabled: true, lastSync: null, balance: uahAccount.balance / 100 },
     { upsert: true, new: true },
   )
 
@@ -393,6 +407,8 @@ router.post('/import-csv', ...requireMonobank, async (req: Request, res: Respons
 
   const userCategories = await Category.find({ userId: req.userId, isActive: true })
   const toInsert: object[] = []
+  // CSV is a Monobank statement — for multi-wallet users it belongs to the Mono wallet.
+  const csvWalletId = req.user?.walletsEnabled ? 'mono' : 'sense'
 
   for (const line of dataLines) {
     const cols = parseCsvLine(line)
@@ -441,6 +457,7 @@ router.post('/import-csv', ...requireMonobank, async (req: Request, res: Respons
       monoId:     null,
       mcc:        mcc ?? null,
       source:     'csv' as const,
+      walletId:   csvWalletId,
     })
   }
 

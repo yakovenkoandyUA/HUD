@@ -121,9 +121,9 @@ async function buildContext(userId: string, domains: string[]): Promise<string> 
     const ym = today.slice(0, 7)
     const [user, balanceAgg, monthTxs, recentTxs, recurring] = await Promise.all([
       User.findById(userId).select('salaryDay').lean(),
-      Transaction.aggregate([{ $match: { userId } }, { $group: { _id: '$type', total: { $sum: '$amount' } } }]),
-      Transaction.find({ userId, date: { $gte: ym } }).lean(),
-      Transaction.find({ userId }).sort({ createdAt: -1 }).limit(10).lean(),
+      Transaction.aggregate([{ $match: { userId, walletId: { $ne: 'mono' } } }, { $group: { _id: '$type', total: { $sum: '$amount' } } }]),
+      Transaction.find({ userId, walletId: { $ne: 'mono' }, date: { $gte: ym } }).lean(),
+      Transaction.find({ userId, walletId: { $ne: 'mono' } }).sort({ createdAt: -1 }).limit(10).lean(),
       RecurringPayment.find({ userId, isActive: true }).lean(),
     ])
 

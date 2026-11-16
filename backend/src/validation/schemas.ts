@@ -121,6 +121,7 @@ export const createTransactionSchema = z.object({
   title:       z.string().max(200).optional(),
   recurringId: z.string().optional(),
   spaceId:     z.string().nullable().optional(),
+  walletId:    z.enum(['sense', 'mono']).optional(),
 })
 
 // ── Notes ─────────────────────────────────────────────────────────────────────

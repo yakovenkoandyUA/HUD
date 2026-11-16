@@ -37,7 +37,11 @@ export interface Transaction {
   tripMemoryId?: string | null
   spaceId?: string | null
   subcategory?: string | null
+  /** Which card the transaction belongs to. Absent/'sense' = main wallet. */
+  walletId?: WalletId
 }
+
+export type WalletId = 'sense' | 'mono'
 
 export interface SprintTask {
   id: string

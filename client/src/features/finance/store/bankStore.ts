@@ -7,6 +7,8 @@ export interface BankConnection {
   accountId: string
   lastSync: string | null
   enabled: boolean
+  /** Live card balance in UAH from Monobank (null until first successful sync). */
+  balance?: number | null
 }
 
 interface BankState {
@@ -86,9 +88,9 @@ export const useBankStore = create<BankState>((set, get) => ({
         const { error } = await res.json() as { error: string }
         throw new Error(error)
       }
-      const data = await res.json() as { imported: number; lastSync: string }
+      const data = await res.json() as { imported: number; lastSync: string; balance?: number | null }
       bankReqId++
-      set(s => s.connection ? { connection: { ...s.connection, lastSync: data.lastSync } } : {})
+      set(s => s.connection ? { connection: { ...s.connection, lastSync: data.lastSync, balance: data.balance ?? s.connection.balance } } : {})
       return { imported: data.imported }
     } finally {
       set({ syncing: false })

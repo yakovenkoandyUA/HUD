@@ -8,6 +8,8 @@ export interface IBankConnection extends Document {
   accountName: string
   lastSync: Date | null
   enabled: boolean
+  /** Last known card balance in UAH (from Monobank client-info), refreshed on every sync. */
+  balance: number | null
 }
 
 const schema = new Schema<IBankConnection>({
@@ -18,6 +20,7 @@ const schema = new Schema<IBankConnection>({
   accountName:    { type: String, default: '' },
   lastSync:       { type: Date, default: null },
   enabled:        { type: Boolean, default: true },
+  balance:        { type: Number, default: null },
 }, { timestamps: true })
 
 schema.index({ userId: 1, bank: 1 }, { unique: true })

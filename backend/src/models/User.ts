@@ -15,6 +15,7 @@ export interface IUser extends Document {
   f1Enabled: boolean
   footballEnabled: boolean
   drinksEnabled: boolean
+  walletsEnabled: boolean
   salaryDay: number
   monthlySpendLimit: number | null
   city: string
@@ -79,6 +80,7 @@ const schema = new Schema<IUser>({
   f1Enabled:         { type: Boolean, default: false },
   footballEnabled:   { type: Boolean, default: false },
   drinksEnabled:     { type: Boolean, default: false },
+  walletsEnabled:    { type: Boolean, default: false },
   salaryDay:         { type: Number, default: 1, min: 1, max: 31 },
   monthlySpendLimit: { type: Number, default: null },
   city:              { type: String, default: '' },

@@ -171,6 +171,7 @@ const USER_PUBLIC_FIELDS = (user: InstanceType<typeof User>, effective?: Effecti
   f1Enabled:      user.f1Enabled ?? false,
   footballEnabled: user.footballEnabled ?? false,
   drinksEnabled:  user.drinksEnabled ?? false,
+  walletsEnabled: user.walletsEnabled ?? false,
   salaryDay:         user.salaryDay ?? 1,
   monthlySpendLimit: user.monthlySpendLimit ?? null,
   city:           user.city ?? '',

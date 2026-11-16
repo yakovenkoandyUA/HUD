@@ -10,7 +10,9 @@ import { useProfileStore } from '@/shared/store/profileStore'
 import { useUiStore } from '@/shared/store/uiStore'
 import { useCanUseFeature } from '@/shared/hooks/usePlan'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
-import type { Category } from '@/shared/types'
+import PillSelector from '@/shared/components/ui/PillSelector'
+import { WALLET_OPTIONS } from '@/features/finance/constants'
+import type { Category, WalletId } from '@/shared/types'
 import styles from './ExpenseForm.module.css'
 
 /**
@@ -20,12 +22,17 @@ import styles from './ExpenseForm.module.css'
  * При виборі категорії з підкатегоріями — показує горизонтальні chips для деталізації.
  * Фінальна категорія: selectedSubCategoryId ?? selectedCategoryId.
  * Необов'язковий вибір простору — прив'язує витрату до простору з увімкненим модулем finance.
+ * Якщо `showWalletPicker` — зверху вибір картки списання (Sense / Mono), за замовчуванням `defaultWalletId`.
  *
  * Props:
- * @prop {(amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null) => void} onExpense
+ * @prop {(amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null, date?: string, walletId?: WalletId) => void} onExpense
+ * @prop {boolean}  [showWalletPicker] — показати вибір картки (лише для профілів з walletsEnabled)
+ * @prop {WalletId} [defaultWalletId]  — картка, обрана за замовчуванням (активна вкладка)
  */
 interface ExpenseFormProps {
-  onExpense: (amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null, date?: string) => void
+  onExpense: (amount: number, description: string, category: string, spaceId?: string | null, subcategory?: string | null, date?: string, walletId?: WalletId) => void
+  showWalletPicker?: boolean
+  defaultWalletId?: WalletId
 }
 
 const CameraIcon: React.FC = () => (
@@ -38,7 +45,7 @@ const CameraIcon: React.FC = () => (
 
 const VISIBLE_CATS = 10
 
-const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
+const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense, showWalletPicker = false, defaultWalletId = 'sense' }) => {
   const { categories, fetchCategories, trackCategoryUsage } = useCategoryStore()
   const transactions = useFinanceStore(s => s.transactions)
   const { activeProfile } = useProfileStore()
@@ -57,7 +64,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
   const [showSourcePicker, setShowSourcePicker] = useState(false)
   const [date, setDate]                         = useState<string>(new Date().toISOString().slice(0, 10))
   const [showDatePicker, setShowDatePicker]     = useState(false)
-  const fileInputRef                            = useRef<HTMLInputElement>(null)
+  const [walletId, setWalletId]                 = useState<WalletId>(defaultWalletId)
+  const fileInputRef                           = useRef<HTMLInputElement>(null)
   const cameraInputRef                          = useRef<HTMLInputElement>(null)
 
   const today       = new Date().toISOString().slice(0, 10)
@@ -109,7 +117,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
     const categoryName = (selectedCat ?? finalCat).name.toLowerCase()
     const subcategoryName = selectedSubCat ? selectedSubCat.name : null
     if (selectedCatId) trackCategoryUsage(selectedCatId)
-    onExpense(parseFloat(amount), desc, categoryName, selectedSpaceId, subcategoryName, isToday ? undefined : date)
+    onExpense(parseFloat(amount), desc, categoryName, selectedSpaceId, subcategoryName, isToday ? undefined : date, walletId)
     setAmount('')
     setDescription('')
     setSelectedCatId(null)
@@ -131,7 +139,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
       <ReceiptScanner
         file={scannerFile}
         allCategories={scanCategories}
-        onSave={(amt, desc, cat, scanDate) => { onExpense(amt, desc, cat, undefined, undefined, scanDate) }}
+        onSave={(amt, desc, cat, scanDate) => { onExpense(amt, desc, cat, undefined, undefined, scanDate, walletId) }}
         onCancel={() => setScannerFile(null)}
       />
     )
@@ -154,6 +162,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onExpense }) => {
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
+
+      {showWalletPicker && (
+        <div className={styles.section}>
+          <span className={styles.sectionLabel}>З якої картки</span>
+          <PillSelector options={WALLET_OPTIONS} value={walletId} onChange={setWalletId} />
+        </div>
+      )}
 
       <Input
         label="Сума (₴)"
