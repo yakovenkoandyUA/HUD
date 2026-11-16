@@ -152,7 +152,7 @@
 | `/api/spaces/:id/pet/events` | GET (`?type=&limit=`), POST — PetEvent (vet_visit/vaccination/medication/grooming/weight/note) |
 | `/api/spaces/:id/pet/events/:eventId` | PATCH, DELETE |
 | `/api/spaces/:id/sport/events/:eventId` | PATCH, DELETE — для учасників обраного простору |
-| `/api/spaces/:id/sport/programs/:programId` | PATCH, DELETE — для учасників обраного простору. При видаленні очищаються сесії програми в цьому просторі |
+| `/api/spaces/:id/sport/programs/:programId` | PATCH, DELETE — для учасників обраного простору. Видалення програми зберігає історію виконаних сесій |
 | `/api/spaces/:id/trip/profile` | GET, PATCH — tripProfile sub-document (destination/startDate/endDate/travelers/status) |
 | `/api/ai/space-chat` | POST — SSE streaming (Claude Haiku), system prompt залежить від space.type (vehicle→механік, trip→travel planner, project→PM); контекст: назва/тип + останні 5 подій/задач/нотаток |
 | `/api/mimir/hint` | GET `?mode=wise\|witty\|dark` — AI-підказка Міміра. Claude для звичайних акаунтів за чинним тарифним правилом; OpenAI для одного автентифікованого профілю, заданого в env |
@@ -260,6 +260,10 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **Інші моделі (існують, коротко не задокументовані по полях):** `Accommodation`, `Ticket`, `TripPlace` (Trip Space Phase 2 — житло/квитки/місця подорожі), `Drink` (трекер напоїв), `Game` (Watchlist ігри), `Label`, `Lesson`, `Note`, `Recipe`/`RecipeComment`, `WatchlistComment`, `PlantEvent` (події догляду за рослиною — простір типу "рослина"), `WorkoutProgram`/`WorkoutSession`, `SportEvent` (Sport hub, колишній F1), `ShoppingItem`, `SpaceInfoCard`, `MimirCache` (кеш AI-відповідей Міміра), `PushSubscription`, `RefreshToken`, `WaitlistEntry`, `YearbookReport`. Дивись `backend/src/models/*.ts` для повних схем.
 
+**SportEvent** — статус тренування та зв’язок `sessionId` із виконаною сесією.
+
+**PlantEvent** — після додавання, зміни чи видалення поливу або підживлення відповідна дата в профілі рослини оновлюється за останньою подією.
+
 ## Зовнішні API
 
 | API | Де використовується |
@@ -279,6 +283,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 ## Jobs/Schedulers
 
+- `petCareReminders` — 5-хвилинний цикл з 09:00 до 10:00 за Києвом у день наступного щеплення чи прийому ліків. Надсилає push поточним учасникам простору з дедуплікацією на пристрої.
 - `pushJobs` — F1 за годину до гонки з вікном повтору 10 хв; нова серія Watchlist о 13:00 і новий сезон о 12:00 за Києвом з повторами протягом години.
 - `routineReminders` — невиконані звички о 12:00 за Києвом; враховує дату початку серії, виконання й видалення.
 - `recurringReminders` — регулярні платежі о 08:00 у день списання і о 12:00 за вибрані дні до списання за Києвом. Дні 29–31 переносяться на останній день коротшого місяця. Підтверджені платежі пропускаються.
