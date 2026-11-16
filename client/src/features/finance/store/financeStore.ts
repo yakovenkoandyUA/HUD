@@ -82,6 +82,8 @@ function calcBalance(txs: Transaction[]): number {
  * (BalanceHero, daily budget, forecast, reports) keeps working untouched.
  * Mono lives separately in `monoTransactions` and never affects `balance`.
  */
+export type TransactionPatch = Partial<Pick<Transaction, 'description' | 'amount' | 'title' | 'category' | 'subcategory' | 'incomeCategory'>>
+
 interface FinanceState {
   balance: number
   transactions: Transaction[]
@@ -93,7 +95,7 @@ interface FinanceState {
   addExpense: (amount: number, description: string, category?: string, tripMemoryId?: string | null, spaceId?: string | null, subcategory?: string | null, date?: string, walletId?: WalletId) => void
   deleteTransaction: (id: string) => void
   renameTransaction: (id: string, title: string | undefined) => void
-  patchTransaction: (id: string, patch: Partial<Pick<Transaction, 'description' | 'amount' | 'title'>>) => Promise<void>
+  patchTransaction: (id: string, patch: TransactionPatch, extraBody?: Record<string, unknown>) => Promise<void>
   tagTripExpenses: (ids: string[], tripMemoryId: string) => void
   setSyncStatus: (s: SyncStatus) => void
   reset: () => void
@@ -226,7 +228,7 @@ export const useFinanceStore = create<FinanceState>()((set, get) => {
       })
     },
 
-    patchTransaction: async (id, patch) => {
+    patchTransaction: async (id, patch, extraBody) => {
       const s = get()
       const tx = s.transactions.find(t => t.id === id) ?? s.monoTransactions.find(t => t.id === id)
       if (!tx) return
@@ -237,7 +239,8 @@ export const useFinanceStore = create<FinanceState>()((set, get) => {
       const delta = mono ? 0 : tx.type === 'topup'
         ? nextAmount - prevAmount
         : prevAmount - nextAmount
-      const prev = { description: tx.description, amount: tx.amount, title: tx.title }
+      const prev: Record<string, unknown> = {}
+      for (const k of Object.keys(patch) as (keyof TransactionPatch)[]) prev[k] = tx[k]
       const apply = (p: object, d: number) => set(s2 => {
         const transactions = mono ? s2.transactions : s2.transactions.map(t => t.id === id ? { ...t, ...p } : t)
         const monoTransactions = mono ? s2.monoTransactions.map(t => t.id === id ? { ...t, ...p } : t) : s2.monoTransactions
@@ -252,6 +255,10 @@ export const useFinanceStore = create<FinanceState>()((set, get) => {
         if (patch.description !== undefined) body.desc = patch.description
         if (patch.amount      !== undefined) body.amount = patch.amount
         if (patch.title       !== undefined) body.title = patch.title
+        if (patch.category    !== undefined) body.category = patch.category
+        if (patch.subcategory !== undefined) body.subcategory = patch.subcategory
+        if (patch.incomeCategory !== undefined) body.incomeCategory = patch.incomeCategory
+        Object.assign(body, extraBody)
         const res = await authFetch(`/api/transactions/${id}`, {
           method: 'PATCH',
           body: JSON.stringify(body),

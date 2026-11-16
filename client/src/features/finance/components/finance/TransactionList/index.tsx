@@ -2,12 +2,15 @@ import React, { useState, useRef, useEffect, useMemo } from 'react'
 import type { Transaction, Category } from '@/shared/types'
 import { fmt } from '../../../utils/finance'
 import { getServiceLogoUrl, getServiceEmoji } from '../../../utils/serviceLogos'
-import { authFetch } from '@/shared/services/api'
-import { useFinanceStore } from '@/features/finance/store/financeStore'
+import { useFinanceStore, type TransactionPatch } from '@/features/finance/store/financeStore'
 import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { INCOME_CATEGORIES } from '../../../constants'
 import Modal from '@/shared/components/ui/Modal'
+import Input from '@/shared/components/ui/Input'
+import Button from '@/shared/components/ui/Button'
+import PillSelector from '@/shared/components/ui/PillSelector'
+import { INCOME_ONLY_NAMES } from '../../../constants'
 import styles from './TransactionList.module.css'
 
 const INCOME_LABEL: Record<string, string> = Object.fromEntries(
@@ -22,7 +25,8 @@ const FALLBACK_ICON  = 'ti-dots'
  * ---------------
  * Список транзакцій з кастомними dropdown-фільтрами по типу та категорії.
  * Транзакції з чеком (description = JSON з полем store) показуються з іконкою
- * і відкривають модалку деталей по тапу.
+ * і відкривають модалку деталей по тапу. Тап на звичайну транзакцію відкриває модалку
+ * редагування (назва, сума, категорія).
  *
  * Props:
  * @prop {Transaction[]}          transactions — масив транзакцій
@@ -183,7 +187,6 @@ function getCategoryForTx(tx: Transaction, cats: Category[]): Category | undefin
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelete }) => {
-  const renameTransaction                  = useFinanceStore(s => s.renameTransaction)
   const patchTransaction                   = useFinanceStore(s => s.patchTransaction)
   const { categories, fetchCategories }    = useCategoryStore()
   const spaces                             = useSpacesStore(s => s.spaces)
@@ -196,8 +199,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<Transaction | null>(null)
   const [isAnimating, setIsAnimating]             = useState(false)
   const [displayedList, setDisplayedList]         = useState<Transaction[]>([])
-  const [editingId, setEditingId]                 = useState<string | null>(null)
-  const [editingTitle, setEditingTitle]           = useState('')
+  // ── Transaction edit modal ──
+  const [editTx, setEditTx]             = useState<Transaction | null>(null)
+  const [editTitle, setEditTitle]       = useState('')
+  const [editAmount, setEditAmount]     = useState('')
+  const [editCatId, setEditCatId]       = useState('')   // expense: Category._id, topup: income category id
+  const [savingEdit, setSavingEdit]     = useState(false)
   const [visibleCount, setVisibleCount]           = useState(20)
   const [newItemIds, setNewItemIds]               = useState<Set<string>>(new Set())
   const sentinelRef       = useRef<HTMLDivElement>(null)
@@ -317,28 +324,59 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
   const handleConfirmDelete = (id: string) => { onDelete?.(id); setPendingDelete(null) }
   const handleCancelDelete  = () => setPendingDelete(null)
 
-  const handleTitleClick = (e: React.MouseEvent, t: Transaction) => {
-    e.stopPropagation()
+  const displayTitle = (t: Transaction): string => {
     const receipt = parseReceipt(t.description)
-    setEditingId(t.id)
-    setEditingTitle(t.title ?? (receipt ? receipt.store : t.description))
+    return t.title ?? (receipt ? receipt.store : (t.subcategory ?? t.description))
   }
 
-  const handleTitleSave = async (id: string) => {
-    const trimmed = editingTitle.trim()
-    setEditingId(null)
-    if (!trimmed) return
-    const tx = transactions.find(t => t.id === id)
-    if (!tx) return
-    const oldTitle = tx.title
-    renameTransaction(id, trimmed)
+  const openEdit = (t: Transaction) => {
+    setEditTx(t)
+    setEditTitle(displayTitle(t))
+    setEditAmount(String(t.amount))
+    setEditCatId(
+      t.type === 'topup'
+        ? (t.incomeCategory ?? '')
+        : (getCategoryForTx(t, categories)?._id ?? ''),
+    )
+  }
+
+  const editableCategories = useMemo(
+    () => categories.filter(c => c.isActive && !c.parentId && !INCOME_ONLY_NAMES.has(c.name.toLowerCase())),
+    [categories],
+  )
+
+  const editAmountNum = parseFloat(editAmount)
+  const canSaveEdit = !!editTx && editAmountNum > 0 && editTitle.trim() !== ''
+
+  const handleEditSave = async () => {
+    if (!editTx || !canSaveEdit || savingEdit) return
+    const tx = editTx
+    const patch: TransactionPatch = {}
+    const extra: Record<string, unknown> = {}
+
+    const title = editTitle.trim()
+    if (title !== displayTitle(tx)) patch.title = title
+    if (editAmountNum !== tx.amount) patch.amount = editAmountNum
+
+    if (tx.type === 'topup') {
+      if (editCatId && editCatId !== (tx.incomeCategory ?? '')) patch.incomeCategory = editCatId
+    } else {
+      const current = getCategoryForTx(tx, categories)
+      const next = editableCategories.find(c => c._id === editCatId)
+      if (next && next._id !== current?._id) {
+        patch.category = next.name.toLowerCase()   // same casing as ExpenseForm
+        patch.subcategory = null                    // old subcategory belongs to the old category
+        extra.categoryId = next._id
+      }
+    }
+
+    setEditTx(null)
+    if (Object.keys(patch).length === 0) return
+    setSavingEdit(true)
     try {
-      await authFetch(`/api/transactions/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ title: trimmed }),
-      })
-    } catch {
-      renameTransaction(id, oldTitle)
+      await patchTransaction(tx.id, patch, extra)
+    } finally {
+      setSavingEdit(false)
     }
   }
 
@@ -479,8 +517,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                 ) : (
                   <>
                     <div
-                      className={`${styles.left} ${receipt ? styles.leftClickable : ''}`}
-                      onClick={receipt ? () => setSelectedReceiptTx(t) : undefined}
+                      className={`${styles.left} ${styles.leftClickable}`}
+                      onClick={() => (receipt ? setSelectedReceiptTx(t) : openEdit(t))}
                     >
                       {t.type === 'expense' ? (() => {
                         if (isRecurring && t.title) {
@@ -514,43 +552,23 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
                       )}
                       <div>
                         <div className={styles.desc}>
-                          {editingId === t.id ? (
-                            <input
-                              className={styles.titleInput}
-                              value={editingTitle}
-                              autoFocus
-                              onChange={e => setEditingTitle(e.target.value)}
-                              onBlur={() => handleTitleSave(t.id)}
-                              onKeyDown={e => {
-                                if (e.key === 'Enter') handleTitleSave(t.id)
-                                if (e.key === 'Escape') setEditingId(null)
-                              }}
-                              onClick={e => e.stopPropagation()}
-                            />
-                          ) : (
-                            <>
-                              <span
-                                className={`${styles.titleEditable} ${styles.descTitle}`}
-                                onClick={e => handleTitleClick(e, t)}
-                              >
-                                {t.title ?? (receipt ? receipt.store : (t.subcategory ?? t.description))}
-                              </span>
-                              {t.type === 'topup' && t.incomeCategory && (
-                                <span className={styles.incomeChip}>
-                                  {INCOME_LABEL[t.incomeCategory] ?? t.incomeCategory}
-                                </span>
-                              )}
-                              {t.spaceId && (() => {
-                                const sp = spaces.find(s => s.id === t.spaceId)
-                                return sp ? (
-                                  <div className={styles.spaceBadge} style={{ '--space-color': sp.color } as React.CSSProperties}>
-                                    <span className={styles.spaceDot} style={{ background: sp.color }} />
-                                    <span className={styles.spaceName}>{sp.name}</span>
-                                  </div>
-                                ) : null
-                              })()}
-                            </>
+                          <span className={styles.descTitle}>
+                            {t.title ?? (receipt ? receipt.store : (t.subcategory ?? t.description))}
+                          </span>
+                          {t.type === 'topup' && t.incomeCategory && (
+                            <span className={styles.incomeChip}>
+                              {INCOME_LABEL[t.incomeCategory] ?? t.incomeCategory}
+                            </span>
                           )}
+                          {t.spaceId && (() => {
+                            const sp = spaces.find(s => s.id === t.spaceId)
+                            return sp ? (
+                              <div className={styles.spaceBadge} style={{ '--space-color': sp.color } as React.CSSProperties}>
+                                <span className={styles.spaceDot} style={{ background: sp.color }} />
+                                <span className={styles.spaceName}>{sp.name}</span>
+                              </div>
+                            ) : null
+                          })()}
                         </div>
                         {t.subcategory && t.description && t.description !== t.subcategory && (
                           <div className={styles.date}>
@@ -588,6 +606,31 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, onDelet
         <p className={styles.allLoaded}>Всі {filteredAll.length} транзакцій завантажено</p>
       )}
       </div>
+
+      {/* ── Edit transaction modal ── */}
+      <Modal isOpen={!!editTx} onClose={() => setEditTx(null)} title="Редагувати транзакцію" draggable>
+        {editTx && (
+          <div className={styles.editModal}>
+            <Input label="Назва" value={editTitle} onChange={setEditTitle} />
+            <Input label="Сума (₴)" type="number" value={editAmount} onChange={setEditAmount} />
+            <div className={styles.editCatLabel}>Категорія</div>
+            {editTx.type === 'topup' ? (
+              <PillSelector
+                options={INCOME_CATEGORIES.map(c => ({ value: c.id, label: c.label, icon: <i className={`ti ${c.icon}`} /> }))}
+                value={editCatId}
+                onChange={setEditCatId}
+              />
+            ) : (
+              <PillSelector
+                options={editableCategories.map(c => ({ value: c._id, label: c.name, icon: <i className={`ti ${c.icon}`} /> }))}
+                value={editCatId}
+                onChange={setEditCatId}
+              />
+            )}
+            <Button fullWidth onClick={handleEditSave} disabled={!canSaveEdit || savingEdit}>Зберегти</Button>
+          </div>
+        )}
+      </Modal>
 
       {/* ── Receipt detail modal ── */}
       <Modal

@@ -674,3 +674,19 @@
 .itemNew {
   animation: itemSlideIn 220ms ease-out both;
 }
+
+/* ── Edit transaction modal ── */
+.editModal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.editCatLabel {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+}
