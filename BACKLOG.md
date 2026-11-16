@@ -72,6 +72,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 **Екрани:**
 - `/` Dashboard — DaySummaryCard, HeroCard (sparkline), DayOverlay, FAB, CarHero (Three.js)
 - **Живий Мімір — пілот на Dashboard.** Для одного профілю сервер може генерувати коротку українську реакцію через OpenAI на час доби та кількість відкритих задач на сьогодні й прострочених. Показ враховує частоту в налаштуваннях, репліка лишається на екрані до закриття; при помилці показується статична підказка. Пілот вимкнено, доки на бекенді не задано `MIMIR_OPENAI_USER_ID` і `OPENAI_API_KEY`.
+  Для наступної репліки Мімір отримує до трьох своїх попередніх реплік і тодішні лічильники за останні 25 годин, щоб підхопити тему між заходами.
 - `/finance` — BalanceHero, TransactionList, ExpenseChart, GoalsList, RecurringPayments, ShoppingTracker, MonthlyReport (AI)
 - `/sprint` — tasks/routines/todos/lessons, WeekHeader (week/month toggle), WeekExpandedView, TrashBin, filter bottom sheet; drag-to-reorder логіка → `hooks/useSprintDrag`, календарна навігація → `hooks/useSprintCalendar`
 - `/shopping` — список покупок з рецептів + manual
