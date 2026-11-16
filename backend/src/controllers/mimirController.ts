@@ -95,10 +95,17 @@ async function generatePilotHint(
   if (cached) return { text: cached.text, pose: cached.pose, slot: timeSlot, cached: true }
 
   const openTasks = { userId, deletedAt: null, done: false }
-  const [dueToday, overdue] = await Promise.all([
+  const [openTasksDueToday, overdueOpenTasks, history] = await Promise.all([
     SprintTask.countDocuments({ ...openTasks, dueDate: date }),
     SprintTask.countDocuments({ ...openTasks, dueDate: { $lt: date, $gt: '' } }),
+    MimirOpenAiCache.find({
+      userId,
+      createdAt: { $gte: new Date(Date.now() - 25 * 60 * 60 * 1000) },
+      $nor: [{ date, timeSlot }],
+    }).sort({ createdAt: -1 }).limit(3)
+      .select('date timeSlot text openTasksDueToday overdueOpenTasks -_id').lean(),
   ])
+  const counts = { openTasksDueToday, overdueOpenTasks }
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
@@ -108,8 +115,9 @@ async function generatePilotHint(
     signal: AbortSignal.timeout(6000),
     body: JSON.stringify({
       model: 'gpt-5-mini',
-      instructions: buildSystemPrompt(mode),
-      input: JSON.stringify({ timeSlot, openTasksDueToday: dueToday, overdueOpenTasks: overdue }),
+      instructions: `${buildSystemPrompt(mode)}
+history — твої попередні репліки та тодішні лічильники, від новішого до старішого. Якщо зміна помітна, природно продовж думку; інакше скажи щось свіже або відреагуй на час доби. Не повторюй реплік. Факти бери з current. Менше прострочених задач саме по собі не означає, що їх виконали.`,
+      input: JSON.stringify({ current: { date, timeSlot, ...counts }, history }),
       reasoning: { effort: 'minimal' },
       max_output_tokens: 120,
       store: false,
@@ -129,7 +137,7 @@ async function generatePilotHint(
   }
 
   const saved = await MimirOpenAiCache.findOneAndUpdate(
-    key, { $setOnInsert: { mode, text, pose: SLOT_POSE[timeSlot][mode] } },
+    key, { $setOnInsert: { mode, text, pose: SLOT_POSE[timeSlot][mode], ...counts } },
     { upsert: true, new: true },
   ).lean()
   return { text: saved.text, pose: saved.pose, slot: timeSlot, cached: false }

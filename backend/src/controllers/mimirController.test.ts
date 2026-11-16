@@ -7,11 +7,17 @@ import { getMimirHint, isMimirOpenAiPilot } from './mimirController'
 vi.mock('../models/SprintTask', () => ({ default: { countDocuments: vi.fn() } }))
 vi.mock('../models/MimirCache', () => ({
   default: { findOne: vi.fn() },
-  MimirOpenAiCache: { findOne: vi.fn(), findOneAndUpdate: vi.fn() },
+  MimirOpenAiCache: { find: vi.fn(), findOne: vi.fn(), findOneAndUpdate: vi.fn() },
 }))
 
 const reply = 'Два борги перед Норнами: почни з найменшого.'
 const fetchModel = vi.fn<typeof fetch>()
+const historyQuery = {
+  sort: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
+  select: vi.fn().mockReturnThis(),
+  lean: vi.fn(),
+}
 
 function request(userId: string) {
   const res = { set: vi.fn(), status: vi.fn().mockReturnThis(), json: vi.fn() }
@@ -28,6 +34,11 @@ describe('Mimir OpenAI pilot', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-11-16T21:30:00Z')) // 23:30 in Kyiv (UTC+2)
     vi.mocked(MimirOpenAiCache.findOne).mockReturnValue({ lean: async () => null } as never)
+    vi.mocked(MimirOpenAiCache.find).mockReturnValue(historyQuery as never)
+    historyQuery.sort.mockReturnThis()
+    historyQuery.limit.mockReturnThis()
+    historyQuery.select.mockReturnThis()
+    historyQuery.lean.mockResolvedValue([])
   })
 
   afterEach(() => {
@@ -47,7 +58,9 @@ describe('Mimir OpenAI pilot', () => {
     expect(isMimirOpenAiPilot('pilot-profile')).toBe(false)
   })
 
-  it('uses the local date, sends only task counts, and coalesces concurrent generations', async () => {
+  it('uses the local date, sends only scoped memory and counts, and coalesces concurrent generations', async () => {
+    const previous = { date: '2026-11-16', timeSlot: 'morning', text: 'Норни нарахували три борги.', overdueOpenTasks: 3 }
+    historyQuery.lean.mockResolvedValue([previous])
     vi.mocked(SprintTask.countDocuments).mockResolvedValueOnce(1).mockResolvedValueOnce(2)
     fetchModel.mockResolvedValue(Response.json({
       status: 'completed',
@@ -66,7 +79,21 @@ describe('Mimir OpenAI pilot', () => {
     const [url, init] = fetchModel.mock.calls[0]
     expect(url).toBe('https://api.openai.com/v1/responses')
     const body = JSON.parse(String(init?.body))
-    expect(JSON.parse(body.input)).toEqual({ timeSlot: 'evening', openTasksDueToday: 1, overdueOpenTasks: 2 })
+    expect(MimirOpenAiCache.find).toHaveBeenCalledWith({
+      userId: 'pilot-profile',
+      createdAt: { $gte: new Date('2026-11-15T20:30:00Z') },
+      $nor: [{ date: '2026-11-16', timeSlot: 'evening' }],
+    })
+    expect(historyQuery.limit).toHaveBeenCalledWith(3)
+    expect(JSON.parse(body.input)).toEqual({
+      current: { date: '2026-11-16', timeSlot: 'evening', openTasksDueToday: 1, overdueOpenTasks: 2 },
+      history: [previous],
+    })
+    expect(MimirOpenAiCache.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.anything(),
+      { $setOnInsert: expect.objectContaining({ openTasksDueToday: 1, overdueOpenTasks: 2 }) },
+      expect.anything(),
+    )
     expect(body.store).toBe(false)
     expect(first.res.json).toHaveBeenCalledWith({ text: reply, pose: 'skeptical', slot: 'evening', cached: false })
     expect(second.res.json).toHaveBeenCalledWith({ text: reply, pose: 'skeptical', slot: 'evening', cached: false })

@@ -8,6 +8,8 @@ export interface IMimirCache extends Document {
   text: string
   pose: string
   createdAt: Date
+  openTasksDueToday?: number
+  overdueOpenTasks?: number
 }
 
 const MimirCacheSchema = new Schema<IMimirCache>({
@@ -25,4 +27,9 @@ MimirCacheSchema.index({ userId: 1, date: 1, timeSlot: 1 }, { unique: true })
 export default mongoose.model<IMimirCache>('MimirCache', MimirCacheSchema)
 
 // Separate collection so enabling or disabling the pilot cannot reuse the other provider's text.
-export const MimirOpenAiCache = mongoose.model<IMimirCache>('MimirOpenAiCache', MimirCacheSchema.clone())
+const MimirOpenAiCacheSchema = MimirCacheSchema.clone().add({
+  openTasksDueToday: Number,
+  overdueOpenTasks: Number,
+})
+
+export const MimirOpenAiCache = mongoose.model<IMimirCache>('MimirOpenAiCache', MimirOpenAiCacheSchema)
