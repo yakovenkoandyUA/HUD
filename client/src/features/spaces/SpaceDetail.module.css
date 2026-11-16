@@ -886,12 +886,24 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  margin: -8px 0 10px;
-  padding: 8px 0;
+  margin: -12px 0 6px;
+  padding: 4px 0;
   background: var(--bg2);
 }
 
-.petEditorTabs button { min-height: 44px; }
+.petEditorSegments {
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  background: var(--bg);
+}
+.petEditorSegments button {
+  min-height: 44px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+}
+.petEditorSegments button[aria-pressed='false'] { border-color: transparent; }
 
 .petSettingsFields {
   min-width: 0;

@@ -23,7 +23,6 @@ const PetProfileEditor: React.FC<PetProfileEditorProps> = ({ saving, profile, sp
     species: profile?.species ?? '',
     breed: profile?.breed ?? '',
     birthDate: profile?.birthDate ?? null,
-    weight: profile?.weight ?? null,
     photoUrl: profile?.photoUrl ?? '',
     chipNumber: profile?.chipNumber ?? '',
     passportNumber: profile?.passportNumber ?? '',
@@ -34,11 +33,13 @@ const PetProfileEditor: React.FC<PetProfileEditorProps> = ({ saving, profile, sp
   const [breed, setBreed]       = useState(profile?.breed ?? '')
   const [birthDate, setBirthDate]         = useState(profile?.birthDate ?? '')
   const [birthDateOpen, setBirthDateOpen] = useState(false)
-  const [weight, setWeight]     = useState(profile?.weight?.toString() ?? '')
   const [photoUrl, setPhotoUrl] = useState(profile?.photoUrl ?? '')
   const [chipNum, setChipNum]   = useState(profile?.chipNumber ?? '')
   const [passport, setPassport] = useState(profile?.passportNumber ?? '')
   const [saveError, setSaveError] = useState('')
+  const [photoActionsOpen, setPhotoActionsOpen] = useState(false)
+  const [documentsOpen, setDocumentsOpen] = useState(false)
+  const documentCount = [chipNum, passport].filter(value => value.trim()).length
 
   const [pendingImgSrc, setPendingImgSrc] = useState<string | null>(null)
   const [cropOffset, setCropOffset]       = useState({ x: 0, y: 0 })
@@ -46,6 +47,7 @@ const PetProfileEditor: React.FC<PetProfileEditorProps> = ({ saving, profile, sp
   const [cropBusy, setCropBusy]           = useState(false)
   const [naturalSize, setNaturalSize]     = useState({ w: 0, h: 0 })
 
+  const avatarButtonRef = useRef<HTMLButtonElement>(null)
   const fileInputRef   = useRef<HTMLInputElement>(null)
   const cropCircleRef  = useRef<HTMLDivElement>(null)
   const cropImgRef     = useRef<HTMLImageElement>(null)
@@ -74,6 +76,7 @@ const PetProfileEditor: React.FC<PetProfileEditorProps> = ({ saving, profile, sp
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    setPhotoActionsOpen(false)
     setPendingImgSrc(URL.createObjectURL(file))
     setCropOffset({ x: 0, y: 0 }); setCropScale(1)
     e.target.value = ''
@@ -166,18 +169,11 @@ const PetProfileEditor: React.FC<PetProfileEditorProps> = ({ saving, profile, sp
 
   const handleSave = async () => {
     setSaveError('')
-    const weightValue = weight ? Number(weight) : null
-    if (weightValue !== baseline.current.weight && weightValue !== null && (!Number.isFinite(weightValue) || weightValue <= 0)) {
-      setSaveError('Вкажи вагу більше нуля.')
-      return
-    }
-
     const draft = {
       name: name.trim(),
       species: species.trim(),
       breed: breed.trim(),
       birthDate: birthDate || null,
-      weight: weightValue,
       photoUrl,
       chipNumber: chipNum.trim(),
       passportNumber: passport.trim(),
@@ -224,7 +220,7 @@ const PetProfileEditor: React.FC<PetProfileEditorProps> = ({ saving, profile, sp
             </div>
             <p className={styles.cropHint}>Перетягни · зводь пальці для масштабу</p>
           </div>
-          <div className={styles.sheetFooter}>
+          <div className={styles.cropFooter}>
             <div className={styles.cropFooterBtns}>
               <button type="button" className={styles.cropCancelBtn} onClick={handleCropCancel} disabled={cropBusy}>Скасувати</button>
               <button type="button" className={styles.cropConfirmBtn} onClick={handleCropConfirm} disabled={cropBusy}>
@@ -236,64 +232,83 @@ const PetProfileEditor: React.FC<PetProfileEditorProps> = ({ saving, profile, sp
       ) : (
         <>
           <fieldset className={styles.sheetBody} disabled={saving}>
-            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileSelected} />
+            <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleFileSelected} />
             <div className={styles.avatarHero}>
-              <div className={styles.avatarSection}>
-                <button type="button" className={styles.avatarWrap} onClick={() => fileInputRef.current?.click()} aria-label="Змінити фото улюбленця">
-                  <span className={styles.avatarCircle}>
-                    {photoUrl
-                      ? <img src={photoUrl} alt="" className={styles.avatarCircleImg} />
-                      : <svg className={styles.avatarPlaceholderIcon} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
-                        </svg>
-                    }
-                  </span>
-                  <span className={styles.avatarEditBadge} aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </span>
-                </button>
-                {photoUrl && (
-                  <button type="button" className={styles.avatarRemoveBtn} onClick={() => setPhotoUrl('')}>Видалити фото</button>
-                )}
-              </div>
-
-              <div className={styles.avatarFields}>
-                <div className={styles.field}>
-                  <label htmlFor={fieldId + "-name"} className={styles.fieldLabel}>КЛИЧКА</label>
-                  <input id={fieldId + "-name"} className={styles.fieldInput} value={name} onChange={e => setName(e.target.value)} placeholder={spaceName} />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={fieldId + "-species"} className={styles.fieldLabel}>ВИД</label>
-                  <input id={fieldId + "-species"} className={styles.fieldInput} value={species} onChange={e => setSpecies(e.target.value)} placeholder="Кіт, Собака…" />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor={fieldId + "-breed"} className={styles.fieldLabel}>ПОРОДА</label>
-                  <input id={fieldId + "-breed"} className={styles.fieldInput} value={breed} onChange={e => setBreed(e.target.value)} placeholder="—" />
-                </div>
+              <button
+                ref={avatarButtonRef}
+                type="button"
+                className={styles.avatarWrap}
+                onClick={() => photoUrl ? setPhotoActionsOpen(open => !open) : fileInputRef.current?.click()}
+                aria-label={photoUrl ? 'Дії з фото улюбленця' : 'Додати фото улюбленця'}
+                aria-expanded={photoUrl ? photoActionsOpen : undefined}
+                aria-controls={photoActionsOpen ? fieldId + '-photoActions' : undefined}
+              >
+                <span className={styles.avatarCircle}>
+                  {photoUrl
+                    ? <img src={photoUrl} alt="" className={styles.avatarCircleImg} />
+                    : <svg className={styles.avatarPlaceholderIcon} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                      </svg>
+                  }
+                </span>
+                <span className={styles.avatarEditBadge} aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </span>
+              </button>
+              <div className={styles.field}>
+                <label htmlFor={fieldId + '-name'} className={styles.fieldLabel}>Кличка</label>
+                <input id={fieldId + '-name'} className={styles.fieldInput} value={name} onChange={e => setName(e.target.value)} placeholder={spaceName} />
               </div>
             </div>
-
-            <div className={styles.fieldRow}>
-              <div className={styles.field}>
-                <label htmlFor={fieldId + "-birthDate"} className={styles.fieldLabel}>ДАТА НАРОДЖЕННЯ</label>
-                <button id={fieldId + "-birthDate"} type="button" className={styles.dateField} onClick={() => setBirthDateOpen(true)}>
-                  {birthDate ? formatDateUA(birthDate.slice(0, 10)) : 'Не вказано'}
-                </button>
-                {birthDateOpen && <CustomDatePicker value={birthDate} onChange={v => { setBirthDate(v); setBirthDateOpen(false) }} onClose={() => setBirthDateOpen(false)} />}
+            {photoActionsOpen && (
+              <div id={fieldId + '-photoActions'} className={styles.photoActions} role="group" aria-label="Дії з фото">
+                <button type="button" onClick={() => fileInputRef.current?.click()}>Замінити фото</button>
+                <button type="button" className={styles.removePhoto} onClick={() => {
+                  setPhotoUrl('')
+                  setPhotoActionsOpen(false)
+                  avatarButtonRef.current?.focus()
+                }}>Видалити фото</button>
               </div>
-              <div className={styles.field}>
-                <label htmlFor={fieldId + "-weight"} className={styles.fieldLabel}>ВАГА (кг)</label>
-                <input id={fieldId + "-weight"} className={styles.fieldInput} type="number" inputMode="decimal" min="0.1" step="0.1" value={weight} onChange={e => setWeight(e.target.value)} placeholder="—" />
-              </div>
-            </div>
-
+            )}
             <div className={styles.field}>
-              <label htmlFor={fieldId + "-chipNum"} className={styles.fieldLabel}>НОМЕР МІКРОЧІПА</label>
-              <input id={fieldId + "-chipNum"} className={styles.fieldInput} value={chipNum} onChange={e => setChipNum(e.target.value)} placeholder="—" />
+              <label htmlFor={fieldId + '-species'} className={styles.fieldLabel}>Вид</label>
+              <input id={fieldId + '-species'} className={styles.fieldInput} value={species} onChange={e => setSpecies(e.target.value)} placeholder="Кіт, собака…" />
             </div>
             <div className={styles.field}>
-              <label htmlFor={fieldId + "-passport"} className={styles.fieldLabel}>НОМЕР ПАСПОРТА</label>
-              <input id={fieldId + "-passport"} className={styles.fieldInput} value={passport} onChange={e => setPassport(e.target.value)} placeholder="—" />
+              <label htmlFor={fieldId + '-breed'} className={styles.fieldLabel}>Порода</label>
+              <input id={fieldId + '-breed'} className={styles.fieldInput} value={breed} onChange={e => setBreed(e.target.value)} placeholder="—" />
+            </div>
+            <div className={styles.field}>
+              <label htmlFor={fieldId + '-birthDate'} className={styles.fieldLabel}>Дата народження</label>
+              <button id={fieldId + '-birthDate'} type="button" className={styles.dateField} onClick={() => setBirthDateOpen(true)}>
+                {birthDate ? formatDateUA(birthDate.slice(0, 10)) : 'Не вказано'}
+              </button>
+              {birthDateOpen && <CustomDatePicker value={birthDate} onChange={v => { setBirthDate(v); setBirthDateOpen(false) }} onClose={() => setBirthDateOpen(false)} />}
+            </div>
+            <div className={styles.documents}>
+              <button
+                type="button"
+                className={styles.documentsToggle}
+                aria-expanded={documentsOpen}
+                aria-controls={fieldId + '-documents'}
+                onClick={() => setDocumentsOpen(open => !open)}
+              >
+                Документи
+                {documentCount > 0 && <span className={styles.documentsCount}>{documentCount} заповнено</span>}
+                <svg className={styles.documentsChevron} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+              <div id={fieldId + '-documents'} className={styles.documentsBody} inert={!documentsOpen}>
+                <div className={styles.documentsFields}>
+                  <div className={styles.field}>
+                    <label htmlFor={fieldId + '-chipNum'} className={styles.fieldLabel}>Номер мікрочіпа</label>
+                    <input id={fieldId + '-chipNum'} className={styles.fieldInput} value={chipNum} onChange={e => setChipNum(e.target.value)} placeholder="—" />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor={fieldId + '-passport'} className={styles.fieldLabel}>Номер паспорта</label>
+                    <input id={fieldId + '-passport'} className={styles.fieldInput} value={passport} onChange={e => setPassport(e.target.value)} placeholder="—" />
+                  </div>
+                </div>
+              </div>
             </div>
           </fieldset>
 

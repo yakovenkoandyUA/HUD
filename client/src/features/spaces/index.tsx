@@ -1733,6 +1733,7 @@ const SpaceDetailScreen: React.FC = () => {
                 options={[{ value: 'pet', label: 'Улюбленець' }, { value: 'space', label: 'Простір' }]}
                 value={editTab}
                 onChange={setEditTab}
+                className={styles.petEditorSegments}
                 columns={2}
               />
             </div>
