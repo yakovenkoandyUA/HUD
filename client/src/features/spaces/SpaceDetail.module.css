@@ -886,24 +886,37 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  margin: -12px 0 6px;
-  padding: 4px 0;
-  background: var(--bg2);
+  margin: -20px -20px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 
 .petEditorSegments {
-  gap: 3px;
-  padding: 3px;
-  border: 1px solid var(--border2);
-  border-radius: 12px;
-  background: var(--bg);
+  gap: 0;
 }
 .petEditorSegments button {
   min-height: 44px;
-  border-radius: 8px;
-  font-size: 0.8125rem;
+  margin-bottom: -1px;
+  padding: 13px 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-.petEditorSegments button[aria-pressed='false'] { border-color: transparent; }
+.petEditorSegments button[aria-pressed='true'] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+.petEditorSegments button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+.petEditorSegments button:active { transform: none; }
 
 .petSettingsFields {
   min-width: 0;
