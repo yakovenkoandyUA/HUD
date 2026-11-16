@@ -158,6 +158,8 @@ Slide-in panel from the left, triggered by the avatar in AppHeader.
 | `usePlan()` | Поточний план юзера (`free\|personal\|couple\|family`) |
 | `usePwaInstall()` | PWA install prompt |
 | `usePushSubscription()` | Синхронізація Web Push підписки пристрою після входу, ручне ввімкнення й вимкнення, тест на поточному пристрої |
+
+`features/spaces/components/PetProfileEditor` містить поля профілю й кадрування аватара для спільного редактора простору. Вибір вкладок використовує `PillSelector`, а активний варіант має стан `aria-pressed`.
 | `useAuth()` | Зручний доступ до profileStore |
 | `useWeather()` | Погода по місту профілю |
 | `useMimirHint(context)` | Статична підказка Міміра по контексту |
