@@ -29,8 +29,8 @@
   - `assertLimit(user, limitKey, currentCount)` — кидає `{ status:403, code:'PLAN_LIMIT', limitKey, limit }` (no-op аналогічно)
   - `requireFeature(feature)` — Express middleware factory, передає помилку в `next(err)`
 - `errorHandler.ts` — обробляє `PLAN_GATE` → `{ error, code, feature }` і `PLAN_LIMIT` → `{ error, code, limitKey, limit }`
-- Guards навішані: `requireFeature('aiChat'/'aiChefChat')` у `routes/ai.ts`, `requireFeature('receiptScanner')` у `routes/receipt.ts`, `requireFeature('yearbookGenerate')` у `routes/yearbook.ts`, `requireFeature('advancedFinance')` у `routes/finance.ts`, `requireFeature('sprintAi')` у `routes/sprint.ts` (AI checklist breakdown), `assertLimit(maxSpaces/sharedSpaces)` у `spaceController.ts`, timeline history у `timelineController.ts`
-- `backend/src/utils/anthropic.ts` — `callAnthropicText(messages, opts)` спільний non-streaming helper для one-shot AI фіч (checklist breakdown). Старі AI-роути (finance.ts, mimirController.ts, ai.ts) досі роблять прямий `fetch()` до Anthropic — не рефакторено, щоб не чіпати робочий код поза скоупом сесії.
+- Guards навішані: `requireFeature('aiChat'/'aiChefChat')` у `routes/ai.ts`, `requireFeature('receiptScanner')` у `routes/receipt.ts`, `requireFeature('yearbookGenerate')` у `routes/yearbook.ts`, `requireFeature('advancedFinance')` у `routes/finance.ts`, `assertLimit(maxSpaces/sharedSpaces)` у `spaceController.ts`, timeline history у `timelineController.ts`
+- AI-роути (finance.ts, mimirController.ts, ai.ts) роблять прямий `fetch()` до Anthropic — спільного helper-а немає (`utils/anthropic.ts` з `callAnthropicText` видалено разом з AI-розбивкою чек-листа).
 - **Близькі (FamilyLink) — не feature-гейт, а ліміт:** `assertLimit(user, 'maxFamilyLinks', currentLinksCount)` інлайн у `familyController.sendRequest` (не middleware, бо потрібен async count query перед перевіркою). `maxFamilyLinks`: free/personal — 2, couple/family — безліміт (-1). Рахується як `FamilyLink.countDocuments({$or:[{requester},{recipient}]})` — будь-який статус (pending+accepted) враховується в ліміт
 
 ## Plan Group (Duo/Group shared payer)
