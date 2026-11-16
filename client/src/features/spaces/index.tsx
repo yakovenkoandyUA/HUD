@@ -133,7 +133,7 @@ const SPACE_CONTEXT: Record<string, SpaceCtx> = {
 
 const DEFAULT_CTX: SpaceCtx = {
   typeLabel: '', description: '',
-  memBtnLabel: '+ Спогад', planBtnLabel: '+ План', noteBtnLabel: '+ Нотатка', taskBtnLabel: '+ Задача',
+  memBtnLabel: 'Спогад', planBtnLabel: 'План', noteBtnLabel: 'Нотатка', taskBtnLabel: 'Задача',
   txEmptyTitle: 'Транзакцій ще немає', txEmptyDesc: 'Витрати пов\'язані з цим простором з\'являться тут.',
   memEmptyTitle: 'Спогадів ще немає',  memEmptyDesc: 'Додай перший спогад у цей простір.',
   planEmptyTitle: 'Планів ще немає',   planEmptyDesc: 'Запиши перший план або ціль.',
