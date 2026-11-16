@@ -212,7 +212,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для звичок, `dueTime?: string`, `reminderSent: boolean`, `timeOfDay?: 'morning'|'afternoon'|'evening'|null` (слот для RoutineRing/TodayHabits).
 
-**Стан нагадувань SprintTask і TodoItem** — `reminderClaimUntil?: Date` резервує спробу на дві хвилини. `reminderSent` встановлюється після прийняття щонайменше одного пуша та скидається при зміні `dueDate`, `dueTime`, `nextDue`, `repeat` або `reminder`.
+**Стан нагадувань SprintTask і TodoItem** — `automaticReminderSince?: Date` вказує, коли був збережений розклад з датою і часом. `reminderSent` відповідає за ранній чи ручний пуш, `dueReminderSent` — за пуш у дедлайн. `reminderClaimUntil?: Date` резервує спробу на дві хвилини. Якщо перший час надсилання минув до збереження розкладу, рання спроба пропускається.
 
 **WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members), `totalSeasons` з TMDB, `category: 'movie'|'series'|'anime'|'book'|'game'`, `runtimeMin`/`episodeRuntimeMin` — реальна тривалість з TMDB (фільм/епізод, хв) для точного підрахунку годин у WatchlistStatsSheet, `moodProfile: { humor, tension, romance, action, drama, atmosphere }` (0-5 кожна, вручну виставляється в WatchlistDetail, за аналогією з `Drink.flavor`)
 
@@ -279,7 +279,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 - `routineReminders` — cron 09:00 UTC, нагадування про невиконані звички
 - `recurringReminders` — cron 09:00 UTC, нагадування про платежі (1/2/7 днів до)
 - `dayReminder` — денний підсумок push 18:00 UTC (21:00 Kyiv)
-- `f1Scheduler` — щопонеділка о 08:00 за Києвом анонс гоночного вікенду, окремий 5-хвилинний цикл для нагадувань квестів і тудушок, окремий 5-хвилинний цикл для сесій F1 і щоденне нагадування про регулярні платежі о 05:00. Розклад квестів використовує `Europe/Kyiv` і 09:00 для дедлайнів без часу.
+- `f1Scheduler` — щопонеділка о 08:00 за Києвом анонс гоночного вікенду, щохвилинний цикл для квестів, покупок і ручних нагадувань, 5-хвилинний цикл для сесій F1 і щоденне нагадування про регулярні платежі о 05:00. Розклад квестів і покупок використовує `Europe/Kyiv`. Для старих ручних нагадувань без часу дедлайн о 09:00.
 - `workoutReminders` — 5-хвилинний цикл, точний до `SportEvent.date` (дефолт 09:00) мінус `reminder.amount/unit`; пуш "Мімір нагадує" з випадковою мотиваційною фразою з пулу `MIMIR_WORKOUT_PHRASES`; `reminderSent` анти-дубль, скидається в контролері при зміні `date`/`reminder`
 - `accountDeletionCron` — daily 04:00 UTC, шукає `User.accountStatus:'deletion_requested'` з `deletedAt` старшим за 30 днів → `hardDeleteUser(userId)` (`scripts/hardDeleteUser.ts`) для кожного
 
