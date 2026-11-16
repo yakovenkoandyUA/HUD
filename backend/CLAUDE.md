@@ -123,8 +123,8 @@
 | `/api/labels` | GET, POST |
 | `/api/labels/:id` | PATCH, DELETE |
 | `/api/push/subscribe` | POST — зберегти підписку |
-| `/api/push/unsubscribe` | POST |
-| `/api/push/test` | POST — тестова нотифікація |
+| `/api/push/unsubscribe` | DELETE `{ endpoint }` — відписка поточного пристрою |
+| `/api/push/test` | POST `{ endpoint }` — тест для вказаної підписки поточного юзера. `accepted: true` підтверджує прийняття push-сервісом. 410 — підписка протермінована, 502 — помилка надсилання, 503 — Web Push не налаштований |
 | `/api/ai/chat` | POST — SSE streaming (Claude Haiku), domain-aware context. У пілоті приймає `discussOverdue` з Dashboard і використовує останні завершені репліки. Фінансовий домен: категорії/дні тижня/підписки рахуються кодом, баланс — через `Transaction.aggregate` |
 | `/api/ai/chat/history` | GET — `{ enabled, turns }` для поточного профілю, до 10 пар лише для пілота; чинні вимоги верифікації й доступу до AI-чату |
 | `/api/ai/chef-chat` | POST — SSE streaming (Claude Haiku), контекст рецепту з тіла запиту |
@@ -210,7 +210,9 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **SprintTask** — `weekNumber + year` = ідентифікатор тижня, `type: 'task'|'routine'`, `repeat: string` для звичок, `completionLog[]`, `checklist[]` (Mixed, `{id, title, done, parentId?, assigneeId?}` — `parentId` дає вкладеність до 3 рівнів, `assigneeId` призначає пункт на конкретного члена сім'ї з `assignedTo[]` задачі; `parent.done` рахується автоматично від дітей на фронтенді, не валідується окремо), `labels[]`, `assignedTo[]`, `deletedAt` (soft-delete), `dueTime?: string` (HH:MM, опційний час дедлайну), `reminderSent: boolean` (анти-дубль для 5-хвилинного reminder-циклу, скидається при зміні `dueDate`/`dueTime`/`nextDue`/`reminder`), `spaceId?: string | null` (simple string ref, не ObjectId — для фільтра `GET /api/sprint/tasks?spaceId=`)
 
-**TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для звичок, `dueTime?: string`, `reminderSent: boolean`, `timeOfDay?: 'morning'|'afternoon'|'evening'|null` (слот для RoutineRing/TodayHabits)
+**TodoItem** — `completionHistory: string[]` для стріків, `checklist[]` підзадачі, `repeat` + `nextDue` для звичок, `dueTime?: string`, `reminderSent: boolean`, `timeOfDay?: 'morning'|'afternoon'|'evening'|null` (слот для RoutineRing/TodayHabits).
+
+**Стан нагадувань SprintTask і TodoItem** — `reminderClaimUntil?: Date` резервує спробу на дві хвилини. `reminderSent` встановлюється після прийняття щонайменше одного пуша та скидається при зміні `dueDate`, `dueTime`, `nextDue`, `repeat` або `reminder`.
 
 **WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members), `totalSeasons` з TMDB, `category: 'movie'|'series'|'anime'|'book'|'game'`, `runtimeMin`/`episodeRuntimeMin` — реальна тривалість з TMDB (фільм/епізод, хв) для точного підрахунку годин у WatchlistStatsSheet, `moodProfile: { humor, tension, romance, action, drama, atmosphere }` (0-5 кожна, вручну виставляється в WatchlistDetail, за аналогією з `Drink.flavor`)
 
@@ -277,7 +279,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 - `routineReminders` — cron 09:00 UTC, нагадування про невиконані звички
 - `recurringReminders` — cron 09:00 UTC, нагадування про платежі (1/2/7 днів до)
 - `dayReminder` — денний підсумок push 18:00 UTC (21:00 Kyiv)
-- `f1Scheduler` — Sun 08:00 Kyiv weekend-алерт + **5-хвилинний reminder-цикл** для квестів/тудушок (точний до `dueDate`+`dueTime`, дефолт 09:00 якщо час не вказано; `reminderSent` анти-дубль) + daily 05:00 UTC нагадування про регулярні платежі (винесено в окремий cron, незалежний від 5-хвилинного циклу)
+- `f1Scheduler` — щопонеділка о 08:00 за Києвом анонс гоночного вікенду, окремий 5-хвилинний цикл для нагадувань квестів і тудушок, окремий 5-хвилинний цикл для сесій F1 і щоденне нагадування про регулярні платежі о 05:00. Розклад квестів використовує `Europe/Kyiv` і 09:00 для дедлайнів без часу.
 - `workoutReminders` — 5-хвилинний цикл, точний до `SportEvent.date` (дефолт 09:00) мінус `reminder.amount/unit`; пуш "Мімір нагадує" з випадковою мотиваційною фразою з пулу `MIMIR_WORKOUT_PHRASES`; `reminderSent` анти-дубль, скидається в контролері при зміні `date`/`reminder`
 - `accountDeletionCron` — daily 04:00 UTC, шукає `User.accountStatus:'deletion_requested'` з `deletedAt` старшим за 30 днів → `hardDeleteUser(userId)` (`scripts/hardDeleteUser.ts`) для кожного
 

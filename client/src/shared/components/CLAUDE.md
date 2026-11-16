@@ -157,7 +157,7 @@ Slide-in panel from the left, triggered by the avatar in AppHeader.
 | `useImageUpload()` | Upload flow + Cloudinary URL |
 | `usePlan()` | Поточний план юзера (`free\|personal\|couple\|family`) |
 | `usePwaInstall()` | PWA install prompt |
-| `usePushSubscription()` | Web Push підписка |
+| `usePushSubscription()` | Синхронізація Web Push підписки пристрою після входу, ручне ввімкнення й вимкнення, тест на поточному пристрої |
 | `useAuth()` | Зручний доступ до profileStore |
 | `useWeather()` | Погода по місту профілю |
 | `useMimirHint(context)` | Статична підказка Міміра по контексту |
