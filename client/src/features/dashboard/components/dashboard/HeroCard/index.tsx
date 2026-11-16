@@ -178,9 +178,7 @@ const HeroCard: React.FC<HeroCardProps> = ({
       <div className={styles.balanceCard}>
         <DetailsLink onClick={onDetailsClick} />
         <div className={styles.balanceTop}>
-          <span className={styles.balanceAmount}>
-            {fmt(displayed)}<span className={styles.balanceCurrency}> ₴</span>
-          </span>
+          <span className={styles.balanceAmount}>{fmt(displayed)}<span className={styles.balanceCurrency}>₴</span></span>
           <span className={styles.balanceSubLabel}>за цей місяць</span>
         </div>
 
