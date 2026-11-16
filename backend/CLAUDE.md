@@ -195,7 +195,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **ProcessedBillingEvent** — idempotency таблиця. `provider`, `eventKey` (composite: `{provider}:{orderRef}:{status}:{amount}:{processingDate}`), `processedAt`. Unique compound index `{provider, eventKey}` — захист від дублювання callbacks
 
-**Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, `source: 'manual'|'monobank'|'csv'`, `tripMemoryId?: string|null` (опційне посилання на trip-спогад для блоку "Витрати в поїздці"), `spaceId?: string|null` (для фільтра `GET /api/transactions?spaceId=`), сортувати по `createdAt`
+**Transaction** — `type: 'income'|'expense'`, `date: string` (не Date), `categoryId` → Category, `source: 'manual'|'monobank'|'csv'`, `tripMemoryId?: string|null` (опційне посилання на trip-спогад для блоку "Витрати в поїздці"), `spaceId?: string|null` (для фільтра `GET /api/transactions?spaceId=`), `walletId: 'sense'|'mono'` (default 'sense'; старі документи без поля = Sense, тому всі агрегації головного балансу фільтрують `walletId: { $ne: 'mono' }` — stats, ai chat context, finance report, yearbook), сортувати по `createdAt`
 
 **Category** — `name`, `icon` (Tabler ti-*), `color` (hex), `userId`, `isDefault`, `isActive`, `parentId` (субкатегорії), `order: number`
 
@@ -233,7 +233,7 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **TripProfile sub-doc** — `destination, startDate: string|null, endDate: string|null, travelers: string[], status: 'planning'|'ongoing'|'completed'`
 
-**BankConnection** — `userId`, `bank: 'monobank'`, `encryptedToken` (AES-256-GCM), `accountId`, `lastSync`
+**BankConnection** — `userId`, `bank: 'monobank'`, `encryptedToken` (AES-256-GCM), `accountId`, `lastSync`, `balance: number|null` (живий баланс картки з Monobank client-info, оновлюється на connect/sync). Для юзерів з `User.walletsEnabled` sync і CSV-імпорт пишуть транзакції з `walletId: 'mono'`; для решти — 'sense'. Скрипти: `scripts/enableWallets.ts <username>`, `scripts/resetFinance.ts <username> [--confirm]` (dry-run за замовчуванням)
 
 **MoodLog** — `userId`, `date: string`, `score: 1-5`, `notes: string`
 

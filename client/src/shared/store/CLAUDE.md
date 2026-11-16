@@ -196,6 +196,7 @@ interface FinanceState {
 }
 ```
 
+- **Гаманці (`walletsEnabled`, per-profile флаг):** `transactions`/`balance` завжди = головний гаманець Sense (всі існуючі споживачі не змінені); Mono живе окремо в `monoTransactions` і НЕ впливає на `balance`. `addTopup`/`addExpense` приймають останнім аргументом `walletId?: 'sense'|'mono'`. Баланс Mono — з `bankStore.connection.balance` (Monobank API), fallback — сума `monoTransactions`.
 - Optimistic updates для всіх мутацій: UI оновлюється одразу, потім синхронізується з бекендом
 - Транзакції кешуються в `sessionStorage` (max 200 записів у пам'яті)
 - `fetchTransactions(month)` — якщо передано місяць, кеш НЕ оновлюється (фільтрований результат)
