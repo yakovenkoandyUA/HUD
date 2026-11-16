@@ -4,7 +4,8 @@ import SprintTask from '../models/SprintTask'
 import TodoItem from '../models/TodoItem'
 import RecurringPayment from '../models/RecurringPayment'
 import F1SessionReminder from '../models/F1SessionReminder'
-import { sendNotification, sendToAll, sendPushToUser } from './webpush'
+import { isWebPushConfigured, sendNotification, sendToAll, sendPushToUser } from './webpush'
+import { questReminderTime } from '../utils/questReminderTime'
 
 // 2026 F1 race dates (race Sunday, ISO format)
 const F1_2026_RACES: Array<{ name: string; date: string; flag: string }> = [
@@ -81,18 +82,14 @@ interface ReminderItem {
   reminder?: { amount: number; unit: string } | null
 }
 
-// Дедлайн + час (за умовчанням 09:00, якщо час не вказано) → конкретний момент
-function parseDueAt(dateStr: string, timeStr?: string | null): Date {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const [hh, mm] = (timeStr || '09:00').split(':').map(Number)
-  return new Date(y, m - 1, d, hh, mm, 0, 0)
-}
+const REMINDER_GRACE_MS = 24 * 60 * 60 * 1000
+const REMINDER_CLAIM_MS = 2 * 60 * 1000
 
 // Перевіряє та шле нагадування для одної моделі (SprintTask або TodoItem), позначає reminderSent
 async function processReminders(
-  Model: { updateOne: (filter: Record<string, unknown>, update: Record<string, unknown>) => Promise<unknown> },
+  Model: { updateOne: (filter: Record<string, unknown>, update: Record<string, unknown>) => Promise<{ matchedCount: number }> },
   items: ReminderItem[],
-  now: Date
+  activeFilter: Record<string, unknown>,
 ): Promise<number> {
   let sentCount = 0
   for (const item of items) {
@@ -101,49 +98,59 @@ async function processReminders(
     const dateStr = isRecurring ? item.nextDue : item.dueDate
     if (!dateStr) continue
 
-    const dueAt = parseDueAt(dateStr, item.dueTime)
-    const reminderAt = new Date(dueAt)
-    const { amount, unit } = item.reminder
-    if (unit === 'minutes') reminderAt.setMinutes(reminderAt.getMinutes() - amount)
-    else if (unit === 'hours') reminderAt.setHours(reminderAt.getHours() - amount)
-    else if (unit === 'days') reminderAt.setDate(reminderAt.getDate() - amount)
-    else if (unit === 'weeks') reminderAt.setDate(reminderAt.getDate() - amount * 7)
+    const schedule = questReminderTime(dateStr, item.dueTime, item.reminder)
+    const now = Date.now()
+    if (!schedule || now < schedule.reminderAt) continue
+    const ttl = Math.floor((schedule.dueAt + REMINDER_GRACE_MS - now) / 1000)
+    if (ttl <= 0) continue
 
-    if (now < reminderAt) continue
-    // Пропущене нагадування (сервер був недоступний/деплой) — не спамити через добу
-    if (now.getTime() - dueAt.getTime() > 24 * 60 * 60 * 1000) continue
-
-    const subs = await PushSubscription.find({ userId: item.userId }).lean()
-    for (const sub of subs) {
-      try {
-        await sendNotification(
-          { endpoint: sub.endpoint, keys: sub.keys },
-          { title: 'Час виконати', body: item.title, url: '/sprint', tag: `reminder-${String(item._id)}` }
-        )
-      } catch (err: unknown) {
-        if ((err as { expired?: boolean }).expired) {
-          await PushSubscription.findByIdAndDelete(sub._id)
-          console.log(`🗑 Removed expired subscription: ${String(sub._id)}`)
-        }
-      }
+    const currentSchedule = {
+      ...activeFilter,
+      _id: item._id,
+      repeat: item.repeat ?? null,
+      [isRecurring ? 'nextDue' : 'dueDate']: dateStr,
+      dueTime: item.dueTime ?? null,
+      'reminder.amount': item.reminder.amount,
+      'reminder.unit': item.reminder.unit,
     }
-    await Model.updateOne({ _id: item._id }, { reminderSent: true })
-    sentCount++
+    // Atomically reserve this attempt so concurrent cron runs don't both send it.
+    const claimUntil = new Date(now + REMINDER_CLAIM_MS)
+    const claim = await Model.updateOne({
+      ...currentSchedule,
+      $or: [{ reminderClaimUntil: null }, { reminderClaimUntil: { $lte: new Date(now) } }],
+    }, { $set: { reminderClaimUntil: claimUntil } })
+    if (!claim.matchedCount) continue
+
+    const claimFilter = { _id: item._id, reminderClaimUntil: claimUntil }
+    try {
+      const { accepted } = await sendPushToUser(item.userId, {
+        title: 'Час виконати',
+        body: item.title,
+        url: `/sprint?quest=${String(item._id)}`,
+        tag: `reminder-${String(item._id)}`,
+      }, Math.min(ttl, REMINDER_GRACE_MS / 1000))
+      if (accepted > 0) {
+        await Model.updateOne({ ...currentSchedule, ...claimFilter }, { $set: { reminderSent: true } })
+        sentCount++
+      }
+    } finally {
+      await Model.updateOne(claimFilter, { $unset: { reminderClaimUntil: '' } })
+    }
   }
   return sentCount
 }
 
 async function sendReminderNotifications(): Promise<void> {
-  const now = new Date()
   const baseFilter = { reminder: { $ne: null }, reminderSent: { $ne: true }, done: false }
+  const taskFilter = { ...baseFilter, deletedAt: null }
 
   const [tasks, todos] = await Promise.all([
-    SprintTask.find({ ...baseFilter, deletedAt: null }).lean(),
+    SprintTask.find(taskFilter).lean(),
     TodoItem.find(baseFilter).lean(),
   ])
 
-  const sentTasks = await processReminders(SprintTask, tasks as unknown as ReminderItem[], now)
-  const sentTodos = await processReminders(TodoItem, todos as unknown as ReminderItem[], now)
+  const sentTasks = await processReminders(SprintTask, tasks, taskFilter)
+  const sentTodos = await processReminders(TodoItem, todos, baseFilter)
   if (sentTasks + sentTodos > 0) {
     console.log(`🔔 Reminder notifications sent (${sentTasks + sentTodos})`)
   }
@@ -193,7 +200,7 @@ async function sendRecurringPaymentNotifications(): Promise<void> {
 }
 
 export function startF1Scheduler(): void {
-  if (!process.env.VAPID_PUBLIC_KEY) {
+  if (!isWebPushConfigured()) {
     console.warn('⚠️  VAPID not configured — F1 scheduler disabled')
     return
   }
@@ -206,9 +213,7 @@ export function startF1Scheduler(): void {
   console.log('🏎 F1 race week scheduler started (Mon 08:00 Kyiv time)')
 
   // Task/quest reminders — every 5 minutes, precise to dueDate+dueTime
-  cron.schedule('*/5 * * * *', () => {
-    sendReminderNotifications().catch(console.error)
-  })
+  cron.schedule('*/5 * * * *', () => sendReminderNotifications().catch(console.error), { noOverlap: true })
   console.log('🔔 Reminder scheduler started (every 5 min)')
 
   // F1 session reminders — every 5 minutes, precise to sessionAt - 30min

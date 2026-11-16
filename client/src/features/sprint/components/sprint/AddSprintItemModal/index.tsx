@@ -12,6 +12,7 @@ import { useUiStore } from '@/shared/store/uiStore'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
 import { usePlan } from '@/shared/hooks/usePlan'
 import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
+import { subscribeToPush } from '@/shared/utils/pushManager'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import { suggestDueFromLabels } from '@/features/sprint/utils/sprint'
@@ -155,6 +156,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   const [showInitialDatePicker, setShowInitialDatePicker] = useState(false)
   const [pendingImages, setPendingImages]       = useState<File[]>([])
   const [imageUploading, setImageUploading]     = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const imageInputRef                           = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -189,6 +192,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   }, [newTitle, newType, items])
 
   const reset = () => {
+    setSaveError('')
     setNewTitle('')
     setNewType(defaultType ?? 'todo')
     setNewPriority(null)
@@ -217,13 +221,15 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
   }
 
   const handleClose = () => {
+    if (saving || imageUploading) return
     reset()
     onClose()
   }
 
   const handleAdd = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!newTitle.trim()) return
+    if (!newTitle.trim() || saving || imageUploading) return
+    setSaveError('')
 
     const isRoutine = newType === 'todo' && newRepeat !== 'none'
 
@@ -254,7 +260,8 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
         ? nextWeekDayFrom(tomorrow, newRepeatConfig.weekDays)
         : hasStartDate ? repeatStartDate : new Date().toISOString().split('T')[0]
 
-    addItem({
+    setSaving(true)
+    const saved = await addItem({
       type:     newType,
       title:    newTitle.trim(),
       priority: newType === 'shopping' ? (newPriority ?? undefined) : undefined,
@@ -276,6 +283,12 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     },
     // Rollback images if backend save fails
     imagePublicIds.length > 0 ? imagePublicIds : undefined)
+    setSaving(false)
+
+    if (!saved) {
+      setSaveError('Сервер не підтвердив збереження. Перевір список перед повтором.')
+      return
+    }
 
     if (newType !== 'shopping') useAchievementsStore.getState().unlock('first-quest')
 
@@ -283,6 +296,12 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
     showToast(msg, 'success')
     reset()
     onClose()
+  }
+
+  const enableReminderPush = () => {
+    void subscribeToPush().then(enabled => {
+      if (!enabled) showToast('Щоб отримувати пуші на цьому пристрої, перевір Я → Система', 'error')
+    })
   }
 
   const modalTitle = newType === 'shopping' ? 'Нова покупка' : 'Новий квест'
@@ -525,9 +544,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                       className={styles.metaChip}
                       onClick={() => {
                         setNewReminderAmount(1); setNewReminderUnit('days'); setShowFormReminderPicker(true)
-                        if ('Notification' in window && Notification.permission === 'default') {
-                          Notification.requestPermission().catch(() => {})
-                        }
+                        enableReminderPush()
                       }}
                     >
                       <svg width="10" height="10" viewBox="0 0 16 18" fill="none">
@@ -570,9 +587,7 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
                     type="button"
                     className={`${styles.metaChip} ${newReminder ? styles.metaChipActive : ''}`}
                     onClick={() => {
-                      if (!newReminder && 'Notification' in window && Notification.permission === 'default') {
-                        Notification.requestPermission().catch(() => {})
-                      }
+                      if (!showReminderEditor) enableReminderPush()
                       setShowReminderEditor(v => !v); setShowTimeEditor(false)
                     }}
                   >
@@ -745,8 +760,9 @@ const AddSprintItemModal: React.FC<Props> = ({ isOpen, onClose, defaultType, ini
             </div>
           )}
 
-          <Button type="submit" fullWidth disabled={imageUploading || !newTitle.trim()}>
-            {imageUploading ? 'Завантаження...' : 'Додати'}
+          {saveError && <p className={styles.saveError} role="alert">{saveError}</p>}
+          <Button type="submit" fullWidth disabled={saving || imageUploading || !newTitle.trim()}>
+            {imageUploading ? 'Завантаження…' : saving ? 'Збереження…' : 'Додати'}
           </Button>
         </form>
       </Modal>

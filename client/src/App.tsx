@@ -246,7 +246,7 @@ const App: React.FC = () => {
 
   const { token, activeProfile, updateProfile, refreshProfile } = useProfileStore()
   const { setUpdateAvailable } = useUiStore()
-  const { isSupported, isSubscribed, subscribe } = usePushSubscription()
+  usePushSubscription()
   const { isInstallable, isIOS, isStandalone, isDismissed, promptInstall, dismiss } = usePwaInstall()
   const cityAutoLocateRef = useRef(false)
 
@@ -295,21 +295,6 @@ const App: React.FC = () => {
     window.addEventListener('online', replayQueue)
     return () => window.removeEventListener('online', replayQueue)
   }, [])
-
-  useEffect(() => {
-    if (!token || !activeProfile || !isSupported || isSubscribed) return
-    async function trySubscribe() {
-      const perm = Notification.permission
-      if (perm === 'denied') return
-      const granted = perm === 'granted'
-        ? true
-        : await Notification.requestPermission().then(p => p === 'granted')
-      if (!granted) return
-      await subscribe()
-    }
-    trySubscribe()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, activeProfile, isSupported, isSubscribed])
 
   useEffect(() => {
     if (!token || !activeProfile || activeProfile.city || cityAutoLocateRef.current) return

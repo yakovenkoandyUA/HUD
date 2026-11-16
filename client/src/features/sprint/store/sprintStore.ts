@@ -191,14 +191,14 @@ interface TodoState {
   fetchTrash: () => Promise<void>
   fetchLabels: () => Promise<void>
   migrateFromLocalStorage: () => Promise<void>
-  addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>, rollbackImagePublicIds?: string[]) => void
+  addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>, rollbackImagePublicIds?: string[]) => Promise<boolean>
   addItems: (dataList: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>[]) => void
   toggleItem: (id: string, date?: string) => void
   deleteItem: (id: string) => void
   restoreItem: (id: string) => void
   purgeItem: (id: string) => void
   setSyncStatus: (s: SyncStatus) => void
-  setReminder: (id: string, reminder: UnifiedTodo['reminder']) => void
+  setReminder: (id: string, reminder: UnifiedTodo['reminder']) => Promise<boolean>
   updateTask: (id: string, updates: Partial<UnifiedTodo>) => void
   addChecklistItem: (taskId: string, title: string, parentId?: string | null) => void
   toggleChecklistItem: (taskId: string, itemId: string) => void
@@ -455,7 +455,9 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   // ── Add item ─────────────────────────────────────────────────────────────────
 
-  addItem: (data, rollbackImagePublicIds) => {
+  addItem: async (data, rollbackImagePublicIds) => {
+    const canSync = Boolean(getToken() && isBackendConfigured())
+    if (!canSync && data.reminder) return false
     const item: UnifiedTodo = {
       id: crypto.randomUUID(),
       done: false,
@@ -464,7 +466,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
     }
     sprintReqId++
     set(s => ({ items: sortItems([...s.items, item]) }))
-    if (!getToken() || !isBackendConfigured()) return
+    if (!canSync) return true
 
     const body: Record<string, unknown> = {
       ...taskBody(item),
@@ -481,14 +483,15 @@ export const useSprintStore = create<TodoState>((set, get) => ({
       body.weekStart  = ws
     }
 
-    authFetch('/api/sprint/tasks', {
+    return authFetch('/api/sprint/tasks', {
       method: 'POST',
       body: JSON.stringify(body),
     })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then((created: { _id: string }) => set(s => ({
-        items: s.items.map(i => i.id === item.id ? { ...i, id: created._id } : i),
-      })))
+      .then((created: { _id: string }) => {
+        set(s => ({ items: s.items.map(i => i.id === item.id ? { ...i, id: created._id } : i) }))
+        return true
+      })
       .catch(() => {
         if (rollbackImagePublicIds?.length) {
           authFetch('/api/sprint/images/rollback', {
@@ -496,7 +499,9 @@ export const useSprintStore = create<TodoState>((set, get) => ({
             body: JSON.stringify({ publicIds: rollbackImagePublicIds }),
           }).catch(() => {})
         }
-        get().fetchItems()
+        set(s => ({ items: s.items.filter(i => i.id !== item.id) }))
+        void get().fetchItems()
+        return false
       })
   },
 
@@ -744,14 +749,21 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   // ── Reminder ──────────────────────────────────────────────────────────────
 
-  setReminder: (id, reminder) => {
+  setReminder: async (id, reminder) => {
+    const previous = get().items.find(i => i.id === id)
+    if (!previous || !getToken() || !isBackendConfigured()) return false
     sprintReqId++
     set(s => ({ items: s.items.map(i => i.id === id ? { ...i, reminder } : i) }))
-    if (!getToken() || !isBackendConfigured()) return
-    authFetch(`/api/sprint/tasks/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ reminder: reminder ?? null }),
-    }).catch(() => {})
+    try {
+      const response = await authFetch(`/api/sprint/tasks/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ reminder: reminder ?? null }),
+      })
+      if (response.ok) return true
+    } catch { /* Offline or request failed. Restore the last known reminder. */ }
+    sprintReqId++
+    set(s => ({ items: s.items.map(i => i.id === id && i.reminder === reminder ? { ...i, reminder: previous.reminder } : i) }))
+    return false
   },
 
   // ── Toggle ────────────────────────────────────────────────────────────────

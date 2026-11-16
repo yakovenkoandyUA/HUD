@@ -19,7 +19,7 @@ const OWNER_ALLOWED = [
 const ASSIGNEE_ALLOWED = ['done', 'completionHistory', 'timeOfDay', 'checklist']
 
 // Зміна дедлайну/часу/повторення/нагадування скидає прапорець "вже надіслано" — щоб нагадування пересчиталось
-const REMINDER_RESET_FIELDS = ['dueDate', 'dueTime', 'nextDue', 'reminder']
+const REMINDER_RESET_FIELDS = ['dueDate', 'dueTime', 'nextDue', 'repeat', 'reminder']
 function touchesReminderSchedule(body: Record<string, unknown>): boolean {
   return REMINDER_RESET_FIELDS.some(k => body[k] !== undefined)
 }
@@ -108,6 +108,10 @@ export async function updateTask(req: Request, res: Response): Promise<void> {
   })
   if (task) {
     const isOwner = task.userId === req.userId
+    if (!isOwner && req.body.reminder !== undefined) {
+      res.status(403).json({ error: 'Only the owner can edit the reminder schedule' })
+      return
+    }
     const allowedFields = isOwner ? OWNER_ALLOWED : ASSIGNEE_ALLOWED
 
     // Validate spaceId change: requester must be owner/member of the target space

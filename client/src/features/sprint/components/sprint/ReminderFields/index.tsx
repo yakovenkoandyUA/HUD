@@ -40,10 +40,13 @@ const ReminderFields: React.FC<ReminderFieldsProps> = ({ amount, unit, onAmountC
     <div className={styles.amountRow}>
       <input
         type="number"
+        min={1}
+        max={999}
+        step={1}
         className={styles.amountInput}
         value={amount}
         onFocus={e => e.target.select()}
-        onChange={e => onAmountChange(e.target.value === '' ? '' : Math.min(999, Number(e.target.value)))}
+        onChange={e => onAmountChange(e.target.value === '' ? '' : Math.min(999, Math.trunc(Number(e.target.value))))}
       />
       <span className={styles.amountSuffix}>{suffix}</span>
     </div>

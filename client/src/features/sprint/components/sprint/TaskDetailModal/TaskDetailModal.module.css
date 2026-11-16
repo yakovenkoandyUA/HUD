@@ -1090,8 +1090,6 @@
 }
 .addReminderBtn:hover { border-color: var(--accent); color: var(--accent); }
 
-.addReminderIcon { flex-shrink: 0; }
-
 .reminderActive {
   display: flex;
   align-items: center;
@@ -1102,16 +1100,11 @@
   border-radius: 8px;
 }
 
-.reminderIcon {
-  flex-shrink: 0;
-  color: var(--accent);
-}
-
-.reminderActiveText {
-  flex: 1;
+.reminderError {
+  margin: 8px 0 0;
   font-family: var(--font-body);
   font-size: 13px;
-  color: var(--accent);
+  color: var(--negative);
 }
 
 .reminderClear {

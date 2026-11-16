@@ -7,6 +7,8 @@ import { useFamilyStore } from '@/shared/store/familyStore'
 import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import { usePlan } from '@/shared/hooks/usePlan'
 import { uploadToCloudinaryFull } from '@/shared/utils/uploadToCloudinary'
+import { subscribeToPush } from '@/shared/utils/pushManager'
+import { useUiStore } from '@/shared/store/uiStore'
 import CustomDatePicker from '@/shared/components/ui/CustomDatePicker'
 import TimeWheelPicker from '@/shared/components/ui/TimeWheelPicker'
 import ReminderFields, { type ReminderUnit } from '../ReminderFields'
@@ -142,6 +144,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
   const [showRepeatConfig, setShowRepeatConfig] = useState(false)
   const [showNextDuePicker, setShowNextDuePicker] = useState(false)
   const [showReminderPicker, setShowReminderPicker] = useState(false)
+  const [savingReminder, setSavingReminder] = useState(false)
+  const [reminderError, setReminderError] = useState('')
   const [reminderAmount, setReminderAmount] = useState<number | ''>(1)
   const [reminderUnit, setReminderUnit] = useState<ReminderUnit>('days')
   const [showTimePicker, setShowTimePicker] = useState(false)
@@ -476,6 +480,25 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
     }
   }
 
+  const openReminderPicker = () => {
+    setReminderError('')
+    setReminderAmount(task.reminder?.amount ?? 1)
+    setReminderUnit((task.reminder?.unit as ReminderUnit | undefined) ?? 'days')
+    setShowReminderPicker(true)
+    void subscribeToPush().then(enabled => {
+      if (!enabled) useUiStore.getState().showToast('Щоб отримувати пуші на цьому пристрої, перевір Я → Система', 'error')
+    })
+  }
+
+  const saveReminder = async (reminder: UnifiedTodo['reminder']) => {
+    setSavingReminder(true)
+    setReminderError('')
+    const saved = await setReminder(task.id, reminder)
+    setSavingReminder(false)
+    if (saved) setShowReminderPicker(false)
+    else setReminderError('Не вдалося зберегти нагадування')
+  }
+
   return (
     <>
       <div
@@ -570,6 +593,34 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
           {/* ── Scrollable body ── */}
           <div ref={bodyRef} className={styles.body}>
 
+            {(recurring ? task.nextDue : task.dueDate) && !task.ownerName && (
+              <div className={styles.section}>
+                <p className={styles.sectionLabel}>Сповіщення · час Києва</p>
+                <div className={styles.reminderActive}>
+                  <button
+                    type="button"
+                    className={styles.addReminderBtn}
+                    disabled={savingReminder}
+                    onClick={openReminderPicker}
+                  >
+                    {task.reminder ? `За ${formatReminderLabel(task.reminder)}` : 'Додати сповіщення'}
+                  </button>
+                  {task.reminder && (
+                    <button
+                      type="button"
+                      className={styles.reminderClear}
+                      disabled={savingReminder}
+                      onClick={() => { void saveReminder(undefined) }}
+                      aria-label="Видалити сповіщення"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                {reminderError && !showReminderPicker && <p className={styles.reminderError} role="alert">{reminderError}</p>}
+              </div>
+            )}
+
             {recurring ? (
               <>
                 {/* ── МІТКИ (звички — окрема секція) ── */}
@@ -614,45 +665,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                   </button>
                 </div>
 
-                {/* ── СПОВІЩЕННЯ ── */}
-                <div className={styles.section}>
-                  <p className={styles.sectionLabel}>Сповіщення</p>
-                  {task.reminder ? (
-                    <div className={styles.reminderActive}>
-                      <svg width="14" height="14" viewBox="0 0 16 18" fill="none" className={styles.reminderIcon}>
-                        <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                      </svg>
-                      <span className={styles.reminderActiveText}>
-                        За {formatReminderLabel(task.reminder)}
-                      </span>
-                      <button
-                        type="button"
-                        className={styles.reminderClear}
-                        onClick={() => setReminder(task.id, undefined)}
-                        aria-label="Видалити сповіщення"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.addReminderBtn}
-                      onClick={() => {
-                        setReminderAmount(1)
-                        setReminderUnit('days')
-                        setShowReminderPicker(true)
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 16 18" fill="none" className={styles.addReminderIcon}>
-                        <path d="M8 1a5 5 0 0 1 5 5v3l2 2H1l2-2V6a5 5 0 0 1 5-5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M6 14a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                      </svg>
-                      Додати сповіщення
-                    </button>
-                  )}
-                </div>
               </>
             ) : (
               <>
@@ -1206,13 +1218,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
                 onAmountChange={setReminderAmount}
                 onUnitChange={setReminderUnit}
               />
+              {reminderError && <p className={styles.reminderError} role="alert">{reminderError}</p>}
             </div>
             <button
               type="button"
               className={styles.reminderDoneBtn}
+              disabled={savingReminder}
               onClick={() => {
-                setReminder(task.id, { amount: Math.max(1, Math.min(999, Number(reminderAmount) || 1)), unit: reminderUnit })
-                setShowReminderPicker(false)
+                void saveReminder({ amount: Math.max(1, Math.min(999, Number(reminderAmount) || 1)), unit: reminderUnit })
               }}
             >
               Готово

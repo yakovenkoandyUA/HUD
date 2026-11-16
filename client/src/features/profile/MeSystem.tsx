@@ -23,7 +23,7 @@ const LocateIcon: React.FC = () => (
 const MeSystem: React.FC = () => {
   const { activeProfile, updateProfile } = useProfileStore()
   const { showToast } = useUiStore()
-  const { isSupported, isSubscribed, subscribe, unsubscribe } = usePushSubscription()
+  const { isSupported, isSubscribed, subscribe, unsubscribe, sendTest } = usePushSubscription()
   const { isInstallable, isIOS, promptInstall } = usePwaInstall()
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
 
@@ -52,12 +52,9 @@ const MeSystem: React.FC = () => {
       if (isSubscribed) {
         await unsubscribe()
       } else {
-        const granted = Notification.permission === 'granted'
-          ? true
-          : await Notification.requestPermission().then(p => p === 'granted')
-        if (!granted) { setPermissionDenied(true); return }
         const ok = await subscribe()
         if (!ok) {
+          setPermissionDenied(Notification.permission === 'denied')
           showToast(
             isIOS && !isStandalone
               ? 'На iOS сповіщення працюють тільки після встановлення застосунку на головний екран'
@@ -66,6 +63,20 @@ const MeSystem: React.FC = () => {
           )
         }
       }
+    } catch {
+      showToast('Не вдалося вимкнути сповіщення', 'error')
+    } finally {
+      setPushLoading(false)
+    }
+  }
+
+  const handlePushTest = async () => {
+    setPushLoading(true)
+    try {
+      await sendTest()
+      showToast('Тест надіслано. Перевір сповіщення на цьому пристрої', 'success')
+    } catch {
+      showToast('Не вдалося надіслати тестове сповіщення', 'error')
     } finally {
       setPushLoading(false)
     }
@@ -155,11 +166,20 @@ const MeSystem: React.FC = () => {
               className={`${styles.toggle} ${isSubscribed ? styles.toggleOn : ''}`}
               onClick={handlePushToggle}
               disabled={pushLoading}
+              aria-label="Push-сповіщення"
               aria-pressed={isSubscribed}
             >
               <span className={styles.toggleThumb} />
             </button>
           </div>
+          {isSubscribed && (
+            <div className={styles.cardRow}>
+              <span className={styles.cardRowLabel}>Тест на цьому пристрої</span>
+              <button type="button" className={styles.pinBtn} onClick={handlePushTest} disabled={pushLoading}>
+                НАДІСЛАТИ
+              </button>
+            </div>
+          )}
         </>
       )}
       {isSupported && permissionDenied && (

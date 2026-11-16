@@ -38,6 +38,7 @@ registerRoute(
   ({ url, request }) =>
     url.origin === API_URL &&
     url.pathname !== '/api/ai/chat' &&
+    !url.pathname.startsWith('/api/push/') &&
     ['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method),
   new NetworkOnly({
     plugins: [{
