@@ -152,7 +152,7 @@
 | `/api/spaces/:id/pet/events/:eventId` | PATCH, DELETE |
 | `/api/spaces/:id/trip/profile` | GET, PATCH — tripProfile sub-document (destination/startDate/endDate/travelers/status) |
 | `/api/ai/space-chat` | POST — SSE streaming (Claude Haiku), system prompt залежить від space.type (vehicle→механік, trip→travel planner, project→PM); контекст: назва/тип + останні 5 подій/задач/нотаток |
-| `/api/mimir/hint` | GET `?mode=wise\|witty\|dark` — AI-підказка Міміра (requireFeature('mimirAi')) |
+| `/api/mimir/hint` | GET `?mode=wise\|witty\|dark` — AI-підказка Міміра. Claude для звичайних акаунтів за чинним тарифним правилом; OpenAI для одного автентифікованого профілю, заданого в env |
 | `/api/billing/checkout` | POST (auth) — генерація WayForPay payment URL, HMAC підпис; повертає `{ paymentUrl, orderReference }` |
 | `/api/billing/wayforpay/callback` | POST (public) — HMAC-MD5 верифікація, idempotency через ProcessedBillingEvent, оновлення BillingOrder + User.plan |
 | `/api/billing/order/:orderReference/status` | GET (auth) — статус BillingOrder для polling |
@@ -176,6 +176,8 @@ JWT_SECRET=...
 VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
 ANTHROPIC_API_KEY=...
+OPENAI_API_KEY=...       # опціонально, лише серверний ключ для пілота Міміра
+MIMIR_OPENAI_USER_ID=... # точний MongoDB _id обраного профілю; прибрати, щоб вимкнути пілот
 GOOGLE_BOOKS_KEY=...
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
@@ -188,6 +190,8 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 ```
 
 ## Моделі — ключові поля
+
+**MimirOpenAiCache** — окремий кеш пілота з TTL 25 годин та унікальним ключем `userId + date + timeSlot` (часова зона `Europe/Kyiv`). До Responses API передаються час доби й два лічильники відкритих задач; `store: false`. При збої OpenAI endpoint повертає 503, і Dashboard показує статичну репліку.
 
 **User** — `email` (sparse unique), `passwordHash`, `pinHash` (optional), `role: 'admin'|'user'`, `f1Enabled: boolean`, `footballEnabled: boolean` (обидва — feature-флаги модулів на екрані `/f1`, який тепер таб-хаб "Спорт"), `isVerified: boolean` (default false), `verificationToken: string|null`, `resetPasswordToken: string|null`, `resetPasswordExpires: Date|null` (1г TTL), `lastLoginAt: Date|null` (оновлюється при login/register/google/refresh — proxy для "активний юзер"), `salaryDay: number`, `onboardingCompleted: boolean` (default false; `USER_PUBLIC_FIELDS` повертає `?? true` для старих юзерів де поле undefined), `accountStatus: 'active'|'deletion_requested'|'deleted'` (default 'active'), `deletedAt: Date|null` (default null). Білінг-поля: `billingProvider: 'wayforpay'|'paddle'|null`, `billingInterval: 'month'|'year'|null`, `billingOrderId: string|null`, `cancelAtPeriodEnd: boolean` (default false), `lastBillingSyncAt: Date|null`. Plan Group: `planGroupPayerId: ObjectId|null` (indexed), `planGroupJoinedAt: Date|null`
 

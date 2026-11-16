@@ -90,6 +90,7 @@ SVG ілюстрації досягнень. `variant` відповідає на
 <MimirHint mode="wise" text="Криниця чекає..." />
 ```
 Пов'язаний з `useMimirHint` / `useMimirAiHint` хуками.
+Для одноразової картки `onShown` записує факт показу, а `onDismiss` за наявності `onShown` спрацьовує лише після закриття.
 
 ### UnsplashPicker (`features/memories/components/memories/UnsplashPicker`)
 Picker для обкладинок з Unsplash. Debounced пошук, 3×3 сітка, attribution overlay.
@@ -159,7 +160,7 @@ Slide-in panel from the left, triggered by the avatar in AppHeader.
 | `useAuth()` | Зручний доступ до profileStore |
 | `useWeather()` | Погода по місту профілю |
 | `useMimirHint(context)` | Статична підказка Міміра по контексту |
-| `useMimirAiHint(context)` | AI-підказка Міміра (SSE) |
+| `useMimirAiHint(userId, enabled)` | AI-підказка Міміра (JSON); частота з uiStore, факт показу за профілем у sessionStorage |
 | `useSwipeTabs(count)` | Свайп між табами |
 | `useLongPress(callback)` | Long press gesture |
 | `usePullToRefresh(callback)` | Pull-to-refresh gesture |
