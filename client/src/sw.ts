@@ -38,6 +38,9 @@ registerRoute(
   ({ url, request }) =>
     url.origin === API_URL &&
     url.pathname !== '/api/ai/chat' &&
+    // Sprint creation reports a failed save to the form. Replaying that POST
+    // after the user saves again could create a second quest and second push.
+    url.pathname !== '/api/sprint/tasks' &&
     !url.pathname.startsWith('/api/push/') &&
     ['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method),
   new NetworkOnly({

@@ -3,6 +3,7 @@ import type { UnifiedTodo, SprintTag, TodoPriority, SprintLabel, ChecklistItem, 
 import { getToken, authFetch, isBackendConfigured } from '@/shared/services/api'
 import { isRecurring, calcStreak } from '../utils/sprint'
 import { useAchievementsStore } from '@/shared/store/achievementsStore'
+import { useUiStore } from '@/shared/store/uiStore'
 import { useSprintStreakStore } from './sprintStreakStore'
 import { usePlantEventStore } from '@/features/spaces/store/plantEventStore'
 import { useSportStore } from '@/features/spaces/store/sportStore'
@@ -903,9 +904,24 @@ export const useSprintStore = create<TodoState>((set, get) => ({
   // ── Delete ────────────────────────────────────────────────────────────────
 
   deleteItem: (id) => {
+    const item = get().items.find(candidate => candidate.id === id)
+    if (!item) return
+    const token = getToken()
     sprintReqId++
     set(s => ({ items: s.items.filter(i => i.id !== id) }))
-    if (!getToken() || !isBackendConfigured()) return
-    authFetch(`/api/sprint/tasks/${id}`, { method: 'DELETE' }).catch(() => {})
+    if (!token || !isBackendConfigured()) return
+    authFetch(`/api/sprint/tasks/${id}`, { method: 'DELETE' })
+      .then(response => {
+        if (!response.ok && response.status !== 404) throw new Error('Task deletion failed')
+      })
+      .catch(() => {
+        if (getToken() !== token) {
+          if (getToken()) void get().fetchItems()
+          return
+        }
+        sprintReqId++
+        set(s => ({ items: s.items.some(candidate => candidate.id === id) ? s.items : sortItems([...s.items, item]) }))
+        useUiStore.getState().showToast('Не вдалося видалити. Заплановані пуші можуть прийти.', 'error')
+      })
   },
 }))
