@@ -75,6 +75,7 @@
 | `/api/plan-group/leave` | POST — member сам покидає групу |
 | `/api/transactions` | GET, POST |
 | `/api/transactions/:id` | DELETE |
+| `/api/transactions/bulk` | DELETE `?period=day\|week\|month\|all[&walletId=sense\|mono][&dryRun=1]` — масове очищення (day = сьогодні, week = 7 днів, month = 30 днів; `dryRun` повертає лише `{count}`); UI — Профіль → Гаманець → «Очищення транзакцій» |
 | `/api/transactions/count` | GET ?category= — кількість транзакцій по категорії |
 | `/api/transactions/migrate-category` | PATCH — { from, to } перенос транзакцій |
 | `/api/sprint/tasks` | GET, POST |

@@ -133,7 +133,7 @@ Bottom sheet з журналом змін. Відкривається з `Profil
 
 ### ProfileDrawer
 Slide-in panel from the left, triggered by the avatar in AppHeader.
-- Порядок: Вигляд → Система → Модулі → **Близькі** → **Тариф** → Адмін (admin only) → **Акаунт** (внизу, шестерня)
+- Порядок: Вигляд → Простори → Близькі → **Гаманець** (`/profile/wallet`) → **ШІ** (`/profile/mimir`, Мімір) → Тариф → Адмін (admin only) → Налаштування (внизу)
 - "Тариф" → `/profile?tab=plan` (підписка, ліміти)
 - "Акаунт" → `/profile/account` (дані, юридичне, небезпечна зона)
 - При `uiStore.updateAvailable` — рядок оновлення під Акаунтом → `ChangelogSheet`
@@ -144,7 +144,7 @@ Slide-in panel from the left, triggered by the avatar in AppHeader.
 - **pill** — плаваюча, label тільки для активного item (розширюється в mini-pill)
 - **hub** — плаваюча + центральна руна Ансуз → радіальне меню решти розділів
 
-На `/profile` завжди повна панель незалежно від стилю.
+На `/profile` нижня навігація прихована (профіль — проста сторінка; решта розділів — в `ProfileDrawer`).
 
 ---
 

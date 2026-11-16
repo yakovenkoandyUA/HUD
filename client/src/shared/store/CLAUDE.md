@@ -55,7 +55,6 @@ interface UiState {
   navStyle: 'classic'|'pill'|'hub'
   navLabelMode: 'always'|'active'|'never'
   pinnedSections: string[]
-  pinnedProfileTabs: string[]
   mimirMode: 'wise'|'witty'|'dark'
   mimirFrequency: 'active'|'balanced'|'silent'
   updateAvailable: boolean
@@ -72,7 +71,6 @@ interface UiState {
   setNavStyle(style): void
   setNavLabelMode(mode): void
   setPinnedSections(ids: string[]): void
-  setPinnedProfileTabs(ids: string[]): void
   setMimirMode(mode): void
   setMimirFrequency(freq): void
   showToast(message: string, type: 'success'|'error'|'info'): void
@@ -90,7 +88,7 @@ interface UiState {
 - `toasts` — масив, кожен toast має свій `id` і auto-dismiss через 3с (`dismissToast(id)`), не одиночний об'єкт
 - `mimirMode`/`mimirFrequency` — характер і частота підказок Міміра (Профіль → Вигляд)
 - `aiChatDiscussOverdue` — передає тему прострочених задач від підказки на Dashboard до відкритого `AiChatSheet`; скидається при закритті, не персистується.
-- `pinnedSections`/`pinnedProfileTabs` — закріплені розділи дашборду / вкладки профілю (дефолти: `DEFAULT_PINNED_SECTIONS`/`DEFAULT_PINNED_PROFILE_TABS`)
+- `pinnedSections` — закріплені розділи нижньої навігації (дефолт: `DEFAULT_PINNED_SECTIONS`). На `/profile` нижньої навігації немає, тому `pinnedProfileTabs` прибрано
 - `activeModal`/`modalDepth` + `pushModal`/`popModal`/`openModal`/`closeModal` — стек модалок для коректної поведінки back-button (`useModalHistory`)
 - `aiChatOpen`/`aiChatSuggestions` + `openAiChat(suggestions?)`/`closeAiChat()` — глобальний стан AI-чату (`AiChatSheet`), змонтованого один раз в `AppHeader`. Не персистується. `AppHeader` сам підставляє контекстні suggestions за поточним роутом (напр. фінансові приклади питань на `/finance`) замість дефолтних із `AiChatSheet`
 
