@@ -195,7 +195,7 @@ interface TodoState {
   migrateFromLocalStorage: () => Promise<void>
   addItem: (data: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>, rollbackImagePublicIds?: string[]) => Promise<boolean>
   addItems: (dataList: Omit<UnifiedTodo, 'id' | 'createdAt' | 'done'>[]) => void
-  toggleItem: (id: string, date?: string) => void
+  toggleItem: (id: string, date?: string, options?: { logSpaceEvent?: boolean }) => void
   deleteItem: (id: string) => void
   restoreItem: (id: string) => void
   purgeItem: (id: string) => void
@@ -804,7 +804,7 @@ export const useSprintStore = create<TodoState>((set, get) => ({
 
   // ── Toggle ────────────────────────────────────────────────────────────────
 
-  toggleItem: (id, date) => {
+  toggleItem: (id, date, options) => {
     const item = get().items.find(i => i.id === id)
     if (!item) return
     sprintReqId++
@@ -830,16 +830,18 @@ export const useSprintStore = create<TodoState>((set, get) => ({
         useAchievementsStore.getState().unlock('streak-7')
       }
       // Habit → Space: log event in linked space based on space type
-      if (item.spaceId) {
+      if (item.spaceId && options?.logSpaceEvent !== false) {
         const space = useSpacesStore.getState().spaces.find(s => s.id === item.spaceId)
-        if (space?.type === 'plant') {
-          const { createEvent, updateProfile } = usePlantEventStore.getState()
-          createEvent(item.spaceId, { type: 'watering', date: completionDateStr })
-            .then(event => updateProfile(item.spaceId!, { lastWateredAt: event.date }))
-            .catch(() => {})
+        if (space?.type === 'plant' && item.repeatConfig?.logsWatering) {
+          const { createEvent, fetchProfile } = usePlantEventStore.getState()
+          const spaceId = item.spaceId
+          createEvent(spaceId, { type: 'watering', date: completionDateStr })
+            .then(() => fetchProfile(spaceId))
+            .then(profile => useSpacesStore.getState().setPlantProfile(spaceId, profile))
+            .catch(() => useUiStore.getState().showToast('Не вдалося записати полив', 'error'))
         } else if (space?.type === 'sports') {
           const { createEvent } = useSportStore.getState()
-          createEvent(item.spaceId, { title: item.title, date: completionDateStr })
+          createEvent(item.spaceId, { title: item.title, date: completionDateStr, status: 'completed' })
             .catch(() => {})
         }
       }

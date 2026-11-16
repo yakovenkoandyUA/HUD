@@ -591,7 +591,7 @@ const ProfileEditSheet: React.FC<ProfileSheetProps> = ({ isOpen, profile, color,
  */
 const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpdate }) => {
   const showToast = useUiStore(s => s.showToast)
-  const { eventsBySpace, healthChecksBySpace, loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile, saveHealthCheck } = usePlantEventStore()
+  const { eventsBySpace, healthChecksBySpace, loading, fetchEvents, createEvent, updateEvent, deleteEvent, updateProfile, fetchProfile, saveHealthCheck } = usePlantEventStore()
   const { items: sprintItems, addItem, toggleItem } = useSprintStore()
 
   const [addSheet, setAddSheet]           = useState<PlantEventType | null>(null)
@@ -603,7 +603,7 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
   const events = eventsBySpace[spaceId] ?? []
 
   // Find habit linked to this space (recurring task with spaceId)
-  const linkedHabit = sprintItems.find(i => i.spaceId === spaceId && i.repeat && i.repeat !== 'none')
+  const linkedHabit = sprintItems.find(i => i.spaceId === spaceId && i.repeat && i.repeat !== 'none' && i.repeatConfig?.logsWatering)
 
   useEffect(() => {
     let cancelled = false
@@ -612,23 +612,35 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
     return () => { cancelled = true }
   }, [spaceId, fetchEvents])
 
-  const handleCreateHabit = () => {
+  const onProfileUpdateRef = useRef(onProfileUpdate)
+  useEffect(() => { onProfileUpdateRef.current = onProfileUpdate }, [onProfileUpdate])
+  useEffect(() => {
+    let cancelled = false
+    void fetchProfile(spaceId).then(updated => {
+      if (!cancelled) onProfileUpdateRef.current(updated)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [spaceId, fetchProfile])
+
+  const handleCreateHabit = async () => {
     if (!profile?.wateringIntervalDays) return
-    addItem({
+    const saved = await addItem({
       title:           `Полити ${profile.commonName || 'рослину'}`,
       type:            'todo',
       repeat:          'custom',
-      repeatConfig:    { interval: profile.wateringIntervalDays, unit: 'day', endsType: 'never' },
+      repeatConfig:    { interval: profile.wateringIntervalDays, unit: 'day', endsType: 'never', logsWatering: true },
       repeatStartDate: todayISO(),
+      nextDue: todayISO(),
       spaceId,
     })
-    showToast('Звичку створено', 'success')
+    showToast(saved ? 'Звичку створено' : 'Не вдалося створити звичку', saved ? 'success' : 'error')
   }
 
   const handleUpdate = async (data: PlantEventInput) => {
     if (!editingEvent) return
     try {
       await updateEvent(spaceId, editingEvent._id, { date: data.date, notes: data.notes })
+      void fetchProfile(spaceId).then(onProfileUpdate).catch(() => {})
       showToast('Оновлено', 'success')
     } catch {
       showToast('Помилка збереження', 'error')
@@ -638,21 +650,11 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
 
   const handleCreate = async (data: PlantEventInput) => {
     try {
-      const event = await createEvent(spaceId, data)
-      if (data.type === 'watering' || data.type === 'fertilizing') {
-        const patch = data.type === 'watering'
-          ? { lastWateredAt: event.date }
-          : { lastFertilizedAt: event.date }
-        const updated = await updateProfile(spaceId, patch)
-        onProfileUpdate(updated)
+      await createEvent(spaceId, data)
+      if (data.type === 'watering' && linkedHabit && !linkedHabit.completionLog?.includes(data.date)) {
+        toggleItem(linkedHabit.id, data.date, { logSpaceEvent: false })
       }
-      // Space → Habit: mark linked habit done today
-      if (data.type === 'watering' && linkedHabit) {
-        const today = todayISO()
-        if (!linkedHabit.completionLog?.includes(today)) {
-          toggleItem(linkedHabit.id, today)
-        }
-      }
+      if (data.type === 'watering' || data.type === 'fertilizing') void fetchProfile(spaceId).then(onProfileUpdate).catch(() => {})
       showToast('Додано', 'success')
     } catch {
       showToast('Помилка збереження', 'error')
@@ -661,21 +663,13 @@ const PlantSpaceView: React.FC<Props> = ({ spaceId, color, profile, onProfileUpd
   }
 
   const handleDelete = async (event: { _id: string; type: PlantEventType }) => {
-    await deleteEvent(spaceId, event._id)
-
-    if (event.type === 'watering' || event.type === 'fertilizing') {
-      const remaining = (eventsBySpace[spaceId] ?? [])
-        .filter(e => e._id !== event._id && e.type === event.type)
-        .sort((a, b) => b.date.localeCompare(a.date))
-      const lastDate = remaining[0]?.date ?? null
-      const patch = event.type === 'watering'
-        ? { lastWateredAt: lastDate }
-        : { lastFertilizedAt: lastDate }
-      const updated = await updateProfile(spaceId, patch)
-      onProfileUpdate(updated)
+    try {
+      await deleteEvent(spaceId, event._id)
+      if (event.type === 'watering' || event.type === 'fertilizing') void fetchProfile(spaceId).then(onProfileUpdate).catch(() => {})
+      showToast('Видалено', 'success')
+    } catch {
+      showToast('Не вдалося оновити журнал догляду', 'error')
     }
-
-    showToast('Видалено', 'success')
   }
 
   const handleProfileSave = async (data: Partial<PlantProfile>) => {

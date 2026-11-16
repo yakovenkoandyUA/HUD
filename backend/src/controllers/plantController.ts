@@ -2,13 +2,39 @@ import { Request, Response } from 'express'
 import { Space } from '../models/Space'
 import { PlantEvent } from '../models/PlantEvent'
 
+function latestCareEvent(spaceId: string, type: 'watering' | 'fertilizing') {
+  return PlantEvent.findOne({ spaceId, type }).sort({ date: -1 }).select('date').lean()
+}
+
+async function refreshCareDate(space: InstanceType<typeof Space>, type: string) {
+  if (type !== 'watering' && type !== 'fertilizing') return
+  const latest = await latestCareEvent(String(space._id), type)
+  const field = type === 'watering' ? 'lastWateredAt' : 'lastFertilizedAt'
+  if (!space.plantProfile) {
+    space.plantProfile = {
+      commonName: '', species: '', location: '', acquiredDate: null,
+      wateringIntervalDays: null, lastWateredAt: null, lastFertilizedAt: null,
+      sunlight: null, photoUrl: '', toxicToPets: null, careNotes: '',
+    }
+  }
+  space.plantProfile[field] = latest?.date ?? null
+  await space.save()
+}
+
 /** GET /api/spaces/:id/plant/profile */
 export async function getPlantProfile(req: Request, res: Response): Promise<void> {
   try {
     const space = await Space.findOne({ _id: req.params.id, 'members.userId': req.userId })
     if (!space) { res.status(404).json({ error: 'Not found' }); return }
     if (space.type !== 'plant') { res.status(400).json({ error: 'Not a plant space' }); return }
-    res.json(space.plantProfile ?? {})
+    const [watering, fertilizing] = await Promise.all([
+      latestCareEvent(req.params.id, 'watering'), latestCareEvent(req.params.id, 'fertilizing'),
+    ])
+    res.json({
+      ...space.toObject().plantProfile,
+      lastWateredAt: watering?.date ?? space.plantProfile?.lastWateredAt ?? null,
+      lastFertilizedAt: fertilizing?.date ?? space.plantProfile?.lastFertilizedAt ?? null,
+    })
   } catch {
     res.status(500).json({ error: 'Server error' })
   }
@@ -82,19 +108,7 @@ export async function createPlantEvent(req: Request, res: Response): Promise<voi
       notes:   req.body.notes ?? '',
     })
 
-    // Update lastWateredAt / lastFertilizedAt in profile on the fly
-    if (type === 'watering' || type === 'fertilizing') {
-      if (!space.plantProfile) {
-        space.plantProfile = {
-          commonName: '', species: '', location: '', acquiredDate: null,
-          wateringIntervalDays: null, lastWateredAt: null, lastFertilizedAt: null,
-          sunlight: null, photoUrl: '', toxicToPets: null, careNotes: '',
-        }
-      }
-      if (type === 'watering')    space.plantProfile.lastWateredAt    = date
-      if (type === 'fertilizing') space.plantProfile.lastFertilizedAt = date
-      await space.save()
-    }
+    await refreshCareDate(space, type)
 
     res.status(201).json(event)
   } catch {
@@ -112,6 +126,7 @@ export async function updatePlantEvent(req: Request, res: Response): Promise<voi
     if (req.body.date  !== undefined) event.date  = req.body.date
     if (req.body.notes !== undefined) event.notes = req.body.notes
     await event.save()
+    await refreshCareDate(space, event.type)
     res.json(event)
   } catch {
     res.status(500).json({ error: 'Server error' })
@@ -127,6 +142,7 @@ export async function deletePlantEvent(req: Request, res: Response): Promise<voi
     const event = await PlantEvent.findOneAndDelete({ _id: req.params.eventId, spaceId: req.params.id })
     if (!event) { res.status(404).json({ error: 'Event not found' }); return }
 
+    await refreshCareDate(space, event.type)
     res.json({ ok: true })
   } catch {
     res.status(500).json({ error: 'Server error' })

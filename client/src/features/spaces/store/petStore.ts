@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { authFetch } from '@/shared/services/api'
+import { authFetch, getToken } from '@/shared/services/api'
 import type { PetProfile } from '@/features/memories/store/spacesStore'
 
 export type PetEventType =
@@ -63,7 +63,7 @@ function bumpPetReqId(spaceId: string): number {
   return next
 }
 
-export const usePetStore = create<PetStore>((set) => ({
+export const usePetStore = create<PetStore>((set, get) => ({
   eventsBySpace: {},
   loading:       false,
 
@@ -105,7 +105,7 @@ export const usePetStore = create<PetStore>((set) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    if (!res.ok) return
+    if (!res.ok) throw new Error('Update failed')
     const updated: PetEvent = await res.json()
     bumpPetReqId(spaceId)
     set(s => ({
@@ -117,6 +117,9 @@ export const usePetStore = create<PetStore>((set) => ({
   },
 
   deleteEvent: async (spaceId, eventId) => {
+    const token = getToken()
+    const previous = get().eventsBySpace[spaceId] ?? []
+    const item = previous.find(event => event._id === eventId)
     bumpPetReqId(spaceId)
     set(s => ({
       eventsBySpace: {
@@ -124,7 +127,19 @@ export const usePetStore = create<PetStore>((set) => ({
         [spaceId]: (s.eventsBySpace[spaceId] ?? []).filter(e => e._id !== eventId),
       },
     }))
-    await authFetch(`/api/spaces/${spaceId}/pet/events/${eventId}`, { method: 'DELETE' })
+    try {
+      const res = await authFetch(`/api/spaces/${spaceId}/pet/events/${eventId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+    } catch (error) {
+      if (item && getToken() === token) {
+        set(state => {
+          const current = state.eventsBySpace[spaceId] ?? []
+          if (current.some(event => event._id === eventId)) return state
+          return { eventsBySpace: { ...state.eventsBySpace, [spaceId]: [...current, item].sort((a, b) => b.date.localeCompare(a.date)) } }
+        })
+      }
+      throw error
+    }
   },
 
   updateProfile: async (spaceId, data) => {

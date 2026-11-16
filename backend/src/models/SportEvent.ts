@@ -37,6 +37,8 @@ export interface ISportEvent extends Document {
   // Дата (YYYY-MM-DD) конкретного входження серії, за яке вже надіслано нагадування.
   // Для repeat='none' це просто event.date; для recurring — дата поточного дня,
   // коли isSportEventDueOnDay() визнав подію "сьогоднішньою".
+  status?: 'planned' | 'completed'
+  sessionId?: string
   reminderSentFor: string | null
   createdAt: Date
 }
@@ -61,6 +63,8 @@ const schema = new Schema<ISportEvent>({
   programIds:   { type: [String], default: [] },
   programNames: { type: [String], default: [] },
   reminder:        { type: Schema.Types.Mixed, default: null },
+  status: { type: String, enum: ['planned', 'completed'] },
+  sessionId: { type: String, index: true },
   reminderSentFor: { type: String, default: null },
 }, { timestamps: true })
 

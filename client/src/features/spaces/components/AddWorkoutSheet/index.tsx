@@ -98,7 +98,8 @@ const CARDIO_METRICS: WorkoutMetric[] = [
 ]
 
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
 
 function fmtDate(iso: string): string {
@@ -135,6 +136,7 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
   const [notes, setNotes]       = useState('')
   const [metrics, setMetrics]   = useState<WorkoutMetric[]>([])
   const [programIds, setProgramIds]       = useState<string[]>([])
+  const [statusChoice, setStatusChoice] = useState<'planned' | 'completed' | null>(null)
   const [repeat, setRepeat]               = useState<SportRepeatType>('none')
   const [repeatConfig, setRepeatConfig]   = useState<RepeatConfig | null>(null)
   const [showRepeatScreen, setShowRepeatScreen] = useState(false)
@@ -158,6 +160,7 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
   useEffect(() => {
     if (isOpen) {
       setMounted(true)
+      setStatusChoice(editEvent?.status ?? null)
       if (editEvent) {
         setDate(editEvent.date)
         setTime(editEvent.time ?? null)
@@ -275,6 +278,10 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
 
   const selectedPrograms = programs?.filter(p => programIds.includes(p._id)) ?? []
 
+  const today = todayISO()
+  const isFuture = date > today || (date === today && time != null && new Date(`${date}T${time}`).getTime() > Date.now())
+  const status = editEvent?.sessionId ? 'completed' : repeat !== 'none' ? 'planned'
+    : statusChoice ?? (isFuture || reminder ? 'planned' : 'completed')
   const handleSave = async () => {
     if (!date || busy) return
     setBusy(true)
@@ -282,6 +289,7 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
       await onSave({
         date,
         time,
+        status,
         title:        title.trim() || 'Тренування',
         duration:     duration ? parseInt(duration, 10) : null,
         metrics:      metrics.filter(m => m.name.trim()),
@@ -290,7 +298,7 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
         repeatConfig: repeat === 'none' ? null : repeatConfig,
         programIds:   selectedPrograms.map(p => p._id),
         programNames: selectedPrograms.map(p => p.name),
-        reminder,
+        reminder: status === 'planned' ? reminder : null,
       })
       onClose()
     } finally {
@@ -395,8 +403,20 @@ const AddWorkoutSheet: React.FC<Props> = ({ isOpen, color, onClose, onSave, edit
             </div>
           </div>
 
+          {repeat === 'none' && !editEvent?.sessionId && (
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>СТАТУС</span>
+              <PillSelector<'planned' | 'completed'>
+                options={[{ value: 'planned', label: 'Заплановано' }, { value: 'completed', label: 'Виконано' }]}
+                value={status}
+                onChange={setStatusChoice}
+                columns={2}
+              />
+            </div>
+          )}
+
           {/* Нагадування */}
-          <div className={styles.field}>
+          <div className={styles.field} hidden={status === 'completed' && (statusChoice !== null || !!editEvent?.sessionId)}>
             <label className={styles.fieldLabel}>НАГАДУВАННЯ</label>
             <button
               type="button"

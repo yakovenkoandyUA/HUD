@@ -23,7 +23,7 @@ const UNIT_MS = { minutes: MINUTE, hours: 60 * MINUTE, days: DAY, weeks: 7 * DAY
 
 async function sendWorkoutReminders(): Promise<void> {
   const now = Date.now()
-  const events = await SportEvent.find({ reminder: { $ne: null } }).lean()
+  const events = await SportEvent.find({ reminder: { $ne: null }, status: { $ne: 'completed' } }).lean()
   for (const event of events) {
     if (!event.reminder) continue
     const lead = UNIT_MS[event.reminder.unit] * event.reminder.amount

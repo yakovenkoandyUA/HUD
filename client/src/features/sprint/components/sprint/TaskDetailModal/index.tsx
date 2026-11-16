@@ -384,7 +384,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ taskId, onClose }) =>
 
   const handleRepeatSave = (config: RepeatConfig) => {
     if (!task) return
-    updateTask(task.id, { repeat: 'custom', repeatConfig: config })
+    updateTask(task.id, { repeat: 'custom', repeatConfig: { ...config, ...(task.repeatConfig?.logsWatering && { logsWatering: true }) } })
     setShowRepeatConfig(false)
   }
 

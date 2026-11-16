@@ -957,9 +957,13 @@ const SportSpaceView: React.FC<Props> = ({
     }
   }
 
-  const handleDelete = (eventId: string) => {
-    deleteEvent(spaceId, eventId)
-    showToast('Видалено', 'success')
+  const handleDelete = async (eventId: string) => {
+    try {
+      await deleteEvent(spaceId, eventId)
+      showToast('Видалено', 'success')
+    } catch {
+      showToast('Не вдалося видалити запис', 'error')
+    }
   }
 
   const handleProfileSave = async (data: Partial<SportProfile>) => {
@@ -1007,10 +1011,14 @@ const SportSpaceView: React.FC<Props> = ({
 
   const handleProgramDelete = async () => {
     if (!editingProgram) return
-    await deleteProgram(spaceId, editingProgram._id)
-    setProgramSheetOpen(false)
-    setEditingProgram(null)
-    showToast('Програму видалено', 'success')
+    try {
+      await deleteProgram(spaceId, editingProgram._id)
+      setProgramSheetOpen(false)
+      setEditingProgram(null)
+      showToast('Програму видалено', 'success')
+    } catch {
+      showToast('Не вдалося видалити програму', 'error')
+    }
   }
 
   const handleFinishWorkout = async (completedIds: string[], exerciseLogs: WorkoutExerciseLog[]) => {
@@ -1061,9 +1069,13 @@ const SportSpaceView: React.FC<Props> = ({
   const now     = new Date()
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-  const thisMonthEvents  = events.filter(e => e.date.slice(0, 7) === monthStr)
-  const streak           = calcStreak(events)
-  const totalMinutes     = events.reduce((s, e) => s + (e.duration ?? 0), 0)
+  const today = `${monthStr}-${String(now.getDate()).padStart(2, '0')}`
+  const completedEvents = events.filter(event => event.date.slice(0, 10) <= today && (
+    event.status === 'completed' || (!event.status && !event.reminder && (!event.repeat || event.repeat === 'none'))
+  ))
+  const thisMonthEvents  = completedEvents.filter(e => e.date.slice(0, 7) === monthStr)
+  const streak           = calcStreak(completedEvents)
+  const totalMinutes     = completedEvents.reduce((s, e) => s + (e.duration ?? 0), 0)
   const monthlyExpenses  = spaceTxs
     .filter(t => t.type === 'expense' && t.date.slice(0, 7) === monthStr)
     .reduce((s, t) => s + t.amount, 0)
@@ -1241,7 +1253,7 @@ const SportSpaceView: React.FC<Props> = ({
 													<span className={styles.programSessionScore}>
 														{s.completedExercises.length}/{s.totalExercises}
 													</span>
-													<button type="button" className={styles.programSessionDeleteBtn} onClick={() => deleteSession(spaceId, s._id)} aria-label="Видалити сесію">
+													<button type="button" className={styles.programSessionDeleteBtn} onClick={() => { void deleteSession(spaceId, s._id).then(() => fetchEvents(spaceId)).catch(() => showToast('Не вдалося видалити сесію', 'error')) }} aria-label="Видалити сесію">
 														<svg width="9" height="9" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
 															<path d="M2 2l10 10M12 2L2 12" />
 														</svg>

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { authFetch } from '@/shared/services/api'
+import { authFetch, getToken } from '@/shared/services/api'
 import type { SportProfile } from '@/features/memories/store/spacesStore'
 import type { RepeatConfig } from '@/shared/types'
 import type { ReminderUnit } from '@/features/sprint/components/sprint/ReminderFields'
@@ -18,6 +18,8 @@ export interface WorkoutMetric {
 export type SportRepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
 
 export interface SportEvent {
+  status?: 'planned' | 'completed'
+  sessionId?: string
   _id:          string
   spaceId:      string
   userId:       string
@@ -37,6 +39,8 @@ export interface SportEvent {
 }
 
 export interface SportEventInput {
+  status?: 'planned' | 'completed'
+  sessionId?: string
   date:           string
   time?:          string | null
   title?:         string
@@ -149,7 +153,7 @@ const sportEventReqIds   = makeReqIdBumper()
 const sportProgramReqIds = makeReqIdBumper()
 const sportSessionReqIds = makeReqIdBumper()
 
-export const useSportStore = create<SportStore>((set) => ({
+export const useSportStore = create<SportStore>((set, get) => ({
   eventsBySpace:   {},
   programsBySpace: {},
   sessionsBySpace: {},
@@ -205,7 +209,7 @@ export const useSportStore = create<SportStore>((set) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    if (!res.ok) return
+    if (!res.ok) throw new Error('Update failed')
     const updated: SportEvent = await res.json()
     sportEventReqIds.bump(spaceId)
     set(s => ({
@@ -217,6 +221,9 @@ export const useSportStore = create<SportStore>((set) => ({
   },
 
   deleteEvent: async (spaceId, eventId) => {
+    const token = getToken()
+    const previous = get().eventsBySpace[spaceId] ?? []
+    const item = previous.find(event => event._id === eventId)
     sportEventReqIds.bump(spaceId)
     set(s => ({
       eventsBySpace: {
@@ -224,7 +231,19 @@ export const useSportStore = create<SportStore>((set) => ({
         [spaceId]: (s.eventsBySpace[spaceId] ?? []).filter(e => e._id !== eventId),
       },
     }))
-    await authFetch(`/api/spaces/${spaceId}/sport/events/${eventId}`, { method: 'DELETE' })
+    try {
+      const res = await authFetch(`/api/spaces/${spaceId}/sport/events/${eventId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+    } catch (error) {
+      if (item && getToken() === token) {
+        set(state => {
+          const current = state.eventsBySpace[spaceId] ?? []
+          if (current.some(event => event._id === eventId)) return state
+          return { eventsBySpace: { ...state.eventsBySpace, [spaceId]: [...current, item].sort((a, b) => b.date.localeCompare(a.date)) } }
+        })
+      }
+      throw error
+    }
   },
 
   updateProfile: async (spaceId, data) => {
@@ -278,9 +297,23 @@ export const useSportStore = create<SportStore>((set) => ({
   },
 
   deleteProgram: async (spaceId, programId) => {
+    const token = getToken()
+    const program = get().programsBySpace[spaceId]?.find(item => item._id === programId)
     sportProgramReqIds.bump(spaceId)
     set(s => ({ programsBySpace: { ...s.programsBySpace, [spaceId]: (s.programsBySpace[spaceId] ?? []).filter(p => p._id !== programId) } }))
-    await authFetch(`/api/spaces/${spaceId}/sport/programs/${programId}`, { method: 'DELETE' })
+    try {
+      const response = await authFetch(`/api/spaces/${spaceId}/sport/programs/${programId}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Program deletion failed')
+    } catch (error) {
+      if (program && getToken() === token) {
+        set(state => {
+          const current = state.programsBySpace[spaceId] ?? []
+          if (current.some(item => item._id === programId)) return state
+          return { programsBySpace: { ...state.programsBySpace, [spaceId]: [...current, program] } }
+        })
+      }
+      throw error
+    }
   },
 
   fetchSessions: async (spaceId) => {
@@ -308,6 +341,8 @@ export const useSportStore = create<SportStore>((set) => ({
   },
 
   deleteSession: async (spaceId, sessionId) => {
+    const token = getToken()
+    const session = get().sessionsBySpace[spaceId]?.find(item => item._id === sessionId)
     sportSessionReqIds.bump(spaceId)
     set(s => ({
       sessionsBySpace: {
@@ -315,6 +350,18 @@ export const useSportStore = create<SportStore>((set) => ({
         [spaceId]: (s.sessionsBySpace[spaceId] ?? []).filter(s => s._id !== sessionId),
       },
     }))
-    await authFetch(`/api/spaces/${spaceId}/sport/sessions/${sessionId}`, { method: 'DELETE' })
+    try {
+      const response = await authFetch(`/api/spaces/${spaceId}/sport/sessions/${sessionId}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Session deletion failed')
+    } catch (error) {
+      if (session && getToken() === token) {
+        set(state => {
+          const current = state.sessionsBySpace[spaceId] ?? []
+          if (current.some(item => item._id === sessionId)) return state
+          return { sessionsBySpace: { ...state.sessionsBySpace, [spaceId]: [...current, session].sort((a, b) => b.date.localeCompare(a.date)) } }
+        })
+      }
+      throw error
+    }
   },
 }))

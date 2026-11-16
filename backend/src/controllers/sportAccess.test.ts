@@ -54,10 +54,10 @@ describe('sport space membership', () => {
     expect(res.json).toHaveBeenCalledWith(program)
   })
 
-  it('scopes program cleanup to the shared space', async () => {
+  it('preserves completed session history when deleting a shared program', async () => {
     models.membership.mockResolvedValue({ _id: 'sport-space' })
     await deleteWorkoutProgram({ userId: 'coach', params } as unknown as Request, response() as unknown as Response)
     expect(models.deleteProgram).toHaveBeenCalledWith({ _id: 'program', spaceId: 'sport-space' })
-    expect(models.deleteSessions).toHaveBeenCalledWith({ programId: 'program', spaceId: 'sport-space' })
+    expect(models.deleteSessions).not.toHaveBeenCalled()
   })
 })

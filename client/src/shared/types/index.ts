@@ -155,6 +155,7 @@ export interface UnifiedTodo {
 }
 
 export interface RepeatConfig {
+  logsWatering?: boolean
   interval: number
   unit: 'day' | 'week' | 'month' | 'year'
   weekDays?: number[]        // 0=Mon..6=Sun, only for unit=week

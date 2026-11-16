@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { authFetch } from '@/shared/services/api'
+import { authFetch, getToken } from '@/shared/services/api'
 import type { PlantProfile } from '@/features/memories/store/spacesStore'
 
 export type PlantEventType = 'watering' | 'fertilizing' | 'repotting' | 'pruning' | 'treatment' | 'note'
@@ -43,6 +43,7 @@ interface PlantEventStore {
   createEvent:     (spaceId: string, data: PlantEventInput) => Promise<PlantEvent>
   updateEvent:     (spaceId: string, eventId: string, data: Partial<PlantEventInput>) => Promise<void>
   deleteEvent:     (spaceId: string, eventId: string) => Promise<void>
+  fetchProfile:    (spaceId: string) => Promise<PlantProfile>
   updateProfile:   (spaceId: string, data: Partial<PlantProfile>) => Promise<PlantProfile>
   saveHealthCheck: (spaceId: string, result: HealthResult) => void
 }
@@ -59,7 +60,7 @@ function bumpPlantEventReqId(spaceId: string): number {
 
 export const usePlantEventStore = create<PlantEventStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
   eventsBySpace:       {},
   healthChecksBySpace: {},
   loading:             false,
@@ -102,7 +103,7 @@ export const usePlantEventStore = create<PlantEventStore>()(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    if (!res.ok) return
+    if (!res.ok) throw new Error('Update failed')
     const updated: PlantEvent = await res.json()
     bumpPlantEventReqId(spaceId)
     set(s => ({
@@ -114,6 +115,9 @@ export const usePlantEventStore = create<PlantEventStore>()(
   },
 
   deleteEvent: async (spaceId, eventId) => {
+    const token = getToken()
+    const previous = get().eventsBySpace[spaceId] ?? []
+    const item = previous.find(event => event._id === eventId)
     bumpPlantEventReqId(spaceId)
     set(s => ({
       eventsBySpace: {
@@ -121,7 +125,25 @@ export const usePlantEventStore = create<PlantEventStore>()(
         [spaceId]: (s.eventsBySpace[spaceId] ?? []).filter(e => e._id !== eventId),
       },
     }))
-    await authFetch(`/api/spaces/${spaceId}/plant/events/${eventId}`, { method: 'DELETE' })
+    try {
+      const res = await authFetch(`/api/spaces/${spaceId}/plant/events/${eventId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+    } catch (error) {
+      if (item && getToken() === token) {
+        set(state => {
+          const current = state.eventsBySpace[spaceId] ?? []
+          if (current.some(event => event._id === eventId)) return state
+          return { eventsBySpace: { ...state.eventsBySpace, [spaceId]: [...current, item].sort((a, b) => b.date.localeCompare(a.date)) } }
+        })
+      }
+      throw error
+    }
+  },
+
+  fetchProfile: async (spaceId) => {
+    const res = await authFetch(`/api/spaces/${spaceId}/plant/profile`)
+    if (!res.ok) throw new Error('Profile refresh failed')
+    return res.json() as Promise<PlantProfile>
   },
 
   updateProfile: async (spaceId, data) => {

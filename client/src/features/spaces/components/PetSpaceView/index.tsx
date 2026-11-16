@@ -730,8 +730,12 @@ const PetSpaceView: React.FC<Props> = ({
   }
 
   const handleDelete = async (eventId: string) => {
-    deleteEvent(spaceId, eventId)
-    showToast('Видалено', 'success')
+    try {
+      await deleteEvent(spaceId, eventId)
+      showToast('Видалено', 'success')
+    } catch {
+      showToast('Не вдалося видалити запис', 'error')
+    }
   }
 
   // ── Derived ──
@@ -755,7 +759,16 @@ const PetSpaceView: React.FC<Props> = ({
       .sort((a, b) => (a.nextDue ?? '').localeCompare(b.nextDue ?? ''))[0]?.nextDue
   const name = profile?.name?.trim() || spaceName
   const description = [profile?.species, profile?.breed, age].filter(Boolean).join(' · ')
-  const weight = profile?.weight
+  const latestWeight = events.filter(event => event.weight != null)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))[0]
+  const weight = latestWeight?.weight ?? profile?.weight
+  const month = todayISO().slice(0, 7)
+  const careCosts = new Map<string, number>()
+  for (const event of events) {
+    if (event.cost != null && event.date.slice(0, 7) === month) {
+      careCosts.set(event.currency, (careCosts.get(event.currency) ?? 0) + event.cost)
+    }
+  }
 
   const colorVar = { '--space-color': color } as React.CSSProperties
 
@@ -796,7 +809,7 @@ const PetSpaceView: React.FC<Props> = ({
         )}
       </div>
 
-      {(weight != null || nextUpcoming || monthlyExpenses > 0) && (
+      {(weight != null || nextUpcoming || monthlyExpenses > 0 || careCosts.size > 0) && (
         <div className={styles.metricsRow}>
           {weight != null && (
             <div className={styles.metricCard}>
@@ -815,7 +828,13 @@ const PetSpaceView: React.FC<Props> = ({
           {monthlyExpenses > 0 && (
             <div className={styles.metricCard}>
               <span className={styles.metricVal}>{fmtCost(Math.round(monthlyExpenses), 'UAH')}</span>
-              <span className={styles.metricLabel}>Витрати за місяць</span>
+              <span className={styles.metricLabel}>Гаманець за місяць</span>
+            </div>
+          )}
+          {careCosts.size > 0 && (
+            <div className={styles.metricCard}>
+              <span className={styles.metricVal}>{[...careCosts].map(([currency, amount]) => fmtCost(amount, currency)).join(' · ')}</span>
+              <span className={styles.metricLabel}>Вартість догляду за місяць</span>
             </div>
           )}
         </div>
