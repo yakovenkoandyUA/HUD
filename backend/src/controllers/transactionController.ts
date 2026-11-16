@@ -55,6 +55,37 @@ export async function remove(req: Request, res: Response): Promise<void> {
   res.status(204).end()
 }
 
+/** Days back from today (inclusive window): day = today only, week = 7 days, month = 30 days */
+const CLEAR_PERIOD_DAYS_BACK: Record<string, number> = { day: 0, week: 6, month: 29 }
+
+/**
+ * DELETE /api/transactions/bulk?period=day|week|month|all[&walletId=sense|mono][&dryRun=1]
+ * Deletes the user's transactions for a rolling period (day = today, week = last 7 days incl. today,
+ * month = last 30 days) or everything. `walletId` limits it to one card; without it all wallets go.
+ * With `dryRun` nothing is deleted — only `{ count }` is returned so the UI can show it before confirming.
+ */
+export async function clearTransactions(req: Request, res: Response): Promise<void> {
+  const { period, walletId, dryRun } = req.query as { period?: string; walletId?: string; dryRun?: string }
+  if (period !== 'all' && !(period && period in CLEAR_PERIOD_DAYS_BACK)) {
+    res.status(400).json({ error: 'period must be day, week, month or all' }); return
+  }
+
+  const query: Record<string, unknown> = { userId: req.userId }
+  if (period !== 'all') {
+    const from = new Date()
+    from.setDate(from.getDate() - CLEAR_PERIOD_DAYS_BACK[period!])
+    query.date = { $gte: from.toISOString().slice(0, 10) }
+  }
+  if (walletId === 'mono') query.walletId = 'mono'
+  else if (walletId === 'sense') query.walletId = { $ne: 'mono' }
+
+  if (dryRun === '1') {
+    res.json({ count: await Transaction.countDocuments(query) }); return
+  }
+  const result = await Transaction.deleteMany(query)
+  res.json({ deleted: result.deletedCount })
+}
+
 export async function countByCategory(req: Request, res: Response): Promise<void> {
   const { category } = req.query
   if (!category || typeof category !== 'string') { res.status(400).json({ error: 'category required' }); return }

@@ -5,6 +5,7 @@ import { useCategoryStore } from '@/features/finance/store/categoryStore'
 import { useBankStore } from '@/features/finance/store/bankStore'
 import { authFetch } from '@/shared/services/api'
 import Modal from '@/shared/components/ui/Modal'
+import ClearTransactions from './ClearTransactions'
 import InfoToggle from '@/shared/components/ui/InfoToggle'
 import { INCOME_CATEGORIES, INCOME_ONLY_NAMES } from '@/features/finance/constants'
 import type { Category } from '@/shared/types'
@@ -752,6 +753,8 @@ const WalletTab: React.FC = () => {
           </button>
         </div>
       </Modal>
+
+      <ClearTransactions />
     </div>
   )
 }

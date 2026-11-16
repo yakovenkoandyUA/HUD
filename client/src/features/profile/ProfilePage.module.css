@@ -3821,3 +3821,10 @@
 	margin: 0 3px;
 	box-shadow: 0 3px 12px color-mix(in srgb, var(--accent) 40%, transparent);
 }
+
+/* ── Clear transactions ── */
+.clearBody {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
