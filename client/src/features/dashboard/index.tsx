@@ -54,7 +54,6 @@ const Dashboard: React.FC = () => {
   const { recipes, fetchRecipes } = useRecipesStore()
   const { notes, fetchNotes } = useNotesStore()
   const { seen: welcomeSeen, markSeen: markWelcomeSeen } = useMimirHint('dashboard-welcome')
-  const { hint: aiHint, markShown: markAiShown } = useMimirAiHint()
 
   // Suppress daily greeting if first_visit fires in this session
   const firstVisitInSession = useRef(!welcomeSeen)
@@ -62,6 +61,8 @@ const Dashboard: React.FC = () => {
   // right away (so quick navigation away doesn't lose it), but must not yank the
   // hint out of the tree mid-display once welcomeSeen flips to true.
   const showWelcomeHint = useRef(!welcomeSeen)
+  const { hint: aiHint, loading: aiHintLoading, markShown: markAiShown } =
+    useMimirAiHint(userId, welcomeSeen && !firstVisitInSession.current)
   const [showDailyGreeting, setShowDailyGreeting] = useState(false)
   const dailyGreetingDecided = useRef(false)
 
@@ -227,14 +228,18 @@ const Dashboard: React.FC = () => {
         <SpacesStrip f1Enabled={f1Enabled} />
 
         {/* Daily / AI hints — float (occasional, acceptable to overlay) */}
-        {welcomeSeen && (aiHint ? (
+        {welcomeSeen && !aiHintLoading && (aiHint ? (
           <div className={styles.mimirFloat}>
             <MimirHint
+              key={`${userId}:${aiHint.slot}:${aiHint.text}`}
               pose={aiHint.pose as MimirPose}
               textKey={aiHint.text}
               oneTime
-              onDismiss={markAiShown}
-              showUpgrade={!aiHint.isAi}
+              onShown={() => {
+                markAiShown()
+                markDailyShown(userId, 'dashboard_daily_greeting')
+              }}
+              showUpgrade={aiHint.showUpgrade}
             />
           </div>
         ) : showDailyGreeting ? (

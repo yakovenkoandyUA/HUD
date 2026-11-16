@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useUiStore, type MimirMode, type MimirFrequency } from '@/shared/store/uiStore'
 import { authFetch } from '@/shared/services/api'
 
@@ -8,7 +8,7 @@ export interface MimirHintResult {
   text: string
   pose: string
   slot: TimeSlot
-  isAi: boolean
+  showUpgrade: boolean
 }
 
 // ── Static fallback hints per mode ────────────────────────────────────────────
@@ -53,8 +53,10 @@ function getStaticHint(mode: MimirMode): string {
 
 // ── Time slot ─────────────────────────────────────────────────────────────────
 
-function currentSlot(): TimeSlot {
-  const h = new Date().getHours()
+function currentSlot(now: Date): TimeSlot {
+  const h = Number(new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Kyiv', hour: '2-digit', hourCycle: 'h23',
+  }).format(now))
   if (h >= 6  && h < 12) return 'morning'
   if (h >= 12 && h < 18) return 'afternoon'
   return 'evening'
@@ -62,28 +64,21 @@ function currentSlot(): TimeSlot {
 
 // ── Session storage keys ──────────────────────────────────────────────────────
 
-function shownKey(slot: TimeSlot): string {
-  return `mimir-shown-${new Date().toDateString()}-${slot}`
-}
-
-function isSlotShownToday(slot: TimeSlot): boolean {
-  return sessionStorage.getItem(shownKey(slot)) === '1'
-}
-
-function markSlotShown(slot: TimeSlot): void {
-  sessionStorage.setItem(shownKey(slot), '1')
+function windowKey(userId: string, now: Date): string {
+  const date = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(now)
+  return `mimir-shown-${userId}-${date}`
 }
 
 // ── Whether to show at all based on frequency ─────────────────────────────────
 
-function shouldShowNow(frequency: MimirFrequency): boolean {
+function shouldShowNow(frequency: MimirFrequency, key: string, slot: TimeSlot): boolean {
   if (frequency === 'silent') return false
-  const slot = currentSlot()
-  if (isSlotShownToday(slot)) return false
+  if (sessionStorage.getItem(`${key}-${slot}`) === '1') return false
   if (frequency === 'balanced') {
-    // only morning slot counts as "once per day"
     const anyShownToday = (['morning', 'afternoon', 'evening'] as TimeSlot[])
-      .some(s => sessionStorage.getItem(shownKey(s)) === '1')
+      .some(s => sessionStorage.getItem(`${key}-${s}`) === '1')
     if (anyShownToday) return false
   }
   return true
@@ -94,72 +89,59 @@ function shouldShowNow(frequency: MimirFrequency): boolean {
 /**
  * useMimirAiHint
  * --------------
- * Fetches an AI-generated Mimir hint from the backend (Haiku + context).
+ * Fetches a contextual Mimir hint when the dashboard can display it.
  * Respects mimirFrequency:
  *   - silent    → never fetches, returns null
  *   - balanced  → one AI call per day (first slot only)
  *   - active    → one AI call per time slot (up to 3/day)
  *
- * Falls back to static hints if the fetch fails or frequency is silent.
+ * Falls back to static hints if the fetch fails.
  * Returns null if nothing should be shown right now.
  */
-export function useMimirAiHint(): {
+export function useMimirAiHint(userId: string, enabled: boolean): {
   hint: MimirHintResult | null
   loading: boolean
   markShown: () => void
 } {
   const { mimirMode, mimirFrequency } = useUiStore()
-  const [hint, setHint]       = useState<MimirHintResult | null>(null)
-  const [loading, setLoading] = useState(false)
-  const fetchedRef = useRef(false)
+  const now = new Date()
+  const slot = currentSlot(now)
+  const shownKey = windowKey(userId, now)
+  const requestKey = `${shownKey}:${slot}:${mimirMode}:${mimirFrequency}`
+  const canLoad = enabled && !!userId && mimirFrequency !== 'silent'
+  const [result, setResult] = useState<{ key: string; hint: MimirHintResult | null } | null>(null)
+  const hint = canLoad && result?.key === requestKey ? result.hint : null
 
   useEffect(() => {
-    if (fetchedRef.current) return
-    fetchedRef.current = true
-
+    if (!canLoad) return
     let cancelled = false
-    const slot = currentSlot()
 
     const load = async () => {
-      if (!shouldShowNow(mimirFrequency)) return
-
-      setLoading(true)
-
-      // silent → no fetch (already handled above, but be safe)
-      if (mimirFrequency === 'silent') {
-        setLoading(false)
+      if (!shouldShowNow(mimirFrequency, shownKey, slot)) {
+        if (!cancelled) setResult({ key: requestKey, hint: null })
         return
       }
 
+      let nextHint: MimirHintResult = { text: getStaticHint(mimirMode), pose: 'idle', slot, showUpgrade: false }
       try {
-        const res = await authFetch(`/api/mimir/hint?mode=${mimirMode}`)
-        if (!cancelled) {
-          if (res.ok) {
-            const data = await res.json() as { text: string; pose: string; slot: TimeSlot }
-            setHint({ text: data.text, pose: data.pose, slot: data.slot, isAi: true })
-          } else {
-            // fallback to static
-            setHint({ text: getStaticHint(mimirMode), pose: 'idle', slot, isAi: false })
-          }
+        const res = await authFetch(`/api/mimir/hint?mode=${mimirMode}`, { signal: AbortSignal.timeout(8500) })
+        if (res.ok) {
+          const data = await res.json() as { text: string; pose: string; slot: TimeSlot }
+          nextHint = { ...data, showUpgrade: false }
+        } else if (res.status === 403) {
+          nextHint.showUpgrade = true
         }
-      } catch {
-        if (!cancelled) {
-          setHint({ text: getStaticHint(mimirMode), pose: 'idle', slot, isAi: false })
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+      } catch { /* keep the static fallback */ }
+      if (!cancelled) setResult({ key: requestKey, hint: nextHint })
     }
 
     load()
     return () => { cancelled = true }
-  }, [mimirMode, mimirFrequency])
+  }, [canLoad, mimirMode, mimirFrequency, requestKey, shownKey, slot])
 
   const markShown = () => {
-    const slot = currentSlot()
-    markSlotShown(slot)
-    setHint(null)
+    if (hint) sessionStorage.setItem(`${shownKey}-${hint.slot}`, '1')
   }
 
-  return { hint, loading, markShown }
+  return { hint, loading: canLoad && result?.key !== requestKey, markShown }
 }

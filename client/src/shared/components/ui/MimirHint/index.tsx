@@ -113,7 +113,8 @@ const POSE_CLASS: Record<MimirPose, string> = {
  *
  * @param pose        - яку позу показати (default: 'idle')
  * @param textKey     - override тексту замість щоденної підказки
- * @param onDismiss   - викликається після анімації закриття (напр. для markSeen)
+ * @param onShown     - для oneTime записує показ, не закриваючи картку
+ * @param onDismiss   - викликається після закриття; без onShown одноразові підказки також викликають його при показі
  * @param oneTime     - режим одноразового хінту: без sessionStorage, тільки локальний стан
  * @param showUpgrade - показати промпт "Оживити Міміра" (коли hint є статичним fallback)
  * @param portal      - рендер картки і backdrop напряму в document.body (для глобальних шарів)
@@ -121,13 +122,14 @@ const POSE_CLASS: Record<MimirPose, string> = {
 interface MimirHintProps {
   pose?: MimirPose
   textKey?: string
+  onShown?: () => void
   onDismiss?: () => void
   oneTime?: boolean
   showUpgrade?: boolean
   portal?: boolean
 }
 
-const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss, oneTime = false, showUpgrade = false, portal = false }) => {
+const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onShown, onDismiss, oneTime = false, showUpgrade = false, portal = false }) => {
   const navigate = useNavigate()
   const { mimirMode } = useUiStore()
   // oneTime хінти не залежать від денного лічильника — показуються завжди до dismiss
@@ -136,8 +138,8 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
   // true якщо поточний показ — останній дозволений сьогодні
   const isLastShow = useState(() => !oneTime && getDailyRecord().count === MAX_DAILY_SHOWS - 1)[0]
 
-  const onDismissRef = useRef(onDismiss)
-  onDismissRef.current = onDismiss
+  const onShownRef = useRef(onShown ?? onDismiss)
+  onShownRef.current = onShown ?? onDismiss
 
   // Щоденний лічильник: рахуємо цей показ при монтуванні (не oneTime)
   useEffect(() => {
@@ -149,7 +151,7 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onDismiss
   // navigating away right after mount must not un-persist the "seen" state
   useEffect(() => {
     if (!oneTime) return
-    onDismissRef.current?.()
+    onShownRef.current?.()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

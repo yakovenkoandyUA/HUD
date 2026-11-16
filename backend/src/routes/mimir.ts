@@ -2,13 +2,18 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { loadUser } from '../middleware/loadUser'
 import { requireFeature } from '../utils/entitlements'
-import { getMimirHint } from '../controllers/mimirController'
+import { getMimirHint, isMimirOpenAiPilot } from '../controllers/mimirController'
 
 const router = Router()
 
 router.use(requireAuth)
 
-// GET /api/mimir/hint?mode=wise|witty|dark  (paid feature)
-router.get('/hint', loadUser, requireFeature('mimirAi'), getMimirHint)
+const requireMimirAi = requireFeature('mimirAi')
+router.get('/hint', loadUser, (req, res, next) => {
+  if (isMimirOpenAiPilot(req.userId)) return next()
+  requireMimirAi(req, res, next)
+}, (req, res, next) => {
+  void getMimirHint(req, res).catch(next)
+})
 
 export default router

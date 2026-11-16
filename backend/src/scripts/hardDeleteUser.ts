@@ -30,7 +30,7 @@ import FinancialReport from '../models/FinancialReport'
 import Label from '../models/Label'
 import Lesson from '../models/Lesson'
 import MealPlan from '../models/MealPlan'
-import MimirCache from '../models/MimirCache'
+import MimirCache, { MimirOpenAiCache } from '../models/MimirCache'
 import PushSubscription from '../models/PushSubscription'
 import ShoppingItem from '../models/ShoppingItem'
 import CookLog from '../models/CookLog'
@@ -75,6 +75,7 @@ export const hardDeleteUser = async (userId: string): Promise<void> => {
     Lesson.deleteMany({ userId }),
     MealPlan.deleteMany({ userId }),
     MimirCache.deleteMany({ userId }),
+    MimirOpenAiCache.deleteMany({ userId }),
     PushSubscription.deleteMany({ userId }),
     ShoppingItem.deleteMany({ userId }),
     CookLog.deleteMany({ userId }),

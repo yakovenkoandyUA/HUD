@@ -23,3 +23,6 @@ const MimirCacheSchema = new Schema<IMimirCache>({
 MimirCacheSchema.index({ userId: 1, date: 1, timeSlot: 1 }, { unique: true })
 
 export default mongoose.model<IMimirCache>('MimirCache', MimirCacheSchema)
+
+// Separate collection so enabling or disabling the pilot cannot reuse the other provider's text.
+export const MimirOpenAiCache = mongoose.model<IMimirCache>('MimirOpenAiCache', MimirCacheSchema.clone())
