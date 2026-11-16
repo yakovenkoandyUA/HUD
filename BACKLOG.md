@@ -144,7 +144,7 @@ F1 вже технічно ізольований через `f1Enabled` boolean
 
 **Квести (Спринт):**
 - **Підказка due date з лейблів** (евристика) — `suggestDueFromLabels()` (`sprint/utils/sprint.ts`) рахує медіанну відстань `dueDate - createdAt` серед минулих задач з тим самим лейблом, показує ненав'язливу підказку в `AddSprintItemModal` з кнопкою "Застосувати" (без auto-fill). Пріоритет свідомо не займали — в поточній формі `priority` стосується лише shopping-айтемів, не todo/labels.
-- **AI-розбивка задачі на checklist** — `POST /api/sprint/ai/breakdown` (`sprintAiController.ts`, гейт `requireFeature('sprintAi')` + `maxChecklistBreakdownsPerMonth`), кнопка "Розбити на кроки" в `TaskDetailModal` біля чек-листа, append (не replace) існуючих пунктів.
+- ~~**AI-розбивка задачі на checklist**~~ — **прибрано** (кнопка "Розбити на кроки", ендпоінт `/api/sprint/ai/breakdown` і контролер видалені: працювало неякісно). У `config/plans.ts` лишились невикористані `sprintAi`/`maxChecklistBreakdownsPerMonth`, а `utils/anthropic.ts` без споживачів.
 
 **Технічний борг закритий по дорозі:** `renderMarkdown` (легкий markdown-рендерер для AI-текстів) винесено з `MonthlyReport` у спільний `client/src/shared/utils/markdown.ts` (класи стилів передаються ззовні). Новий backend-helper `callAnthropicText()` (`backend/src/utils/anthropic.ts`) для нового ендпоінта — старі 4 прямі `fetch()` виклики (finance/mimir/ai routes) свідомо не чіпали (поза скоупом сесії).
 

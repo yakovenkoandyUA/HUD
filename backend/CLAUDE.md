@@ -83,7 +83,6 @@
 | `/api/sprint/todos` | GET, POST |
 | `/api/sprint/todos/:id` | PATCH, DELETE |
 | `/api/sprint/trash` | GET — soft-deleted tasks (TTL 24г) |
-| `/api/sprint/ai/breakdown` | POST — AI розбивка задачі на checklist кроки (requireFeature('sprintAi')) |
 | `/api/lessons` | GET, POST |
 | `/api/lessons/:id` | PATCH, DELETE |
 | `/api/goals` | GET, POST |
