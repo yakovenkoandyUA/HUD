@@ -130,6 +130,18 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
             onClick={() => go('/profile/family')}
           />
           <DrawerItem
+            icon={<svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="18" height="13" rx="2"/><path d="M2 10h18"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M6 3l10 0"/></svg>}
+            label="Гаманець"
+            sub="Рахунки, бюджет, категорії"
+            onClick={() => go('/profile/wallet')}
+          />
+          <DrawerItem
+            icon={<svg width="18" height="18" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 L13 6 L7 11 L1 6 Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/><line x1="3.5" y1="9.5" x2="3.5" y2="13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><line x1="10.5" y1="9.5" x2="10.5" y2="13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><circle cx="7" cy="6.5" r="1.2" fill="currentColor"/></svg>}
+            label="ШІ"
+            sub="Мімір, характер підказок"
+            onClick={() => go('/profile/mimir')}
+          />
+          <DrawerItem
             icon={<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="14" height="11" rx="2"/><path d="M5 4V3a2 2 0 0 1 4 0v1M5 9h8M5 12h5"/></svg>}
             label="Тариф"
             sub="Підписка, ліміти"

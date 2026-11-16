@@ -14,7 +14,6 @@ export type MimirMode = 'wise' | 'witty' | 'dark'
 export type MimirFrequency = 'active' | 'balanced' | 'silent'
 
 export const DEFAULT_PINNED_SECTIONS = ['/', '/finance', '/sprint', '/watchlist']
-export const DEFAULT_PINNED_PROFILE_TABS = ['me', 'wallet', 'plan', 'timeline']
 export const NAV_STYLE_MAX_PINNED: Record<NavStyle, number> = { classic: 8, pill: 7, hub: 4 }
 
 interface UiState {
@@ -27,7 +26,6 @@ interface UiState {
   navStyle: NavStyle
   navLabelMode: NavLabelMode
   pinnedSections: string[]
-  pinnedProfileTabs: string[]
   updateAvailable: boolean
   aiChatOpen: boolean
   aiChatSuggestions: string[] | null
@@ -46,7 +44,6 @@ interface UiState {
   setNavStyle: (style: NavStyle) => void
   setNavLabelMode: (mode: NavLabelMode) => void
   setPinnedSections: (sections: string[]) => void
-  setPinnedProfileTabs: (tabs: string[]) => void
   setUpdateAvailable: (v: boolean) => void
 }
 
@@ -62,7 +59,6 @@ export const useUiStore = create<UiState>()(
       navStyle: 'classic',
       navLabelMode: 'always',
       pinnedSections: DEFAULT_PINNED_SECTIONS,
-      pinnedProfileTabs: DEFAULT_PINNED_PROFILE_TABS,
       updateAvailable: false,
       aiChatOpen: false,
       aiChatSuggestions: null,
@@ -96,7 +92,6 @@ export const useUiStore = create<UiState>()(
       setNavStyle: (navStyle) => set({ navStyle }),
       setNavLabelMode: (navLabelMode) => set({ navLabelMode }),
       setPinnedSections: (pinnedSections) => set({ pinnedSections }),
-      setPinnedProfileTabs: (pinnedProfileTabs) => set({ pinnedProfileTabs }),
 
       setUpdateAvailable: (v) => set({ updateAvailable: v }),
     }),
@@ -115,7 +110,7 @@ export const useUiStore = create<UiState>()(
         if (s.theme === 'mimir') s.theme = 'vellum' as Theme
         return s as UiState
       },
-      partialize: (s) => ({ theme: s.theme, navStyle: s.navStyle, navLabelMode: s.navLabelMode, pinnedSections: s.pinnedSections, pinnedProfileTabs: s.pinnedProfileTabs, mimirMode: s.mimirMode, mimirFrequency: s.mimirFrequency }),
+      partialize: (s) => ({ theme: s.theme, navStyle: s.navStyle, navLabelMode: s.navLabelMode, pinnedSections: s.pinnedSections, mimirMode: s.mimirMode, mimirFrequency: s.mimirFrequency }),
     }
   )
 )

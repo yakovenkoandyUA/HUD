@@ -38,6 +38,8 @@ const MeModules = lazy(() => import('@/features/profile/MeModules'))
 const MeFamily = lazy(() => import('@/features/profile/MeFamily'))
 const AdminTab = lazy(() => import('@/features/profile/AdminTab'))
 const MeAccount = lazy(() => import('@/features/profile/MeAccount'))
+const WalletTab = lazy(() => import('@/features/profile/WalletTab'))
+const MeMimir = lazy(() => import('@/features/profile/MeMimir'))
 const MeLevels = lazy(() => import('@/features/profile/MeLevels'))
 const VerifyEmail = lazy(() => import('@/features/auth/VerifyEmail'))
 const ForgotPasswordScreen = lazy(() => import('@/features/auth/ForgotPassword'))
@@ -132,6 +134,8 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/profile/appearance" element={<ProfileSubPage title="ВИГЛЯД"><MeAppearance /></ProfileSubPage>} />
           <Route path="/profile/modules"    element={<ProfileSubPage title="ПРОСТОРИ"><MeModules /></ProfileSubPage>} />
           <Route path="/profile/family"     element={<MeFamily />} />
+          <Route path="/profile/wallet"    element={<ProfileSubPage title="ГАМАНЕЦЬ"><WalletTab /></ProfileSubPage>} />
+          <Route path="/profile/mimir"     element={<ProfileSubPage title="ШІ" mimir><MeMimir /></ProfileSubPage>} />
           <Route path="/profile/account"    element={<ProfileSubPage title="НАЛАШТУВАННЯ"><MeAccount /></ProfileSubPage>} />
           <Route path="/profile/levels"     element={<ProfileSubPage title="ШЛЯХ РІВНІВ" fullBleed darkHeader><MeLevels /></ProfileSubPage>} />
           <Route path="/profile/admin"      element={<ProfileSubPage title="АДМІН"><AdminTab /></ProfileSubPage>} />

@@ -3,19 +3,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProfileStore } from '@/shared/store/profileStore'
 import { useFamilyStore } from '@/shared/store/familyStore'
 import MeTab from './MeTab'
-import WalletTab from './WalletTab'
 import PlanTab from './PlanTab'
-import YearbookTab from './YearbookTab'
-import MeMimir from './MeMimir'
 import styles from './ProfilePage.module.css'
 
-type ProfileTab = 'me' | 'wallet' | 'plan' | 'timeline' | 'mimir'
+type ProfileTab = 'me' | 'plan'
 
 /**
  * ProfilePage
  * -----------
- * Сторінка налаштувань профілю з 3 вкладками через ?tab= query param.
- * BottomNav на /profile перемикається в профільний режим і drive-ить вкладки.
+ * Сторінка профілю: за замовчуванням MeTab; ?tab=plan показує тарифи (на нього ведуть
+ * платіжні CTA). Нижньої навігації на /profile немає — решта розділів (Гаманець, ШІ,
+ * Вигляд тощо) відкриваються з бічного меню (ProfileDrawer).
  *
  * Props: none
  */
@@ -25,7 +23,7 @@ const ProfilePage: React.FC = () => {
   const { activeProfile, logout } = useProfileStore()
   const { fetchFamily } = useFamilyStore()
 
-  const activeTab = (searchParams.get('tab') as ProfileTab | null) ?? 'me'
+  const activeTab: ProfileTab = searchParams.get('tab') === 'plan' ? 'plan' : 'me'
   const [branchActive, setBranchActive] = useState(false)
 
   useEffect(() => { fetchFamily() }, [fetchFamily])
@@ -39,9 +37,9 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className={`${styles.page} ${activeTab === 'mimir' ? styles.pageMimir : ''}`}>
+    <div className={styles.page}>
       {/* ── Header ── */}
-      <div className={`${styles.header} ${activeTab === 'mimir' ? styles.headerMimir : ''}`}>
+      <div className={styles.header}>
         <button
           type="button"
           className={`${styles.backBtn} ${branchActive ? styles.backBtnHidden : ''}`}
@@ -61,14 +59,11 @@ const ProfilePage: React.FC = () => {
         </button>
       </div>
 
-      {/* ── Tab content (with bottom nav padding) ── */}
+      {/* ── Tab content ── */}
       <div className={styles.content}>
         <div key={activeTab} className={styles.tabFade}>
           {activeTab === 'me'     && <MeTab onBranchActiveChange={setBranchActive} />}
-          {activeTab === 'wallet' && <WalletTab />}
           {activeTab === 'plan'   && <PlanTab />}
-          {activeTab === 'timeline' && <YearbookTab />}
-          {activeTab === 'mimir'    && <MeMimir />}
         </div>
       </div>
     </div>

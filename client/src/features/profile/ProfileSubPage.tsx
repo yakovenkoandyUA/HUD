@@ -20,15 +20,18 @@ const CLOSE_ANIM_MS = 260
  *                                  a scale/fade close animation before navigating back.
  * @prop {boolean}   [darkHeader] — force header to dark colors regardless of active app theme
  *                                  (for pages with a permanently dark atmospheric background)
+ * @prop {boolean}   [mimir]      — transparent page + blurred header, so the Mimir page's own
+ *                                  background shows through
  */
 interface ProfileSubPageProps {
   title: string
   children: ReactNode
   fullBleed?: boolean
   darkHeader?: boolean
+  mimir?: boolean
 }
 
-const ProfileSubPage: React.FC<ProfileSubPageProps> = ({ title, children, fullBleed, darkHeader }) => {
+const ProfileSubPage: React.FC<ProfileSubPageProps> = ({ title, children, fullBleed, darkHeader, mimir }) => {
   const navigate = useNavigate()
   const [closing, setClosing] = useState(false)
 
@@ -42,8 +45,8 @@ const ProfileSubPage: React.FC<ProfileSubPageProps> = ({ title, children, fullBl
   }
 
   return (
-    <div className={styles.page}>
-      <div className={`${styles.header} ${darkHeader ? styles.headerDark : ''}`}>
+    <div className={`${styles.page} ${mimir ? styles.pageMimir : ''}`}>
+      <div className={`${styles.header} ${darkHeader ? styles.headerDark : ''} ${mimir ? styles.headerMimir : ''}`}>
         <button type="button" className={styles.backBtn} onClick={handleBack}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M12.5 16L7 10l5.5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
