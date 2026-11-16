@@ -151,6 +151,8 @@
 | `/api/spaces/:id/pet/profile` | GET, PATCH — petProfile sub-document (name/species/breed/birthDate/weight/photo/chip/passport) |
 | `/api/spaces/:id/pet/events` | GET (`?type=&limit=`), POST — PetEvent (vet_visit/vaccination/medication/grooming/weight/note) |
 | `/api/spaces/:id/pet/events/:eventId` | PATCH, DELETE |
+| `/api/spaces/:id/sport/events/:eventId` | PATCH, DELETE — для учасників обраного простору |
+| `/api/spaces/:id/sport/programs/:programId` | PATCH, DELETE — для учасників обраного простору. При видаленні очищаються сесії програми в цьому просторі |
 | `/api/spaces/:id/trip/profile` | GET, PATCH — tripProfile sub-document (destination/startDate/endDate/travelers/status) |
 | `/api/ai/space-chat` | POST — SSE streaming (Claude Haiku), system prompt залежить від space.type (vehicle→механік, trip→travel planner, project→PM); контекст: назва/тип + останні 5 подій/задач/нотаток |
 | `/api/mimir/hint` | GET `?mode=wise\|witty\|dark` — AI-підказка Міміра. Claude для звичайних акаунтів за чинним тарифним правилом; OpenAI для одного автентифікованого профілю, заданого в env |
