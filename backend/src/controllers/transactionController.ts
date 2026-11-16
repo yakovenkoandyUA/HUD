@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import Transaction from '../models/Transaction'
+import { findHomeSpaceId, isUtilitiesCategory } from '../utils/utilitiesSpace'
 
 export async function getAll(req: Request, res: Response): Promise<void> {
   const { month, spaceId } = req.query as { month?: string; spaceId?: string }
@@ -31,7 +32,12 @@ export async function getStats(req: Request, res: Response): Promise<void> {
 }
 
 export async function create(req: Request, res: Response): Promise<void> {
-  const item = await Transaction.create({ ...req.body, userId: req.userId })
+  const body = { ...req.body }
+  // "Комунальні" expenses without an explicit space go straight to the user's home space
+  if (!body.spaceId && body.type === 'expense' && isUtilitiesCategory(body.category)) {
+    body.spaceId = await findHomeSpaceId(req.userId!)
+  }
+  const item = await Transaction.create({ ...body, userId: req.userId })
   res.status(201).json(item)
 }
 

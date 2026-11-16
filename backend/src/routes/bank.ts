@@ -7,6 +7,7 @@ import BankConnection from '../models/BankConnection'
 import Transaction from '../models/Transaction'
 import Category from '../models/Category'
 import { categorize } from '../utils/categorizeTransaction'
+import { findHomeSpaceId, isUtilitiesCategory } from '../utils/utilitiesSpace'
 
 const router = Router()
 
@@ -216,6 +217,7 @@ router.post('/sync', ...requireMonobank, async (req: Request, res: Response) => 
 
   // Users with the multi-wallet flag keep Monobank in its own wallet; everyone else stays on the single balance.
   const walletId = req.user?.walletsEnabled ? 'mono' : 'sense'
+  const homeSpaceId = await findHomeSpaceId(req.userId!)
 
   const toInsert = statements
     .filter(s => s.currencyCode === 980 && s.amount !== 0 && !existingMonoIds.has(s.id))
@@ -235,6 +237,7 @@ router.post('/sync', ...requireMonobank, async (req: Request, res: Response) => 
         mcc:        s.mcc || null,
         source:     'monobank' as const,
         walletId,
+        spaceId:    s.amount < 0 && isUtilitiesCategory(match?.name) ? homeSpaceId : null,
       }
     })
 
@@ -409,6 +412,7 @@ router.post('/import-csv', ...requireMonobank, async (req: Request, res: Respons
   const toInsert: object[] = []
   // CSV is a Monobank statement — for multi-wallet users it belongs to the Mono wallet.
   const csvWalletId = req.user?.walletsEnabled ? 'mono' : 'sense'
+  const homeSpaceId = await findHomeSpaceId(req.userId!)
 
   for (const line of dataLines) {
     const cols = parseCsvLine(line)
@@ -458,6 +462,7 @@ router.post('/import-csv', ...requireMonobank, async (req: Request, res: Respons
       mcc:        mcc ?? null,
       source:     'csv' as const,
       walletId:   csvWalletId,
+      spaceId:    amount < 0 && isUtilitiesCategory(match?.name) ? homeSpaceId : null,
     })
   }
 
@@ -483,6 +488,7 @@ router.post('/recategorize', ...requireMonobank, async (req: Request, res: Respo
   }
 
   const userCategories = await Category.find({ userId: req.userId, isActive: true })
+  const homeSpaceId = await findHomeSpaceId(req.userId!)
 
   let updated = 0
   let skipped = 0
@@ -492,6 +498,7 @@ router.post('/recategorize', ...requireMonobank, async (req: Request, res: Respo
     if (!match) { skipped++; continue }
     tx.category   = match.name
     tx.categoryId = match.id
+    if (!tx.spaceId && tx.type === 'expense' && isUtilitiesCategory(match.name)) tx.spaceId = homeSpaceId
     await tx.save()
     updated++
   }
