@@ -114,6 +114,7 @@ const POSE_CLASS: Record<MimirPose, string> = {
  * @param pose        - яку позу показати (default: 'idle')
  * @param textKey     - override тексту замість щоденної підказки
  * @param onShown     - для oneTime записує показ, не закриваючи картку
+ * @param onDiscussOverdue - відкриває розмову про прострочені задачі
  * @param onDismiss   - викликається після закриття; без onShown одноразові підказки також викликають його при показі
  * @param oneTime     - режим одноразового хінту: без sessionStorage, тільки локальний стан
  * @param showUpgrade - показати промпт "Оживити Міміра" (коли hint є статичним fallback)
@@ -123,13 +124,14 @@ interface MimirHintProps {
   pose?: MimirPose
   textKey?: string
   onShown?: () => void
+  onDiscussOverdue?: () => void
   onDismiss?: () => void
   oneTime?: boolean
   showUpgrade?: boolean
   portal?: boolean
 }
 
-const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onShown, onDismiss, oneTime = false, showUpgrade = false, portal = false }) => {
+const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onShown, onDiscussOverdue, onDismiss, oneTime = false, showUpgrade = false, portal = false }) => {
   const navigate = useNavigate()
   const { mimirMode } = useUiStore()
   // oneTime хінти не залежать від денного лічильника — показуються завжди до dismiss
@@ -188,7 +190,15 @@ const MimirHint: React.FC<MimirHintProps> = ({ pose = 'idle', textKey, onShown, 
         <div key={mimirMode} className={styles.bubble}>
           <p className={styles.text}>{isLastShow ? `${hint} Нагадую востаннє на сьогодні.` : hint}</p>
           <span className={styles.signature}>— Мімір</span>
-          {showUpgrade ? (
+          {onDiscussOverdue ? (
+            <button type="button" className={styles.upgradeLink} onClick={event => {
+              event.stopPropagation()
+              handleDismiss()
+              onDiscussOverdue()
+            }}>
+              Обговорити задачі
+            </button>
+          ) : showUpgrade ? (
             <button
               type="button"
               className={styles.upgradeLink}

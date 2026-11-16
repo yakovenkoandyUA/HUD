@@ -31,7 +31,8 @@ interface UiState {
   updateAvailable: boolean
   aiChatOpen: boolean
   aiChatSuggestions: string[] | null
-  openAiChat: (suggestions?: string[]) => void
+  aiChatDiscussOverdue: boolean
+  openAiChat: (suggestions?: string[], discussOverdue?: boolean) => void
   closeAiChat: () => void
   mimirMode: MimirMode
   setMimirMode: (mode: MimirMode) => void
@@ -65,8 +66,10 @@ export const useUiStore = create<UiState>()(
       updateAvailable: false,
       aiChatOpen: false,
       aiChatSuggestions: null,
-      openAiChat: (suggestions) => set({ aiChatOpen: true, aiChatSuggestions: suggestions ?? null }),
-      closeAiChat: () => set({ aiChatOpen: false }),
+      aiChatDiscussOverdue: false,
+      openAiChat: (suggestions, discussOverdue = false) =>
+        set({ aiChatOpen: true, aiChatSuggestions: suggestions ?? null, aiChatDiscussOverdue: discussOverdue }),
+      closeAiChat: () => set({ aiChatOpen: false, aiChatDiscussOverdue: false }),
       mimirMode: 'wise',
       setMimirMode: (mimirMode) => set({ mimirMode }),
       mimirFrequency: 'balanced',

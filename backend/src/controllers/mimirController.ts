@@ -7,7 +7,7 @@ import MimirCache, { MimirOpenAiCache } from '../models/MimirCache'
 type MimirMode = 'wise' | 'witty' | 'dark'
 type TimeSlot = 'morning' | 'afternoon' | 'evening'
 
-function getKyivWindow(now: Date): { date: string; timeSlot: TimeSlot } {
+export function getKyivWindow(now: Date): { date: string; timeSlot: TimeSlot } {
   const date = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit',
   }).format(now)
@@ -78,6 +78,7 @@ interface OpenAiHint {
   pose: string
   slot: TimeSlot
   cached: boolean
+  canDiscussOverdue?: boolean
 }
 
 const pilotInFlight = new Map<string, Promise<OpenAiHint>>()
@@ -92,7 +93,7 @@ async function generatePilotHint(
 ): Promise<OpenAiHint> {
   const key = { userId, date, timeSlot }
   const cached = await MimirOpenAiCache.findOne(key).lean()
-  if (cached) return { text: cached.text, pose: cached.pose, slot: timeSlot, cached: true }
+  if (cached) return { text: cached.text, pose: cached.pose, slot: timeSlot, cached: true, ...(cached.overdueOpenTasks ? { canDiscussOverdue: true } : {}) }
 
   const openTasks = { userId, deletedAt: null, done: false }
   const [openTasksDueToday, overdueOpenTasks, history] = await Promise.all([
@@ -116,6 +117,7 @@ async function generatePilotHint(
     body: JSON.stringify({
       model: 'gpt-5-mini',
       instructions: `${buildSystemPrompt(mode)}
+Якщо є прострочені задачі, згадай їх у репліці.
 history — твої попередні репліки та тодішні лічильники, від новішого до старішого. Якщо зміна помітна, природно продовж думку; інакше скажи щось свіже або відреагуй на час доби. Не повторюй реплік. Факти бери з current. Менше прострочених задач саме по собі не означає, що їх виконали.`,
       input: JSON.stringify({ current: { date, timeSlot, ...counts }, history }),
       reasoning: { effort: 'minimal' },
@@ -140,7 +142,7 @@ history — твої попередні репліки та тодішні лі�
     key, { $setOnInsert: { mode, text, pose: SLOT_POSE[timeSlot][mode], ...counts } },
     { upsert: true, new: true },
   ).lean()
-  return { text: saved.text, pose: saved.pose, slot: timeSlot, cached: false }
+  return { text: saved.text, pose: saved.pose, slot: timeSlot, cached: false, ...(saved.overdueOpenTasks ? { canDiscussOverdue: true } : {}) }
 }
 
 export async function getMimirHint(req: Request, res: Response): Promise<void> {

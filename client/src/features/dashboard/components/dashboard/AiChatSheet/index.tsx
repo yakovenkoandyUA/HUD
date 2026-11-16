@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useSwipeToDismiss } from '@/shared/hooks/useSwipeToDismiss'
 import { useModalHistory } from '@/shared/hooks/useModalHistory'
-import { getToken } from '@/shared/services/api'
+import { authFetch } from '@/shared/services/api'
 import MimirIcon from '@/shared/components/ui/MimirIcon'
 import InfoToggle from '@/shared/components/ui/InfoToggle'
 import styles from './AiChatSheet.module.css'
@@ -20,11 +20,13 @@ const MIMIR_THINKING_SRC = '/mimir/mimir-thinking.webp'
  * @prop {boolean}    isOpen      — видимість шіта
  * @prop {() => void} onClose     — callback закриття
  * @prop {string[]}   [suggestions] — контекстні приклади питань замість дефолтних (напр. відкрито з фінансів)
+ * @prop {boolean}    [discussOverdue] — відкрито з репліки про прострочені задачі
  */
 interface AiChatSheetProps {
   isOpen: boolean
   onClose: () => void
   suggestions?: string[]
+  discussOverdue?: boolean
 }
 
 interface ActionResult {
@@ -40,6 +42,13 @@ interface Message {
   streaming?: boolean
   action?: ActionResult
 }
+
+interface ChatHistory {
+  enabled: boolean
+  turns: Array<{ _id: string; question: string; answer: string; action?: ActionResult }>
+}
+
+const OVERDUE_QUESTION = 'З якої простроченої задачі почати?'
 
 const SUGGESTIONS = [
   'Скільки витратив цього місяця?',
@@ -66,8 +75,9 @@ const QuestIcon: React.FC = () => (
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions }) => {
+const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions, discussOverdue = false }) => {
   const [messages, setMessages] = useState<Message[]>([])
+  const [historyEnabled, setHistoryEnabled] = useState<boolean | null>(null)
   const [input, setInput]       = useState('')
   const [busy, setBusy]         = useState(false)
   const [mounted, setMounted]   = useState(false)
@@ -82,6 +92,32 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions 
 
   useSwipeToDismiss(onClose, { enabled: mounted, bodyRef, overlayRef, sheetRef })
   useModalHistory(onClose, isOpen)
+
+  useEffect(() => {
+    if (!isOpen || historyEnabled !== null) return
+    let cancelled = false
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 8000)
+    const loadHistory = async () => {
+      try {
+        const response = await authFetch('/api/ai/chat/history', { signal: controller.signal, cache: 'no-store' })
+        if (!response.ok) throw new Error('History unavailable')
+        const history = await response.json() as ChatHistory
+        if (cancelled) return
+        setMessages(history.turns.flatMap(turn => [
+          { id: `${turn._id}-user`, role: 'user' as const, text: turn.question },
+          { id: `${turn._id}-ai`, role: 'ai' as const, text: turn.answer, action: turn.action },
+        ]))
+        setHistoryEnabled(history.enabled)
+      } catch {
+        if (!cancelled) setHistoryEnabled(false)
+      }
+    }
+    void loadHistory()
+    return () => { cancelled = true; window.clearTimeout(timeout); controller.abort() }
+  }, [isOpen, historyEnabled])
+
+  useEffect(() => () => abortRef.current?.abort(), [])
 
   useEffect(() => {
     if (isOpen) {
@@ -104,7 +140,7 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions 
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim()
-    if (!trimmed || busy) return
+    if (!trimmed || abortRef.current || historyEnabled === null) return
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: trimmed }
     const aiId = (Date.now() + 1).toString()
@@ -114,18 +150,13 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions 
     setInput('')
     setBusy(true)
 
-    const token = getToken()
     const ctrl  = new AbortController()
     abortRef.current = ctrl
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ai/chat`, {
+      const res = await authFetch('/api/ai/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: trimmed, discussOverdue }),
         signal: ctrl.signal,
       })
 
@@ -181,9 +212,10 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions 
         m.id === aiId ? { ...m, text: 'Не вдалось зʼєднатись. Спробуй ще.', streaming: false } : m
       ))
     } finally {
+      abortRef.current = null
       setBusy(false)
     }
-  }, [busy])
+  }, [discussOverdue, historyEnabled])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -214,7 +246,9 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions 
             <span className={styles.headerTitle}>MIMIR</span>
             <InfoToggle
               ariaLabel="Що бачить Мімір"
-              text="Мімір бачить контекст поточного розділу (наприклад, фінанси чи рецепт), щоб відповідати влучно. Історія діалогу не зберігається — кожен чат починається з чистого аркуша."
+              text={historyEnabled
+                ? 'Мімір підтягує дані за темою запиту й пам’ятає до десяти останніх пар запитань і відповідей.'
+                : 'Мімір підтягує дані за темою запиту, наприклад фінанси чи задачі.'}
             />
           </div>
           <button type="button" className={styles.closeBtn} onClick={onClose}>
@@ -226,12 +260,14 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions 
 
         {/* Messages */}
         <div ref={bodyRef} className={styles.body}>
-          {messages.length === 0 ? (
+          {historyEnabled === null ? (
+            <p className={styles.emptyText} role="status">Завантажую чат…</p>
+          ) : messages.length === 0 ? (
             <div className={styles.empty}>
               <img src={MIMIR_EMPTY_SRC} alt="Mimir" className={styles.emptyMimir} draggable={false} />
               <p className={styles.emptyText}>Я допоможу знайти відповідь у твоїх фінансах,<br/>задачах, рецептах і медіа.</p>
               <div className={styles.suggestions}>
-                {(suggestions ?? SUGGESTIONS).map(s => (
+                {(discussOverdue ? [] : suggestions ?? SUGGESTIONS).map(s => (
                   <button
                     key={s}
                     type="button"
@@ -269,6 +305,11 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions 
               </div>
             ))
           )}
+          {discussOverdue && historyEnabled !== null && !busy && (
+            <button type="button" className={styles.suggestionChip} onClick={() => sendMessage(OVERDUE_QUESTION)}>
+              {OVERDUE_QUESTION}
+            </button>
+          )}
           <div ref={bottomRef} />
         </div>
 
@@ -278,17 +319,18 @@ const AiChatSheet: React.FC<AiChatSheetProps> = ({ isOpen, onClose, suggestions 
             ref={inputRef}
             className={styles.input}
             value={input}
+            maxLength={historyEnabled ? 2000 : undefined}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Запитай щось..."
             rows={1}
-            disabled={busy}
+            disabled={busy || historyEnabled === null}
           />
           <button
             type="button"
             className={`${styles.sendBtn} ${(busy || !input.trim()) ? styles.sendBtnDisabled : ''}`}
             onClick={() => sendMessage(input)}
-            disabled={busy || !input.trim()}
+            disabled={busy || historyEnabled === null || !input.trim()}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/>

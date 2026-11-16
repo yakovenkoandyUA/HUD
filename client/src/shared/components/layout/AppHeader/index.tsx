@@ -39,7 +39,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
   const [showDrawer, setShowDrawer] = useState(false)
   const [offline, setOffline] = useState(!navigator.onLine)
   const { activeProfile } = useProfileStore()
-  const { showToast, updateAvailable, aiChatOpen, aiChatSuggestions, openAiChat, closeAiChat } = useUiStore()
+  const { showToast, updateAvailable, aiChatOpen, aiChatSuggestions, aiChatDiscussOverdue, openAiChat, closeAiChat } = useUiStore()
   const navigate = useNavigate()
   const location = useLocation()
   const canUseAI = useCanUseFeature('aiChat')
@@ -128,7 +128,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
 
       <VerificationBanner />
 
-      <AiChatSheet isOpen={aiChatOpen} onClose={closeAiChat} suggestions={aiChatSuggestions ?? undefined} />
+      <AiChatSheet key={activeProfile?.id} isOpen={aiChatOpen} onClose={closeAiChat} suggestions={aiChatSuggestions ?? undefined} discussOverdue={aiChatDiscussOverdue} />
       <FeedbackSheet isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
       <ProfileDrawer isOpen={showDrawer} onClose={() => setShowDrawer(false)} />
     </>

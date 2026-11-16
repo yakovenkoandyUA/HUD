@@ -32,6 +32,7 @@ import { useSpacesStore } from '@/features/memories/store/spacesStore'
 import DayOverlay from './components/dashboard/DayOverlay'
 import MimirHint, { type MimirPose } from '@/shared/components/ui/MimirHint'
 import { useMimirHint } from '@/shared/hooks/useMimirHint'
+import { useCanUseFeature } from '@/shared/hooks/usePlan'
 import { useMimirAiHint } from '@/shared/hooks/useMimirAiHint'
 import { MIMIR_DIALOGUE, getMimirText } from '@/shared/data/mimirDialogue'
 import { getMimirHistory, isDailyEligible, markDailyShown } from '@/shared/utils/mimirHistory'
@@ -42,7 +43,9 @@ const Dashboard: React.FC = () => {
   const { balance, transactions, addExpense, fetchTransactions } = useFinanceStore()
   const { items: sprintItems, fetchItems } = useSprintStore()
   const { todayEvents: todayWorkouts, fetchTodayEvents } = useSportStore()
-  const { showToast, mimirMode } = useUiStore()
+  const { showToast, mimirMode, openAiChat } = useUiStore()
+  const canUseAiChat = useCanUseFeature('aiChat')
+  const isVerified = useProfileStore(s => s.activeProfile?.isVerified)
   const f1Enabled         = useProfileStore(s => s.activeProfile?.f1Enabled ?? false)
   const drinksEnabled     = useProfileStore(s => s.activeProfile?.drinksEnabled ?? false)
   const ensureCellarSpace = useSpacesStore(s => s.ensureCellarSpace)
@@ -240,6 +243,8 @@ const Dashboard: React.FC = () => {
                 markDailyShown(userId, 'dashboard_daily_greeting')
               }}
               showUpgrade={aiHint.showUpgrade}
+              onDiscussOverdue={aiHint.canDiscussOverdue && canUseAiChat && isVerified
+                ? () => openAiChat(undefined, true) : undefined}
             />
           </div>
         ) : showDailyGreeting ? (

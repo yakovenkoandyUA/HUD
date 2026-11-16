@@ -9,6 +9,7 @@ export interface MimirHintResult {
   pose: string
   slot: TimeSlot
   showUpgrade: boolean
+  canDiscussOverdue?: boolean
 }
 
 // ── Static fallback hints per mode ────────────────────────────────────────────
@@ -126,7 +127,7 @@ export function useMimirAiHint(userId: string, enabled: boolean): {
       try {
         const res = await authFetch(`/api/mimir/hint?mode=${mimirMode}`, { signal: AbortSignal.timeout(8500) })
         if (res.ok) {
-          const data = await res.json() as { text: string; pose: string; slot: TimeSlot }
+          const data = await res.json() as { text: string; pose: string; slot: TimeSlot; canDiscussOverdue?: boolean }
           nextHint = { ...data, showUpgrade: false }
         } else if (res.status === 403) {
           nextHint.showUpgrade = true

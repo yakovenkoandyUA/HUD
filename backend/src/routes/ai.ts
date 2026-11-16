@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express'
+import { Router, Request, Response, NextFunction } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { requireVerified } from '../middleware/requireVerified'
 import { loadUser } from '../middleware/loadUser'
@@ -13,6 +13,8 @@ import Memory from '../models/Memory'
 import Note from '../models/Note'
 import { Space } from '../models/Space'
 import { User } from '../models/User'
+import { getKyivWindow, isMimirOpenAiPilot } from '../controllers/mimirController'
+import MimirConversation, { MIMIR_CHAT_TURN_LIMIT } from '../models/MimirConversation'
 
 const router = Router()
 router.use(requireAuth)
@@ -115,7 +117,7 @@ function buildActionPromptHint(intent: ActionIntent): string {
 
 async function buildContext(userId: string, domains: string[]): Promise<string> {
   const parts: string[] = []
-  const today = new Date().toISOString().slice(0, 10)
+  const { date: today } = getKyivWindow(new Date())
 
   if (domains.includes('finance')) {
     const ym = today.slice(0, 7)
@@ -166,12 +168,15 @@ ${recent}`)
   }
 
   if (domains.includes('sprint')) {
-    const tasks = await SprintTask.find({ userId, done: false }).sort({ createdAt: -1 }).limit(20).lean()
+    const tasks = await SprintTask.find({ userId, done: false, deletedAt: null }).sort({ createdAt: -1 }).limit(20).lean()
+    const overdue = await SprintTask.find({ userId, done: false, deletedAt: null, dueDate: { $gt: '', $lt: today } })
+      .select('title dueDate priority').sort({ dueDate: 1 }).limit(10).lean()
     const todos = await TodoItem.find({ userId, done: false }).sort({ createdAt: -1 }).limit(10).lean()
     const todayTasks = tasks.filter(t => !t.dueDate || t.dueDate === today)
     parts.push(`ЗАДАЧІ/КВЕСТИ:
 Активних квестів: ${tasks.length}
 Сьогодні: ${todayTasks.map(t => `• ${t.title}`).join('\n') || 'немає'}
+Прострочені (до 10 найдавніших): ${overdue.map(t => `• ${t.title} (до ${t.dueDate}, пріоритет: ${t.priority ?? 'normal'})`).join('\n') || 'немає'}
 Решта: ${tasks.slice(0, 10).map(t => `• ${t.title}${t.dueDate ? ` (до ${t.dueDate})` : ''}`).join('\n')}
 Todo: ${todos.map(t => `• ${t.title}`).join('\n') || 'немає'}`)
   }
@@ -203,33 +208,57 @@ ${recipes.map(r => `• ${r.title} (${r.category ?? '—'}, ${r.cookTime ?? '?'}
 
 // ── POST /api/ai/chat (SSE streaming) ────────────────────────────────────────
 
-router.post('/chat', requireFeature('aiChat'), async (req: Request, res: Response): Promise<void> => {
-  const { message } = req.body as { message?: string }
-  if (!message?.trim()) { res.status(400).json({ error: 'message required' }); return }
+export async function getChatHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  res.set('Cache-Control', 'private, no-store')
+  const enabled = isMimirOpenAiPilot(req.userId)
+  try {
+    const conversation = enabled ? await MimirConversation.findOne({ userId: req.userId }).lean() : null
+    res.json({ enabled, turns: conversation?.turns ?? [] })
+  } catch (error) {
+    next(error)
+  }
+}
+
+const activePilotTurns = new Set<string>()
+
+export async function streamChat(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const { message, discussOverdue } = req.body as { message?: string; discussOverdue?: unknown }
+  if (typeof message !== 'string' || !message.trim()) { res.status(400).json({ error: 'message required' }); return }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) { res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' }); return }
 
   const userId   = req.userId as string
-  const intent   = detectActionIntent(message)
-  const domains  = detectDomains(message)
-  const context  = await buildContext(userId, domains)
-  const userName = (await User.findById(userId).select('name').lean() as { name?: string } | null)?.name ?? 'Користувач'
-  const today    = new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const remember = isMimirOpenAiPilot(userId)
+  const question = message.trim()
+  if (remember && question.length > 2000) { res.status(400).json({ error: 'message too long' }); return }
+  if (remember && activePilotTurns.has(userId)) { res.status(409).json({ error: 'Chat is busy' }); return }
+  if (remember) activePilotTurns.add(userId)
+  try {
+    const history = remember ? await MimirConversation.findOne({ userId }).lean() : null
+    const turns = history?.turns ?? []
+    const intent   = detectActionIntent(message)
+    const detected = detectDomains(message)
+    const fromMascot = remember && discussOverdue === true
+    const domains = detected.length ? detected : fromMascot ? ['sprint'] : turns[turns.length - 1]?.domains ?? []
+    const context  = await buildContext(userId, domains)
+    const userName = (await User.findById(userId).select('name').lean() as { name?: string } | null)?.name ?? 'Користувач'
+    const today    = new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
-  const systemPrompt = `Ти MIMIR — особистий AI-асистент органайзеру. Відповідаєш лаконічно, по-людськи, українською.
+    const systemPrompt = `Ти MIMIR — особистий AI-асистент органайзеру. Відповідаєш лаконічно, по-людськи, українською.
 Користувач: ${userName}. Сьогодні: ${today}.
 
-${context ? `Дані користувача:\n${context}` : 'Даних не знайдено — відповідай загально.'}${intent ? buildActionPromptHint(intent) : ''}`
+${context ? `Дані користувача:\n${context}` : 'Даних не знайдено — відповідай загально.'}${intent ? buildActionPromptHint(intent) : ''}
+${fromMascot && domains.includes('sprint') ? 'Розмову відкрили з репліки маскота про прострочені задачі. На загальне уточнення спирайся на їхній актуальний список. Якщо їх уже немає, скажи про це.' : ''}`
 
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+    res.flushHeaders()
 
-  try {
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: AbortSignal.timeout(45000),
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
@@ -240,7 +269,13 @@ ${context ? `Дані користувача:\n${context}` : 'Даних не з
         max_tokens: 600,
         stream: true,
         system: systemPrompt,
-        messages: [{ role: 'user', content: message.trim() }],
+        messages: [
+          ...turns.flatMap(turn => [
+            { role: 'user', content: turn.question },
+            { role: 'assistant', content: turn.answer },
+          ]),
+          { role: 'user', content: question },
+        ],
       }),
     })
 
@@ -252,17 +287,22 @@ ${context ? `Дані користувача:\n${context}` : 'Даних не з
     const reader  = anthropicRes.body.getReader()
     const decoder = new TextDecoder()
     let accText   = ''
+    let buffer = ''
+    let complete = false
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      const raw = decoder.decode(value, { stream: true })
-      for (const line of raw.split('\n')) {
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+      for (const line of lines) {
         if (!line.startsWith('data: ')) continue
         const payload = line.slice(6).trim()
         if (!payload || payload === '[DONE]') continue
         try {
           const parsed = JSON.parse(payload) as { type: string; delta?: { type: string; text?: string } }
+          if (parsed.type === 'message_stop') complete = true
           if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
             accText += parsed.delta.text
             res.write(`data: ${JSON.stringify(parsed.delta.text)}\n\n`)
@@ -270,20 +310,33 @@ ${context ? `Дані користувача:\n${context}` : 'Даних не з
         } catch { /* skip malformed */ }
       }
     }
+    if (!complete) throw new Error('Incomplete AI response')
 
     // Execute detected action and emit result before [DONE]
-    if (intent) {
-      const result = await executeAction(intent, userId, accText)
-      if (result) res.write(`data: [ACTION:${JSON.stringify(result)}]\n\n`)
+    const action = intent ? await executeAction(intent, userId, accText) : null
+    if (action) res.write(`data: [ACTION:${JSON.stringify(action)}]\n\n`)
+    if (remember && accText.trim()) {
+      const turn = { question, answer: accText, domains, ...(action ? { action } : {}) }
+      await MimirConversation.updateOne(
+        { userId },
+        { $push: { turns: { $each: [turn], $slice: -MIMIR_CHAT_TURN_LIMIT } } },
+        { upsert: true },
+      )
     }
 
     res.write('data: [DONE]\n\n')
     res.end()
   } catch (err) {
-    res.write(`data: [ERROR] ${String(err)}\n\n`)
+    if (!res.headersSent) { next(err); return }
+    res.write('data: [ERROR]\n\n')
     res.end()
+  } finally {
+    if (remember) activePilotTurns.delete(userId)
   }
-})
+}
+
+router.get('/chat/history', requireFeature('aiChat'), getChatHistory)
+router.post('/chat', requireFeature('aiChat'), streamChat)
 
 // ── POST /api/ai/chef-chat (SSE streaming, контекст конкретного рецепту) ─────
 

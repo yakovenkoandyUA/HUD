@@ -37,6 +37,7 @@ const writeQueue = new Queue('api-write-queue', {
 registerRoute(
   ({ url, request }) =>
     url.origin === API_URL &&
+    url.pathname !== '/api/ai/chat' &&
     ['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method),
   new NetworkOnly({
     plugins: [{
