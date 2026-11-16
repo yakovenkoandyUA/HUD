@@ -214,6 +214,8 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 **Стан нагадувань SprintTask і TodoItem** — `automaticReminderSince?: Date` вказує, коли був збережений розклад з датою і часом. `reminderSent` відповідає за ранній чи ручний пуш, `dueReminderSent` — за пуш у дедлайн. `reminderClaimUntil?: Date` резервує спробу на дві хвилини. Якщо перший час надсилання минув до збереження розкладу, рання спроба пропускається.
 
+**PushSendReceipt** — короткоживучий запис спроби для конкретної події й підписки пристрою. Ідентифікатор хешує ключ події та дані підписки. `leaseUntil` блокує паралельні спроби, `accepted` запобігає повтору після успіху, а TTL-індекс на `expiresAt` видаляє запис після закінчення вікна надсилання.
+
 **WatchlistItem** — `watchedEpisodes: number[]` прогрес серіалу, `watchedWith: string[]` (userId family members), `totalSeasons` з TMDB, `category: 'movie'|'series'|'anime'|'book'|'game'`, `runtimeMin`/`episodeRuntimeMin` — реальна тривалість з TMDB (фільм/епізод, хв) для точного підрахунку годин у WatchlistStatsSheet, `moodProfile: { humor, tension, romance, action, drama, atmosphere }` (0-5 кожна, вручну виставляється в WatchlistDetail, за аналогією з `Drink.flavor`)
 
 **FamilyLink** — `requester: string`, `recipient: string`, `status: 'pending'|'accepted'`. Унікальний compound index `{requester, recipient}`. `getAcceptedFamilyIds(userId)` — shared helper.
@@ -275,12 +277,14 @@ WAYFORPAY_SECRET_KEY=...      # (Phase 4B)
 
 ## Jobs/Schedulers
 
-- `pushJobs` — три cron: F1 push за 1г до гонки (every-minute lightweight перевірка `F1_RACES_2026`), нова серія watchlist (10:00 UTC), новий сезон watchlist (09:00 UTC)
-- `routineReminders` — cron 09:00 UTC, нагадування про невиконані звички
-- `recurringReminders` — cron 09:00 UTC, нагадування про платежі (1/2/7 днів до)
-- `dayReminder` — денний підсумок push 18:00 UTC (21:00 Kyiv)
-- `f1Scheduler` — щопонеділка о 08:00 за Києвом анонс гоночного вікенду, щохвилинний цикл для квестів, покупок і ручних нагадувань, 5-хвилинний цикл для сесій F1 і щоденне нагадування про регулярні платежі о 05:00. Розклад квестів і покупок використовує `Europe/Kyiv`. Для старих ручних нагадувань без часу дедлайн о 09:00.
-- `workoutReminders` — 5-хвилинний цикл, точний до `SportEvent.date` (дефолт 09:00) мінус `reminder.amount/unit`; пуш "Мімір нагадує" з випадковою мотиваційною фразою з пулу `MIMIR_WORKOUT_PHRASES`; `reminderSent` анти-дубль, скидається в контролері при зміні `date`/`reminder`
+- `pushJobs` — F1 за годину до гонки з вікном повтору 10 хв; нова серія Watchlist о 13:00 і новий сезон о 12:00 за Києвом з повторами протягом години.
+- `routineReminders` — невиконані звички о 12:00 за Києвом; враховує дату початку серії, виконання й видалення.
+- `recurringReminders` — регулярні платежі о 08:00 у день списання і о 12:00 за вибрані дні до списання за Києвом. Дні 29–31 переносяться на останній день коротшого місяця. Підтверджені платежі пропускаються.
+- `renewalReminder` — нагадування про продовження підписки о 12:00 за Києвом. Напередодні закінчення використовується одноденний пуш.
+- `dayReminder` — денний підсумок о 21:00 за Києвом, повтори протягом години, строк доставки шість годин після запланованого часу.
+- `f1Scheduler` — анонс гоночного вікенду щопонеділка о 08:00 за Києвом для профілів з F1, щохвилинний цикл для квестів та покупок і 5-хвилинний цикл для сесій F1 до початку сесії. Для старих ручних нагадувань без часу дедлайн о 09:00.
+- `workoutReminders` — 5-хвилинний цикл, розрахунок за Києвом (09:00 за замовчуванням), пошук входження серії на дату запланованого тренування. Повтор до 60 хв після запланованого нагадування і щонайбільше 15 хв після початку тренування.
+- `vehicleDocReminders` — документи авто о 12:00 за Києвом; `spaceWeeklyDigest` — дайджест просторів щонеділі о 11:00. Обидва повторюють спроби протягом години.
 - `accountDeletionCron` — daily 04:00 UTC, шукає `User.accountStatus:'deletion_requested'` з `deletedAt` старшим за 30 днів → `hardDeleteUser(userId)` (`scripts/hardDeleteUser.ts`) для кожного
 
 ## Скрипти міграції
