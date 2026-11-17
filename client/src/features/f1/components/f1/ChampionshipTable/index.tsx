@@ -1,60 +1,13 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useId, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useChampionshipStandings, type DriverStanding } from '../../../hooks/useChampionshipStandings'
-// import PixelCar from '../../PixelCar'
-import DriverHero from '../DriverHero'
-import ConstructorStatsCard, { type ConstructorStats } from '../ConstructorStatsCard'
-import type { DriverStats } from '../../../hooks/useDriverStats'
+import { F1_TEAMS } from '../../../data/f1Teams'
+import ConstructorStatsCard from '../ConstructorStatsCard'
 import { getDriverHeadshot } from '../../../utils/f1'
 import styles from './ChampionshipTable.module.css'
 
-/**
- * ChampionshipTable
- * -----------------
- * Таблиця чемпіонату F1: пілоти (з фото) або команди.
- * Дані через Jolpica (standings) + OpenF1 (headshots).
- * Денне кешування у sessionStorage.
- *
- * Props:
- * @prop {'drivers' | 'constructors'} tab — яка таблиця відображається (контролюється батьківським екраном)
- */
-
-const TEAM_COLORS: Record<string, string> = {
-  'Mercedes':     '#00D2BE',
-  'Ferrari':      '#E8002D',
-  'McLaren':      '#FF8000',
-  'Red Bull':     '#3671C6',
-  'Alpine':       '#FF87BC',
-  'Aston Martin': '#229971',
-  'Williams':     '#64C4FF',
-  'Haas':         '#B6BABD',
-  'Kick Sauber':  '#52E252',
-  'RB':           '#6692FF',
-}
-
 interface ChampionshipTableProps {
   tab: 'drivers' | 'constructors'
-}
-
-function rowClass(pos: number): string {
-  if (pos === 1) return `${styles.row} ${styles.gold}`
-  if (pos === 2) return `${styles.row} ${styles.silver}`
-  if (pos === 3) return `${styles.row} ${styles.bronze}`
-  return styles.row
-}
-
-function driverRowClass(pos: number): string {
-  if (pos === 1) return `${styles.driverRow} ${styles.gold}`
-  if (pos === 2) return `${styles.driverRow} ${styles.silver}`
-  if (pos === 3) return `${styles.driverRow} ${styles.bronze}`
-  return styles.driverRow
-}
-
-function posClass(pos: number): string {
-  if (pos === 1) return styles.posGold
-  if (pos === 2) return styles.posSilver
-  if (pos === 3) return styles.posBronze
-  return styles.posOther
 }
 
 function initials(name: string): string {
@@ -65,13 +18,18 @@ function initials(name: string): string {
 
 type ImgStage = 'direct' | 'proxy' | 'initials'
 
-function DriverAvatar({ driver }: { driver: DriverStanding }) {
+interface DriverAvatarProps {
+  driver: DriverStanding
+}
+
+/** Shows the standings portrait with proxy and initials fallbacks. */
+function DriverAvatar({ driver }: DriverAvatarProps) {
   const url = getDriverHeadshot(driver.driverId ?? '') ?? driver.headshot_url
   const [stage, setStage] = useState<ImgStage>(url ? 'direct' : 'initials')
 
   if (stage === 'initials' || !url) {
     return (
-      <div className={styles.avatar}>
+      <div className={styles.avatar} aria-hidden="true">
         <span className={styles.avatarInitials}>{initials(driver.full_name)}</span>
       </div>
     )
@@ -87,10 +45,11 @@ function DriverAvatar({ driver }: { driver: DriverStanding }) {
   }
 
   return (
-    <div className={styles.avatar}>
+    <div className={styles.avatar} aria-hidden="true">
       <img
         src={src}
-        alt={driver.broadcast_name}
+        alt=""
+        loading="lazy"
         className={styles.avatarImg}
         crossOrigin="anonymous"
         referrerPolicy="no-referrer"
@@ -119,173 +78,109 @@ function Skeleton() {
   )
 }
 
-const ChampionshipTable: React.FC<ChampionshipTableProps> = ({ tab }) => {
-  const navigate = useNavigate()
+/** Displays the driver and constructor standings in a shared ranking layout. */
+function ChampionshipTable({ tab }: ChampionshipTableProps) {
+  const panelId = useId()
   const { drivers, constructors, loading, error, refetch } = useChampionshipStandings()
-  const [statsCache, setStatsCache]                   = useState<Map<string, DriverStats>>(new Map())
-  const [selectedDriverId, setSelectedDriverId]       = useState<string | null>(null)
   const [expandedConstructor, setExpandedConstructor] = useState<string | null>(null)
-  const [constrCache, setConstrCache]                 = useState<Map<string, ConstructorStats>>(new Map())
+  const [openedConstructors, setOpenedConstructors] = useState<Set<string>>(() => new Set())
+  const teamsByName = new Map(constructors.map(team => [team.team_name, team]))
 
-  // No explicit selection yet (or a stale id from a previous load) → default to
-  // the first driver in the current standings. Never hardcoded.
-  const heroDriver = drivers.find(d => d.driverId === selectedDriverId) ?? drivers[0]
-
-  const handleStats = (id: string, stats: DriverStats) => {
-    setStatsCache(prev => new Map(prev).set(id, stats))
-  }
-
-  const handleConstrStats = (id: string, stats: ConstructorStats) => {
-    setConstrCache(prev => new Map(prev).set(id, stats))
+  const toggleConstructor = (id: string) => {
+    setExpandedConstructor(current => current === id ? null : id)
+    setOpenedConstructors(current => current.has(id) ? current : new Set(current).add(id))
   }
 
   if (loading) return <Skeleton />
-
   if (error) {
     return (
       <div className={styles.error}>
         <span className={styles.errorText}>Не вдалося завантажити дані</span>
         <span className={styles.errorDetail}>{error}</span>
-        <button className={styles.retryBtn} onClick={refetch}>Спробувати знову</button>
+        <button type="button" className={styles.retryBtn} onClick={refetch}>Спробувати знову</button>
       </div>
     )
   }
 
-  return (
-    <div className={styles.wrap}>
-      {tab === 'drivers' && (
-        <div className={styles.table}>
-          {drivers.length === 0 && (
-            <p className={styles.emptyText}>Дані відсутні</p>
-          )}
-          {heroDriver && (
-            <DriverHero
-              driver={heroDriver}
-              cachedStats={statsCache.get(heroDriver.driverId ?? '')}
-              onStats={handleStats}
-            />
-          )}
-          {drivers.map((d) => {
-            const driverId   = d.driverId ?? ''
-            const maxPts     = drivers[0]?.points ?? 1
-            const isSelected = !!driverId && driverId === (heroDriver?.driverId ?? '')
-            return (
-              <div key={d.driver_number} className={styles.driverGroup}>
-                <div className={`${driverRowClass(d.position)} ${isSelected ? styles.selectedRow : ''}`}>
-                  <button
-                    type="button"
-                    className={styles.rowSelectBtn}
-                    aria-current={isSelected ? 'true' : undefined}
-                    onClick={() => driverId && setSelectedDriverId(driverId)}
-                  >
-                    <span className={`${styles.pos} ${posClass(d.position)}`}>{d.position}</span>
-                    <DriverAvatar driver={d} />
-                    <div className={styles.info}>
-                      <span className={styles.name}>{d.full_name}</span>
-                      <div className={styles.teamRow}>
-                        <span
-                          className={styles.teamDot}
-                          style={{ background: TEAM_COLORS[d.team_name] ?? 'var(--border2)' }}
-                        />
-                        <span className={styles.team}>{d.team_name}</span>
-                      </div>
-                    </div>
-                    <div className={styles.pointsWrap}>
-                      <span className={styles.points}>{d.points}</span>
-                      <div className={styles.pointsBar}>
-                        <div
-                          className={styles.pointsFill}
-                          style={{ width: `${(d.points / maxPts) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </button>
-                  {driverId && (
-                    <button
-                      type="button"
-                      className={styles.navBtn}
-                      aria-label={`Детальніше про ${d.full_name}`}
-                      onClick={() => navigate(`/f1/drivers/${driverId}`)}
-                    >
-                      <span className={styles.arrow}>›</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+  const isDrivers = tab === 'drivers'
+  if (!(isDrivers ? drivers.length : constructors.length)) {
+    return <p className={styles.emptyText}>Дані відсутні</p>
+  }
 
-      {tab === 'constructors' && (
-        <div className={styles.table}>
-          {constructors.length === 0 && (
-            <p className={styles.emptyText}>Дані відсутні</p>
-          )}
-          {constructors.map((c) => {
-            const cid    = c.constructorId ?? ''
-            const isOpen = expandedConstructor === cid
-            const maxPts = constructors[0]?.points ?? 1
-            const teamDrivers = drivers
-              .filter(d => d.team_name === c.team_name)
-              .map(d => ({ name: d.full_name, points: d.points }))
-            return (
-              <div key={c.team_name} className={styles.driverGroup}>
-                <div
-                  className={`${rowClass(c.position)} ${c.position <= 3 ? styles.rowCar : ''} ${styles.rowClickable}`}
-                  onClick={() => cid && setExpandedConstructor(isOpen ? null : cid)}
-                > 
-               
-                  <span className={`${styles.pos} ${posClass(c.position)}`}>{c.position}</span>
-                  <div className={styles.info}>
-                    {c.position <= 3 ? (
-                      <div className={styles.carRow}>
-                        {/* <PixelCar team={c.team_name} size={28} /> */}
-                        <span className={styles.name}>{c.team_name}</span>
-                        {/* <img src="/car.jpg" alt=""  style={{width: "100px"}}/> */}
-                      </div>
-                    ) : (
-                      <div className={styles.teamRow}>
-                        <span
-                          className={styles.teamDot}
-                          style={{ background: TEAM_COLORS[c.team_name] ?? 'var(--border2)' }}
-                        />
-                        <span className={styles.name}>{c.team_name}</span>
-                      </div>
-                    )}
+  return (
+    <section className={styles.table} aria-label={isDrivers ? 'Залік пілотів' : 'Кубок конструкторів'}>
+      <div className={styles.tableHeader} aria-hidden="true">
+        <span>Поз.</span>
+        <span>{isDrivers ? 'Пілот' : 'Команда'}</span>
+        <span>Очки</span>
+      </div>
+      <ol className={styles.list}>
+        {isDrivers ? drivers.map(driver => {
+          const constructorId = teamsByName.get(driver.team_name)?.constructorId
+          const team = constructorId ? F1_TEAMS[constructorId] : undefined
+          const content = (
+            <>
+              <span className={styles.pos}>{driver.position}</span>
+              <DriverAvatar key={driver.driverId ?? driver.headshot_url} driver={driver} />
+              <span className={styles.info}>
+                <span className={styles.name}>{driver.full_name}</span>
+                <span className={styles.subtitle}>
+                  <span className={styles.teamDot} style={{ backgroundColor: team?.primary }} />
+                  <span>{driver.team_name}</span>
+                </span>
+              </span>
+              <span className={styles.points} aria-label={`${driver.points} очок`}>{driver.points}</span>
+              {driver.driverId && <svg className={styles.arrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>}
+            </>
+          )
+          return (
+            <li key={driver.driverId ?? driver.driver_number} className={styles.entry}>
+              {driver.driverId
+                ? <Link className={styles.row} to={`/f1/drivers/${driver.driverId}`}>{content}</Link>
+                : <div className={styles.row}>{content}</div>}
+            </li>
+          )
+        }) : constructors.map(team => {
+          const id = team.constructorId
+          const teamInfo = id ? F1_TEAMS[id] : undefined
+          const isOpen = !!id && expandedConstructor === id
+          const panel = `${panelId}-${team.position}`
+          const driversForTeam = drivers
+            .filter(driver => driver.team_name === team.team_name)
+            .map(driver => driver.full_name.trim().split(/\s+/).slice(1).join(' ') || driver.full_name)
+          const content = (
+            <>
+              <span className={styles.pos}>{team.position}</span>
+              <span className={styles.teamMark} style={{ color: teamInfo?.primary }} aria-hidden="true">
+                {teamInfo?.logo
+                  ? <img src={teamInfo.logo} alt="" loading="lazy" className={styles.teamLogo} />
+                  : <span className={styles.teamDot} />}
+              </span>
+              <span className={styles.info}>
+                <span className={styles.name}>{team.team_name}</span>
+                {driversForTeam.length > 0 && <span className={styles.subtitle}>{driversForTeam.join(' · ')}</span>}
+              </span>
+              <span className={styles.points} aria-label={`${team.points} очок`}>{team.points}</span>
+            </>
+          )
+          return (
+            <li key={id ?? team.team_name} className={styles.entry}>
+              {id ? (
+                <>
+                  <button type="button" className={styles.row} aria-expanded={isOpen} aria-controls={panel} onClick={() => toggleConstructor(id)}>
+                    {content}
+                    <svg className={styles.arrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                  </button>
+                  <div id={panel} className={`${styles.expandable} ${isOpen ? styles.expandableOpen : ''}`} inert={!isOpen}>
+                    {openedConstructors.has(id) && <ConstructorStatsCard constructorId={id} />}
                   </div>
-                  <div className={styles.pointsWrap}>
-                    <span className={styles.points}>{c.points}</span>
-                    <div className={styles.pointsBar}>
-                      <div
-                        className={styles.pointsFill}
-                        style={{ width: `${(c.points / maxPts) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                  {cid && (
-                    <span className={`${styles.arrow} ${isOpen ? styles.arrowUp : ''}`}>▼</span>
-                  )}
-                </div>
-                <div className={`${styles.expandable} ${isOpen ? styles.expandableOpen : ''}`}>
-                  {isOpen && cid && (
-                    <ConstructorStatsCard
-                      constructorId={cid}
-                      teamName={c.team_name}
-                      points={c.points}
-                      maxPoints={maxPts}
-                      teamDrivers={teamDrivers}
-                      cachedStats={constrCache.get(cid)}
-                      onStats={handleConstrStats}
-                    />
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
+                </>
+              ) : <div className={styles.row}>{content}</div>}
+            </li>
+          )
+        })}
+      </ol>
+    </section>
   )
 }
 

@@ -1,218 +1,31 @@
-/* ── Card wrapper ── */
-.card {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Hero ── */
-.hero {
-  position: relative;
-  height: 160px;
-  border-radius: 12px 12px 0 0;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--team-color) 20%, var(--bg3));
-}
-
-.carImage {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 85%;
-  height: 100%;
-  object-fit: cover;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 25%);
-  mask-image: linear-gradient(to right, transparent 0%, black 25%);
-}
-
-.heroFade {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 80%,
-    rgba(0, 0, 0, 0.8) 100%
-  );
-  z-index: 1;
-}
-
-.speedLines {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 60px;
-  height: 100%;
-  z-index: 2;
-  opacity: 0.9;
-}
-
-.heroInfo {
-  position: absolute;
-  bottom: 10px;
-  left: 12px;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.heroName {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.heroPtsRow {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.heroPts {
-  font-family: var(--font-display);
-  font-size: 32px;
-  color: var(--team-color);
-  line-height: 1;
-}
-
-.heroPtsLabel {
-  font-family: var(--font-ui);
-  font-size: 12px;
-  color: rgba(255,255,255,0.4);
-  text-transform: uppercase;
-}
-
-/* ── Container ── */
-.inner {
-  background: var(--surface-2, var(--surface));
-  border-radius: 0 0 12px 12px;
-  padding: 12px 14px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* ── Drivers list ── */
-.driversList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.driversLabel {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 2px;
-}
-
-.driverRow {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.driverDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--gold);
-  flex-shrink: 0;
-}
-
-.driverName {
-  font-family: var(--font-ui);
-  font-size: 12px;
-  color: var(--text);
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.driverPts {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text2);
-  flex-shrink: 0;
-}
-
-/* ── Stats grid ── */
-.statsGrid {
+.stats {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 10px;
-  align-items: center;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 12px 8px 14px;
 }
-
-.statLabel {
-  font-family: var(--font-ui);
-  font-size: 11px;
+.stats > div {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+.stats > div + div { border-inline-start: 1px solid var(--border); }
+.stats dt {
   color: var(--text2);
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  font: 0.6875rem var(--font-ui);
 }
-
-.icon {
-  font-size: 11px;
-  line-height: 1;
+.stats dd {
+  grid-row: 1;
+  margin: 0;
+  color: var(--text);
+  font: 700 1rem var(--font-mono);
 }
-
-.statVal {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--gold);
-  text-align: right;
-}
-
-/* ── Progress bar ── */
-.progress {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.track {
-  width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border2);
-  overflow: hidden;
-}
-
-.fill {
-  height: 100%;
-  background: var(--gold);
-  border-radius: 2px;
-  transition: width 0.4s ease;
-}
-
-.progressLabel {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text3);
-  text-align: right;
-}
-
-/* ── Skeleton ── */
-@keyframes skPulse {
-  0%, 100% { opacity: 0.35; }
-  50%       { opacity: 0.7; }
-}
-
-.skBar {
-  height: 10px;
-  border-radius: 4px;
-  background: var(--border2);
-  animation: skPulse 1.4s ease-in-out infinite;
-  margin-bottom: 6px;
+.message {
+  margin: 0;
+  padding: 14px;
+  color: var(--text2);
+  text-align: center;
+  font: 0.75rem var(--font-ui);
 }

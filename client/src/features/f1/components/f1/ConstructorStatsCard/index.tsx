@@ -1,205 +1,85 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './ConstructorStatsCard.module.css'
 
-const TEAM_CAR_IMAGE: Record<string, string> = {
-  mercedes:     '/teams/mercedes_mini.avif',
-  ferrari:      '/teams/ferrari_mini.avif',
-  mclaren:      '/teams/mclaren_mini.avif',
-  red_bull:     '/teams/redbull_mini.avif',
-  alpine:       '/teams/alpine_mini.avif',
-  williams:     '/teams/williams_mini.avif',
-  aston_martin: '/teams/aston_martin_mini.avif',
-  haas:         '/teams/haas_mini.avif',
-  racing_bulls: '/teams/racing_bulls_mini.avif',
-  audi:         '/teams/audi_mini.avif',
-  cadillac:     '/teams/cadillac_mini.avif',
+interface ConstructorStatsCardProps {
+  constructorId: string
 }
 
-const TEAM_COLOR: Record<string, string> = {
-  mercedes:     '#00D2BE',
-  ferrari:      '#E8002D',
-  mclaren:      '#FF8000',
-  red_bull:     '#3671C6',
-  alpine:       '#FF87BC',
-  williams:     '#64C4FF',
-  aston_martin: '#229971',
-  haas:         '#B6BABD',
-  racing_bulls: '#6692FF',
-  audi:         '#BB0000',
-  cadillac:     '#C0C0C0',
+interface RaceResults {
+  MRData?: {
+    RaceTable?: {
+      Races?: { Results?: { position: string; FastestLap?: { rank: string } }[] }[]
+    }
+  }
 }
 
-/**
- * ConstructorStatsCard
- * --------------------
- * Розгортна картка статистики команди в таблиці команд.
- * Показує болид (анімований), пілотів, статистику сезону, прогрес-бар.
- * Дані з Jolpica (results + qualifying), кешуються у батьківському компоненті.
- *
- * Props:
- * @prop {string}                          constructorId — Jolpica slug (mercedes, red_bull, …)
- * @prop {string}                          teamName      — назва команди (для PixelCar)
- * @prop {number}                          points        — поточні очки команди
- * @prop {number}                          maxPoints     — очки лідера (для прогрес-бару)
- * @prop {DriverEntry[]}                   teamDrivers   — пілоти цієї команди (з standings)
- * @prop {ConstructorStats | undefined}    cachedStats   — вже отримані дані (якщо є)
- * @prop {(id, stats) => void}             onStats       — колбек для збереження в кеш
- */
+interface QualifyingResults {
+  MRData?: {
+    RaceTable?: {
+      Races?: { QualifyingResults?: { position: string }[] }[]
+    }
+  }
+}
 
-export interface ConstructorStats {
-  wins:        number
-  poles:       number
-  podiums:     number
+interface ConstructorStats {
+  wins: number
+  podiums: number
+  poles: number
   fastestLaps: number
 }
 
-export interface DriverEntry {
-  name:   string
-  points: number
-}
-
-interface Props {
-  constructorId: string
-  teamName:      string
-  points:        number
-  maxPoints:     number
-  teamDrivers:   DriverEntry[]
-  cachedStats:   ConstructorStats | undefined
-  onStats:       (id: string, stats: ConstructorStats) => void
-}
-
-function SkeletonRows() {
-  return (
-    <div className={styles.inner}>
-      {[80, 60, 70, 50].map((w, i) => (
-        <div key={i} className={styles.skBar} style={{ width: `${w}%` }} />
-      ))}
-    </div>
-  )
-}
-
-const ConstructorStatsCard: React.FC<Props> = ({
-  constructorId, teamName, points, maxPoints, teamDrivers, cachedStats, onStats,
-}) => {
-  const [stats, setStats]     = useState<ConstructorStats | null>(cachedStats ?? null)
-  const [loading, setLoading] = useState<boolean>(!cachedStats)
+/** Loads a team's season totals when its standings row is expanded. */
+function ConstructorStatsCard({ constructorId }: ConstructorStatsCardProps) {
+  const [stats, setStats] = useState<ConstructorStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (cachedStats || !constructorId) return
     let cancelled = false
+    const controller = new AbortController()
     const base = `https://api.jolpi.ca/ergast/f1/current/constructors/${constructorId}`
+    const load = async () => {
+      try {
+        const [raceResponse, qualiResponse] = await Promise.all([
+          fetch(`${base}/results.json?limit=200`, { signal: controller.signal }),
+          fetch(`${base}/qualifying.json?limit=200`, { signal: controller.signal }),
+        ])
+        if (!raceResponse.ok || !qualiResponse.ok) throw new Error('Constructor stats unavailable')
+        const raceData: RaceResults = await raceResponse.json()
+        const qualiData: QualifyingResults = await qualiResponse.json()
+        const races = raceData.MRData?.RaceTable?.Races
+        const qualifying = qualiData.MRData?.RaceTable?.Races
+        if (!races || !qualifying) throw new Error('Invalid constructor stats')
+        const results = races.flatMap(race => race.Results ?? [])
+        const positions = qualifying.flatMap(race => race.QualifyingResults ?? [])
+        if (!cancelled) setStats({
+          wins: results.filter(result => result.position === '1').length,
+          podiums: results.filter(result => Number(result.position) >= 1 && Number(result.position) <= 3).length,
+          poles: positions.filter(result => result.position === '1').length,
+          fastestLaps: results.filter(result => result.FastestLap?.rank === '1').length,
+        })
+      } catch {
+        if (!cancelled) setStats(null)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [constructorId])
 
-    Promise.all([
-      fetch(`${base}/results.json?limit=200`).then(r => { if (!r.ok) throw new Error(); return r.json() }),
-      fetch(`${base}/qualifying.json?limit=200`).then(r => { if (!r.ok) throw new Error(); return r.json() }),
-    ])
-      .then(([resJson, quaJson]) => {
-        if (cancelled) return
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const results = (resJson?.MRData?.RaceTable?.Races ?? []).flatMap((r: any) => r.Results ?? [])
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const quali   = (quaJson?.MRData?.RaceTable?.Races ?? []).flatMap((r: any) => r.QualifyingResults ?? [])
-
-        const parsed: ConstructorStats = {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          wins:        results.filter((r: any) => r.position === '1').length,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          podiums:     results.filter((r: any) => Number(r.position) <= 3).length,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          fastestLaps: results.filter((r: any) => r.FastestLap?.rank === '1').length,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          poles:       quali.filter((r: any) => r.position === '1').length,
-        }
-        setStats(parsed)
-        onStats(constructorId, parsed)
-        setLoading(false)
-      })
-      .catch(() => { if (!cancelled) setLoading(false) })
-
-    return () => { cancelled = true }
-  }, [constructorId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const carImage  = TEAM_CAR_IMAGE[constructorId] ?? null
-  const teamColor = TEAM_COLOR[constructorId] ?? 'var(--accent)'
-  const pct = maxPoints > 0 ? Math.min(100, Math.round((points / maxPoints) * 100)) : 0
+  if (loading) return <p role="status" className={styles.message}>Завантажуємо статистику…</p>
+  if (!stats) return <p role="status" className={styles.message}>Статистика сезону недоступна</p>
 
   return (
-    <div className={styles.card}>
-
-      {/* ── Hero ── */}
-      <div
-        className={styles.hero}
-        style={{ '--team-color': teamColor } as React.CSSProperties}
-      >
-        {carImage && (
-          <img
-            src={carImage}
-            alt={teamName}
-            className={styles.carImage}
-            onError={e => { e.currentTarget.style.display = 'none' }}
-          />
-        )}
-
-        <div className={styles.heroFade} />
-
-        <svg className={styles.speedLines} viewBox="0 0 60 120" preserveAspectRatio="none">
-          <rect x="4"  y="0"  width="5" height="120" rx="2" fill="var(--team-color)" opacity="1"/>
-          <rect x="14" y="15" width="5" height="105" rx="2" fill="var(--team-color)" opacity="0.7"/>
-          <rect x="24" y="30" width="5" height="90"  rx="2" fill="var(--team-color)" opacity="0.45"/>
-          <rect x="34" y="50" width="5" height="70"  rx="2" fill="var(--team-color)" opacity="0.25"/>
-        </svg>
-
-        <div className={styles.heroInfo}>
-          <span className={styles.heroName}>{teamName}</span>
-          <div className={styles.heroPtsRow}>
-            <span className={styles.heroPts}>{points}</span>
-            <span className={styles.heroPtsLabel}>pts</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Stats ── */}
-      {loading ? <SkeletonRows /> : !stats ? null : (
-        <div className={styles.inner}>
-
-          {teamDrivers.length > 0 && (
-            <div className={styles.driversList}>
-              <span className={styles.driversLabel}>Пілоти:</span>
-              {teamDrivers.map(d => (
-                <div key={d.name} className={styles.driverRow}>
-                  <span className={styles.driverDot} />
-                  <span className={styles.driverName}>{d.name}</span>
-                  <span className={styles.driverPts}>{d.points} pts</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className={styles.statsGrid}>
-            <span className={styles.statLabel}><span className={styles.icon}>🏆</span>Перемоги команди</span>
-            <span className={styles.statVal}>{stats.wins}</span>
-
-            <span className={styles.statLabel}><span className={styles.icon}>🥇</span>Поули</span>
-            <span className={styles.statVal}>{stats.poles}</span>
-
-            <span className={styles.statLabel}><span className={styles.icon}>🏅</span>Подіуми</span>
-            <span className={styles.statVal}>{stats.podiums}</span>
-
-            <span className={styles.statLabel}><span className={styles.icon}>⚡</span>Fastest laps</span>
-            <span className={styles.statVal}>{stats.fastestLaps}</span>
-          </div>
-
-          <div className={styles.progress}>
-            <div className={styles.track}>
-              <div className={styles.fill} style={{ width: `${pct}%` }} />
-            </div>
-            <span className={styles.progressLabel}>{points} / {maxPoints} pts</span>
-          </div>
-
-        </div>
-      )}
-
-    </div>
+    <dl className={styles.stats} aria-label="Статистика сезону">
+      <div><dt>Перемоги</dt><dd>{stats.wins}</dd></div>
+      <div><dt>Подіуми</dt><dd>{stats.podiums}</dd></div>
+      <div><dt>Поули</dt><dd>{stats.poles}</dd></div>
+      <div><dt>Швидкі кола</dt><dd>{stats.fastestLaps}</dd></div>
+    </dl>
   )
 }
 
