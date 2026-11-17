@@ -777,7 +777,16 @@
   margin: 0;
 }
 .blackFridayCopy strong { color: var(--gold); font-family: var(--font-mono); }
-.priceAmount.offerPrice { color: var(--gold); font-size: clamp(20px, 7vw, 30px); }
+.offerCardHeader { flex-wrap: wrap; gap: 8px; }
+.offerCardHeader .priceBlock { margin-inline-start: auto; }
+.offerPriceMain { gap: 4px; white-space: nowrap; }
+.offerPriceMain .priceSuffix { color: var(--text2); padding-bottom: 0; }
+.regularPrice {
+  margin-inline-end: 3px;
+  color: var(--text2);
+  font: 0.75rem var(--font-mono);
+}
+.priceAmount.offerPrice { color: var(--gold); font-size: clamp(20px, 6.2vw, 28px); }
 .offerRenewal { display: block; margin-top: 4px; color: var(--text2); font: 0.6875rem var(--font-ui); }
 .offerPayment { display: grid; gap: 10px; color: var(--text2); font: 0.875rem var(--font-ui); }
 .offerPayment p { margin: 0; }

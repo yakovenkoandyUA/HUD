@@ -19,7 +19,7 @@ function isBlackFriday(now = Date.now()) {
   return now >= BLACK_FRIDAY_START && now < BLACK_FRIDAY_END
 }
 
-const formatPrice = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 2 })
+const formatPrice = new Intl.NumberFormat('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const blackFridayPrice = (monthlyPrice: number) => monthlyPrice / 2
 
 type BillingCycle = 'monthly' | 'annual'
@@ -363,7 +363,7 @@ const PlanTab: React.FC = () => {
             )}
 
             {/* Header */}
-            <div className={styles.cardHeader}>
+            <div className={offerPrice !== null ? `${styles.cardHeader} ${styles.offerCardHeader}` : styles.cardHeader}>
               <div className={styles.cardMeta}>
                 <div className={styles.planNameRow}>
                   {PLAN_ICONS[plan.id] && React.createElement(PLAN_ICONS[plan.id], { className: styles.planIcon })}
@@ -372,12 +372,13 @@ const PlanTab: React.FC = () => {
                 <span className={styles.planConcept}>{plan.concept}</span>
               </div>
               <div className={styles.priceBlock}>
-                <div className={styles.priceMain}>
+                <div className={offerPrice !== null ? `${styles.priceMain} ${styles.offerPriceMain}` : styles.priceMain}>
+                  {offerPrice !== null && <s className={styles.regularPrice}>{plan.priceMonthly} ₴</s>}
                   <span className={`${styles.priceAmount} ${offerPrice !== null ? styles.offerPrice : ''}`}>{offerPrice !== null ? formatPrice.format(offerPrice) : price}</span>
-                  <span className={styles.priceSuffix}>₴&thinsp;/ міс</span>
+                  <span className={styles.priceSuffix}>{offerPrice !== null ? '₴' : '₴ / міс'}</span>
                 </div>
                 {offerPrice !== null && (
-                  <span className={styles.offerRenewal}>Далі {plan.priceMonthly} ₴ / міс</span>
+                  <span className={styles.offerRenewal}>−50% на один місяць</span>
                 )}
                 {cycle === 'annual' && (
                   <span className={styles.priceAnnualNote}>{plan.priceAnnualTotal} ₴ / рік</span>
