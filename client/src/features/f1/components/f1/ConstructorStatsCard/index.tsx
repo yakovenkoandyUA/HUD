@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { DriverStanding } from '../../../hooks/useChampionshipStandings'
+import { getDriverPortraitSources } from '../../../utils/f1'
 import styles from './ConstructorStatsCard.module.css'
 
 interface ConstructorStatsCardProps {
@@ -102,16 +103,26 @@ function ConstructorStatsCard({ constructorId, drivers }: ConstructorStatsCardPr
           <h2 className={styles.title}>Пілоти команди</h2>
           <ul className={styles.drivers}>
             {drivers.map(driver => {
+              const portrait = getDriverPortraitSources(driver.headshot_url)[0]
               const content = (
                 <>
-                  <span className={styles.driverNumber}>#{driver.driver_number}</span>
-                  <span className={styles.driverPortrait} aria-hidden="true">
-                    {driver.broadcast_name || driver.full_name.slice(0, 2).toUpperCase()}
-                    {driver.headshot_url && (
-                      <img src={driver.headshot_url} loading="lazy" alt="" onError={event => { event.currentTarget.hidden = true }} />
-                    )}
+                  <span className={styles.driverVisual} aria-hidden="true">
+                    {driver.driver_number > 0 && <span className={styles.driverNumber}>{driver.driver_number}</span>}
+                    <span className={styles.driverPortrait}>
+                      {driver.broadcast_name || driver.full_name.slice(0, 2).toUpperCase()}
+                      {portrait && (
+                        <img src={portrait} loading="lazy" alt="" onError={event => {
+                          if (driver.headshot_url && event.currentTarget.getAttribute('src') !== driver.headshot_url) {
+                            event.currentTarget.src = driver.headshot_url
+                          } else {
+                            event.currentTarget.hidden = true
+                          }
+                        }} />
+                      )}
+                    </span>
                   </span>
-                  <span>{driver.full_name}</span>
+                  <span className={styles.driverName}>{driver.full_name}</span>
+                  <span className={styles.driverStanding}><strong>P{driver.position}</strong><span>{driver.points} очок</span></span>
                 </>
               )
               return (

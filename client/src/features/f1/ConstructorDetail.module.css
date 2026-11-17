@@ -1,3 +1,8 @@
+.content {
+  gap: 16px;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+}
+
 .hero {
   position: relative;
   isolation: isolate;
@@ -59,10 +64,8 @@
   object-position: center bottom;
 }
 .about {
-  padding: 14px 16px;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  background: var(--bg2);
+  padding: 12px 0;
+  border-top: 1px solid var(--border2);
 }
 .about h2 {
   margin: 0 0 8px;

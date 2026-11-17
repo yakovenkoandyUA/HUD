@@ -1,16 +1,9 @@
-.details { display: grid; gap: 20px; }
-.section {
-  display: grid;
-  gap: 8px;
-  padding: 14px 16px;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  background: var(--bg2);
-}
+.details { display: grid; gap: 18px; }
+.section { display: grid; gap: 8px; }
 .title {
   margin: 0;
   color: var(--text2);
-  font: 700 0.6875rem var(--font-ui);
+  font: 700 0.75rem var(--font-ui);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -19,13 +12,13 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0;
   border-block: 1px solid var(--border2);
-  background: var(--surface2);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--team-color) 12%, var(--bg2)), var(--bg2) 80%);
 }
 .stats > div {
   display: grid;
   justify-items: center;
   gap: 3px;
-  padding: 7px 4px;
+  padding: 10px 3px;
   text-align: center;
 }
 .stats > div + div { border-inline-start: 1px solid var(--border); }
@@ -39,30 +32,72 @@
 .message { margin: 0; color: var(--text2); font: 0.75rem var(--font-ui); }
 .retry { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .retry button { color: var(--accent); min-height: 44px; font: 700 0.75rem var(--font-ui); }
-.drivers { display: grid; list-style: none; margin: 0; padding: 0; }
-.drivers > li + li { border-top: 1px solid var(--border); }
-.driver {
-  display: flex;
-  align-items: center;
+.drivers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  min-height: 48px;
-  color: var(--text);
-  font: 600 0.8125rem var(--font-ui);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-.driverNumber { min-width: 3ch; color: var(--text2); font-family: var(--font-mono); }
-a.driver:hover { color: var(--accent); }
-a.driver:focus-visible, .retry button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.driver {
+  display: grid;
+  height: 100%;
+  grid-template-rows: auto 1fr auto;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg2);
+  color: var(--text);
+}
+.driverVisual {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: end;
+  justify-items: end;
+  min-height: 90px;
+  overflow: hidden;
+  background: linear-gradient(130deg, color-mix(in srgb, var(--team-color) 25%, var(--bg2)), var(--bg2) 80%);
+}
+.driverNumber {
+  position: absolute;
+  inset: 10px auto auto 9px;
+  color: color-mix(in srgb, var(--team-color) 62%, var(--text));
+  font: 1.375rem var(--font-display);
+}
 .driverPortrait {
   position: relative;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-  overflow: hidden;
-  border-radius: 50%;
-  background: var(--surface2);
+  width: min(82px, 62%);
+  aspect-ratio: 1;
   color: var(--text2);
-  font: 600 0.625rem var(--font-mono);
+  font: 700 0.8125rem var(--font-mono);
 }
-.driverPortrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--surface2); }
+.driverPortrait img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+.driverName {
+  padding: 7px 9px;
+  font: 700 0.8125rem / 1.25 var(--font-ui);
+  overflow-wrap: anywhere;
+}
+.driverStanding {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 7px 9px;
+  border-top: 1px solid var(--border);
+  color: var(--text2);
+  font: 0.6875rem var(--font-mono);
+}
+.driverStanding strong { color: var(--text); }
+a.driver:hover { border-color: color-mix(in srgb, var(--team-color) 64%, var(--border2)); }
+a.driver:focus-visible, .retry button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }

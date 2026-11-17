@@ -31,7 +31,7 @@ export default function ConstructorDetailPage() {
           <button className={layout.moreBtn} type="button" onClick={refetch}>Спробувати знову</button>
         </div>
       ) : standing && constructorId ? (
-        <div className={layout.content} style={{ '--team-color': profile?.primary ?? 'var(--accent)' } as CSSProperties}>
+        <div className={`${layout.content} ${styles.content}`} style={{ '--team-color': profile?.primary ?? 'var(--accent)' } as CSSProperties}>
           <div className={layout.heroInline}>
             <section className={styles.hero} aria-labelledby="constructor-title">
               {profile && <img className={styles.emblem} src={profile.emblem} alt="" />}
