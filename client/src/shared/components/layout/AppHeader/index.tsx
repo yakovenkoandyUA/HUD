@@ -26,7 +26,7 @@ const FINANCE_AI_SUGGESTIONS = [
  * AppHeader
  * ---------
  * Єдиний шапковий компонент для всіх екранів.
- * Ліво: аватар профілю, Центр: SVG-логотип, Право: feedback + AI.
+ * Ліво: аватар профілю, Центр: SVG-логотип, Право: AI (відгук — в ProfileDrawer).
  *
  * Props:
  * @prop {React.ReactNode} [right] — додатковий вміст зліва від кнопок
@@ -95,18 +95,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
           {right}
           <button
             type="button"
-            className={styles.feedbackBtn}
-            onClick={() => setShowFeedback(true)}
-            aria-label="Надіслати фідбек"
-          >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9Z"/>
-              <line x1="7" y1="8" x2="13" y2="8"/>
-              <line x1="7" y1="11" x2="10" y2="11"/>
-            </svg>
-          </button>
-          <button
-            type="button"
             className={styles.aiBtn}
             onClick={() => {
               if (!activeProfile?.isVerified) { showToast('Підтвердіть email для AI-асистента', 'error'); return }
@@ -130,7 +118,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ right }) => {
 
       <AiChatSheet key={activeProfile?.id} isOpen={aiChatOpen} onClose={closeAiChat} suggestions={aiChatSuggestions ?? undefined} discussOverdue={aiChatDiscussOverdue} />
       <FeedbackSheet isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
-      <ProfileDrawer isOpen={showDrawer} onClose={() => setShowDrawer(false)} />
+      <ProfileDrawer isOpen={showDrawer} onClose={() => setShowDrawer(false)} onFeedback={() => setShowFeedback(true)} />
     </>
   )
 }

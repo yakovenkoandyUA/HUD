@@ -19,13 +19,15 @@ import styles from './ProfileDrawer.module.css'
  * Props:
  * @prop {boolean}    isOpen  — whether the drawer is open
  * @prop {() => void} onClose — close callback
+ * @prop {() => void} onFeedback — відкриває FeedbackSheet (стан живе в AppHeader, щоб шит пережив закриття меню)
  */
 interface ProfileDrawerProps {
   isOpen: boolean
   onClose: () => void
+  onFeedback: () => void
 }
 
-const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
+const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, onFeedback }) => {
   const { activeProfile, logout } = useProfileStore()
   const { pendingReceived } = useFamilyStore()
   const { updateAvailable } = useUiStore()
@@ -174,6 +176,16 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose }) => {
         <ChangelogSheet isOpen={changelogOpen} onClose={() => setChangelogOpen(false)} />
 
         <div className={styles.spacer} />
+
+        {/* ── Feedback ── */}
+        <button type="button" className={styles.logoutBtn} onClick={() => { onClose(); onFeedback() }}>
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M18 13a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9Z"/>
+            <line x1="7" y1="8" x2="13" y2="8"/>
+            <line x1="7" y1="11" x2="10" y2="11"/>
+          </svg>
+          Надіслати відгук
+        </button>
         <div className={styles.divider} />
 
         {/* ── Logout ── */}
