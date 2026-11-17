@@ -133,7 +133,7 @@ Bottom sheet з журналом змін. Відкривається з `Profil
 
 ### ProfileDrawer
 Slide-in panel from the left, triggered by the avatar in AppHeader.
-- Порядок: Вигляд → Простори → Близькі → **Гаманець** (`/profile/wallet`) → **ШІ** (`/profile/mimir`, Мімір) → Тариф → Адмін (admin only) → Налаштування (внизу)
+- Порядок: Вигляд → Простори → Близькі → **Гаманець** (`/profile/wallet`) → **ШІ** (`/profile/mimir`, Мімір) → Тариф → Адмін (admin only) → Налаштування; унизу — «Надіслати відгук» (відкриває `FeedbackSheet`, стан якого живе в `AppHeader`) і «Вийти»
 - "Тариф" → `/profile?tab=plan` (підписка, ліміти)
 - "Акаунт" → `/profile/account` (дані, юридичне, небезпечна зона)
 - При `uiStore.updateAvailable` — рядок оновлення під Акаунтом → `ChangelogSheet`
