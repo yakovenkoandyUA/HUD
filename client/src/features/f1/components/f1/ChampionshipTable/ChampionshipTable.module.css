@@ -17,6 +17,15 @@
   background: var(--bg2);
   border-block: 1px solid var(--border);
 }
+.driverTable {
+  --identity-width: 32px;
+  --portrait-column-width: calc(var(--identity-width) + 8px);
+  --columns: var(--position-width) var(--portrait-column-width) minmax(0, 1fr) 56px var(--control-width);
+}
+.driverTable .row {
+  min-height: 49px;
+  padding-block: 5px;
+}
 .tableHeader, .row {
   display: grid;
   grid-template-columns: var(--columns);
@@ -65,6 +74,30 @@ a.row, button.row { cursor: pointer; }
 .pos, .points { font: 700 0.875rem var(--font-mono); }
 .pos { text-align: center; color: var(--text2); }
 .points { grid-column: 4; justify-self: end; }
+.driverTable .pos { font-size: 1rem; }
+.driverTable .pos[data-podium] { color: var(--text); }
+.driverTable .pos[data-podium='1'] { color: var(--gold); }
+.score {
+  grid-column: 4;
+  display: grid;
+  gap: 2px;
+  text-align: end;
+}
+.score .points { grid-column: auto; }
+.driverTable .score .points { font-size: 1rem; }
+.gapLabel { font-size: 0.625rem; }
+.pointsGap { color: var(--text2); font: 500 0.625rem var(--font-mono); }
+.driverPortrait {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.teamStripe {
+  width: 3px;
+  height: 26px;
+  flex: 0 0 3px;
+  background: var(--border2);
+}
 .avatar, .teamMark {
   display: grid;
   place-items: center;

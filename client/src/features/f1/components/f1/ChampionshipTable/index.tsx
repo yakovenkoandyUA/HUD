@@ -122,28 +122,35 @@ function ChampionshipTable({ tab }: ChampionshipTableProps) {
           ) : <DriverHero key={leader.driver_number} driver={leader} />}
         </div>
       )}
-      <section className={styles.table} aria-label={isDrivers ? 'Залік пілотів' : 'Кубок конструкторів'}>
+      <section className={isDrivers ? `${styles.table} ${styles.driverTable}` : styles.table} aria-label={isDrivers ? 'Залік пілотів' : 'Кубок конструкторів'}>
         <div className={styles.tableHeader} aria-hidden="true">
           <span>Поз.</span>
           <span>{isDrivers ? 'Пілот' : 'Команда'}</span>
-          <span>Очки</span>
+          <span className={styles.score}>
+            Очки
+            {isDrivers && leader && <span className={styles.gapLabel}>До лідера</span>}
+          </span>
         </div>
         <ol className={styles.list}>
           {isDrivers ? drivers.map(driver => {
             const constructorId = teamsByName.get(driver.team_name)?.constructorId
             const team = constructorId ? F1_TEAMS[constructorId] : undefined
+            const gap = leader ? leader.points - driver.points : 0
             const content = (
               <>
-                <span className={styles.pos}>{driver.position}</span>
-                <DriverAvatar key={driver.driverId ?? driver.headshot_url} driver={driver} />
+                <span className={styles.pos} data-podium={driver.position <= 3 ? driver.position : undefined}>{driver.position}</span>
+                <span className={styles.driverPortrait}>
+                  <span className={styles.teamStripe} style={{ backgroundColor: team?.primary }} aria-hidden="true" />
+                  <DriverAvatar key={driver.driverId ?? driver.headshot_url} driver={driver} />
+                </span>
                 <span className={styles.info}>
                   <span className={styles.name}>{driver.full_name}</span>
-                  <span className={styles.subtitle}>
-                    <span className={styles.teamDot} style={{ backgroundColor: team?.primary }} />
-                    <span>{driver.team_name}</span>
-                  </span>
+                  <span className={styles.subtitle}>{driver.team_name}</span>
                 </span>
-                <span className={styles.points} aria-label={`${driver.points} очок`}>{driver.points}</span>
+                <span className={styles.score}>
+                  <span className={styles.points} aria-label={`${driver.points} очок`}>{driver.points}</span>
+                  {gap > 0 && <span className={styles.pointsGap} aria-label={`Відставання від лідера: ${gap} очок`}>−{gap}</span>}
+                </span>
                 {driver.driverId && <svg className={styles.arrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>}
               </>
             )
