@@ -157,8 +157,8 @@ const PlanTab: React.FC = () => {
     return () => clearTimeout(timer)
   }, [blackFriday])
 
-  const hasBlackFridayOffer = blackFriday && currentPlan === 'free'
-  const showDiscountedPrices = hasBlackFridayOffer && cycle === 'monthly'
+  const canUseBlackFridayOffer = blackFriday && currentPlan === 'free'
+  const showDiscountedPrices = canUseBlackFridayOffer && cycle === 'monthly'
 
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(() => setSupportOpen(false), { enabled: supportOpen, overlayRef })
@@ -229,13 +229,14 @@ const PlanTab: React.FC = () => {
   return (
     <div className={styles.root}>
 
-      {hasBlackFridayOffer ? (
+      {blackFriday ? (
         <section className={styles.blackFridayBanner} aria-label="Акція Black Friday">
           <img className={styles.blackFridayLogo} src="/icons/icon-192.png" alt="" />
           <div className={styles.blackFridayCopy}>
             <h2>Black Friday</h2>
             <p><strong>−50%</strong> на перший місяць платного тарифу</p>
             <span>До 30 листопада включно · Без промокоду</span>
+            <span>Для переходу з FREE на місячний тариф</span>
           </div>
         </section>
       ) : (
@@ -378,6 +379,11 @@ const PlanTab: React.FC = () => {
                 </div>
                 {offerPrice !== null && (
                   <span className={styles.offerRenewal}>Далі {plan.priceMonthly} ₴ / міс</span>
+                )}
+                {blackFriday && cycle === 'monthly' && !canUseBlackFridayOffer && (
+                  <span className={styles.offerRenewal}>
+                    Для FREE: {formatPrice.format(firstMonthPrice(plan.priceMonthly))} ₴ за 1-й міс
+                  </span>
                 )}
                 {cycle === 'annual' && (
                   <span className={styles.priceAnnualNote}>{plan.priceAnnualTotal} ₴ / рік</span>
