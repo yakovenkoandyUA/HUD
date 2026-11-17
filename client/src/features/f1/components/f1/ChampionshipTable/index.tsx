@@ -1,8 +1,7 @@
-import { useId, useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useChampionshipStandings, type DriverStanding } from '../../../hooks/useChampionshipStandings'
-import { F1_TEAMS } from '../../../data/f1Teams'
-import ConstructorStatsCard from '../ConstructorStatsCard'
+import { getF1TeamProfile } from '../../../data/f1Teams'
 import DriverHero from '../DriverHero'
 import { getDriverHeadshot } from '../../../utils/f1'
 import styles from './ChampionshipTable.module.css'
@@ -82,16 +81,8 @@ function Skeleton() {
 
 /** Displays the driver and constructor standings in a shared ranking layout. */
 function ChampionshipTable({ tab }: ChampionshipTableProps) {
-  const panelId = useId()
   const { drivers, constructors, loading, error, refetch } = useChampionshipStandings()
-  const [expandedConstructor, setExpandedConstructor] = useState<string | null>(null)
-  const [openedConstructors, setOpenedConstructors] = useState<Set<string>>(() => new Set())
   const teamsByName = new Map(constructors.map(team => [team.team_name, team]))
-
-  const toggleConstructor = (id: string) => {
-    setExpandedConstructor(current => current === id ? null : id)
-    setOpenedConstructors(current => current.has(id) ? current : new Set(current).add(id))
-  }
 
   if (loading) return <Skeleton />
   if (error) {
@@ -132,7 +123,7 @@ function ChampionshipTable({ tab }: ChampionshipTableProps) {
         <ol className={styles.list}>
           {isDrivers ? drivers.map(driver => {
             const constructorId = teamsByName.get(driver.team_name)?.constructorId
-            const team = constructorId ? F1_TEAMS[constructorId === 'rb' ? 'racing_bulls' : constructorId] : undefined
+            const team = constructorId ? getF1TeamProfile(constructorId) : undefined
             const rowStyle = team ? { '--team-color': team.primary } as CSSProperties : undefined
             const content = (
               <>
@@ -155,18 +146,15 @@ function ChampionshipTable({ tab }: ChampionshipTableProps) {
             )
           }) : constructors.map(team => {
             const id = team.constructorId
-            const assetId = id === 'rb' ? 'racing_bulls' : id
-            const teamInfo = assetId ? F1_TEAMS[assetId] : undefined
-            const isOpen = !!id && expandedConstructor === id
-            const panel = `${panelId}-${team.position}`
+            const teamInfo = id ? getF1TeamProfile(id) : undefined
             const driversForTeam = drivers.filter(driver => driver.team_name === team.team_name)
             const rowStyle = teamInfo ? { '--team-color': teamInfo.primary } as CSSProperties : undefined
             const content = (
               <>
                 <span className={styles.pos} data-leader={team.position === 1 || undefined}>{team.position}</span>
                 <span className={teamStyles.mark} aria-hidden="true">
-                  {teamInfo?.logo
-                    ? <img src={teamInfo.logo} alt="" loading="lazy" />
+                  {teamInfo?.emblem
+                    ? <img src={teamInfo.emblem} alt="" loading="lazy" />
                     : <span>{team.team_name.slice(0, 2).toUpperCase()}</span>}
                 </span>
                 <span className={styles.info}>
@@ -183,19 +171,10 @@ function ChampionshipTable({ tab }: ChampionshipTableProps) {
             return (
               <li key={id ?? team.team_name} className={styles.entry} style={rowStyle}>
                 {id ? (
-                  <>
-                    <button type="button" className={`${styles.row} ${teamStyles.row}`} aria-expanded={isOpen} aria-controls={panel} onClick={() => toggleConstructor(id)}>
-                      {content}
-                      <svg className={styles.arrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-                    </button>
-                    <div id={panel} className={`${teamStyles.panel} ${isOpen ? teamStyles.panelOpen : ''}`} inert={!isOpen}>
-                      <div className={teamStyles.panelContent}>
-                        {openedConstructors.has(id) && (
-                          <ConstructorStatsCard constructorId={id} assetId={assetId} teamInfo={teamInfo} drivers={driversForTeam} />
-                        )}
-                      </div>
-                    </div>
-                  </>
+                  <Link className={`${styles.row} ${teamStyles.row}`} to={`/f1/teams/${id}`}>
+                    {content}
+                    <svg className={styles.arrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+                  </Link>
                 ) : <div className={`${styles.row} ${teamStyles.row}`}>{content}</div>}
               </li>
             )

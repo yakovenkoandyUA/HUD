@@ -1,0 +1,84 @@
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  padding: 22px 16px 0;
+  border-block: 1px solid color-mix(in srgb, var(--team-color) 50%, var(--border2));
+  background: linear-gradient(138deg, color-mix(in srgb, var(--team-color) 26%, var(--bg2)), var(--bg2) 64%);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 20%;
+  background:
+    linear-gradient(62deg, transparent 76%, var(--team-color) 76.5%, transparent 77%, transparent 86%, var(--team-color) 86.5%, transparent 87%),
+    radial-gradient(color-mix(in srgb, var(--team-color) 45%, transparent) 1px, transparent 1.3px) 0 0 / 7px 7px;
+  mask-image: linear-gradient(to right, transparent, black);
+  opacity: 0.48;
+}
+.emblem {
+  width: 48px;
+  height: 36px;
+  object-fit: contain;
+  object-position: left center;
+}
+.name {
+  max-width: 100%;
+  margin: 0;
+  font: clamp(1.625rem, 7vw, 2.875rem) / 1.06 var(--font-display);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.standing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 6px 10px 6px 0;
+  border: 1px solid color-mix(in srgb, var(--team-color) 40%, var(--border2));
+  background: var(--bg2);
+  color: var(--text);
+  font: 600 0.8125rem var(--font-mono);
+}
+.position {
+  min-width: 42px;
+  padding-inline: 8px;
+  border-inline-end: 1px solid var(--border2);
+  text-align: center;
+  color: color-mix(in srgb, var(--team-color) 74%, var(--text));
+}
+.car {
+  display: block;
+  width: 100%;
+  height: clamp(80px, 32vw, 180px);
+  object-fit: contain;
+  object-position: center bottom;
+}
+.about {
+  padding: 14px 16px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  background: var(--bg2);
+}
+.about h2 {
+  margin: 0 0 8px;
+  color: var(--text2);
+  font: 700 0.75rem var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.about dl, .about dd { margin: 0; }
+.about dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 12px;
+  padding-block: 9px;
+  font: 0.8125rem var(--font-ui);
+}
+.about dl > div + div { border-top: 1px solid var(--border); }
+.about dt { color: var(--text2); }
+.about dd { color: var(--text); text-align: end; }

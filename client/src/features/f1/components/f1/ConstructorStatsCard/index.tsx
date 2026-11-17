@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { F1TeamInfo } from '../../../data/f1Teams'
 import type { DriverStanding } from '../../../hooks/useChampionshipStandings'
 import styles from './ConstructorStatsCard.module.css'
 
 interface ConstructorStatsCardProps {
   constructorId: string
-  assetId?: string
-  teamInfo?: F1TeamInfo
   drivers: DriverStanding[]
 }
 
@@ -40,8 +37,8 @@ async function fetchTeamResults<T>(url: string, signal: AbortSignal): Promise<T>
   return response.json() as Promise<T>
 }
 
-/** Displays the constructor's car, season totals, and links to its drivers. */
-function ConstructorStatsCard({ constructorId, assetId, teamInfo, drivers }: ConstructorStatsCardProps) {
+/** Shows season totals and links to the constructor's drivers. */
+function ConstructorStatsCard({ constructorId, drivers }: ConstructorStatsCardProps) {
   const [stats, setStats] = useState<ConstructorStats | null>(null)
   const [attempt, setAttempt] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -75,19 +72,12 @@ function ConstructorStatsCard({ constructorId, assetId, teamInfo, drivers }: Con
     }
   }, [attempt, constructorId])
 
-  const imageName = assetId === 'red_bull' ? 'redbull' : assetId
   const unavailable = stats && (stats.wins == null || stats.poles == null)
 
   return (
     <div className={styles.details}>
-      {teamInfo && imageName && (
-        <div className={styles.car}>
-          <span className={styles.hq}>{teamInfo.hq}</span>
-          <img src={`/teams/${imageName}_mini.avif`} alt={`Болід ${teamInfo.name}`} loading="lazy" />
-        </div>
-      )}
       <section className={styles.section} aria-label="Статистика сезону">
-        <h3 className={styles.title}>Статистика сезону</h3>
+        <h2 className={styles.title}>Статистика сезону</h2>
         <dl className={styles.stats} aria-busy={loading}>
           <div><dt>Перемоги</dt><dd>{stats?.wins ?? '—'}</dd></div>
           <div><dt>Подіуми</dt><dd>{stats?.podiums ?? '—'}</dd></div>
@@ -109,12 +99,18 @@ function ConstructorStatsCard({ constructorId, assetId, teamInfo, drivers }: Con
       </section>
       {drivers.length > 0 && (
         <section className={styles.section} aria-label="Пілоти команди">
-          <h3 className={styles.title}>Пілоти команди</h3>
+          <h2 className={styles.title}>Пілоти команди</h2>
           <ul className={styles.drivers}>
             {drivers.map(driver => {
               const content = (
                 <>
                   <span className={styles.driverNumber}>#{driver.driver_number}</span>
+                  <span className={styles.driverPortrait} aria-hidden="true">
+                    {driver.broadcast_name || driver.full_name.slice(0, 2).toUpperCase()}
+                    {driver.headshot_url && (
+                      <img src={driver.headshot_url} loading="lazy" alt="" onError={event => { event.currentTarget.hidden = true }} />
+                    )}
+                  </span>
                   <span>{driver.full_name}</span>
                 </>
               )

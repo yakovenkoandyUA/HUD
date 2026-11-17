@@ -21,6 +21,7 @@ const F1Screen = lazy(() => import('@/features/f1'))
 const F1Live = lazy(() => import('@/features/f1/live'))
 const RaceDetailPage = lazy(() => import('@/features/f1/raceDetail'))
 const MySeasonPage = lazy(() => import('@/features/f1/mySeasonPage'))
+const ConstructorDetailPage = lazy(() => import('@/features/f1/constructorDetail'))
 const DriverDetailPage = lazy(() => import('@/features/f1/driverDetail'))
 const Sprint = lazy(() => import('@/features/sprint'))
 const Recipes = lazy(() => import('@/features/recipes'))
@@ -151,6 +152,7 @@ const AnimatedRoutes: React.FC = () => {
             <Route path="/f1/live" element={<F1Live />} />
             <Route path="/f1/my-season" element={<MySeasonPage />} />
             <Route path="/f1/drivers/:driverId" element={<DriverDetailPage />} />
+            <Route path="/f1/teams/:constructorId" element={<ConstructorDetailPage />} />
             <Route path="/f1/:round" element={<RaceDetailPage />} />
           </Route>
         </Route>

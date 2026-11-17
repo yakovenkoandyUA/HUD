@@ -62,3 +62,33 @@ export const F1_TEAMS: Record<string, F1TeamInfo> = {
     principal: 'Graeme Lowdon', engine: 'Ferrari', logo: '/f1-logo/cadillac.png', primary: '#C0C0C0',
   },
 }
+
+const F1_ASSET_SLUGS: Record<string, string> = {
+  mercedes: 'mercedes',
+  ferrari: 'ferrari',
+  red_bull: 'redbullracing',
+  mclaren: 'mclaren',
+  racing_bulls: 'racingbulls',
+  alpine: 'alpine',
+  haas: 'haasf1team',
+  audi: 'audi',
+  williams: 'williams',
+  aston_martin: 'astonmartin',
+  cadillac: 'cadillac',
+}
+
+/** Resolves the standings ID against the 2026 Formula 1 team catalogue. */
+export function getF1TeamProfile(constructorId: string) {
+  const id = constructorId === 'rb' ? 'racing_bulls' : constructorId
+  const info = F1_TEAMS[id]
+  const slug = F1_ASSET_SLUGS[id]
+  if (!info || !slug) return undefined
+
+  const cdn = 'https://media.formula1.com/image/upload'
+  const asset = `v1740000001/common/f1/2026/${slug}/2026${slug}`
+  return {
+    ...info,
+    emblem: `${cdn}/c_lfill,w_96/q_auto/${asset}logowhite.webp`,
+    car: `${cdn}/q_auto/${asset}carright.webp`,
+  }
+}
