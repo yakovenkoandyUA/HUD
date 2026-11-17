@@ -744,3 +744,41 @@
   color: var(--text3);
   margin-top: 3px;
 }
+
+.blackFridayBanner {
+  display: grid;
+  grid-template-columns: clamp(36px, 12vw, 56px) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--border2));
+  border-radius: var(--radius);
+  background: linear-gradient(115deg, color-mix(in srgb, var(--gold) 17%, var(--bg2)), var(--bg2) 78%);
+}
+.blackFridayLogo {
+  width: 100%;
+  border-radius: var(--radius);
+  display: block;
+}
+.blackFridayCopy {
+  display: grid;
+  gap: 3px;
+  color: var(--text2);
+  font: 0.6875rem var(--font-ui);
+}
+.blackFridayCopy h2 {
+  color: var(--text);
+  font: 1rem var(--font-display);
+  margin: 0;
+}
+.blackFridayCopy p {
+  color: var(--text);
+  font: 700 0.875rem var(--font-ui);
+  margin: 0;
+}
+.blackFridayCopy strong { color: var(--gold); font-family: var(--font-mono); }
+.priceAmount.offerPrice { color: var(--gold); font-size: clamp(20px, 7vw, 30px); }
+.offerRenewal { display: block; margin-top: 4px; color: var(--text2); font: 0.6875rem var(--font-ui); }
+.offerPayment { display: grid; gap: 10px; color: var(--text2); font: 0.875rem var(--font-ui); }
+.offerPayment p { margin: 0; }
+.offerPayment strong { color: var(--text); font-family: var(--font-mono); }
