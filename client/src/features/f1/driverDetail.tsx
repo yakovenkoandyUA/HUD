@@ -7,6 +7,7 @@ import { F1_TEAMS } from './data/f1Teams'
 import DriverDetailHero from './components/f1/DriverDetailHero'
 import DriverSeasonSummary from './components/f1/DriverSeasonSummary'
 import DriverTeamCard from './components/f1/DriverTeamCard'
+import DriverRecentForm from './components/f1/DriverRecentForm'
 import DriverRecentResults from './components/f1/DriverRecentResults'
 import { DRIVER_TEAM_COLOR } from './utils/f1'
 import styles from './DriverDetail.module.css'
@@ -29,7 +30,7 @@ const DriverDetailPage: React.FC = () => {
   const { drivers, loading: standingsLoading } = useChampionshipStandings()
   const driver = drivers.find(d => d.driverId === driverId)
 
-  const { stats, loading: statsLoading } = useDriverStats(driverId ?? '')
+  const { stats } = useDriverStats(driverId ?? '')
   const { results, loading: resultsLoading } = useDriverRaceResults(driverId ?? '')
 
   if (standingsLoading) {
@@ -64,8 +65,10 @@ const DriverDetailPage: React.FC = () => {
 
       <div className={styles.content}>
         <div className={styles.heroInline}>
-          <DriverDetailHero key={driver.driverId ?? driver.driver_number} driver={driver} stats={stats} loading={statsLoading} />
+          <DriverDetailHero key={driver.driverId ?? driver.driver_number} driver={driver} stats={stats} />
         </div>
+
+        <DriverRecentForm results={results} loading={resultsLoading} />
 
         <DriverSeasonSummary
           points={driver.points}

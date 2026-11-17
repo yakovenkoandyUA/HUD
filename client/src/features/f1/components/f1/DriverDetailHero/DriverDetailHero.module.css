@@ -132,6 +132,11 @@
   margin-top: 10px;
 }
 
+.nameHeading {
+  display: grid;
+  margin: 0;
+}
+
 .firstName {
   font-family: var(--font-ui);
   font-size: 13px;
@@ -143,7 +148,8 @@
 
 .lastName {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: clamp(22px, 7vw, 32px);
+  overflow-wrap: anywhere;
   color: var(--text);
   text-transform: uppercase;
   line-height: 1.1;
@@ -158,89 +164,24 @@
   margin-top: 2px;
 }
 
-/* ── Stats box: 4-cell grid + inline mini row ── */
-.statsBox {
+.standing {
   position: relative;
   z-index: 1;
-  border: 1px solid color-mix(in srgb, var(--team-color) 30%, var(--border2));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--bg) 75%, transparent);
-  overflow: hidden;
-}
-
-.statsRow1 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border-bottom: 1px solid color-mix(in srgb, var(--team-color) 25%, var(--border2));
-}
-
-.cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 10px 4px 8px;
-  min-width: 0;
-  border-right: 1px solid color-mix(in srgb, var(--team-color) 20%, var(--border2));
-}
-.cell:last-child { border-right: none; }
-
-.cellTop {
   display: flex;
   align-items: center;
-  gap: 5px;
-}
-
-.cellIcon { color: var(--team-color); flex-shrink: 0; }
-
-.cellValue {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 700;
+  align-self: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 6px 10px 6px 0;
+  border: 1px solid color-mix(in srgb, var(--team-color) 35%, var(--border2));
+  background: var(--bg2);
   color: var(--text);
+  font: 600 0.8125rem var(--font-mono);
 }
-
-.cellLabel {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+.standingPosition {
+  min-width: 42px;
+  padding-inline: 8px;
+  border-inline-end: 1px solid var(--border2);
+  color: var(--team-color);
   text-align: center;
-}
-
-.statsRow2 {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 8px 6px;
-  gap: 4px;
-}
-
-.miniStat {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  min-width: 0;
-}
-
-.miniIcon { color: var(--team-color); flex-shrink: 0; }
-
-.miniLabel {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.miniValue {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  flex-shrink: 0;
 }
