@@ -19,12 +19,18 @@
 }
 .driverTable {
   --identity-width: 32px;
-  --portrait-column-width: calc(var(--identity-width) + 8px);
-  --columns: var(--position-width) var(--portrait-column-width) minmax(0, 1fr) 56px var(--control-width);
 }
 .driverTable .row {
   min-height: 49px;
   padding-block: 5px;
+}
+.driverTable .entry {
+  background-image: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--team-color, transparent) 28%, transparent),
+    color-mix(in srgb, var(--team-color, transparent) 12%, transparent) 34%,
+    transparent 78%
+  );
 }
 .tableHeader, .row {
   display: grid;
@@ -64,6 +70,7 @@
 a.row, button.row { cursor: pointer; }
 @media (hover: hover) {
   a.row:hover, button.row:hover { background: var(--surface2); }
+  .driverTable a.row:hover { background: color-mix(in srgb, var(--surface2) 48%, transparent); }
 }
 .row[aria-expanded='true'] { background: var(--surface2); }
 .row:focus-visible {
@@ -77,27 +84,7 @@ a.row, button.row { cursor: pointer; }
 .driverTable .pos { font-size: 1rem; }
 .driverTable .pos[data-podium] { color: var(--text); }
 .driverTable .pos[data-podium='1'] { color: var(--gold); }
-.score {
-  grid-column: 4;
-  display: grid;
-  gap: 2px;
-  text-align: end;
-}
-.score .points { grid-column: auto; }
-.driverTable .score .points { font-size: 1rem; }
-.gapLabel { font-size: 0.625rem; }
-.pointsGap { color: var(--text2); font: 500 0.625rem var(--font-mono); }
-.driverPortrait {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.teamStripe {
-  width: 3px;
-  height: 26px;
-  flex: 0 0 3px;
-  background: var(--border2);
-}
+.driverTable .points { font-size: 1rem; }
 .avatar, .teamMark {
   display: grid;
   place-items: center;
