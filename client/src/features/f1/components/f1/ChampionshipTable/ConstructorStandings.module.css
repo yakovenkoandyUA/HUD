@@ -26,8 +26,8 @@
   color: var(--text2);
   font: 700 0.6875rem var(--font-mono);
 }
-.mark {
+/* .mark {
   border-radius: 6px;
   background: color-mix(in srgb, var(--bg) 84%, var(--team-color, var(--bg)));
-}
-.mark img { width: 24px; height: 24px; object-fit: contain; }
+} */
+.mark img { width: 34px; height: 34px; object-fit: contain; }

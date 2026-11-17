@@ -88,13 +88,12 @@ a.row, button.row { cursor: pointer; }
 .avatar, .teamMark {
   display: grid;
   place-items: center;
-  width: var(--identity-width);
+  width: 45px;
   aspect-ratio: 1;
   overflow: hidden;
 }
 .avatar {
-  border-radius: 50%;
-  background: var(--surface2);
+  margin-left: -13px;
 }
 .teamMark {
   color: var(--text3);
@@ -105,7 +104,7 @@ a.row, button.row { cursor: pointer; }
   width: 100%;
   height: 100%;
 }
-.avatarImg { object-fit: cover; object-position: top center; }
+/* .avatarImg { object-fit: cover; object-position: top center; } */
 .teamLogo { object-fit: contain; padding: 3px; }
 .avatarInitials { color: var(--text2); font: 700 0.6875rem var(--font-ui); }
 
