@@ -64,7 +64,7 @@ const DriverDetailPage: React.FC = () => {
 
       <div className={styles.content}>
         <div className={styles.heroInline}>
-          <DriverDetailHero driver={driver} stats={stats} loading={statsLoading} />
+          <DriverDetailHero key={driver.driverId ?? driver.driver_number} driver={driver} stats={stats} loading={statsLoading} />
         </div>
 
         <DriverSeasonSummary

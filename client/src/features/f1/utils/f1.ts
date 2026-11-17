@@ -4,6 +4,23 @@ export function getDriverHeadshot(_driverId: string): string | null {
   return null
 }
 
+/** Prefer the original Formula 1 portrait for large cards and retain the thumbnail as a fallback. */
+export function getDriverPortraitSources(thumbnail: string | undefined): string[] {
+  if (!thumbnail) return []
+  const sources = [thumbnail, `https://images.weserv.nl/?url=${encodeURIComponent(thumbnail)}`]
+  try {
+    const url = new URL(thumbnail)
+    if (url.protocol === 'https:' && ['media.formula1.com', 'www.formula1.com'].includes(url.hostname)
+      && /\.transform\/1col\/image\.png$/.test(url.pathname)) {
+      url.pathname = url.pathname.replace(/\.transform\/1col\/image\.png$/, '')
+      sources.unshift(url.href)
+    }
+  } catch {
+    // Relative and custom URLs can still be passed through unchanged.
+  }
+  return sources
+}
+
 // Keyed by Jolpica driverId (current 2026 grid — slugs occasionally change, e.g.
 // verstappen → max_verstappen, lindblad → arvid_lindblad; keep in sync with /api/f1/standings).
 export const DRIVER_TEAM_COLOR: Record<string, string> = {

@@ -1,3 +1,14 @@
+.leaderTitle {
+  margin: 0 14px 8px;
+  color: var(--text2);
+  font: 700 0.75rem var(--font-ui);
+}
+.leaderLink { display: block; }
+.leaderLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 .table {
   --position-width: 26px;
   --identity-width: 34px;

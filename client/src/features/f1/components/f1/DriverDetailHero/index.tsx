@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import type { DriverStanding } from '../../../hooks/useChampionshipStandings'
 import { NATIONALITY_UA, type DriverStats } from '../../../hooks/useDriverStats'
-import { DRIVER_TEAM_COLOR, getDriverHeadshot } from '../../../utils/f1'
+import { DRIVER_TEAM_COLOR, getDriverPortraitSources } from '../../../utils/f1'
 import styles from './DriverDetailHero.module.css'
 
 /**
@@ -72,13 +72,8 @@ const DriverDetailHero: React.FC<Props> = ({ driver, stats, loading }) => {
   const driverId  = driver.driverId ?? ''
   const teamColor = DRIVER_TEAM_COLOR[driverId] ?? 'var(--accent)'
   const nat       = stats ? NATIONALITY_UA[stats.nationality] : undefined
-  const photoUrl  = getDriverHeadshot(driverId) ?? driver.headshot_url
-
-  type PhotoStage = 'direct' | 'proxy' | 'hidden'
-  const [photoStage, setPhotoStage] = useState<PhotoStage>(photoUrl ? 'direct' : 'hidden')
-  const photoSrc = photoStage === 'proxy'
-    ? `https://images.weserv.nl/?url=${encodeURIComponent(photoUrl ?? '')}`
-    : photoUrl
+  const [photoIndex, setPhotoIndex] = useState(0)
+  const photoSrc = getDriverPortraitSources(driver.headshot_url)[photoIndex]
 
   return (
     <div className={styles.hero} style={{ '--team-color': teamColor } as React.CSSProperties}>
@@ -86,14 +81,13 @@ const DriverDetailHero: React.FC<Props> = ({ driver, stats, loading }) => {
       <span className={`${styles.corner} ${styles.br}`} />
 
       <div className={styles.photoLayer}>
-        {photoStage !== 'hidden' && photoSrc && (
+        {photoSrc && (
           <img
             className={styles.photo}
             src={photoSrc}
             alt={driver.full_name}
-            crossOrigin="anonymous"
             referrerPolicy="no-referrer"
-            onError={() => setPhotoStage(s => (s === 'direct' ? 'proxy' : 'hidden'))}
+            onError={() => setPhotoIndex(index => index + 1)}
           />
         )}
         <svg className={styles.speedLines} viewBox="0 0 300 220" preserveAspectRatio="none">

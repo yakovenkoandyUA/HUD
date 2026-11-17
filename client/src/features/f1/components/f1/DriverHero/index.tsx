@@ -1,27 +1,11 @@
 import React, { useState } from 'react'
 import type { DriverStanding } from '../../../hooks/useChampionshipStandings'
-import { useDriverStats, NATIONALITY_UA, type DriverStats } from '../../../hooks/useDriverStats'
-import { DRIVER_TEAM_COLOR, getDriverHeadshot } from '../../../utils/f1'
+import { useDriverStats, NATIONALITY_UA } from '../../../hooks/useDriverStats'
+import { DRIVER_TEAM_COLOR, getDriverPortraitSources } from '../../../utils/f1'
 import styles from './DriverHero.module.css'
 
-/**
- * DriverHero
- * -----------
- * Персональна hero-картка вибраного пілота над списком у табі "Пілоти".
- * Показує того пілота, що вибраний у списку (за замовчуванням — перший
- * у поточному рейтингу). Портрет — реальний headshot (OpenF1, через
- * backend proxy standings), не запечений асет; фолбек — силует.
- *
- * Props:
- * @prop {DriverStanding}             driver      — вибраний пілот (з поточного рейтингу)
- * @prop {DriverStats | undefined}    cachedStats — кеш сезонної статистики (спільний зі списком)
- * @prop {(id, stats) => void}        onStats     — колбек для збереження в кеш
- */
-
-interface Props {
-  driver:      DriverStanding
-  cachedStats: DriverStats | undefined
-  onStats:     (id: string, stats: DriverStats) => void
+interface DriverHeroProps {
+  driver: DriverStanding
 }
 
 function RankIcon() {
@@ -63,21 +47,18 @@ function SilhouetteIcon() {
   )
 }
 
-const DriverHero: React.FC<Props> = ({ driver, cachedStats, onStats }) => {
+/** Shows the championship leader with a portrait and season statistics. */
+const DriverHero: React.FC<DriverHeroProps> = ({ driver }) => {
   const driverId   = driver.driverId ?? ''
-  const { stats }  = useDriverStats(driverId, cachedStats, onStats)
+  const { stats }  = useDriverStats(driverId)
   const teamColor  = DRIVER_TEAM_COLOR[driverId] ?? 'var(--accent)'
   const nat        = stats ? NATIONALITY_UA[stats.nationality] : undefined
 
   const firstName = stats?.givenName ?? ''
   const lastName  = (stats?.familyName || driver.full_name).toUpperCase()
 
-  const photoUrl = getDriverHeadshot(driverId) ?? driver.headshot_url
-  type PhotoStage = 'direct' | 'proxy' | 'hidden'
-  const [photoStage, setPhotoStage] = useState<PhotoStage>(photoUrl ? 'direct' : 'hidden')
-  const photoSrc = photoStage === 'proxy'
-    ? `https://images.weserv.nl/?url=${encodeURIComponent(photoUrl ?? '')}`
-    : photoUrl
+  const [photoIndex, setPhotoIndex] = useState(0)
+  const photoSrc = getDriverPortraitSources(driver.headshot_url)[photoIndex]
 
   return (
     <div className={styles.hero} style={{ '--team-color': teamColor } as React.CSSProperties}>
@@ -91,14 +72,13 @@ const DriverHero: React.FC<Props> = ({ driver, cachedStats, onStats }) => {
       </svg>
 
       <div className={styles.portraitLayer} aria-hidden="true">
-        {photoStage !== 'hidden' && photoSrc ? (
+        {photoSrc ? (
           <img
             className={styles.portrait}
             src={photoSrc}
             alt=""
-            crossOrigin="anonymous"
             referrerPolicy="no-referrer"
-            onError={() => setPhotoStage(s => (s === 'direct' ? 'proxy' : 'hidden'))}
+            onError={() => setPhotoIndex(index => index + 1)}
           />
         ) : (
           <span className={styles.silhouette}><SilhouetteIcon /></span>
