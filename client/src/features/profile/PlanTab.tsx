@@ -20,7 +20,7 @@ function isBlackFriday(now = Date.now()) {
 }
 
 const formatPrice = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 2 })
-const firstMonthPrice = (monthlyPrice: number) => monthlyPrice / 2
+const blackFridayPrice = (monthlyPrice: number) => monthlyPrice / 2
 
 type BillingCycle = 'monthly' | 'annual'
 
@@ -157,8 +157,7 @@ const PlanTab: React.FC = () => {
     return () => clearTimeout(timer)
   }, [blackFriday])
 
-  const canUseBlackFridayOffer = blackFriday && currentPlan === 'free'
-  const showDiscountedPrices = canUseBlackFridayOffer && cycle === 'monthly'
+  const showDiscountedPrices = blackFriday && cycle === 'monthly'
 
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef   = useSwipeToDismiss(() => setSupportOpen(false), { enabled: supportOpen, overlayRef })
@@ -206,11 +205,11 @@ const PlanTab: React.FC = () => {
   }
 
   const handleOfferPayment = () => {
-    if (!offerPlan || currentPlan !== 'free' || !isBlackFriday()) {
+    if (!offerPlan || !isBlackFriday()) {
       setOfferPlan(null)
       return
     }
-    const amount = firstMonthPrice(offerPlan.priceMonthly)
+    const amount = blackFridayPrice(offerPlan.priceMonthly)
     window.open(`${MONOBANK_JAR}?amount=${amount}`, '_blank', 'noopener,noreferrer')
     setOfferPlan(null)
   }
@@ -234,9 +233,9 @@ const PlanTab: React.FC = () => {
           <img className={styles.blackFridayLogo} src="/icons/icon-192.png" alt="" />
           <div className={styles.blackFridayCopy}>
             <h2>Black Friday</h2>
-            <p><strong>−50%</strong> на перший місяць платного тарифу</p>
+            <p><strong>−50%</strong> на один місяць платного тарифу</p>
             <span>До 30 листопада включно · Без промокоду</span>
-            <span>Для переходу з FREE на місячний тариф</span>
+            <span>Для нових і чинних підписок</span>
           </div>
         </section>
       ) : (
@@ -345,7 +344,7 @@ const PlanTab: React.FC = () => {
         const isCurrent  = plan.id === currentPlan
         const isPopular  = plan.id === 'personal'
         const price      = cycle === 'annual' ? plan.priceAnnual : plan.priceMonthly
-        const offerPrice = showDiscountedPrices ? firstMonthPrice(plan.priceMonthly) : null
+        const offerPrice = showDiscountedPrices ? blackFridayPrice(plan.priceMonthly) : null
         const cardMod    = plan.id === 'personal' ? styles.cardPersonal
                          : plan.id === 'couple'   ? styles.cardCouple
                          : styles.cardFamily
@@ -375,15 +374,10 @@ const PlanTab: React.FC = () => {
               <div className={styles.priceBlock}>
                 <div className={styles.priceMain}>
                   <span className={`${styles.priceAmount} ${offerPrice !== null ? styles.offerPrice : ''}`}>{offerPrice !== null ? formatPrice.format(offerPrice) : price}</span>
-                  <span className={styles.priceSuffix}>₴&thinsp;/ {offerPrice !== null ? '1-й міс' : 'міс'}</span>
+                  <span className={styles.priceSuffix}>₴&thinsp;/ міс</span>
                 </div>
                 {offerPrice !== null && (
                   <span className={styles.offerRenewal}>Далі {plan.priceMonthly} ₴ / міс</span>
-                )}
-                {blackFriday && cycle === 'monthly' && !canUseBlackFridayOffer && (
-                  <span className={styles.offerRenewal}>
-                    Для FREE: {formatPrice.format(firstMonthPrice(plan.priceMonthly))} ₴ за 1-й міс
-                  </span>
                 )}
                 {cycle === 'annual' && (
                   <span className={styles.priceAnnualNote}>{plan.priceAnnualTotal} ₴ / рік</span>
@@ -408,7 +402,7 @@ const PlanTab: React.FC = () => {
                   Поточний план
                 </div>
                 <button type="button" className={styles.ctaManage} onClick={() => handleUpgrade(plan)}>
-                  Керувати підпискою
+                  {showDiscountedPrices ? 'Продовжити зі знижкою' : 'Керувати підпискою'}
                 </button>
               </>
             ) : (
@@ -510,11 +504,11 @@ const PlanTab: React.FC = () => {
         Оплата через Monobank — після підтвердження платежу план активується вручну.
       </p>
 
-      <Modal isOpen={offerPlan !== null} onClose={() => setOfferPlan(null)} title="Оплата першого місяця" draggable>
+      <Modal isOpen={offerPlan !== null} onClose={() => setOfferPlan(null)} title="Оплата зі знижкою" draggable>
         {offerPlan && (
           <div className={styles.offerPayment}>
-            <p><strong>{offerPlan.name} · {formatPrice.format(firstMonthPrice(offerPlan.priceMonthly))} ₴</strong></p>
-            <p>Далі {offerPlan.priceMonthly} ₴ на місяць. Перед оплатою перевірте акційну суму в Monobank.</p>
+            <p><strong>{offerPlan.name} · {formatPrice.format(blackFridayPrice(offerPlan.priceMonthly))} ₴ за один місяць</strong></p>
+            <p>Далі {offerPlan.priceMonthly} ₴ на місяць. Підписку оновлять після підтвердження платежу.</p>
             <button type="button" className={styles.ctaUpgrade} onClick={handleOfferPayment}>Перейти до Monobank</button>
           </div>
         )}
