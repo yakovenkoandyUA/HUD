@@ -6,6 +6,7 @@ import ConstructorStatsCard from '../ConstructorStatsCard'
 import DriverHero from '../DriverHero'
 import { getDriverHeadshot } from '../../../utils/f1'
 import styles from './ChampionshipTable.module.css'
+import teamStyles from './ConstructorStandings.module.css'
 
 interface ChampionshipTableProps {
   tab: 'drivers' | 'constructors'
@@ -122,7 +123,7 @@ function ChampionshipTable({ tab }: ChampionshipTableProps) {
           ) : <DriverHero key={leader.driver_number} driver={leader} />}
         </div>
       )}
-      <section className={isDrivers ? `${styles.table} ${styles.driverTable}` : styles.table} aria-label={isDrivers ? 'Залік пілотів' : 'Кубок конструкторів'}>
+      <section className={isDrivers ? `${styles.table} ${styles.driverTable}` : `${styles.table} ${teamStyles.table}`} aria-label={isDrivers ? 'Залік пілотів' : 'Кубок конструкторів'}>
         <div className={styles.tableHeader} aria-hidden="true">
           <span>Поз.</span>
           <span>{isDrivers ? 'Пілот' : 'Команда'}</span>
@@ -131,7 +132,7 @@ function ChampionshipTable({ tab }: ChampionshipTableProps) {
         <ol className={styles.list}>
           {isDrivers ? drivers.map(driver => {
             const constructorId = teamsByName.get(driver.team_name)?.constructorId
-            const team = constructorId ? F1_TEAMS[constructorId] : undefined
+            const team = constructorId ? F1_TEAMS[constructorId === 'rb' ? 'racing_bulls' : constructorId] : undefined
             const rowStyle = team ? { '--team-color': team.primary } as CSSProperties : undefined
             const content = (
               <>
@@ -154,40 +155,48 @@ function ChampionshipTable({ tab }: ChampionshipTableProps) {
             )
           }) : constructors.map(team => {
             const id = team.constructorId
-            const teamInfo = id ? F1_TEAMS[id] : undefined
+            const assetId = id === 'rb' ? 'racing_bulls' : id
+            const teamInfo = assetId ? F1_TEAMS[assetId] : undefined
             const isOpen = !!id && expandedConstructor === id
             const panel = `${panelId}-${team.position}`
-            const driversForTeam = drivers
-              .filter(driver => driver.team_name === team.team_name)
-              .map(driver => driver.full_name.trim().split(/\s+/).slice(1).join(' ') || driver.full_name)
+            const driversForTeam = drivers.filter(driver => driver.team_name === team.team_name)
+            const rowStyle = teamInfo ? { '--team-color': teamInfo.primary } as CSSProperties : undefined
             const content = (
               <>
-                <span className={styles.pos}>{team.position}</span>
-                <span className={styles.teamMark} style={{ color: teamInfo?.primary }} aria-hidden="true">
+                <span className={styles.pos} data-leader={team.position === 1 || undefined}>{team.position}</span>
+                <span className={teamStyles.mark} aria-hidden="true">
                   {teamInfo?.logo
-                    ? <img src={teamInfo.logo} alt="" loading="lazy" className={styles.teamLogo} />
-                    : <span className={styles.teamDot} />}
+                    ? <img src={teamInfo.logo} alt="" loading="lazy" />
+                    : <span>{team.team_name.slice(0, 2).toUpperCase()}</span>}
                 </span>
                 <span className={styles.info}>
-                  <span className={styles.name}>{team.team_name}</span>
-                  {driversForTeam.length > 0 && <span className={styles.subtitle}>{driversForTeam.join(' · ')}</span>}
+                  <span className={teamStyles.name}>{teamInfo?.name ?? team.team_name}</span>
+                  {driversForTeam.length > 0 && (
+                    <span className={styles.subtitle}>
+                      {driversForTeam.map(driver => driver.full_name.trim().split(/\s+/).slice(1).join(' ') || driver.full_name).join(' · ')}
+                    </span>
+                  )}
                 </span>
                 <span className={styles.points} aria-label={`${team.points} очок`}>{team.points}</span>
               </>
             )
             return (
-              <li key={id ?? team.team_name} className={styles.entry}>
+              <li key={id ?? team.team_name} className={styles.entry} style={rowStyle}>
                 {id ? (
                   <>
-                    <button type="button" className={styles.row} aria-expanded={isOpen} aria-controls={panel} onClick={() => toggleConstructor(id)}>
+                    <button type="button" className={`${styles.row} ${teamStyles.row}`} aria-expanded={isOpen} aria-controls={panel} onClick={() => toggleConstructor(id)}>
                       {content}
                       <svg className={styles.arrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                     </button>
-                    <div id={panel} className={`${styles.expandable} ${isOpen ? styles.expandableOpen : ''}`} inert={!isOpen}>
-                      {openedConstructors.has(id) && <ConstructorStatsCard constructorId={id} />}
+                    <div id={panel} className={`${teamStyles.panel} ${isOpen ? teamStyles.panelOpen : ''}`} inert={!isOpen}>
+                      <div className={teamStyles.panelContent}>
+                        {openedConstructors.has(id) && (
+                          <ConstructorStatsCard constructorId={id} assetId={assetId} teamInfo={teamInfo} drivers={driversForTeam} />
+                        )}
+                      </div>
                     </div>
                   </>
-                ) : <div className={styles.row}>{content}</div>}
+                ) : <div className={`${styles.row} ${teamStyles.row}`}>{content}</div>}
               </li>
             )
           })}

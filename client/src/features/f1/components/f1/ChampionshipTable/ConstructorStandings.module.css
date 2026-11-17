@@ -1,0 +1,43 @@
+.table {
+  --identity-width: 36px;
+}
+.table .row {
+  min-height: 60px;
+  padding-block: 7px;
+  background: linear-gradient(112deg, color-mix(in srgb, var(--team-color, transparent) 21%, transparent), transparent 68%);
+}
+.table .row[aria-expanded='true'] {
+  background-color: var(--surface2);
+}
+.table .row:focus-visible {
+  outline-offset: -3px;
+}
+.table [data-leader] { color: var(--gold); }
+.name {
+  overflow: hidden;
+  color: var(--text);
+  font: 700 0.875rem var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mark {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 0;
+  color: var(--text2);
+  font: 700 0.6875rem var(--font-mono);
+}
+.mark img { width: 100%; height: 100%; object-fit: contain; }
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 260ms ease, opacity 200ms ease;
+}
+.panelOpen { grid-template-rows: 1fr; opacity: 1; }
+.panelContent { min-height: 0; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .panel { transition: none; }
+}
